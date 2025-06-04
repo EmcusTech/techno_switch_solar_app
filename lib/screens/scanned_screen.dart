@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:techno_switch_solar_app/screens/access_code_screen.dart';
 import 'package:techno_switch_solar_app/screens/scanning_screen.dart';
 
 class ScannedScreen extends StatefulWidget {
@@ -143,46 +144,55 @@ class _ScannedScreenState extends State<ScannedScreen> {
         return SizedBox(height: 10);
       },
       itemBuilder: (context, index) {
-        return Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            border: Border.all(
-              color: Color(0xFFB9B9B9).withValues(alpha: 0.31),
-              width: 1,
+        return GestureDetector(
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => AccessCodeScreen(),
+              ),
+            );
+          },
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              border: Border.all(
+                color: Color(0xFFB9B9B9).withValues(alpha: 0.31),
+                width: 1,
+              ),
+              borderRadius: BorderRadius.circular(8),
             ),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(18.0),
-            child: Row(
-              children: [
-                // SvgPicture.asset('assets/svgs/panel_icon.svg'),
-                Image.asset('assets/images/panel_icon.png'),
-                SizedBox(width: 14.31),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Project Name',
-                      style: GoogleFonts.inter(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF3D3D3D),
+            child: Padding(
+              padding: const EdgeInsets.all(18.0),
+              child: Row(
+                children: [
+                  // SvgPicture.asset('assets/svgs/panel_icon.svg'),
+                  Image.asset('assets/images/panel_icon.png'),
+                  SizedBox(width: 14.31),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Project Name',
+                        style: GoogleFonts.inter(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF3D3D3D),
+                        ),
                       ),
-                    ),
-                    Text(
-                      'location',
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w400,
-                        color: Color(0xFF918F8F),
+                      Text(
+                        'location',
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w400,
+                          color: Color(0xFF918F8F),
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-                Spacer(),
-                SvgPicture.asset('assets/svgs/arrow_right_colored_icon.svg'),
-              ],
+                    ],
+                  ),
+                  Spacer(),
+                  SvgPicture.asset('assets/svgs/arrow_right_colored_icon.svg'),
+                ],
+              ),
             ),
           ),
         );

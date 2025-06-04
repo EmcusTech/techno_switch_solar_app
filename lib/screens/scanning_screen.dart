@@ -15,7 +15,14 @@ class _ScanningScreenState extends State<ScanningScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: ClipRect(
+      body: Container(
+        decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFFF6EBEB), Colors.white],
+        ),
+      ),
         child: Stack(
           alignment: Alignment.center,
           children: [
@@ -29,9 +36,9 @@ class _ScanningScreenState extends State<ScanningScreen> {
                 ),
               ],
             ),
-    
+            
             Align(alignment: Alignment.center, child: ScanningAnimation()),
-    
+            
             Column(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
