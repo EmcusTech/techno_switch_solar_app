@@ -21,6 +21,7 @@ class _AccessCodeScreenState extends State<AccessCodeScreen> {
     });
     super.initState();
   }
+  
 
   @override
   Widget build(BuildContext context) {
@@ -209,6 +210,7 @@ class _AccessCodeScreenState extends State<AccessCodeScreen> {
               if (_accessCodeController.text.isEmpty) {
                 return;
               }
+              _accessCodeController.clear();
               Navigator.of(context).push(
                 MaterialPageRoute(builder: (context) => LogRetrievalLoadingScreen()),
               );
@@ -248,5 +250,11 @@ class _AccessCodeScreenState extends State<AccessCodeScreen> {
         ],
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _accessCodeController.dispose();
+    super.dispose();
   }
 }

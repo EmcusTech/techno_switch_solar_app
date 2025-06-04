@@ -4,6 +4,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'dart:async';
+import 'package:techno_switch_solar_app/screens/event_log_screen.dart';
 
 class LogRetrievalLoadingScreen extends StatefulWidget {
   const LogRetrievalLoadingScreen({super.key});
@@ -13,7 +14,8 @@ class LogRetrievalLoadingScreen extends StatefulWidget {
       _LogRetrievalLoadingScreenState();
 }
 
-class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen> with SingleTickerProviderStateMixin {
+class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
+    with SingleTickerProviderStateMixin {
   late TextEditingController _accessCodeController;
   late AnimationController _controller;
   late Animation<double> _animation;
@@ -41,20 +43,16 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen> w
 
     _controller.forward();
 
-    // Optional: Navigate to next screen when animation completes
+    // Add navigation when animation completes
     _controller.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
-        // Navigate to next screen or do something when loading completes
-        // Navigator.of(context).pushReplacement(...);
+        // Navigator.pop(context);
+        // Navigate to EventLogScreen
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => const EventLogScreen()),
+        );
       }
     });
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    _timer?.cancel();
-    super.dispose();
   }
 
   @override
@@ -162,11 +160,6 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen> w
                 ),
               ),
             ),
-
-            // LinearProgressIndicator(
-            //   color: Color(0xFFEC1D24),
-            //   backgroundColor: Color(0xFFF6EBEB),
-            // ),
             Padding(
               padding: const EdgeInsets.only(left: 24, right: 24, bottom: 100),
               child: Align(
@@ -291,5 +284,13 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen> w
         ],
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _accessCodeController.dispose();
+    _controller.dispose();
+    _timer?.cancel();
+    super.dispose();
   }
 }
