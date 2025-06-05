@@ -369,13 +369,103 @@ class _EventLogContentState extends State<_EventLogContent> {
   }
 
   Widget _buildList() {
-    return Container();
+    return Column(
+      children: [
+        // Table header
+        Container(
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+          color: Colors.white,
+          child: Row(
+            children: [
+              Expanded(
+                flex: 2,
+                child: Text(
+                  'Event ID',
+                  style: GoogleFonts.inter(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 15,
+                  ),
+                ),
+              ),
+              Expanded(
+                flex: 4,
+                child: Text(
+                  'Date & Time',
+                  style: GoogleFonts.inter(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 15,
+                  ),
+                ),
+              ),
+              Expanded(
+                flex: 3,
+                child: Text(
+                  'Event Status',
+                  style: GoogleFonts.inter(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 15,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const Divider(height: 1, thickness: 1),
+        // Table rows
+        ListView.separated(
+          shrinkWrap: true,
+          physics: NeverScrollableScrollPhysics(),
+          itemCount: widget.logDataList.length,
+          separatorBuilder: (context, index) => const Divider(height: 1),
+          itemBuilder: (context, index) {
+            final log = widget.logDataList[index];
+            return Container(
+              color: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+              child: Row(
+                children: [
+                  Expanded(
+                    flex: 2,
+                    child: Text(
+                      log.eventId ?? '',
+                      style: GoogleFonts.inter(fontSize: 14),
+                    ),
+                  ),
+                  Expanded(
+                    flex: 4,
+                    child: Text(
+                      log.eventDateTime != null
+                          ? DateFormat(
+                            'dd-MM-yyyy hh:mm:ss a',
+                          ).format(log.eventDateTime!)
+                          : '',
+                      style: GoogleFonts.inter(fontSize: 14),
+                    ),
+                  ),
+                  Expanded(
+                    flex: 3,
+                    child: Text(
+                      log.eventStatus ?? '',
+                      style: GoogleFonts.inter(fontSize: 14),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      ],
+    );
   }
 
   Widget _buildTable() {
-    return ListView.builder(
+    return ListView.separated(
       shrinkWrap: true,
+      physics: NeverScrollableScrollPhysics(),
       itemCount: widget.logDataList.length,
+      separatorBuilder: (context, index) {
+        return SizedBox(height: 10);
+      },
       itemBuilder: (context, index) {
         return Container(
           width: double.infinity,
@@ -408,9 +498,10 @@ class _EventLogContentState extends State<_EventLogContent> {
                         ),
                         Text(
                           widget.logDataList[index].eventDateTime != null
-                              ? DateFormat(
-                                'dd/MM/yyyy - hh:mm a',
-                              ).format(widget.logDataList[index].eventDateTime!.toLocal())
+                              ? DateFormat('dd/MM/yyyy - hh:mm a').format(
+                                widget.logDataList[index].eventDateTime!
+                                    .toLocal(),
+                              )
                               : 'N/A',
                           style: GoogleFonts.inter(
                             fontSize: 10,
@@ -451,70 +542,80 @@ class _EventLogContentState extends State<_EventLogContent> {
                   ),
                 ),
                 Row(
+                  crossAxisAlignment: CrossAxisAlignment.start, 
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Panel No',
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF3A3A3A),
+                    Expanded(
+                      flex: 1,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Panel No',
+                            style: GoogleFonts.inter(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF3A3A3A),
+                            ),
                           ),
-                        ),
-                        Text(
-                          widget.logDataList[index].panelNo ?? '',
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w400,
-                            color: Color(0xFF696969),
+                          Text(
+                            widget.logDataList[index].panelNo ?? '',
+                            style: GoogleFonts.inter(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w400,
+                              color: Color(0xFF696969),
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'L-Bus No',
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF3A3A3A),
+                    Expanded(
+                      flex: 1,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'L-Bus No',
+                            style: GoogleFonts.inter(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF3A3A3A),
+                            ),
                           ),
-                        ),
-                        Text(
-                          widget.logDataList[index].lBusNo ?? '',
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w400,
-                            color: Color(0xFF696969),
+                          Text(
+                            widget.logDataList[index].lBusNo ?? '',
+                            style: GoogleFonts.inter(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w400,
+                              color: Color(0xFF696969),
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Module No',
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF3A3A3A),
+                    Expanded(
+                      flex: 1,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Module No',
+                            style: GoogleFonts.inter(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF3A3A3A),
+                            ),
                           ),
-                        ),
-                        Text(
-                          widget.logDataList[index].moduleNo ?? '',
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w400,
-                            color: Color(0xFF696969),
+                          Text(
+                            widget.logDataList[index].moduleNo ?? '',
+                            style: GoogleFonts.inter(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w400,
+                              color: Color(0xFF696969),
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ],
                 ),
@@ -526,70 +627,80 @@ class _EventLogContentState extends State<_EventLogContent> {
                   ),
                 ),
                 Row(
+                  crossAxisAlignment: CrossAxisAlignment.start, 
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Event Status',
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF3A3A3A),
+                    Expanded(
+                      flex: 1,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Event Status',
+                            style: GoogleFonts.inter(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF3A3A3A),
+                            ),
                           ),
-                        ),
-                        Text(
-                          widget.logDataList[index].eventStatus ?? '',
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w400,
-                            color: Color(0xFF696969),
+                          Text(
+                            widget.logDataList[index].eventStatus ?? '',
+                            style: GoogleFonts.inter(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w400,
+                              color: Color(0xFF696969),
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Event Class',
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF3A3A3A),
+                    Expanded(
+                      flex: 1,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Event Class',
+                            style: GoogleFonts.inter(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF3A3A3A),
+                            ),
                           ),
-                        ),
-                        Text(
-                          widget.logDataList[index].eventClass ?? '',
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w400,
-                            color: Color(0xFF696969),
+                          Text(
+                            widget.logDataList[index].eventClass ?? '',
+                            style: GoogleFonts.inter(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w400,
+                              color: Color(0xFF696969),
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Event Source',
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF3A3A3A),
+                    Expanded(
+                      flex: 1,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Event Source',
+                            style: GoogleFonts.inter(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF3A3A3A),
+                            ),
                           ),
-                        ),
-                        Text(
-                          widget.logDataList[index].eventSource ?? '',
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w400,
-                            color: Color(0xFF696969),
+                          Text(
+                            widget.logDataList[index].eventSource ?? '',
+                            style: GoogleFonts.inter(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w400,
+                              color: Color(0xFF696969),
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ],
                 ),
@@ -601,97 +712,111 @@ class _EventLogContentState extends State<_EventLogContent> {
                   ),
                 ),
                 Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Event Type',
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF3A3A3A),
+                    Expanded(
+                      flex: 1,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Event Type',
+                            style: GoogleFonts.inter(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF3A3A3A),
+                            ),
                           ),
-                        ),
-                        Text(
-                          widget.logDataList[index].eventType ?? '',
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w400,
-                            color: Color(0xFF696969),
+                          Text(
+                            widget.logDataList[index].eventType ?? '',
+                            style: GoogleFonts.inter(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w400,
+                              color: Color(0xFF696969),
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Event Sub Type',
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF3A3A3A),
+                    Expanded(
+                      flex: 1,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Event Sub Type',
+                            style: GoogleFonts.inter(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF3A3A3A),
+                            ),
                           ),
-                        ),
-                        Text(
-                          widget.logDataList[index].eventSubType ?? '',
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w400,
-                            color: Color(0xFF696969),
+                          Text(
+                            widget.logDataList[index].eventSubType ?? '',
+                            style: GoogleFonts.inter(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w400,
+                              color: Color(0xFF696969),
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ],
                 ),
                 SizedBox(height: 22),
                 Row(
+                  crossAxisAlignment: CrossAxisAlignment.start, 
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Module No',
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF3A3A3A),
+                    Expanded(
+                      flex: 1,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Module No',
+                            style: GoogleFonts.inter(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF3A3A3A),
+                            ),
                           ),
-                        ),
-                        Text(
-                          widget.logDataList[index].moduleNo ?? '',
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w400,
-                            color: Color(0xFF696969),
+                          Text(
+                            widget.logDataList[index].moduleNo ?? '',
+                            style: GoogleFonts.inter(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w400,
+                              color: Color(0xFF696969),
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Module No',
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF3A3A3A),
+                    Expanded(
+                      flex: 1,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Module No',
+                            style: GoogleFonts.inter(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF3A3A3A),
+                            ),
                           ),
-                        ),
-                        Text(
-                          widget.logDataList[index].moduleNo ?? '',
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w400,
-                            color: Color(0xFF696969),
+                          Text(
+                            widget.logDataList[index].moduleNo ?? '',
+                            style: GoogleFonts.inter(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w400,
+                              color: Color(0xFF696969),
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ],
                 ),
