@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
+import 'package:techno_switch_solar_app/models/log_model.dart';
 import 'dart:async';
 import 'package:techno_switch_solar_app/screens/event_log_screen.dart';
 
@@ -49,7 +50,30 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
         // Navigator.pop(context);
         // Navigate to EventLogScreen
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const EventLogScreen()),
+          MaterialPageRoute(
+            builder:
+                (context) => EventLogScreen(
+                  panelName: 'RHINO2008',
+                  panelVersionNo: '0.98',
+                  logDataList: [
+                    LogModel(
+                      panelNo: '253565566',
+                      eventId: '1234567890',
+                      eventDateTime: DateTime.now(),
+                      panelText: 'Some sample text from panel',
+                      lBusNo: '3465656',
+                      moduleNo: '7655435654',
+                      eventStatus: 'Accepted',
+                      eventClass: 'Disablement',
+                      eventSource: 'Accepted',
+                      eventType: 'Ext. Zone Equipment',
+                      eventSubType: 'Non-Volatile Memory Changed',
+                      identifier: 'Techno switch detector',
+                      text: 'Cape town',
+                    ),
+                  ],
+                ),
+          ),
         );
       }
     });
