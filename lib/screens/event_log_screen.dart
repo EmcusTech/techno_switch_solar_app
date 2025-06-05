@@ -3,6 +3,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:techno_switch_solar_app/models/log_model.dart';
+import 'package:techno_switch_solar_app/utils/serial_communication_service.dart';
 
 import 'package:techno_switch_solar_app/screens/log_history_screen.dart';
 import 'package:techno_switch_solar_app/screens/settings_screen.dart';
@@ -155,6 +156,65 @@ class _EventLogContent extends StatefulWidget {
 
 class _EventLogContentState extends State<_EventLogContent> {
   bool _isListSelected = true;
+  late SerialCommunicationService _serialService;
+  List<LogModel> _realTimeLogs = [];
+  String _connectionStatus = "Disconnected";
+  bool _isConnecting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _serialService = SerialCommunicationService();
+    _realTimeLogs = List.from(widget.logDataList);
+    
+    // Listen to log stream
+    _serialService.logStream.listen((logModel) {
+      setState(() {
+        _realTimeLogs.insert(0, logModel); // Add new logs at the beginning
+      });
+    });
+    
+    // Listen to status stream
+    _serialService.statusStream.listen((status) {
+      setState(() {
+        _connectionStatus = status;
+        if (status.contains("Connected")) {
+          _isConnecting = false;
+        } else if (status.contains("error") || status.contains("Failed")) {
+          _isConnecting = false;
+        }
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _serialService.dispose();
+    super.dispose();
+  }
+
+  Future<void> _connectToDevice() async {
+    setState(() {
+      _isConnecting = true;
+      _connectionStatus = "Connecting...";
+    });
+    
+    bool connected = await _serialService.connectToDevice();
+    if (!connected) {
+      setState(() {
+        _isConnecting = false;
+        _connectionStatus = "Connection failed";
+      });
+    }
+  }
+
+  void _disconnectFromDevice() {
+    _serialService.disconnect();
+    setState(() {
+      _connectionStatus = "Disconnected";
+      _isConnecting = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -225,8 +285,8 @@ class _EventLogContentState extends State<_EventLogContent> {
       padding: const EdgeInsets.all(20),
       child: Column(
         children: [
+          // Panel Information Row
           Row(
-            // crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               SvgPicture.asset(
                 'assets/svgs/panel_icon.svg',
@@ -265,11 +325,11 @@ class _EventLogContentState extends State<_EventLogContent> {
                           ),
                         ),
                         TextSpan(
-                          text: 'connected',
+                          text: _connectionStatus.contains("Connected") ? 'connected' : 'disconnected',
                           style: GoogleFonts.inter(
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
-                            color: Color(0xFF00A706),
+                            color: _connectionStatus.contains("Connected") ? Color(0xFF00A706) : Color(0xFFEC1D24),
                           ),
                         ),
                       ],
@@ -289,8 +349,89 @@ class _EventLogContentState extends State<_EventLogContent> {
             ],
           ),
           SizedBox(height: 10),
+          
+          // Connection Status and Controls
+          Container(
+            padding: EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Color(0xFFF9F9F9),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Color(0xFFD7D7D7)),
+            ),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      _connectionStatus.contains("Connected") ? Icons.usb : Icons.usb_off,
+                      color: _connectionStatus.contains("Connected") ? Color(0xFF00A706) : Color(0xFF979797),
+                    ),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        _connectionStatus,
+                        style: GoogleFonts.inter(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                    if (_connectionStatus.contains("Connected"))
+                      ElevatedButton(
+                        onPressed: _disconnectFromDevice,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Color(0xFFEC1D24),
+                          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        ),
+                        child: Text(
+                          'Disconnect',
+                          style: GoogleFonts.inter(color: Colors.white, fontSize: 12),
+                        ),
+                      )
+                    else
+                      ElevatedButton(
+                        onPressed: _isConnecting ? null : _connectToDevice,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Color(0xFF00A706),
+                          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        ),
+                        child: _isConnecting
+                            ? SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                ),
+                              )
+                            : Text(
+                                'Connect',
+                                style: GoogleFonts.inter(color: Colors.white, fontSize: 12),
+                              ),
+                      ),
+                  ],
+                ),
+                if (_realTimeLogs.length > widget.logDataList.length)
+                  Padding(
+                    padding: EdgeInsets.only(top: 8),
+                    child: Text(
+                      '${_realTimeLogs.length - widget.logDataList.length} new logs received',
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        color: Color(0xFF00A706),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          
+          SizedBox(height: 15),
           Divider(color: Color(0xFF000000).withOpacity(0.18), thickness: 1),
           SizedBox(height: 15),
+          
+          // Event Log Header
           Row(
             children: [
               Text(
@@ -415,10 +556,10 @@ class _EventLogContentState extends State<_EventLogContent> {
         ListView.separated(
           shrinkWrap: true,
           physics: NeverScrollableScrollPhysics(),
-          itemCount: widget.logDataList.length,
+          itemCount: _realTimeLogs.length,
           separatorBuilder: (context, index) => const Divider(height: 1),
           itemBuilder: (context, index) {
-            final log = widget.logDataList[index];
+            final log = _realTimeLogs[index];
             return Container(
               color: Colors.white,
               padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
@@ -462,11 +603,12 @@ class _EventLogContentState extends State<_EventLogContent> {
     return ListView.separated(
       shrinkWrap: true,
       physics: NeverScrollableScrollPhysics(),
-      itemCount: widget.logDataList.length,
+      itemCount: _realTimeLogs.length,
       separatorBuilder: (context, index) {
         return SizedBox(height: 10);
       },
       itemBuilder: (context, index) {
+        final log = _realTimeLogs[index];
         return Container(
           width: double.infinity,
           decoration: BoxDecoration(
@@ -489,7 +631,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          widget.logDataList[index].panelText ?? 'No Text',
+                          log.panelText ?? 'No Text',
                           style: GoogleFonts.inter(
                             fontSize: 12,
                             fontWeight: FontWeight.w500,
@@ -497,10 +639,9 @@ class _EventLogContentState extends State<_EventLogContent> {
                           ),
                         ),
                         Text(
-                          widget.logDataList[index].eventDateTime != null
+                          log.eventDateTime != null
                               ? DateFormat('dd/MM/yyyy - hh:mm a').format(
-                                widget.logDataList[index].eventDateTime!
-                                    .toLocal(),
+                                log.eventDateTime!.toLocal(),
                               )
                               : 'N/A',
                           style: GoogleFonts.inter(
@@ -523,7 +664,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                           vertical: 0.5,
                         ),
                         child: Text(
-                          '0149',
+                          log.eventId ?? '0149',
                           style: GoogleFonts.inter(
                             fontSize: 13,
                             fontWeight: FontWeight.w700,
@@ -559,7 +700,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                             ),
                           ),
                           Text(
-                            widget.logDataList[index].panelNo ?? '',
+                            log.panelNo ?? '',
                             style: GoogleFonts.inter(
                               fontSize: 12,
                               fontWeight: FontWeight.w400,
@@ -583,7 +724,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                             ),
                           ),
                           Text(
-                            widget.logDataList[index].lBusNo ?? '',
+                            log.lBusNo ?? '',
                             style: GoogleFonts.inter(
                               fontSize: 12,
                               fontWeight: FontWeight.w400,
@@ -607,7 +748,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                             ),
                           ),
                           Text(
-                            widget.logDataList[index].moduleNo ?? '',
+                            log.moduleNo ?? '',
                             style: GoogleFonts.inter(
                               fontSize: 12,
                               fontWeight: FontWeight.w400,
@@ -644,7 +785,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                             ),
                           ),
                           Text(
-                            widget.logDataList[index].eventStatus ?? '',
+                            log.eventStatus ?? '',
                             style: GoogleFonts.inter(
                               fontSize: 12,
                               fontWeight: FontWeight.w400,
@@ -668,7 +809,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                             ),
                           ),
                           Text(
-                            widget.logDataList[index].eventClass ?? '',
+                            log.eventClass ?? '',
                             style: GoogleFonts.inter(
                               fontSize: 12,
                               fontWeight: FontWeight.w400,
@@ -692,7 +833,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                             ),
                           ),
                           Text(
-                            widget.logDataList[index].eventSource ?? '',
+                            log.eventSource ?? '',
                             style: GoogleFonts.inter(
                               fontSize: 12,
                               fontWeight: FontWeight.w400,
@@ -729,7 +870,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                             ),
                           ),
                           Text(
-                            widget.logDataList[index].eventType ?? '',
+                            log.eventType ?? '',
                             style: GoogleFonts.inter(
                               fontSize: 12,
                               fontWeight: FontWeight.w400,
@@ -753,7 +894,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                             ),
                           ),
                           Text(
-                            widget.logDataList[index].eventSubType ?? '',
+                            log.eventSubType ?? '',
                             style: GoogleFonts.inter(
                               fontSize: 12,
                               fontWeight: FontWeight.w400,
@@ -765,61 +906,66 @@ class _EventLogContentState extends State<_EventLogContent> {
                     ),
                   ],
                 ),
-                SizedBox(height: 22),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start, 
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      flex: 1,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                if (log.identifier != null && log.identifier!.isNotEmpty && log.identifier != "-")
+                  Column(
+                    children: [
+                      SizedBox(height: 22),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start, 
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            'Module No',
-                            style: GoogleFonts.inter(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFF3A3A3A),
+                          Expanded(
+                            flex: 1,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Identifier',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                    color: Color(0xFF3A3A3A),
+                                  ),
+                                ),
+                                Text(
+                                  log.identifier ?? '',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w400,
+                                    color: Color(0xFF696969),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                          Text(
-                            widget.logDataList[index].moduleNo ?? '',
-                            style: GoogleFonts.inter(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w400,
-                              color: Color(0xFF696969),
+                          Expanded(
+                            flex: 1,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Text',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                    color: Color(0xFF3A3A3A),
+                                  ),
+                                ),
+                                Text(
+                                  log.text ?? '',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w400,
+                                    color: Color(0xFF696969),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ],
                       ),
-                    ),
-                    Expanded(
-                      flex: 1,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Module No',
-                            style: GoogleFonts.inter(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFF3A3A3A),
-                            ),
-                          ),
-                          Text(
-                            widget.logDataList[index].moduleNo ?? '',
-                            style: GoogleFonts.inter(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w400,
-                              color: Color(0xFF696969),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+                    ],
+                  ),
               ],
             ),
           ),

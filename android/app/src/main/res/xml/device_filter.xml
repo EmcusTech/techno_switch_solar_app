@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- USB Serial devices -->
+    <usb-device vendor-id="1027" product-id="24577" />
+    <!-- FTDI devices -->
+    <usb-device vendor-id="1027" />
+    <!-- CH34x devices -->
+    <usb-device vendor-id="6790" />
+    <!-- CP210x devices -->
+    <usb-device vendor-id="4292" />
+    <!-- PL2303 devices -->
+    <usb-device vendor-id="1659" />
+    <!-- CDC ACM devices -->
+    <usb-device class="2" />
+    <!-- Generic serial devices - you can customize this based on your specific device -->
+</resources> 
