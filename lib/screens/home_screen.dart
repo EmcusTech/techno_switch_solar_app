@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:techno_switch_solar_app/screens/create_project/create_project_screen.dart';
 import 'package:techno_switch_solar_app/screens/scanning_screen.dart';
 import 'settings_screen.dart';
 import 'help_screen.dart';
@@ -127,7 +128,7 @@ class _HomeContent extends StatelessWidget {
         child: Column(
           children: [
             _buildHeader(context),
-            _buildQuickLinks(),
+            _buildQuickLinks(context),
             _buildRecentProjects(),
           ],
         ),
@@ -211,7 +212,7 @@ class _HomeContent extends StatelessWidget {
     );
   }
 
-  Widget _buildQuickLinks() {
+  Widget _buildQuickLinks(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
@@ -231,9 +232,18 @@ class _HomeContent extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildQuickLinkItem(
-                'assets/svgs/new_project_icon.svg',
-                'New Project',
+              GestureDetector(
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => CreateProjectScreen(),
+                    ),
+                  );
+                },
+                child: _buildQuickLinkItem(
+                  'assets/svgs/new_project_icon.svg',
+                  'New Project',
+                ),
               ),
               _buildQuickLinkItem(
                 'assets/svgs/open_project_icon.svg',
