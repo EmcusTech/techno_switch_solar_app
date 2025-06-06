@@ -1,6 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:techno_switch_solar_app/screens/create_project/pages/panel_selection_page.dart';
+import 'package:techno_switch_solar_app/screens/create_project/pages/general_settings_page.dart';
+import 'package:techno_switch_solar_app/screens/create_project/pages/zone_settings_page.dart';
+import 'package:techno_switch_solar_app/screens/create_project/pages/sounder_page.dart';
+import 'package:techno_switch_solar_app/screens/create_project/pages/sounder_settings_page.dart';
+import 'package:techno_switch_solar_app/screens/create_project/pages/input_page.dart';
+import 'package:techno_switch_solar_app/screens/create_project/pages/relay_page.dart';
+import 'package:techno_switch_solar_app/screens/create_project/pages/l_bus_devices_page.dart';
+import 'package:techno_switch_solar_app/screens/create_project/pages/project_summary_page.dart';
 
 class CreateProjectScreen extends StatefulWidget {
   const CreateProjectScreen({super.key});
@@ -11,276 +20,453 @@ class CreateProjectScreen extends StatefulWidget {
 
 class _CreateProjectScreenState extends State<CreateProjectScreen> {
   late TextEditingController _panelNameController;
+  late PageController _pageController;
   int currentStep = 1;
-  final int totalSteps = 8;
+  final int totalSteps = 9;
+  String? selectedPanelType;
+
+  // General Settings values
+  String levelTimeout = '300 Seconds';
+  double timerSettings = 300;
+  String faultLatching = 'Yes';
+  String panelDateTime = '13/05/2025 - 10:31:02';
+  String serviceDue = '13/09/2025';
+  String serviceDueReminder = '13/09/2025';
+  String eventReminder = '13/09/2025';
+
+  // Expanded state for slider fields
+  String? expandedField;
+
+  // Zone Settings state
+  String? expandedZone;
+  Map<String, String> zoneTexts = {
+    'Zone 1': '',
+    'Zone 2': '',
+    'Zone 3': '',
+    'Zone 4': '',
+  };
+  Map<String, String> zoneTypes = {
+    'Zone 1': 'Double Knock',
+    'Zone 2': 'Double Knock',
+    'Zone 3': 'Double Knock',
+    'Zone 4': 'Double Knock',
+  };
+  Map<String, String> zoneStates = {
+    'Zone 1': 'Enable',
+    'Zone 2': 'Enable',
+    'Zone 3': 'Enable',
+    'Zone 4': 'Enable',
+  };
+  Map<String, String> zoneTests = {
+    'Zone 1': 'Yes',
+    'Zone 2': 'Yes',
+    'Zone 3': 'Yes',
+    'Zone 4': 'Yes',
+  };
+  Map<String, String> zoneModes = {
+    'Zone 1': 'Yes',
+    'Zone 2': 'Yes',
+    'Zone 3': 'Yes',
+    'Zone 4': 'Yes',
+  };
+  Map<String, String> zoneVerificationTimes = {
+    'Zone 1': '300 Sec',
+    'Zone 2': '300 Sec',
+    'Zone 3': '300 Sec',
+    'Zone 4': '300 Sec',
+  };
+
+  // Sounder Settings state
+  String? expandedSounder;
+  Map<String, String> sounderTexts = {
+    'Sounder 1': '',
+    'Sounder 2': '',
+    'Sounder 3': '',
+  };
+  Map<String, String> sounderStates = {
+    'Sounder 1': 'Enable',
+    'Sounder 2': 'Enable',
+    'Sounder 3': 'Enable',
+  };
+  Map<String, String> sounderTests = {
+    'Sounder 1': 'Yes',
+    'Sounder 2': 'Yes',
+    'Sounder 3': 'Yes',
+  };
+  Map<String, String> sounderTypes = {
+    'Sounder 1': 'Horn',
+    'Sounder 2': 'Horn',
+    'Sounder 3': 'Horn',
+  };
+  Map<String, String> sounderGroups = {
+    'Sounder 1': 'Zone 1',
+    'Sounder 2': 'Zone 1',
+    'Sounder 3': 'Zone 1',
+  };
+  Map<String, String> sounderFunctions = {
+    'Sounder 1': 'P1',
+    'Sounder 2': 'P1',
+    'Sounder 3': 'P1',
+  };
+
+  // Sounder Settings Page state
+  String fireSoundTone = 'Pulsing 1s ON, 4s OFF';
+  String fireSounderDelay = '300 Sec';
+  String countDownAction = 'Pulsing 1s ON, 4s OFF';
+  String holdAction = 'Pulsing 1s ON, 4s OFF';
+  String releaseAction = 'Pulsing 1s ON, 4s OFF';
+  String extSounderDelay = '300 Sec';
+
+  // Input Page state
+  String inputText = '';
+  String inverted = 'No';
+  String test = 'No';
+  String input1 = 'Enable';
+  String group = 'Group A';
+  String function = 'Function 1A';
+
+  // Relay Page state
+  String relayText = '';
+  String relayTest = 'No';
+  String relay = 'Enable';
+  String relayGroup = 'Group A';
+  String relayFunction = 'Function 1A';
+
+  // L-Bus Devices Page state
+  String? expandedLBus;
+  Map<String, String> lbusInputs = {
+    'L-BUS 1': '',
+    'L-BUS 2': '',
+  };
+  Map<String, String> lbusInputTexts = {
+    'L-BUS 1': '',
+    'L-BUS 2': '',
+  };
+  Map<String, String> lbusProducts = {
+    'L-BUS 1': 'ONYX202',
+    'L-BUS 2': 'ONYX202',
+  };
+  Map<String, String> lbusGroups = {
+    'L-BUS 1': 'Group A',
+    'L-BUS 2': 'Group A',
+  };
+  Map<String, String> lbusFunctions = {
+    'L-BUS 1': 'Function A',
+    'L-BUS 2': 'Function A',
+  };
+  Map<String, String> lbusEnabled = {
+    'L-BUS 1': 'Yes',
+    'L-BUS 2': 'Yes',
+  };
+  Map<String, String> lbusTests = {
+    'L-BUS 1': 'No',
+    'L-BUS 2': 'No',
+  };
+  Map<String, String> lbusInverted = {
+    'L-BUS 1': 'No',
+    'L-BUS 2': 'No',
+  };
+
+  // Extinguishing Out Page state
+  String extinguishingEnabled = 'Yes';
+  String actuatorType = 'Type B';
+  String extinguishingFunction = 'Function B';
+  String autoCountdown = '15 Sec';
+  String manualCountdown = '30 Sec';
+  String releaseTime = '45 Sec';
+  String resetInCount = 'Yes';
+  String holdCount = '5 Sec';
+  String extinguishingAction = 'Extinguish';
 
   @override
   void initState() {
     _panelNameController = TextEditingController();
+    _pageController = PageController();
     super.initState();
   }
 
   void _goToNextStep() {
     if (currentStep < totalSteps) {
-      setState(() {
-        currentStep++;
-      });
+      _pageController.nextPage(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
     }
   }
 
   void _goToPreviousStep() {
     if (currentStep > 1) {
-      setState(() {
-        currentStep--;
-      });
+      _pageController.previousPage(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
     }
   }
 
-  Widget _getPageContent() {
-    switch (currentStep) {
-      case 1:
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Panel Selection',
-              style: GoogleFonts.inter(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF3A3A3A),
-              ),
-            ),
-            SizedBox(height: 32),
-            Text(
-              'Panel Name',
-              style: GoogleFonts.inter(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF696969),
-              ),
-            ),
-            SizedBox(height: 8),
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(4),
-                border: Border.all(color: Color(0xFFE0E0E0)),
-              ),
-              child: TextField(
-                controller: _panelNameController,
-                onTapOutside: (value) {
-                  FocusScope.of(context).unfocus();
-                },
-                decoration: InputDecoration(
-                  contentPadding: EdgeInsets.all(12),
-                  border: InputBorder.none,
-                  hintText: 'Enter Panel Name',
-                  hintStyle: GoogleFonts.inter(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w400,
-                    color: Color(0xFFBDBDBD),
-                  ),
-                ),
-              ),
-            ),
-            SizedBox(height: 36),
-            Text(
-              'Panel Type',
-              style: GoogleFonts.inter(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF696969),
-              ),
-            ),
-            SizedBox(height: 18),
-            _buildPanelTypeTiles(),
-          ],
-        );
-      case 2:
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Text Configuration',
-              style: GoogleFonts.inter(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF3A3A3A),
-              ),
-            ),
-            SizedBox(height: 32),
-            Text(
-              'Enter your text content here for page 2',
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                fontWeight: FontWeight.w400,
-                color: Color(0xFF696969),
-              ),
-            ),
-            SizedBox(height: 20),
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(4),
-                border: Border.all(color: Color(0xFFE0E0E0)),
-              ),
-              child: TextField(
-                maxLines: 5,
-                decoration: InputDecoration(
-                  contentPadding: EdgeInsets.all(12),
-                  border: InputBorder.none,
-                  hintText: 'Enter text content...',
-                  hintStyle: GoogleFonts.inter(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w400,
-                    color: Color(0xFFBDBDBD),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        );
-      case 3:
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Device Configuration',
-              style: GoogleFonts.inter(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF3A3A3A),
-              ),
-            ),
-            SizedBox(height: 32),
-            Text(
-              'Configure your devices for page 3',
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                fontWeight: FontWeight.w400,
-                color: Color(0xFF696969),
-              ),
-            ),
-          ],
-        );
-      case 4:
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Network Settings',
-              style: GoogleFonts.inter(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF3A3A3A),
-              ),
-            ),
-            SizedBox(height: 32),
-            Text(
-              'Setup network configuration for page 4',
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                fontWeight: FontWeight.w400,
-                color: Color(0xFF696969),
-              ),
-            ),
-          ],
-        );
-      case 5:
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Security Settings',
-              style: GoogleFonts.inter(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF3A3A3A),
-              ),
-            ),
-            SizedBox(height: 32),
-            Text(
-              'Configure security options for page 5',
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                fontWeight: FontWeight.w400,
-                color: Color(0xFF696969),
-              ),
-            ),
-          ],
-        );
-      case 6:
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Advanced Settings',
-              style: GoogleFonts.inter(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF3A3A3A),
-              ),
-            ),
-            SizedBox(height: 32),
-            Text(
-              'Advanced configuration options for page 6',
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                fontWeight: FontWeight.w400,
-                color: Color(0xFF696969),
-              ),
-            ),
-          ],
-        );
-      case 7:
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Review & Confirm',
-              style: GoogleFonts.inter(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF3A3A3A),
-              ),
-            ),
-            SizedBox(height: 32),
-            Text(
-              'Review your configuration for page 7',
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                fontWeight: FontWeight.w400,
-                color: Color(0xFF696969),
-              ),
-            ),
-          ],
-        );
-      case 8:
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Final Setup',
-              style: GoogleFonts.inter(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF3A3A3A),
-              ),
-            ),
-            SizedBox(height: 32),
-            Text(
-              'Complete the final setup for page 8',
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                fontWeight: FontWeight.w400,
-                color: Color(0xFF696969),
-              ),
-            ),
-          ],
-        );
-      default:
-        return Container();
-    }
+  void _onPageChanged(int page) {
+    setState(() {
+      currentStep = page + 1;
+    });
+  }
+
+  void _onPanelTypeChanged(String? panelType) {
+    setState(() {
+      selectedPanelType = panelType;
+    });
+  }
+
+  void _onFieldChanged(String label, String newValue) {
+    setState(() {
+      switch (label) {
+        case 'Level Timeout':
+          levelTimeout = newValue;
+          break;
+        case 'Fault Latching':
+          faultLatching = newValue;
+          break;
+        case 'Panel Date & Time':
+          panelDateTime = newValue;
+          break;
+        case 'Service Due':
+          serviceDue = newValue;
+          break;
+        case 'Service Due Reminder':
+          serviceDueReminder = newValue;
+          break;
+        case 'Event Reminder':
+          eventReminder = newValue;
+          break;
+      }
+    });
+  }
+
+  void _onSliderChanged(String label, double value) {
+    setState(() {
+      switch (label) {
+        case 'Level Timeout':
+          levelTimeout = '${value.toInt()} Seconds';
+          break;
+        case 'Timer Settings':
+          timerSettings = value;
+          break;
+      }
+    });
+  }
+
+  void _onExpandedChanged(String? field) {
+    setState(() {
+      expandedField = field;
+    });
+  }
+
+  void _onZoneExpanded(String? zoneName) {
+    setState(() {
+      expandedZone = zoneName;
+    });
+  }
+
+  void _onZoneFieldChanged(String zoneName, String fieldType, String value) {
+    setState(() {
+      switch (fieldType) {
+        case 'zoneText':
+          zoneTexts[zoneName] = value;
+          break;
+        case 'zoneType':
+          zoneTypes[zoneName] = value;
+          break;
+        case 'zoneState':
+          zoneStates[zoneName] = value;
+          break;
+        case 'zoneTest':
+          zoneTests[zoneName] = value;
+          break;
+        case 'zoneMode':
+          zoneModes[zoneName] = value;
+          break;
+        case 'zoneVerificationTime':
+          zoneVerificationTimes[zoneName] = value;
+          break;
+      }
+    });
+  }
+
+  void _onSounderExpanded(String? sounderName) {
+    setState(() {
+      expandedSounder = sounderName;
+    });
+  }
+
+  void _onSounderFieldChanged(String sounderName, String fieldType, String value) {
+    setState(() {
+      switch (fieldType) {
+        case 'sounderText':
+          sounderTexts[sounderName] = value;
+          break;
+        case 'sounderState':
+          sounderStates[sounderName] = value;
+          break;
+        case 'sounderTest':
+          sounderTests[sounderName] = value;
+          break;
+        case 'sounderType':
+          sounderTypes[sounderName] = value;
+          break;
+        case 'sounderGroup':
+          sounderGroups[sounderName] = value;
+          break;
+        case 'sounderFunction':
+          sounderFunctions[sounderName] = value;
+          break;
+      }
+    });
+  }
+
+  void _onSounderSettingChanged(String label, String value) {
+    setState(() {
+      switch (label) {
+        case 'Fire Sound':
+          fireSoundTone = value;
+          break;
+        case 'Sounder Delay':
+          if (label == 'Sounder Delay') {
+            // Determine if it's fire sounder delay or ext sounder delay based on context
+            // For now, we'll assume it's the first one encountered
+            if (fireSounderDelay == value) {
+              fireSounderDelay = value;
+            } else {
+              extSounderDelay = value;
+            }
+          }
+          break;
+        case 'Count Down Action':
+          countDownAction = value;
+          break;
+        case 'Hold Action':
+          holdAction = value;
+          break;
+        case 'Release Action':
+          releaseAction = value;
+          break;
+      }
+    });
+  }
+
+  void _onInputSettingChanged(String label, String value) {
+    setState(() {
+      switch (label) {
+        case 'Input Text':
+          inputText = value;
+          break;
+        case 'Inverted':
+          inverted = value;
+          break;
+        case 'Test':
+          test = value;
+          break;
+        case 'Input 1':
+          input1 = value;
+          break;
+        case 'Group':
+          group = value;
+          break;
+        case 'Function':
+          function = value;
+          break;
+      }
+    });
+  }
+
+  void _onRelaySettingChanged(String label, String value) {
+    setState(() {
+      switch (label) {
+        case 'Relay Text':
+          relayText = value;
+          break;
+        case 'Test':
+          relayTest = value;
+          break;
+        case 'Relay':
+          relay = value;
+          break;
+        case 'Group':
+          relayGroup = value;
+          break;
+        case 'Function':
+          relayFunction = value;
+          break;
+      }
+    });
+  }
+
+  void _onLBusExpanded(String? lbusName) {
+    setState(() {
+      expandedLBus = lbusName;
+    });
+  }
+
+  void _onLBusFieldChanged(String lbusName, String fieldType, String value) {
+    setState(() {
+      switch (fieldType) {
+        case 'input':
+          lbusInputs[lbusName] = value;
+          break;
+        case 'inputText':
+          lbusInputTexts[lbusName] = value;
+          break;
+        case 'product':
+          lbusProducts[lbusName] = value;
+          break;
+        case 'group':
+          lbusGroups[lbusName] = value;
+          break;
+        case 'function':
+          lbusFunctions[lbusName] = value;
+          break;
+        case 'enabled':
+          lbusEnabled[lbusName] = value;
+          break;
+        case 'test':
+          lbusTests[lbusName] = value;
+          break;
+        case 'inverted':
+          lbusInverted[lbusName] = value;
+          break;
+      }
+    });
+  }
+
+  void _onExtinguishingSettingChanged(String label, String value) {
+    setState(() {
+      switch (label) {
+        case 'Enabled':
+          extinguishingEnabled = value;
+          break;
+        case 'Actuator Type':
+          actuatorType = value;
+          break;
+        case 'Function':
+          extinguishingFunction = value;
+          break;
+        case 'Auto Countdown':
+          autoCountdown = value;
+          break;
+        case 'Manual Countdown':
+          manualCountdown = value;
+          break;
+        case 'Release Time':
+          releaseTime = value;
+          break;
+        case 'Reset in Count':
+          resetInCount = value;
+          break;
+        case 'Hold / Count':
+          holdCount = value;
+          break;
+        case 'Action':
+          extinguishingAction = value;
+          break;
+      }
+    });
   }
 
   @override
@@ -371,84 +557,186 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Expanded(child: _getPageContent()),
+                            Expanded(
+                              child: PageView(
+                                controller: _pageController,
+                                onPageChanged: _onPageChanged,
+                                physics: const NeverScrollableScrollPhysics(),
+                                children: [
+                                  PanelSelectionPage(
+                                    selectedPanelType: selectedPanelType,
+                                    panelNameController: _panelNameController,
+                                    onPanelTypeChanged: _onPanelTypeChanged,
+                                  ),
+                                  GeneralSettingsPage(
+                                    levelTimeout: levelTimeout,
+                                    timerSettings: timerSettings,
+                                    faultLatching: faultLatching,
+                                    panelDateTime: panelDateTime,
+                                    serviceDue: serviceDue,
+                                    serviceDueReminder: serviceDueReminder,
+                                    eventReminder: eventReminder,
+                                    expandedField: expandedField,
+                                    onFieldChanged: _onFieldChanged,
+                                    onSliderChanged: _onSliderChanged,
+                                    onExpandedChanged: _onExpandedChanged,
+                                  ),
+                                  ZoneSettingsPage(
+                                    expandedZone: expandedZone,
+                                    zoneTexts: zoneTexts,
+                                    zoneTypes: zoneTypes,
+                                    zoneStates: zoneStates,
+                                    zoneTests: zoneTests,
+                                    zoneModes: zoneModes,
+                                    zoneVerificationTimes: zoneVerificationTimes,
+                                    onZoneExpanded: _onZoneExpanded,
+                                    onZoneFieldChanged: _onZoneFieldChanged,
+                                  ),
+                                  SounderPage(
+                                    expandedSounder: expandedSounder,
+                                    sounderTexts: sounderTexts,
+                                    sounderStates: sounderStates,
+                                    sounderTests: sounderTests,
+                                    sounderTypes: sounderTypes,
+                                    sounderGroups: sounderGroups,
+                                    sounderFunctions: sounderFunctions,
+                                    onSounderExpanded: _onSounderExpanded,
+                                    onSounderFieldChanged: _onSounderFieldChanged,
+                                  ),
+                                  SounderSettingsPage(
+                                    fireSoundTone: fireSoundTone,
+                                    fireSounderDelay: fireSounderDelay,
+                                    countDownAction: countDownAction,
+                                    holdAction: holdAction,
+                                    releaseAction: releaseAction,
+                                    extSounderDelay: extSounderDelay,
+                                    onSounderSettingChanged: _onSounderSettingChanged,
+                                  ),
+                                  InputPage(
+                                    inputText: inputText,
+                                    inverted: inverted,
+                                    test: test,
+                                    input1: input1,
+                                    group: group,
+                                    function: function,
+                                    onInputSettingChanged: _onInputSettingChanged,
+                                  ),
+                                  RelayPage(
+                                    relayText: relayText,
+                                    test: relayTest,
+                                    relay: relay,
+                                    group: relayGroup,
+                                    function: relayFunction,
+                                    onRelaySettingChanged: _onRelaySettingChanged,
+                                  ),
+                                  LBusDevicesPage(
+                                    expandedLBus: expandedLBus,
+                                    lbusInputs: lbusInputs,
+                                    lbusInputTexts: lbusInputTexts,
+                                    lbusProducts: lbusProducts,
+                                    lbusGroups: lbusGroups,
+                                    lbusFunctions: lbusFunctions,
+                                    lbusEnabled: lbusEnabled,
+                                    lbusTests: lbusTests,
+                                    lbusInverted: lbusInverted,
+                                    onLBusExpanded: _onLBusExpanded,
+                                    onLBusFieldChanged: _onLBusFieldChanged,
+                                  ),
+                                  ProjectSummaryPage(
+                                    enabled: extinguishingEnabled,
+                                    actuatorType: actuatorType,
+                                    function: extinguishingFunction,
+                                    autoCountdown: autoCountdown,
+                                    manualCountdown: manualCountdown,
+                                    releaseTime: releaseTime,
+                                    resetInCount: resetInCount,
+                                    holdCount: holdCount,
+                                    action: extinguishingAction,
+                                    onExtinguishingSettingChanged: _onExtinguishingSettingChanged,
+                                  ),
+                                ],
+                              ),
+                            ),
                             SizedBox(height: 20),
-                            Row(
-                              children: [
-                                Opacity(
-                                  opacity: currentStep == 1 ? 0.2 : 1.0,
-                                  child: GestureDetector(
-                                    onTap: _goToPreviousStep,
+                            if (currentStep < totalSteps) // Only show navigation buttons if not on final page
+                              Row(
+                                children: [
+                                  Opacity(
+                                    opacity: currentStep == 1 ? 0.2 : 1.0,
+                                    child: GestureDetector(
+                                      onTap: _goToPreviousStep,
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          color: Color(0xFFEFEEEE),
+                                          borderRadius: BorderRadius.circular(
+                                            28.5,
+                                          ),
+                                        ),
+                                        child: Padding(
+                                          padding: const EdgeInsets.only(
+                                            left: 16,
+                                            right: 34,
+                                            top: 18,
+                                            bottom: 18,
+                                          ),
+                                          child: Row(
+                                            children: [
+                                              Icon(
+                                                Icons.arrow_back,
+                                                color: Color(0xFF49454F),
+                                              ),
+                                              SizedBox(width: 6),
+                                              Text(
+                                                'Back',
+                                                style: GoogleFonts.inter(
+                                                  fontSize: 14,
+                                                  fontWeight: FontWeight.w700,
+                                                  color: Color(0xFF49454F),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  Spacer(),
+                                  GestureDetector(
+                                    onTap: _goToNextStep,
                                     child: Container(
                                       decoration: BoxDecoration(
-                                        color: Color(0xFFEFEEEE),
+                                        color: Color(0xFFEC1D24),
                                         borderRadius: BorderRadius.circular(28.5),
                                       ),
                                       child: Padding(
                                         padding: const EdgeInsets.only(
-                                          left: 16,
-                                          right: 34,
+                                          left: 28,
+                                          right: 23,
                                           top: 18,
                                           bottom: 18,
                                         ),
                                         child: Row(
                                           children: [
-                                            Icon(
-                                              Icons.arrow_back,
-                                              color: Color(0xFF49454F),
-                                            ),
-                                            SizedBox(width: 6),
                                             Text(
-                                              'Back',
+                                              'Next',
                                               style: GoogleFonts.inter(
                                                 fontSize: 14,
                                                 fontWeight: FontWeight.w700,
-                                                color: Color(0xFF49454F),
+                                                color: Colors.white,
                                               ),
+                                            ),
+                                            SizedBox(width: 6),
+                                            Icon(
+                                              Icons.arrow_forward,
+                                              color: Colors.white,
                                             ),
                                           ],
                                         ),
                                       ),
                                     ),
                                   ),
-                                ),
-                                Spacer(),
-                                GestureDetector(
-                                  onTap: _goToNextStep,
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      color: Color(0xFFEC1D24),
-                                      borderRadius: BorderRadius.circular(28.5),
-                                    ),
-                                    child: Padding(
-                                      padding: const EdgeInsets.only(
-                                        left: 28,
-                                        right: 23,
-                                        top: 18,
-                                        bottom: 18,
-                                      ),
-                                      child: Row(
-                                        children: [
-                                          Text(
-                                            'Next',
-                                            style: GoogleFonts.inter(
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.w700,
-                                              color: Colors.white,
-                                            ),
-                                          ),
-                                          SizedBox(width: 6),
-                                          Icon(
-                                            Icons.arrow_forward,
-                                            color: Colors.white,
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
+                                ],
+                              ),
                           ],
                         ),
                       ),
@@ -463,173 +751,10 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
     );
   }
 
-  Widget _buildPanelTypeTiles() {
-    return Column(
-      children: [
-        _buildPanelTypeTile(
-          title: 'ORYX202',
-          panelCount: '0',
-          panelAlarmCount: '2',
-          panelConnectionCount: '2',
-          panelFireExtinguisherCount: '0',
-        ),
-        SizedBox(height: 16),
-        _buildPanelTypeTile(
-          title: 'ORYX204',
-          panelCount: '1',
-          panelAlarmCount: '1',
-          panelConnectionCount: '1',
-          panelFireExtinguisherCount: '1',
-        ),
-        SizedBox(height: 16),
-        _buildPanelTypeTile(
-          title: 'ORYX208',
-          panelCount: '1',
-          panelAlarmCount: '1',
-          panelConnectionCount: '1',
-          panelFireExtinguisherCount: '1',
-        ),
-        SizedBox(height: 16),
-        _buildPanelTypeTile(
-          title: 'RHINO103',
-          panelCount: '1',
-          panelAlarmCount: '1',
-          panelConnectionCount: '1',
-          panelFireExtinguisherCount: '1',
-        ),
-        SizedBox(height: 16),
-        _buildPanelTypeTile(
-          title: 'RHINO203',
-          panelCount: '1',
-          panelAlarmCount: '1',
-          panelConnectionCount: '1',
-          panelFireExtinguisherCount: '1',
-        ),
-      ],
-    );
-  }
-
-  Widget _buildPanelTypeTile({
-    required String title,
-    required String panelCount,
-    required String panelAlarmCount,
-    required String panelConnectionCount,
-    required String panelFireExtinguisherCount,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(4),
-        border: Border.all(color: Color(0xFFE0E0E0)),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Row(
-          children: [
-            Text(
-              title,
-              style: GoogleFonts.inter(
-                fontSize: 13,
-                fontWeight: FontWeight.w400,
-                color: Color(0xFF3D3D3D),
-              ),
-            ),
-            Spacer(),
-            SvgPicture.asset(
-              'assets/svgs/panel_type_icon_1.svg',
-              color: panelCount == '0' ? Color(0xFFBDBDBD) : Color(0xFFEC1D24),
-            ),
-            SizedBox(width: 6),
-            SizedBox(
-              width: 14,
-              child: Text(
-                panelCount,
-                style: GoogleFonts.inter(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w400,
-                  color:
-                      panelCount == '0' ? Color(0xFFBDBDBD) : Color(0xFFEC1D24),
-                ),
-              ),
-            ),
-            SizedBox(width: 6),
-            SvgPicture.asset(
-              'assets/svgs/panel_type_icon_2.svg',
-              color:
-                  panelAlarmCount == '0'
-                      ? Color(0xFFBDBDBD)
-                      : Color(0xFFEC1D24),
-            ),
-            SizedBox(width: 6),
-            SizedBox(
-              width: 14,
-              child: Text(
-                panelAlarmCount,
-                style: GoogleFonts.inter(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w400,
-                  color:
-                      panelAlarmCount == '0'
-                          ? Color(0xFFBDBDBD)
-                          : Color(0xFFEC1D24),
-                ),
-              ),
-            ),
-            SizedBox(width: 6),
-            SvgPicture.asset(
-              'assets/svgs/panel_type_icon_3.svg',
-              color:
-                  panelConnectionCount == '0'
-                      ? Color(0xFFBDBDBD)
-                      : Color(0xFFEC1D24),
-            ),
-            SizedBox(width: 6),
-            SizedBox(
-              width: 14,
-              child: Text(
-                panelConnectionCount,
-                style: GoogleFonts.inter(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w400,
-                  color:
-                      panelConnectionCount == '0'
-                          ? Color(0xFFBDBDBD)
-                          : Color(0xFFEC1D24),
-                ),
-              ),
-            ),
-            SizedBox(width: 6),
-            SvgPicture.asset(
-              'assets/svgs/panel_type_icon_4.svg',
-              color:
-                  panelFireExtinguisherCount == '0'
-                      ? Color(0xFFBDBDBD)
-                      : Color(0xFFEC1D24),
-            ),
-            SizedBox(width: 6),
-            SizedBox(
-              width: 14,
-              child: Text(
-                panelFireExtinguisherCount,
-                style: GoogleFonts.inter(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w400,
-                  color:
-                      panelFireExtinguisherCount == '0'
-                          ? Color(0xFFBDBDBD)
-                          : Color(0xFFEC1D24),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   @override
   void dispose() {
     _panelNameController.dispose();
+    _pageController.dispose();
     super.dispose();
   }
 }

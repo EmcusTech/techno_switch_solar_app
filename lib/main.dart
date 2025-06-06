@@ -22,7 +22,8 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return SafeArea(
       child: MaterialApp(
-        title: 'Flutter Demo',
+        debugShowCheckedModeBanner: false,
+        title: 'Techno Switch Solar',
         theme: ThemeData(
           textTheme: GoogleFonts.interTextTheme(
             Theme.of(context).textTheme,
