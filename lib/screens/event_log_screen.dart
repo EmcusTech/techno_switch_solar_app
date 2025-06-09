@@ -54,7 +54,7 @@ class _EventLogScreenState extends State<EventLogScreen> {
         decoration: BoxDecoration(
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 10,
               offset: const Offset(0, -5),
             ),
@@ -299,14 +299,14 @@ class _EventLogContentState extends State<_EventLogContent> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    widget.panelName ?? '',
+                    widget.panelName,
                     style: GoogleFonts.inter(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
                   Text(
-                    widget.panelVersionNo ?? '',
+                    widget.panelVersionNo,
                     style: GoogleFonts.inter(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
@@ -428,7 +428,7 @@ class _EventLogContentState extends State<_EventLogContent> {
           ),
           
           SizedBox(height: 15),
-          Divider(color: Color(0xFF000000).withOpacity(0.18), thickness: 1),
+          Divider(color: Color(0xFF000000).withValues(alpha: 0.18), thickness: 1),
           SizedBox(height: 15),
           
           // Event Log Header
@@ -462,7 +462,10 @@ class _EventLogContentState extends State<_EventLogContent> {
                             padding: const EdgeInsets.all(2.0),
                             child: SvgPicture.asset(
                               'assets/svgs/list_deselected_icon.svg',
-                              color: Colors.white,
+                              colorFilter: ColorFilter.mode(
+                                Colors.white,
+                                BlendMode.srcIn,
+                              ),
                             ),
                           ),
                         )
@@ -493,8 +496,10 @@ class _EventLogContentState extends State<_EventLogContent> {
                             padding: const EdgeInsets.all(4.0),
                             child: SvgPicture.asset(
                               'assets/svgs/table_deselected_icon.svg',
-
-                              color: Colors.white,
+                              colorFilter: ColorFilter.mode(
+                                Colors.white,
+                                BlendMode.srcIn,
+                              ),
                             ),
                           ),
                         ),
@@ -678,7 +683,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 13),
                   child: Divider(
-                    color: Color(0xFF000000).withOpacity(0.17),
+                    color: Color(0xFF000000).withValues(alpha: 0.17),
                     thickness: 1,
                   ),
                 ),
@@ -763,7 +768,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 13),
                   child: Divider(
-                    color: Color(0xFF000000).withOpacity(0.17),
+                    color: Color(0xFF000000).withValues(alpha: 0.17),
                     thickness: 1,
                   ),
                 ),
@@ -848,7 +853,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 13),
                   child: Divider(
-                    color: Color(0xFF000000).withOpacity(0.17),
+                    color: Color(0xFF000000).withValues(alpha: 0.17),
                     thickness: 1,
                   ),
                 ),

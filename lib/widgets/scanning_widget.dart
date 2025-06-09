@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 
 class ScanningAnimation extends StatefulWidget {
-  const ScanningAnimation({Key? key}) : super(key: key);
+  const ScanningAnimation({super.key});
 
   @override
   State<ScanningAnimation> createState() => _ScanningAnimationState();
@@ -37,7 +37,7 @@ class _ScanningAnimationState extends State<ScanningAnimation>
           height: 320,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: Colors.redAccent.withOpacity(0.2),
+            color: Colors.redAccent.withValues(alpha: 0.2),
           ),
         ),
       ),

@@ -276,84 +276,84 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
     );
   }
 
-  Widget _buildBottomBar() {
-    return Padding(
-      padding: const EdgeInsets.all(20),
-      child: Row(
-        children: [
-          Opacity(
-            opacity: 0.2,
-            child: Container(
-              decoration: BoxDecoration(
-                color: Color(0xFFEFEEEE),
-                borderRadius: BorderRadius.circular(28.5),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.only(
-                  top: 18,
-                  bottom: 18,
-                  left: 16,
-                  right: 34,
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.arrow_back, color: Color(0xFF49454F)),
-                    SizedBox(width: 6),
-                    Text(
-                      'Back',
-                      style: GoogleFonts.inter(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          Spacer(),
-          GestureDetector(
-            onTap: () {
-              if (_accessCodeController.text.isEmpty) {
-                return;
-              }
-            },
-            child: Container(
-              decoration: BoxDecoration(
-                color:
-                    _accessCodeController.text.isEmpty
-                        ? Color(0xFFDADADA)
-                        : Color(0xFFEC1D24),
-                borderRadius: BorderRadius.circular(28.5),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.only(
-                  top: 18,
-                  bottom: 18,
-                  left: 27,
-                  right: 23,
-                ),
-                child: Row(
-                  children: [
-                    Text(
-                      'Retrieve Data',
-                      style: GoogleFonts.inter(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                      ),
-                    ),
-                    SizedBox(width: 13),
-                    Icon(Icons.arrow_forward, color: Colors.white),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  // Widget _buildBottomBar() {
+  //   return Padding(
+  //     padding: const EdgeInsets.all(20),
+  //     child: Row(
+  //       children: [
+  //         Opacity(
+  //           opacity: 0.2,
+  //           child: Container(
+  //             decoration: BoxDecoration(
+  //               color: Color(0xFFEFEEEE),
+  //               borderRadius: BorderRadius.circular(28.5),
+  //             ),
+  //             child: Padding(
+  //               padding: const EdgeInsets.only(
+  //                 top: 18,
+  //                 bottom: 18,
+  //                 left: 16,
+  //                 right: 34,
+  //               ),
+  //               child: Row(
+  //                 children: [
+  //                   Icon(Icons.arrow_back, color: Color(0xFF49454F)),
+  //                   SizedBox(width: 6),
+  //                   Text(
+  //                     'Back',
+  //                     style: GoogleFonts.inter(
+  //                       fontSize: 14,
+  //                       fontWeight: FontWeight.w600,
+  //                     ),
+  //                   ),
+  //                 ],
+  //               ),
+  //             ),
+  //           ),
+  //         ),
+  //         Spacer(),
+  //         GestureDetector(
+  //           onTap: () {
+  //             if (_accessCodeController.text.isEmpty) {
+  //               return;
+  //             }
+  //           },
+  //           child: Container(
+  //             decoration: BoxDecoration(
+  //               color:
+  //                   _accessCodeController.text.isEmpty
+  //                       ? Color(0xFFDADADA)
+  //                       : Color(0xFFEC1D24),
+  //               borderRadius: BorderRadius.circular(28.5),
+  //             ),
+  //             child: Padding(
+  //               padding: const EdgeInsets.only(
+  //                 top: 18,
+  //                 bottom: 18,
+  //                 left: 27,
+  //                 right: 23,
+  //               ),
+  //               child: Row(
+  //                 children: [
+  //                   Text(
+  //                     'Retrieve Data',
+  //                     style: GoogleFonts.inter(
+  //                       fontSize: 14,
+  //                       fontWeight: FontWeight.w600,
+  //                       color: Colors.white,
+  //                     ),
+  //                   ),
+  //                   SizedBox(width: 13),
+  //                   Icon(Icons.arrow_forward, color: Colors.white),
+  //                 ],
+  //               ),
+  //             ),
+  //           ),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
   @override
   void dispose() {

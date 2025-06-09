@@ -103,7 +103,7 @@ class _AccessCodeScreenState extends State<AccessCodeScreen> {
               height: 100,
               width: 100,
               decoration: BoxDecoration(
-                color: Color(0xFFEC1D24).withOpacity(0.08),
+                color: Color(0xFFEC1D24).withValues(alpha: 0.08),
                 shape: BoxShape.circle,
               ),
               child: Center(

@@ -145,7 +145,6 @@ class _PanelSelectionPageState extends State<PanelSelectionPage> {
     required String panelConnectionCount,
     required String panelFireExtinguisherCount,
   }) {
-    bool isSelected = widget.selectedPanelType == title;
 
     return GestureDetector(
       onTap: () {
@@ -183,8 +182,10 @@ class _PanelSelectionPageState extends State<PanelSelectionPage> {
               Spacer(),
               SvgPicture.asset(
                 'assets/svgs/panel_type_icon_1.svg',
-                color:
-                    panelCount == '0' ? Color(0xFFBDBDBD) : Color(0xFFEC1D24),
+                colorFilter: ColorFilter.mode(
+                  panelCount == '0' ? Color(0xFFBDBDBD) : Color(0xFFEC1D24),
+                  BlendMode.srcIn,
+                ),
               ),
               SizedBox(width: 6),
               SizedBox(
@@ -203,9 +204,12 @@ class _PanelSelectionPageState extends State<PanelSelectionPage> {
               SizedBox(width: 6),
               SvgPicture.asset(
                 'assets/svgs/panel_type_icon_2.svg',
-                color: panelAlarmCount == '0'
-                    ? Color(0xFFBDBDBD)
-                    : Color(0xFFEC1D24),
+                colorFilter: ColorFilter.mode(
+                  panelAlarmCount == '0'
+                      ? Color(0xFFBDBDBD)
+                      : Color(0xFFEC1D24),
+                  BlendMode.srcIn,
+                ),
               ),
               SizedBox(width: 6),
               SizedBox(
@@ -224,9 +228,12 @@ class _PanelSelectionPageState extends State<PanelSelectionPage> {
               SizedBox(width: 6),
               SvgPicture.asset(
                 'assets/svgs/panel_type_icon_3.svg',
-                color: panelConnectionCount == '0'
-                    ? Color(0xFFBDBDBD)
-                    : Color(0xFFEC1D24),
+                colorFilter: ColorFilter.mode(
+                  panelConnectionCount == '0'
+                      ? Color(0xFFBDBDBD)
+                      : Color(0xFFEC1D24),
+                  BlendMode.srcIn,
+                ),
               ),
               SizedBox(width: 6),
               SizedBox(
@@ -245,9 +252,12 @@ class _PanelSelectionPageState extends State<PanelSelectionPage> {
               SizedBox(width: 6),
               SvgPicture.asset(
                 'assets/svgs/panel_type_icon_4.svg',
-                color: panelFireExtinguisherCount == '0'
-                    ? Color(0xFFBDBDBD)
-                    : Color(0xFFEC1D24),
+                colorFilter: ColorFilter.mode(
+                  panelFireExtinguisherCount == '0'
+                      ? Color(0xFFBDBDBD)
+                      : Color(0xFFEC1D24),
+                  BlendMode.srcIn,
+                ),
               ),
               SizedBox(width: 6),
               SizedBox(

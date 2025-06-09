@@ -155,7 +155,7 @@ class _GeneralSettingsPageState extends State<GeneralSettingsPage> {
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
+                  color: Colors.black.withValues(alpha: 0.1),
                   blurRadius: 10,
                   offset: Offset(0, 4),
                 ),
@@ -194,7 +194,7 @@ class _GeneralSettingsPageState extends State<GeneralSettingsPage> {
                       activeTrackColor: Color(0xFF007AFF),
                       inactiveTrackColor: Color(0xFFE5E5E7),
                       thumbColor: Color(0xFF007AFF),
-                      overlayColor: Color(0xFF007AFF).withOpacity(0.2),
+                      overlayColor: Color(0xFF007AFF).withValues(alpha: 0.2),
                       thumbShape: CustomSliderThumbShape(
                         enabledThumbRadius: 7.5,
                       ),

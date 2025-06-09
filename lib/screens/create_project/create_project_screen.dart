@@ -8,7 +8,7 @@ import 'package:techno_switch_solar_app/screens/create_project/pages/sounder_pag
 import 'package:techno_switch_solar_app/screens/create_project/pages/sounder_settings_page.dart';
 import 'package:techno_switch_solar_app/screens/create_project/pages/input_page.dart';
 import 'package:techno_switch_solar_app/screens/create_project/pages/relay_page.dart';
-import 'package:techno_switch_solar_app/screens/create_project/pages/l_bus_devices_page.dart';
+import 'package:techno_switch_solar_app/screens/create_project/pages/devices_page.dart';
 import 'package:techno_switch_solar_app/screens/create_project/pages/project_summary_page.dart';
 
 class CreateProjectScreen extends StatefulWidget {

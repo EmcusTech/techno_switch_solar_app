@@ -250,13 +250,11 @@ class SerialCommunicationService {
         break;
       case ProcessState.reqRspWaitState:
         // Waiting for response - check for timeout
-        if (_responseTimer == null) {
-          _responseTimer = Timer(Duration(seconds: 10), () {
+        _responseTimer ??= Timer(Duration(seconds: 10), () {
             _statusStreamController.add("Response timeout - retrying...");
             _mainProcessState = ProcessState.reqNwkPkt;
             _responseTimer = null;
           });
-        }
         break;
     }
   }

@@ -163,7 +163,7 @@ class _TestModeScreenState extends State<TestModeScreen> {
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -177,7 +177,7 @@ class _TestModeScreenState extends State<TestModeScreen> {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: Color(0xFFEC1D24).withOpacity(0.08),
+                  color: Color(0xFFEC1D24).withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Center(

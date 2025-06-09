@@ -187,7 +187,7 @@ class _LogHistoryScreenState extends State<LogHistoryScreen> {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -204,8 +204,8 @@ class _LogHistoryScreenState extends State<LogHistoryScreen> {
                   padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
                     color: isSuccess 
-                        ? Color(0xFF4CAF50).withOpacity(0.1)
-                        : Color(0xFFFFA000).withOpacity(0.1),
+                        ? Color(0xFF4CAF50).withValues(alpha: 0.1)
+                        : Color(0xFFFFA000).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
