@@ -38,108 +38,147 @@ class _ProjectSummaryPageState extends State<ProjectSummaryPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Extinguishing Out',
-          style: GoogleFonts.inter(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: Color(0xFF3A3A3A),
-          ),
-        ),
-        SizedBox(height: 32),
         Expanded(
           child: SingleChildScrollView(
             child: Column(
               children: [
                 // Main configuration container with yellow background and stripes
-                Container(
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: Color(0xFFFFF59D), // Light yellow background
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Color(0xFFE0E0E0)),
-                  ),
-                  child: Column(
-                    children: [
-                      // Top diagonal stripes
-                      Container(
-                        width: double.infinity,
-                        height: 30,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.only(
-                            topLeft: Radius.circular(12),
-                            topRight: Radius.circular(12),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: Container(
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: Color(0xFFFFFAA4), // Light yellow background
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Color(0xFFD2CD7D)),
+                    ),
+                    child: Column(
+                      children: [
+                        // Top diagonal stripes
+                        Container(
+                          width: double.infinity,
+                          height: 30,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(12),
+                              topRight: Radius.circular(12),
+                            ),
                           ),
+                          child: CustomPaint(painter: DiagonalStripesPainter()),
                         ),
-                        child: CustomPaint(
-                          painter: DiagonalStripesPainter(),
-                        ),
-                      ),
-                      
-                      // Main content
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-                        child: Column(
+
+                        // Main content
+                        Column(
                           children: [
+                            SizedBox(height: 36),
                             Text(
                               'EXTINGUISHING OUT',
                               style: GoogleFonts.inter(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
-                                color: Color(0xFF000000),
-                                letterSpacing: 2.0,
+                                fontSize: 18,
+                                fontWeight: FontWeight.w800,
+                                color: Color(0xFF3A3A3A),
+                                letterSpacing: 4.0,
                               ),
                             ),
-                            SizedBox(height: 32),
+                            SizedBox(height: 31),
+                        
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 20),
+                              child: Divider(
+                                color: Colors.black.withValues(alpha: 0.17),
+                                thickness: 1,
+                              ),
+                            ),
                             
-                            // Configuration fields
-                            _buildDropdownField('Enabled', widget.enabled, ['Yes', 'No']),
-                            SizedBox(height: 20),
-                            _buildDropdownField('Actuator Type', widget.actuatorType, ['Type A', 'Type B', 'Type C']),
-                            SizedBox(height: 20),
-                            _buildDropdownField('Function', widget.function, ['Function A', 'Function B', 'Function C']),
-                            SizedBox(height: 20),
-                            _buildDropdownField('Auto Countdown', widget.autoCountdown, ['10 Sec', '15 Sec', '20 Sec', '30 Sec']),
-                            SizedBox(height: 20),
-                            _buildDropdownField('Manual Countdown', widget.manualCountdown, ['15 Sec', '30 Sec', '45 Sec', '60 Sec']),
-                            SizedBox(height: 20),
-                            _buildDropdownField('Release Time', widget.releaseTime, ['30 Sec', '45 Sec', '60 Sec', '90 Sec']),
-                            SizedBox(height: 20),
-                            _buildDropdownField('Reset in Count', widget.resetInCount, ['Yes', 'No']),
-                            SizedBox(height: 20),
-                            _buildDropdownField('Hold / Count', widget.holdCount, ['3 Sec', '5 Sec', '10 Sec', '15 Sec']),
-                            SizedBox(height: 20),
-                            _buildDropdownField('Action', widget.action, ['Extinguish', 'Alert', 'Test']),
+                        
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                              child: Column(
+                                children: [
+                                  // Configuration fields
+                              _buildDropdownField('Enabled', widget.enabled, [
+                                'Yes',
+                                'No',
+                              ]),
+                              SizedBox(height: 20),
+                              _buildDropdownField(
+                                'Actuator Type',
+                                widget.actuatorType,
+                                ['Type A', 'Type B', 'Type C'],
+                              ),
+                              SizedBox(height: 20),
+                              _buildDropdownField('Function', widget.function, [
+                                'Function A',
+                                'Function B',
+                                'Function C',
+                              ]),
+                              SizedBox(height: 20),
+                              _buildDropdownField(
+                                'Auto Countdown',
+                                widget.autoCountdown,
+                                ['10 Sec', '15 Sec', '20 Sec', '30 Sec'],
+                              ),
+                              SizedBox(height: 20),
+                              _buildDropdownField(
+                                'Manual Countdown',
+                                widget.manualCountdown,
+                                ['15 Sec', '30 Sec', '45 Sec', '60 Sec'],
+                              ),
+                              SizedBox(height: 20),
+                              _buildDropdownField(
+                                'Release Time',
+                                widget.releaseTime,
+                                ['30 Sec', '45 Sec', '60 Sec', '90 Sec'],
+                              ),
+                              SizedBox(height: 20),
+                              _buildDropdownField(
+                                'Reset in Count',
+                                widget.resetInCount,
+                                ['Yes', 'No'],
+                              ),
+                              SizedBox(height: 20),
+                              _buildDropdownField(
+                                'Hold / Count',
+                                widget.holdCount,
+                                ['3 Sec', '5 Sec', '10 Sec', '15 Sec'],
+                              ),
+                              SizedBox(height: 20),
+                              _buildDropdownField('Action', widget.action, [
+                                'Extinguish',
+                                'Alert',
+                                'Test',
+                              ]),
+                                ],
+                              ),
+                            )
                           ],
                         ),
-                      ),
-                      
-                      // Bottom diagonal stripes
-                      Container(
-                        width: double.infinity,
-                        height: 30,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.only(
-                            bottomLeft: Radius.circular(12),
-                            bottomRight: Radius.circular(12),
+
+                        // Bottom diagonal stripes
+                        Container(
+                          width: double.infinity,
+                          height: 30,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.only(
+                              bottomLeft: Radius.circular(12),
+                              bottomRight: Radius.circular(12),
+                            ),
                           ),
+                          child: CustomPaint(painter: DiagonalStripesPainter()),
                         ),
-                        child: CustomPaint(
-                          painter: DiagonalStripesPainter(),
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
-                
+
                 SizedBox(height: 32),
               ],
             ),
           ),
         ),
-        
+
         // Upload to Panel button - Fixed at bottom
-        Container(
+        SizedBox(
           width: double.infinity,
           child: ElevatedButton(
             onPressed: () {
@@ -177,9 +216,9 @@ class _ProjectSummaryPageState extends State<ProjectSummaryPage> {
           child: Text(
             label,
             style: GoogleFonts.inter(
-              fontSize: 14,
+              fontSize: 13,
               fontWeight: FontWeight.w600,
-              color: Color(0xFF000000),
+              color: Color(0xFF3D3D3D),
             ),
           ),
         ),
@@ -187,29 +226,20 @@ class _ProjectSummaryPageState extends State<ProjectSummaryPage> {
           flex: 2,
           child: GestureDetector(
             onTap: () => _showDropdownDialog(label, value, options),
-            child: Container(
-              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(4),
-                border: Border.all(color: Color(0xFFE0E0E0)),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Text(
-                      value,
-                      style: GoogleFonts.inter(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w400,
-                        color: Color(0xFFEC1D24),
-                      ),
-                    ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Text(
+                  value,
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w400,
+                    color: Color(0xFFC00F0C),
                   ),
-                  SvgPicture.asset('assets/svgs/drop_down_red_icon.svg'),
-                ],
-              ),
+                ),
+                SizedBox(width: 2),
+                SvgPicture.asset('assets/svgs/drop_down_red_icon.svg'),
+              ],
             ),
           ),
         ),
@@ -217,7 +247,11 @@ class _ProjectSummaryPageState extends State<ProjectSummaryPage> {
     );
   }
 
-  void _showDropdownDialog(String label, String currentValue, List<String> options) {
+  void _showDropdownDialog(
+    String label,
+    String currentValue,
+    List<String> options,
+  ) {
     String selectedValue = currentValue;
 
     showDialog(
@@ -237,8 +271,8 @@ class _ProjectSummaryPageState extends State<ProjectSummaryPage> {
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
-            children: options
-                .map((option) {
+            children:
+                options.map((option) {
                   return RadioListTile<String>(
                     title: Text(
                       option,
@@ -254,11 +288,13 @@ class _ProjectSummaryPageState extends State<ProjectSummaryPage> {
                     onChanged: (String? value) {
                       selectedValue = value!;
                       Navigator.of(context).pop();
-                      widget.onExtinguishingSettingChanged(label, selectedValue);
+                      widget.onExtinguishingSettingChanged(
+                        label,
+                        selectedValue,
+                      );
                     },
                   );
-                })
-                .toList(),
+                }).toList(),
           ),
           actions: [
             TextButton(
@@ -355,11 +391,7 @@ class _ProjectSummaryPageState extends State<ProjectSummaryPage> {
           ),
           title: Row(
             children: [
-              Icon(
-                Icons.check_circle,
-                color: Color(0xFF4CAF50),
-                size: 24,
-              ),
+              Icon(Icons.check_circle, color: Color(0xFF4CAF50), size: 24),
               SizedBox(width: 8),
               Text(
                 'Upload Successful',
@@ -410,22 +442,52 @@ class _ProjectSummaryPageState extends State<ProjectSummaryPage> {
 class DiagonalStripesPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.black
-      ..strokeWidth = 3
-      ..style = PaintingStyle.stroke;
+    // Fill background with bright yellow (hazard warning yellow)
+    final backgroundPaint =
+        Paint()
+          ..color = Color(0xFFFFDD00) // Classic hazard warning yellow
+          ..style = PaintingStyle.fill;
 
-    const double stripeSpacing = 12;
-    
-    for (double i = -size.height; i < size.width + size.height; i += stripeSpacing) {
-      canvas.drawLine(
-        Offset(i, 0),
-        Offset(i + size.height, size.height),
-        paint,
-      );
+    canvas.drawRect(
+      Rect.fromLTWH(0, 0, size.width, size.height),
+      backgroundPaint,
+    );
+
+    // Draw black diagonal stripes
+    final stripePaint =
+        Paint()
+          ..color = Color(0xFF000000) // Pure black
+          ..style = PaintingStyle.fill;
+
+    // Much thinner stripes to match the reference image
+    const double stripeWidth = 6; // Thin black stripes
+    const double totalStripeWidth =
+        12; // Total width including yellow gap (6px black + 6px yellow)
+
+    // Calculate the diagonal offset based on the height to create 45-degree angle
+    final double diagonalOffset = size.height;
+
+    // Draw diagonal stripes from top-left to bottom-right
+    for (
+      double i = -diagonalOffset;
+      i < size.width + diagonalOffset;
+      i += totalStripeWidth
+    ) {
+      final path = Path();
+      // Create parallelogram shape for the stripe
+      path.moveTo(i, 0); // Top left
+      path.lineTo(i + stripeWidth, 0); // Top right
+      path.lineTo(
+        i + stripeWidth + diagonalOffset,
+        size.height,
+      ); // Bottom right
+      path.lineTo(i + diagonalOffset, size.height); // Bottom left
+      path.close();
+
+      canvas.drawPath(path, stripePaint);
     }
   }
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-} 
+}

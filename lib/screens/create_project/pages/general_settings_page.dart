@@ -42,12 +42,15 @@ class _GeneralSettingsPageState extends State<GeneralSettingsPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'General Settings',
-          style: GoogleFonts.inter(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: Color(0xFF3A3A3A),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 19),
+          child: Text(
+            'General Settings',
+            style: GoogleFonts.inter(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF3A3A3A),
+            ),
           ),
         ),
         SizedBox(height: 32),
@@ -116,29 +119,32 @@ class _GeneralSettingsPageState extends State<GeneralSettingsPage> {
               _showDropdownDialog(label, value, options);
             }
           },
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: GoogleFonts.inter(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF696969),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 19),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF696969),
+                  ),
                 ),
-              ),
-              Spacer(),
-              Text(
-                value,
-                style: GoogleFonts.inter(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w400,
-                  color: Color(0xFF3D3D3D),
+                Spacer(),
+                Text(
+                  value,
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w400,
+                    color: Color(0xFF918F8F),
+                  ),
                 ),
-              ),
-              SizedBox(width: 2),
-              SvgPicture.asset('assets/svgs/drop_down_red_icon.svg'),
-            ],
+                SizedBox(width: 2),
+                SvgPicture.asset('assets/svgs/drop_down_red_icon.svg'),
+              ],
+            ),
           ),
         ),
         if (isSliderField && isExpanded) ...[
@@ -159,25 +165,28 @@ class _GeneralSettingsPageState extends State<GeneralSettingsPage> {
               padding: const EdgeInsets.only(top: 13, bottom: 16),
               child: Column(
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Timer Settings',
-                        style: GoogleFonts.inter(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Timer Settings',
+                          style: GoogleFonts.inter(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                      ),
-                      Text(
-                        value,
-                        style: GoogleFonts.inter(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF3A3A3A),
+                        Text(
+                          value,
+                          style: GoogleFonts.inter(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF3A3A3A),
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                   SizedBox(height: 24),
                   SliderTheme(

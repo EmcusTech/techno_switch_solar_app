@@ -134,38 +134,20 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
 
   // L-Bus Devices Page state
   String? expandedLBus;
-  Map<String, String> lbusInputs = {
-    'L-BUS 1': '',
-    'L-BUS 2': '',
-  };
-  Map<String, String> lbusInputTexts = {
-    'L-BUS 1': '',
-    'L-BUS 2': '',
-  };
+  Map<String, String> lbusInputs = {'L-BUS 1': '', 'L-BUS 2': ''};
+  Map<String, String> lbusInputTexts = {'L-BUS 1': '', 'L-BUS 2': ''};
   Map<String, String> lbusProducts = {
     'L-BUS 1': 'ONYX202',
     'L-BUS 2': 'ONYX202',
   };
-  Map<String, String> lbusGroups = {
-    'L-BUS 1': 'Group A',
-    'L-BUS 2': 'Group A',
-  };
+  Map<String, String> lbusGroups = {'L-BUS 1': 'Group A', 'L-BUS 2': 'Group A'};
   Map<String, String> lbusFunctions = {
     'L-BUS 1': 'Function A',
     'L-BUS 2': 'Function A',
   };
-  Map<String, String> lbusEnabled = {
-    'L-BUS 1': 'Yes',
-    'L-BUS 2': 'Yes',
-  };
-  Map<String, String> lbusTests = {
-    'L-BUS 1': 'No',
-    'L-BUS 2': 'No',
-  };
-  Map<String, String> lbusInverted = {
-    'L-BUS 1': 'No',
-    'L-BUS 2': 'No',
-  };
+  Map<String, String> lbusEnabled = {'L-BUS 1': 'Yes', 'L-BUS 2': 'Yes'};
+  Map<String, String> lbusTests = {'L-BUS 1': 'No', 'L-BUS 2': 'No'};
+  Map<String, String> lbusInverted = {'L-BUS 1': 'No', 'L-BUS 2': 'No'};
 
   // Extinguishing Out Page state
   String extinguishingEnabled = 'Yes';
@@ -296,7 +278,11 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
     });
   }
 
-  void _onSounderFieldChanged(String sounderName, String fieldType, String value) {
+  void _onSounderFieldChanged(
+    String sounderName,
+    String fieldType,
+    String value,
+  ) {
     setState(() {
       switch (fieldType) {
         case 'sounderText':
@@ -544,16 +530,13 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
                   Expanded(
                     child: Container(
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: currentStep < totalSteps
+                            ? Colors.white
+                            : Colors.transparent,
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Padding(
-                        padding: const EdgeInsets.only(
-                          left: 19,
-                          right: 19,
-                          top: 22,
-                          bottom: 20,
-                        ),
+                        padding: const EdgeInsets.only(top: 22, bottom: 20),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -588,7 +571,8 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
                                     zoneStates: zoneStates,
                                     zoneTests: zoneTests,
                                     zoneModes: zoneModes,
-                                    zoneVerificationTimes: zoneVerificationTimes,
+                                    zoneVerificationTimes:
+                                        zoneVerificationTimes,
                                     onZoneExpanded: _onZoneExpanded,
                                     onZoneFieldChanged: _onZoneFieldChanged,
                                   ),
@@ -601,7 +585,8 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
                                     sounderGroups: sounderGroups,
                                     sounderFunctions: sounderFunctions,
                                     onSounderExpanded: _onSounderExpanded,
-                                    onSounderFieldChanged: _onSounderFieldChanged,
+                                    onSounderFieldChanged:
+                                        _onSounderFieldChanged,
                                   ),
                                   SounderSettingsPage(
                                     fireSoundTone: fireSoundTone,
@@ -610,7 +595,8 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
                                     holdAction: holdAction,
                                     releaseAction: releaseAction,
                                     extSounderDelay: extSounderDelay,
-                                    onSounderSettingChanged: _onSounderSettingChanged,
+                                    onSounderSettingChanged:
+                                        _onSounderSettingChanged,
                                   ),
                                   InputPage(
                                     inputText: inputText,
@@ -619,7 +605,8 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
                                     input1: input1,
                                     group: group,
                                     function: function,
-                                    onInputSettingChanged: _onInputSettingChanged,
+                                    onInputSettingChanged:
+                                        _onInputSettingChanged,
                                   ),
                                   RelayPage(
                                     relayText: relayText,
@@ -627,7 +614,8 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
                                     relay: relay,
                                     group: relayGroup,
                                     function: relayFunction,
-                                    onRelaySettingChanged: _onRelaySettingChanged,
+                                    onRelaySettingChanged:
+                                        _onRelaySettingChanged,
                                   ),
                                   LBusDevicesPage(
                                     expandedLBus: expandedLBus,
@@ -652,13 +640,15 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
                                     resetInCount: resetInCount,
                                     holdCount: holdCount,
                                     action: extinguishingAction,
-                                    onExtinguishingSettingChanged: _onExtinguishingSettingChanged,
+                                    onExtinguishingSettingChanged:
+                                        _onExtinguishingSettingChanged,
                                   ),
                                 ],
                               ),
                             ),
                             SizedBox(height: 20),
-                            if (currentStep < totalSteps) // Only show navigation buttons if not on final page
+                            if (currentStep <
+                                totalSteps) // Only show navigation buttons if not on final page
                               Row(
                                 children: [
                                   Opacity(
@@ -706,7 +696,9 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
                                     child: Container(
                                       decoration: BoxDecoration(
                                         color: Color(0xFFEC1D24),
-                                        borderRadius: BorderRadius.circular(28.5),
+                                        borderRadius: BorderRadius.circular(
+                                          28.5,
+                                        ),
                                       ),
                                       child: Padding(
                                         padding: const EdgeInsets.only(

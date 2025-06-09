@@ -36,12 +36,15 @@ class _ZoneSettingsPageState extends State<ZoneSettingsPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Zone Settings',
-          style: GoogleFonts.inter(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: Color(0xFF3A3A3A),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 19),
+          child: Text(
+            'Zone Settings',
+            style: GoogleFonts.inter(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF3A3A3A),
+            ),
           ),
         ),
         SizedBox(height: 32),
@@ -75,13 +78,13 @@ class _ZoneSettingsPageState extends State<ZoneSettingsPage> {
       child: Container(
         decoration: BoxDecoration(
           color: Color(0xFFF5F5F5),
-          borderRadius: BorderRadius.circular(8),
+          // borderRadius: BorderRadius.circular(8),
         ),
         child: Column(
           children: [
             // Zone header
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              padding: EdgeInsets.only(left: 19, right: 17, top: 12, bottom: 12),
               child: Row(
                 children: [
                   Text(
@@ -109,7 +112,7 @@ class _ZoneSettingsPageState extends State<ZoneSettingsPage> {
               Container(
                 color: Colors.white,
                 child: Padding(
-                  padding: EdgeInsets.all(16),
+                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 24),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -262,7 +265,7 @@ class _ZoneSettingsPageState extends State<ZoneSettingsPage> {
                 style: GoogleFonts.inter(
                   fontSize: 13,
                   fontWeight: FontWeight.w400,
-                  color: Color(0xFF3D3D3D),
+                  color: Color(0xFF918F8F),
                 ),
               ),
               SizedBox(width: 2),

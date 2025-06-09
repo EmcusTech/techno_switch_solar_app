@@ -36,29 +36,24 @@ class _SounderPageState extends State<SounderPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Text(
-              'Sounder',
-              style: GoogleFonts.inter(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF3A3A3A),
+        Padding(
+          padding: const EdgeInsets.only(left: 19, right: 27),
+          child: Row(
+            children: [
+              Text(
+                'Sounder',
+                style: GoogleFonts.inter(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF3A3A3A),
+                ),
               ),
-            ),
-            Spacer(),
-            Container(
-              width: 24,
-              height: 24,
-              decoration: BoxDecoration(
-                color: Color(0xFFEC1D24),
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: Icon(Icons.settings, color: Colors.white, size: 16),
-            ),
-          ],
+              Spacer(),
+              SvgPicture.asset('assets/svgs/settings_icon.svg'),
+            ],
+          ),
         ),
-        SizedBox(height: 32),
+        SizedBox(height: 23),
         Expanded(
           child: SingleChildScrollView(
             child: Column(
@@ -87,7 +82,7 @@ class _SounderPageState extends State<SounderPage> {
       child: Container(
         decoration: BoxDecoration(
           color: Color(0xFFF5F5F5),
-          borderRadius: BorderRadius.circular(8),
+          // borderRadius: BorderRadius.circular(8),
         ),
         child: Column(
           children: [
@@ -121,7 +116,7 @@ class _SounderPageState extends State<SounderPage> {
               Container(
                 color: Colors.white,
                 child: Padding(
-                  padding: EdgeInsets.all(16),
+                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 24),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [

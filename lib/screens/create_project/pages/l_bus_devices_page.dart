@@ -35,8 +35,8 @@ class LBusDevicesPage extends StatefulWidget {
 }
 
 class _LBusDevicesPageState extends State<LBusDevicesPage> {
-  Map<String, TextEditingController> _inputControllers = {};
-  Map<String, TextEditingController> _inputTextControllers = {};
+  final Map<String, TextEditingController> _inputControllers = {};
+  final Map<String, TextEditingController> _inputTextControllers = {};
 
   @override
   void initState() {
@@ -50,8 +50,12 @@ class _LBusDevicesPageState extends State<LBusDevicesPage> {
 
   @override
   void dispose() {
-    _inputControllers.values.forEach((controller) => controller.dispose());
-    _inputTextControllers.values.forEach((controller) => controller.dispose());
+    for (var controller in _inputControllers.values) {
+      controller.dispose();
+    }
+    for (var controller in _inputTextControllers.values) {
+      controller.dispose();
+    }
     super.dispose();
   }
 
@@ -60,45 +64,40 @@ class _LBusDevicesPageState extends State<LBusDevicesPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Text(
-              'L-Bus Devices',
-              style: GoogleFonts.inter(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF3A3A3A),
+        Padding(
+          padding: const EdgeInsets.only(left: 19, right: 20),
+          child: Row(
+            children: [
+              Text(
+                'L-Bus Devices',
+                style: GoogleFonts.inter(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF3A3A3A),
+                ),
               ),
-            ),
-            Spacer(),
-            Container(
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(
-                color: Color(0xFFEC1D24),
-                shape: BoxShape.circle,
+              Spacer(),
+              SvgPicture.asset(
+                'assets/svgs/add_circle_icon.svg',
+                width: 24,
+                height: 24,
               ),
-              child: Icon(
-                Icons.add,
-                color: Colors.white,
-                size: 20,
+              SizedBox(width: 25),
+              SvgPicture.asset(
+                'assets/svgs/edit_icon.svg',
+                width: 24,
+                height: 24,
               ),
-            ),
-            SizedBox(width: 8),
-            SvgPicture.asset(
-              'assets/svgs/setting_icon.svg',
-              width: 24,
-              height: 24,
-            ),
-          ],
+            ],
+          ),
         ),
-        SizedBox(height: 32),
+        SizedBox(height: 27),
         Expanded(
           child: SingleChildScrollView(
             child: Column(
               children: [
                 _buildLBusSection('L-BUS 1'),
-                SizedBox(height: 16),
+                SizedBox(height: 10),
                 _buildLBusSection('L-BUS 2'),
               ],
             ),
@@ -111,173 +110,167 @@ class _LBusDevicesPageState extends State<LBusDevicesPage> {
   Widget _buildLBusSection(String lbusName) {
     bool isExpanded = widget.expandedLBus == lbusName;
     
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Color(0xFFE0E0E0)),
-      ),
-      child: Column(
-        children: [
-          GestureDetector(
-            onTap: () {
-              widget.onLBusExpanded(isExpanded ? null : lbusName);
-            },
-            child: Container(
-              padding: EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Color(0xFFF5F5F5),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                children: [
-                  Text(
-                    lbusName,
-                    style: GoogleFonts.inter(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF3A3A3A),
-                    ),
+    return Column(
+      children: [
+        GestureDetector(
+          onTap: () {
+            widget.onLBusExpanded(isExpanded ? null : lbusName);
+          },
+          child: Container(
+            padding: EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Color(0xFFF5F5F5),
+              // borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              children: [
+                Text(
+                  lbusName,
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF3A3A3A),
                   ),
-                  Spacer(),
-                  Icon(
-                    isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
-                    color: Color(0xFF696969),
-                  ),
-                ],
-              ),
+                ),
+                Spacer(),
+                Icon(
+                  isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                  color: Color(0xFF696969),
+                ),
+              ],
             ),
           ),
-          if (isExpanded) ...[
-            Padding(
-              padding: EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Input field
-                  Text(
-                    'Input',
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF696969),
-                    ),
+        ),
+        if (isExpanded) ...[
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Input field
+                Text(
+                  'Input',
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF696969),
                   ),
-                  SizedBox(height: 8),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(4),
-                      border: Border.all(color: Color(0xFFE0E0E0)),
-                    ),
-                    child: TextField(
-                      controller: _inputControllers[lbusName],
-                      onChanged: (value) {
-                        widget.onLBusFieldChanged(lbusName, 'input', value);
-                      },
-                      onTapOutside: (value) {
-                        FocusScope.of(context).unfocus();
-                      },
-                      decoration: InputDecoration(
-                        contentPadding: EdgeInsets.all(12),
-                        border: InputBorder.none,
-                        hintText: 'Enter Input Text',
-                        hintStyle: GoogleFonts.inter(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w400,
-                          color: Color(0xFFBDBDBD),
-                        ),
+                ),
+                SizedBox(height: 8),
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(4),
+                    border: Border.all(color: Color(0xFFE0E0E0)),
+                  ),
+                  child: TextField(
+                    controller: _inputControllers[lbusName],
+                    onChanged: (value) {
+                      widget.onLBusFieldChanged(lbusName, 'input', value);
+                    },
+                    onTapOutside: (value) {
+                      FocusScope.of(context).unfocus();
+                    },
+                    decoration: InputDecoration(
+                      contentPadding: EdgeInsets.all(12),
+                      border: InputBorder.none,
+                      hintText: 'Enter Input Text',
+                      hintStyle: GoogleFonts.inter(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w400,
+                        color: Color(0xFFBDBDBD),
                       ),
                     ),
                   ),
-                  SizedBox(height: 16),
-
-                  // Input Text field
-                  Text(
-                    'Input Text',
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF696969),
-                    ),
+                ),
+                SizedBox(height: 16),
+    
+                // Input Text field
+                Text(
+                  'Input Text',
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF696969),
                   ),
-                  SizedBox(height: 8),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(4),
-                      border: Border.all(color: Color(0xFFE0E0E0)),
-                    ),
-                    child: TextField(
-                      controller: _inputTextControllers[lbusName],
-                      onChanged: (value) {
-                        widget.onLBusFieldChanged(lbusName, 'inputText', value);
-                      },
-                      onTapOutside: (value) {
-                        FocusScope.of(context).unfocus();
-                      },
-                      decoration: InputDecoration(
-                        contentPadding: EdgeInsets.all(12),
-                        border: InputBorder.none,
-                        hintText: 'Enter Input Text',
-                        hintStyle: GoogleFonts.inter(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w400,
-                          color: Color(0xFFBDBDBD),
-                        ),
+                ),
+                SizedBox(height: 8),
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(4),
+                    border: Border.all(color: Color(0xFFE0E0E0)),
+                  ),
+                  child: TextField(
+                    controller: _inputTextControllers[lbusName],
+                    onChanged: (value) {
+                      widget.onLBusFieldChanged(lbusName, 'inputText', value);
+                    },
+                    onTapOutside: (value) {
+                      FocusScope.of(context).unfocus();
+                    },
+                    decoration: InputDecoration(
+                      contentPadding: EdgeInsets.all(12),
+                      border: InputBorder.none,
+                      hintText: 'Enter Input Text',
+                      hintStyle: GoogleFonts.inter(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w400,
+                        color: Color(0xFFBDBDBD),
                       ),
                     ),
                   ),
-                  SizedBox(height: 24),
-
-                  // Dropdown fields
-                  _buildDropdownField(
-                    lbusName,
-                    'Product',
-                    widget.lbusProducts[lbusName] ?? 'ONYX202',
-                    ['ONYX202', 'ONYX204', 'ONYX205', 'ONYX206'],
-                  ),
-                  SizedBox(height: 20),
-                  _buildDropdownField(
-                    lbusName,
-                    'Group',
-                    widget.lbusGroups[lbusName] ?? 'Group A',
-                    ['Group A', 'Group B', 'Group C', 'Group D'],
-                  ),
-                  SizedBox(height: 20),
-                  _buildDropdownField(
-                    lbusName,
-                    'Function',
-                    widget.lbusFunctions[lbusName] ?? 'Function A',
-                    ['Function A', 'Function B', 'Function C', 'Function D'],
-                  ),
-                  SizedBox(height: 20),
-                  _buildDropdownField(
-                    lbusName,
-                    'Enabled',
-                    widget.lbusEnabled[lbusName] ?? 'Yes',
-                    ['Yes', 'No'],
-                  ),
-                  SizedBox(height: 20),
-                  _buildDropdownField(
-                    lbusName,
-                    'Test',
-                    widget.lbusTests[lbusName] ?? 'No',
-                    ['No', 'Yes'],
-                  ),
-                  SizedBox(height: 20),
-                  _buildDropdownField(
-                    lbusName,
-                    'Inverted',
-                    widget.lbusInverted[lbusName] ?? 'No',
-                    ['No', 'Yes'],
-                  ),
-                ],
-              ),
+                ),
+                SizedBox(height: 24),
+    
+                // Dropdown fields
+                _buildDropdownField(
+                  lbusName,
+                  'Product',
+                  widget.lbusProducts[lbusName] ?? 'ONYX202',
+                  ['ONYX202', 'ONYX204', 'ONYX205', 'ONYX206'],
+                ),
+                SizedBox(height: 20),
+                _buildDropdownField(
+                  lbusName,
+                  'Group',
+                  widget.lbusGroups[lbusName] ?? 'Group A',
+                  ['Group A', 'Group B', 'Group C', 'Group D'],
+                ),
+                SizedBox(height: 20),
+                _buildDropdownField(
+                  lbusName,
+                  'Function',
+                  widget.lbusFunctions[lbusName] ?? 'Function A',
+                  ['Function A', 'Function B', 'Function C', 'Function D'],
+                ),
+                SizedBox(height: 20),
+                _buildDropdownField(
+                  lbusName,
+                  'Enabled',
+                  widget.lbusEnabled[lbusName] ?? 'Yes',
+                  ['Yes', 'No'],
+                ),
+                SizedBox(height: 20),
+                _buildDropdownField(
+                  lbusName,
+                  'Test',
+                  widget.lbusTests[lbusName] ?? 'No',
+                  ['No', 'Yes'],
+                ),
+                SizedBox(height: 20),
+                _buildDropdownField(
+                  lbusName,
+                  'Inverted',
+                  widget.lbusInverted[lbusName] ?? 'No',
+                  ['No', 'Yes'],
+                ),
+              ],
             ),
-          ],
+          ),
+          Divider(color: Color(0xFFBDBDBD), thickness: 1),
         ],
-      ),
+      ],
     );
   }
 

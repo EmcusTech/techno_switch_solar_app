@@ -21,71 +21,74 @@ class PanelSelectionPage extends StatefulWidget {
 class _PanelSelectionPageState extends State<PanelSelectionPage> {
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Panel Selection',
-          style: GoogleFonts.inter(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: Color(0xFF3A3A3A),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 19),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Panel Selection',
+            style: GoogleFonts.inter(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF3A3A3A),
+            ),
           ),
-        ),
-        SizedBox(height: 32),
-        Expanded(
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Panel Name',
-                  style: GoogleFonts.inter(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF696969),
+          SizedBox(height: 32),
+          Expanded(
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Panel Name',
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF696969),
+                    ),
                   ),
-                ),
-                SizedBox(height: 8),
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(4),
-                    border: Border.all(color: Color(0xFFE0E0E0)),
-                  ),
-                  child: TextField(
-                    controller: widget.panelNameController,
-                    onTapOutside: (value) {
-                      FocusScope.of(context).unfocus();
-                    },
-                    decoration: InputDecoration(
-                      contentPadding: EdgeInsets.all(12),
-                      border: InputBorder.none,
-                      hintText: 'Enter Panel Name',
-                      hintStyle: GoogleFonts.inter(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w400,
-                        color: Color(0xFFBDBDBD),
+                  SizedBox(height: 8),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(4),
+                      border: Border.all(color: Color(0xFFE0E0E0)),
+                    ),
+                    child: TextField(
+                      controller: widget.panelNameController,
+                      onTapOutside: (value) {
+                        FocusScope.of(context).unfocus();
+                      },
+                      decoration: InputDecoration(
+                        contentPadding: EdgeInsets.all(12),
+                        border: InputBorder.none,
+                        hintText: 'Enter Panel Name',
+                        hintStyle: GoogleFonts.inter(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w400,
+                          color: Color(0xFFBDBDBD),
+                        ),
                       ),
                     ),
                   ),
-                ),
-                SizedBox(height: 36),
-                Text(
-                  'Panel Type',
-                  style: GoogleFonts.inter(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF696969),
+                  SizedBox(height: 36),
+                  Text(
+                    'Panel Type',
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF696969),
+                    ),
                   ),
-                ),
-                SizedBox(height: 18),
-                _buildPanelTypeTiles(),
-              ],
+                  SizedBox(height: 18),
+                  _buildPanelTypeTiles(),
+                ],
+              ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 

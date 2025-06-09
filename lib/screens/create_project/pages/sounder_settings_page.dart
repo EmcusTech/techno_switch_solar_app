@@ -32,127 +32,155 @@ class _SounderSettingsPageState extends State<SounderSettingsPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Text(
-              'Sounder Settings',
-              style: GoogleFonts.inter(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF3A3A3A),
-              ),
-            ),
-            Spacer(),
-            GestureDetector(
-              onTap: () {
-                Navigator.pop(context);
-              },
-              child: Container(
-                width: 24,
-                height: 24,
-                decoration: BoxDecoration(
-                  color: Colors.transparent,
-                ),
-                child: Icon(
-                  Icons.close,
-                  color: Color(0xFF696969),
-                  size: 20,
+        Padding(
+          padding: const EdgeInsets.only(left: 19, right: 22),
+          child: Row(
+            children: [
+              Text(
+                'Sounder Settings',
+                style: GoogleFonts.inter(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF3A3A3A),
                 ),
               ),
-            ),
-          ],
+              Spacer(),
+              GestureDetector(
+                onTap: () {
+                  Navigator.pop(context);
+                },
+                child: Container(
+                  width: 24,
+                  height: 24,
+                  decoration: BoxDecoration(
+                    color: Colors.transparent,
+                  ),
+                  child: Icon(
+                    Icons.close,
+                    color: Color(0xFF1D1B20),
+                    size: 20,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
-        SizedBox(height: 32),
+        SizedBox(height: 29),
         Expanded(
           child: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Sounder Tone Section
-                Text(
-                  'Sounder Tone',
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF3A3A3A),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                    'Sounder Tone',
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF3A3A3A),
+                    ),
+                  ),
+                  SizedBox(height: 20),
+                  _buildDropdownField(
+                    'Fire Sound',
+                    widget.fireSoundTone,
+                    [
+                      'Pulsing 1s ON, 4s OFF',
+                      'Pulsing 2s ON, 2s OFF',
+                      'Continuous',
+                      'Warble',
+                    ],
+                  ),
+                  SizedBox(height: 20),
+                  _buildDropdownField(
+                    'Sounder Delay',
+                    widget.fireSounderDelay,
+                    [
+                      '300 Sec',
+                      '600 Sec',
+                      '900 Sec',
+                      '1200 Sec',
+                    ],
+                  ),
+                    ],
                   ),
                 ),
-                SizedBox(height: 20),
-                _buildDropdownField(
-                  'Fire Sound',
-                  widget.fireSoundTone,
-                  [
-                    'Pulsing 1s ON, 4s OFF',
-                    'Pulsing 2s ON, 2s OFF',
-                    'Continuous',
-                    'Warble',
-                  ],
+                Divider(
+                  color: Color(0xFFBDBDBD),
+                  thickness: 1,
                 ),
-                SizedBox(height: 20),
-                _buildDropdownField(
-                  'Sounder Delay',
-                  widget.fireSounderDelay,
-                  [
-                    '300 Sec',
-                    '600 Sec',
-                    '900 Sec',
-                    '1200 Sec',
-                  ],
-                ),
-                SizedBox(height: 32),
+
+                SizedBox(height: 16),
                 
                 // Ext Sound Section
-                Text(
-                  'Ext Sound 1/Ext Sound 2/Man Release Sound',
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF3A3A3A),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                    'Ext Sound 1/Ext Sound 2/Man Release Sound',
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF3A3A3A),
+                    ),
+                  ),
+                  SizedBox(height: 20),
+                  _buildDropdownField(
+                    'Count Down Action',
+                    widget.countDownAction,
+                    [
+                      'Pulsing 1s ON, 4s OFF',
+                      'Pulsing 2s ON, 2s OFF',
+                      'Continuous',
+                      'Warble',
+                    ],
+                  ),
+                  SizedBox(height: 20),
+                  _buildDropdownField(
+                    'Hold Action',
+                    widget.holdAction,
+                    [
+                      'Pulsing 1s ON, 4s OFF',
+                      'Pulsing 2s ON, 2s OFF',
+                      'Continuous',
+                      'Warble',
+                    ],
+                  ),
+                  SizedBox(height: 20),
+                  _buildDropdownField(
+                    'Release Action',
+                    widget.releaseAction,
+                    [
+                      'Pulsing 1s ON, 4s OFF',
+                      'Pulsing 2s ON, 2s OFF',
+                      'Continuous',
+                      'Warble',
+                    ],
+                  ),
+                  SizedBox(height: 20),
+                  _buildDropdownField(
+                    'Sounder Delay',
+                    widget.extSounderDelay,
+                    [
+                      '300 Sec',
+                      '600 Sec',
+                      '900 Sec',
+                      '1200 Sec',
+                    ],
+                  ),
+                    ],
                   ),
                 ),
-                SizedBox(height: 20),
-                _buildDropdownField(
-                  'Count Down Action',
-                  widget.countDownAction,
-                  [
-                    'Pulsing 1s ON, 4s OFF',
-                    'Pulsing 2s ON, 2s OFF',
-                    'Continuous',
-                    'Warble',
-                  ],
-                ),
-                SizedBox(height: 20),
-                _buildDropdownField(
-                  'Hold Action',
-                  widget.holdAction,
-                  [
-                    'Pulsing 1s ON, 4s OFF',
-                    'Pulsing 2s ON, 2s OFF',
-                    'Continuous',
-                    'Warble',
-                  ],
-                ),
-                SizedBox(height: 20),
-                _buildDropdownField(
-                  'Release Action',
-                  widget.releaseAction,
-                  [
-                    'Pulsing 1s ON, 4s OFF',
-                    'Pulsing 2s ON, 2s OFF',
-                    'Continuous',
-                    'Warble',
-                  ],
-                ),
-                SizedBox(height: 20),
-                _buildDropdownField(
-                  'Sounder Delay',
-                  widget.extSounderDelay,
-                  [
-                    '300 Sec',
-                    '600 Sec',
-                    '900 Sec',
-                    '1200 Sec',
-                  ],
+                Divider(
+                  color: Color(0xFFBDBDBD),
+                  thickness: 1,
                 ),
               ],
             ),
@@ -186,7 +214,7 @@ class _SounderSettingsPageState extends State<SounderSettingsPage> {
                     style: GoogleFonts.inter(
                       fontSize: 13,
                       fontWeight: FontWeight.w400,
-                      color: Color(0xFF3D3D3D),
+                      color: Color(0xFF918F8F),
                     ),
                   ),
                   SizedBox(width: 2),
