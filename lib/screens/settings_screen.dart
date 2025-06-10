@@ -194,32 +194,35 @@ class _SettingsContentState extends State<_SettingsContent> {
   Widget _settingTile({required String title, required VoidCallback onTap}) {
     return Column(
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 15),
-          child: Row(
-            children: [
-              SvgPicture.asset(
-                'assets/svgs/settings_icon.svg',
-                colorFilter: ColorFilter.mode(
-                  Color(0xFF1B1F26).withValues(alpha: 0.72),
-                  BlendMode.srcIn,
+        GestureDetector(
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 15),
+            child: Row(
+              children: [
+                SvgPicture.asset(
+                  'assets/svgs/settings_icon.svg',
+                  colorFilter: ColorFilter.mode(
+                    Color(0xFF1B1F26).withValues(alpha: 0.72),
+                    BlendMode.srcIn,
+                  ),
                 ),
-              ),
-              SizedBox(width: 12),
-              Text(
-                title,
-                style: GoogleFonts.inter(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w400,
+                SizedBox(width: 12),
+                Text(
+                  title,
+                  style: GoogleFonts.inter(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w400,
+                  ),
                 ),
-              ),
-              Spacer(),
-              Icon(
-                Icons.arrow_forward_ios,
-                size: 18,
-                color: Color(0xFF696969).withValues(alpha: 0.47),
-              ),
-            ],
+                Spacer(),
+                Icon(
+                  Icons.arrow_forward_ios,
+                  size: 18,
+                  color: Color(0xFF696969).withValues(alpha: 0.47),
+                ),
+              ],
+            ),
           ),
         ),
         Divider(color: Colors.black.withValues(alpha: 0.18), thickness: 1),
