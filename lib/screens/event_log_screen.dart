@@ -25,115 +25,15 @@ class EventLogScreen extends StatefulWidget {
 }
 
 class _EventLogScreenState extends State<EventLogScreen> {
-  int _selectedIndex = 0;
-
-  List<Widget> get _screens => [
-    _EventLogContent(
-      logDataList: widget.logDataList,
-      panelName: widget.panelName,
-      panelVersionNo: widget.panelVersionNo,
-    ),
-    const SettingsScreen(),
-    const TestModeScreen(),
-    const LogHistoryScreen(),
-  ];
-
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       extendBody: true,
-      body: _screens[_selectedIndex],
-      bottomNavigationBar: Container(
-        height: 80,
-        decoration: BoxDecoration(
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
-              blurRadius: 10,
-              offset: const Offset(0, -5),
-            ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(32),
-            topRight: Radius.circular(32),
-          ),
-          child: BottomNavigationBar(
-            iconSize: 24,
-            items: <BottomNavigationBarItem>[
-              BottomNavigationBarItem(
-                icon: SvgPicture.asset(
-                  'assets/svgs/dashboard_icon.svg',
-                  height: 24,
-                  width: 24,
-                  colorFilter: ColorFilter.mode(
-                    _selectedIndex == 0 ? Colors.white : Colors.grey,
-                    BlendMode.srcIn,
-                  ),
-                ),
-                label: 'Dashboard',
-              ),
-              BottomNavigationBarItem(
-                icon: SvgPicture.asset(
-                  'assets/svgs/setting_icon.svg',
-                  height: 24,
-                  width: 24,
-                  colorFilter: ColorFilter.mode(
-                    _selectedIndex == 1 ? Colors.white : Colors.grey,
-                    BlendMode.srcIn,
-                  ),
-                ),
-                label: 'Settings',
-              ),
-              BottomNavigationBarItem(
-                icon: SvgPicture.asset(
-                  'assets/svgs/test_mode_icon.svg',
-                  height: 24,
-                  width: 24,
-                  colorFilter: ColorFilter.mode(
-                    _selectedIndex == 2 ? Colors.white : Colors.grey,
-                    BlendMode.srcIn,
-                  ),
-                ),
-                label: 'Test Mode',
-              ),
-              BottomNavigationBarItem(
-                icon: SvgPicture.asset(
-                  'assets/svgs/log_history_icon.svg',
-                  height: 24,
-                  width: 24,
-                  colorFilter: ColorFilter.mode(
-                    _selectedIndex == 3 ? Colors.white : Colors.grey,
-                    BlendMode.srcIn,
-                  ),
-                ),
-                label: 'Log History',
-              ),
-            ],
-            currentIndex: _selectedIndex,
-            selectedItemColor: Colors.white,
-            unselectedItemColor: Colors.grey,
-            onTap: _onItemTapped,
-            backgroundColor: Color(0xffEC1D24),
-            elevation: 0,
-            type: BottomNavigationBarType.fixed,
-            selectedLabelStyle: GoogleFonts.inter(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-            ),
-            unselectedLabelStyle: GoogleFonts.inter(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ),
+      body: _EventLogContent(
+        logDataList: widget.logDataList,
+        panelName: widget.panelName,
+        panelVersionNo: widget.panelVersionNo,
       ),
     );
   }

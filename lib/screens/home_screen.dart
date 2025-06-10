@@ -18,7 +18,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
   final List<Widget> _screens = [
     const _HomeContent(),
-    const SettingsScreen(),
+    SettingsScreen(
+      panelName: 'RHINO2008',
+      panelVersionNo: '0.98',
+    ),
     const HelpScreen(),
   ];
 

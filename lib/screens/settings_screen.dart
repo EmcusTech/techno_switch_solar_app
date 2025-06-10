@@ -1,9 +1,48 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-class SettingsScreen extends StatelessWidget {
-  const SettingsScreen({super.key});
+class SettingsScreen extends StatefulWidget {
+  final String panelName;
+  final String panelVersionNo;
 
+  const SettingsScreen({
+    super.key,
+    required this.panelName,
+    required this.panelVersionNo,
+  });
+
+  @override
+  State<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends State<SettingsScreen> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      extendBody: true,
+      body: _SettingsContent(
+        panelName: widget.panelName,
+        panelVersionNo: widget.panelVersionNo,
+      ),
+    );
+  }
+}
+
+// Create a separate widget for the EventLog content
+class _SettingsContent extends StatefulWidget {
+  final String panelName;
+  final String panelVersionNo;
+  const _SettingsContent({
+    required this.panelName,
+    required this.panelVersionNo,
+  });
+
+  @override
+  State<_SettingsContent> createState() => _SettingsContentState();
+}
+
+class _SettingsContentState extends State<_SettingsContent> {
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -14,131 +53,177 @@ class SettingsScreen extends StatelessWidget {
           colors: [Color(0xFFF6EBEB), Colors.white],
         ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Stack(
         children: [
+          SvgPicture.asset('assets/svgs/background_1.svg'),
           Padding(
-            padding: const EdgeInsets.only(top: 24, left: 24, right: 24),
-            child: Text(
-              'Settings',
-              style: GoogleFonts.inter(
-                fontSize: 24,
-                fontWeight: FontWeight.w700,
-                color: const Color(0xFF3D3D3D),
-              ),
+            padding: EdgeInsets.only(top: 54),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisSize: MainAxisSize.max,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Row(
+                    children: [
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.of(context).pop();
+                        },
+                        child: SvgPicture.asset(
+                          'assets/svgs/arrow_back_icon.svg',
+                        ),
+                      ),
+                      SizedBox(width: 8),
+                      Text(
+                        'Project Name',
+                        style: GoogleFonts.inter(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 19),
+                _buildSettingsContainer(),
+              ],
             ),
-          ),
-          _buildSettingsSection(
-            'Account',
-            [
-              _buildSettingsItem(
-                'Profile Information',
-                Icons.person_outline,
-                () {},
-              ),
-              _buildSettingsItem(
-                'Notifications',
-                Icons.notifications_outlined,
-                () {},
-              ),
-            ],
-          ),
-          _buildSettingsSection(
-            'Preferences',
-            [
-              _buildSettingsItem(
-                'Language',
-                Icons.language_outlined,
-                () {},
-              ),
-              _buildSettingsItem(
-                'Theme',
-                Icons.palette_outlined,
-                () {},
-              ),
-              _buildSettingsItem(
-                'Units',
-                Icons.straighten_outlined,
-                () {},
-              ),
-            ],
-          ),
-          _buildSettingsSection(
-            'Support',
-            [
-              _buildSettingsItem(
-                'About',
-                Icons.info_outline,
-                () {},
-              ),
-              _buildSettingsItem(
-                'Privacy Policy',
-                Icons.privacy_tip_outlined,
-                () {},
-              ),
-              _buildSettingsItem(
-                'Terms of Service',
-                Icons.description_outlined,
-                () {},
-              ),
-            ],
           ),
         ],
       ),
     );
   }
 
-  Widget _buildSettingsSection(String title, List<Widget> items) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
-          child: Text(
-            title,
-            style: GoogleFonts.inter(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: const Color(0xFF3D3D3D),
-            ),
-          ),
+  Widget _buildSettingsContainer() {
+    return Expanded(
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(35),
         ),
-        ...items,
-        const Divider(height: 1),
-      ],
-    );
-  }
-
-  Widget _buildSettingsItem(String title, IconData icon, VoidCallback onTap) {
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-        child: Row(
-          children: [
-            Icon(
-              icon,
-              size: 24,
-              color: const Color(0xFF3D3D3D),
-            ),
-            const SizedBox(width: 16),
-            Text(
-              title,
-              style: GoogleFonts.inter(
-                fontSize: 16,
-                fontWeight: FontWeight.w400,
-                color: const Color(0xFF3D3D3D),
-              ),
-            ),
-            const Spacer(),
-            const Icon(
-              Icons.chevron_right,
-              size: 24,
-              color: Color(0xFF3D3D3D),
-            ),
-          ],
-        ),
+        child: SingleChildScrollView(child: _buildLogStatus()),
       ),
     );
   }
-} 
+
+  Widget _buildLogStatus() {
+    return Padding(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        children: [
+          // Panel Information Row
+          Row(
+            children: [
+              SvgPicture.asset(
+                'assets/svgs/panel_icon.svg',
+                height: 81,
+                width: 81,
+              ),
+              SizedBox(width: 14),
+              Column(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    widget.panelName,
+                    style: GoogleFonts.inter(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  Text(
+                    widget.panelVersionNo,
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: Color(0xFF979797),
+                    ),
+                  ),
+                  RichText(
+                    text: TextSpan(
+                      children: [
+                        TextSpan(
+                          text: 'status : ',
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: Color(0xFF979797),
+                          ),
+                        ),
+                        TextSpan(
+                          text: 'connected',
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: Color(0xFF00A706),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              Spacer(),
+              Transform.rotate(
+                angle: 180 * 3.14159 / 360,
+                child: Icon(
+                  Icons.arrow_forward_ios,
+                  size: 18,
+                  color: Color(0xFF696969),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 10),
+          Divider(color: Colors.black.withValues(alpha: 0.18), thickness: 1),
+          _settingTile(title: 'Panel Settings', onTap: () {}),
+          _settingTile(title: 'Zone Settings', onTap: () {}),
+          _settingTile(title: 'Input Settings', onTap: () {}),
+          _settingTile(title: 'Relay Settings', onTap: () {}),
+          _settingTile(title: 'Sounder Settings', onTap: () {}),
+          _settingTile(title: 'Extinguishing out Settings', onTap: () {}),
+          _settingTile(title: 'L-Bus Settings', onTap: () {}),
+          _settingTile(title: 'Panel Information', onTap: () {}),
+          SizedBox(height: 80),
+        ],
+      ),
+    );
+  }
+
+  Widget _settingTile({required String title, required VoidCallback onTap}) {
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 15),
+          child: Row(
+            children: [
+              SvgPicture.asset(
+                'assets/svgs/settings_icon.svg',
+                colorFilter: ColorFilter.mode(
+                  Color(0xFF1B1F26).withValues(alpha: 0.72),
+                  BlendMode.srcIn,
+                ),
+              ),
+              SizedBox(width: 12),
+              Text(
+                title,
+                style: GoogleFonts.inter(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
+              Spacer(),
+              Icon(
+                Icons.arrow_forward_ios,
+                size: 18,
+                color: Color(0xFF696969).withValues(alpha: 0.47),
+              ),
+            ],
+          ),
+        ),
+        Divider(color: Colors.black.withValues(alpha: 0.18), thickness: 1),
+      ],
+    );
+  }
+}

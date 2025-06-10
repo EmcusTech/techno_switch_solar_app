@@ -1,0 +1,3 @@
+[info] 'isAvailable' is deprecated and shouldn't be used. Use isSupported instead (C:\Users\Manoranjankumar\dev\projects\techno_switch_solar_app\techno_switch_solar_app\lib\screens\scanning_screen.dart:98:35)
+[info] Don't invoke 'print' in production code (C:\Users\Manoranjankumar\dev\projects\techno_switch_solar_app\techno_switch_solar_app\lib\screens\scanning_screen.dart:117:9)
+[info] Don't invoke 'print' in production code (C:\Users\Manoranjankumar\dev\projects\techno_switch_solar_app\techno_switch_solar_app\lib\screens\scanning_screen.dart:120:7)
