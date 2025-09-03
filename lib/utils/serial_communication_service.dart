@@ -111,10 +111,17 @@ class SerialCommunicationService {
   int _pktTxCnt = 0;
   int _pktRxCnt = 0;
   int _logEvtSearchNumber = 200; // Start from 1000th log
+  // Align with Python script: start from 0x3E7 (999) and decrement
+  // Will be reset in _startCommunicationProcess
+  // ignore: unused_field
+
   bool _stopEvtLogRead = false;
   int _totalValidEvtLogCnt = 0;
   Timer? _processTimer;
   Timer? _responseTimer;
+  Timer? _pollTimer;
+  int _evtLogRetryCount = 0;
+  static const int _evtLogRetryMax = 3;
 
   final CommFrame _commFrame = CommFrame();
   final StreamController<LogModel> _logStreamController =
@@ -596,14 +603,23 @@ class SerialCommunicationService {
   }
 
   void _startCommunicationProcess() {
+    // Ensure no duplicate timers are running
+    _processTimer?.cancel();
+    _responseTimer?.cancel();
+    _pollTimer?.cancel();
+    _processTimer = null;
+    _responseTimer = null;
+    _pollTimer = null;
+
     _connectionState = PanelConnectionState.processing;
     _totalValidEvtLogCnt = 0;
     _pktTxCnt = 0;
     _pktRxCnt = 0;
-    // _logEvtSearchNumber = 200;
+    _logEvtSearchNumber = 0x3E7; // 999 - match Python default
     _stopEvtLogRead = false;
     _processState = ProcessState.reqNwkPkt;
     _mainProcessState = ProcessState.reqNwkPkt;
+    _evtLogRetryCount = 0;
 
     _processTimer = Timer.periodic(const Duration(milliseconds: 500), (timer) {
       if (_connectionState != PanelConnectionState.processing) {
@@ -621,6 +637,12 @@ class SerialCommunicationService {
       _statusStreamController.add(
         "Cannot start log retrieval: Device not connected",
       );
+      return;
+    }
+    // Avoid restarting if already running
+    if (_connectionState == PanelConnectionState.processing ||
+        _processTimer != null) {
+      _statusStreamController.add("Log retrieval already running");
       return;
     }
 
@@ -646,7 +668,14 @@ class SerialCommunicationService {
         // Waiting for response - check for timeout
         _responseTimer ??= Timer(Duration(seconds: 10), () {
           _statusStreamController.add("Response timeout - retrying...");
-          _mainProcessState = ProcessState.reqNwkPkt;
+          if (_processState == ProcessState.readEvtLog &&
+              _evtLogRetryCount < _evtLogRetryMax) {
+            _evtLogRetryCount++;
+            _mainProcessState = ProcessState.readEvtLog; // retry same request
+          } else {
+            _mainProcessState = ProcessState.reqNwkPkt;
+            _evtLogRetryCount = 0;
+          }
           _responseTimer = null;
         });
         break;
@@ -654,6 +683,10 @@ class SerialCommunicationService {
   }
 
   void _reqNwkPkt() {
+    // Avoid duplicate NWK sends if we're already awaiting a response
+    if (_mainProcessState == ProcessState.reqRspWaitState) {
+      return;
+    }
     _statusStreamController.add("Requesting network packet...");
 
     List<int> nwkReqPkt = [
@@ -762,13 +795,13 @@ class SerialCommunicationService {
       _pktTxCnt = 0;
     }
 
-    List<int> evtLogPayloadData = [
-      logEvtSearchMethod,
-      (_logEvtSearchNumber >> 24) & 0xff,
-      (_logEvtSearchNumber >> 16) & 0xff,
-      (_logEvtSearchNumber >> 8) & 0xff,
-      _logEvtSearchNumber & 0xff,
-    ];
+    // Build 200-byte payload and set search method/number at offsets 132..136
+    List<int> evtLogPayloadData = List.filled(200, 0x00);
+    evtLogPayloadData[132] = logEvtSearchMethod;
+    evtLogPayloadData[133] = (_logEvtSearchNumber >> 24) & 0xff;
+    evtLogPayloadData[134] = (_logEvtSearchNumber >> 16) & 0xff;
+    evtLogPayloadData[135] = (_logEvtSearchNumber >> 8) & 0xff;
+    evtLogPayloadData[136] = _logEvtSearchNumber & 0xff;
 
     List<int> framePacket = _frameTheTxCommPkt(
       scriptDest,
@@ -784,16 +817,12 @@ class SerialCommunicationService {
       logSk,
       logCmd,
       evtLogPayloadData,
-      5,
+      200,
     );
 
     _sendData(Uint8List.fromList(framePacket));
 
-    if (_logEvtSearchNumber <= 0) {
-      _stopEvtLogRead = true;
-    } else {
-      _logEvtSearchNumber--;
-    }
+    // Decrement only after we get a valid response, to avoid gaps on retries
 
     _pktTxCnt++;
     _processState = ProcessState.readEvtLog;
@@ -1074,19 +1103,57 @@ class SerialCommunicationService {
 
       case ProcessState.reqAccessKey:
         print('DEBUG: Processing Access Key Request');
-        if (_commFrame.pktTyp == PacketType.ack.value) {
-          _statusStreamController.add("Access key ACK received");
-          _processState = ProcessState.dummyPktSend;
-          _mainProcessState = ProcessState.dummyPktSend;
-          print(
-            'DEBUG: Access key ACK received, transitioning to Dummy Packet Send',
-          );
+        if (_commFrame.pktTyp == PacketType.nrm.value) {
+          // Accept either DB_STATUS_INSTRUCT '1974' OR an immediate event-log (dbSetupReq/cmd=2)
+          bool isDbStatusInstruct =
+              _commFrame.payload.header.mode ==
+              InstructMode.dbStatusInstruct.value;
+          bool isDbSetupEventLog =
+              _commFrame.payload.header.mode == RequestMode.dbSetupReq.value &&
+              _commFrame.payload.header.cmd == eventStatusCmd;
+
+          if (isDbStatusInstruct) {
+            List<int> asciiList = _commFrame.payload.data.sublist(1, 5);
+            String asciiStr = String.fromCharCodes(asciiList);
+            print('DEBUG: Access key response ASCII: $asciiStr');
+            if (asciiStr == '1974') {
+              _statusStreamController.add(
+                "Access key verified - Starting log retrieval",
+              );
+              _processState = ProcessState.readEvtLog;
+              _mainProcessState = ProcessState.readEvtLog;
+              print('DEBUG: Access key verified, starting log retrieval');
+              _stopPolling();
+            } else {
+              _statusStreamController.add("Invalid access key");
+              _processState = ProcessState.reqNwkPkt;
+              _mainProcessState = ProcessState.reqNwkPkt;
+              print(
+                'DEBUG: Invalid access key, restarting from Network Request',
+              );
+            }
+          } else if (isDbSetupEventLog) {
+            _statusStreamController.add(
+              "Event-log received after access key - proceeding to log retrieval",
+            );
+            _processEventLog(_commFrame.payload.data);
+            _processState = ProcessState.readEvtLog;
+            _mainProcessState = ProcessState.readEvtLog;
+            _stopPolling();
+          } else {
+            _statusStreamController.add("Access key response not recognized");
+            _processState = ProcessState.reqNwkPkt;
+            _mainProcessState = ProcessState.reqNwkPkt;
+            print(
+              'DEBUG: Access key invalid response, restarting from Network Request',
+            );
+          }
         } else {
-          _statusStreamController.add("Access key NACK received");
+          _statusStreamController.add("Access key NACK/Invalid response");
           _processState = ProcessState.reqNwkPkt;
           _mainProcessState = ProcessState.reqNwkPkt;
           print(
-            'DEBUG: Access key NACK received, restarting from Network Request',
+            'DEBUG: Access key invalid response, restarting from Network Request',
           );
         }
         break;
@@ -1130,13 +1197,34 @@ class SerialCommunicationService {
             _commFrame.payload.header.cmd == eventStatusCmd) {
           print('DEBUG: Valid event log packet received, processing...');
           _processEventLog(_commFrame.payload.data);
+          // Only now decrement search number
+          if (_logEvtSearchNumber > 0) {
+            _logEvtSearchNumber--;
+          } else {
+            _stopEvtLogRead = true;
+          }
+          _evtLogRetryCount = 0;
+          _processState = ProcessState.readEvtLog;
+          _mainProcessState = ProcessState.readEvtLog;
+        } else if (_commFrame.pktTyp == PacketType.nrm.value &&
+            _commFrame.payload.header.mode ==
+                InstructMode.dbStatusInstruct.value) {
+          // Some panels periodically send DB_STATUS_INSTRUCT '1974' frames during log retrieval
+          List<int> asciiList = _commFrame.payload.data.sublist(1, 5);
+          String asciiStr = String.fromCharCodes(asciiList);
+          print(
+            'DEBUG: Received DB_STATUS_INSTRUCT during log retrieval: $asciiStr',
+          );
+          // Treat as keep-alive; remain in log retrieval
           _processState = ProcessState.readEvtLog;
           _mainProcessState = ProcessState.readEvtLog;
         } else {
           print(
-            'DEBUG: Invalid event log packet - Type: ${_commFrame.pktTyp}, Mode: ${_commFrame.payload.header.mode}, Cmd: ${_commFrame.payload.header.cmd}',
+            'DEBUG: Unexpected packet during log retrieval - Type: ${_commFrame.pktTyp}, Mode: ${_commFrame.payload.header.mode}, Cmd: ${_commFrame.payload.header.cmd}',
           );
-          _statusStreamController.add("Invalid event log packet");
+          // Ignore and continue log retrieval instead of restarting
+          _processState = ProcessState.readEvtLog;
+          _mainProcessState = ProcessState.readEvtLog;
         }
         break;
 
@@ -1160,7 +1248,8 @@ class SerialCommunicationService {
   }
 
   void _processEventLog(List<int> evtData) {
-    List<int> timestamp = evtData.sublist(17, 21);
+    // Align offsets with Python implementation
+    List<int> timestamp = evtData.sublist(12, 16);
     int timestampDecimal =
         timestamp[3] |
         (timestamp[2] << 8) |
@@ -1180,17 +1269,19 @@ class SerialCommunicationService {
             : DateTime.now();
     print('DEBUG: Event time: $eventTime');
 
+    // Event ID taken from search number bytes [133..136]
     int eventId =
-        evtData[4] |
-        (evtData[3] << 8) |
-        (evtData[2] << 16) |
-        (evtData[1] << 24);
+        evtData[136] |
+        (evtData[135] << 8) |
+        (evtData[134] << 16) |
+        (evtData[133] << 24);
     print('DEBUG: Event ID: $eventId');
 
     String evtTextAscii;
-    List<int> evtText = evtData.sublist(47);
+    List<int> evtText = evtData.sublist(42, 124);
     if (evtText.length > 1 && evtText[1] != 0x00) {
-      List<int> evtTextValue = evtText.sublist(2, evtText[1] + 2);
+      int textLen = evtText[1];
+      List<int> evtTextValue = evtText.sublist(2, 2 + textLen);
       evtTextAscii = String.fromCharCodes(evtTextValue);
       print('DEBUG: Event text: $evtTextAscii');
     } else {
@@ -1199,12 +1290,12 @@ class SerialCommunicationService {
     }
 
     String panelSource;
-    if (evtData[5] == 0 && evtData[6] == 0 && evtData[7] == 0) {
+    if (evtData[0] == 0 && evtData[1] == 0 && evtData[2] == 0) {
       panelSource = "SOLAR";
-    } else if (evtData[5] == 1 && evtData[6] == 1 && evtData[7] == 0) {
-      panelSource = "Panel No.${evtData[5]}";
+    } else if (evtData[0] == 1 && evtData[1] == 0 && evtData[2] == 0) {
+      panelSource = "Panel No.${evtData[0]}";
     } else {
-      panelSource = "Panel ${evtData[5]}.${evtData[6]}.${evtData[7]}";
+      panelSource = "Panel ${evtData[0]}.${evtData[1]}.${evtData[2]}";
     }
     print('DEBUG: Panel source: $panelSource');
 
@@ -1212,22 +1303,19 @@ class SerialCommunicationService {
       panelText: panelSource,
       eventId: (eventId + 1).toString(),
       eventDateTime: eventTime,
-      panelNo: evtData[5].toString(),
-      lBusNo: evtData[6].toString(),
-      moduleNo: evtData[7].toString(),
-      eventStatus: EventConstants.getEventStatusValue(evtData[15]),
-      eventClass: EventConstants.getEventClassValue(evtData[12]),
+      panelNo: evtData[0].toString(),
+      lBusNo: evtData[1].toString(),
+      moduleNo: evtData[2].toString(),
+      eventStatus: EventConstants.getEventStatusValue(evtData[10]),
+      eventClass: EventConstants.getEventClassValue(evtData[7]),
       eventSource: panelSource,
-      eventType: EventConstants.getEventType(evtData[14]),
-      eventSubType: EventConstants.getEventDescription(
-        evtData[14],
-        evtData[16],
-      ),
+      eventType: EventConstants.getEventType(evtData[9]),
+      eventSubType: EventConstants.getEventDescription(evtData[9], evtData[11]),
       identifier: EventConstants.getEventIdentifier(
-        evtData[14],
-        evtData[34],
-        evtData[35],
-        evtData[36],
+        evtData[9],
+        evtData[29],
+        evtData[30],
+        evtData[31],
       ),
       text: evtTextAscii,
     );
@@ -1246,6 +1334,7 @@ class SerialCommunicationService {
     _connectionState = PanelConnectionState.notConnected;
     _processTimer?.cancel();
     _responseTimer?.cancel();
+    _stopPolling();
 
     // Cancel BLE subscriptions
     await _characteristicSubscription?.cancel();
@@ -1270,6 +1359,13 @@ class SerialCommunicationService {
     _rxBuffer.clear();
 
     _statusStreamController.add("Disconnected");
+  }
+
+  // POLL loop removed for stability; reintroduce if needed.
+
+  void _stopPolling() {
+    _pollTimer?.cancel();
+    _pollTimer = null;
   }
 
   void dispose() {
