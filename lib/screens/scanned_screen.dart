@@ -7,11 +7,12 @@ import 'package:usb_serial/usb_serial.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
 class ScannedScreen extends StatefulWidget {
-  final List<dynamic> discoveredDevices; // Can hold both UsbDevice and ScanResult
+  final List<dynamic>
+  discoveredDevices; // Can hold both UsbDevice and ScanResult
   final ScanType scanType;
-  
+
   const ScannedScreen({
-    super.key, 
+    super.key,
     this.discoveredDevices = const [],
     required this.scanType,
   });
@@ -34,10 +35,7 @@ class _ScannedScreenState extends State<ScannedScreen> {
         ),
         child: SingleChildScrollView(
           child: Column(
-            children: [
-              _buildHeader(context),
-              _buildDevicesIdentified(),
-            ],
+            children: [_buildHeader(context), _buildDevicesIdentified()],
           ),
         ),
       ),
@@ -153,7 +151,10 @@ class _ScannedScreenState extends State<ScannedScreen> {
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: widget.discoveredDevices.isEmpty ? Colors.orange : Colors.green,
+                  color:
+                      widget.discoveredDevices.isEmpty
+                          ? Colors.orange
+                          : Colors.green,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
@@ -188,7 +189,9 @@ class _ScannedScreenState extends State<ScannedScreen> {
       child: Column(
         children: [
           Icon(
-            widget.scanType == ScanType.usb ? Icons.usb_off : Icons.bluetooth_disabled,
+            widget.scanType == ScanType.usb
+                ? Icons.usb_off
+                : Icons.bluetooth_disabled,
             size: 48,
             color: Colors.grey,
           ),
@@ -203,7 +206,7 @@ class _ScannedScreenState extends State<ScannedScreen> {
           ),
           SizedBox(height: 8),
           Text(
-            widget.scanType == ScanType.usb 
+            widget.scanType == ScanType.usb
                 ? 'Make sure your solar devices are connected via USB and powered on.'
                 : 'Make sure Bluetooth is enabled and solar devices are in pairing mode.',
             textAlign: TextAlign.center,
@@ -230,9 +233,14 @@ class _ScannedScreenState extends State<ScannedScreen> {
         final device = widget.discoveredDevices[index];
         return GestureDetector(
           onTap: () {
+            // Pass the selected device to AccessCodeScreen
             Navigator.of(context).push(
               MaterialPageRoute(
-                builder: (context) => AccessCodeScreen(),
+                builder:
+                    (context) => AccessCodeScreen(
+                      selectedDevice: device,
+                      scanType: widget.scanType,
+                    ),
               ),
             );
           },
@@ -253,12 +261,20 @@ class _ScannedScreenState extends State<ScannedScreen> {
                     width: 48,
                     height: 48,
                     decoration: BoxDecoration(
-                      color: (widget.scanType == ScanType.usb ? Color(0xFFEC1D24) : Colors.blue).withValues(alpha: 0.1),
+                      color: (widget.scanType == ScanType.usb
+                              ? Color(0xFFEC1D24)
+                              : Colors.blue)
+                          .withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Icon(
-                      widget.scanType == ScanType.usb ? Icons.usb : Icons.bluetooth,
-                      color: widget.scanType == ScanType.usb ? Color(0xFFEC1D24) : Colors.blue,
+                      widget.scanType == ScanType.usb
+                          ? Icons.usb
+                          : Icons.bluetooth,
+                      color:
+                          widget.scanType == ScanType.usb
+                              ? Color(0xFFEC1D24)
+                              : Colors.blue,
                       size: 24,
                     ),
                   ),
@@ -300,8 +316,8 @@ class _ScannedScreenState extends State<ScannedScreen> {
     if (widget.scanType == ScanType.usb && device is UsbDevice) {
       return device.productName ?? 'USB Solar Device';
     } else if (widget.scanType == ScanType.bluetooth && device is ScanResult) {
-      return device.device.platformName.isNotEmpty 
-          ? device.device.platformName 
+      return device.device.platformName.isNotEmpty
+          ? device.device.platformName
           : 'BLE Solar Device';
     }
     return 'Unknown Device';

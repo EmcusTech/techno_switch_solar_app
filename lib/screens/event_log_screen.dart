@@ -4,10 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:techno_switch_solar_app/models/log_model.dart';
 import 'package:techno_switch_solar_app/utils/serial_communication_service.dart';
-
-import 'package:techno_switch_solar_app/screens/log_history_screen.dart';
-import 'package:techno_switch_solar_app/screens/settings_screen.dart';
-import 'package:techno_switch_solar_app/screens/test_mode_screen.dart';
+import 'package:techno_switch_solar_app/services/app_services.dart';
 
 class EventLogScreen extends StatefulWidget {
   final List<LogModel> logDataList;
@@ -25,7 +22,6 @@ class EventLogScreen extends StatefulWidget {
 }
 
 class _EventLogScreenState extends State<EventLogScreen> {
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -59,61 +55,48 @@ class _EventLogContentState extends State<_EventLogContent> {
   late SerialCommunicationService _serialService;
   List<LogModel> _realTimeLogs = [];
   String _connectionStatus = "Disconnected";
-  bool _isConnecting = false;
 
   @override
   void initState() {
     super.initState();
-    _serialService = SerialCommunicationService();
+    // Use the shared service instead of creating a new instance
+    _serialService = AppServices.serialService;
     _realTimeLogs = List.from(widget.logDataList);
-    
+
+    // Check if already connected and start log retrieval automatically
+    if (AppServices.isConnected) {
+      _connectionStatus = "Retrieving logs...";
+      // Start log retrieval immediately
+      _startLogRetrieval();
+    } else {
+      _connectionStatus = "Device not connected";
+    }
+
     // Listen to log stream
     _serialService.logStream.listen((logModel) {
       setState(() {
         _realTimeLogs.insert(0, logModel); // Add new logs at the beginning
       });
     });
-    
-    // Listen to status stream
+
+    // Listen to status stream for log retrieval progress
     _serialService.statusStream.listen((status) {
       setState(() {
         _connectionStatus = status;
-        if (status.contains("Connected")) {
-          _isConnecting = false;
-        } else if (status.contains("error") || status.contains("Failed")) {
-          _isConnecting = false;
-        }
       });
     });
+  }
+
+  void _startLogRetrieval() {
+    // Trigger the automatic log retrieval process
+    _serialService.startLogRetrieval();
   }
 
   @override
   void dispose() {
-    _serialService.dispose();
+    // Don't dispose the shared service here, as other screens might still be using it
+    // _serialService.dispose(); // Commented out
     super.dispose();
-  }
-
-  Future<void> _connectToDevice() async {
-    setState(() {
-      _isConnecting = true;
-      _connectionStatus = "Connecting...";
-    });
-    
-    bool connected = await _serialService.connectToDevice();
-    if (!connected) {
-      setState(() {
-        _isConnecting = false;
-        _connectionStatus = "Connection failed";
-      });
-    }
-  }
-
-  void _disconnectFromDevice() {
-    _serialService.disconnect();
-    setState(() {
-      _connectionStatus = "Disconnected";
-      _isConnecting = false;
-    });
   }
 
   @override
@@ -225,11 +208,17 @@ class _EventLogContentState extends State<_EventLogContent> {
                           ),
                         ),
                         TextSpan(
-                          text: _connectionStatus.contains("Connected") ? 'connected' : 'disconnected',
+                          text:
+                              _connectionStatus.contains("Connected")
+                                  ? 'connected'
+                                  : 'disconnected',
                           style: GoogleFonts.inter(
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
-                            color: _connectionStatus.contains("Connected") ? Color(0xFF00A706) : Color(0xFFEC1D24),
+                            color:
+                                _connectionStatus.contains("Connected")
+                                    ? Color(0xFF00A706)
+                                    : Color(0xFFEC1D24),
                           ),
                         ),
                       ],
@@ -249,8 +238,8 @@ class _EventLogContentState extends State<_EventLogContent> {
             ],
           ),
           SizedBox(height: 10),
-          
-          // Connection Status and Controls
+
+          // Log Retrieval Status
           Container(
             padding: EdgeInsets.all(12),
             decoration: BoxDecoration(
@@ -263,8 +252,21 @@ class _EventLogContentState extends State<_EventLogContent> {
                 Row(
                   children: [
                     Icon(
-                      _connectionStatus.contains("Connected") ? Icons.usb : Icons.usb_off,
-                      color: _connectionStatus.contains("Connected") ? Color(0xFF00A706) : Color(0xFF979797),
+                      _connectionStatus.contains("Retrieving") ||
+                              _connectionStatus.contains("Processing")
+                          ? Icons.sync
+                          : _connectionStatus.contains("Complete") ||
+                              _connectionStatus.contains("received")
+                          ? Icons.check_circle
+                          : Icons.info,
+                      color:
+                          _connectionStatus.contains("Retrieving") ||
+                                  _connectionStatus.contains("Processing")
+                              ? Colors.orange
+                              : _connectionStatus.contains("Complete") ||
+                                  _connectionStatus.contains("received")
+                              ? Color(0xFF00A706)
+                              : Color(0xFF979797),
                     ),
                     SizedBox(width: 8),
                     Expanded(
@@ -276,46 +278,13 @@ class _EventLogContentState extends State<_EventLogContent> {
                         ),
                       ),
                     ),
-                    if (_connectionStatus.contains("Connected"))
-                      ElevatedButton(
-                        onPressed: _disconnectFromDevice,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Color(0xFFEC1D24),
-                          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        ),
-                        child: Text(
-                          'Disconnect',
-                          style: GoogleFonts.inter(color: Colors.white, fontSize: 12),
-                        ),
-                      )
-                    else
-                      ElevatedButton(
-                        onPressed: _isConnecting ? null : _connectToDevice,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Color(0xFF00A706),
-                          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        ),
-                        child: _isConnecting
-                            ? SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                                ),
-                              )
-                            : Text(
-                                'Connect',
-                                style: GoogleFonts.inter(color: Colors.white, fontSize: 12),
-                              ),
-                      ),
                   ],
                 ),
                 if (_realTimeLogs.length > widget.logDataList.length)
                   Padding(
                     padding: EdgeInsets.only(top: 8),
                     child: Text(
-                      '${_realTimeLogs.length - widget.logDataList.length} new logs received',
+                      '${_realTimeLogs.length - widget.logDataList.length} new logs retrieved',
                       style: GoogleFonts.inter(
                         fontSize: 12,
                         color: Color(0xFF00A706),
@@ -326,11 +295,14 @@ class _EventLogContentState extends State<_EventLogContent> {
               ],
             ),
           ),
-          
+
           SizedBox(height: 15),
-          Divider(color: Color(0xFF000000).withValues(alpha: 0.18), thickness: 1),
+          Divider(
+            color: Color(0xFF000000).withValues(alpha: 0.18),
+            thickness: 1,
+          ),
           SizedBox(height: 15),
-          
+
           // Event Log Header
           Row(
             children: [
@@ -545,9 +517,9 @@ class _EventLogContentState extends State<_EventLogContent> {
                         ),
                         Text(
                           log.eventDateTime != null
-                              ? DateFormat('dd/MM/yyyy - hh:mm a').format(
-                                log.eventDateTime!.toLocal(),
-                              )
+                              ? DateFormat(
+                                'dd/MM/yyyy - hh:mm a',
+                              ).format(log.eventDateTime!.toLocal())
                               : 'N/A',
                           style: GoogleFonts.inter(
                             fontSize: 10,
@@ -588,7 +560,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                   ),
                 ),
                 Row(
-                  crossAxisAlignment: CrossAxisAlignment.start, 
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Expanded(
@@ -673,7 +645,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                   ),
                 ),
                 Row(
-                  crossAxisAlignment: CrossAxisAlignment.start, 
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Expanded(
@@ -811,12 +783,14 @@ class _EventLogContentState extends State<_EventLogContent> {
                     ),
                   ],
                 ),
-                if (log.identifier != null && log.identifier!.isNotEmpty && log.identifier != "-")
+                if (log.identifier != null &&
+                    log.identifier!.isNotEmpty &&
+                    log.identifier != "-")
                   Column(
                     children: [
                       SizedBox(height: 22),
                       Row(
-                        crossAxisAlignment: CrossAxisAlignment.start, 
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Expanded(

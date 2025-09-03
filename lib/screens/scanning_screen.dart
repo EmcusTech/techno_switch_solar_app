@@ -5,7 +5,7 @@ import 'package:techno_switch_solar_app/screens/scanned_screen.dart';
 import 'package:techno_switch_solar_app/widgets/scanning_widget.dart';
 import 'package:usb_serial/usb_serial.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:techno_switch_solar_app/utils/bluetooth_service.dart';
 import 'dart:async';
 
 enum ScanType { usb, bluetooth }
@@ -21,18 +21,24 @@ class _ScanningScreenState extends State<ScanningScreen> {
   Timer? _scanTimer;
   Timer? _autoStopTimer;
   Timer? _countdownTimer;
-  List<dynamic> _discoveredDevices = []; // Can hold both UsbDevice and BluetoothDevice
+  List<dynamic> _discoveredDevices =
+      []; // Can hold both UsbDevice and BluetoothDevice
   bool _isScanning = false;
   bool _showSelection = true;
   ScanType? _selectedScanType;
   static const int _scanDurationSeconds = 15; // Auto-stop after 15 seconds
   int _remainingSeconds = _scanDurationSeconds;
 
+  final BluetoothService _bluetoothService = BluetoothService();
+  StreamSubscription? _bleResultsSub;
+
   @override
   void dispose() {
     _scanTimer?.cancel();
     _autoStopTimer?.cancel();
     _countdownTimer?.cancel();
+    _bleResultsSub?.cancel();
+    _bluetoothService.dispose();
     super.dispose();
   }
 
@@ -46,13 +52,33 @@ class _ScanningScreenState extends State<ScanningScreen> {
 
     // Request permissions
     await _requestPermissions(scanType);
-    
-    // Start periodic scanning
-    _scanTimer = Timer.periodic(const Duration(seconds: 2), (timer) async {
-      if (_isScanning) {
-        await _scanForDevices();
+
+    if (scanType == ScanType.bluetooth) {
+      await _bluetoothService.requestPermissions();
+      final poweredOn = await _bluetoothService.ensurePoweredOn();
+      if (poweredOn) {
+        await _bleResultsSub?.cancel();
+        _bleResultsSub = _bluetoothService.scanResultsStream.listen((results) {
+          if (mounted) {
+            setState(() {
+              _discoveredDevices = results.cast<dynamic>();
+            });
+          }
+        });
+        await _bluetoothService.startScanning(
+          timeout: const Duration(seconds: 2),
+        );
       }
-    });
+    }
+
+    // Start periodic scanning
+    if (scanType == ScanType.usb) {
+      _scanTimer = Timer.periodic(const Duration(seconds: 2), (timer) async {
+        if (_isScanning) {
+          await _scanForDevices();
+        }
+      });
+    }
 
     // Start countdown timer
     _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
@@ -76,11 +102,8 @@ class _ScanningScreenState extends State<ScanningScreen> {
       await Permission.storage.request();
       await Permission.manageExternalStorage.request();
     } else if (scanType == ScanType.bluetooth) {
-      await Permission.bluetooth.request();
-      await Permission.bluetoothScan.request();
-      await Permission.bluetoothConnect.request();
-      await Permission.bluetoothAdvertise.request();
-      await Permission.location.request();
+      // Handled by BluetoothService
+      return;
     }
   }
 
@@ -94,24 +117,10 @@ class _ScanningScreenState extends State<ScanningScreen> {
           });
         }
       } else if (_selectedScanType == ScanType.bluetooth) {
-        // Check if Bluetooth is available and on
-        if (await FlutterBluePlus.isSupported) {
-          await FlutterBluePlus.turnOn();
-          
-          // Start scanning for BLE devices
-          await FlutterBluePlus.startScan(timeout: const Duration(seconds: 2));
-          
-          // Listen to scan results
-          FlutterBluePlus.scanResults.listen((results) {
-            if (mounted) {
-              setState(() {
-                _discoveredDevices = results.cast<dynamic>();
-              });
-            }
-          });
-        }
+        // BLE scanning handled by BluetoothService stream
+        return;
       }
-      
+
       // If devices are found for the first time, give feedback
       if (_discoveredDevices.isNotEmpty) {
         print('Devices discovered: ${_discoveredDevices.length}');
@@ -128,14 +137,14 @@ class _ScanningScreenState extends State<ScanningScreen> {
         _isScanning = false;
       });
     }
-    
+
     _scanTimer?.cancel();
     _autoStopTimer?.cancel();
     _countdownTimer?.cancel();
 
     // Stop BLE scanning if active
     if (_selectedScanType == ScanType.bluetooth) {
-      FlutterBluePlus.stopScan();
+      _bluetoothService.stopScanning();
     }
 
     // Navigate to scanned screen with discovered devices
@@ -143,10 +152,11 @@ class _ScanningScreenState extends State<ScanningScreen> {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) => ScannedScreen(
-            discoveredDevices: _discoveredDevices,
-            scanType: _selectedScanType!,
-          ),
+          builder:
+              (context) => ScannedScreen(
+                discoveredDevices: _discoveredDevices,
+                scanType: _selectedScanType!,
+              ),
         ),
       );
     }
@@ -159,13 +169,14 @@ class _ScanningScreenState extends State<ScanningScreen> {
       _selectedScanType = null;
       _discoveredDevices.clear();
     });
-    
+
     _scanTimer?.cancel();
     _autoStopTimer?.cancel();
     _countdownTimer?.cancel();
-    
+
     // Stop BLE scanning if active
-    FlutterBluePlus.stopScan();
+    _bleResultsSub?.cancel();
+    _bluetoothService.stopScanning();
   }
 
   @override
@@ -198,7 +209,7 @@ class _ScanningScreenState extends State<ScanningScreen> {
             ),
           ],
         ),
-        
+
         Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -210,13 +221,11 @@ class _ScanningScreenState extends State<ScanningScreen> {
                 shape: BoxShape.circle,
                 color: Colors.red[50],
               ),
-              child: Center(
-                child: SvgPicture.asset('assets/svgs/logo.svg'),
-              ),
+              child: Center(child: SvgPicture.asset('assets/svgs/logo.svg')),
             ),
-            
+
             SizedBox(height: 40),
-            
+
             Text(
               'Choose Scan Type',
               style: GoogleFonts.inter(
@@ -225,9 +234,9 @@ class _ScanningScreenState extends State<ScanningScreen> {
                 color: Color(0xFF3D3D3D),
               ),
             ),
-            
+
             SizedBox(height: 12),
-            
+
             Text(
               'Select the type of devices you want to scan for',
               textAlign: TextAlign.center,
@@ -237,9 +246,9 @@ class _ScanningScreenState extends State<ScanningScreen> {
                 color: Color(0xFF3A3A3A),
               ),
             ),
-            
+
             SizedBox(height: 40),
-            
+
             // USB Scan Option
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 28),
@@ -311,9 +320,9 @@ class _ScanningScreenState extends State<ScanningScreen> {
                 ),
               ),
             ),
-            
+
             SizedBox(height: 16),
-            
+
             // Bluetooth Scan Option
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 28),
@@ -405,9 +414,9 @@ class _ScanningScreenState extends State<ScanningScreen> {
             ),
           ],
         ),
-        
+
         Align(alignment: Alignment.center, child: ScanningAnimation()),
-        
+
         // Back button
         Positioned(
           top: 50,
@@ -436,7 +445,7 @@ class _ScanningScreenState extends State<ScanningScreen> {
             ),
           ),
         ),
-        
+
         Column(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
@@ -448,16 +457,29 @@ class _ScanningScreenState extends State<ScanningScreen> {
                 padding: const EdgeInsets.all(16),
                 margin: const EdgeInsets.only(bottom: 20),
                 decoration: BoxDecoration(
-                  color: (_selectedScanType == ScanType.usb ? Color(0xFFEC1D24) : Colors.blue).withValues(alpha: 0.1),
+                  color: (_selectedScanType == ScanType.usb
+                          ? Color(0xFFEC1D24)
+                          : Colors.blue)
+                      .withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: (_selectedScanType == ScanType.usb ? Color(0xFFEC1D24) : Colors.blue).withValues(alpha: 0.3)),
+                  border: Border.all(
+                    color: (_selectedScanType == ScanType.usb
+                            ? Color(0xFFEC1D24)
+                            : Colors.blue)
+                        .withValues(alpha: 0.3),
+                  ),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(
-                      _selectedScanType == ScanType.usb ? Icons.usb : Icons.bluetooth,
-                      color: _selectedScanType == ScanType.usb ? Color(0xFFEC1D24) : Colors.blue,
+                      _selectedScanType == ScanType.usb
+                          ? Icons.usb
+                          : Icons.bluetooth,
+                      color:
+                          _selectedScanType == ScanType.usb
+                              ? Color(0xFFEC1D24)
+                              : Colors.blue,
                       size: 20,
                     ),
                     SizedBox(width: 8),
@@ -467,14 +489,17 @@ class _ScanningScreenState extends State<ScanningScreen> {
                       style: GoogleFonts.inter(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: _selectedScanType == ScanType.usb ? Color(0xFFEC1D24) : Colors.blue,
+                        color:
+                            _selectedScanType == ScanType.usb
+                                ? Color(0xFFEC1D24)
+                                : Colors.blue,
                       ),
                     ),
                   ],
                 ),
               ),
             ),
-            
+
             // Show discovered devices count
             if (_discoveredDevices.isNotEmpty)
               Padding(
@@ -486,7 +511,9 @@ class _ScanningScreenState extends State<ScanningScreen> {
                   decoration: BoxDecoration(
                     color: Colors.green.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
+                    border: Border.all(
+                      color: Colors.green.withValues(alpha: 0.3),
+                    ),
                   ),
                   child: Text(
                     '${_discoveredDevices.length} device(s) found',
@@ -499,7 +526,7 @@ class _ScanningScreenState extends State<ScanningScreen> {
                   ),
                 ),
               ),
-            
+
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 28),
               child: GestureDetector(
@@ -527,11 +554,11 @@ class _ScanningScreenState extends State<ScanningScreen> {
               ),
             ),
             SizedBox(height: 20),
-            
+
             // Padding(
             //   padding: const EdgeInsets.symmetric(vertical: 30),
             //   child: Text(
-            //     _isScanning 
+            //     _isScanning
             //         ? 'Scanning for ${_selectedScanType == ScanType.usb ? 'USB' : 'Bluetooth'} devices... Auto-stop in ${_remainingSeconds}s'
             //         : 'Scan completed',
             //     textAlign: TextAlign.center,
