@@ -3,8 +3,8 @@ import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:techno_switch_solar_app/models/log_model.dart';
-import 'package:techno_switch_solar_app/utils/serial_communication_service.dart';
 import 'package:techno_switch_solar_app/services/app_services.dart';
+import 'package:techno_switch_solar_app/services/navigation_service.dart';
 
 class EventLogScreen extends StatefulWidget {
   final List<LogModel> logDataList;
@@ -52,50 +52,27 @@ class _EventLogContent extends StatefulWidget {
 
 class _EventLogContentState extends State<_EventLogContent> {
   bool _isListSelected = true;
-  late SerialCommunicationService _serialService;
-  List<LogModel> _realTimeLogs = [];
+  List<LogModel> _displayLogs = [];
   String _connectionStatus = "Disconnected";
 
   @override
   void initState() {
     super.initState();
-    // Use the shared service instead of creating a new instance
-    _serialService = AppServices.serialService;
-    _realTimeLogs = List.from(widget.logDataList);
+    // Initialize display logs with the data passed from loading screen
+    _displayLogs = List.from(widget.logDataList);
 
-    // Check if already connected and start log retrieval automatically
-    if (AppServices.isConnected) {
-      _connectionStatus = "Retrieving logs...";
-      // Start log retrieval immediately
-      _startLogRetrieval();
+    // Set connection status based on whether we have logs
+    if (_displayLogs.isNotEmpty) {
+      _connectionStatus = "Connected - ${_displayLogs.length} logs retrieved";
+    } else if (AppServices.isConnected) {
+      _connectionStatus = "Connected - No logs retrieved";
     } else {
       _connectionStatus = "Device not connected";
     }
-
-    // Listen to log stream
-    _serialService.logStream.listen((logModel) {
-      setState(() {
-        _realTimeLogs.insert(0, logModel); // Add new logs at the beginning
-      });
-    });
-
-    // Listen to status stream for log retrieval progress
-    _serialService.statusStream.listen((status) {
-      setState(() {
-        _connectionStatus = status;
-      });
-    });
-  }
-
-  void _startLogRetrieval() {
-    // Trigger the automatic log retrieval process
-    _serialService.startLogRetrieval();
   }
 
   @override
   void dispose() {
-    // Don't dispose the shared service here, as other screens might still be using it
-    // _serialService.dispose(); // Commented out
     super.dispose();
   }
 
@@ -123,8 +100,11 @@ class _EventLogContentState extends State<_EventLogContent> {
                   child: Row(
                     children: [
                       GestureDetector(
-                        onTap: () {
-                          Navigator.of(context).pop();
+                        onTap: () async {
+                          // Disconnect Bluetooth when going back
+                          await NavigationService.navigateBackToScanning(
+                            context,
+                          );
                         },
                         child: SvgPicture.asset(
                           'assets/svgs/arrow_back_icon.svg',
@@ -280,11 +260,11 @@ class _EventLogContentState extends State<_EventLogContent> {
                     ),
                   ],
                 ),
-                if (_realTimeLogs.length > widget.logDataList.length)
+                if (_displayLogs.isNotEmpty)
                   Padding(
                     padding: EdgeInsets.only(top: 8),
                     child: Text(
-                      '${_realTimeLogs.length - widget.logDataList.length} new logs retrieved',
+                      '${_displayLogs.length} logs retrieved',
                       style: GoogleFonts.inter(
                         fontSize: 12,
                         color: Color(0xFF00A706),
@@ -433,10 +413,10 @@ class _EventLogContentState extends State<_EventLogContent> {
         ListView.separated(
           shrinkWrap: true,
           physics: NeverScrollableScrollPhysics(),
-          itemCount: _realTimeLogs.length,
+          itemCount: _displayLogs.length,
           separatorBuilder: (context, index) => const Divider(height: 1),
           itemBuilder: (context, index) {
-            final log = _realTimeLogs[index];
+            final log = _displayLogs[index];
             return Container(
               color: Colors.white,
               padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
@@ -480,12 +460,12 @@ class _EventLogContentState extends State<_EventLogContent> {
     return ListView.separated(
       shrinkWrap: true,
       physics: NeverScrollableScrollPhysics(),
-      itemCount: _realTimeLogs.length,
+      itemCount: _displayLogs.length,
       separatorBuilder: (context, index) {
         return SizedBox(height: 10);
       },
       itemBuilder: (context, index) {
-        final log = _realTimeLogs[index];
+        final log = _displayLogs[index];
         return Container(
           width: double.infinity,
           decoration: BoxDecoration(

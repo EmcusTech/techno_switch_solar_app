@@ -6,7 +6,10 @@ import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:techno_switch_solar_app/models/log_model.dart';
 import 'dart:async';
 import 'package:techno_switch_solar_app/screens/event_log_screen.dart';
-import 'package:techno_switch_solar_app/screens/project_dashboard.dart';
+import 'package:techno_switch_solar_app/utils/serial_communication_service.dart';
+import 'package:techno_switch_solar_app/services/app_services.dart';
+import 'package:techno_switch_solar_app/services/app_state.dart';
+import 'package:techno_switch_solar_app/services/navigation_service.dart';
 
 class LogRetrievalLoadingScreen extends StatefulWidget {
   const LogRetrievalLoadingScreen({super.key});
@@ -24,13 +27,26 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
   double _progress = 0.0;
   Timer? _timer;
 
+  // Log retrieval state
+  late SerialCommunicationService _serialService;
+  List<LogModel> _retrievedLogs = [];
+  String _connectionStatus = "Disconnected";
+  int _logsCount = 0;
+  bool _logRetrievalCompleted = false;
+  StreamSubscription? _logSubscription;
+  StreamSubscription? _statusSubscription;
+
   @override
   void initState() {
+    super.initState();
     _accessCodeController = TextEditingController();
     _accessCodeController.addListener(() {
       setState(() {});
     });
-    super.initState();
+
+    // Initialize serial service
+    _serialService = AppServices.serialService;
+
     _controller = AnimationController(
       duration: const Duration(seconds: 5),
       vsync: this,
@@ -43,86 +59,69 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
         });
       });
 
-    _controller.forward();
+    // Start log retrieval instead of animation
+    _startLogRetrieval();
+  }
 
-    // Add navigation when animation completes
-    _controller.addStatusListener((status) {
-      if (status == AnimationStatus.completed) {
-        // Navigator.pop(context);
-        // Navigate to EventLogScreen
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder:
-                (context) => ProjectDashboardScreen(
-                  panelName: 'RHINO2008',
-                  panelVersionNo: '0.98',
-                  // logDataList: [
-                  //   LogModel(
-                  //     panelNo: '253565566',
-                  //     eventId: '1234567890',
-                  //     eventDateTime: DateTime.now(),
-                  //     panelText: 'Some sample text from panel',
-                  //     lBusNo: '3465656',
-                  //     moduleNo: '7655435654',
-                  //     eventStatus: 'Accepted',
-                  //     eventClass: 'Disablement',
-                  //     eventSource: 'Accepted',
-                  //     eventType: 'Ext. Zone Equipment',
-                  //     eventSubType: 'Non-Volatile Memory Changed',
-                  //     identifier: 'Techno switch detector',
-                  //     text: 'Cape town',
-                  //   ),
-                  //   LogModel(
-                  //     panelNo: '253565566',
-                  //     eventId: '1234567890',
-                  //     eventDateTime: DateTime.now(),
-                  //     panelText: 'Some sample text from panel',
-                  //     lBusNo: '3465656',
-                  //     moduleNo: '7655435654',
-                  //     eventStatus: 'Accepted',
-                  //     eventClass: 'Disablement',
-                  //     eventSource: 'Accepted',
-                  //     eventType: 'Ext. Zone Equipment',
-                  //     eventSubType: 'Non-Volatile Memory Changed',
-                  //     identifier: 'Techno switch detector',
-                  //     text: 'Cape town',
-                  //   ),
-                  //   LogModel(
-                  //     panelNo: '253565566',
-                  //     eventId: '1234567890',
-                  //     eventDateTime: DateTime.now(),
-                  //     panelText: 'Some sample text from panel',
-                  //     lBusNo: '3465656',
-                  //     moduleNo: '7655435654',
-                  //     eventStatus: 'Accepted',
-                  //     eventClass: 'Disablement',
-                  //     eventSource: 'Accepted',
-                  //     eventType: 'Ext. Zone Equipment',
-                  //     eventSubType: 'Non-Volatile Memory Changed',
-                  //     identifier: 'Techno switch detector',
-                  //     text: 'Cape town',
-                  //   ),
-                  //   LogModel(
-                  //     panelNo: '253565566',
-                  //     eventId: '1234567890',
-                  //     eventDateTime: DateTime.now(),
-                  //     panelText: 'Some sample text from panel',
-                  //     lBusNo: '3465656',
-                  //     moduleNo: '7655435654',
-                  //     eventStatus: 'Accepted',
-                  //     eventClass: 'Disablement',
-                  //     eventSource: 'Accepted',
-                  //     eventType: 'Ext. Zone Equipment',
-                  //     eventSubType: 'Non-Volatile Memory Changed',
-                  //     identifier: 'Techno switch detector',
-                  //     text: 'Cape town',
-                  //   ),
-                  // ],
+  void _startLogRetrieval() {
+    // Check if already connected and start log retrieval
+    if (AppServices.isConnected) {
+      _connectionStatus = "Starting log retrieval...";
+
+      // Listen to log stream
+      _logSubscription = _serialService.logStream.listen((logModel) {
+        setState(() {
+          _retrievedLogs.add(logModel);
+          _logsCount = _retrievedLogs.length;
+        });
+      });
+
+      // Listen to status stream
+      _statusSubscription = _serialService.statusStream.listen((status) {
+        setState(() {
+          _connectionStatus = status;
+
+          // Check if log retrieval is completed
+          if (status.contains("Completed") || status.contains("Disconnected")) {
+            _logRetrievalCompleted = true;
+            _controller.forward().then((_) {
+              // Navigate to EventLogScreen with retrieved logs
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(
+                  builder:
+                      (context) => EventLogScreen(
+                        logDataList: _retrievedLogs,
+                        panelName: 'RHINO2008',
+                        panelVersionNo: '0.98',
+                      ),
                 ),
-          ),
-        );
-      }
-    });
+              );
+            });
+          }
+        });
+      });
+
+      // Start the actual log retrieval process
+      _serialService.startLogRetrieval();
+    } else {
+      _connectionStatus = "Device not connected";
+      // Fallback navigation after 5 seconds if not connected
+      _controller.forward();
+      _controller.addStatusListener((status) {
+        if (status == AnimationStatus.completed) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder:
+                  (context) => EventLogScreen(
+                    logDataList: [], // Empty list if not connected
+                    panelName: 'RHINO2008',
+                    panelVersionNo: '0.98',
+                  ),
+            ),
+          );
+        }
+      });
+    }
   }
 
   @override
@@ -151,8 +150,11 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
                     child: Row(
                       children: [
                         GestureDetector(
-                          onTap: () {
-                            Navigator.of(context).pop();
+                          onTap: () async {
+                            // Disconnect Bluetooth when going back
+                            await NavigationService.navigateBackToScanning(
+                              context,
+                            );
                           },
                           child: SvgPicture.asset(
                             'assets/svgs/arrow_back_icon.svg',
@@ -239,7 +241,9 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     Text(
-                      '${(_progress * 100).toInt()}%',
+                      _logRetrievalCompleted
+                          ? '${(_progress * 100).toInt()}%'
+                          : '$_logsCount logs',
                       style: GoogleFonts.inter(
                         fontSize: 38,
                         fontWeight: FontWeight.w700,
@@ -259,7 +263,9 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 10),
                         child: Text(
-                          'Fetching Logs...',
+                          _connectionStatus.isNotEmpty
+                              ? _connectionStatus
+                              : 'Fetching Logs...',
                           style: GoogleFonts.inter(
                             fontSize: 14,
                             fontWeight: FontWeight.w400,
@@ -361,6 +367,8 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
     _accessCodeController.dispose();
     _controller.dispose();
     _timer?.cancel();
+    _logSubscription?.cancel();
+    _statusSubscription?.cancel();
     super.dispose();
   }
 }

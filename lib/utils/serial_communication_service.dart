@@ -79,6 +79,21 @@ class CommFrame {
 }
 
 class SerialCommunicationService {
+  // Singleton pattern
+  static SerialCommunicationService? _instance;
+
+  /// Get the singleton instance
+  static SerialCommunicationService get instance {
+    _instance ??= SerialCommunicationService._internal();
+    return _instance!;
+  }
+
+  /// Private constructor
+  SerialCommunicationService._internal();
+
+  /// Factory constructor that returns singleton
+  factory SerialCommunicationService() => instance;
+
   static const int frameSot = 0xFE;
   static const int frameEot = 0xFD;
   static const int frameHeaderSize = 7;
@@ -1103,7 +1118,13 @@ class SerialCommunicationService {
 
       case ProcessState.reqAccessKey:
         print('DEBUG: Processing Access Key Request');
-        if (_commFrame.pktTyp == PacketType.nrm.value) {
+        print(
+          'DEBUG: Received packet type: ${_commFrame.pktTyp}, mode: ${_commFrame.payload.header.mode}',
+        );
+
+        // Accept both NRM packets (1) and ACK packets (2) for access key response
+        if (_commFrame.pktTyp == PacketType.nrm.value ||
+            _commFrame.pktTyp == PacketType.ack.value) {
           // Accept either DB_STATUS_INSTRUCT '1974' OR an immediate event-log (dbSetupReq/cmd=2)
           bool isDbStatusInstruct =
               _commFrame.payload.header.mode ==
@@ -1111,6 +1132,7 @@ class SerialCommunicationService {
           bool isDbSetupEventLog =
               _commFrame.payload.header.mode == RequestMode.dbSetupReq.value &&
               _commFrame.payload.header.cmd == eventStatusCmd;
+          bool isAckPacket = _commFrame.pktTyp == PacketType.ack.value;
 
           if (isDbStatusInstruct) {
             List<int> asciiList = _commFrame.payload.data.sublist(1, 5);
@@ -1139,6 +1161,15 @@ class SerialCommunicationService {
             _processEventLog(_commFrame.payload.data);
             _processState = ProcessState.readEvtLog;
             _mainProcessState = ProcessState.readEvtLog;
+            _stopPolling();
+          } else if (isAckPacket) {
+            // ACK packet received - treat as access key accepted
+            _statusStreamController.add(
+              "Access key ACK received - Starting log retrieval",
+            );
+            _processState = ProcessState.readEvtLog;
+            _mainProcessState = ProcessState.readEvtLog;
+            print('DEBUG: ACK packet received, proceeding to log retrieval');
             _stopPolling();
           } else {
             _statusStreamController.add("Access key response not recognized");
@@ -1333,8 +1364,15 @@ class SerialCommunicationService {
   void disconnect() async {
     _connectionState = PanelConnectionState.notConnected;
     _processTimer?.cancel();
+    _processTimer = null;
     _responseTimer?.cancel();
+    _responseTimer = null;
     _stopPolling();
+
+    //reset all variables
+    _processState = ProcessState.reqNwkPkt;
+    _mainProcessState = ProcessState.reqNwkPkt;
+    _stopEvtLogRead = false;
 
     // Cancel BLE subscriptions
     await _characteristicSubscription?.cancel();

@@ -3,6 +3,8 @@ import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/screens/create_project/create_project_screen.dart';
 import 'package:techno_switch_solar_app/screens/scanning_screen.dart';
+import 'package:techno_switch_solar_app/services/app_services.dart';
+import 'package:techno_switch_solar_app/services/app_state.dart';
 import 'settings_screen.dart';
 import 'help_screen.dart';
 
@@ -18,12 +20,27 @@ class _HomeScreenState extends State<HomeScreen> {
 
   final List<Widget> _screens = [
     const _HomeContent(),
-    SettingsScreen(
-      panelName: 'RHINO2008',
-      panelVersionNo: '0.98',
-    ),
+    SettingsScreen(panelName: 'RHINO2008', panelVersionNo: '0.98'),
     const HelpScreen(),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    // Disconnect Bluetooth when returning to home screen
+    _handleBluetoothCleanup();
+  }
+
+  Future<void> _handleBluetoothCleanup() async {
+    // If there's an active Bluetooth connection, disconnect it
+    // This ensures clean state when user returns to home
+    if (AppServices.isConnected) {
+      await AppServices.disconnect();
+    }
+
+    // Reset app state for fresh start
+    AppState.reset();
+  }
 
   void _onItemTapped(int index) {
     setState(() {

@@ -4,8 +4,12 @@ import 'package:techno_switch_solar_app/services/app_services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/services.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize app services
+  await AppServices.initialize();
+
   SystemChrome.setSystemUIOverlayStyle(
     SystemUiOverlayStyle(
       systemNavigationBarColor: Color(

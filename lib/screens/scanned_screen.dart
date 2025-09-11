@@ -3,6 +3,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/screens/access_code_screen.dart';
 import 'package:techno_switch_solar_app/screens/scanning_screen.dart';
+import 'package:techno_switch_solar_app/services/navigation_service.dart';
 import 'package:usb_serial/usb_serial.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
@@ -72,12 +73,18 @@ class _ScannedScreenState extends State<ScannedScreen> {
                 child: Padding(
                   padding: const EdgeInsets.all(30.0),
                   child: GestureDetector(
-                    onTap: () {
-                      Navigator.of(context).pushReplacement(
-                        MaterialPageRoute(
-                          builder: (context) => ScanningScreen(),
-                        ),
-                      );
+                    onTap: () async {
+                      // Disconnect Bluetooth before going back to scan
+                      await NavigationService.navigateToScanAgain(context);
+
+                      // Then navigate to scanning screen
+                      if (context.mounted) {
+                        Navigator.of(context).pushReplacement(
+                          MaterialPageRoute(
+                            builder: (context) => ScanningScreen(),
+                          ),
+                        );
+                      }
                     },
                     child: Container(
                       width: 106,
