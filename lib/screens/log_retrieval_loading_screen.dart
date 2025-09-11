@@ -248,6 +248,7 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
                         fontSize: 38,
                         fontWeight: FontWeight.w700,
                       ),
+                      maxLines: 1,
                     ),
                     SizedBox(height: 31),
                     LinearPercentIndicator(
@@ -270,6 +271,7 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
                             fontSize: 14,
                             fontWeight: FontWeight.w400,
                           ),
+                          maxLines: 1,
                         ),
                       ),
                     ),
