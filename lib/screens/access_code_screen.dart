@@ -1,3 +1,4 @@
+// paste this entire file (replace your existing AccessCodeScreen.dart)
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -24,15 +25,28 @@ class AccessCodeScreen extends StatefulWidget {
 
 class _AccessCodeScreenState extends State<AccessCodeScreen> {
   late TextEditingController _accessCodeController;
+  late ScrollController _scrollController;
+  late FocusNode _accessFocusNode;
+  final GlobalKey _textFieldKey = GlobalKey();
+
   bool _isConnecting = false;
   String _connectionStatus = "Not connected";
 
+  // validation state
+  bool _isAccessCodeValid = false;
+  bool _showAccessCodeError = false;
+  static const String _requiredAccessCode = "1974";
+
   @override
   void initState() {
+    super.initState();
+
     _accessCodeController = TextEditingController();
-    _accessCodeController.addListener(() {
-      setState(() {});
-    });
+    _accessCodeController.addListener(_onAccessCodeChanged);
+
+    _scrollController = ScrollController();
+    _accessFocusNode = FocusNode();
+    _accessFocusNode.addListener(_onFocusChange);
 
     // Check if already connected
     if (AppServices.isConnected) {
@@ -42,8 +56,39 @@ class _AccessCodeScreenState extends State<AccessCodeScreen> {
       // Auto-connect to the selected device
       _connectToSelectedDevice();
     }
+  }
 
-    super.initState();
+  void _onFocusChange() {
+    if (_accessFocusNode.hasFocus) {
+      // ensure the text field is visible when keyboard opens
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_textFieldKey.currentContext != null) {
+          Scrollable.ensureVisible(
+            _textFieldKey.currentContext!,
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeInOut,
+            alignment: 0.3,
+          );
+        } else {
+          // fallback: scroll to bottom
+          _scrollController.animateTo(
+            _scrollController.position.maxScrollExtent,
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeInOut,
+          );
+        }
+      });
+    }
+  }
+
+  void _onAccessCodeChanged() {
+    final text = _accessCodeController.text.trim();
+    final valid = text == _requiredAccessCode;
+    setState(() {
+      _isAccessCodeValid = valid;
+      // Show error only when user typed something and it's invalid
+      _showAccessCodeError = text.isNotEmpty && !valid;
+    });
   }
 
   Future<void> _connectToSelectedDevice() async {
@@ -70,8 +115,6 @@ class _AccessCodeScreenState extends State<AccessCodeScreen> {
         );
       } else {
         // Handle USB device connection
-        // For USB, we'd need to modify the service to handle USB devices too
-        // For now, just try the general connect method
         connected = await AppServices.serialService.connectToDevice();
       }
 
@@ -132,7 +175,7 @@ class _AccessCodeScreenState extends State<AccessCodeScreen> {
               color: AppServices.isConnected ? Colors.green : Colors.orange,
               size: 20,
             ),
-            SizedBox(width: 8),
+            const SizedBox(width: 8),
             Expanded(
               child: Text(
                 _connectionStatus,
@@ -163,8 +206,11 @@ class _AccessCodeScreenState extends State<AccessCodeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // allow scaffold to resize when keyboard opens
+    final themePrimary = Theme.of(context).primaryColor;
+
     return Scaffold(
-      resizeToAvoidBottomInset: false,
+      resizeToAvoidBottomInset: true,
       body: Container(
         height: MediaQuery.sizeOf(context).height,
         decoration: const BoxDecoration(
@@ -178,43 +224,43 @@ class _AccessCodeScreenState extends State<AccessCodeScreen> {
           children: [
             SvgPicture.asset('assets/svgs/background_1.svg'),
             SingleChildScrollView(
-              child: Padding(
-                padding: EdgeInsets.only(
-                  left: 24,
-                  right: 24,
-                  top: 54,
-                  bottom: 120,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  mainAxisSize: MainAxisSize.max,
-                  children: [
-                    Row(
-                      children: [
-                        GestureDetector(
-                          onTap: () {
-                            Navigator.of(context).pop();
-                          },
-                          child: SvgPicture.asset(
-                            'assets/svgs/arrow_back_icon.svg',
-                          ),
+              controller: _scrollController,
+              padding: EdgeInsets.only(
+                left: 24,
+                right: 24,
+                top: 54,
+                // add viewInsets.bottom so when keyboard opens there's extra space
+                bottom: 120 + MediaQuery.of(context).viewInsets.bottom,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisSize: MainAxisSize.max,
+                children: [
+                  Row(
+                    children: [
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.of(context).pop();
+                        },
+                        child: SvgPicture.asset(
+                          'assets/svgs/arrow_back_icon.svg',
                         ),
-                        SizedBox(width: 8),
-                        Text(
-                          'Event Log Retrieval ',
-                          style: GoogleFonts.inter(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w700,
-                          ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Event Log Retrieval ',
+                        style: GoogleFonts.inter(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
                         ),
-                      ],
-                    ),
-                    SizedBox(height: 52),
-                    _buildConnectionStatus(),
-                    SizedBox(height: 16),
-                    _buildAccesCodeContainer(),
-                  ],
-                ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 52),
+                  _buildConnectionStatus(),
+                  const SizedBox(height: 16),
+                  _buildAccesCodeContainer(themePrimary),
+                ],
               ),
             ),
             Positioned(left: 0, right: 0, bottom: 0, child: _buildBottomBar()),
@@ -224,7 +270,7 @@ class _AccessCodeScreenState extends State<AccessCodeScreen> {
     );
   }
 
-  Widget _buildAccesCodeContainer() {
+  Widget _buildAccesCodeContainer(Color themePrimary) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -243,7 +289,7 @@ class _AccessCodeScreenState extends State<AccessCodeScreen> {
               height: 100,
               width: 100,
               decoration: BoxDecoration(
-                color: Color(0xFFEC1D24).withValues(alpha: 0.08),
+                color: Color(0xFFEC1D24).withOpacity(0.08),
                 shape: BoxShape.circle,
               ),
               child: Center(
@@ -254,7 +300,7 @@ class _AccessCodeScreenState extends State<AccessCodeScreen> {
                 ),
               ),
             ),
-            SizedBox(height: 41),
+            const SizedBox(height: 41),
             Text(
               'Access Code Required',
               style: GoogleFonts.inter(
@@ -262,7 +308,7 @@ class _AccessCodeScreenState extends State<AccessCodeScreen> {
                 fontWeight: FontWeight.w700,
               ),
             ),
-            SizedBox(height: 74),
+            const SizedBox(height: 74),
             Text(
               'Enter your access code ',
               style: GoogleFonts.inter(
@@ -271,26 +317,34 @@ class _AccessCodeScreenState extends State<AccessCodeScreen> {
                 color: Color(0xFF696969),
               ),
             ),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
+            // TextField with dynamic border color based on validation state
             Container(
+              key: _textFieldKey,
               height: 50,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(4),
-                border: Border.all(color: Color(0xFFE0E0E0), width: 1),
+                border: Border.all(
+                  color:
+                      _showAccessCodeError ? themePrimary : Color(0xFFE0E0E0),
+                  width: 1.5,
+                ),
               ),
               child: Padding(
                 padding: const EdgeInsets.only(top: 5),
                 child: TextField(
+                  focusNode: _accessFocusNode,
                   textAlign: TextAlign.center,
                   controller: _accessCodeController,
-                  // maxLength: 4,
-                  showCursor: false,
+                  maxLength: 4,
+                  showCursor: true,
                   obscureText: true,
                   obscuringCharacter: "*",
+                  keyboardType: TextInputType.number,
                   onTapOutside: (value) {
                     FocusScope.of(context).unfocus();
                   },
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                     border: InputBorder.none,
                     contentPadding: EdgeInsets.symmetric(horizontal: 16),
                     counterText: '',
@@ -303,6 +357,32 @@ class _AccessCodeScreenState extends State<AccessCodeScreen> {
                 ),
               ),
             ),
+
+            // Error message shown when code is invalid and user entered something
+            if (_showAccessCodeError) ...[
+              const SizedBox(height: 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Text(
+                    'Ïnvalid Access Code!',
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFFEC1D24),
+                    ),
+                  ),
+                  Text(
+                    'Please Try Again',
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: Color(0xFFEC1D24),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ],
         ),
       ),
@@ -310,6 +390,9 @@ class _AccessCodeScreenState extends State<AccessCodeScreen> {
   }
 
   Widget _buildBottomBar() {
+    final isButtonDisabled =
+        !_isAccessCodeValid || _isConnecting || !AppServices.isConnected;
+
     return Padding(
       padding: const EdgeInsets.all(20),
       child: Row(
@@ -331,7 +414,7 @@ class _AccessCodeScreenState extends State<AccessCodeScreen> {
                 child: Row(
                   children: [
                     Icon(Icons.arrow_back, color: Color(0xFF49454F)),
-                    SizedBox(width: 6),
+                    const SizedBox(width: 6),
                     Text(
                       'Back',
                       style: GoogleFonts.inter(
@@ -344,39 +427,49 @@ class _AccessCodeScreenState extends State<AccessCodeScreen> {
               ),
             ),
           ),
-          Spacer(),
+          const Spacer(),
           GestureDetector(
-            onTap: () {
-              if (_accessCodeController.text.isEmpty) {
-                return;
-              }
+            onTap:
+                isButtonDisabled
+                    ? null
+                    : () {
+                      // Final guard: ensure code is valid before proceeding
+                      if (!_isAccessCodeValid) {
+                        setState(() {
+                          _showAccessCodeError = true;
+                        });
+                        return;
+                      }
 
-              // Check if device is connected before proceeding
-              if (!AppServices.isConnected) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      'Device not connected. Current state: ${AppServices.connectionState}',
-                    ),
-                    backgroundColor: Colors.red,
-                  ),
-                );
-                return;
-              }
+                      // Ensure device connected (already checked in isButtonDisabled, but keep for safety)
+                      if (!AppServices.isConnected) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              'Device not connected. Current state: ${AppServices.connectionState}',
+                            ),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                        return;
+                      }
 
-              _accessCodeController.clear();
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => LogRetrievalLoadingScreen(),
-                ),
-              );
-            },
+                      // Clear and navigate
+                      _accessCodeController.clear();
+                      setState(() {
+                        _isAccessCodeValid = false;
+                        _showAccessCodeError = false;
+                      });
+
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => LogRetrievalLoadingScreen(),
+                        ),
+                      );
+                    },
             child: Container(
               decoration: BoxDecoration(
-                color:
-                    _accessCodeController.text.isEmpty
-                        ? Color(0xFFDADADA)
-                        : Color(0xFFEC1D24),
+                color: isButtonDisabled ? Color(0xFFDADADA) : Color(0xFFEC1D24),
                 borderRadius: BorderRadius.circular(28.5),
               ),
               child: Padding(
@@ -396,7 +489,7 @@ class _AccessCodeScreenState extends State<AccessCodeScreen> {
                         color: Colors.white,
                       ),
                     ),
-                    SizedBox(width: 13),
+                    const SizedBox(width: 13),
                     Icon(Icons.arrow_forward, color: Colors.white),
                   ],
                 ),
@@ -411,6 +504,10 @@ class _AccessCodeScreenState extends State<AccessCodeScreen> {
   @override
   void dispose() {
     _accessCodeController.dispose();
+    _accessFocusNode.removeListener(_onFocusChange);
+    _accessFocusNode.dispose();
+    _scrollController.dispose();
+    AppServices.serialService.disconnect();
     super.dispose();
   }
 }

@@ -149,7 +149,7 @@ class _HomeContent extends StatelessWidget {
           children: [
             _buildHeader(context),
             _buildQuickLinks(context),
-            _buildRecentProjects(),
+            _buildRecentSites(),
           ],
         ),
       ),
@@ -262,16 +262,16 @@ class _HomeContent extends StatelessWidget {
                 },
                 child: _buildQuickLinkItem(
                   'assets/svgs/new_project_icon.svg',
-                  'New Project',
+                  'New Site',
                 ),
               ),
               _buildQuickLinkItem(
                 'assets/svgs/open_project_icon.svg',
-                'Open Project',
+                'Open Site',
               ),
               _buildQuickLinkItem(
                 'assets/svgs/maintenance_icon.svg',
-                'Maintenance',
+                'Live Events',
               ),
               _buildQuickLinkItem(
                 'assets/svgs/retrieve_log_icon.svg',
@@ -315,7 +315,7 @@ class _HomeContent extends StatelessWidget {
     );
   }
 
-  Widget _buildRecentProjects() {
+  Widget _buildRecentSites() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
@@ -324,7 +324,7 @@ class _HomeContent extends StatelessWidget {
           Align(
             alignment: Alignment.centerLeft,
             child: Text(
-              'Recent Projects',
+              'Recent Sites',
               style: GoogleFonts.inter(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
@@ -333,13 +333,13 @@ class _HomeContent extends StatelessWidget {
             ),
           ),
           SizedBox(height: 20),
-          _buildRecentProjectItem(),
+          _buildRecentSitesItem(),
         ],
       ),
     );
   }
 
-  Widget _buildRecentProjectItem() {
+  Widget _buildRecentSitesItem() {
     return ListView.separated(
       physics: NeverScrollableScrollPhysics(),
       shrinkWrap: true,

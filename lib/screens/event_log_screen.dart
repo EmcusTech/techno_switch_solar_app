@@ -73,6 +73,9 @@ class _EventLogContentState extends State<_EventLogContent> {
 
   @override
   void dispose() {
+    // Don't dispose the shared service here, as other screens might still be using it
+    // _serialService.dispose(); // Commented out
+    AppServices.serialService.disconnect();
     super.dispose();
   }
 
@@ -189,14 +192,14 @@ class _EventLogContentState extends State<_EventLogContent> {
                         ),
                         TextSpan(
                           text:
-                              _connectionStatus.contains("Connected")
+                              AppServices.isConnected
                                   ? 'connected'
                                   : 'disconnected',
                           style: GoogleFonts.inter(
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
                             color:
-                                _connectionStatus.contains("Connected")
+                                AppServices.isConnected
                                     ? Color(0xFF00A706)
                                     : Color(0xFFEC1D24),
                           ),
@@ -207,75 +210,100 @@ class _EventLogContentState extends State<_EventLogContent> {
                 ],
               ),
               Spacer(),
-              Transform.rotate(
-                angle: 180 * 3.14159 / 360,
-                child: Icon(
-                  Icons.arrow_forward_ios,
-                  size: 18,
-                  color: Color(0xFF696969),
+              InkWell(
+                onTap: () {
+                  AppServices.serialService.disconnect();
+                },
+                child: Container(
+                  height: 40,
+                  width: 80,
+                  decoration: BoxDecoration(
+                    color: Color(0xFFEC1D24),
+                    borderRadius: BorderRadius.circular(5),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Center(
+                      child: Text(
+                        'Disconnect',
+                        style: GoogleFonts.inter(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
               ),
+              // Transform.rotate(
+              //   angle: 180 * 3.14159 / 360,
+              //   child: Icon(
+              //     Icons.arrow_forward_ios,
+              //     size: 18,
+              //     color: Color(0xFF696969),
+              //   ),
+              // ),
             ],
           ),
           SizedBox(height: 10),
 
-          // Log Retrieval Status
-          Container(
-            padding: EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Color(0xFFF9F9F9),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Color(0xFFD7D7D7)),
-            ),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    Icon(
-                      _connectionStatus.contains("Retrieving") ||
-                              _connectionStatus.contains("Processing")
-                          ? Icons.sync
-                          : _connectionStatus.contains("Complete") ||
-                              _connectionStatus.contains("received")
-                          ? Icons.check_circle
-                          : Icons.info,
-                      color:
-                          _connectionStatus.contains("Retrieving") ||
-                                  _connectionStatus.contains("Processing")
-                              ? Colors.orange
-                              : _connectionStatus.contains("Complete") ||
-                                  _connectionStatus.contains("received")
-                              ? Color(0xFF00A706)
-                              : Color(0xFF979797),
-                    ),
-                    SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        _connectionStatus,
-                        style: GoogleFonts.inter(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                if (_displayLogs.isNotEmpty)
-                  Padding(
-                    padding: EdgeInsets.only(top: 8),
-                    child: Text(
-                      '${_displayLogs.length} logs retrieved',
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
-                        color: Color(0xFF00A706),
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-
+          // // Log Retrieval Status
+          // Container(
+          //   padding: EdgeInsets.all(12),
+          //   decoration: BoxDecoration(
+          //     color: Color(0xFFF9F9F9),
+          //     borderRadius: BorderRadius.circular(8),
+          //     border: Border.all(color: Color(0xFFD7D7D7)),
+          //   ),
+          //   child: Column(
+          //     children: [
+          //       Row(
+          //         children: [
+          //           Icon(
+          //             _connectionStatus.contains("Retrieving") ||
+          //                     _connectionStatus.contains("Processing")
+          //                 ? Icons.sync
+          //                 : _connectionStatus.contains("Complete") ||
+          //                     _connectionStatus.contains("received")
+          //                 ? Icons.check_circle
+          //                 : Icons.info,
+          //             color:
+          //                 _connectionStatus.contains("Retrieving") ||
+          //                         _connectionStatus.contains("Processing")
+          //                     ? Colors.orange
+          //                     : _connectionStatus.contains("Complete") ||
+          //                         _connectionStatus.contains("received")
+          //                     ? Color(0xFF00A706)
+          //                     : Color(0xFF979797),
+          //           ),
+          //           SizedBox(width: 8),
+          //           Expanded(
+          //             child: Text(
+          //               _connectionStatus,
+          //               style: GoogleFonts.inter(
+          //                 fontSize: 14,
+          //                 fontWeight: FontWeight.w500,
+          //               ),
+          //             ),
+          //           ),
+          //         ],
+          //       ),
+          //       if (_realTimeLogs.length > widget.logDataList.length)
+          //         Padding(
+          //           padding: EdgeInsets.only(top: 8),
+          //           child: Text(
+          //             '${_realTimeLogs.length - widget.logDataList.length} new logs retrieved',
+          //             style: GoogleFonts.inter(
+          //               fontSize: 12,
+          //               color: Color(0xFF00A706),
+          //               fontWeight: FontWeight.w500,
+          //             ),
+          //           ),
+          //         ),
+          //     ],
+          //   ),
+          // ),
           SizedBox(height: 15),
           Divider(
             color: Color(0xFF000000).withValues(alpha: 0.18),

@@ -265,8 +265,8 @@ class _ScannedScreenState extends State<ScannedScreen> {
               child: Row(
                 children: [
                   Container(
-                    width: 48,
-                    height: 48,
+                    // width: 48,
+                    // height: 48,
                     decoration: BoxDecoration(
                       color: (widget.scanType == ScanType.usb
                               ? Color(0xFFEC1D24)
@@ -274,16 +274,7 @@ class _ScannedScreenState extends State<ScannedScreen> {
                           .withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: Icon(
-                      widget.scanType == ScanType.usb
-                          ? Icons.usb
-                          : Icons.bluetooth,
-                      color:
-                          widget.scanType == ScanType.usb
-                              ? Color(0xFFEC1D24)
-                              : Colors.blue,
-                      size: 24,
-                    ),
+                    child: SvgPicture.asset('assets/svgs/panel_icon.svg'),
                   ),
                   SizedBox(width: 14.31),
                   Expanded(
