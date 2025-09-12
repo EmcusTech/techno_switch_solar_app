@@ -3,6 +3,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/screens/create_project/pages/panel_selection_page.dart';
 import 'package:techno_switch_solar_app/screens/create_project/pages/general_settings_page.dart';
+import 'package:techno_switch_solar_app/screens/create_project/pages/site_creation_page.dart';
 import 'package:techno_switch_solar_app/screens/create_project/pages/zone_settings_page.dart';
 import 'package:techno_switch_solar_app/screens/create_project/pages/sounder_page.dart';
 import 'package:techno_switch_solar_app/screens/create_project/pages/sounder_settings_page.dart';
@@ -11,15 +12,23 @@ import 'package:techno_switch_solar_app/screens/create_project/pages/relay_page.
 import 'package:techno_switch_solar_app/screens/create_project/pages/devices_page.dart';
 import 'package:techno_switch_solar_app/screens/create_project/pages/project_summary_page.dart';
 
-class CreateProjectScreen extends StatefulWidget {
-  const CreateProjectScreen({super.key});
+class CreateSiteScreen extends StatefulWidget {
+  const CreateSiteScreen({super.key});
 
   @override
-  State<CreateProjectScreen> createState() => _CreateProjectScreenState();
+  State<CreateSiteScreen> createState() => _CreateSiteScreenState();
 }
 
-class _CreateProjectScreenState extends State<CreateProjectScreen> {
+class _CreateSiteScreenState extends State<CreateSiteScreen> {
   late TextEditingController _panelNameController;
+  late TextEditingController _siteNameController;
+  late TextEditingController _installerNameController;
+  late TextEditingController _companyNameController;
+  late TextEditingController _saqccRegNumberController;
+  late TextEditingController _buildingNameController;
+  late TextEditingController _installerContactNumberController;
+  late TextEditingController _installerEmailController;
+  late TextEditingController _siteDescriptionController;
   late PageController _pageController;
   int currentStep = 1;
   final int totalSteps = 9;
@@ -163,6 +172,14 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
   @override
   void initState() {
     _panelNameController = TextEditingController();
+    _siteNameController = TextEditingController();
+    _installerNameController = TextEditingController();
+    _companyNameController = TextEditingController();
+    _saqccRegNumberController = TextEditingController();
+    _buildingNameController = TextEditingController();
+    _installerContactNumberController = TextEditingController();
+    _installerEmailController = TextEditingController();
+    _siteDescriptionController = TextEditingController();
     _pageController = PageController();
     super.initState();
   }
@@ -486,7 +503,7 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
                       ),
                       SizedBox(width: 17),
                       Text(
-                        'Create Project',
+                        'Create Site',
                         style: GoogleFonts.inter(
                           fontSize: 20,
                           fontWeight: FontWeight.w700,
@@ -530,9 +547,10 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
                   Expanded(
                     child: Container(
                       decoration: BoxDecoration(
-                        color: currentStep < totalSteps
-                            ? Colors.white
-                            : Colors.transparent,
+                        color:
+                            currentStep < totalSteps
+                                ? Colors.white
+                                : Colors.transparent,
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Padding(
@@ -546,6 +564,23 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
                                 onPageChanged: _onPageChanged,
                                 physics: const NeverScrollableScrollPhysics(),
                                 children: [
+                                  SiteCreationPage(
+                                    siteNameController: _siteNameController,
+                                    installerNameController:
+                                        _installerNameController,
+                                    companyNameController:
+                                        _companyNameController,
+                                    saqccRegNumberController:
+                                        _saqccRegNumberController,
+                                    buildingNameController:
+                                        _buildingNameController,
+                                    installerContactNumberController:
+                                        _installerContactNumberController,
+                                    installerEmailController:
+                                        _installerEmailController,
+                                    siteDescriptionController:
+                                        _siteDescriptionController,
+                                  ),
                                   PanelSelectionPage(
                                     selectedPanelType: selectedPanelType,
                                     panelNameController: _panelNameController,

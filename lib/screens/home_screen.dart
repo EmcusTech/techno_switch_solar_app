@@ -255,9 +255,7 @@ class _HomeContent extends StatelessWidget {
               GestureDetector(
                 onTap: () {
                   Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => CreateProjectScreen(),
-                    ),
+                    MaterialPageRoute(builder: (context) => CreateSiteScreen()),
                   );
                 },
                 child: _buildQuickLinkItem(
