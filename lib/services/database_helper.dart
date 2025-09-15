@@ -335,9 +335,13 @@ class DatabaseHelper {
     );
 
     if (existing.isNotEmpty) {
-      // Update existing panel
+      // Update existing panel - preserve siteId if it exists and panel.siteId is null
+      final existingSiteId = existing.first['site_id'] as int?;
       final updatedPanel = panel.copyWith(
         id: existing.first['id'] as int,
+        siteId:
+            panel.siteId ??
+            existingSiteId, // Preserve existing siteId if new one is null
         updatedAt: DateTime.now(),
         lastConnected: DateTime.now(),
       );

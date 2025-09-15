@@ -4,8 +4,10 @@ import 'package:google_fonts/google_fonts.dart';
 import '../models/log_model.dart';
 import '../services/app_services.dart';
 import '../services/site_service.dart';
+import '../services/panel_service.dart';
 import '../screens/create_project/pages/site_creation_page.dart';
 import '../screens/home_screen.dart';
+import '../screens/site_screen.dart';
 
 class SimpleSiteCreationScreen extends StatefulWidget {
   final List<LogModel> retrievedLogs;
@@ -37,6 +39,7 @@ class _SimpleSiteCreationScreenState extends State<SimpleSiteCreationScreen> {
   late TextEditingController _siteDescriptionController;
 
   final SiteService _siteService = SiteService();
+  final PanelService _panelService = PanelService();
   bool _isLoading = false;
   Map<String, String> _validationErrors = {};
 
@@ -78,6 +81,82 @@ class _SimpleSiteCreationScreenState extends State<SimpleSiteCreationScreen> {
     });
 
     try {
+      // First, check if panel is already associated with a site
+      final panelIdToCheck =
+          widget.panelId ?? AppServices.serialService.currentPanelId;
+      print('DEBUG: SimpleSiteCreation - Checking panel ID: $panelIdToCheck');
+
+      if (panelIdToCheck != null) {
+        final existingPanel = await _panelService.getPanelByPanelId(
+          panelIdToCheck,
+        );
+        print(
+          'DEBUG: SimpleSiteCreation - Found existing panel: ${existingPanel?.panelId} with siteId: ${existingPanel?.siteId}',
+        );
+
+        if (existingPanel != null && existingPanel.siteId != null) {
+          // Panel is already associated with a site
+          final existingSite = await _siteService.getSiteById(
+            existingPanel.siteId!,
+          );
+          if (existingSite != null) {
+            // Save logs to the existing site
+            await _siteService.storeLogs(
+              widget.retrievedLogs,
+              siteId: existingSite.id!,
+            );
+
+            // Show message and navigate to existing site
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'Panel already installed at "${existingSite.siteName}". ${widget.retrievedLogs.length} logs saved to existing site.',
+                ),
+                backgroundColor: Color(0xFF0F72E9),
+                duration: Duration(seconds: 4),
+              ),
+            );
+
+            // Navigate to the existing site screen
+            // Get updated site information with new log count
+            final allSitesWithLogCount =
+                await _siteService.getSitesWithLogCount();
+            final updatedSiteWithLogCount = allSitesWithLogCount.firstWhere(
+              (siteWithLogCount) => siteWithLogCount.site.id == existingSite.id,
+              orElse:
+                  () => SiteWithLogCount(
+                    site: existingSite,
+                    logCount:
+                        widget
+                            .retrievedLogs
+                            .length, // fallback to current logs count
+                    lastLogRetrieved: DateTime.now(),
+                  ),
+            );
+
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(
+                builder:
+                    (context) => SiteScreen(
+                      site: existingSite,
+                      siteWithLogCount: updatedSiteWithLogCount,
+                    ),
+              ),
+              (route) => false,
+            );
+            return;
+          }
+        } else {
+          print(
+            'DEBUG: SimpleSiteCreation - Panel exists but no siteId, or panel not found',
+          );
+        }
+      } else {
+        print('DEBUG: SimpleSiteCreation - No panel ID to check');
+      }
+
+      // Panel is not associated with any site, proceed with site creation
+      print('DEBUG: SimpleSiteCreation - Proceeding with new site creation');
       // Validate the form data
       final errors = _siteService.validateSiteData(
         siteName: _siteNameController.text,
@@ -139,6 +218,15 @@ class _SimpleSiteCreationScreenState extends State<SimpleSiteCreationScreen> {
         } catch (e) {
           // Panel association failed, but don't block site creation
           print('DEBUG: Panel association failed: $e');
+
+          // Show error to user
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Warning: Panel association failed - $e'),
+              backgroundColor: Color(0xFFFF9800),
+              duration: Duration(seconds: 4),
+            ),
+          );
         }
       } else {
         print(
