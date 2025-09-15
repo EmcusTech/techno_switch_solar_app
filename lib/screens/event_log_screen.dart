@@ -5,8 +5,11 @@ import 'package:intl/intl.dart';
 import 'package:techno_switch_solar_app/models/log_model.dart';
 import 'package:techno_switch_solar_app/services/app_services.dart';
 import 'package:techno_switch_solar_app/services/navigation_service.dart';
+import 'package:techno_switch_solar_app/services/panel_service.dart';
+import 'package:techno_switch_solar_app/services/site_service.dart';
 import 'package:techno_switch_solar_app/widgets/site_creation_dialog.dart';
 import 'package:techno_switch_solar_app/screens/simple_site_creation_screen.dart';
+import 'package:techno_switch_solar_app/screens/site_screen.dart';
 
 class EventLogScreen extends StatefulWidget {
   final List<LogModel> logDataList;
@@ -68,6 +71,9 @@ class _EventLogContentState extends State<_EventLogContent> {
   String _connectionStatus = "Disconnected";
   String? _storedPanelId; // Store panel ID to preserve across disconnects
 
+  final PanelService _panelService = PanelService();
+  final SiteService _siteService = SiteService();
+
   Future<void> _handleBackNavigation() async {
     // Use stored panel ID (captured during initState) instead of current one
     final panelIdToUse =
@@ -82,8 +88,66 @@ class _EventLogContentState extends State<_EventLogContent> {
       "DEBUG: EventLog - Panel ID after disconnect: ${AppServices.serialService.currentPanelId}",
     );
 
-    // If this is standalone mode (not from a site) and we have logs, show dialog
+    // If this is standalone mode (not from a site) and we have logs, check panel association first
     if (widget.isStandalone && _displayLogs.isNotEmpty) {
+      // Check if panel is already associated with a site
+      if (panelIdToUse != null) {
+        final existingPanel = await _panelService.getPanelByPanelId(
+          panelIdToUse,
+        );
+        if (existingPanel != null && existingPanel.siteId != null) {
+          // Panel is already associated with a site - show existing site dialog
+          final existingSite = await _siteService.getSiteById(
+            existingPanel.siteId!,
+          );
+          if (existingSite != null) {
+            final shouldNavigateToSite = await _showExistingSiteDialog(
+              context,
+              existingSite.siteName,
+              _displayLogs.length,
+            );
+
+            if (shouldNavigateToSite == true) {
+              // Save logs to the existing site
+              await _siteService.storeLogs(
+                _displayLogs,
+                siteId: existingSite.id!,
+              );
+
+              // Navigate to the existing site screen
+              final allSitesWithLogCount =
+                  await _siteService.getSitesWithLogCount();
+              final updatedSiteWithLogCount = allSitesWithLogCount.firstWhere(
+                (siteWithLogCount) =>
+                    siteWithLogCount.site.id == existingSite.id,
+                orElse:
+                    () => SiteWithLogCount(
+                      site: existingSite,
+                      logCount: _displayLogs.length,
+                      lastLogRetrieved: DateTime.now(),
+                    ),
+              );
+
+              Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute(
+                  builder:
+                      (context) => SiteScreen(
+                        site: existingSite,
+                        siteWithLogCount: updatedSiteWithLogCount,
+                      ),
+                ),
+                (route) => false,
+              );
+            } else {
+              // User chose not to save logs, navigate back to scanning
+              await NavigationService.navigateBackToScanning(context);
+            }
+            return;
+          }
+        }
+      }
+
+      // Panel is not associated with any site, show normal site creation dialog
       final shouldCreateSite = await showSiteCreationDialog(
         context,
         logCount: _displayLogs.length,
@@ -111,6 +175,123 @@ class _EventLogContentState extends State<_EventLogContent> {
 
     // Default behavior: navigate back to scanning screen
     await NavigationService.navigateBackToScanning(context);
+  }
+
+  Future<bool?> _showExistingSiteDialog(
+    BuildContext context,
+    String siteName,
+    int logCount,
+  ) async {
+    return showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Row(
+            children: [
+              Icon(Icons.info_outline, color: Color(0xFF0F72E9), size: 28),
+              SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Panel Already Installed',
+                  style: GoogleFonts.inter(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF3A3A3A),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'This panel is already installed at:',
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w400,
+                  color: Color(0xFF666666),
+                ),
+              ),
+              SizedBox(height: 8),
+              Container(
+                padding: EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Color(0xFFF0F7FF),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Color(0xFF0F72E9).withOpacity(0.2)),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.location_on, color: Color(0xFF0F72E9), size: 20),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        siteName,
+                        style: GoogleFonts.inter(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF0F72E9),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: 16),
+              Text(
+                'Would you like to save the $logCount retrieved log${logCount == 1 ? '' : 's'} to this existing site?',
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w400,
+                  color: Color(0xFF3A3A3A),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(false);
+              },
+              child: Text(
+                'Discard Logs',
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF666666),
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop(true);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Color(0xFF0F72E9),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                elevation: 0,
+              ),
+              child: Text(
+                'Save to Existing Site',
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
