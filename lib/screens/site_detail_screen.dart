@@ -56,7 +56,7 @@ class SiteDetailScreen extends StatelessWidget {
                           "Site Name",
                           style: GoogleFonts.inter(
                             color: Color(0xFF767676),
-                            fontSize: 13,
+                            fontSize: 18,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
@@ -65,8 +65,8 @@ class SiteDetailScreen extends StatelessWidget {
                           siteWithLogCount.site.siteName,
                           style: GoogleFonts.inter(
                             color: Color(0xFF3A3A3A),
-                            fontSize: 20,
-                            fontWeight: FontWeight.w700,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                         SizedBox(height: 24),
@@ -74,7 +74,7 @@ class SiteDetailScreen extends StatelessWidget {
                           "Installer Name",
                           style: GoogleFonts.inter(
                             color: Color(0xFF767676),
-                            fontSize: 13,
+                            fontSize: 18,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
@@ -83,8 +83,8 @@ class SiteDetailScreen extends StatelessWidget {
                           siteWithLogCount.site.installerName,
                           style: GoogleFonts.inter(
                             color: Color(0xFF3A3A3A),
-                            fontSize: 20,
-                            fontWeight: FontWeight.w700,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                         SizedBox(height: 24),
@@ -92,7 +92,7 @@ class SiteDetailScreen extends StatelessWidget {
                           "Company Name",
                           style: GoogleFonts.inter(
                             color: Color(0xFF767676),
-                            fontSize: 13,
+                            fontSize: 18,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
@@ -101,8 +101,8 @@ class SiteDetailScreen extends StatelessWidget {
                           siteWithLogCount.site.companyName,
                           style: GoogleFonts.inter(
                             color: Color(0xFF3A3A3A),
-                            fontSize: 20,
-                            fontWeight: FontWeight.w700,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                         SizedBox(height: 24),
@@ -110,7 +110,7 @@ class SiteDetailScreen extends StatelessWidget {
                           "SAQCC Registration Number",
                           style: GoogleFonts.inter(
                             color: Color(0xFF767676),
-                            fontSize: 13,
+                            fontSize: 18,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
@@ -119,8 +119,8 @@ class SiteDetailScreen extends StatelessWidget {
                           siteWithLogCount.site.saqccRegNumber,
                           style: GoogleFonts.inter(
                             color: Color(0xFF3A3A3A),
-                            fontSize: 20,
-                            fontWeight: FontWeight.w700,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                         SizedBox(height: 24),
@@ -128,7 +128,7 @@ class SiteDetailScreen extends StatelessWidget {
                           "Building Name",
                           style: GoogleFonts.inter(
                             color: Color(0xFF767676),
-                            fontSize: 13,
+                            fontSize: 18,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
@@ -137,8 +137,8 @@ class SiteDetailScreen extends StatelessWidget {
                           siteWithLogCount.site.buildingName,
                           style: GoogleFonts.inter(
                             color: Color(0xFF3A3A3A),
-                            fontSize: 20,
-                            fontWeight: FontWeight.w700,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                         SizedBox(height: 24),
@@ -146,7 +146,7 @@ class SiteDetailScreen extends StatelessWidget {
                           "Installer Contact Number",
                           style: GoogleFonts.inter(
                             color: Color(0xFF767676),
-                            fontSize: 13,
+                            fontSize: 18,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
@@ -155,8 +155,8 @@ class SiteDetailScreen extends StatelessWidget {
                           siteWithLogCount.site.installerContactNumber,
                           style: GoogleFonts.inter(
                             color: Color(0xFF3A3A3A),
-                            fontSize: 20,
-                            fontWeight: FontWeight.w700,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                         SizedBox(height: 24),
@@ -164,7 +164,7 @@ class SiteDetailScreen extends StatelessWidget {
                           "Installer Email",
                           style: GoogleFonts.inter(
                             color: Color(0xFF767676),
-                            fontSize: 13,
+                            fontSize: 18,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
@@ -173,8 +173,8 @@ class SiteDetailScreen extends StatelessWidget {
                           siteWithLogCount.site.installerEmail,
                           style: GoogleFonts.inter(
                             color: Color(0xFF3A3A3A),
-                            fontSize: 20,
-                            fontWeight: FontWeight.w700,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                         SizedBox(height: 24),
@@ -182,7 +182,7 @@ class SiteDetailScreen extends StatelessWidget {
                           "Site Description",
                           style: GoogleFonts.inter(
                             color: Color(0xFF767676),
-                            fontSize: 13,
+                            fontSize: 18,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
@@ -191,8 +191,8 @@ class SiteDetailScreen extends StatelessWidget {
                           siteWithLogCount.site.siteDescription,
                           style: GoogleFonts.inter(
                             color: Color(0xFF3A3A3A),
-                            fontSize: 20,
-                            fontWeight: FontWeight.w700,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                       ],
