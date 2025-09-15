@@ -8,7 +8,6 @@ import 'dart:async';
 import 'package:techno_switch_solar_app/screens/event_log_screen.dart';
 import 'package:techno_switch_solar_app/utils/serial_communication_service.dart';
 import 'package:techno_switch_solar_app/services/app_services.dart';
-import 'package:techno_switch_solar_app/services/app_state.dart';
 import 'package:techno_switch_solar_app/services/navigation_service.dart';
 
 class LogRetrievalLoadingScreen extends StatefulWidget {
@@ -35,6 +34,7 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
   bool _logRetrievalCompleted = false;
   StreamSubscription? _logSubscription;
   StreamSubscription? _statusSubscription;
+  String? _capturedPanelId; // Capture panel ID before potential disconnect
 
   @override
   void initState() {
@@ -66,6 +66,10 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
   void _startLogRetrieval() {
     // Check if already connected and start log retrieval
     if (AppServices.isConnected) {
+      // Capture the panel ID before starting log retrieval (before potential disconnect)
+      _capturedPanelId = AppServices.serialService.currentPanelId;
+      print("DEBUG: LogRetrieval - Captured panel ID: $_capturedPanelId");
+
       _connectionStatus = "Starting log retrieval...";
 
       // Listen to log stream
@@ -85,7 +89,7 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
           if (status.contains("Completed") || status.contains("Disconnected")) {
             _logRetrievalCompleted = true;
             _controller.forward().then((_) {
-              // Navigate to EventLogScreen with retrieved logs
+              // Navigate to EventLogScreen with retrieved logs and captured panel ID
               Navigator.of(context).pushReplacement(
                 MaterialPageRoute(
                   builder:
@@ -94,6 +98,7 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
                         panelName: 'RHINO2008',
                         panelVersionNo: '0.98',
                         isStandalone: true, // This is standalone mode
+                        panelId: _capturedPanelId, // Pass the captured panel ID
                       ),
                 ),
               );

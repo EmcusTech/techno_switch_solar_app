@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/log_model.dart';
+import '../services/app_services.dart';
 import '../services/site_service.dart';
 import '../screens/create_project/pages/site_creation_page.dart';
 import '../screens/home_screen.dart';
@@ -10,12 +11,14 @@ class SimpleSiteCreationScreen extends StatefulWidget {
   final List<LogModel> retrievedLogs;
   final String? panelName;
   final String? panelVersionNo;
+  final String? panelId; // Store panel ID to associate with site
 
   const SimpleSiteCreationScreen({
     super.key,
     required this.retrievedLogs,
     this.panelName,
     this.panelVersionNo,
+    this.panelId,
   });
 
   @override
@@ -40,14 +43,17 @@ class _SimpleSiteCreationScreenState extends State<SimpleSiteCreationScreen> {
   @override
   void initState() {
     super.initState();
-    _siteNameController = TextEditingController();
-    _installerNameController = TextEditingController();
-    _companyNameController = TextEditingController();
-    _saqccRegNumberController = TextEditingController();
-    _buildingNameController = TextEditingController();
-    _installerContactNumberController = TextEditingController();
-    _installerEmailController = TextEditingController();
-    _siteDescriptionController = TextEditingController();
+    print(
+      "DEBUG: SimpleSiteCreationScreen initialized with panel ID: ${widget.panelId}",
+    );
+    _siteNameController = TextEditingController(text: 'test new');
+    _installerNameController = TextEditingController(text: 'test');
+    _companyNameController = TextEditingController(text: 'test');
+    _saqccRegNumberController = TextEditingController(text: '1234567890');
+    _buildingNameController = TextEditingController(text: 'test');
+    _installerContactNumberController = TextEditingController(text: 'test');
+    _installerEmailController = TextEditingController(text: 'test@test.com');
+    _siteDescriptionController = TextEditingController(text: 'test');
   }
 
   @override
@@ -114,6 +120,31 @@ class _SimpleSiteCreationScreenState extends State<SimpleSiteCreationScreen> {
 
       // Save the logs and associate them with the site
       await _siteService.storeLogs(widget.retrievedLogs, siteId: site.id!);
+
+      // Associate the panel with the site (use stored panelId if available)
+      final panelIdToAssociate =
+          widget.panelId ?? AppServices.serialService.currentPanelId;
+      print(
+        'DEBUG: Panel ID to associate: $panelIdToAssociate (from widget: ${widget.panelId}, from service: ${AppServices.serialService.currentPanelId})',
+      );
+      print('DEBUG: Site ID: ${site.id}');
+
+      if (panelIdToAssociate != null) {
+        try {
+          final success = await _siteService.associateCurrentPanelWithSite(
+            panelIdToAssociate,
+            site.id!,
+          );
+          print('DEBUG: Panel association success: $success');
+        } catch (e) {
+          // Panel association failed, but don't block site creation
+          print('DEBUG: Panel association failed: $e');
+        }
+      } else {
+        print(
+          'DEBUG: No panel ID found - panel was not registered during connection or not passed to constructor',
+        );
+      }
 
       // Show success message
       ScaffoldMessenger.of(context).showSnackBar(

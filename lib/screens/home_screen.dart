@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/screens/create_project/create_project_screen.dart';
 import 'package:techno_switch_solar_app/screens/scanning_screen.dart';
 import 'package:techno_switch_solar_app/screens/site_detail_screen.dart';
+import 'package:techno_switch_solar_app/screens/site_screen.dart';
 import 'package:techno_switch_solar_app/services/app_services.dart';
 import 'package:techno_switch_solar_app/services/app_state.dart';
 import 'package:techno_switch_solar_app/services/site_service.dart';
@@ -473,8 +474,10 @@ class _HomeContentState extends State<_HomeContent> {
             Navigator.of(context).push(
               MaterialPageRoute(
                 builder:
-                    (context) =>
-                        SiteDetailScreen(siteWithLogCount: siteWithLogCount),
+                    (context) => SiteScreen(
+                      site: site,
+                      siteWithLogCount: siteWithLogCount,
+                    ),
               ),
             );
           },

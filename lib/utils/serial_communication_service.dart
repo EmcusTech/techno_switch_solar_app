@@ -3,6 +3,8 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:techno_switch_solar_app/models/log_model.dart';
+import 'package:techno_switch_solar_app/models/panel_model.dart';
+import 'package:techno_switch_solar_app/services/panel_service.dart';
 import 'package:techno_switch_solar_app/utils/bluetooth_constants.dart';
 import 'package:techno_switch_solar_app/utils/event_constants.dart';
 import 'package:techno_switch_solar_app/utils/timestamp_converter.dart';
@@ -139,6 +141,8 @@ class SerialCommunicationService {
   static const int _evtLogRetryMax = 3;
 
   final CommFrame _commFrame = CommFrame();
+  final PanelService _panelService = PanelService();
+  String? _currentPanelId; // Store the current connected panel ID
   final StreamController<LogModel> _logStreamController =
       StreamController<LogModel>.broadcast();
   final StreamController<String> _statusStreamController =
@@ -153,6 +157,10 @@ class SerialCommunicationService {
       _connectionState == PanelConnectionState.connected ||
       _connectionState == PanelConnectionState.processing;
   BluetoothDevice? get connectedDevice => _device;
+  String? get currentPanelId {
+    print("DEBUG: Getting currentPanelId: $_currentPanelId");
+    return _currentPanelId;
+  }
 
   /// Send a simple ping to test basic communication
   Future<void> sendPing() async {
@@ -436,6 +444,26 @@ class SerialCommunicationService {
 
       _connectionState = PanelConnectionState.connected;
       _statusStreamController.add("Connected to: ${device.platformName}");
+
+      // Register/update panel in database
+      try {
+        print(
+          "DEBUG: Starting panel registration for device: ${device.platformName}",
+        );
+        final panel = await _panelService.registerPanelFromDevice(
+          device: device,
+          scanType: 'bluetooth',
+        );
+        _currentPanelId = panel.panelId;
+        print(
+          "DEBUG: Panel registered successfully - ID: ${panel.panelId}, Name: ${panel.panelName}",
+        );
+        _statusStreamController.add("Panel registered: ${panel.panelName}");
+      } catch (e) {
+        print("DEBUG: Panel registration failed: $e");
+        _statusStreamController.add("Panel registration failed: $e");
+        // Continue even if panel registration fails
+      }
 
       // Don't auto-start communication process - it will be started manually from Event Log screen
       return true;
@@ -1373,6 +1401,8 @@ class SerialCommunicationService {
     _processState = ProcessState.reqNwkPkt;
     _mainProcessState = ProcessState.reqNwkPkt;
     _stopEvtLogRead = false;
+    print("DEBUG: Clearing panel ID in disconnect() - was: $_currentPanelId");
+    _currentPanelId = null; // Clear current panel ID
 
     // Cancel BLE subscriptions
     await _characteristicSubscription?.cancel();

@@ -3,6 +3,7 @@ import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 import '../models/site_model.dart';
 import '../models/log_model.dart';
+import '../models/panel_model.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper _instance = DatabaseHelper._internal();
@@ -21,7 +22,7 @@ class DatabaseHelper {
     String path = join(await getDatabasesPath(), 'techno_switch_solar.db');
     return await openDatabase(
       path,
-      version: 1,
+      version: 2, // Increment version to add panels table
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -68,16 +69,53 @@ class DatabaseHelper {
       )
     ''');
 
+    // Create panels table
+    await db.execute('''
+      CREATE TABLE panels (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        panel_id TEXT NOT NULL UNIQUE,
+        panel_name TEXT NOT NULL,
+        device_type TEXT NOT NULL,
+        device_info TEXT NOT NULL,
+        site_id INTEGER,
+        created_at INTEGER NOT NULL,
+        updated_at INTEGER NOT NULL,
+        last_connected INTEGER,
+        FOREIGN KEY (site_id) REFERENCES sites (id) ON DELETE SET NULL
+      )
+    ''');
+
     // Create indexes for better performance
     await db.execute('CREATE INDEX idx_logs_site_id ON logs (site_id)');
     await db.execute(
       'CREATE INDEX idx_logs_event_date ON logs (event_date_time)',
     );
     await db.execute('CREATE INDEX idx_sites_created_at ON sites (created_at)');
+    await db.execute('CREATE INDEX idx_panels_panel_id ON panels (panel_id)');
+    await db.execute('CREATE INDEX idx_panels_site_id ON panels (site_id)');
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    // Handle database schema upgrades here if needed in the future
+    if (oldVersion < 2) {
+      // Add panels table if upgrading from version 1
+      await db.execute('''
+        CREATE TABLE panels (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          panel_id TEXT NOT NULL UNIQUE,
+          panel_name TEXT NOT NULL,
+          device_type TEXT NOT NULL,
+          device_info TEXT NOT NULL,
+          site_id INTEGER,
+          created_at INTEGER NOT NULL,
+          updated_at INTEGER NOT NULL,
+          last_connected INTEGER,
+          FOREIGN KEY (site_id) REFERENCES sites (id) ON DELETE SET NULL
+        )
+      ''');
+
+      await db.execute('CREATE INDEX idx_panels_panel_id ON panels (panel_id)');
+      await db.execute('CREATE INDEX idx_panels_site_id ON panels (site_id)');
+    }
   }
 
   // SITE OPERATIONS
@@ -281,6 +319,142 @@ class DatabaseHelper {
     );
 
     return maps;
+  }
+
+  // PANEL OPERATIONS
+
+  /// Insert or update a panel (upsert based on panel_id)
+  Future<int> upsertPanel(PanelModel panel) async {
+    final db = await database;
+
+    // Check if panel already exists
+    final existing = await db.query(
+      'panels',
+      where: 'panel_id = ?',
+      whereArgs: [panel.panelId],
+    );
+
+    if (existing.isNotEmpty) {
+      // Update existing panel
+      final updatedPanel = panel.copyWith(
+        id: existing.first['id'] as int,
+        updatedAt: DateTime.now(),
+        lastConnected: DateTime.now(),
+      );
+      await db.update(
+        'panels',
+        updatedPanel.toMap(),
+        where: 'panel_id = ?',
+        whereArgs: [panel.panelId],
+      );
+      return existing.first['id'] as int;
+    } else {
+      // Insert new panel
+      return await db.insert('panels', panel.toMap());
+    }
+  }
+
+  /// Get panel by panel_id
+  Future<PanelModel?> getPanelByPanelId(String panelId) async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.query(
+      'panels',
+      where: 'panel_id = ?',
+      whereArgs: [panelId],
+    );
+
+    if (maps.isNotEmpty) {
+      return PanelModel.fromMap(maps.first);
+    }
+    return null;
+  }
+
+  /// Get all panels for a specific site
+  Future<List<PanelModel>> getPanelsBySiteId(int siteId) async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.query(
+      'panels',
+      where: 'site_id = ?',
+      whereArgs: [siteId],
+      orderBy: 'last_connected DESC, created_at DESC',
+    );
+
+    return List.generate(maps.length, (i) {
+      return PanelModel.fromMap(maps[i]);
+    });
+  }
+
+  /// Get all panels that are not associated with any site
+  Future<List<PanelModel>> getUnassignedPanels() async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.query(
+      'panels',
+      where: 'site_id IS NULL',
+      orderBy: 'last_connected DESC, created_at DESC',
+    );
+
+    return List.generate(maps.length, (i) {
+      return PanelModel.fromMap(maps[i]);
+    });
+  }
+
+  /// Associate a panel with a site
+  Future<int> assignPanelToSite(String panelId, int siteId) async {
+    final db = await database;
+    return await db.update(
+      'panels',
+      {'site_id': siteId, 'updated_at': DateTime.now().millisecondsSinceEpoch},
+      where: 'panel_id = ?',
+      whereArgs: [panelId],
+    );
+  }
+
+  /// Remove panel from site (unassign)
+  Future<int> unassignPanelFromSite(String panelId) async {
+    final db = await database;
+    return await db.update(
+      'panels',
+      {'site_id': null, 'updated_at': DateTime.now().millisecondsSinceEpoch},
+      where: 'panel_id = ?',
+      whereArgs: [panelId],
+    );
+  }
+
+  /// Update panel last connected time
+  Future<int> updatePanelLastConnected(String panelId) async {
+    final db = await database;
+    return await db.update(
+      'panels',
+      {
+        'last_connected': DateTime.now().millisecondsSinceEpoch,
+        'updated_at': DateTime.now().millisecondsSinceEpoch,
+      },
+      where: 'panel_id = ?',
+      whereArgs: [panelId],
+    );
+  }
+
+  /// Get all panels
+  Future<List<PanelModel>> getAllPanels() async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.query(
+      'panels',
+      orderBy: 'last_connected DESC, created_at DESC',
+    );
+
+    return List.generate(maps.length, (i) {
+      return PanelModel.fromMap(maps[i]);
+    });
+  }
+
+  /// Delete a panel
+  Future<int> deletePanel(String panelId) async {
+    final db = await database;
+    return await db.delete(
+      'panels',
+      where: 'panel_id = ?',
+      whereArgs: [panelId],
+    );
   }
 
   // DATABASE MAINTENANCE

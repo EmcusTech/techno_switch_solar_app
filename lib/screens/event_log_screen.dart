@@ -13,12 +13,14 @@ class EventLogScreen extends StatefulWidget {
   final String panelVersionNo;
   final String panelName;
   final bool isStandalone; // True if accessed without site context
+  final String? panelId; // Panel ID to preserve across disconnects
   const EventLogScreen({
     super.key,
     required this.logDataList,
     required this.panelVersionNo,
     required this.panelName,
     this.isStandalone = false, // Default to false for existing usage
+    this.panelId, // Optional panel ID parameter
   });
 
   @override
@@ -35,6 +37,7 @@ class _EventLogScreenState extends State<EventLogScreen> {
         panelName: widget.panelName,
         panelVersionNo: widget.panelVersionNo,
         isStandalone: widget.isStandalone,
+        panelId: widget.panelId,
       ),
     );
   }
@@ -46,11 +49,13 @@ class _EventLogContent extends StatefulWidget {
   final String panelName;
   final String panelVersionNo;
   final bool isStandalone;
+  final String? panelId;
   const _EventLogContent({
     required this.logDataList,
     required this.panelName,
     required this.panelVersionNo,
     required this.isStandalone,
+    this.panelId,
   });
 
   @override
@@ -61,10 +66,21 @@ class _EventLogContentState extends State<_EventLogContent> {
   bool _isListSelected = true;
   List<LogModel> _displayLogs = [];
   String _connectionStatus = "Disconnected";
+  String? _storedPanelId; // Store panel ID to preserve across disconnects
 
   Future<void> _handleBackNavigation() async {
-    // Disconnect Bluetooth first
+    // Use stored panel ID (captured during initState) instead of current one
+    final panelIdToUse =
+        _storedPanelId ?? AppServices.serialService.currentPanelId;
+    print(
+      "DEBUG: EventLog - Panel ID before disconnect: $panelIdToUse (stored: $_storedPanelId, current: ${AppServices.serialService.currentPanelId})",
+    );
+
+    // Disconnect Bluetooth
     AppServices.serialService.disconnect();
+    print(
+      "DEBUG: EventLog - Panel ID after disconnect: ${AppServices.serialService.currentPanelId}",
+    );
 
     // If this is standalone mode (not from a site) and we have logs, show dialog
     if (widget.isStandalone && _displayLogs.isNotEmpty) {
@@ -74,7 +90,10 @@ class _EventLogContentState extends State<_EventLogContent> {
       );
 
       if (shouldCreateSite == true) {
-        // Navigate to site creation screen with logs
+        print(
+          "DEBUG: EventLog - Navigating to site creation with panel ID: $panelIdToUse",
+        );
+        // Navigate to site creation screen with logs and panel ID
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
             builder:
@@ -82,6 +101,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                   retrievedLogs: _displayLogs,
                   panelName: widget.panelName,
                   panelVersionNo: widget.panelVersionNo,
+                  panelId: panelIdToUse, // Pass the stored panel ID
                 ),
           ),
         );
@@ -96,6 +116,13 @@ class _EventLogContentState extends State<_EventLogContent> {
   @override
   void initState() {
     super.initState();
+    // Use the panel ID passed from the constructor (captured before disconnect)
+    // Fall back to current service panel ID if not provided
+    _storedPanelId = widget.panelId ?? AppServices.serialService.currentPanelId;
+    print(
+      "DEBUG: EventLog - Stored panel ID at init: $_storedPanelId (from widget: ${widget.panelId}, from service: ${AppServices.serialService.currentPanelId})",
+    );
+
     // Initialize display logs with the data passed from loading screen
     _displayLogs = List.from(widget.logDataList);
 
@@ -113,7 +140,8 @@ class _EventLogContentState extends State<_EventLogContent> {
   void dispose() {
     // Don't dispose the shared service here, as other screens might still be using it
     // _serialService.dispose(); // Commented out
-    AppServices.serialService.disconnect();
+    // Don't disconnect here - let _handleBackNavigation handle it properly
+    // AppServices.serialService.disconnect();
     super.dispose();
   }
 
@@ -246,8 +274,9 @@ class _EventLogContentState extends State<_EventLogContent> {
               ),
               Spacer(),
               InkWell(
-                onTap: () {
-                  AppServices.serialService.disconnect();
+                onTap: () async {
+                  // Use the same logic as back navigation to ensure panel ID is preserved
+                  await _handleBackNavigation();
                 },
                 child: Container(
                   height: 40,

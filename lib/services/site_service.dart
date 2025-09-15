@@ -1,6 +1,8 @@
 import '../models/site_model.dart';
 import '../models/log_model.dart';
+import '../models/panel_model.dart';
 import 'database_helper.dart';
+import 'panel_service.dart';
 
 class SiteService {
   static final SiteService _instance = SiteService._internal();
@@ -8,6 +10,7 @@ class SiteService {
   SiteService._internal();
 
   final DatabaseHelper _databaseHelper = DatabaseHelper();
+  final PanelService _panelService = PanelService();
 
   /// Create a new site from the site creation form data
   Future<SiteModel> createSite({
@@ -216,6 +219,52 @@ class SiteService {
 
   bool _isValidEmail(String email) {
     return RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email);
+  }
+
+  // PANEL MANAGEMENT METHODS
+
+  /// Get all panels for a specific site
+  Future<List<PanelModel>> getSitePanels(int siteId) async {
+    return await _panelService.getPanelsBySiteId(siteId);
+  }
+
+  /// Assign panel to site (used when connecting to panel within a site)
+  Future<bool> assignPanelToSite(String panelId, int siteId) async {
+    return await _panelService.assignPanelToSite(panelId, siteId);
+  }
+
+  /// Get unassigned panels (panels not associated with any site)
+  Future<List<PanelModel>> getUnassignedPanels() async {
+    return await _panelService.getUnassignedPanels();
+  }
+
+  /// Get panel by panel ID
+  Future<PanelModel?> getPanelByPanelId(String panelId) async {
+    return await _panelService.getPanelByPanelId(panelId);
+  }
+
+  /// Associate the currently connected panel with a site when creating a site after log retrieval
+  Future<bool> associateCurrentPanelWithSite(
+    String? panelId,
+    int siteId,
+  ) async {
+    if (panelId == null) return false;
+    return await _panelService.assignPanelToSite(panelId, siteId);
+  }
+
+  /// Check if a panel can be assigned to a site
+  Future<bool> canAssignPanelToSite(String panelId, int siteId) async {
+    return await _panelService.canAssignPanelToSite(panelId, siteId);
+  }
+
+  /// Get count of panels for a site
+  Future<int> getSitePanelCount(int siteId) async {
+    return await _panelService.getSitePanelsCount(siteId);
+  }
+
+  /// Get all panels (for debugging)
+  Future<List<PanelModel>> getAllPanels() async {
+    return await _panelService.getAllPanels();
   }
 }
 
