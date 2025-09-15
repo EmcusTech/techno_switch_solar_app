@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:techno_switch_solar_app/models/log_model.dart';
 import 'package:techno_switch_solar_app/screens/event_log_screen.dart';
 import 'package:techno_switch_solar_app/screens/log_history_screen.dart';
 import 'package:techno_switch_solar_app/screens/settings_screen.dart';
@@ -10,10 +9,14 @@ import 'package:techno_switch_solar_app/screens/test_mode_screen.dart';
 class ProjectDashboardScreen extends StatefulWidget {
   final String panelVersionNo;
   final String panelName;
+  final int? siteId;
+  final String? siteName;
   const ProjectDashboardScreen({
     super.key,
     required this.panelVersionNo,
     required this.panelName,
+    this.siteId,
+    this.siteName,
   });
 
   @override
@@ -33,7 +36,10 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
       panelVersionNo: widget.panelVersionNo,
     ),
     const TestModeScreen(),
-    const LogHistoryScreen(),
+    LogHistoryScreen(
+      siteId: widget.siteId ?? 0,
+      siteName: widget.siteName ?? '',
+    ),
   ];
 
   void _onItemTapped(int index) {

@@ -3,6 +3,7 @@ import '../models/log_model.dart';
 import '../models/panel_model.dart';
 import 'database_helper.dart';
 import 'panel_service.dart';
+import 'log_retrieval_service.dart';
 
 class SiteService {
   static final SiteService _instance = SiteService._internal();
@@ -11,6 +12,7 @@ class SiteService {
 
   final DatabaseHelper _databaseHelper = DatabaseHelper();
   final PanelService _panelService = PanelService();
+  final LogRetrievalService _logRetrievalService = LogRetrievalService();
 
   /// Create a new site from the site creation form data
   Future<SiteModel> createSite({
@@ -120,6 +122,18 @@ class SiteService {
             .toList();
 
     await _databaseHelper.insertLogs(logsWithSiteId);
+
+    // Create a log retrieval session if associated with a site
+    if (siteId != null && logs.isNotEmpty) {
+      final site = await getSiteById(siteId);
+      if (site != null) {
+        await _logRetrievalService.createLogRetrievalSession(
+          siteId: siteId,
+          siteName: site.siteName,
+          logs: logs,
+        );
+      }
+    }
   }
 
   /// Get orphaned logs (logs not associated with any site)

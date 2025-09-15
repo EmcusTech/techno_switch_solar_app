@@ -1,253 +1,288 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../models/log_retrieval_model.dart';
+import '../services/log_retrieval_service.dart';
 
 class LogHistoryScreen extends StatefulWidget {
-  const LogHistoryScreen({super.key});
+  final int siteId;
+  final String siteName;
+
+  const LogHistoryScreen({
+    super.key,
+    required this.siteId,
+    required this.siteName,
+  });
 
   @override
   State<LogHistoryScreen> createState() => _LogHistoryScreenState();
 }
 
 class _LogHistoryScreenState extends State<LogHistoryScreen> {
+  List<LogRetrievalModel> _logRetrievals = [];
+  bool _isLoading = true;
+  final LogRetrievalService _logRetrievalService = LogRetrievalService();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLogHistory();
+  }
+
+  Future<void> _loadLogHistory() async {
+    try {
+      final retrievals = await _logRetrievalService.getLogRetrievalsForSite(
+        widget.siteId,
+      );
+      setState(() {
+        _logRetrievals = retrievals;
+        _isLoading = false;
+      });
+    } catch (error) {
+      print('Error loading log history: $error');
+      setState(() {
+        _logRetrievals = [];
+        _isLoading = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        height: MediaQuery.sizeOf(context).height,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFFF6EBEB), Colors.white],
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back_ios, color: Colors.black),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: Text(
+          'Log History',
+          style: GoogleFonts.inter(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+            color: Colors.black,
           ),
         ),
-        child: Stack(
-          children: [
-            SvgPicture.asset('assets/svgs/background_1.svg'),
-            Padding(
-              padding: EdgeInsets.only(top: 54),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                mainAxisSize: MainAxisSize.max,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    child: Row(
-                      children: [
-                        GestureDetector(
-                          onTap: () {
-                            Navigator.of(context).pop();
-                          },
-                          child: SvgPicture.asset(
-                            'assets/svgs/arrow_back_icon.svg',
-                          ),
-                        ),
-                        SizedBox(width: 8),
-                        Text(
-                          'Log History',
-                          style: GoogleFonts.inter(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  SizedBox(height: 19),
-                  _buildLogHistoryContainer(),
-                ],
-              ),
-            ),
-          ],
-        ),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.share, color: Colors.black),
+            onPressed: () {
+              // TODO: Implement share functionality
+            },
+          ),
+          IconButton(
+            icon: Icon(Icons.filter_list, color: Colors.black),
+            onPressed: () {
+              // TODO: Implement filter functionality
+            },
+          ),
+        ],
       ),
+      body: Column(children: [_buildDeviceHeader(), _buildLogHistorySection()]),
     );
   }
 
-  Widget _buildLogHistoryContainer() {
-    return Expanded(
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(35),
-        ),
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            Align(
-              alignment: Alignment.topRight,
-              child: SvgPicture.asset('assets/svgs/background_2.svg'),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(top: 45),
-              child: Center(
-                child: Column(
-                  children: [
-                    Text(
-                      'Event',
-                      style: GoogleFonts.inter(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF918F8F),
-                      ),
-                    ),
-                    Text(
-                      'Log History',
-                      style: GoogleFonts.inter(
-                        fontSize: 32,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF3A3A3A),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(top: 120, left: 24, right: 24),
-              child: Column(
-                children: [
-                  _buildFilterSection(),
-                  SizedBox(height: 16),
-                  Expanded(
-                    child: ListView.separated(
-                      itemCount: 10, // Replace with actual log count
-                      separatorBuilder: (context, index) => SizedBox(height: 12),
-                      itemBuilder: (context, index) {
-                        return _buildLogHistoryItem(
-                          date: '2024-03-${15 - index}',
-                          time: '${10 + index}:30 AM',
-                          eventType: 'System Check',
-                          status: index % 2 == 0 ? 'Success' : 'Warning',
-                          details: 'System performance check completed',
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFilterSection() {
+  Widget _buildDeviceHeader() {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      margin: EdgeInsets.all(16),
+      padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Color(0xFFF5F5F5),
+        color: Color(0xFFF8F9FA),
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Color(0xFFE9ECEF)),
       ),
       child: Row(
         children: [
-          Icon(Icons.filter_list, color: Color(0xFF3D3D3D)),
-          SizedBox(width: 8),
-          Text(
-            'Filter Logs',
-            style: GoogleFonts.inter(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: Color(0xFF3D3D3D),
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: Color(0xFF28A745),
+              borderRadius: BorderRadius.circular(8),
             ),
+            child: Icon(Icons.device_hub, color: Colors.white, size: 24),
           ),
-          Spacer(),
-          Text(
-            'Last 7 Days',
-            style: GoogleFonts.inter(
-              fontSize: 14,
-              fontWeight: FontWeight.w400,
-              color: Color(0xFF666666),
-            ),
-          ),
-          Icon(Icons.arrow_drop_down, color: Color(0xFF666666)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildLogHistoryItem({
-    required String date,
-    required String time,
-    required String eventType,
-    required String status,
-    required String details,
-  }) {
-    final bool isSuccess = status == 'Success';
-    
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: Color(0xFFE0E0E0),
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+          SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: isSuccess 
-                        ? Color(0xFF4CAF50).withValues(alpha: 0.1)
-                        : Color(0xFFFFA000).withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    status,
-                    style: GoogleFonts.inter(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: isSuccess ? Color(0xFF4CAF50) : Color(0xFFFFA000),
-                    ),
+                Text(
+                  'RHINO2008',
+                  style: GoogleFonts.inter(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black,
                   ),
                 ),
-                Spacer(),
                 Text(
-                  '$date $time',
+                  'version : 0.98',
                   style: GoogleFonts.inter(
-                    fontSize: 12,
+                    fontSize: 14,
                     fontWeight: FontWeight.w400,
-                    color: Color(0xFF666666),
+                    color: Color(0xFF6C757D),
+                  ),
+                ),
+                Text(
+                  'status : Offline',
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w400,
+                    color: Color(0xFF6C757D),
                   ),
                 ),
               ],
             ),
-            SizedBox(height: 12),
+          ),
+          Icon(Icons.keyboard_arrow_down, color: Color(0xFF6C757D), size: 24),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLogHistorySection() {
+    return Expanded(
+      child: Container(
+        margin: EdgeInsets.symmetric(horizontal: 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
             Text(
-              eventType,
+              'Log Retrieval History',
               style: GoogleFonts.inter(
-                fontSize: 16,
+                fontSize: 18,
                 fontWeight: FontWeight.w600,
-                color: Color(0xFF3D3D3D),
+                color: Colors.black,
               ),
             ),
-            SizedBox(height: 4),
-            Text(
-              details,
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                fontWeight: FontWeight.w400,
-                color: Color(0xFF666666),
-              ),
+            SizedBox(height: 16),
+            Expanded(
+              child:
+                  _isLoading
+                      ? Center(
+                        child: CircularProgressIndicator(
+                          color: Color(0xFFEC1D24),
+                        ),
+                      )
+                      : _logRetrievals.isEmpty
+                      ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.history,
+                              size: 64,
+                              color: Color(0xFFE0E0E0),
+                            ),
+                            SizedBox(height: 16),
+                            Text(
+                              'No Log History',
+                              style: GoogleFonts.inter(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF666666),
+                              ),
+                            ),
+                            SizedBox(height: 8),
+                            Text(
+                              'Log retrievals will appear here when you retrieve logs for this site.',
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.inter(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w400,
+                                color: Color(0xFF999999),
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                      : ListView.separated(
+                        itemCount: _logRetrievals.length,
+                        separatorBuilder:
+                            (context, index) => SizedBox(height: 12),
+                        itemBuilder: (context, index) {
+                          final logRetrieval = _logRetrievals[index];
+                          return _buildLogRetrievalItem(logRetrieval);
+                        },
+                      ),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildLogRetrievalItem(LogRetrievalModel logRetrieval) {
+    final DateTime dateRetrieved = logRetrieval.retrievalDate;
+    final String formattedDate =
+        "${dateRetrieved.day.toString().padLeft(2, '0')}/${dateRetrieved.month.toString().padLeft(2, '0')}/${dateRetrieved.year} - ${dateRetrieved.hour.toString().padLeft(2, '0')}:${dateRetrieved.minute.toString().padLeft(2, '0')} ${dateRetrieved.hour >= 12 ? 'PM' : 'AM'}";
+
+    return Container(
+      padding: EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Color(0xFFE9ECEF)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: Color(0xFFDC3545).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(
+              Icons.description_outlined,
+              color: Color(0xFFDC3545),
+              size: 20,
+            ),
+          ),
+          SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  logRetrieval.sessionName,
+                  style: GoogleFonts.inter(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black,
+                  ),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  'Log Records : ${logRetrieval.logCount}',
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w400,
+                    color: Color(0xFF6C757D),
+                  ),
+                ),
+                SizedBox(height: 2),
+                Text(
+                  'Date Retrieved : $formattedDate',
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w400,
+                    color: Color(0xFF6C757D),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

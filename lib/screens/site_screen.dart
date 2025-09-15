@@ -5,6 +5,7 @@ import 'package:techno_switch_solar_app/models/panel_model.dart';
 import 'package:techno_switch_solar_app/models/site_model.dart';
 import 'package:techno_switch_solar_app/screens/scanning_screen.dart';
 import 'package:techno_switch_solar_app/screens/site_detail_screen.dart';
+import 'package:techno_switch_solar_app/screens/project_dashboard.dart';
 import 'package:techno_switch_solar_app/services/site_service.dart';
 import 'package:intl/intl.dart';
 
@@ -298,115 +299,130 @@ class _SiteScreenState extends State<SiteScreen> {
       itemBuilder: (context, index) {
         final panel = _panels[index];
 
-        return Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            border: Border.all(
-              color: Color(0xFFB9B9B9).withValues(alpha: 0.31),
-              width: 1,
+        return GestureDetector(
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder:
+                    (context) => ProjectDashboardScreen(
+                      panelName: panel.panelName,
+                      panelVersionNo: panel.deviceDisplayInfo,
+                      siteId: widget.site.id!,
+                      siteName: widget.site.siteName,
+                    ),
+              ),
+            );
+          },
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              border: Border.all(
+                color: Color(0xFFB9B9B9).withValues(alpha: 0.31),
+                width: 1,
+              ),
+              borderRadius: BorderRadius.circular(8),
             ),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(18.0),
-            child: Row(
-              children: [
-                Image.asset('assets/images/panel_icon.png'),
-                SizedBox(width: 14.31),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        panel.panelName,
-                        style: GoogleFonts.inter(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF3D3D3D),
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      Text(
-                        'Panel ID: ${panel.panelId}',
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w400,
-                          color: Color(0xFF918F8F),
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      Text(
-                        '${panel.deviceType.toUpperCase()} • ${panel.deviceDisplayInfo}',
-                        style: GoogleFonts.inter(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w400,
-                          color: Color(0xFF666666),
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      if (panel.lastConnected != null) ...[
-                        SizedBox(height: 2),
+            child: Padding(
+              padding: const EdgeInsets.all(18.0),
+              child: Row(
+                children: [
+                  Image.asset('assets/images/panel_icon.png'),
+                  SizedBox(width: 14.31),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
                         Text(
-                          'Last connected: ${DateFormat('MMM d, y').format(panel.lastConnected!)}',
+                          panel.panelName,
                           style: GoogleFonts.inter(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w400,
-                            color: Color(0xFF999999),
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF3D3D3D),
                           ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                      ],
-                      if (widget.siteWithLogCount.logCount > 0) ...[
-                        SizedBox(height: 4),
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.timeline,
-                              size: 12,
-                              color: Color(0xFF00A706),
-                            ),
-                            SizedBox(width: 4),
-                            Text(
-                              '${widget.siteWithLogCount.logCount} log${widget.siteWithLogCount.logCount == 1 ? '' : 's'}',
-                              style: GoogleFonts.inter(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w500,
-                                color: Color(0xFF00A706),
-                              ),
-                            ),
-                            if (widget.siteWithLogCount.lastLogRetrieved !=
-                                null) ...[
-                              SizedBox(width: 8),
-                              Text(
-                                'Last: ${DateFormat('MMM d').format(widget.siteWithLogCount.lastLogRetrieved!)}',
-                                style: GoogleFonts.inter(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w400,
-                                  color: Color(0xFF918F8F),
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
-                      ] else ...[
-                        SizedBox(height: 4),
                         Text(
-                          'No logs yet',
+                          'Panel ID: ${panel.panelId}',
                           style: GoogleFonts.inter(
-                            fontSize: 11,
+                            fontSize: 12,
                             fontWeight: FontWeight.w400,
                             color: Color(0xFF918F8F),
                           ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
+                        Text(
+                          '${panel.deviceType.toUpperCase()} • ${panel.deviceDisplayInfo}',
+                          style: GoogleFonts.inter(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w400,
+                            color: Color(0xFF666666),
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        if (panel.lastConnected != null) ...[
+                          SizedBox(height: 2),
+                          Text(
+                            'Last connected: ${DateFormat('MMM d, y').format(panel.lastConnected!)}',
+                            style: GoogleFonts.inter(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w400,
+                              color: Color(0xFF999999),
+                            ),
+                          ),
+                        ],
+                        if (widget.siteWithLogCount.logCount > 0) ...[
+                          SizedBox(height: 4),
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.timeline,
+                                size: 12,
+                                color: Color(0xFF00A706),
+                              ),
+                              SizedBox(width: 4),
+                              Text(
+                                '${widget.siteWithLogCount.logCount} log${widget.siteWithLogCount.logCount == 1 ? '' : 's'}',
+                                style: GoogleFonts.inter(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w500,
+                                  color: Color(0xFF00A706),
+                                ),
+                              ),
+                              if (widget.siteWithLogCount.lastLogRetrieved !=
+                                  null) ...[
+                                SizedBox(width: 8),
+                                Text(
+                                  'Last: ${DateFormat('MMM d').format(widget.siteWithLogCount.lastLogRetrieved!)}',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w400,
+                                    color: Color(0xFF918F8F),
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ] else ...[
+                          SizedBox(height: 4),
+                          Text(
+                            'No logs yet',
+                            style: GoogleFonts.inter(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w400,
+                              color: Color(0xFF918F8F),
+                            ),
+                          ),
+                        ],
                       ],
-                    ],
+                    ),
                   ),
-                ),
-                SizedBox(width: 8),
-                SvgPicture.asset('assets/svgs/arrow_right_icon.svg'),
-              ],
+                  SizedBox(width: 8),
+                  SvgPicture.asset('assets/svgs/arrow_right_icon.svg'),
+                ],
+              ),
             ),
           ),
         );

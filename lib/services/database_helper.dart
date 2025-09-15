@@ -4,6 +4,7 @@ import 'package:sqflite/sqflite.dart';
 import '../models/site_model.dart';
 import '../models/log_model.dart';
 import '../models/panel_model.dart';
+import '../models/log_retrieval_model.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper _instance = DatabaseHelper._internal();
@@ -22,7 +23,7 @@ class DatabaseHelper {
     String path = join(await getDatabasesPath(), 'techno_switch_solar.db');
     return await openDatabase(
       path,
-      version: 2, // Increment version to add panels table
+      version: 3, // Increment version to add log_retrievals table
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -85,6 +86,20 @@ class DatabaseHelper {
       )
     ''');
 
+    // Create log_retrievals table
+    await db.execute('''
+      CREATE TABLE log_retrievals (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        site_id INTEGER NOT NULL,
+        session_name TEXT NOT NULL,
+        log_count INTEGER NOT NULL,
+        retrieval_date INTEGER NOT NULL,
+        created_at INTEGER NOT NULL,
+        updated_at INTEGER NOT NULL,
+        FOREIGN KEY (site_id) REFERENCES sites (id) ON DELETE CASCADE
+      )
+    ''');
+
     // Create indexes for better performance
     await db.execute('CREATE INDEX idx_logs_site_id ON logs (site_id)');
     await db.execute(
@@ -93,6 +108,12 @@ class DatabaseHelper {
     await db.execute('CREATE INDEX idx_sites_created_at ON sites (created_at)');
     await db.execute('CREATE INDEX idx_panels_panel_id ON panels (panel_id)');
     await db.execute('CREATE INDEX idx_panels_site_id ON panels (site_id)');
+    await db.execute(
+      'CREATE INDEX idx_log_retrievals_site_id ON log_retrievals (site_id)',
+    );
+    await db.execute(
+      'CREATE INDEX idx_log_retrievals_retrieval_date ON log_retrievals (retrieval_date)',
+    );
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
@@ -115,6 +136,29 @@ class DatabaseHelper {
 
       await db.execute('CREATE INDEX idx_panels_panel_id ON panels (panel_id)');
       await db.execute('CREATE INDEX idx_panels_site_id ON panels (site_id)');
+    }
+
+    if (oldVersion < 3) {
+      // Add log_retrievals table if upgrading from version 2
+      await db.execute('''
+        CREATE TABLE log_retrievals (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          site_id INTEGER NOT NULL,
+          session_name TEXT NOT NULL,
+          log_count INTEGER NOT NULL,
+          retrieval_date INTEGER NOT NULL,
+          created_at INTEGER NOT NULL,
+          updated_at INTEGER NOT NULL,
+          FOREIGN KEY (site_id) REFERENCES sites (id) ON DELETE CASCADE
+        )
+      ''');
+
+      await db.execute(
+        'CREATE INDEX idx_log_retrievals_site_id ON log_retrievals (site_id)',
+      );
+      await db.execute(
+        'CREATE INDEX idx_log_retrievals_retrieval_date ON log_retrievals (retrieval_date)',
+      );
     }
   }
 
@@ -459,6 +503,90 @@ class DatabaseHelper {
       where: 'panel_id = ?',
       whereArgs: [panelId],
     );
+  }
+
+  // LOG RETRIEVAL OPERATIONS
+
+  /// Insert a new log retrieval session
+  Future<int> insertLogRetrieval(LogRetrievalModel logRetrieval) async {
+    final db = await database;
+    return await db.insert('log_retrievals', logRetrieval.toMap());
+  }
+
+  /// Get all log retrievals for a site
+  Future<List<LogRetrievalModel>> getLogRetrievalsBySite(int siteId) async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.query(
+      'log_retrievals',
+      where: 'site_id = ?',
+      whereArgs: [siteId],
+      orderBy: 'retrieval_date DESC',
+    );
+
+    return List.generate(maps.length, (i) {
+      return LogRetrievalModel.fromMap(maps[i]);
+    });
+  }
+
+  /// Get a specific log retrieval by ID
+  Future<LogRetrievalModel?> getLogRetrievalById(int id) async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.query(
+      'log_retrievals',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+
+    if (maps.isNotEmpty) {
+      return LogRetrievalModel.fromMap(maps.first);
+    }
+    return null;
+  }
+
+  /// Update an existing log retrieval
+  Future<int> updateLogRetrieval(LogRetrievalModel logRetrieval) async {
+    final db = await database;
+    return await db.update(
+      'log_retrievals',
+      logRetrieval.toMap(),
+      where: 'id = ?',
+      whereArgs: [logRetrieval.id],
+    );
+  }
+
+  /// Delete a log retrieval
+  Future<int> deleteLogRetrieval(int id) async {
+    final db = await database;
+    return await db.delete('log_retrievals', where: 'id = ?', whereArgs: [id]);
+  }
+
+  /// Get total number of log retrievals for a site
+  Future<int> getLogRetrievalCountBySite(int siteId) async {
+    final db = await database;
+    return Sqflite.firstIntValue(
+          await db.rawQuery(
+            'SELECT COUNT(*) FROM log_retrievals WHERE site_id = ?',
+            [siteId],
+          ),
+        ) ??
+        0;
+  }
+
+  /// Get the most recent log retrieval for a site
+  Future<LogRetrievalModel?> getMostRecentLogRetrieval(int siteId) async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.query(
+      'log_retrievals',
+      where: 'site_id = ?',
+      whereArgs: [siteId],
+      orderBy: 'retrieval_date DESC',
+      limit: 1,
+    );
+
+    if (maps.isNotEmpty) {
+      return LogRetrievalModel.fromMap(maps.first);
+    }
+    return null;
   }
 
   // DATABASE MAINTENANCE
