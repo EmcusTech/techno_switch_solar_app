@@ -139,6 +139,7 @@ class SerialCommunicationService {
   Timer? _pollTimer;
   int _evtLogRetryCount = 0;
   static const int _evtLogRetryMax = 3;
+  int logCount = 1001;
 
   final CommFrame _commFrame = CommFrame();
   final PanelService _panelService = PanelService();
@@ -1307,6 +1308,7 @@ class SerialCommunicationService {
   }
 
   void _processEventLog(List<int> evtData) {
+    logCount--;
     // Align offsets with Python implementation
     List<int> timestamp = evtData.sublist(12, 16);
     int timestampDecimal =
@@ -1360,7 +1362,7 @@ class SerialCommunicationService {
 
     LogModel logModel = LogModel(
       panelText: panelSource,
-      eventId: (eventId + 1).toString(),
+      eventId: logCount.toString(),
       eventDateTime: eventTime,
       panelNo: evtData[0].toString(),
       lBusNo: evtData[1].toString(),
