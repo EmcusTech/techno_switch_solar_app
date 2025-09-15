@@ -93,6 +93,7 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
                         logDataList: _retrievedLogs,
                         panelName: 'RHINO2008',
                         panelVersionNo: '0.98',
+                        isStandalone: true, // This is standalone mode
                       ),
                 ),
               );

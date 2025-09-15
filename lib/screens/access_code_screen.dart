@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:techno_switch_solar_app/screens/project_dashboard.dart';
 import 'package:usb_serial/usb_serial.dart';
 import 'package:techno_switch_solar_app/screens/log_retrieval_loading_screen.dart';
 import 'package:techno_switch_solar_app/screens/scanning_screen.dart';
@@ -12,11 +13,13 @@ class AccessCodeScreen extends StatefulWidget {
   final dynamic
   selectedDevice; // Can be BluetoothDevice or UsbDevice or ScanResult
   final ScanType scanType;
+  final bool? isLiveEvent;
 
   const AccessCodeScreen({
     super.key,
     this.selectedDevice,
     required this.scanType,
+    this.isLiveEvent = false,
   });
 
   @override
@@ -460,12 +463,23 @@ class _AccessCodeScreenState extends State<AccessCodeScreen> {
                         _isAccessCodeValid = false;
                         _showAccessCodeError = false;
                       });
-
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) => LogRetrievalLoadingScreen(),
-                        ),
-                      );
+                      if (widget.isLiveEvent == false) {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder:
+                                (context) => ProjectDashboardScreen(
+                                  panelName: 'RHINO2008',
+                                  panelVersionNo: '0.98',
+                                ),
+                          ),
+                        );
+                      } else {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => LogRetrievalLoadingScreen(),
+                          ),
+                        );
+                      }
                     },
             child: Container(
               decoration: BoxDecoration(

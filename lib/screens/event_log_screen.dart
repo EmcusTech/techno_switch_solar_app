@@ -5,16 +5,20 @@ import 'package:intl/intl.dart';
 import 'package:techno_switch_solar_app/models/log_model.dart';
 import 'package:techno_switch_solar_app/services/app_services.dart';
 import 'package:techno_switch_solar_app/services/navigation_service.dart';
+import 'package:techno_switch_solar_app/widgets/site_creation_dialog.dart';
+import 'package:techno_switch_solar_app/screens/simple_site_creation_screen.dart';
 
 class EventLogScreen extends StatefulWidget {
   final List<LogModel> logDataList;
   final String panelVersionNo;
   final String panelName;
+  final bool isStandalone; // True if accessed without site context
   const EventLogScreen({
     super.key,
     required this.logDataList,
     required this.panelVersionNo,
     required this.panelName,
+    this.isStandalone = false, // Default to false for existing usage
   });
 
   @override
@@ -30,6 +34,7 @@ class _EventLogScreenState extends State<EventLogScreen> {
         logDataList: widget.logDataList,
         panelName: widget.panelName,
         panelVersionNo: widget.panelVersionNo,
+        isStandalone: widget.isStandalone,
       ),
     );
   }
@@ -40,10 +45,12 @@ class _EventLogContent extends StatefulWidget {
   final List<LogModel> logDataList;
   final String panelName;
   final String panelVersionNo;
+  final bool isStandalone;
   const _EventLogContent({
     required this.logDataList,
     required this.panelName,
     required this.panelVersionNo,
+    required this.isStandalone,
   });
 
   @override
@@ -54,6 +61,37 @@ class _EventLogContentState extends State<_EventLogContent> {
   bool _isListSelected = true;
   List<LogModel> _displayLogs = [];
   String _connectionStatus = "Disconnected";
+
+  Future<void> _handleBackNavigation() async {
+    // Disconnect Bluetooth first
+    AppServices.serialService.disconnect();
+
+    // If this is standalone mode (not from a site) and we have logs, show dialog
+    if (widget.isStandalone && _displayLogs.isNotEmpty) {
+      final shouldCreateSite = await showSiteCreationDialog(
+        context,
+        logCount: _displayLogs.length,
+      );
+
+      if (shouldCreateSite == true) {
+        // Navigate to site creation screen with logs
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder:
+                (context) => SimpleSiteCreationScreen(
+                  retrievedLogs: _displayLogs,
+                  panelName: widget.panelName,
+                  panelVersionNo: widget.panelVersionNo,
+                ),
+          ),
+        );
+        return;
+      }
+    }
+
+    // Default behavior: navigate back to scanning screen
+    await NavigationService.navigateBackToScanning(context);
+  }
 
   @override
   void initState() {
@@ -104,10 +142,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                     children: [
                       GestureDetector(
                         onTap: () async {
-                          // Disconnect Bluetooth when going back
-                          await NavigationService.navigateBackToScanning(
-                            context,
-                          );
+                          await _handleBackNavigation();
                         },
                         child: SvgPicture.asset(
                           'assets/svgs/arrow_back_icon.svg',

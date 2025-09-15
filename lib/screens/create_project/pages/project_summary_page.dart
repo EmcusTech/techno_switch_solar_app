@@ -13,6 +13,7 @@ class ProjectSummaryPage extends StatefulWidget {
   final String holdCount;
   final String action;
   final Function(String, String) onExtinguishingSettingChanged;
+  final Function() onUploadToPanel;
 
   const ProjectSummaryPage({
     super.key,
@@ -26,6 +27,7 @@ class ProjectSummaryPage extends StatefulWidget {
     required this.holdCount,
     required this.action,
     required this.onExtinguishingSettingChanged,
+    required this.onUploadToPanel,
   });
 
   @override
@@ -81,76 +83,81 @@ class _ProjectSummaryPageState extends State<ProjectSummaryPage> {
                               ),
                             ),
                             SizedBox(height: 31),
-                        
+
                             Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 20),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                              ),
                               child: Divider(
                                 color: Colors.black.withValues(alpha: 0.17),
                                 thickness: 1,
                               ),
                             ),
-                            
-                        
+
                             Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 24,
+                              ),
                               child: Column(
                                 children: [
                                   // Configuration fields
-                              _buildDropdownField('Enabled', widget.enabled, [
-                                'Yes',
-                                'No',
-                              ]),
-                              SizedBox(height: 20),
-                              _buildDropdownField(
-                                'Actuator Type',
-                                widget.actuatorType,
-                                ['Type A', 'Type B', 'Type C'],
-                              ),
-                              SizedBox(height: 20),
-                              _buildDropdownField('Function', widget.function, [
-                                'Function A',
-                                'Function B',
-                                'Function C',
-                              ]),
-                              SizedBox(height: 20),
-                              _buildDropdownField(
-                                'Auto Countdown',
-                                widget.autoCountdown,
-                                ['10 Sec', '15 Sec', '20 Sec', '30 Sec'],
-                              ),
-                              SizedBox(height: 20),
-                              _buildDropdownField(
-                                'Manual Countdown',
-                                widget.manualCountdown,
-                                ['15 Sec', '30 Sec', '45 Sec', '60 Sec'],
-                              ),
-                              SizedBox(height: 20),
-                              _buildDropdownField(
-                                'Release Time',
-                                widget.releaseTime,
-                                ['30 Sec', '45 Sec', '60 Sec', '90 Sec'],
-                              ),
-                              SizedBox(height: 20),
-                              _buildDropdownField(
-                                'Reset in Count',
-                                widget.resetInCount,
-                                ['Yes', 'No'],
-                              ),
-                              SizedBox(height: 20),
-                              _buildDropdownField(
-                                'Hold / Count',
-                                widget.holdCount,
-                                ['3 Sec', '5 Sec', '10 Sec', '15 Sec'],
-                              ),
-                              SizedBox(height: 20),
-                              _buildDropdownField('Action', widget.action, [
-                                'Extinguish',
-                                'Alert',
-                                'Test',
-                              ]),
+                                  _buildDropdownField(
+                                    'Enabled',
+                                    widget.enabled,
+                                    ['Yes', 'No'],
+                                  ),
+                                  SizedBox(height: 20),
+                                  _buildDropdownField(
+                                    'Actuator Type',
+                                    widget.actuatorType,
+                                    ['Type A', 'Type B', 'Type C'],
+                                  ),
+                                  SizedBox(height: 20),
+                                  _buildDropdownField(
+                                    'Function',
+                                    widget.function,
+                                    ['Function A', 'Function B', 'Function C'],
+                                  ),
+                                  SizedBox(height: 20),
+                                  _buildDropdownField(
+                                    'Auto Countdown',
+                                    widget.autoCountdown,
+                                    ['10 Sec', '15 Sec', '20 Sec', '30 Sec'],
+                                  ),
+                                  SizedBox(height: 20),
+                                  _buildDropdownField(
+                                    'Manual Countdown',
+                                    widget.manualCountdown,
+                                    ['15 Sec', '30 Sec', '45 Sec', '60 Sec'],
+                                  ),
+                                  SizedBox(height: 20),
+                                  _buildDropdownField(
+                                    'Release Time',
+                                    widget.releaseTime,
+                                    ['30 Sec', '45 Sec', '60 Sec', '90 Sec'],
+                                  ),
+                                  SizedBox(height: 20),
+                                  _buildDropdownField(
+                                    'Reset in Count',
+                                    widget.resetInCount,
+                                    ['Yes', 'No'],
+                                  ),
+                                  SizedBox(height: 20),
+                                  _buildDropdownField(
+                                    'Hold / Count',
+                                    widget.holdCount,
+                                    ['3 Sec', '5 Sec', '10 Sec', '15 Sec'],
+                                  ),
+                                  SizedBox(height: 20),
+                                  _buildDropdownField('Action', widget.action, [
+                                    'Extinguish',
+                                    'Alert',
+                                    'Test',
+                                  ]),
                                 ],
                               ),
-                            )
+                            ),
                           ],
                         ),
 
@@ -357,6 +364,7 @@ class _ProjectSummaryPageState extends State<ProjectSummaryPage> {
             ElevatedButton(
               onPressed: () {
                 Navigator.of(context).pop();
+                widget.onUploadToPanel();
                 // Handle successful upload
                 _showSuccessDialog();
               },

@@ -3,8 +3,11 @@ import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/screens/create_project/create_project_screen.dart';
 import 'package:techno_switch_solar_app/screens/scanning_screen.dart';
+import 'package:techno_switch_solar_app/screens/site_detail_screen.dart';
 import 'package:techno_switch_solar_app/services/app_services.dart';
 import 'package:techno_switch_solar_app/services/app_state.dart';
+import 'package:techno_switch_solar_app/services/site_service.dart';
+import 'package:intl/intl.dart';
 import 'settings_screen.dart';
 import 'help_screen.dart';
 
@@ -131,8 +134,45 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-class _HomeContent extends StatelessWidget {
+class _HomeContent extends StatefulWidget {
   const _HomeContent();
+
+  @override
+  State<_HomeContent> createState() => _HomeContentState();
+}
+
+class _HomeContentState extends State<_HomeContent> {
+  final SiteService _siteService = SiteService();
+  List<SiteWithLogCount> _sites = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSites();
+  }
+
+  Future<void> _loadSites() async {
+    try {
+      final sites = await _siteService.getSitesWithLogCount();
+      setState(() {
+        _sites = sites;
+        _isLoading = false;
+      });
+    } catch (error) {
+      setState(() {
+        _isLoading = false;
+      });
+      print('Error loading sites: $error');
+    }
+  }
+
+  Future<void> _refreshSites() async {
+    setState(() {
+      _isLoading = true;
+    });
+    await _loadSites();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -144,13 +184,17 @@ class _HomeContent extends StatelessWidget {
           colors: [Color(0xFFF6EBEB), Colors.white],
         ),
       ),
-      child: SingleChildScrollView(
-        child: Column(
-          children: [
-            _buildHeader(context),
-            _buildQuickLinks(context),
-            _buildRecentSites(),
-          ],
+      child: RefreshIndicator(
+        onRefresh: _refreshSites,
+        child: SingleChildScrollView(
+          physics: AlwaysScrollableScrollPhysics(),
+          child: Column(
+            children: [
+              _buildHeader(context),
+              _buildQuickLinks(context),
+              _buildRecentSites(),
+            ],
+          ),
         ),
       ),
     );
@@ -271,9 +315,18 @@ class _HomeContent extends StatelessWidget {
                 'assets/svgs/maintenance_icon.svg',
                 'Live Events',
               ),
-              _buildQuickLinkItem(
-                'assets/svgs/retrieve_log_icon.svg',
-                'Retrieve Log',
+              GestureDetector(
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => ScanningScreen(isLiveEvent: true),
+                    ),
+                  );
+                },
+                child: _buildQuickLinkItem(
+                  'assets/svgs/retrieve_log_icon.svg',
+                  'Retrieve Log',
+                ),
               ),
             ],
           ),
@@ -319,16 +372,27 @@ class _HomeContent extends StatelessWidget {
       child: Column(
         children: [
           SizedBox(height: 48),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Text(
-              'Recent Sites',
-              style: GoogleFonts.inter(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: Color(0xFF3D3D3D),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Recent Sites',
+                style: GoogleFonts.inter(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF3D3D3D),
+                ),
               ),
-            ),
+              if (_sites.isNotEmpty)
+                Text(
+                  '${_sites.length} site${_sites.length == 1 ? '' : 's'}',
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: Color(0xFF666666),
+                  ),
+                ),
+            ],
           ),
           SizedBox(height: 20),
           _buildRecentSitesItem(),
@@ -338,54 +402,171 @@ class _HomeContent extends StatelessWidget {
   }
 
   Widget _buildRecentSitesItem() {
+    if (_isLoading) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32.0),
+          child: CircularProgressIndicator(color: Color(0xFFEC1D24)),
+        ),
+      );
+    }
+
+    if (_sites.isEmpty) {
+      return Container(
+        padding: EdgeInsets.all(32),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border.all(
+            color: Color(0xFFB9B9B9).withValues(alpha: 0.31),
+            width: 1,
+          ),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Column(
+          children: [
+            SvgPicture.asset(
+              'assets/svgs/new_project_icon.svg',
+              height: 48,
+              width: 48,
+              colorFilter: ColorFilter.mode(
+                Color(0xFFEC1D24).withValues(alpha: 0.5),
+                BlendMode.srcIn,
+              ),
+            ),
+            SizedBox(height: 16),
+            Text(
+              'No Sites Yet',
+              style: GoogleFonts.inter(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF3D3D3D),
+              ),
+            ),
+            SizedBox(height: 8),
+            Text(
+              'Create your first site to get started',
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                fontWeight: FontWeight.w400,
+                color: Color(0xFF666666),
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      );
+    }
+
     return ListView.separated(
       physics: NeverScrollableScrollPhysics(),
       shrinkWrap: true,
-      itemCount: 10,
+      itemCount: _sites.length,
       separatorBuilder: (context, index) {
         return SizedBox(height: 10);
       },
       itemBuilder: (context, index) {
-        return Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            border: Border.all(
-              color: Color(0xFFB9B9B9).withValues(alpha: 0.31),
-              width: 1,
+        final siteWithLogCount = _sites[index];
+        final site = siteWithLogCount.site;
+
+        return GestureDetector(
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder:
+                    (context) =>
+                        SiteDetailScreen(siteWithLogCount: siteWithLogCount),
+              ),
+            );
+          },
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              border: Border.all(
+                color: Color(0xFFB9B9B9).withValues(alpha: 0.31),
+                width: 1,
+              ),
+              borderRadius: BorderRadius.circular(8),
             ),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(18.0),
-            child: Row(
-              children: [
-                // SvgPicture.asset('assets/svgs/panel_icon.svg'),
-                Image.asset('assets/images/panel_icon.png'),
-                SizedBox(width: 14.31),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Project Name',
-                      style: GoogleFonts.inter(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF3D3D3D),
-                      ),
+            child: Padding(
+              padding: const EdgeInsets.all(18.0),
+              child: Row(
+                children: [
+                  Image.asset('assets/images/panel_icon.png'),
+                  SizedBox(width: 14.31),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          site.siteName,
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF3D3D3D),
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        Text(
+                          '${site.installerName} • ${site.companyName}',
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w400,
+                            color: Color(0xFF918F8F),
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        if (siteWithLogCount.logCount > 0) ...[
+                          SizedBox(height: 4),
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.timeline,
+                                size: 12,
+                                color: Color(0xFF00A706),
+                              ),
+                              SizedBox(width: 4),
+                              Text(
+                                '${siteWithLogCount.logCount} log${siteWithLogCount.logCount == 1 ? '' : 's'}',
+                                style: GoogleFonts.inter(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w500,
+                                  color: Color(0xFF00A706),
+                                ),
+                              ),
+                              if (siteWithLogCount.lastLogRetrieved !=
+                                  null) ...[
+                                SizedBox(width: 8),
+                                Text(
+                                  'Last: ${DateFormat('MMM d').format(siteWithLogCount.lastLogRetrieved!)}',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w400,
+                                    color: Color(0xFF918F8F),
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ] else ...[
+                          SizedBox(height: 4),
+                          Text(
+                            'No logs yet',
+                            style: GoogleFonts.inter(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w400,
+                              color: Color(0xFF918F8F),
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
-                    Text(
-                      'location',
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w400,
-                        color: Color(0xFF918F8F),
-                      ),
-                    ),
-                  ],
-                ),
-                Spacer(),
-                SvgPicture.asset('assets/svgs/arrow_right_icon.svg'),
-              ],
+                  ),
+                  SizedBox(width: 8),
+                  SvgPicture.asset('assets/svgs/arrow_right_icon.svg'),
+                ],
+              ),
             ),
           ),
         );

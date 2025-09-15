@@ -11,6 +11,8 @@ import 'package:techno_switch_solar_app/screens/create_project/pages/input_page.
 import 'package:techno_switch_solar_app/screens/create_project/pages/relay_page.dart';
 import 'package:techno_switch_solar_app/screens/create_project/pages/devices_page.dart';
 import 'package:techno_switch_solar_app/screens/create_project/pages/project_summary_page.dart';
+import 'package:techno_switch_solar_app/screens/home_screen.dart';
+import 'package:techno_switch_solar_app/services/site_service.dart';
 
 class CreateSiteScreen extends StatefulWidget {
   const CreateSiteScreen({super.key});
@@ -31,7 +33,7 @@ class _CreateSiteScreenState extends State<CreateSiteScreen> {
   late TextEditingController _siteDescriptionController;
   late PageController _pageController;
   int currentStep = 1;
-  final int totalSteps = 9;
+  final int totalSteps = 10;
   String? selectedPanelType;
 
   // General Settings values
@@ -169,6 +171,9 @@ class _CreateSiteScreenState extends State<CreateSiteScreen> {
   String holdCount = '5 Sec';
   String extinguishingAction = 'Extinguish';
 
+  final SiteService _siteService = SiteService();
+  bool _isSaving = false;
+
   @override
   void initState() {
     _panelNameController = TextEditingController();
@@ -182,6 +187,85 @@ class _CreateSiteScreenState extends State<CreateSiteScreen> {
     _siteDescriptionController = TextEditingController();
     _pageController = PageController();
     super.initState();
+  }
+
+  Future<void> _createSite() async {
+    // if (_isLoading) return;
+
+    // setState(() {
+    //   _isLoading = true;
+    //   _validationErrors.clear();
+    // });
+
+    try {
+      // Validate the form data
+      final errors = _siteService.validateSiteData(
+        siteName: _siteNameController.text,
+        installerName: _installerNameController.text,
+        companyName: _companyNameController.text,
+        saqccRegNumber: _saqccRegNumberController.text,
+        buildingName: _buildingNameController.text,
+        installerContactNumber: _installerContactNumberController.text,
+        installerEmail: _installerEmailController.text,
+        siteDescription: _siteDescriptionController.text,
+      );
+
+      if (errors.isNotEmpty) {
+        // setState(() {
+        //   _validationErrors = errors;
+        //   _isLoading = false;
+        // });
+
+        // Show error snackbar
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Please fix the errors in the form'),
+            backgroundColor: Color(0xFFEC1D24),
+          ),
+        );
+        return;
+      }
+
+      // Create the site
+      final site = await _siteService.createSite(
+        siteName: _siteNameController.text,
+        installerName: _installerNameController.text,
+        companyName: _companyNameController.text,
+        saqccRegNumber: _saqccRegNumberController.text,
+        buildingName: _buildingNameController.text,
+        installerContactNumber: _installerContactNumberController.text,
+        installerEmail: _installerEmailController.text,
+        siteDescription: _siteDescriptionController.text,
+      );
+
+      // Save the logs and associate them with the site
+      // await _siteService.storeLogs(widget.retrievedLogs, siteId: site.id!);
+
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Site created successfully!'),
+          backgroundColor: Color(0xFF00A706),
+        ),
+      );
+
+      // Navigate back to home screen
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => HomeScreen()),
+        (route) => false,
+      );
+    } catch (error) {
+      // setState(() {
+      //   _isLoading = false;
+      // });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error creating site: $error'),
+          backgroundColor: Color(0xFFEC1D24),
+        ),
+      );
+    }
   }
 
   void _goToNextStep() {
@@ -677,6 +761,9 @@ class _CreateSiteScreenState extends State<CreateSiteScreen> {
                                     action: extinguishingAction,
                                     onExtinguishingSettingChanged:
                                         _onExtinguishingSettingChanged,
+                                    onUploadToPanel: () {
+                                      _createSite();
+                                    },
                                   ),
                                 ],
                               ),

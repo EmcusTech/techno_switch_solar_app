@@ -11,11 +11,13 @@ class ScannedScreen extends StatefulWidget {
   final List<dynamic>
   discoveredDevices; // Can hold both UsbDevice and ScanResult
   final ScanType scanType;
+  final bool? isLiveEvent;
 
   const ScannedScreen({
     super.key,
     this.discoveredDevices = const [],
     required this.scanType,
+    this.isLiveEvent = false,
   });
 
   @override
@@ -246,6 +248,7 @@ class _ScannedScreenState extends State<ScannedScreen> {
                 builder:
                     (context) => AccessCodeScreen(
                       selectedDevice: device,
+                      isLiveEvent: widget.isLiveEvent,
                       scanType: widget.scanType,
                     ),
               ),

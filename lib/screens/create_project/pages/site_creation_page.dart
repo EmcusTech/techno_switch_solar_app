@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class SiteCreationPage extends StatefulWidget {
@@ -11,6 +10,7 @@ class SiteCreationPage extends StatefulWidget {
   final TextEditingController installerContactNumberController;
   final TextEditingController installerEmailController;
   final TextEditingController siteDescriptionController;
+  final Map<String, String>? validationErrors;
   const SiteCreationPage({
     super.key,
     required this.siteNameController,
@@ -21,6 +21,7 @@ class SiteCreationPage extends StatefulWidget {
     required this.installerContactNumberController,
     required this.installerEmailController,
     required this.siteDescriptionController,
+    this.validationErrors,
   });
 
   @override
@@ -28,6 +29,71 @@ class SiteCreationPage extends StatefulWidget {
 }
 
 class _SiteCreationPageState extends State<SiteCreationPage> {
+  Widget _buildTextField({
+    required String label,
+    required TextEditingController controller,
+    required String hintText,
+    String? validationKey,
+    int? maxLines = 1,
+  }) {
+    final hasError =
+        widget.validationErrors?.containsKey(validationKey) == true;
+    final errorMessage = widget.validationErrors?[validationKey];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: GoogleFonts.inter(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: hasError ? Color(0xFFEC1D24) : Color(0xFF696969),
+          ),
+        ),
+        SizedBox(height: 8),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(4),
+            border: Border.all(
+              color: hasError ? Color(0xFFEC1D24) : Color(0xFFE0E0E0),
+              width: hasError ? 2 : 1,
+            ),
+          ),
+          child: TextField(
+            controller: controller,
+            maxLines: maxLines,
+            onTapOutside: (value) {
+              FocusScope.of(context).unfocus();
+            },
+            decoration: InputDecoration(
+              contentPadding: EdgeInsets.all(12),
+              border: InputBorder.none,
+              hintText: hintText,
+              hintStyle: GoogleFonts.inter(
+                fontSize: 13,
+                fontWeight: FontWeight.w400,
+                color: Color(0xFFBDBDBD),
+              ),
+            ),
+          ),
+        ),
+        if (hasError && errorMessage != null) ...[
+          SizedBox(height: 4),
+          Text(
+            errorMessage,
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: Color(0xFFEC1D24),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -49,269 +115,61 @@ class _SiteCreationPageState extends State<SiteCreationPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Site Name',
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF696969),
-                    ),
-                  ),
-                  SizedBox(height: 8),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(4),
-                      border: Border.all(color: Color(0xFFE0E0E0)),
-                    ),
-                    child: TextField(
-                      controller: widget.siteNameController,
-                      onTapOutside: (value) {
-                        FocusScope.of(context).unfocus();
-                      },
-                      decoration: InputDecoration(
-                        contentPadding: EdgeInsets.all(12),
-                        border: InputBorder.none,
-                        hintText: 'Enter Site Name',
-                        hintStyle: GoogleFonts.inter(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w400,
-                          color: Color(0xFFBDBDBD),
-                        ),
-                      ),
-                    ),
+                  _buildTextField(
+                    label: 'Site Name',
+                    controller: widget.siteNameController,
+                    hintText: 'Enter Site Name',
+                    validationKey: 'siteName',
                   ),
                   SizedBox(height: 20),
-                  Text(
-                    'Installer Name',
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF696969),
-                    ),
-                  ),
-                  SizedBox(height: 8),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(4),
-                      border: Border.all(color: Color(0xFFE0E0E0)),
-                    ),
-                    child: TextField(
-                      controller: widget.installerNameController,
-                      onTapOutside: (value) {
-                        FocusScope.of(context).unfocus();
-                      },
-                      decoration: InputDecoration(
-                        contentPadding: EdgeInsets.all(12),
-                        border: InputBorder.none,
-                        hintText: 'Enter Installer Name',
-                        hintStyle: GoogleFonts.inter(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w400,
-                          color: Color(0xFFBDBDBD),
-                        ),
-                      ),
-                    ),
+                  _buildTextField(
+                    label: 'Installer Name',
+                    controller: widget.installerNameController,
+                    hintText: 'Enter Installer Name',
+                    validationKey: 'installerName',
                   ),
                   SizedBox(height: 20),
-                  Text(
-                    'Company Name',
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF696969),
-                    ),
-                  ),
-                  SizedBox(height: 8),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(4),
-                      border: Border.all(color: Color(0xFFE0E0E0)),
-                    ),
-                    child: TextField(
-                      controller: widget.companyNameController,
-                      onTapOutside: (value) {
-                        FocusScope.of(context).unfocus();
-                      },
-                      decoration: InputDecoration(
-                        contentPadding: EdgeInsets.all(12),
-                        border: InputBorder.none,
-                        hintText: 'Enter Company Name',
-                        hintStyle: GoogleFonts.inter(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w400,
-                          color: Color(0xFFBDBDBD),
-                        ),
-                      ),
-                    ),
+                  _buildTextField(
+                    label: 'Company Name',
+                    controller: widget.companyNameController,
+                    hintText: 'Enter Company Name',
+                    validationKey: 'companyName',
                   ),
                   SizedBox(height: 20),
-                  Text(
-                    'SAQCC Registration Number',
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF696969),
-                    ),
-                  ),
-                  SizedBox(height: 8),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(4),
-                      border: Border.all(color: Color(0xFFE0E0E0)),
-                    ),
-                    child: TextField(
-                      controller: widget.saqccRegNumberController,
-                      onTapOutside: (value) {
-                        FocusScope.of(context).unfocus();
-                      },
-                      decoration: InputDecoration(
-                        contentPadding: EdgeInsets.all(12),
-                        border: InputBorder.none,
-                        hintText: 'Enter SAQCC Registration Number',
-                        hintStyle: GoogleFonts.inter(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w400,
-                          color: Color(0xFFBDBDBD),
-                        ),
-                      ),
-                    ),
+                  _buildTextField(
+                    label: 'SAQCC Registration Number',
+                    controller: widget.saqccRegNumberController,
+                    hintText: 'Enter SAQCC Registration Number',
+                    validationKey: 'saqccRegNumber',
                   ),
                   SizedBox(height: 20),
-                  Text(
-                    'Building Name',
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF696969),
-                    ),
-                  ),
-                  SizedBox(height: 8),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(4),
-                      border: Border.all(color: Color(0xFFE0E0E0)),
-                    ),
-                    child: TextField(
-                      controller: widget.buildingNameController,
-                      onTapOutside: (value) {
-                        FocusScope.of(context).unfocus();
-                      },
-                      decoration: InputDecoration(
-                        contentPadding: EdgeInsets.all(12),
-                        border: InputBorder.none,
-                        hintText: 'Enter Building Name',
-                        hintStyle: GoogleFonts.inter(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w400,
-                          color: Color(0xFFBDBDBD),
-                        ),
-                      ),
-                    ),
+                  _buildTextField(
+                    label: 'Building Name',
+                    controller: widget.buildingNameController,
+                    hintText: 'Enter Building Name',
+                    validationKey: 'buildingName',
                   ),
                   SizedBox(height: 20),
-                  Text(
-                    'Installer Contact Number',
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF696969),
-                    ),
-                  ),
-                  SizedBox(height: 8),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(4),
-                      border: Border.all(color: Color(0xFFE0E0E0)),
-                    ),
-                    child: TextField(
-                      controller: widget.installerContactNumberController,
-                      onTapOutside: (value) {
-                        FocusScope.of(context).unfocus();
-                      },
-                      decoration: InputDecoration(
-                        contentPadding: EdgeInsets.all(12),
-                        border: InputBorder.none,
-                        hintText: 'Enter Installer Contact Number',
-                        hintStyle: GoogleFonts.inter(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w400,
-                          color: Color(0xFFBDBDBD),
-                        ),
-                      ),
-                    ),
+                  _buildTextField(
+                    label: 'Installer Contact Number',
+                    controller: widget.installerContactNumberController,
+                    hintText: 'Enter Installer Contact Number',
+                    validationKey: 'installerContactNumber',
                   ),
                   SizedBox(height: 20),
-                  Text(
-                    'Installer Email',
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF696969),
-                    ),
-                  ),
-                  SizedBox(height: 8),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(4),
-                      border: Border.all(color: Color(0xFFE0E0E0)),
-                    ),
-                    child: TextField(
-                      controller: widget.installerEmailController,
-                      onTapOutside: (value) {
-                        FocusScope.of(context).unfocus();
-                      },
-                      decoration: InputDecoration(
-                        contentPadding: EdgeInsets.all(12),
-                        border: InputBorder.none,
-                        hintText: 'Enter Installer Email',
-                        hintStyle: GoogleFonts.inter(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w400,
-                          color: Color(0xFFBDBDBD),
-                        ),
-                      ),
-                    ),
+                  _buildTextField(
+                    label: 'Installer Email',
+                    controller: widget.installerEmailController,
+                    hintText: 'Enter Installer Email',
+                    validationKey: 'installerEmail',
                   ),
                   SizedBox(height: 20),
-                  Text(
-                    'Site Description',
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF696969),
-                    ),
-                  ),
-                  SizedBox(height: 8),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(4),
-                      border: Border.all(color: Color(0xFFE0E0E0)),
-                    ),
-                    child: TextField(
-                      controller: widget.siteDescriptionController,
-                      onTapOutside: (value) {
-                        FocusScope.of(context).unfocus();
-                      },
-                      maxLines: 5,
-                      decoration: InputDecoration(
-                        contentPadding: EdgeInsets.all(12),
-                        border: InputBorder.none,
-                        hintText: 'Enter Site Description',
-                        hintStyle: GoogleFonts.inter(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w400,
-                          color: Color(0xFFBDBDBD),
-                        ),
-                      ),
-                    ),
+                  _buildTextField(
+                    label: 'Site Description',
+                    controller: widget.siteDescriptionController,
+                    hintText: 'Enter Site Description',
+                    validationKey: 'siteDescription',
+                    maxLines: 5,
                   ),
                 ],
               ),

@@ -15,7 +15,8 @@ import 'package:techno_switch_solar_app/utils/bluetooth_service.dart';
 enum ScanType { usb, bluetooth }
 
 class ScanningScreen extends StatefulWidget {
-  const ScanningScreen({super.key});
+  final bool? isLiveEvent;
+  const ScanningScreen({super.key, this.isLiveEvent = false});
 
   @override
   State<ScanningScreen> createState() => _ScanningScreenState();
@@ -416,6 +417,7 @@ class _ScanningScreenState extends State<ScanningScreen>
               (context) => ScannedScreen(
                 discoveredDevices: _discoveredDevices,
                 scanType: _selectedScanType!,
+                isLiveEvent: widget.isLiveEvent,
               ),
         ),
       );
