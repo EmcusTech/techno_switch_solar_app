@@ -343,7 +343,7 @@ class _SiteScreenState extends State<SiteScreen> {
                           overflow: TextOverflow.ellipsis,
                         ),
                         Text(
-                          'Panel ID: ${panel.panelId}',
+                          panel.panelId,
                           style: GoogleFonts.inter(
                             fontSize: 12,
                             fontWeight: FontWeight.w400,
@@ -352,29 +352,29 @@ class _SiteScreenState extends State<SiteScreen> {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        Text(
-                          '${panel.deviceType.toUpperCase()} • ${panel.deviceDisplayInfo}',
-                          style: GoogleFonts.inter(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w400,
-                            color: Color(0xFF666666),
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        if (panel.lastConnected != null) ...[
-                          SizedBox(height: 2),
-                          Text(
-                            'Last connected: ${DateFormat('MMM d, y').format(panel.lastConnected!)}',
-                            style: GoogleFonts.inter(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w400,
-                              color: Color(0xFF999999),
-                            ),
-                          ),
-                        ],
+                        // Text(
+                        //   '${panel.deviceType.toUpperCase()} • ${panel.deviceDisplayInfo}',
+                        //   style: GoogleFonts.inter(
+                        //     fontSize: 11,
+                        //     fontWeight: FontWeight.w400,
+                        //     color: Color(0xFF666666),
+                        //   ),
+                        //   maxLines: 1,
+                        //   overflow: TextOverflow.ellipsis,
+                        // ),
+                        // if (panel.lastConnected != null) ...[
+                        //   SizedBox(height: 2),
+                        //   Text(
+                        //     'Last connected: ${DateFormat('MMM d, y').format(panel.lastConnected!)}',
+                        //     style: GoogleFonts.inter(
+                        //       fontSize: 10,
+                        //       fontWeight: FontWeight.w400,
+                        //       color: Color(0xFF999999),
+                        //     ),
+                        //   ),
+                        // ],
                         if (widget.siteWithLogCount.logCount > 0) ...[
-                          SizedBox(height: 4),
+                          // SizedBox(height: 4),
                           Row(
                             children: [
                               Icon(
@@ -420,7 +420,7 @@ class _SiteScreenState extends State<SiteScreen> {
                     ),
                   ),
                   SizedBox(width: 8),
-                  SvgPicture.asset('assets/svgs/arrow_right_icon.svg'),
+                  SvgPicture.asset('assets/svgs/arrow_right_colored_icon.svg'),
                 ],
               ),
             ),

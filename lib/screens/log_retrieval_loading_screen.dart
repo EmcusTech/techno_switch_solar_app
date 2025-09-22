@@ -86,7 +86,7 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
           _connectionStatus = status;
 
           // Check if log retrieval is completed
-          if (status.contains("Completed") || status.contains("Disconnected")) {
+          if (status.contains("Completed")) {
             _logRetrievalCompleted = true;
             _controller.forward().then((_) {
               // Navigate to EventLogScreen with retrieved logs and captured panel ID
@@ -112,19 +112,19 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
     } else {
       _connectionStatus = "Device not connected";
       // Fallback navigation after 5 seconds if not connected
-      _controller.forward();
+      // _controller.forward();
       _controller.addStatusListener((status) {
         if (status == AnimationStatus.completed) {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(
-              builder:
-                  (context) => EventLogScreen(
-                    logDataList: [], // Empty list if not connected
-                    panelName: 'RHINO2008',
-                    panelVersionNo: '0.98',
-                  ),
-            ),
-          );
+          // Navigator.of(context).pushReplacement(
+          //   MaterialPageRoute(
+          //     builder:
+          //         (context) => EventLogScreen(
+          //           logDataList: [], // Empty list if not connected
+          //           panelName: 'RHINO2008',
+          //           panelVersionNo: '0.98',
+          //         ),
+          //   ),
+          // );
         }
       });
     }

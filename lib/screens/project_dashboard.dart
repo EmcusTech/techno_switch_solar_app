@@ -3,6 +3,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/screens/event_log_screen.dart';
 import 'package:techno_switch_solar_app/screens/log_history_screen.dart';
+import 'package:techno_switch_solar_app/screens/log_retrieval_loading_screen.dart';
 import 'package:techno_switch_solar_app/screens/settings_screen.dart';
 import 'package:techno_switch_solar_app/screens/test_mode_screen.dart';
 
@@ -37,8 +38,9 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
     ),
     const TestModeScreen(),
     LogHistoryScreen(
+      panelName: widget.panelName,
+      panelVersionNo: widget.panelVersionNo,
       siteId: widget.siteId ?? 0,
-      siteName: widget.siteName ?? '',
     ),
   ];
 
@@ -422,15 +424,9 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
             children: [
               GestureDetector(
                 onTap: () {
-                  Navigator.push(
-                    context,
+                  Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder:
-                          (context) => EventLogScreen(
-                            panelName: 'RHINO2008',
-                            panelVersionNo: '0.98',
-                            logDataList: [],
-                          ),
+                      builder: (context) => LogRetrievalLoadingScreen(),
                     ),
                   );
                 },
