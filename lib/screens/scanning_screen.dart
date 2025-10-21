@@ -1,12 +1,12 @@
 // scanning_screen.dart
 import 'dart:async';
-import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/screens/scanned_screen.dart';
+import 'package:techno_switch_solar_app/utils/bluetooth_constants.dart';
 import 'package:techno_switch_solar_app/widgets/scanning_widget.dart';
 import 'package:usb_serial/usb_serial.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -34,7 +34,11 @@ class _ScanningScreenState extends State<ScanningScreen>
   static const int _scanDurationSeconds = 30; // longer so logs are visible
   int _remainingSeconds = _scanDurationSeconds;
 
-  final BluetoothService _bluetoothService = BluetoothService();
+  final BluetoothService _bluetoothService = BluetoothService(
+    primaryReadCharUuid: BleUuids.primaryReadCharUuid,
+    primaryServiceUuid: BleUuids.primaryServiceUuid,
+    primaryWriteCharUuid: BleUuids.primaryWriteCharUuid,
+  );
   StreamSubscription? _bleResultsSub;
 
   late final AnimationController _sweepController;
