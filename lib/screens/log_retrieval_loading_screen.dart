@@ -84,9 +84,10 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
       _statusSubscription = _serialService.statusStream.listen((status) {
         setState(() {
           _connectionStatus = status;
+          print("DEBUG: LogRetrieval - Status: $status");
 
           // Check if log retrieval is completed
-          if (status.contains("Completed")) {
+          if (status.contains("Completed") || status.contains("Disconnected")) {
             _logRetrievalCompleted = true;
             _controller.forward().then((_) {
               // Navigate to EventLogScreen with retrieved logs and captured panel ID

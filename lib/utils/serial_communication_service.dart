@@ -3,7 +3,6 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:techno_switch_solar_app/models/log_model.dart';
-import 'package:techno_switch_solar_app/models/panel_model.dart';
 import 'package:techno_switch_solar_app/services/panel_service.dart';
 import 'package:techno_switch_solar_app/utils/bluetooth_constants.dart';
 import 'package:techno_switch_solar_app/utils/event_constants.dart';
@@ -182,7 +181,7 @@ class SerialCommunicationService {
       );
       _statusStreamController.add("String ping sent: '$testString'");
 
-      await Future.delayed(Duration(milliseconds: 1000));
+      // await Future.delayed(Duration(milliseconds: 1000));
 
       // Test 2: Simple binary (SOT + EOT)
       List<int> binaryPing = [0xFE, 0xFD];
@@ -194,7 +193,7 @@ class SerialCommunicationService {
         "Binary ping sent: ${binaryPing.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
       );
 
-      await Future.delayed(Duration(milliseconds: 1000));
+      // await Future.delayed(Duration(milliseconds: 1000));
 
       // Test 3: Your actual network packet (first 10 bytes)
       List<int> networkSample = [
@@ -264,7 +263,7 @@ class SerialCommunicationService {
     try {
       // Test 1: Simple "HELLO" string (exactly like your test app)
       await sendStringCommand("HELLO");
-      await Future.delayed(Duration(milliseconds: 2000));
+      // await Future.delayed(Duration(milliseconds: 2000));
 
       // Test 2: Single byte
       await _txCharacteristic!.write(
@@ -272,7 +271,7 @@ class SerialCommunicationService {
         withoutResponse: false,
       ); // 'H'
       _statusStreamController.add("📤 Sent single byte: 0x48 ('H')");
-      await Future.delayed(Duration(milliseconds: 1000));
+      // await Future.delayed(Duration(milliseconds: 1000));
 
       // Test 3: Empty write
       await _txCharacteristic!.write(
@@ -280,7 +279,7 @@ class SerialCommunicationService {
         withoutResponse: false,
       );
       _statusStreamController.add("📤 Sent empty packet");
-      await Future.delayed(Duration(milliseconds: 1000));
+      // await Future.delayed(Duration(milliseconds: 1000));
 
       // Test 4: Simple binary sequence
       await _txCharacteristic!.write(
@@ -349,7 +348,7 @@ class SerialCommunicationService {
       });
 
       // Wait for scan to complete
-      await Future.delayed(timeout + const Duration(seconds: 1));
+      // await Future.delayed(timeout + const Duration(seconds: 1));
       await FlutterBluePlus.stopScan();
       _scanSubscription?.cancel();
 
@@ -519,7 +518,7 @@ class SerialCommunicationService {
       });
 
       // Wait for scan to complete
-      await Future.delayed(const Duration(seconds: 11));
+      // await Future.delayed(const Duration(seconds: 11));
       await FlutterBluePlus.stopScan();
       _scanSubscription?.cancel();
 
@@ -665,7 +664,7 @@ class SerialCommunicationService {
     _mainProcessState = ProcessState.reqNwkPkt;
     _evtLogRetryCount = 0;
 
-    _processTimer = Timer.periodic(const Duration(milliseconds: 500), (timer) {
+    _processTimer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
       if (_connectionState != PanelConnectionState.processing) {
         timer.cancel();
         return;
@@ -710,7 +709,7 @@ class SerialCommunicationService {
         break;
       case ProcessState.reqRspWaitState:
         // Waiting for response - check for timeout
-        _responseTimer ??= Timer(Duration(seconds: 10), () {
+        _responseTimer ??= Timer(Duration(seconds: 3), () {
           _statusStreamController.add("Response timeout - retrying...");
           if (_processState == ProcessState.readEvtLog &&
               _evtLogRetryCount < _evtLogRetryMax) {
@@ -960,17 +959,17 @@ class SerialCommunicationService {
             int end = (i + maxMtu < data.length) ? i + maxMtu : data.length;
             Uint8List chunk = data.sublist(i, end);
             await _txCharacteristic!.write(chunk, withoutResponse: false);
-            await Future.delayed(
-              const Duration(milliseconds: 20),
-            ); // Small delay between chunks
+            // await Future.delayed(
+            //   const Duration(milliseconds: 20),
+            // ); // Small delay between chunks
           }
         } else {
           await _txCharacteristic!.write(data, withoutResponse: false);
         }
 
-        await Future.delayed(
-          const Duration(milliseconds: 50),
-        ); // Small delay between writes
+        // await Future.delayed(
+        //   const Duration(milliseconds: 50),
+        // ); // Small delay between writes
       } catch (e) {
         _statusStreamController.add("Send error: $e");
         disconnect();
@@ -1008,7 +1007,7 @@ class SerialCommunicationService {
     // Check for small responses first (like string responses)
     if (_rxBuffer.length < 216 && _rxBuffer.length > 0) {
       // Wait a bit to see if more data comes
-      Timer(Duration(milliseconds: 500), () {
+      Timer(Duration(milliseconds: 100), () {
         if (_rxBuffer.length < 216 && _rxBuffer.length > 0) {
           // Process as short response (possibly string)
           _processShortResponse(List.from(_rxBuffer));
