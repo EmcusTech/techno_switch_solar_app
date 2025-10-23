@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/screens/create_project/create_project_screen.dart';
+import 'package:techno_switch_solar_app/screens/desktop/desktop_home_screen.dart';
 import 'package:techno_switch_solar_app/screens/scanning_screen.dart';
-import 'package:techno_switch_solar_app/screens/site_detail_screen.dart';
 import 'package:techno_switch_solar_app/screens/site_screen.dart';
 import 'package:techno_switch_solar_app/services/app_services.dart';
 import 'package:techno_switch_solar_app/services/app_state.dart';
@@ -54,6 +54,15 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Responsive breakpoint - show desktop layout for screens wider than 900px
+    final isDesktop = MediaQuery.of(context).size.width > 900;
+
+    if (isDesktop) {
+      // Desktop layout - no bottom navigation bar
+      return const DesktopHomeScreen();
+    }
+
+    // Mobile layout with bottom navigation
     return Scaffold(
       extendBody: true,
       body: _screens[_selectedIndex],

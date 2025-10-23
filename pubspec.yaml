@@ -43,6 +43,7 @@ dependencies:
   flutter_blue_plus: ^1.32.12
   convert: ^3.1.2
   sqflite: ^2.3.3+1
+  sqflite_common_ffi: ^2.3.3  # Add this line
   path: ^1.9.0
   crypto: ^3.0.6
   universal_ble: ^0.21.1

@@ -89,7 +89,7 @@ class BluetoothService {
 
     // Start scan
     try {
-      UniversalBle.startScan();
+      UniversalBle.startScan(scanFilter: filter);
     } catch (e) {
       // Some platforms may throw if Bluetooth unavailable; surface empty results but keep app alive
       debugPrint('startScan error: $e');

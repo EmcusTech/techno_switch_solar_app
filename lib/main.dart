@@ -3,9 +3,19 @@ import 'package:techno_switch_solar_app/screens/home_screen.dart';
 import 'package:techno_switch_solar_app/services/app_services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/services.dart';
+import 'dart:io'; // Add this import
+import 'package:sqflite_common_ffi/sqflite_ffi.dart'; // Add this import
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize sqflite for desktop platforms
+  if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+    // Initialize FFI
+    sqfliteFfiInit();
+    // Change the default factory for desktop platforms
+    databaseFactory = databaseFactoryFfi;
+  }
 
   // Initialize app services
   await AppServices.initialize();
