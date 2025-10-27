@@ -390,7 +390,7 @@ class _ScanningScreenState extends State<ScanningScreen>
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
           style: GoogleFonts.inter(
-            fontSize: 12,
+            fontSize: 8,
             color: Colors.black87,
             fontWeight: FontWeight.w600,
           ),
@@ -797,7 +797,7 @@ class _ScanningScreenState extends State<ScanningScreen>
                           children: [
                             // image area (top)
                             Container(
-                              height: cardHeight * 0.56,
+                              height: cardHeight * 0.8,
                               width: double.infinity,
                               decoration: BoxDecoration(
                                 color: Colors.grey.shade50,

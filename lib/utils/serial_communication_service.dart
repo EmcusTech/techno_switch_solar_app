@@ -1364,7 +1364,7 @@ class SerialCommunicationService {
     if (eventId != 0) {
       LogModel logModel = LogModel(
         panelText: panelSource,
-        eventId: eventId.toString(),
+        eventId: {eventId + 1}.toString(),
         eventDateTime: eventTime,
         panelNo: evtData[0].toString(),
         lBusNo: evtData[1].toString(),

@@ -154,7 +154,7 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
           children: [
             SvgPicture.asset('assets/svgs/background_1.svg'),
             Padding(
-              padding: EdgeInsets.only(top: 54),
+              padding: EdgeInsets.only(top: 24),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 mainAxisSize: MainAxisSize.max,

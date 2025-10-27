@@ -84,7 +84,7 @@ class _AccessCodeScreenState extends State<AccessCodeScreen> {
     final themePrimary = Theme.of(context).primaryColor;
 
     return Scaffold(
-      resizeToAvoidBottomInset: true,
+      resizeToAvoidBottomInset: false,
       body: Container(
         height: MediaQuery.sizeOf(context).height,
         decoration: const BoxDecoration(

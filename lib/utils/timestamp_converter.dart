@@ -21,7 +21,7 @@ class TimestampConverter {
   static DateTime clockTimeFromTimeStamp(int timestamp) {
     // Convert timestamp to ClockTime first
     ClockTime clockTime = _convertTimestampToClockTime(timestamp);
-    
+
     // Convert ClockTime to DateTime
     return DateTime(
       clockTime.year,
@@ -35,12 +35,19 @@ class TimestampConverter {
 
   // Internal method to convert timestamp to ClockTime structure
   static ClockTime _convertTimestampToClockTime(int timestamp) {
-    // This is a simplified conversion - you may need to adjust based on the actual
-    // timestamp format used by your device. The timestamp appears to be Unix-like.
-    
-    // Convert timestamp to DateTime first using standard Unix timestamp
-    DateTime dateTime = DateTime.fromMillisecondsSinceEpoch(timestamp * 1000, isUtc: true);
-    
+    // Device format: Days*86400 + Hour*3600 + Minute*60 + Second
+    // Where Days start from 1 (not 0) since 1.1.1970
+    // Subtract 1 day (86400 seconds) to convert to standard Unix timestamp
+
+    const int oneDayInSeconds = 86400;
+    int adjustedTimestamp = timestamp - oneDayInSeconds;
+
+    DateTime dateTime =
+        DateTime.fromMillisecondsSinceEpoch(
+          adjustedTimestamp * 1000,
+          isUtc: true,
+        ).toLocal();
+
     return ClockTime(
       year: dateTime.year,
       month: dateTime.month,
@@ -55,11 +62,14 @@ class TimestampConverter {
   static DateTime convertDeviceTimestamp(int timestamp) {
     // If the device uses a different epoch or format, adjust this calculation
     // For now, assuming it's similar to Unix timestamp
-    return DateTime.fromMillisecondsSinceEpoch(timestamp * 1000, isUtc: true).toLocal();
+    return DateTime.fromMillisecondsSinceEpoch(
+      timestamp * 1000,
+      isUtc: true,
+    ).toLocal();
   }
 
   // Utility method to format timestamp for display
   static String formatTimestamp(DateTime dateTime) {
     return "${dateTime.day.toString().padLeft(2, '0')}/${dateTime.month.toString().padLeft(2, '0')}/${dateTime.year} - ${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}:${dateTime.second.toString().padLeft(2, '0')}";
   }
-} 
+}
