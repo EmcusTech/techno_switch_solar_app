@@ -67,8 +67,8 @@ class _EventLogContent extends StatefulWidget {
 
 class _EventLogContentState extends State<_EventLogContent> {
   bool _isListSelected = true;
+  int _selectedViewIndex = 0; // 0 for list, 1 for table
   List<LogModel> _displayLogs = [];
-  String _connectionStatus = "Disconnected";
   String? _storedPanelId; // Store panel ID to preserve across disconnects
 
   final PanelService _panelService = PanelService();
@@ -306,15 +306,6 @@ class _EventLogContentState extends State<_EventLogContent> {
 
     // Initialize display logs with the data passed from loading screen
     _displayLogs = List.from(widget.logDataList);
-
-    // Set connection status based on whether we have logs
-    if (_displayLogs.isNotEmpty) {
-      _connectionStatus = "Connected - ${_displayLogs.length} logs retrieved";
-    } else if (AppServices.isConnected) {
-      _connectionStatus = "Connected - No logs retrieved";
-    } else {
-      _connectionStatus = "Device not connected";
-    }
   }
 
   @override
@@ -359,7 +350,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                       ),
                       SizedBox(width: 8),
                       Text(
-                        'Event Log Retrieval ',
+                        'Event Log Retrieval',
                         style: GoogleFonts.inter(
                           fontSize: 20,
                           fontWeight: FontWeight.w700,
@@ -454,33 +445,33 @@ class _EventLogContentState extends State<_EventLogContent> {
                 ],
               ),
               Spacer(),
-              InkWell(
-                onTap: () async {
-                  // Use the same logic as back navigation to ensure panel ID is preserved
-                  await _handleBackNavigation();
-                },
-                child: Container(
-                  height: 40,
-                  width: 80,
-                  decoration: BoxDecoration(
-                    color: Color(0xFFEC1D24),
-                    borderRadius: BorderRadius.circular(5),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Center(
-                      child: Text(
-                        'Disconnect',
-                        style: GoogleFonts.inter(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
+              // InkWell(
+              //   onTap: () async {
+              //     // Use the same logic as back navigation to ensure panel ID is preserved
+              //     await _handleBackNavigation();
+              //   },
+              //   child: Container(
+              //     height: 40,
+              //     width: 80,
+              //     decoration: BoxDecoration(
+              //       color: Color(0xFFEC1D24),
+              //       borderRadius: BorderRadius.circular(5),
+              //     ),
+              //     child: Padding(
+              //       padding: const EdgeInsets.all(8.0),
+              //       child: Center(
+              //         child: Text(
+              //           'Disconnect',
+              //           style: GoogleFonts.inter(
+              //             fontSize: 10,
+              //             fontWeight: FontWeight.w500,
+              //             color: Colors.white,
+              //           ),
+              //         ),
+              //       ),
+              //     ),
+              //   ),
+              // ),
               // Transform.rotate(
               //   angle: 180 * 3.14159 / 360,
               //   child: Icon(
@@ -572,6 +563,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                 onTap: () {
                   setState(() {
                     _isListSelected = true;
+                    _selectedViewIndex = 0;
                   });
                 },
                 child:
@@ -603,6 +595,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                 onTap: () {
                   setState(() {
                     _isListSelected = false;
+                    _selectedViewIndex = 1;
                   });
                 },
                 child:
@@ -632,14 +625,39 @@ class _EventLogContentState extends State<_EventLogContent> {
             ],
           ),
           SizedBox(height: 20),
-          _isListSelected ? _buildList() : _buildTable(),
+          IndexedStack(
+            index: _selectedViewIndex,
+            sizing: StackFit.passthrough,
+            children: [
+              _LogListView(displayLogs: _displayLogs),
+              _LogTableView(displayLogs: _displayLogs),
+            ],
+          ),
           SizedBox(height: 80),
         ],
       ),
     );
   }
+}
 
-  Widget _buildList() {
+// Separate StatefulWidget for ListView with AutomaticKeepAliveClientMixin
+class _LogListView extends StatefulWidget {
+  final List<LogModel> displayLogs;
+
+  const _LogListView({required this.displayLogs});
+
+  @override
+  State<_LogListView> createState() => _LogListViewState();
+}
+
+class _LogListViewState extends State<_LogListView>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context); // Required for AutomaticKeepAliveClientMixin
     return Column(
       children: [
         // Table header
@@ -686,10 +704,10 @@ class _EventLogContentState extends State<_EventLogContent> {
         ListView.separated(
           shrinkWrap: true,
           physics: NeverScrollableScrollPhysics(),
-          itemCount: _displayLogs.length,
+          itemCount: widget.displayLogs.length,
           separatorBuilder: (context, index) => const Divider(height: 1),
           itemBuilder: (context, index) {
-            final log = _displayLogs[index];
+            final log = widget.displayLogs[index];
             return Container(
               color: Colors.white,
               padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
@@ -728,17 +746,35 @@ class _EventLogContentState extends State<_EventLogContent> {
       ],
     );
   }
+}
 
-  Widget _buildTable() {
+// Separate StatefulWidget for TableView with AutomaticKeepAliveClientMixin
+class _LogTableView extends StatefulWidget {
+  final List<LogModel> displayLogs;
+
+  const _LogTableView({required this.displayLogs});
+
+  @override
+  State<_LogTableView> createState() => _LogTableViewState();
+}
+
+class _LogTableViewState extends State<_LogTableView>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context); // Required for AutomaticKeepAliveClientMixin
     return ListView.separated(
       shrinkWrap: true,
       physics: NeverScrollableScrollPhysics(),
-      itemCount: _displayLogs.length,
+      itemCount: widget.displayLogs.length,
       separatorBuilder: (context, index) {
         return SizedBox(height: 10);
       },
       itemBuilder: (context, index) {
-        final log = _displayLogs[index];
+        final log = widget.displayLogs[index];
         return Container(
           width: double.infinity,
           decoration: BoxDecoration(

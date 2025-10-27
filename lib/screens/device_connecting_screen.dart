@@ -254,14 +254,7 @@ class _DeviceConnectingScreenState extends State<DeviceConnectingScreen>
                   .withOpacity(0.1),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(
-              widget.scanType == ScanType.usb ? Icons.usb : Icons.bluetooth,
-              color:
-                  widget.scanType == ScanType.usb
-                      ? Color(0xFFEC1D24)
-                      : Colors.blue,
-              size: 24,
-            ),
+            child: SvgPicture.asset('assets/svgs/panel_icon.svg'),
           ),
           const SizedBox(width: 12),
           Expanded(
