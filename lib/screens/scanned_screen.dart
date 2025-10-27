@@ -36,10 +36,8 @@ class _ScannedScreenState extends State<ScannedScreen> {
             colors: [Color(0xFFF6EBEB), Colors.white],
           ),
         ),
-        child: SingleChildScrollView(
-          child: Column(
-            children: [_buildHeader(context), _buildDevicesIdentified()],
-          ),
+        child: Column(
+          children: [_buildHeader(context), _buildDevicesIdentified()],
         ),
       ),
     );

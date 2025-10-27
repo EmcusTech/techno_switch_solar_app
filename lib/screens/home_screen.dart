@@ -414,7 +414,8 @@ class _HomeContentState extends State<_HomeContent> {
 
     if (_sites.isEmpty) {
       return Container(
-        padding: EdgeInsets.all(32),
+        width: double.infinity,
+        padding: EdgeInsets.symmetric(vertical: 32, horizontal: 16),
         decoration: BoxDecoration(
           color: Colors.white,
           border: Border.all(

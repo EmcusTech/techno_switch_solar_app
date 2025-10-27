@@ -158,7 +158,7 @@ class SerialCommunicationService {
       _connectionState == PanelConnectionState.processing;
   BluetoothDevice? get connectedDevice => _device;
   String? get currentPanelId {
-    print("DEBUG: Getting currentPanelId: $_currentPanelId");
+    // print("DEBUG: Getting currentPanelId: $_currentPanelId");
     return _currentPanelId;
   }
 
@@ -318,7 +318,7 @@ class SerialCommunicationService {
 
       // Start scanning
       if (Platform.isAndroid) {
-        print("SCAN START SCAN:::::::::::::::::::");
+        // print("SCAN START SCAN:::::::::::::::::::");
         await FlutterBluePlus.startScan(
           androidScanMode: AndroidScanMode.lowLatency,
           continuousUpdates: true,
@@ -447,20 +447,20 @@ class SerialCommunicationService {
 
       // Register/update panel in database
       try {
-        print(
-          "DEBUG: Starting panel registration for device: ${device.platformName}",
-        );
+        // print(
+        //   "DEBUG: Starting panel registration for device: ${device.platformName}",
+        // );
         final panel = await _panelService.registerPanelFromDevice(
           device: device,
           scanType: 'bluetooth',
         );
         _currentPanelId = panel.panelId;
-        print(
-          "DEBUG: Panel registered successfully - ID: ${panel.panelId}, Name: ${panel.panelName}",
-        );
+        // print(
+        //   "DEBUG: Panel registered successfully - ID: ${panel.panelId}, Name: ${panel.panelName}",
+        // );
         _statusStreamController.add("Panel registered: ${panel.panelName}");
       } catch (e) {
-        print("DEBUG: Panel registration failed: $e");
+        // print("DEBUG: Panel registration failed: $e");
         _statusStreamController.add("Panel registration failed: $e");
         // Continue even if panel registration fails
       }
@@ -840,11 +840,11 @@ class SerialCommunicationService {
 
     // Build 200-byte payload and set search method/number at offsets 132..136
     List<int> evtLogPayloadData = List.filled(200, 0x00);
-    evtLogPayloadData[132] = logEvtSearchMethod;
-    evtLogPayloadData[133] = (_logEvtSearchNumber >> 24) & 0xff;
-    evtLogPayloadData[134] = (_logEvtSearchNumber >> 16) & 0xff;
-    evtLogPayloadData[135] = (_logEvtSearchNumber >> 8) & 0xff;
-    evtLogPayloadData[136] = _logEvtSearchNumber & 0xff;
+    evtLogPayloadData[125] = logEvtSearchMethod;
+    evtLogPayloadData[126] = (_logEvtSearchNumber >> 24) & 0xff;
+    evtLogPayloadData[127] = (_logEvtSearchNumber >> 16) & 0xff;
+    evtLogPayloadData[128] = (_logEvtSearchNumber >> 8) & 0xff;
+    evtLogPayloadData[129] = _logEvtSearchNumber & 0xff;
 
     List<int> framePacket = _frameTheTxCommPkt(
       scriptDest,
@@ -949,7 +949,7 @@ class SerialCommunicationService {
         String hexString = data
             .map((byte) => byte.toRadixString(16).padLeft(2, '0').toUpperCase())
             .join(' ');
-        print('writing data: $hexString');
+        print('DEBUG LOG: writing data: $hexString\n');
 
         // BLE has MTU limitations, so we might need to split large packets
         const int maxMtu = 244; // Common MTU size minus headers
@@ -988,13 +988,13 @@ class SerialCommunicationService {
         .join(' ');
 
     print('🔥 DATA RECEIVED! 🔥');
-    print('DEBUG: Received chunk: $hexString (${data.length} bytes)');
-    print('DEBUG: Buffer size: ${_rxBuffer.length} bytes');
+    print('DEBUG LOG: Received chunk: $hexString (${data.length} bytes)\n');
+    // print('DEBUG: Buffer size: ${_rxBuffer.length} bytes');
 
     // Try to interpret as string (like your test app)
     try {
       String asString = String.fromCharCodes(data);
-      print('DEBUG: As string: "$asString"');
+      // print('DEBUG: As string: "$asString"');
       _statusStreamController.add(
         "✅ RECEIVED ${data.length} bytes: $hexString (String: '$asString')",
       );
@@ -1040,23 +1040,23 @@ class SerialCommunicationService {
                 (byte) => byte.toRadixString(16).padLeft(2, '0').toUpperCase(),
               )
               .join(' ');
-          print('DEBUG: Complete frame received: $frameHex');
-          print('DEBUG: Current Process State: $_processState');
-          print('DEBUG: Current Main Process State: $_mainProcessState');
+          // print('DEBUG: Complete frame received: $frameHex');
+          // print('DEBUG: Current Process State: $_processState');
+          // print('DEBUG: Current Main Process State: $_mainProcessState');
 
           _rxFrameProcess(frame, frame.length);
 
           // Remove processed frame from buffer
           _rxBuffer.removeRange(0, sotIndex + 216);
         } else {
-          print('DEBUG: Frame does not end with EOT, waiting for more data');
+          // print('DEBUG: Frame does not end with EOT, waiting for more data');
         }
       } else {
-        print('DEBUG: SOT not found, clearing buffer');
+        // print('DEBUG: SOT not found, clearing buffer');
         _rxBuffer.clear(); // Clear buffer if no SOT found
       }
     } else if (_rxBuffer.length > 216) {
-      print('DEBUG: Buffer too large (${_rxBuffer.length} bytes), clearing');
+      // print('DEBUG: Buffer too large (${_rxBuffer.length} bytes), clearing');
       _rxBuffer.clear();
     }
   }
@@ -1068,7 +1068,7 @@ class SerialCommunicationService {
 
     try {
       String asString = String.fromCharCodes(data);
-      print('DEBUG: Short response as string: "$asString"');
+      // print('DEBUG: Short response as string: "$asString"');
       _statusStreamController.add(
         "Short response (${data.length} bytes): '$asString' (Hex: $hexString)",
       );
@@ -1082,7 +1082,7 @@ class SerialCommunicationService {
         );
       }
     } catch (e) {
-      print('DEBUG: Short response (binary): $hexString');
+      // print('DEBUG: Short response (binary): $hexString');
       _statusStreamController.add(
         "Short response (${data.length} bytes): $hexString",
       );
@@ -1116,9 +1116,9 @@ class SerialCommunicationService {
 
   void _rxFrameProcess(Uint8List rxFrame, int rxFrameLen) {
     _parseAndUpdateRxCommPkt(rxFrame, rxFrameLen);
-    print('DEBUG: Processing frame - Packet Type: ${_commFrame.pktTyp}');
-    print('DEBUG: Frame Mode: ${_commFrame.payload.header.mode}');
-    print('DEBUG: Frame Command: ${_commFrame.payload.header.cmd}');
+    // print('DEBUG: Processing frame - Packet Type: ${_commFrame.pktTyp}');
+    // print('DEBUG: Frame Mode: ${_commFrame.payload.header.mode}');
+    // print('DEBUG: Frame Command: ${_commFrame.payload.header.cmd}');
 
     // Cancel response timer since we received a response
     _responseTimer?.cancel();
@@ -1126,29 +1126,29 @@ class SerialCommunicationService {
 
     switch (_processState) {
       case ProcessState.reqNwkPkt:
-        print('DEBUG: Processing Network Packet Request');
+        // print('DEBUG: Processing Network Packet Request');
         if (_commFrame.pktTyp == PacketType.nwk.value) {
           _statusStreamController.add("Network packet received");
           _processState = ProcessState.reqAccessKey;
           _mainProcessState = ProcessState.reqAccessKey;
-          print(
-            'DEBUG: Network packet received, transitioning to Access Key Request',
-          );
+          // print(
+          //   'DEBUG: Network packet received, transitioning to Access Key Request',
+          // );
         } else {
           _statusStreamController.add("Network packet NACK received");
           _processState = ProcessState.reqNwkPkt;
           _mainProcessState = ProcessState.reqNwkPkt;
-          print(
-            'DEBUG: Network packet NACK received, retrying Network Request',
-          );
+          // print(
+          //   'DEBUG: Network packet NACK received, retrying Network Request',
+          // );
         }
         break;
 
       case ProcessState.reqAccessKey:
-        print('DEBUG: Processing Access Key Request');
-        print(
-          'DEBUG: Received packet type: ${_commFrame.pktTyp}, mode: ${_commFrame.payload.header.mode}',
-        );
+        // print('DEBUG: Processing Access Key Request');
+        // print(
+        //   'DEBUG: Received packet type: ${_commFrame.pktTyp}, mode: ${_commFrame.payload.header.mode}',
+        // );
 
         // Accept both NRM packets (1) and ACK packets (2) for access key response
         if (_commFrame.pktTyp == PacketType.nrm.value ||
@@ -1165,22 +1165,22 @@ class SerialCommunicationService {
           if (isDbStatusInstruct) {
             List<int> asciiList = _commFrame.payload.data.sublist(1, 5);
             String asciiStr = String.fromCharCodes(asciiList);
-            print('DEBUG: Access key response ASCII: $asciiStr');
+            // print('DEBUG: Access key response ASCII: $asciiStr');
             if (asciiStr == '1974') {
               _statusStreamController.add(
                 "Access key verified - Starting log retrieval",
               );
               _processState = ProcessState.readEvtLog;
               _mainProcessState = ProcessState.readEvtLog;
-              print('DEBUG: Access key verified, starting log retrieval');
+              // print('DEBUG: Access key verified, starting log retrieval');
               _stopPolling();
             } else {
               _statusStreamController.add("Invalid access key");
               _processState = ProcessState.reqNwkPkt;
               _mainProcessState = ProcessState.reqNwkPkt;
-              print(
-                'DEBUG: Invalid access key, restarting from Network Request',
-              );
+              // print(
+              //   'DEBUG: Invalid access key, restarting from Network Request',
+              // );
             }
           } else if (isDbSetupEventLog) {
             _statusStreamController.add(
@@ -1197,34 +1197,34 @@ class SerialCommunicationService {
             );
             _processState = ProcessState.readEvtLog;
             _mainProcessState = ProcessState.readEvtLog;
-            print('DEBUG: ACK packet received, proceeding to log retrieval');
+            // print('DEBUG: ACK packet received, proceeding to log retrieval');
             _stopPolling();
           } else {
             _statusStreamController.add("Access key response not recognized");
             _processState = ProcessState.reqNwkPkt;
             _mainProcessState = ProcessState.reqNwkPkt;
-            print(
-              'DEBUG: Access key invalid response, restarting from Network Request',
-            );
+            // print(
+            //   'DEBUG: Access key invalid response, restarting from Network Request',
+            // );
           }
         } else {
           _statusStreamController.add("Access key NACK/Invalid response");
           _processState = ProcessState.reqNwkPkt;
           _mainProcessState = ProcessState.reqNwkPkt;
-          print(
-            'DEBUG: Access key invalid response, restarting from Network Request',
-          );
+          // print(
+          //   'DEBUG: Access key invalid response, restarting from Network Request',
+          // );
         }
         break;
 
       case ProcessState.dummyPktSend:
-        print('DEBUG: Processing Dummy Packet Send');
+        // print('DEBUG: Processing Dummy Packet Send');
         if (_commFrame.pktTyp == PacketType.nrm.value &&
             _commFrame.payload.header.mode ==
                 InstructMode.dbStatusInstruct.value) {
           List<int> asciiList = _commFrame.payload.data.sublist(1, 5);
           String asciiStr = String.fromCharCodes(asciiList);
-          print('DEBUG: Dummy packet response - ASCII: $asciiStr');
+          // print('DEBUG: Dummy packet response - ASCII: $asciiStr');
 
           if (asciiStr == '1974') {
             _statusStreamController.add(
@@ -1232,29 +1232,29 @@ class SerialCommunicationService {
             );
             _processState = ProcessState.readEvtLog;
             _mainProcessState = ProcessState.readEvtLog;
-            print('DEBUG: Access key verified, starting log retrieval');
+            // print('DEBUG: Access key verified, starting log retrieval');
           } else {
             _statusStreamController.add("Invalid access key");
             _processState = ProcessState.reqNwkPkt;
             _mainProcessState = ProcessState.reqNwkPkt;
-            print('DEBUG: Invalid access key, restarting from Network Request');
+            // print('DEBUG: Invalid access key, restarting from Network Request');
           }
         } else {
           _statusStreamController.add("Dummy packet NACK received");
           _processState = ProcessState.reqNwkPkt;
           _mainProcessState = ProcessState.reqNwkPkt;
-          print(
-            'DEBUG: Dummy packet NACK received, restarting from Network Request',
-          );
+          // print(
+          //   'DEBUG: Dummy packet NACK received, restarting from Network Request',
+          // );
         }
         break;
 
       case ProcessState.readEvtLog:
-        print('DEBUG: Processing Event Log');
+        // print('DEBUG: Processing Event Log');
         if (_commFrame.pktTyp == PacketType.nrm.value &&
             _commFrame.payload.header.mode == RequestMode.dbSetupReq.value &&
             _commFrame.payload.header.cmd == eventStatusCmd) {
-          print('DEBUG: Valid event log packet received, processing...');
+          // print('DEBUG: Valid event log packet received, processing...');
           _processEventLog(_commFrame.payload.data);
           // Only now decrement search number
           if (_logEvtSearchNumber > 0) {
@@ -1271,16 +1271,16 @@ class SerialCommunicationService {
           // Some panels periodically send DB_STATUS_INSTRUCT '1974' frames during log retrieval
           List<int> asciiList = _commFrame.payload.data.sublist(1, 5);
           String asciiStr = String.fromCharCodes(asciiList);
-          print(
-            'DEBUG: Received DB_STATUS_INSTRUCT during log retrieval: $asciiStr',
-          );
+          // print(
+          //   'DEBUG: Received DB_STATUS_INSTRUCT during log retrieval: $asciiStr',
+          // );
           // Treat as keep-alive; remain in log retrieval
           _processState = ProcessState.readEvtLog;
           _mainProcessState = ProcessState.readEvtLog;
         } else {
-          print(
-            'DEBUG: Unexpected packet during log retrieval - Type: ${_commFrame.pktTyp}, Mode: ${_commFrame.payload.header.mode}, Cmd: ${_commFrame.payload.header.cmd}',
-          );
+          // print(
+          //   'DEBUG: Unexpected packet during log retrieval - Type: ${_commFrame.pktTyp}, Mode: ${_commFrame.payload.header.mode}, Cmd: ${_commFrame.payload.header.cmd}',
+          // );
           // Ignore and continue log retrieval instead of restarting
           _processState = ProcessState.readEvtLog;
           _mainProcessState = ProcessState.readEvtLog;
@@ -1288,17 +1288,17 @@ class SerialCommunicationService {
         break;
 
       case ProcessState.reqRspWaitState:
-        print('DEBUG: In Response Wait State');
+        // print('DEBUG: In Response Wait State');
         break;
     }
 
     _pktRxCnt = _commFrame.txp;
-    print('DEBUG: Updated packet RX count: $_pktRxCnt');
+    // print('DEBUG: Updated packet RX count: $_pktRxCnt');
 
     if (_stopEvtLogRead) {
-      print(
-        'DEBUG: Log reading completed. Total valid logs: $_totalValidEvtLogCnt',
-      );
+      // print(
+      //   'DEBUG: Log reading completed. Total valid logs: $_totalValidEvtLogCnt',
+      // );
       _statusStreamController.add(
         "Completed reading logs. Total: $_totalValidEvtLogCnt",
       );
@@ -1307,6 +1307,7 @@ class SerialCommunicationService {
   }
 
   void _processEventLog(List<int> evtData) {
+    print('DEBUG: Processing event log: $evtData');
     logCount--;
     // Align offsets with Python implementation
     List<int> timestamp = evtData.sublist(12, 16);
@@ -1315,27 +1316,27 @@ class SerialCommunicationService {
         (timestamp[2] << 8) |
         (timestamp[1] << 16) |
         (timestamp[0] << 24);
-    print('DEBUG: Processing log with timestamp: $timestampDecimal');
+    // print('DEBUG: Processing log with timestamp: $timestampDecimal');
 
     // Comment out timestamp validation
     // if (timestampDecimal != 0x00) {
     _totalValidEvtLogCnt++;
-    print('DEBUG: Processing log - Total count: $_totalValidEvtLogCnt');
+    // print('DEBUG: Processing log - Total count: $_totalValidEvtLogCnt');
 
     // Use current time if timestamp is invalid
     DateTime eventTime =
         timestampDecimal != 0x00
             ? TimestampConverter.clockTimeFromTimeStamp(timestampDecimal)
             : DateTime.now();
-    print('DEBUG: Event time: $eventTime');
+    // print('DEBUG: Event time: $eventTime');
 
     // Event ID taken from search number bytes [133..136]
     int eventId =
-        evtData[136] |
-        (evtData[135] << 8) |
-        (evtData[134] << 16) |
-        (evtData[133] << 24);
-    print('DEBUG: Event ID: $eventId');
+        (evtData[126] << 24) |
+        (evtData[127] << 16) |
+        (evtData[128] << 8) |
+        (evtData[129] << 0);
+    // print('DEBUG: Event ID: $eventId');
 
     String evtTextAscii;
     List<int> evtText = evtData.sublist(42, 124);
@@ -1343,10 +1344,10 @@ class SerialCommunicationService {
       int textLen = evtText[1];
       List<int> evtTextValue = evtText.sublist(2, 2 + textLen);
       evtTextAscii = String.fromCharCodes(evtTextValue);
-      print('DEBUG: Event text: $evtTextAscii');
+      // print('DEBUG: Event text: $evtTextAscii');
     } else {
       evtTextAscii = "NO-TEXT";
-      print('DEBUG: No event text found');
+      // print('DEBUG: No event text found');
     }
 
     String panelSource;
@@ -1357,36 +1358,41 @@ class SerialCommunicationService {
     } else {
       panelSource = "Panel ${evtData[0]}.${evtData[1]}.${evtData[2]}";
     }
-    print('DEBUG: Panel source: $panelSource');
+    // print('DEBUG: Panel source: $panelSource');
 
-    LogModel logModel = LogModel(
-      panelText: panelSource,
-      eventId: logCount.toString(),
-      eventDateTime: eventTime,
-      panelNo: evtData[0].toString(),
-      lBusNo: evtData[1].toString(),
-      moduleNo: evtData[2].toString(),
-      eventStatus: EventConstants.getEventStatusValue(evtData[10]),
-      eventClass: EventConstants.getEventClassValue(evtData[7]),
-      eventSource: panelSource,
-      eventType: EventConstants.getEventType(evtData[9]),
-      eventSubType: EventConstants.getEventDescription(evtData[9], evtData[11]),
-      identifier: EventConstants.getEventIdentifier(
-        evtData[9],
-        evtData[29],
-        evtData[30],
-        evtData[31],
-      ),
-      text: evtTextAscii,
-    );
+    if (eventId != 0 && timestampDecimal != 0x00) {
+      LogModel logModel = LogModel(
+        panelText: panelSource,
+        eventId: eventId.toString(),
+        eventDateTime: eventTime,
+        panelNo: evtData[0].toString(),
+        lBusNo: evtData[1].toString(),
+        moduleNo: evtData[2].toString(),
+        eventStatus: EventConstants.getEventStatusValue(evtData[10]),
+        eventClass: EventConstants.getEventClassValue(evtData[7]),
+        eventSource: panelSource,
+        eventType: EventConstants.getEventType(evtData[9]),
+        eventSubType: EventConstants.getEventDescription(
+          evtData[9],
+          evtData[11],
+        ),
+        identifier: EventConstants.getEventIdentifier(
+          evtData[9],
+          evtData[29],
+          evtData[30],
+          evtData[31],
+        ),
+        text: evtTextAscii,
+      );
 
-    print('DEBUG: Adding log to stream - Event Type: ${logModel.eventType}');
-    _logStreamController.add(logModel);
-    _statusStreamController.add(
-      "Log $_totalValidEvtLogCnt received: ${logModel.eventType}",
-    );
+      // print('DEBUG: Adding log to stream - Event Type: ${logModel.eventType}');
+      _logStreamController.add(logModel);
+      _statusStreamController.add(
+        "Log $_totalValidEvtLogCnt received: ${logModel.eventType}",
+      );
+    }
     // } else {
-    //     print('DEBUG: Skipping log due to invalid timestamp (0x00)');
+    // print('DEBUG: Skipping log due to invalid timestamp (0x00)');
     // }
   }
 
@@ -1402,7 +1408,7 @@ class SerialCommunicationService {
     _processState = ProcessState.reqNwkPkt;
     _mainProcessState = ProcessState.reqNwkPkt;
     _stopEvtLogRead = false;
-    print("DEBUG: Clearing panel ID in disconnect() - was: $_currentPanelId");
+    // print("DEBUG: Clearing panel ID in disconnect() - was: $_currentPanelId");
     _currentPanelId = null; // Clear current panel ID
 
     // Cancel BLE subscriptions
@@ -1415,7 +1421,7 @@ class SerialCommunicationService {
         await _device!.disconnect();
       } catch (e) {
         // Ignore disconnect errors
-        print('Disconnect error: $e');
+        // print('Disconnect error: $e');
       }
       _device = null;
     }

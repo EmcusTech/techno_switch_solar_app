@@ -713,6 +713,15 @@ class _ScanningScreenState extends State<ScanningScreen>
               ),
             ),
             const SizedBox(height: 20),
+            Text(
+              'Please wait till scan identifies the devices....',
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                fontWeight: FontWeight.w400,
+                color: Color(0xFF3A3A3A),
+              ),
+            ),
+            const SizedBox(height: 20),
           ],
         ),
       ],
