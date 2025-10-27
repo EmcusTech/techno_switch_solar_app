@@ -1361,7 +1361,7 @@ class SerialCommunicationService {
     }
     // print('DEBUG: Panel source: $panelSource');
 
-    if (eventId != 0 && timestampDecimal != 0x00) {
+    if (eventId != 0) {
       LogModel logModel = LogModel(
         panelText: panelSource,
         eventId: eventId.toString(),
@@ -1384,6 +1384,7 @@ class SerialCommunicationService {
           evtData[31],
         ),
         text: evtTextAscii,
+        isValid: timestampDecimal != 0x00,
       );
 
       // print('DEBUG: Adding log to stream - Event Type: ${logModel.eventType}');

@@ -205,7 +205,7 @@ class _HomeContentState extends State<_HomeContent> {
     return Stack(
       children: [
         Padding(
-          padding: const EdgeInsets.only(top: 100),
+          padding: const EdgeInsets.only(top: 80),
           child: Align(
             alignment: Alignment.topCenter,
             child: Opacity(
@@ -223,7 +223,7 @@ class _HomeContentState extends State<_HomeContent> {
         ),
         SvgPicture.asset('assets/svgs/background_1.svg'),
         Padding(
-          padding: const EdgeInsets.only(top: 100),
+          padding: const EdgeInsets.only(top: 80),
           child: Column(
             children: [
               Align(

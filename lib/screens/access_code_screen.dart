@@ -102,7 +102,7 @@ class _AccessCodeScreenState extends State<AccessCodeScreen> {
               padding: EdgeInsets.only(
                 left: 24,
                 right: 24,
-                top: 54,
+                top: 24,
                 // add viewInsets.bottom so when keyboard opens there's extra space
                 bottom: 120 + MediaQuery.of(context).viewInsets.bottom,
               ),
@@ -130,7 +130,7 @@ class _AccessCodeScreenState extends State<AccessCodeScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 52),
+                  const SizedBox(height: 24),
                   _buildAccesCodeContainer(themePrimary),
                 ],
               ),

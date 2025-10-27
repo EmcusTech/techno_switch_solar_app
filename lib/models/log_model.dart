@@ -14,7 +14,8 @@ class LogModel {
   final String? eventSubType;
   final String? identifier;
   final String? text;
-  final DateTime? retrievedAt; // When the log was retrieved/stored
+  final DateTime? retrievedAt;
+  final bool? isValid; // When the log was retrieved/stored
 
   LogModel({
     this.id,
@@ -33,6 +34,7 @@ class LogModel {
     this.identifier,
     this.text,
     this.retrievedAt,
+    this.isValid,
   });
 
   // Convert Log object to Map for database storage
@@ -56,6 +58,7 @@ class LogModel {
       'retrieved_at':
           retrievedAt?.millisecondsSinceEpoch ??
           DateTime.now().millisecondsSinceEpoch,
+      'is_valid': isValid,
     };
   }
 
@@ -84,6 +87,7 @@ class LogModel {
           map['retrieved_at'] != null
               ? DateTime.fromMillisecondsSinceEpoch(map['retrieved_at'])
               : null,
+      isValid: map['is_valid'],
     );
   }
 
@@ -105,6 +109,7 @@ class LogModel {
     String? identifier,
     String? text,
     DateTime? retrievedAt,
+    bool? isValid,
   }) {
     return LogModel(
       id: id ?? this.id,
@@ -123,11 +128,12 @@ class LogModel {
       identifier: identifier ?? this.identifier,
       text: text ?? this.text,
       retrievedAt: retrievedAt ?? this.retrievedAt,
+      isValid: isValid ?? this.isValid,
     );
   }
 
   @override
   String toString() {
-    return 'LogModel{id: $id, siteId: $siteId, panelText: $panelText, eventId: $eventId, eventDateTime: $eventDateTime, panelNo: $panelNo, lBusNo: $lBusNo, moduleNo: $moduleNo, eventStatus: $eventStatus, eventClass: $eventClass, eventSource: $eventSource, eventType: $eventType, eventSubType: $eventSubType, identifier: $identifier, text: $text, retrievedAt: $retrievedAt}';
+    return 'LogModel{id: $id, siteId: $siteId, panelText: $panelText, eventId: $eventId, eventDateTime: $eventDateTime, panelNo: $panelNo, lBusNo: $lBusNo, moduleNo: $moduleNo, eventStatus: $eventStatus, eventClass: $eventClass, eventSource: $eventSource, eventType: $eventType, eventSubType: $eventSubType, identifier: $identifier, text: $text, retrievedAt: $retrievedAt, isValid: $isValid}';
   }
 }

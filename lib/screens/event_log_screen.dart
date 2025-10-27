@@ -305,7 +305,8 @@ class _EventLogContentState extends State<_EventLogContent> {
     );
 
     // Initialize display logs with the data passed from loading screen
-    _displayLogs = List.from(widget.logDataList);
+    _displayLogs =
+        widget.logDataList.where((log) => log.isValid == true).toList();
   }
 
   @override
@@ -655,95 +656,145 @@ class _LogListViewState extends State<_LogListView>
   @override
   bool get wantKeepAlive => true;
 
+  final ScrollController _headerScrollController = ScrollController();
+  final ScrollController _bodyScrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    // Sync scroll controllers
+    _headerScrollController.addListener(() {
+      if (_bodyScrollController.hasClients &&
+          _bodyScrollController.offset != _headerScrollController.offset) {
+        _bodyScrollController.jumpTo(_headerScrollController.offset);
+      }
+    });
+    _bodyScrollController.addListener(() {
+      if (_headerScrollController.hasClients &&
+          _headerScrollController.offset != _bodyScrollController.offset) {
+        _headerScrollController.jumpTo(_bodyScrollController.offset);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _headerScrollController.dispose();
+    _bodyScrollController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     super.build(context); // Required for AutomaticKeepAliveClientMixin
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Table header
-        Container(
-          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-          color: Colors.white,
-          child: Row(
-            children: [
-              Expanded(
-                flex: 2,
-                child: Text(
-                  'Event ID',
-                  style: GoogleFonts.inter(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 15,
-                  ),
-                ),
-              ),
-              Expanded(
-                flex: 4,
-                child: Text(
-                  'Date & Time',
-                  style: GoogleFonts.inter(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 15,
-                  ),
-                ),
-              ),
-              Expanded(
-                flex: 3,
-                child: Text(
-                  'Event Status',
-                  style: GoogleFonts.inter(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 15,
-                  ),
-                ),
-              ),
-            ],
+        // Scrollable table header
+        SingleChildScrollView(
+          controller: _headerScrollController,
+          scrollDirection: Axis.horizontal,
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+            color: Colors.white,
+            child: Row(
+              children: [
+                _buildHeaderCell('Event ID', 80),
+                _buildHeaderCell('Date & Time', 180),
+                _buildHeaderCell('Event Status', 120),
+                _buildHeaderCell('Event Class', 120),
+                _buildHeaderCell('Event Type', 150),
+                _buildHeaderCell('Event Sub Type', 150),
+                _buildHeaderCell('Event Source', 120),
+                _buildHeaderCell('Identifier', 120),
+                _buildHeaderCell('Text', 120),
+                _buildHeaderCell('Panel no', 100),
+                _buildHeaderCell('Module no', 100),
+                _buildHeaderCell('L-Bus no', 100),
+              ],
+            ),
           ),
         ),
         const Divider(height: 1, thickness: 1),
-        // Table rows
-        ListView.separated(
-          shrinkWrap: true,
-          physics: NeverScrollableScrollPhysics(),
-          itemCount: widget.displayLogs.length,
-          separatorBuilder: (context, index) => const Divider(height: 1),
-          itemBuilder: (context, index) {
-            final log = widget.displayLogs[index];
-            return Container(
-              color: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-              child: Row(
+        // Scrollable table rows
+        SingleChildScrollView(
+          controller: _bodyScrollController,
+          scrollDirection: Axis.horizontal,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: List.generate(widget.displayLogs.length, (index) {
+              final log = widget.displayLogs[index];
+              return Column(
                 children: [
-                  Expanded(
-                    flex: 2,
-                    child: Text(
-                      log.eventId ?? '',
-                      style: GoogleFonts.inter(fontSize: 14),
+                  if (index > 0) const Divider(height: 1),
+                  Container(
+                    color: index % 2 == 0 ? Colors.white : Color(0xFFFAFAFA),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 12,
+                      horizontal: 8,
                     ),
-                  ),
-                  Expanded(
-                    flex: 4,
-                    child: Text(
-                      log.eventDateTime != null
-                          ? DateFormat(
-                            'dd-MM-yyyy hh:mm:ss a',
-                          ).format(log.eventDateTime!)
-                          : '',
-                      style: GoogleFonts.inter(fontSize: 14),
-                    ),
-                  ),
-                  Expanded(
-                    flex: 3,
-                    child: Text(
-                      log.eventStatus ?? '',
-                      style: GoogleFonts.inter(fontSize: 14),
+                    child: Row(
+                      children: [
+                        _buildDataCell(log.eventId ?? '', 80),
+                        _buildDataCell(
+                          log.eventDateTime != null
+                              ? DateFormat(
+                                'dd-MM-yyyy\nhh:mm:ss a',
+                              ).format(log.eventDateTime!)
+                              : '',
+                          180,
+                        ),
+                        _buildDataCell(log.eventStatus ?? '', 120),
+                        _buildDataCell(log.eventClass ?? '', 120),
+                        _buildDataCell(log.eventType ?? '', 150),
+                        _buildDataCell(log.eventSubType ?? '', 150),
+                        _buildDataCell(log.eventSource ?? '', 120),
+                        _buildDataCell(log.identifier ?? '', 120),
+                        _buildDataCell(log.text ?? '', 120),
+                        _buildDataCell(log.panelNo ?? '', 100),
+                        _buildDataCell(log.moduleNo ?? '', 100),
+                        _buildDataCell(log.lBusNo ?? '', 100),
+                      ],
                     ),
                   ),
                 ],
-              ),
-            );
-          },
+              );
+            }),
+          ),
         ),
       ],
+    );
+  }
+
+  Widget _buildHeaderCell(String text, double width) {
+    return Container(
+      width: width,
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      child: Text(
+        text,
+        style: GoogleFonts.inter(
+          fontWeight: FontWeight.w700,
+          fontSize: 12,
+          color: Color(0xFF3A3A3A),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDataCell(String text, double width) {
+    return Container(
+      width: width,
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      child: Text(
+        text,
+        style: GoogleFonts.inter(
+          fontSize: 11,
+          fontWeight: FontWeight.w400,
+          color: Color(0xFF696969),
+        ),
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+      ),
     );
   }
 }
