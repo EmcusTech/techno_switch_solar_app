@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:techno_switch_solar_app/screens/access_code_screen.dart';
+import 'package:techno_switch_solar_app/screens/device_connecting_screen.dart';
 import 'package:techno_switch_solar_app/screens/scanning_screen.dart';
 import 'package:techno_switch_solar_app/services/navigation_service.dart';
 import 'package:usb_serial/usb_serial.dart';
@@ -240,11 +240,11 @@ class _ScannedScreenState extends State<ScannedScreen> {
         final device = widget.discoveredDevices[index];
         return GestureDetector(
           onTap: () {
-            // Pass the selected device to AccessCodeScreen
+            // Pass the selected device to DeviceConnectingScreen
             Navigator.of(context).push(
               MaterialPageRoute(
                 builder:
-                    (context) => AccessCodeScreen(
+                    (context) => DeviceConnectingScreen(
                       selectedDevice: device,
                       isLiveEvent: widget.isLiveEvent,
                       scanType: widget.scanType,

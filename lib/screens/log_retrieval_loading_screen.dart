@@ -31,10 +31,10 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
   List<LogModel> _retrievedLogs = [];
   String _connectionStatus = "Disconnected";
   int _logsCount = 0;
-  bool _logRetrievalCompleted = false;
   StreamSubscription? _logSubscription;
   StreamSubscription? _statusSubscription;
   String? _capturedPanelId; // Capture panel ID before potential disconnect
+  static const int totalExpectedLogs = 1000; // Total logs expected
 
   @override
   void initState() {
@@ -77,6 +77,8 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
         setState(() {
           _retrievedLogs.add(logModel);
           _logsCount = _retrievedLogs.length;
+          // Update progress based on logs retrieved out of total expected
+          _progress = (_logsCount / totalExpectedLogs).clamp(0.0, 1.0);
         });
       });
 
@@ -88,21 +90,26 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
 
           // Check if log retrieval is completed
           if (status.contains("Completed") || status.contains("Disconnected")) {
-            _logRetrievalCompleted = true;
-            _controller.forward().then((_) {
-              // Navigate to EventLogScreen with retrieved logs and captured panel ID
-              Navigator.of(context).pushReplacement(
-                MaterialPageRoute(
-                  builder:
-                      (context) => EventLogScreen(
-                        logDataList: _retrievedLogs,
-                        panelName: 'RHINO2008',
-                        panelVersionNo: '0.98',
-                        isStandalone: true, // This is standalone mode
-                        panelId: _capturedPanelId, // Pass the captured panel ID
-                      ),
-                ),
-              );
+            // Set progress to 100% if completed
+            _progress = 1.0;
+            // Small delay before navigation to show completion
+            Future.delayed(Duration(milliseconds: 500), () {
+              if (mounted) {
+                // Navigate to EventLogScreen with retrieved logs and captured panel ID
+                Navigator.of(context).pushReplacement(
+                  MaterialPageRoute(
+                    builder:
+                        (context) => EventLogScreen(
+                          logDataList: _retrievedLogs,
+                          panelName: 'RHINO2008',
+                          panelVersionNo: '0.98',
+                          isStandalone: true, // This is standalone mode
+                          panelId:
+                              _capturedPanelId, // Pass the captured panel ID
+                        ),
+                  ),
+                );
+              }
             });
           }
         });
@@ -248,16 +255,24 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     Text(
-                      _logRetrievalCompleted
-                          ? '${(_progress * 100).toInt()}%'
-                          : '$_logsCount logs',
+                      '${(_progress * 100).toInt()}%',
                       style: GoogleFonts.inter(
                         fontSize: 38,
                         fontWeight: FontWeight.w700,
                       ),
                       maxLines: 1,
                     ),
-                    SizedBox(height: 31),
+                    // SizedBox(height: 8),
+                    // Text(
+                    //   '$_logsCount / $totalExpectedLogs logs',
+                    //   style: GoogleFonts.inter(
+                    //     fontSize: 16,
+                    //     fontWeight: FontWeight.w500,
+                    //     color: Color(0xFF918F8F),
+                    //   ),
+                    //   maxLines: 1,
+                    // ),
+                    SizedBox(height: 23),
                     LinearPercentIndicator(
                       lineHeight: 11.0,
                       percent: _progress,
@@ -271,9 +286,7 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 10),
                         child: Text(
-                          _connectionStatus.isNotEmpty
-                              ? _connectionStatus
-                              : 'Fetching Logs...',
+                          'Fetching Logs...',
                           style: GoogleFonts.inter(
                             fontSize: 14,
                             fontWeight: FontWeight.w400,

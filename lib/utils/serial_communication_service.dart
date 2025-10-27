@@ -1303,6 +1303,7 @@ class SerialCommunicationService {
         "Completed reading logs. Total: $_totalValidEvtLogCnt",
       );
       disconnect();
+      //TODO: need stop disconnecting the device
     }
   }
 
