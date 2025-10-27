@@ -42,11 +42,10 @@ class TimestampConverter {
     const int oneDayInSeconds = 86400;
     int adjustedTimestamp = timestamp - oneDayInSeconds;
 
-    DateTime dateTime =
-        DateTime.fromMillisecondsSinceEpoch(
-          adjustedTimestamp * 1000,
-          isUtc: true,
-        ).toLocal();
+    DateTime dateTime = DateTime.fromMillisecondsSinceEpoch(
+      adjustedTimestamp * 1000,
+      isUtc: true,
+    );
 
     return ClockTime(
       year: dateTime.year,
