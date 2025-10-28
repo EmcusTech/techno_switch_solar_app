@@ -1,3 +1,4 @@
+// event_log_screen_sync_headers.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -22,8 +23,8 @@ class EventLogScreen extends StatefulWidget {
     required this.logDataList,
     required this.panelVersionNo,
     required this.panelName,
-    this.isStandalone = false, // Default to false for existing usage
-    this.panelId, // Optional panel ID parameter
+    this.isStandalone = false,
+    this.panelId,
   });
 
   @override
@@ -46,7 +47,6 @@ class _EventLogScreenState extends State<EventLogScreen> {
   }
 }
 
-// Create a separate widget for the EventLog content
 class _EventLogContent extends StatefulWidget {
   final List<LogModel> logDataList;
   final String panelName;
@@ -69,34 +69,23 @@ class _EventLogContentState extends State<_EventLogContent> {
   bool _isListSelected = true;
   int _selectedViewIndex = 0; // 0 for list, 1 for table
   List<LogModel> _displayLogs = [];
-  String? _storedPanelId; // Store panel ID to preserve across disconnects
+  String? _storedPanelId;
 
   final PanelService _panelService = PanelService();
   final SiteService _siteService = SiteService();
 
   Future<void> _handleBackNavigation() async {
-    // Use stored panel ID (captured during initState) instead of current one
     final panelIdToUse =
         _storedPanelId ?? AppServices.serialService.currentPanelId;
-    print(
-      "DEBUG: EventLog - Panel ID before disconnect: $panelIdToUse (stored: $_storedPanelId, current: ${AppServices.serialService.currentPanelId})",
-    );
 
-    // Disconnect Bluetooth
     AppServices.serialService.disconnect();
-    print(
-      "DEBUG: EventLog - Panel ID after disconnect: ${AppServices.serialService.currentPanelId}",
-    );
 
-    // If this is standalone mode (not from a site) and we have logs, check panel association first
     if (widget.isStandalone && _displayLogs.isNotEmpty) {
-      // Check if panel is already associated with a site
       if (panelIdToUse != null) {
         final existingPanel = await _panelService.getPanelByPanelId(
           panelIdToUse,
         );
         if (existingPanel != null && existingPanel.siteId != null) {
-          // Panel is already associated with a site - show existing site dialog
           final existingSite = await _siteService.getSiteById(
             existingPanel.siteId!,
           );
@@ -108,13 +97,11 @@ class _EventLogContentState extends State<_EventLogContent> {
             );
 
             if (shouldNavigateToSite == true) {
-              // Save logs to the existing site
               await _siteService.storeLogs(
                 _displayLogs,
                 siteId: existingSite.id!,
               );
 
-              // Navigate to the existing site screen
               final allSitesWithLogCount =
                   await _siteService.getSitesWithLogCount();
               final updatedSiteWithLogCount = allSitesWithLogCount.firstWhere(
@@ -139,7 +126,6 @@ class _EventLogContentState extends State<_EventLogContent> {
                 (route) => false,
               );
             } else {
-              // User chose not to save logs, navigate back to scanning
               await NavigationService.navigateBackToScanning(context);
             }
             return;
@@ -147,17 +133,12 @@ class _EventLogContentState extends State<_EventLogContent> {
         }
       }
 
-      // Panel is not associated with any site, show normal site creation dialog
       final shouldCreateSite = await showSiteCreationDialog(
         context,
         logCount: _displayLogs.length,
       );
 
       if (shouldCreateSite == true) {
-        print(
-          "DEBUG: EventLog - Navigating to site creation with panel ID: $panelIdToUse",
-        );
-        // Navigate to site creation screen with logs and panel ID
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
             builder:
@@ -165,7 +146,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                   retrievedLogs: _displayLogs,
                   panelName: widget.panelName,
                   panelVersionNo: widget.panelVersionNo,
-                  panelId: panelIdToUse, // Pass the stored panel ID
+                  panelId: panelIdToUse,
                 ),
           ),
         );
@@ -173,7 +154,6 @@ class _EventLogContentState extends State<_EventLogContent> {
       }
     }
 
-    // Default behavior: navigate back to scanning screen
     await NavigationService.navigateBackToScanning(context);
   }
 
@@ -256,9 +236,7 @@ class _EventLogContentState extends State<_EventLogContent> {
           ),
           actions: [
             TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(false);
-              },
+              onPressed: () => Navigator.of(context).pop(false),
               child: Text(
                 'Discard Logs',
                 style: GoogleFonts.inter(
@@ -269,9 +247,7 @@ class _EventLogContentState extends State<_EventLogContent> {
               ),
             ),
             ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).pop(true);
-              },
+              onPressed: () => Navigator.of(context).pop(true),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Color(0xFF0F72E9),
                 shape: RoundedRectangleBorder(
@@ -297,25 +273,9 @@ class _EventLogContentState extends State<_EventLogContent> {
   @override
   void initState() {
     super.initState();
-    // Use the panel ID passed from the constructor (captured before disconnect)
-    // Fall back to current service panel ID if not provided
     _storedPanelId = widget.panelId ?? AppServices.serialService.currentPanelId;
-    print(
-      "DEBUG: EventLog - Stored panel ID at init: $_storedPanelId (from widget: ${widget.panelId}, from service: ${AppServices.serialService.currentPanelId})",
-    );
-
-    // Initialize display logs with the data passed from loading screen
     _displayLogs =
         widget.logDataList.where((log) => log.isValid == true).toList();
-  }
-
-  @override
-  void dispose() {
-    // Don't dispose the shared service here, as other screens might still be using it
-    // _serialService.dispose(); // Commented out
-    // Don't disconnect here - let _handleBackNavigation handle it properly
-    // AppServices.serialService.disconnect();
-    super.dispose();
   }
 
   @override
@@ -342,9 +302,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                   child: Row(
                     children: [
                       GestureDetector(
-                        onTap: () async {
-                          await _handleBackNavigation();
-                        },
+                        onTap: () async => await _handleBackNavigation(),
                         child: SvgPicture.asset(
                           'assets/svgs/arrow_back_icon.svg',
                         ),
@@ -361,23 +319,19 @@ class _EventLogContentState extends State<_EventLogContent> {
                   ),
                 ),
                 SizedBox(height: 19),
-                _buildLogStatusContainer(),
+                Expanded(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(35),
+                    ),
+                    child: _buildLogStatus(),
+                  ),
+                ),
               ],
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildLogStatusContainer() {
-    return Expanded(
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(35),
-        ),
-        child: SingleChildScrollView(child: _buildLogStatus()),
       ),
     );
   }
@@ -387,7 +341,7 @@ class _EventLogContentState extends State<_EventLogContent> {
       padding: const EdgeInsets.all(20),
       child: Column(
         children: [
-          // Panel Information Row
+          // Panel Info Row
           Row(
             children: [
               SvgPicture.asset(
@@ -446,109 +400,11 @@ class _EventLogContentState extends State<_EventLogContent> {
                 ],
               ),
               Spacer(),
-              // InkWell(
-              //   onTap: () async {
-              //     // Use the same logic as back navigation to ensure panel ID is preserved
-              //     await _handleBackNavigation();
-              //   },
-              //   child: Container(
-              //     height: 40,
-              //     width: 80,
-              //     decoration: BoxDecoration(
-              //       color: Color(0xFFEC1D24),
-              //       borderRadius: BorderRadius.circular(5),
-              //     ),
-              //     child: Padding(
-              //       padding: const EdgeInsets.all(8.0),
-              //       child: Center(
-              //         child: Text(
-              //           'Disconnect',
-              //           style: GoogleFonts.inter(
-              //             fontSize: 10,
-              //             fontWeight: FontWeight.w500,
-              //             color: Colors.white,
-              //           ),
-              //         ),
-              //       ),
-              //     ),
-              //   ),
-              // ),
-              // Transform.rotate(
-              //   angle: 180 * 3.14159 / 360,
-              //   child: Icon(
-              //     Icons.arrow_forward_ios,
-              //     size: 18,
-              //     color: Color(0xFF696969),
-              //   ),
-              // ),
             ],
           ),
-          SizedBox(height: 10),
-
-          // // Log Retrieval Status
-          // Container(
-          //   padding: EdgeInsets.all(12),
-          //   decoration: BoxDecoration(
-          //     color: Color(0xFFF9F9F9),
-          //     borderRadius: BorderRadius.circular(8),
-          //     border: Border.all(color: Color(0xFFD7D7D7)),
-          //   ),
-          //   child: Column(
-          //     children: [
-          //       Row(
-          //         children: [
-          //           Icon(
-          //             _connectionStatus.contains("Retrieving") ||
-          //                     _connectionStatus.contains("Processing")
-          //                 ? Icons.sync
-          //                 : _connectionStatus.contains("Complete") ||
-          //                     _connectionStatus.contains("received")
-          //                 ? Icons.check_circle
-          //                 : Icons.info,
-          //             color:
-          //                 _connectionStatus.contains("Retrieving") ||
-          //                         _connectionStatus.contains("Processing")
-          //                     ? Colors.orange
-          //                     : _connectionStatus.contains("Complete") ||
-          //                         _connectionStatus.contains("received")
-          //                     ? Color(0xFF00A706)
-          //                     : Color(0xFF979797),
-          //           ),
-          //           SizedBox(width: 8),
-          //           Expanded(
-          //             child: Text(
-          //               _connectionStatus,
-          //               style: GoogleFonts.inter(
-          //                 fontSize: 14,
-          //                 fontWeight: FontWeight.w500,
-          //               ),
-          //             ),
-          //           ),
-          //         ],
-          //       ),
-          //       if (_realTimeLogs.length > widget.logDataList.length)
-          //         Padding(
-          //           padding: EdgeInsets.only(top: 8),
-          //           child: Text(
-          //             '${_realTimeLogs.length - widget.logDataList.length} new logs retrieved',
-          //             style: GoogleFonts.inter(
-          //               fontSize: 12,
-          //               color: Color(0xFF00A706),
-          //               fontWeight: FontWeight.w500,
-          //             ),
-          //           ),
-          //         ),
-          //     ],
-          //   ),
-          // ),
           SizedBox(height: 15),
-          Divider(
-            color: Color(0xFF000000).withValues(alpha: 0.18),
-            thickness: 1,
-          ),
+          Divider(color: Color(0xFF000000).withAlpha(46), thickness: 1),
           SizedBox(height: 15),
-
-          // Event Log Header
           Row(
             children: [
               Text(
@@ -561,12 +417,11 @@ class _EventLogContentState extends State<_EventLogContent> {
               ),
               Spacer(),
               GestureDetector(
-                onTap: () {
-                  setState(() {
-                    _isListSelected = true;
-                    _selectedViewIndex = 0;
-                  });
-                },
+                onTap:
+                    () => setState(() {
+                      _isListSelected = true;
+                      _selectedViewIndex = 0;
+                    }),
                 child:
                     _isListSelected
                         ? Container(
@@ -593,12 +448,11 @@ class _EventLogContentState extends State<_EventLogContent> {
               ),
               SizedBox(width: 21),
               GestureDetector(
-                onTap: () {
-                  setState(() {
-                    _isListSelected = false;
-                    _selectedViewIndex = 1;
-                  });
-                },
+                onTap:
+                    () => setState(() {
+                      _isListSelected = false;
+                      _selectedViewIndex = 1;
+                    }),
                 child:
                     _isListSelected
                         ? SvgPicture.asset(
@@ -626,22 +480,23 @@ class _EventLogContentState extends State<_EventLogContent> {
             ],
           ),
           SizedBox(height: 20),
-          IndexedStack(
-            index: _selectedViewIndex,
-            sizing: StackFit.passthrough,
-            children: [
-              _LogListView(displayLogs: _displayLogs),
-              _LogTableView(displayLogs: _displayLogs),
-            ],
+          Expanded(
+            child: IndexedStack(
+              index: _selectedViewIndex,
+              children: [
+                _LogListView(displayLogs: _displayLogs),
+                _LogTableView(displayLogs: _displayLogs),
+              ],
+            ),
           ),
-          SizedBox(height: 80),
+          SizedBox(height: 8),
         ],
       ),
     );
   }
 }
 
-// Separate StatefulWidget for ListView with AutomaticKeepAliveClientMixin
+// ---------- UPDATED _LogListView: header + rows share one horizontal scroll ----------
 class _LogListView extends StatefulWidget {
   final List<LogModel> displayLogs;
 
@@ -656,116 +511,69 @@ class _LogListViewState extends State<_LogListView>
   @override
   bool get wantKeepAlive => true;
 
-  final ScrollController _scrollController = ScrollController();
-  bool _isSyncing = false;
+  // One horizontal controller for header + all rows (they will be inside the same horizontal scroll view)
+  final ScrollController _horizontalController = ScrollController();
+
+  // Fixed widths for columns (same as before)
+  static const double wEventId = 80;
+  static const double wDateTime = 180;
+  static const double wEventStatus = 120;
+  static const double wEventClass = 120;
+  static const double wEventType = 150;
+  static const double wEventSubType = 150;
+  static const double wEventSource = 120;
+  static const double wIdentifier = 120;
+  static const double wText = 120;
+  static const double wPanelNo = 100;
+  static const double wModuleNo = 100;
+  static const double wLbusNo = 100;
+
+  // total width computed from column widths
+  late final double _totalTableWidth =
+      wEventId +
+      wDateTime +
+      wEventStatus +
+      wEventClass +
+      wEventType +
+      wEventSubType +
+      wEventSource +
+      wIdentifier +
+      wText +
+      wPanelNo +
+      wModuleNo +
+      wLbusNo;
+
+  // Row height (can be adjusted)
+  static const double _rowHeight = 72.0;
+  static const double _headerHeight = 48.0;
 
   @override
   void dispose() {
-    _scrollController.dispose();
+    _horizontalController.dispose();
     super.dispose();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    super.build(context); // Required for AutomaticKeepAliveClientMixin
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Scrollable table header
-        SingleChildScrollView(
-          controller: _scrollController,
-          scrollDirection: Axis.horizontal,
-          physics: const ClampingScrollPhysics(),
-          child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-            color: Colors.white,
-            child: Row(
-              children: [
-                _buildHeaderCell('Event ID', 80),
-                _buildHeaderCell('Date & Time', 180),
-                _buildHeaderCell('Event Status', 120),
-                _buildHeaderCell('Event Class', 120),
-                _buildHeaderCell('Event Type', 150),
-                _buildHeaderCell('Event Sub Type', 150),
-                _buildHeaderCell('Event Source', 120),
-                _buildHeaderCell('Identifier', 120),
-                _buildHeaderCell('Text', 120),
-                _buildHeaderCell('Panel no', 100),
-                _buildHeaderCell('Module no', 100),
-                _buildHeaderCell('L-Bus no', 100),
-              ],
-            ),
-          ),
-        ),
-        const Divider(height: 1, thickness: 1),
-        // Scrollable table rows - using NotificationListener for smoother sync
-        NotificationListener<ScrollNotification>(
-          onNotification: (notification) {
-            if (!_isSyncing &&
-                notification is ScrollUpdateNotification &&
-                _scrollController.hasClients) {
-              _isSyncing = true;
-              // Use animateTo for smoother scrolling instead of jumpTo
-              if ((notification.metrics.pixels - _scrollController.offset)
-                      .abs() >
-                  0) {
-                _scrollController.jumpTo(notification.metrics.pixels);
-              }
-              Future.microtask(() => _isSyncing = false);
-            }
-            return false;
-          },
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            physics: const ClampingScrollPhysics(),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: List.generate(widget.displayLogs.length, (index) {
-                final log = widget.displayLogs[index];
-                return Column(
-                  children: [
-                    if (index > 0) const Divider(height: 1),
-                    Container(
-                      color:
-                          index % 2 == 0
-                              ? Colors.white
-                              : const Color(0xFFFAFAFA),
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 12,
-                        horizontal: 8,
-                      ),
-                      child: Row(
-                        children: [
-                          _buildDataCell(log.eventId ?? '', 80),
-                          _buildDataCell(
-                            log.eventDateTime != null
-                                ? DateFormat(
-                                  'dd-MM-yyyy\nhh:mm:ss a',
-                                ).format(log.eventDateTime!)
-                                : '',
-                            180,
-                          ),
-                          _buildDataCell(log.eventStatus ?? '', 120),
-                          _buildDataCell(log.eventClass ?? '', 120),
-                          _buildDataCell(log.eventType ?? '', 150),
-                          _buildDataCell(log.eventSubType ?? '', 150),
-                          _buildDataCell(log.eventSource ?? '', 120),
-                          _buildDataCell(log.identifier ?? '', 120),
-                          _buildDataCell(log.text ?? '', 120),
-                          _buildDataCell(log.panelNo ?? '', 100),
-                          _buildDataCell(log.moduleNo ?? '', 100),
-                          _buildDataCell(log.lBusNo ?? '', 100),
-                        ],
-                      ),
-                    ),
-                  ],
-                );
-              }),
-            ),
-          ),
-        ),
-      ],
+  Widget _buildHeader() {
+    return Container(
+      height: _headerHeight,
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+      color: Colors.white,
+      child: Row(
+        children: [
+          _buildHeaderCell('Event ID', wEventId),
+          _buildHeaderCell('Date & Time', wDateTime),
+          _buildHeaderCell('Event Status', wEventStatus),
+          _buildHeaderCell('Event Class', wEventClass),
+          _buildHeaderCell('Event Type', wEventType),
+          _buildHeaderCell('Event Sub Type', wEventSubType),
+          _buildHeaderCell('Event Source', wEventSource),
+          _buildHeaderCell('Identifier', wIdentifier),
+          _buildHeaderCell('Text', wText),
+          _buildHeaderCell('Panel no', wPanelNo),
+          _buildHeaderCell('Module no', wModuleNo),
+          _buildHeaderCell('L-Bus no', wLbusNo),
+        ],
+      ),
     );
   }
 
@@ -800,9 +608,104 @@ class _LogListViewState extends State<_LogListView>
       ),
     );
   }
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // we get vertical space available to this widget, use it to size the internal ListView
+        final double availableHeight = constraints.maxHeight;
+
+        return SingleChildScrollView(
+          controller: _horizontalController,
+          scrollDirection: Axis.horizontal,
+          physics: const ClampingScrollPhysics(),
+          child: SizedBox(
+            width: _totalTableWidth + 16,
+            height:
+                availableHeight, // constrain vertical space for internal Column/ListView
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // header (will scroll horizontally because it's inside the outer SingleChildScrollView)
+                _buildHeader(),
+                const Divider(height: 1, thickness: 1),
+                // Expanded ListView takes remaining vertical space and scrolls vertically only.
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: widget.displayLogs.length,
+                    itemBuilder: (context, index) {
+                      final log = widget.displayLogs[index];
+                      return Column(
+                        children: [
+                          if (index > 0) const Divider(height: 1),
+                          Container(
+                            color:
+                                index % 2 == 0
+                                    ? Colors.white
+                                    : const Color(0xFFFAFAFA),
+                            height: _rowHeight,
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 6,
+                              horizontal: 8,
+                            ),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                _buildDataCell(log.eventId ?? '', wEventId),
+                                _buildDataCell(
+                                  log.eventDateTime != null
+                                      ? DateFormat(
+                                        'dd-MM-yyyy\nhh:mm:ss a',
+                                      ).format(log.eventDateTime!)
+                                      : '',
+                                  wDateTime,
+                                ),
+                                _buildDataCell(
+                                  log.eventStatus ?? '',
+                                  wEventStatus,
+                                ),
+                                _buildDataCell(
+                                  log.eventClass ?? '',
+                                  wEventClass,
+                                ),
+                                _buildDataCell(log.eventType ?? '', wEventType),
+                                _buildDataCell(
+                                  log.eventSubType ?? '',
+                                  wEventSubType,
+                                ),
+                                _buildDataCell(
+                                  log.eventSource ?? '',
+                                  wEventSource,
+                                ),
+                                _buildDataCell(
+                                  log.identifier ?? '',
+                                  wIdentifier,
+                                ),
+                                _buildDataCell(log.text ?? '', wText),
+                                _buildDataCell(log.panelNo ?? '', wPanelNo),
+                                _buildDataCell(log.moduleNo ?? '', wModuleNo),
+                                _buildDataCell(log.lBusNo ?? '', wLbusNo),
+                              ],
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
 }
 
-// Separate StatefulWidget for TableView with AutomaticKeepAliveClientMixin
+// ---------- Unchanged _LogTableView (kept for completeness) ----------
 class _LogTableView extends StatefulWidget {
   final List<LogModel> displayLogs;
 
@@ -819,14 +722,12 @@ class _LogTableViewState extends State<_LogTableView>
 
   @override
   Widget build(BuildContext context) {
-    super.build(context); // Required for AutomaticKeepAliveClientMixin
+    super.build(context);
     return ListView.separated(
       shrinkWrap: true,
-      physics: NeverScrollableScrollPhysics(),
+      // physics: NeverScrollableScrollPhysics(),
       itemCount: widget.displayLogs.length,
-      separatorBuilder: (context, index) {
-        return SizedBox(height: 10);
-      },
+      separatorBuilder: (context, index) => SizedBox(height: 10),
       itemBuilder: (context, index) {
         final log = widget.displayLogs[index];
         return Container(
@@ -898,7 +799,7 @@ class _LogTableViewState extends State<_LogTableView>
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 13),
                   child: Divider(
-                    color: Color(0xFF000000).withValues(alpha: 0.17),
+                    color: Color(0xFF000000).withAlpha(43),
                     thickness: 1,
                   ),
                 ),
@@ -906,84 +807,15 @@ class _LogTableViewState extends State<_LogTableView>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Expanded(
-                      flex: 1,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Panel No',
-                            style: GoogleFonts.inter(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFF3A3A3A),
-                            ),
-                          ),
-                          Text(
-                            log.panelNo ?? '',
-                            style: GoogleFonts.inter(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w400,
-                              color: Color(0xFF696969),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Expanded(
-                      flex: 1,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'L-Bus No',
-                            style: GoogleFonts.inter(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFF3A3A3A),
-                            ),
-                          ),
-                          Text(
-                            log.lBusNo ?? '',
-                            style: GoogleFonts.inter(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w400,
-                              color: Color(0xFF696969),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Expanded(
-                      flex: 1,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Module No',
-                            style: GoogleFonts.inter(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFF3A3A3A),
-                            ),
-                          ),
-                          Text(
-                            log.moduleNo ?? '',
-                            style: GoogleFonts.inter(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w400,
-                              color: Color(0xFF696969),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                    _buildInfoColumn('Panel No', log.panelNo ?? ''),
+                    _buildInfoColumn('L-Bus No', log.lBusNo ?? ''),
+                    _buildInfoColumn('Module No', log.moduleNo ?? ''),
                   ],
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 13),
                   child: Divider(
-                    color: Color(0xFF000000).withValues(alpha: 0.17),
+                    color: Color(0xFF000000).withAlpha(43),
                     thickness: 1,
                   ),
                 ),
@@ -991,84 +823,15 @@ class _LogTableViewState extends State<_LogTableView>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Expanded(
-                      flex: 1,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Event Status',
-                            style: GoogleFonts.inter(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFF3A3A3A),
-                            ),
-                          ),
-                          Text(
-                            log.eventStatus ?? '',
-                            style: GoogleFonts.inter(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w400,
-                              color: Color(0xFF696969),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Expanded(
-                      flex: 1,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Event Class',
-                            style: GoogleFonts.inter(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFF3A3A3A),
-                            ),
-                          ),
-                          Text(
-                            log.eventClass ?? '',
-                            style: GoogleFonts.inter(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w400,
-                              color: Color(0xFF696969),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Expanded(
-                      flex: 1,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Event Source',
-                            style: GoogleFonts.inter(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFF3A3A3A),
-                            ),
-                          ),
-                          Text(
-                            log.eventSource ?? '',
-                            style: GoogleFonts.inter(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w400,
-                              color: Color(0xFF696969),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                    _buildInfoColumn('Event Status', log.eventStatus ?? ''),
+                    _buildInfoColumn('Event Class', log.eventClass ?? ''),
+                    _buildInfoColumn('Event Source', log.eventSource ?? ''),
                   ],
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 13),
                   child: Divider(
-                    color: Color(0xFF000000).withValues(alpha: 0.17),
+                    color: Color(0xFF000000).withAlpha(43),
                     thickness: 1,
                   ),
                 ),
@@ -1076,54 +839,8 @@ class _LogTableViewState extends State<_LogTableView>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Expanded(
-                      flex: 1,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Event Type',
-                            style: GoogleFonts.inter(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFF3A3A3A),
-                            ),
-                          ),
-                          Text(
-                            log.eventType ?? '',
-                            style: GoogleFonts.inter(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w400,
-                              color: Color(0xFF696969),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Expanded(
-                      flex: 1,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Event Sub Type',
-                            style: GoogleFonts.inter(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFF3A3A3A),
-                            ),
-                          ),
-                          Text(
-                            log.eventSubType ?? '',
-                            style: GoogleFonts.inter(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w400,
-                              color: Color(0xFF696969),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                    _buildInfoColumn('Event Type', log.eventType ?? ''),
+                    _buildInfoColumn('Event Sub Type', log.eventSubType ?? ''),
                   ],
                 ),
                 if (log.identifier != null &&
@@ -1136,54 +853,8 @@ class _LogTableViewState extends State<_LogTableView>
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Expanded(
-                            flex: 1,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Identifier',
-                                  style: GoogleFonts.inter(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w700,
-                                    color: Color(0xFF3A3A3A),
-                                  ),
-                                ),
-                                Text(
-                                  log.identifier ?? '',
-                                  style: GoogleFonts.inter(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w400,
-                                    color: Color(0xFF696969),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Expanded(
-                            flex: 1,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Text',
-                                  style: GoogleFonts.inter(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w700,
-                                    color: Color(0xFF3A3A3A),
-                                  ),
-                                ),
-                                Text(
-                                  log.text ?? '',
-                                  style: GoogleFonts.inter(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w400,
-                                    color: Color(0xFF696969),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
+                          _buildInfoColumn('Identifier', log.identifier ?? ''),
+                          _buildInfoColumn('Text', log.text ?? ''),
                         ],
                       ),
                     ],
@@ -1193,6 +864,33 @@ class _LogTableViewState extends State<_LogTableView>
           ),
         );
       },
+    );
+  }
+
+  Widget _buildInfoColumn(String title, String value) {
+    return Expanded(
+      flex: 1,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF3A3A3A),
+            ),
+          ),
+          Text(
+            value,
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              fontWeight: FontWeight.w400,
+              color: Color(0xFF696969),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
