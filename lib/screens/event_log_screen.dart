@@ -516,17 +516,17 @@ class _LogListViewState extends State<_LogListView>
 
   // Fixed widths for columns (same as before)
   static const double wEventId = 80;
-  static const double wDateTime = 180;
-  static const double wEventStatus = 120;
-  static const double wEventClass = 120;
-  static const double wEventType = 150;
-  static const double wEventSubType = 150;
+  static const double wDateTime = 140;
+  static const double wEventStatus = 100;
+  static const double wEventClass = 90;
+  static const double wEventType = 160;
+  static const double wEventSubType = 200;
   static const double wEventSource = 120;
-  static const double wIdentifier = 120;
-  static const double wText = 120;
+  static const double wIdentifier = 100;
+  static const double wText = 150;
   static const double wPanelNo = 100;
   static const double wModuleNo = 100;
-  static const double wLbusNo = 100;
+  static const double wLbusNo = 90;
 
   // total width computed from column widths
   late final double _totalTableWidth =
@@ -560,13 +560,13 @@ class _LogListViewState extends State<_LogListView>
       color: Colors.white,
       child: Row(
         children: [
-          _buildHeaderCell('Event ID', wEventId),
+          _buildHeaderCell('ID', wEventId),
           _buildHeaderCell('Date & Time', wDateTime),
-          _buildHeaderCell('Event Status', wEventStatus),
-          _buildHeaderCell('Event Class', wEventClass),
-          _buildHeaderCell('Event Type', wEventType),
-          _buildHeaderCell('Event Sub Type', wEventSubType),
-          _buildHeaderCell('Event Source', wEventSource),
+          _buildHeaderCell('Status', wEventStatus),
+          _buildHeaderCell('Class', wEventClass),
+          _buildHeaderCell('Type', wEventType),
+          _buildHeaderCell('Sub Type', wEventSubType),
+          _buildHeaderCell('Source', wEventSource),
           _buildHeaderCell('Identifier', wIdentifier),
           _buildHeaderCell('Text', wText),
           _buildHeaderCell('Panel no', wPanelNo),
@@ -585,7 +585,7 @@ class _LogListViewState extends State<_LogListView>
         text,
         style: GoogleFonts.inter(
           fontWeight: FontWeight.w700,
-          fontSize: 12,
+          fontSize: 16,
           color: Color(0xFF3A3A3A),
         ),
       ),
@@ -599,8 +599,8 @@ class _LogListViewState extends State<_LogListView>
       child: Text(
         text,
         style: GoogleFonts.inter(
-          fontSize: 11,
-          fontWeight: FontWeight.w400,
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
           color: Color(0xFF696969),
         ),
         maxLines: 2,
@@ -843,22 +843,21 @@ class _LogTableViewState extends State<_LogTableView>
                     _buildInfoColumn('Event Sub Type', log.eventSubType ?? ''),
                   ],
                 ),
-                if (log.identifier != null &&
-                    log.identifier!.isNotEmpty &&
-                    log.identifier != "-")
-                  Column(
-                    children: [
-                      SizedBox(height: 22),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          _buildInfoColumn('Identifier', log.identifier ?? ''),
-                          _buildInfoColumn('Text', log.text ?? ''),
-                        ],
-                      ),
-                    ],
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 13),
+                  child: Divider(
+                    color: Color(0xFF000000).withAlpha(43),
+                    thickness: 1,
                   ),
+                ),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    _buildInfoColumn('Identifier', log.identifier ?? ''),
+                    _buildInfoColumn('Text', log.text ?? ''),
+                  ],
+                ),
               ],
             ),
           ),
