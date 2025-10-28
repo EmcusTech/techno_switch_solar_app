@@ -656,44 +656,27 @@ class _LogListViewState extends State<_LogListView>
   @override
   bool get wantKeepAlive => true;
 
-  final ScrollController _headerScrollController = ScrollController();
-  final ScrollController _bodyScrollController = ScrollController();
-
-  @override
-  void initState() {
-    super.initState();
-    // Sync scroll controllers
-    _headerScrollController.addListener(() {
-      if (_bodyScrollController.hasClients &&
-          _bodyScrollController.offset != _headerScrollController.offset) {
-        _bodyScrollController.jumpTo(_headerScrollController.offset);
-      }
-    });
-    _bodyScrollController.addListener(() {
-      if (_headerScrollController.hasClients &&
-          _headerScrollController.offset != _bodyScrollController.offset) {
-        _headerScrollController.jumpTo(_bodyScrollController.offset);
-      }
-    });
-  }
+  final ScrollController _scrollController = ScrollController();
+  bool _isSyncing = false;
 
   @override
   void dispose() {
-    _headerScrollController.dispose();
-    _bodyScrollController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     super.build(context); // Required for AutomaticKeepAliveClientMixin
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Scrollable table header
         SingleChildScrollView(
-          controller: _headerScrollController,
+          controller: _scrollController,
           scrollDirection: Axis.horizontal,
+          physics: const ClampingScrollPhysics(),
           child: Container(
             padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
             color: Colors.white,
@@ -716,50 +699,70 @@ class _LogListViewState extends State<_LogListView>
           ),
         ),
         const Divider(height: 1, thickness: 1),
-        // Scrollable table rows
-        SingleChildScrollView(
-          controller: _bodyScrollController,
-          scrollDirection: Axis.horizontal,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: List.generate(widget.displayLogs.length, (index) {
-              final log = widget.displayLogs[index];
-              return Column(
-                children: [
-                  if (index > 0) const Divider(height: 1),
-                  Container(
-                    color: index % 2 == 0 ? Colors.white : Color(0xFFFAFAFA),
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 12,
-                      horizontal: 8,
+        // Scrollable table rows - using NotificationListener for smoother sync
+        NotificationListener<ScrollNotification>(
+          onNotification: (notification) {
+            if (!_isSyncing &&
+                notification is ScrollUpdateNotification &&
+                _scrollController.hasClients) {
+              _isSyncing = true;
+              // Use animateTo for smoother scrolling instead of jumpTo
+              if ((notification.metrics.pixels - _scrollController.offset)
+                      .abs() >
+                  0) {
+                _scrollController.jumpTo(notification.metrics.pixels);
+              }
+              Future.microtask(() => _isSyncing = false);
+            }
+            return false;
+          },
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            physics: const ClampingScrollPhysics(),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: List.generate(widget.displayLogs.length, (index) {
+                final log = widget.displayLogs[index];
+                return Column(
+                  children: [
+                    if (index > 0) const Divider(height: 1),
+                    Container(
+                      color:
+                          index % 2 == 0
+                              ? Colors.white
+                              : const Color(0xFFFAFAFA),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 12,
+                        horizontal: 8,
+                      ),
+                      child: Row(
+                        children: [
+                          _buildDataCell(log.eventId ?? '', 80),
+                          _buildDataCell(
+                            log.eventDateTime != null
+                                ? DateFormat(
+                                  'dd-MM-yyyy\nhh:mm:ss a',
+                                ).format(log.eventDateTime!)
+                                : '',
+                            180,
+                          ),
+                          _buildDataCell(log.eventStatus ?? '', 120),
+                          _buildDataCell(log.eventClass ?? '', 120),
+                          _buildDataCell(log.eventType ?? '', 150),
+                          _buildDataCell(log.eventSubType ?? '', 150),
+                          _buildDataCell(log.eventSource ?? '', 120),
+                          _buildDataCell(log.identifier ?? '', 120),
+                          _buildDataCell(log.text ?? '', 120),
+                          _buildDataCell(log.panelNo ?? '', 100),
+                          _buildDataCell(log.moduleNo ?? '', 100),
+                          _buildDataCell(log.lBusNo ?? '', 100),
+                        ],
+                      ),
                     ),
-                    child: Row(
-                      children: [
-                        _buildDataCell(log.eventId ?? '', 80),
-                        _buildDataCell(
-                          log.eventDateTime != null
-                              ? DateFormat(
-                                'dd-MM-yyyy\nhh:mm:ss a',
-                              ).format(log.eventDateTime!)
-                              : '',
-                          180,
-                        ),
-                        _buildDataCell(log.eventStatus ?? '', 120),
-                        _buildDataCell(log.eventClass ?? '', 120),
-                        _buildDataCell(log.eventType ?? '', 150),
-                        _buildDataCell(log.eventSubType ?? '', 150),
-                        _buildDataCell(log.eventSource ?? '', 120),
-                        _buildDataCell(log.identifier ?? '', 120),
-                        _buildDataCell(log.text ?? '', 120),
-                        _buildDataCell(log.panelNo ?? '', 100),
-                        _buildDataCell(log.moduleNo ?? '', 100),
-                        _buildDataCell(log.lBusNo ?? '', 100),
-                      ],
-                    ),
-                  ),
-                ],
-              );
-            }),
+                  ],
+                );
+              }),
+            ),
           ),
         ),
       ],
