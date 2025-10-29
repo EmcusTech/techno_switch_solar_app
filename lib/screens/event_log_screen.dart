@@ -514,6 +514,11 @@ class _LogListViewState extends State<_LogListView>
   // One horizontal controller for header + all rows (they will be inside the same horizontal scroll view)
   final ScrollController _horizontalController = ScrollController();
 
+  // Sorting state
+  String? _sortColumn;
+  bool _sortAscending = true;
+  List<LogModel> _sortedLogs = [];
+
   // Fixed widths for columns (same as before)
   static const double wEventId = 80;
   static const double wDateTime = 140;
@@ -548,9 +553,81 @@ class _LogListViewState extends State<_LogListView>
   static const double _headerHeight = 48.0;
 
   @override
+  void initState() {
+    super.initState();
+    _sortedLogs = List.from(widget.displayLogs);
+  }
+
+  @override
   void dispose() {
     _horizontalController.dispose();
     super.dispose();
+  }
+
+  void _sortLogs(String column) {
+    setState(() {
+      if (_sortColumn == column) {
+        _sortAscending = !_sortAscending;
+      } else {
+        _sortColumn = column;
+        _sortAscending = true;
+      }
+
+      _sortedLogs = List.from(widget.displayLogs);
+
+      _sortedLogs.sort((a, b) {
+        int comparison = 0;
+
+        switch (column) {
+          case 'eventId':
+            final aId = int.tryParse(a.eventId ?? '0') ?? 0;
+            final bId = int.tryParse(b.eventId ?? '0') ?? 0;
+            comparison = aId.compareTo(bId);
+            break;
+          case 'dateTime':
+            if (a.eventDateTime != null && b.eventDateTime != null) {
+              comparison = a.eventDateTime!.compareTo(b.eventDateTime!);
+            } else if (a.eventDateTime != null) {
+              comparison = 1;
+            } else if (b.eventDateTime != null) {
+              comparison = -1;
+            }
+            break;
+          case 'status':
+            comparison = (a.eventStatus ?? '').compareTo(b.eventStatus ?? '');
+            break;
+          case 'class':
+            comparison = (a.eventClass ?? '').compareTo(b.eventClass ?? '');
+            break;
+          case 'type':
+            comparison = (a.eventType ?? '').compareTo(b.eventType ?? '');
+            break;
+          case 'subType':
+            comparison = (a.eventSubType ?? '').compareTo(b.eventSubType ?? '');
+            break;
+          case 'source':
+            comparison = (a.eventSource ?? '').compareTo(b.eventSource ?? '');
+            break;
+          case 'identifier':
+            comparison = (a.identifier ?? '').compareTo(b.identifier ?? '');
+            break;
+          case 'text':
+            comparison = (a.text ?? '').compareTo(b.text ?? '');
+            break;
+          case 'panelNo':
+            comparison = (a.panelNo ?? '').compareTo(b.panelNo ?? '');
+            break;
+          case 'moduleNo':
+            comparison = (a.moduleNo ?? '').compareTo(b.moduleNo ?? '');
+            break;
+          case 'lBusNo':
+            comparison = (a.lBusNo ?? '').compareTo(b.lBusNo ?? '');
+            break;
+        }
+
+        return _sortAscending ? comparison : -comparison;
+      });
+    });
   }
 
   Widget _buildHeader() {
@@ -560,33 +637,53 @@ class _LogListViewState extends State<_LogListView>
       color: Colors.white,
       child: Row(
         children: [
-          _buildHeaderCell('ID', wEventId),
-          _buildHeaderCell('Date & Time', wDateTime),
-          _buildHeaderCell('Status', wEventStatus),
-          _buildHeaderCell('Class', wEventClass),
-          _buildHeaderCell('Type', wEventType),
-          _buildHeaderCell('Sub Type', wEventSubType),
-          _buildHeaderCell('Source', wEventSource),
-          _buildHeaderCell('Identifier', wIdentifier),
-          _buildHeaderCell('Text', wText),
-          _buildHeaderCell('Panel no', wPanelNo),
-          _buildHeaderCell('Module no', wModuleNo),
-          _buildHeaderCell('L-Bus no', wLbusNo),
+          _buildHeaderCell('ID', wEventId, 'eventId'),
+          _buildHeaderCell('Date & Time', wDateTime, 'dateTime'),
+          _buildHeaderCell('Status', wEventStatus, 'status'),
+          _buildHeaderCell('Class', wEventClass, 'class'),
+          _buildHeaderCell('Type', wEventType, 'type'),
+          _buildHeaderCell('Sub Type', wEventSubType, 'subType'),
+          _buildHeaderCell('Source', wEventSource, 'source'),
+          _buildHeaderCell('Identifier', wIdentifier, 'identifier'),
+          _buildHeaderCell('Text', wText, 'text'),
+          _buildHeaderCell('Panel no', wPanelNo, 'panelNo'),
+          _buildHeaderCell('Module no', wModuleNo, 'moduleNo'),
+          _buildHeaderCell('L-Bus no', wLbusNo, 'lBusNo'),
         ],
       ),
     );
   }
 
-  Widget _buildHeaderCell(String text, double width) {
-    return Container(
-      width: width,
-      padding: const EdgeInsets.symmetric(horizontal: 8),
-      child: Text(
-        text,
-        style: GoogleFonts.inter(
-          fontWeight: FontWeight.w700,
-          fontSize: 16,
-          color: Color(0xFF3A3A3A),
+  Widget _buildHeaderCell(String text, double width, String columnKey) {
+    final bool isActive = _sortColumn == columnKey;
+
+    return GestureDetector(
+      onTap: () => _sortLogs(columnKey),
+      child: Container(
+        width: width,
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        child: Row(
+          children: [
+            Flexible(
+              child: Text(
+                text,
+                style: GoogleFonts.inter(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 16,
+                  color: isActive ? Color(0xFFEC1D24) : Color(0xFF3A3A3A),
+                ),
+              ),
+            ),
+            SizedBox(width: 4),
+            if (isActive)
+              Icon(
+                _sortAscending ? Icons.arrow_upward : Icons.arrow_downward,
+                size: 16,
+                color: Color(0xFFEC1D24),
+              )
+            else
+              Icon(Icons.unfold_more, size: 16, color: Color(0xFF999999)),
+          ],
         ),
       ),
     );
@@ -635,9 +732,9 @@ class _LogListViewState extends State<_LogListView>
                 // Expanded ListView takes remaining vertical space and scrolls vertically only.
                 Expanded(
                   child: ListView.builder(
-                    itemCount: widget.displayLogs.length,
+                    itemCount: _sortedLogs.length,
                     itemBuilder: (context, index) {
-                      final log = widget.displayLogs[index];
+                      final log = _sortedLogs[index];
                       return Column(
                         children: [
                           if (index > 0) const Divider(height: 1),
