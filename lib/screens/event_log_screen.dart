@@ -522,7 +522,7 @@ class _LogListViewState extends State<_LogListView>
   static const double wEventType = 160;
   static const double wEventSubType = 200;
   static const double wEventSource = 120;
-  static const double wIdentifier = 100;
+  static const double wIdentifier = 180;
   static const double wText = 150;
   static const double wPanelNo = 100;
   static const double wModuleNo = 100;

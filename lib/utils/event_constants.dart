@@ -29,7 +29,7 @@ class EventConstants {
     3: "Short",
     4: "Double EOL",
     5: "Low resistance",
-    7: "Overload"
+    7: "Overload",
   };
 
   static final Map<int, String> eventParam0NumberNameList = {
@@ -69,7 +69,7 @@ class EventConstants {
     "Timer alarm",
     "Service due",
     "Supply",
-    "Network"
+    "Network",
   ];
 
   static final List<String> statusEventClassNames = [
@@ -87,7 +87,7 @@ class EventConstants {
     "All(search),Passive(Response)",
     "Active",
     "Accepted",
-    "Logged"
+    "Logged",
   ];
 
   static final List<List<String>> eventDescriptions = [
@@ -114,7 +114,7 @@ class EventConstants {
       "Event buffer cleared",
       "Non-volatile text changed",
       "Firmware changed",
-      "Firmware check-sum error"
+      "Firmware check-sum error",
     ],
 
     // 2 - Action
@@ -147,7 +147,7 @@ class EventConstants {
       "External activate sounders",
       "I/O suspended",
       "Local Controls enabled",
-      "Local Controls disabled"
+      "Local Controls disabled",
     ],
 
     // 3 - Restart
@@ -175,7 +175,7 @@ class EventConstants {
       "Local controls disabled",
       "Double address",
       "Extnl controls enabled",
-      "Extnl controls disabled"
+      "Extnl controls disabled",
     ],
 
     // 5 - Access
@@ -196,7 +196,7 @@ class EventConstants {
       "Alarm off (Auto)",
       "Alarm (MCP)",
       "Alarm off (MCP)",
-      "Evacuation"
+      "Evacuation",
     ],
 
     // 7 - Area
@@ -212,7 +212,7 @@ class EventConstants {
       "Test-alarm off",
       "Test-coincidence on",
       "Test-coincidence off",
-      "Evacuation"
+      "Evacuation",
     ],
 
     // 8 - Input
@@ -223,7 +223,7 @@ class EventConstants {
       "Test Off",
       "Input on (test)",
       "Input off (test)",
-      "Input duplication"
+      "Input duplication",
     ],
 
     // 9 - Output
@@ -250,7 +250,7 @@ class EventConstants {
       "Fault",
       "Normal",
       "Delay enabled",
-      "Delay disabled"
+      "Delay disabled",
     ],
 
     // 15 - Ext. Zone
@@ -315,7 +315,7 @@ class EventConstants {
       "Extnl Gas Disable Fault on",
       "Extnl Gas Disable Fault off",
       "Extnl Extinguishing Flt Fault on",
-      "Extnl Extinguishing Flt Fault off"
+      "Extnl Extinguishing Flt Fault off",
     ],
 
     // 16 - Zone Equipment
@@ -327,7 +327,7 @@ class EventConstants {
       "Fault",
       "Normal",
       "Delay enabled",
-      "Delay disabled"
+      "Delay disabled",
     ],
 
     // 17 - Area Equipment
@@ -339,7 +339,7 @@ class EventConstants {
       "Fault",
       "Normal",
       "Delay enabled",
-      "Delay disabled"
+      "Delay disabled",
     ],
 
     // 18 - Ext. Zone Equipment
@@ -351,7 +351,7 @@ class EventConstants {
       "Fault",
       "Normal",
       "Delay enabled",
-      "Delay disabled"
+      "Delay disabled",
     ],
 
     // 19 - Timer alarm
@@ -389,11 +389,11 @@ class EventConstants {
       "Supply fault",
       "Supply fault ok",
       "Extnl fault",
-      "Extnl fault ok"
+      "Extnl fault ok",
     ],
 
     // 22 - Network
-    ["Ring open", "Ring closed", "Ring disconnect", "Test on", "Test off"]
+    ["Ring open", "Ring closed", "Ring disconnect", "Test on", "Test off"],
   ];
 
   static String getEventStatusValue(int evtStatus) {
@@ -428,7 +428,13 @@ class EventConstants {
     }
   }
 
-  static bool checkEvtDescriptorToDisplay(int evttype, int evtsubTyp, int rxpar0, int rxpar1, int rxpar2) {
+  static bool checkEvtDescriptorToDisplay(
+    int evttype,
+    int evtsubTyp,
+    int rxpar0,
+    int rxpar1,
+    int rxpar2,
+  ) {
     if ((evtTypeZone == evttype) && ((6 == evtsubTyp) || (7 == evtsubTyp))) {
       return false;
     } else if (evtTypeSupervisedInput == evttype) {
@@ -449,29 +455,51 @@ class EventConstants {
     return true;
   }
 
-  static String getEventIdentifier(int evttype, int rxpar0, int rxpar1, int rxpar2) {
+  static String getEventIdentifier(
+    int evttype,
+    int rxpar0,
+    int rxpar1,
+    int rxpar2,
+  ) {
     String returnIdentifier = "-";
 
-    try {
-      if ((evtTypeZone == evttype) ||
-          (evtTypeSupervisedInput == evttype) ||
-          (evtTypeSupervisedOutput == evttype) ||
-          (evtTypeZoneInput == evttype) ||
-          (evtTypeExtZone == evttype)) {
-        String valuePar0 = eventParam0NumberNameList[evttype]?.replaceAll('{par0}', rxpar0.toString()) ?? "";
-        String valuePar1 = supervisoryFaultParam12Name[rxpar1] ?? "";
-        returnIdentifier = "$valuePar0 $valuePar1";
-      } else if ((evtTypeZoneEquipment == evttype) ||
-          (evtTypeAreaEquipment == evttype) ||
-          (evtTypeExtZoneEquipment == evttype)) {
-        String valuePar1 = eventParam1NumberNameList[evttype]?.replaceAll('{par1}', rxpar1.toString()) ?? "";
-        String valuePar2 = supervisoryFaultParam12Name[rxpar2] ?? "";
-        returnIdentifier = "Equipment $valuePar1 $valuePar2";
+    if (evttype == evtTypeZone) {
+      if (rxpar1 == 2) {
+        returnIdentifier = "Zone $rxpar0 Open Circuit";
+      } else if (rxpar1 == 3) {
+        returnIdentifier = "Zone $rxpar0 Short Circuit";
+      } else if (rxpar1 == 4) {
+        returnIdentifier = "Zone $rxpar0 Low Resistance";
       }
-    } catch (e) {
-      return returnIdentifier;
+    } else if (evttype == evtTypeArea) {
+      returnIdentifier = "Area $rxpar0";
+    } else if (evttype == evtTypeAccess) {
+      returnIdentifier = "Level $rxpar1 Code No. $rxpar2";
+    } else if (evttype == evtTypeSupervisedInput) {
+      returnIdentifier =
+          "Input No. $rxpar0 ${supervisoryFaultParam12Name[rxpar1]} ${supervisoryFaultParam12Name[rxpar2]}";
     }
+
+    // try {
+    //   if ((evtTypeZone == evttype) ||
+    //       (evtTypeSupervisedInput == evttype) ||
+    //       (evtTypeSupervisedOutput == evttype) ||
+    //       (evtTypeZoneInput == evttype) ||
+    //       (evtTypeExtZone == evttype)) {
+    //     String valuePar0 = eventParam0NumberNameList[evttype]?.replaceAll('{par0}', rxpar0.toString()) ?? "";
+    //     String valuePar1 = supervisoryFaultParam12Name[rxpar1] ?? "";
+    //     returnIdentifier = "$valuePar0 $valuePar1";
+    //   } else if ((evtTypeZoneEquipment == evttype) ||
+    //       (evtTypeAreaEquipment == evttype) ||
+    //       (evtTypeExtZoneEquipment == evttype)) {
+    //     String valuePar1 = eventParam1NumberNameList[evttype]?.replaceAll('{par1}', rxpar1.toString()) ?? "";
+    //     String valuePar2 = supervisoryFaultParam12Name[rxpar2] ?? "";
+    //     returnIdentifier = "Equipment $valuePar1 $valuePar2";
+    //   }
+    // } catch (e) {
+    //   return returnIdentifier;
+    // }
 
     return returnIdentifier;
   }
-} 
+}
