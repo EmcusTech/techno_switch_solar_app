@@ -292,7 +292,7 @@ class _EventLogContentState extends State<_EventLogContent> {
         children: [
           SvgPicture.asset('assets/svgs/background_1.svg'),
           Padding(
-            padding: EdgeInsets.only(top: 54),
+            padding: EdgeInsets.only(top: 24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               mainAxisSize: MainAxisSize.max,
@@ -567,8 +567,18 @@ class _LogListViewState extends State<_LogListView>
   void _sortLogs(String column) {
     setState(() {
       if (_sortColumn == column) {
-        _sortAscending = !_sortAscending;
+        if (_sortAscending) {
+          // Second tap: sort descending
+          _sortAscending = false;
+        } else {
+          // Third tap: clear sorting
+          _sortColumn = null;
+          _sortAscending = true;
+          _sortedLogs = List.from(widget.displayLogs);
+          return;
+        }
       } else {
+        // First tap: sort ascending
         _sortColumn = column;
         _sortAscending = true;
       }

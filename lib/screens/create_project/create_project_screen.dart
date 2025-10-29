@@ -571,7 +571,7 @@ class _CreateSiteScreenState extends State<CreateSiteScreen> {
           children: [
             SvgPicture.asset('assets/svgs/background_1.svg'),
             Padding(
-              padding: const EdgeInsets.only(left: 20, right: 20, top: 55),
+              padding: const EdgeInsets.only(left: 20, right: 20, top: 24),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
