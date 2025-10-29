@@ -58,7 +58,7 @@ class LogModel {
       'retrieved_at':
           retrievedAt?.millisecondsSinceEpoch ??
           DateTime.now().millisecondsSinceEpoch,
-      'is_valid': isValid,
+      'is_valid': isValid == null ? null : (isValid! ? 1 : 0),
     };
   }
 
@@ -87,7 +87,7 @@ class LogModel {
           map['retrieved_at'] != null
               ? DateTime.fromMillisecondsSinceEpoch(map['retrieved_at'])
               : null,
-      isValid: map['is_valid'],
+      isValid: map['is_valid'] == null ? null : map['is_valid'] == 1,
     );
   }
 

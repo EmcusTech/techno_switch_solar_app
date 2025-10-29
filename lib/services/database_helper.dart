@@ -23,7 +23,7 @@ class DatabaseHelper {
     String path = join(await getDatabasesPath(), 'techno_switch_solar.db');
     return await openDatabase(
       path,
-      version: 3, // Increment version to add log_retrievals table
+      version: 4, // Increment version to add is_valid column to logs table
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -66,6 +66,7 @@ class DatabaseHelper {
         identifier TEXT,
         text TEXT,
         retrieved_at INTEGER NOT NULL,
+        is_valid INTEGER,
         FOREIGN KEY (site_id) REFERENCES sites (id) ON DELETE CASCADE
       )
     ''');
@@ -159,6 +160,11 @@ class DatabaseHelper {
       await db.execute(
         'CREATE INDEX idx_log_retrievals_retrieval_date ON log_retrievals (retrieval_date)',
       );
+    }
+
+    if (oldVersion < 4) {
+      // Add is_valid column to logs table if upgrading from version 3
+      await db.execute('ALTER TABLE logs ADD COLUMN is_valid INTEGER');
     }
   }
 

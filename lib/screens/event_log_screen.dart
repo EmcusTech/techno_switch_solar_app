@@ -861,7 +861,7 @@ class _LogTableViewState extends State<_LogTableView>
                         Text(
                           log.panelText ?? 'No Text',
                           style: GoogleFonts.inter(
-                            fontSize: 12,
+                            fontSize: 14,
                             fontWeight: FontWeight.w500,
                             color: Color(0xFF3A3A3A),
                           ),
@@ -873,7 +873,7 @@ class _LogTableViewState extends State<_LogTableView>
                               ).format(log.eventDateTime!.toLocal())
                               : 'N/A',
                           style: GoogleFonts.inter(
-                            fontSize: 10,
+                            fontSize: 12,
                             fontWeight: FontWeight.w400,
                             color: Color(0xFF696969),
                           ),
@@ -982,7 +982,7 @@ class _LogTableViewState extends State<_LogTableView>
           Text(
             title,
             style: GoogleFonts.inter(
-              fontSize: 12,
+              fontSize: 14,
               fontWeight: FontWeight.w700,
               color: Color(0xFF3A3A3A),
             ),
@@ -990,7 +990,7 @@ class _LogTableViewState extends State<_LogTableView>
           Text(
             value,
             style: GoogleFonts.inter(
-              fontSize: 12,
+              fontSize: 14,
               fontWeight: FontWeight.w400,
               color: Color(0xFF696969),
             ),
