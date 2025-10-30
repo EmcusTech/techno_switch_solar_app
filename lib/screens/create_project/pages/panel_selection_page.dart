@@ -97,41 +97,41 @@ class _PanelSelectionPageState extends State<PanelSelectionPage> {
       children: [
         _buildPanelTypeTile(
           title: 'ORYX202',
-          panelCount: '0',
-          panelAlarmCount: '2',
-          panelConnectionCount: '2',
+          zoneCount: '2',
+          sounderCount: '2',
+          relaysCount: '2',
           panelFireExtinguisherCount: '0',
         ),
         SizedBox(height: 16),
         _buildPanelTypeTile(
           title: 'ORYX204',
-          panelCount: '1',
-          panelAlarmCount: '1',
-          panelConnectionCount: '1',
-          panelFireExtinguisherCount: '1',
+          zoneCount: '4',
+          sounderCount: '2',
+          relaysCount: '4',
+          panelFireExtinguisherCount: '0',
         ),
         SizedBox(height: 16),
         _buildPanelTypeTile(
           title: 'ORYX208',
-          panelCount: '1',
-          panelAlarmCount: '1',
-          panelConnectionCount: '1',
-          panelFireExtinguisherCount: '1',
+          zoneCount: '8',
+          sounderCount: '2',
+          relaysCount: '8',
+          panelFireExtinguisherCount: '0',
         ),
         SizedBox(height: 16),
         _buildPanelTypeTile(
           title: 'RHINO103',
-          panelCount: '1',
-          panelAlarmCount: '1',
-          panelConnectionCount: '1',
+          zoneCount: '3',
+          sounderCount: '3',
+          relaysCount: '3',
           panelFireExtinguisherCount: '1',
         ),
         SizedBox(height: 16),
         _buildPanelTypeTile(
           title: 'RHINO203',
-          panelCount: '1',
-          panelAlarmCount: '1',
-          panelConnectionCount: '1',
+          zoneCount: '3',
+          sounderCount: '3',
+          relaysCount: '6',
           panelFireExtinguisherCount: '1',
         ),
       ],
@@ -140,12 +140,11 @@ class _PanelSelectionPageState extends State<PanelSelectionPage> {
 
   Widget _buildPanelTypeTile({
     required String title,
-    required String panelCount,
-    required String panelAlarmCount,
-    required String panelConnectionCount,
+    required String zoneCount,
+    required String sounderCount,
+    required String relaysCount,
     required String panelFireExtinguisherCount,
   }) {
-
     return GestureDetector(
       onTap: () {
         widget.onPanelTypeChanged(title);
@@ -183,7 +182,7 @@ class _PanelSelectionPageState extends State<PanelSelectionPage> {
               SvgPicture.asset(
                 'assets/svgs/panel_type_icon_1.svg',
                 colorFilter: ColorFilter.mode(
-                  panelCount == '0' ? Color(0xFFBDBDBD) : Color(0xFFEC1D24),
+                  zoneCount == '0' ? Color(0xFFBDBDBD) : Color(0xFFEC1D24),
                   BlendMode.srcIn,
                 ),
               ),
@@ -191,13 +190,14 @@ class _PanelSelectionPageState extends State<PanelSelectionPage> {
               SizedBox(
                 width: 14,
                 child: Text(
-                  panelCount,
+                  zoneCount,
                   style: GoogleFonts.inter(
                     fontSize: 13,
                     fontWeight: FontWeight.w400,
-                    color: panelCount == '0'
-                        ? Color(0xFFBDBDBD)
-                        : Color(0xFFEC1D24),
+                    color:
+                        zoneCount == '0'
+                            ? Color(0xFFBDBDBD)
+                            : Color(0xFFEC1D24),
                   ),
                 ),
               ),
@@ -205,9 +205,7 @@ class _PanelSelectionPageState extends State<PanelSelectionPage> {
               SvgPicture.asset(
                 'assets/svgs/panel_type_icon_2.svg',
                 colorFilter: ColorFilter.mode(
-                  panelAlarmCount == '0'
-                      ? Color(0xFFBDBDBD)
-                      : Color(0xFFEC1D24),
+                  sounderCount == '0' ? Color(0xFFBDBDBD) : Color(0xFFEC1D24),
                   BlendMode.srcIn,
                 ),
               ),
@@ -215,13 +213,14 @@ class _PanelSelectionPageState extends State<PanelSelectionPage> {
               SizedBox(
                 width: 14,
                 child: Text(
-                  panelAlarmCount,
+                  sounderCount,
                   style: GoogleFonts.inter(
                     fontSize: 13,
                     fontWeight: FontWeight.w400,
-                    color: panelAlarmCount == '0'
-                        ? Color(0xFFBDBDBD)
-                        : Color(0xFFEC1D24),
+                    color:
+                        sounderCount == '0'
+                            ? Color(0xFFBDBDBD)
+                            : Color(0xFFEC1D24),
                   ),
                 ),
               ),
@@ -229,9 +228,7 @@ class _PanelSelectionPageState extends State<PanelSelectionPage> {
               SvgPicture.asset(
                 'assets/svgs/panel_type_icon_3.svg',
                 colorFilter: ColorFilter.mode(
-                  panelConnectionCount == '0'
-                      ? Color(0xFFBDBDBD)
-                      : Color(0xFFEC1D24),
+                  relaysCount == '0' ? Color(0xFFBDBDBD) : Color(0xFFEC1D24),
                   BlendMode.srcIn,
                 ),
               ),
@@ -239,13 +236,14 @@ class _PanelSelectionPageState extends State<PanelSelectionPage> {
               SizedBox(
                 width: 14,
                 child: Text(
-                  panelConnectionCount,
+                  relaysCount,
                   style: GoogleFonts.inter(
                     fontSize: 13,
                     fontWeight: FontWeight.w400,
-                    color: panelConnectionCount == '0'
-                        ? Color(0xFFBDBDBD)
-                        : Color(0xFFEC1D24),
+                    color:
+                        relaysCount == '0'
+                            ? Color(0xFFBDBDBD)
+                            : Color(0xFFEC1D24),
                   ),
                 ),
               ),
@@ -267,9 +265,10 @@ class _PanelSelectionPageState extends State<PanelSelectionPage> {
                   style: GoogleFonts.inter(
                     fontSize: 13,
                     fontWeight: FontWeight.w400,
-                    color: panelFireExtinguisherCount == '0'
-                        ? Color(0xFFBDBDBD)
-                        : Color(0xFFEC1D24),
+                    color:
+                        panelFireExtinguisherCount == '0'
+                            ? Color(0xFFBDBDBD)
+                            : Color(0xFFEC1D24),
                   ),
                 ),
               ),
@@ -279,4 +278,4 @@ class _PanelSelectionPageState extends State<PanelSelectionPage> {
       ),
     );
   }
-} 
+}
