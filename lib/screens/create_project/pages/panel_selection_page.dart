@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:techno_switch_solar_app/models/panel_type_config.dart';
 
 class PanelSelectionPage extends StatefulWidget {
   final String? selectedPanelType;
@@ -94,47 +95,26 @@ class _PanelSelectionPageState extends State<PanelSelectionPage> {
 
   Widget _buildPanelTypeTiles() {
     return Column(
-      children: [
-        _buildPanelTypeTile(
-          title: 'ORYX202',
-          zoneCount: '2',
-          sounderCount: '2',
-          relaysCount: '2',
-          panelFireExtinguisherCount: '0',
-        ),
-        SizedBox(height: 16),
-        _buildPanelTypeTile(
-          title: 'ORYX204',
-          zoneCount: '4',
-          sounderCount: '2',
-          relaysCount: '4',
-          panelFireExtinguisherCount: '0',
-        ),
-        SizedBox(height: 16),
-        _buildPanelTypeTile(
-          title: 'ORYX208',
-          zoneCount: '8',
-          sounderCount: '2',
-          relaysCount: '8',
-          panelFireExtinguisherCount: '0',
-        ),
-        SizedBox(height: 16),
-        _buildPanelTypeTile(
-          title: 'RHINO103',
-          zoneCount: '3',
-          sounderCount: '3',
-          relaysCount: '3',
-          panelFireExtinguisherCount: '1',
-        ),
-        SizedBox(height: 16),
-        _buildPanelTypeTile(
-          title: 'RHINO203',
-          zoneCount: '3',
-          sounderCount: '3',
-          relaysCount: '6',
-          panelFireExtinguisherCount: '1',
-        ),
-      ],
+      children:
+          PanelTypeConfig.availablePanels.map((panelConfig) {
+            return Column(
+              children: [
+                _buildPanelTypeTile(
+                  title: panelConfig.typeName,
+                  zoneCount: panelConfig.zoneCount.toString(),
+                  sounderCount: panelConfig.sounderCount.toString(),
+                  relaysCount: panelConfig.relayCount.toString(),
+                  panelFireExtinguisherCount:
+                      panelConfig.fireExtinguisherCount.toString(),
+                ),
+                if (panelConfig !=
+                    PanelTypeConfig
+                        .availablePanels
+                        .last) // Don't add spacing after last item
+                  SizedBox(height: 16),
+              ],
+            );
+          }).toList(),
     );
   }
 

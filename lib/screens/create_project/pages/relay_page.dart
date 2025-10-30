@@ -3,21 +3,25 @@ import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class RelayPage extends StatefulWidget {
-  final String relayText;
-  final String test;
-  final String relay;
-  final String group;
-  final String function;
-  final Function(String, String) onRelaySettingChanged;
+  final String? expandedRelay;
+  final Map<String, String> relayTexts;
+  final Map<String, String> relayTests;
+  final Map<String, String> relayStates;
+  final Map<String, String> relayGroups;
+  final Map<String, String> relayFunctions;
+  final Function(String?) onRelayExpanded;
+  final Function(String, String, String) onRelayFieldChanged;
 
   const RelayPage({
     super.key,
-    required this.relayText,
-    required this.test,
-    required this.relay,
-    required this.group,
-    required this.function,
-    required this.onRelaySettingChanged,
+    required this.expandedRelay,
+    required this.relayTexts,
+    required this.relayTests,
+    required this.relayStates,
+    required this.relayGroups,
+    required this.relayFunctions,
+    required this.onRelayExpanded,
+    required this.onRelayFieldChanged,
   });
 
   @override
@@ -25,27 +29,13 @@ class RelayPage extends StatefulWidget {
 }
 
 class _RelayPageState extends State<RelayPage> {
-  late TextEditingController _relayTextController;
-
-  @override
-  void initState() {
-    super.initState();
-    _relayTextController = TextEditingController(text: widget.relayText);
-  }
-
-  @override
-  void dispose() {
-    _relayTextController.dispose();
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.only(left: 19),
+          padding: const EdgeInsets.symmetric(horizontal: 19),
           child: Text(
             'Relay',
             style: GoogleFonts.inter(
@@ -55,21 +45,85 @@ class _RelayPageState extends State<RelayPage> {
             ),
           ),
         ),
-        SizedBox(height: 29),
+        SizedBox(height: 32),
         Expanded(
           child: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Relay Text Section
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 24,
+                // Dynamically build relay sections based on available relays
+                ...widget.relayTexts.keys.map((relayName) {
+                  return Column(
+                    children: [
+                      _buildRelaySection(relayName),
+                      if (relayName !=
+                          widget
+                              .relayTexts
+                              .keys
+                              .last) // Don't add spacing after last relay
+                        SizedBox(height: 16),
+                    ],
+                  );
+                }),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRelaySection(String relayName) {
+    bool isExpanded = widget.expandedRelay == relayName;
+
+    return GestureDetector(
+      onTap: () {
+        widget.onRelayExpanded(isExpanded ? null : relayName);
+      },
+      child: Container(
+        decoration: BoxDecoration(color: Color(0xFFF5F5F5)),
+        child: Column(
+          children: [
+            // Relay header
+            Padding(
+              padding: EdgeInsets.only(
+                left: 19,
+                right: 17,
+                top: 12,
+                bottom: 12,
+              ),
+              child: Row(
+                children: [
+                  Text(
+                    relayName,
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF3A3A3A),
+                    ),
                   ),
+                  Spacer(),
+                  Icon(
+                    isExpanded
+                        ? Icons.keyboard_arrow_up
+                        : Icons.keyboard_arrow_down,
+                    color: Color(0xFF696969),
+                    size: 20,
+                  ),
+                ],
+              ),
+            ),
+
+            // Expanded content
+            if (isExpanded) ...[
+              Container(
+                color: Colors.white,
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 24),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // Relay Text
                       Text(
                         'Relay Text',
                         style: GoogleFonts.inter(
@@ -86,17 +140,17 @@ class _RelayPageState extends State<RelayPage> {
                           border: Border.all(color: Color(0xFFE0E0E0)),
                         ),
                         child: TextField(
-                          controller: _relayTextController,
                           onChanged: (value) {
-                            widget.onRelaySettingChanged('Relay Text', value);
-                          },
-                          onTapOutside: (value) {
-                            FocusScope.of(context).unfocus();
+                            widget.onRelayFieldChanged(
+                              relayName,
+                              'relayText',
+                              value,
+                            );
                           },
                           decoration: InputDecoration(
                             contentPadding: EdgeInsets.all(12),
                             border: InputBorder.none,
-                            hintText: 'Enter relay text',
+                            hintText: 'Enter Relay Text',
                             hintStyle: GoogleFonts.inter(
                               fontSize: 13,
                               fontWeight: FontWeight.w400,
@@ -105,27 +159,39 @@ class _RelayPageState extends State<RelayPage> {
                           ),
                         ),
                       ),
+                      SizedBox(height: 20),
+
+                      // Test
+                      _buildRelayDropdownField(
+                        'Test',
+                        widget.relayTests[relayName]!,
+                        ['No', 'Yes'],
+                        (value) {
+                          widget.onRelayFieldChanged(
+                            relayName,
+                            'relayTest',
+                            value,
+                          );
+                        },
+                      ),
+                      SizedBox(height: 20),
+
+                      // Relay State
+                      _buildRelayDropdownField(
+                        'Relay',
+                        widget.relayStates[relayName]!,
+                        ['Enable', 'Disable'],
+                        (value) {
+                          widget.onRelayFieldChanged(
+                            relayName,
+                            'relayState',
+                            value,
+                          );
+                        },
+                      ),
                       SizedBox(height: 24),
 
-                      // Relay Configuration Fields
-                      _buildDropdownField('Test', widget.test, ['No', 'Yes']),
-                      SizedBox(height: 20),
-                      _buildDropdownField('Relay', widget.relay, [
-                        'Enable',
-                        'Disable',
-                      ]),
-                    ],
-                  ),
-                ),
-                Divider(color: Color(0xFFBDBDBD), thickness: 1),
-                SizedBox(height: 16),
-
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Programming Group Section
+                      // Programming Group Section Header
                       Text(
                         'Programming Group',
                         style: GoogleFonts.inter(
@@ -135,75 +201,97 @@ class _RelayPageState extends State<RelayPage> {
                         ),
                       ),
                       SizedBox(height: 20),
-                      _buildDropdownField('Group', widget.group, [
-                        'Group A',
-                        'Group B',
-                        'Group C',
-                        'Group D',
-                      ]),
+
+                      // Group
+                      _buildRelayDropdownField(
+                        'Group',
+                        widget.relayGroups[relayName]!,
+                        ['Group A', 'Group B', 'Group C', 'Group D'],
+                        (value) {
+                          widget.onRelayFieldChanged(
+                            relayName,
+                            'relayGroup',
+                            value,
+                          );
+                        },
+                      ),
                       SizedBox(height: 20),
-                      _buildDropdownField('Function', widget.function, [
-                        'Function 1A',
-                        'Function 1B',
-                        'Function 2A',
-                        'Function 2B',
-                        'Function 3A',
-                        'Function 3B',
-                      ]),
+
+                      // Function
+                      _buildRelayDropdownField(
+                        'Function',
+                        widget.relayFunctions[relayName]!,
+                        [
+                          'Function 1A',
+                          'Function 1B',
+                          'Function 2A',
+                          'Function 2B',
+                          'Function 3A',
+                          'Function 3B',
+                        ],
+                        (value) {
+                          widget.onRelayFieldChanged(
+                            relayName,
+                            'relayFunction',
+                            value,
+                          );
+                        },
+                      ),
                     ],
                   ),
                 ),
-                Divider(color: Color(0xFFBDBDBD), thickness: 1),
-              ],
-            ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRelayDropdownField(
+    String label,
+    String value,
+    List<String> options,
+    Function(String) onChanged,
+  ) {
+    return Row(
+      children: [
+        Text(
+          label,
+          style: GoogleFonts.inter(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF696969),
+          ),
+        ),
+        Spacer(),
+        GestureDetector(
+          onTap:
+              () => _showRelayDropdownDialog(label, value, options, onChanged),
+          child: Row(
+            children: [
+              Text(
+                value,
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w400,
+                  color: Color(0xFF3D3D3D),
+                ),
+              ),
+              SizedBox(width: 2),
+              SvgPicture.asset('assets/svgs/drop_down_red_icon.svg'),
+            ],
           ),
         ),
       ],
     );
   }
 
-  Widget _buildDropdownField(String label, String value, List<String> options) {
-    return Column(
-      children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              label,
-              style: GoogleFonts.inter(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF696969),
-              ),
-            ),
-            Spacer(),
-            GestureDetector(
-              onTap: () => _showDropdownDialog(label, value, options),
-              child: Row(
-                children: [
-                  Text(
-                    value,
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w400,
-                      color: Color(0xFF3D3D3D),
-                    ),
-                  ),
-                  SizedBox(width: 2),
-                  SvgPicture.asset('assets/svgs/drop_down_red_icon.svg'),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  void _showDropdownDialog(
+  void _showRelayDropdownDialog(
     String label,
     String currentValue,
     List<String> options,
+    Function(String) onChanged,
   ) {
     String selectedValue = currentValue;
 
@@ -241,7 +329,7 @@ class _RelayPageState extends State<RelayPage> {
                     onChanged: (String? value) {
                       selectedValue = value!;
                       Navigator.of(context).pop();
-                      widget.onRelaySettingChanged(label, selectedValue);
+                      onChanged(selectedValue);
                     },
                   );
                 }).toList(),

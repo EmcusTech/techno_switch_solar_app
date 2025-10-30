@@ -1,0 +1,68 @@
+class PanelTypeConfig {
+  final String typeName;
+  final int zoneCount;
+  final int sounderCount;
+  final int relayCount;
+  final int fireExtinguisherCount;
+
+  const PanelTypeConfig({
+    required this.typeName,
+    required this.zoneCount,
+    required this.sounderCount,
+    required this.relayCount,
+    required this.fireExtinguisherCount,
+  });
+
+  // Predefined panel types
+  static const List<PanelTypeConfig> availablePanels = [
+    PanelTypeConfig(
+      typeName: 'ORYX202',
+      zoneCount: 2,
+      sounderCount: 2,
+      relayCount: 2,
+      fireExtinguisherCount: 0,
+    ),
+    PanelTypeConfig(
+      typeName: 'ORYX204',
+      zoneCount: 4,
+      sounderCount: 2,
+      relayCount: 4,
+      fireExtinguisherCount: 0,
+    ),
+    PanelTypeConfig(
+      typeName: 'ORYX208',
+      zoneCount: 8,
+      sounderCount: 2,
+      relayCount: 8,
+      fireExtinguisherCount: 0,
+    ),
+    PanelTypeConfig(
+      typeName: 'RHINO103',
+      zoneCount: 3,
+      sounderCount: 3,
+      relayCount: 3,
+      fireExtinguisherCount: 1,
+    ),
+    PanelTypeConfig(
+      typeName: 'RHINO203',
+      zoneCount: 3,
+      sounderCount: 3,
+      relayCount: 6,
+      fireExtinguisherCount: 1,
+    ),
+  ];
+
+  /// Get panel configuration by type name
+  static PanelTypeConfig? getByTypeName(String typeName) {
+    try {
+      return availablePanels.firstWhere((panel) => panel.typeName == typeName);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  @override
+  String toString() {
+    return 'PanelTypeConfig(typeName: $typeName, zones: $zoneCount, sounders: $sounderCount, relays: $relayCount, fireExt: $fireExtinguisherCount)';
+  }
+}

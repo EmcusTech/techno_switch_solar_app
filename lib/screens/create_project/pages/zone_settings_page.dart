@@ -53,13 +53,20 @@ class _ZoneSettingsPageState extends State<ZoneSettingsPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildZoneSection('Zone 1'),
-                SizedBox(height: 16),
-                _buildZoneSection('Zone 2'),
-                SizedBox(height: 16),
-                _buildZoneSection('Zone 3'),
-                SizedBox(height: 16),
-                _buildZoneSection('Zone 4'),
+                // Dynamically build zone sections based on available zones
+                ...widget.zoneTexts.keys.map((zoneName) {
+                  return Column(
+                    children: [
+                      _buildZoneSection(zoneName),
+                      if (zoneName !=
+                          widget
+                              .zoneTexts
+                              .keys
+                              .last) // Don't add spacing after last zone
+                        SizedBox(height: 16),
+                    ],
+                  );
+                }),
               ],
             ),
           ),
@@ -84,7 +91,12 @@ class _ZoneSettingsPageState extends State<ZoneSettingsPage> {
           children: [
             // Zone header
             Padding(
-              padding: EdgeInsets.only(left: 19, right: 17, top: 12, bottom: 12),
+              padding: EdgeInsets.only(
+                left: 19,
+                right: 17,
+                top: 12,
+                bottom: 12,
+              ),
               child: Row(
                 children: [
                   Text(

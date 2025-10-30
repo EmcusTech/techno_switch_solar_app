@@ -12,6 +12,7 @@ class SounderPage extends StatefulWidget {
   final Map<String, String> sounderFunctions;
   final Function(String?) onSounderExpanded;
   final Function(String, String, String) onSounderFieldChanged;
+  final List<String>? availableZones; // Optional list of available zones
 
   const SounderPage({
     super.key,
@@ -24,6 +25,7 @@ class SounderPage extends StatefulWidget {
     required this.sounderFunctions,
     required this.onSounderExpanded,
     required this.onSounderFieldChanged,
+    this.availableZones,
   });
 
   @override
@@ -59,11 +61,20 @@ class _SounderPageState extends State<SounderPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildSounderSection('Sounder 1'),
-                SizedBox(height: 16),
-                _buildSounderSection('Sounder 2'),
-                SizedBox(height: 16),
-                _buildSounderSection('Sounder 3'),
+                // Dynamically build sounder sections based on available sounders
+                ...widget.sounderTexts.keys.map((sounderName) {
+                  return Column(
+                    children: [
+                      _buildSounderSection(sounderName),
+                      if (sounderName !=
+                          widget
+                              .sounderTexts
+                              .keys
+                              .last) // Don't add spacing after last sounder
+                        SizedBox(height: 16),
+                    ],
+                  );
+                }),
               ],
             ),
           ),
@@ -207,7 +218,10 @@ class _SounderPageState extends State<SounderPage> {
                       _buildSounderDropdownField(
                         'Sounder Group',
                         widget.sounderGroups[sounderName]!,
-                        ['Zone 1', 'Zone 2', 'Zone 3', 'Zone 4'],
+                        widget.availableZones ??
+                            [
+                              'Zone 1',
+                            ], // Use dynamic zones or default to Zone 1
                         (value) {
                           widget.onSounderFieldChanged(
                             sounderName,

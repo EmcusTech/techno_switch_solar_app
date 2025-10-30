@@ -13,6 +13,7 @@ import 'package:techno_switch_solar_app/screens/create_project/pages/devices_pag
 import 'package:techno_switch_solar_app/screens/create_project/pages/project_summary_page.dart';
 import 'package:techno_switch_solar_app/screens/home_screen.dart';
 import 'package:techno_switch_solar_app/services/site_service.dart';
+import 'package:techno_switch_solar_app/models/panel_type_config.dart';
 
 class CreateSiteScreen extends StatefulWidget {
   const CreateSiteScreen({super.key});
@@ -137,11 +138,12 @@ class _CreateSiteScreenState extends State<CreateSiteScreen> {
   String function = 'Function 1A';
 
   // Relay Page state
-  String relayText = '';
-  String relayTest = 'No';
-  String relay = 'Enable';
-  String relayGroup = 'Group A';
-  String relayFunction = 'Function 1A';
+  String? expandedRelay;
+  Map<String, String> relayTexts = {};
+  Map<String, String> relayTests = {};
+  Map<String, String> relayStates = {};
+  Map<String, String> relayGroups = {};
+  Map<String, String> relayFunctions = {};
 
   // L-Bus Devices Page state
   String? expandedLBus;
@@ -295,7 +297,82 @@ class _CreateSiteScreenState extends State<CreateSiteScreen> {
   void _onPanelTypeChanged(String? panelType) {
     setState(() {
       selectedPanelType = panelType;
+
+      // Dynamically initialize zones, sounders, and relays based on panel type
+      if (panelType != null) {
+        final panelConfig = PanelTypeConfig.getByTypeName(panelType);
+        if (panelConfig != null) {
+          _initializeZones(panelConfig.zoneCount);
+          _initializeSounders(panelConfig.sounderCount);
+          _initializeRelays(panelConfig.relayCount);
+        }
+      }
     });
+  }
+
+  /// Initialize zones dynamically based on panel configuration
+  void _initializeZones(int zoneCount) {
+    zoneTexts.clear();
+    zoneTypes.clear();
+    zoneStates.clear();
+    zoneTests.clear();
+    zoneModes.clear();
+    zoneVerificationTimes.clear();
+    expandedZone = null;
+
+    for (int i = 1; i <= zoneCount; i++) {
+      final zoneName = 'Zone $i';
+      zoneTexts[zoneName] = '';
+      zoneTypes[zoneName] = 'Double Knock';
+      zoneStates[zoneName] = 'Enable';
+      zoneTests[zoneName] = 'Yes';
+      zoneModes[zoneName] = 'Yes';
+      zoneVerificationTimes[zoneName] = '300 Sec';
+    }
+  }
+
+  /// Initialize sounders dynamically based on panel configuration
+  void _initializeSounders(int sounderCount) {
+    sounderTexts.clear();
+    sounderStates.clear();
+    sounderTests.clear();
+    sounderTypes.clear();
+    sounderGroups.clear();
+    sounderFunctions.clear();
+    expandedSounder = null;
+
+    // Get the first available zone, or default to 'Zone 1'
+    final defaultZone =
+        zoneTexts.keys.isNotEmpty ? zoneTexts.keys.first : 'Zone 1';
+
+    for (int i = 1; i <= sounderCount; i++) {
+      final sounderName = 'Sounder $i';
+      sounderTexts[sounderName] = '';
+      sounderStates[sounderName] = 'Enable';
+      sounderTests[sounderName] = 'Yes';
+      sounderTypes[sounderName] = 'Horn';
+      sounderGroups[sounderName] = defaultZone;
+      sounderFunctions[sounderName] = 'P1';
+    }
+  }
+
+  /// Initialize relays dynamically based on panel configuration
+  void _initializeRelays(int relayCount) {
+    relayTexts.clear();
+    relayTests.clear();
+    relayStates.clear();
+    relayGroups.clear();
+    relayFunctions.clear();
+    expandedRelay = null;
+
+    for (int i = 1; i <= relayCount; i++) {
+      final relayName = 'Relay $i';
+      relayTexts[relayName] = '';
+      relayTests[relayName] = 'No';
+      relayStates[relayName] = 'Enable';
+      relayGroups[relayName] = 'Group A';
+      relayFunctions[relayName] = 'Function 1A';
+    }
   }
 
   void _onFieldChanged(String label, String newValue) {
@@ -463,23 +540,29 @@ class _CreateSiteScreenState extends State<CreateSiteScreen> {
     });
   }
 
-  void _onRelaySettingChanged(String label, String value) {
+  void _onRelayExpanded(String? relayName) {
     setState(() {
-      switch (label) {
-        case 'Relay Text':
-          relayText = value;
+      expandedRelay = relayName;
+    });
+  }
+
+  void _onRelayFieldChanged(String relayName, String fieldType, String value) {
+    setState(() {
+      switch (fieldType) {
+        case 'relayText':
+          relayTexts[relayName] = value;
           break;
-        case 'Test':
-          relayTest = value;
+        case 'relayTest':
+          relayTests[relayName] = value;
           break;
-        case 'Relay':
-          relay = value;
+        case 'relayState':
+          relayStates[relayName] = value;
           break;
-        case 'Group':
-          relayGroup = value;
+        case 'relayGroup':
+          relayGroups[relayName] = value;
           break;
-        case 'Function':
-          relayFunction = value;
+        case 'relayFunction':
+          relayFunctions[relayName] = value;
           break;
       }
     });
@@ -703,6 +786,9 @@ class _CreateSiteScreenState extends State<CreateSiteScreen> {
                                     sounderTypes: sounderTypes,
                                     sounderGroups: sounderGroups,
                                     sounderFunctions: sounderFunctions,
+                                    availableZones:
+                                        zoneTexts.keys
+                                            .toList(), // Pass available zones
                                     onSounderExpanded: _onSounderExpanded,
                                     onSounderFieldChanged:
                                         _onSounderFieldChanged,
@@ -728,13 +814,14 @@ class _CreateSiteScreenState extends State<CreateSiteScreen> {
                                         _onInputSettingChanged,
                                   ),
                                   RelayPage(
-                                    relayText: relayText,
-                                    test: relayTest,
-                                    relay: relay,
-                                    group: relayGroup,
-                                    function: relayFunction,
-                                    onRelaySettingChanged:
-                                        _onRelaySettingChanged,
+                                    expandedRelay: expandedRelay,
+                                    relayTexts: relayTexts,
+                                    relayTests: relayTests,
+                                    relayStates: relayStates,
+                                    relayGroups: relayGroups,
+                                    relayFunctions: relayFunctions,
+                                    onRelayExpanded: _onRelayExpanded,
+                                    onRelayFieldChanged: _onRelayFieldChanged,
                                   ),
                                   LBusDevicesPage(
                                     expandedLBus: expandedLBus,
