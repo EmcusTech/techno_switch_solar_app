@@ -140,12 +140,24 @@ class _RelayPageState extends State<RelayPage> {
                           border: Border.all(color: Color(0xFFE0E0E0)),
                         ),
                         child: TextField(
+                          controller: TextEditingController(
+                              text: widget.relayTexts[relayName] ?? '',
+                            )
+                            ..selection = TextSelection.fromPosition(
+                              TextPosition(
+                                offset:
+                                    widget.relayTexts[relayName]?.length ?? 0,
+                              ),
+                            ),
                           onChanged: (value) {
                             widget.onRelayFieldChanged(
                               relayName,
                               'relayText',
                               value,
                             );
+                          },
+                          onTapOutside: (value) {
+                            FocusScope.of(context).unfocus();
                           },
                           decoration: InputDecoration(
                             contentPadding: EdgeInsets.all(12),

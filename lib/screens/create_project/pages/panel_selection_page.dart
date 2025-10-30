@@ -7,12 +7,14 @@ class PanelSelectionPage extends StatefulWidget {
   final String? selectedPanelType;
   final TextEditingController panelNameController;
   final Function(String?) onPanelTypeChanged;
+  final Map<String, String>? validationErrors;
 
   const PanelSelectionPage({
     super.key,
     required this.selectedPanelType,
     required this.panelNameController,
     required this.onPanelTypeChanged,
+    this.validationErrors,
   });
 
   @override
@@ -46,7 +48,11 @@ class _PanelSelectionPageState extends State<PanelSelectionPage> {
                     style: GoogleFonts.inter(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
-                      color: Color(0xFF696969),
+                      color:
+                          widget.validationErrors?.containsKey('panelName') ==
+                                  true
+                              ? Color(0xFFEC1D24)
+                              : Color(0xFF696969),
                     ),
                   ),
                   SizedBox(height: 8),
@@ -54,7 +60,18 @@ class _PanelSelectionPageState extends State<PanelSelectionPage> {
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(4),
-                      border: Border.all(color: Color(0xFFE0E0E0)),
+                      border: Border.all(
+                        color:
+                            widget.validationErrors?.containsKey('panelName') ==
+                                    true
+                                ? Color(0xFFEC1D24)
+                                : Color(0xFFE0E0E0),
+                        width:
+                            widget.validationErrors?.containsKey('panelName') ==
+                                    true
+                                ? 2
+                                : 1,
+                      ),
                     ),
                     child: TextField(
                       controller: widget.panelNameController,
@@ -73,15 +90,43 @@ class _PanelSelectionPageState extends State<PanelSelectionPage> {
                       ),
                     ),
                   ),
+                  if (widget.validationErrors?.containsKey('panelName') ==
+                      true) ...[
+                    SizedBox(height: 4),
+                    Text(
+                      widget.validationErrors!['panelName']!,
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFFEC1D24),
+                      ),
+                    ),
+                  ],
                   SizedBox(height: 36),
                   Text(
                     'Panel Type',
                     style: GoogleFonts.inter(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
-                      color: Color(0xFF696969),
+                      color:
+                          widget.validationErrors?.containsKey('panelType') ==
+                                  true
+                              ? Color(0xFFEC1D24)
+                              : Color(0xFF696969),
                     ),
                   ),
+                  if (widget.validationErrors?.containsKey('panelType') ==
+                      true) ...[
+                    SizedBox(height: 4),
+                    Text(
+                      widget.validationErrors!['panelType']!,
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFFEC1D24),
+                      ),
+                    ),
+                  ],
                   SizedBox(height: 18),
                   _buildPanelTypeTiles(),
                 ],

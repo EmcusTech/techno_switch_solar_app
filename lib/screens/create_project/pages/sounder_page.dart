@@ -148,12 +148,25 @@ class _SounderPageState extends State<SounderPage> {
                           border: Border.all(color: Color(0xFFE0E0E0)),
                         ),
                         child: TextField(
+                          controller: TextEditingController(
+                              text: widget.sounderTexts[sounderName] ?? '',
+                            )
+                            ..selection = TextSelection.fromPosition(
+                              TextPosition(
+                                offset:
+                                    widget.sounderTexts[sounderName]?.length ??
+                                    0,
+                              ),
+                            ),
                           onChanged: (value) {
                             widget.onSounderFieldChanged(
                               sounderName,
                               'sounderText',
                               value,
                             );
+                          },
+                          onTapOutside: (value) {
+                            FocusScope.of(context).unfocus();
                           },
                           decoration: InputDecoration(
                             contentPadding: EdgeInsets.all(12),

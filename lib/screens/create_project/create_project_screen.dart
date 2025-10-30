@@ -130,7 +130,7 @@ class _CreateSiteScreenState extends State<CreateSiteScreen> {
   String extSounderDelay = '300 Sec';
 
   // Input Page state
-  String inputText = '';
+  String inputText = 'Input 1';
   String inverted = 'No';
   String test = 'No';
   String input1 = 'Enable';
@@ -175,6 +175,7 @@ class _CreateSiteScreenState extends State<CreateSiteScreen> {
 
   final SiteService _siteService = SiteService();
   bool _isSaving = false;
+  Map<String, String> _validationErrors = {};
 
   @override
   void initState() {
@@ -272,6 +273,49 @@ class _CreateSiteScreenState extends State<CreateSiteScreen> {
 
   void _goToNextStep() {
     if (currentStep < totalSteps) {
+      // Validate mandatory fields based on current step
+      Map<String, String> errors = {};
+
+      if (currentStep == 1) {
+        // Site Creation Page validation
+        if (_siteNameController.text.trim().isEmpty) {
+          errors['siteName'] = 'Site Name is required';
+        }
+        if (_saqccRegNumberController.text.trim().isEmpty) {
+          errors['saqccRegNumber'] = 'SAQCC Registration Number is required';
+        }
+      } else if (currentStep == 2) {
+        // Panel Selection Page validation
+        if (_panelNameController.text.trim().isEmpty) {
+          errors['panelName'] = 'Panel Name is required';
+        }
+        if (selectedPanelType == null) {
+          errors['panelType'] = 'Panel Type is required';
+        }
+      }
+
+      // If there are validation errors, show them and don't proceed
+      if (errors.isNotEmpty) {
+        setState(() {
+          _validationErrors = errors;
+        });
+
+        // Show error snackbar
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Please fill in all required fields'),
+            backgroundColor: Color(0xFFEC1D24),
+            duration: Duration(seconds: 2),
+          ),
+        );
+        return;
+      }
+
+      // Clear validation errors if validation passes
+      setState(() {
+        _validationErrors = {};
+      });
+
       _pageController.nextPage(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
@@ -322,7 +366,7 @@ class _CreateSiteScreenState extends State<CreateSiteScreen> {
 
     for (int i = 1; i <= zoneCount; i++) {
       final zoneName = 'Zone $i';
-      zoneTexts[zoneName] = '';
+      zoneTexts[zoneName] = zoneName; // Initialize with zone name
       zoneTypes[zoneName] = 'Double Knock';
       zoneStates[zoneName] = 'Enable';
       zoneTests[zoneName] = 'Yes';
@@ -347,7 +391,7 @@ class _CreateSiteScreenState extends State<CreateSiteScreen> {
 
     for (int i = 1; i <= sounderCount; i++) {
       final sounderName = 'Sounder $i';
-      sounderTexts[sounderName] = '';
+      sounderTexts[sounderName] = sounderName; // Initialize with sounder name
       sounderStates[sounderName] = 'Enable';
       sounderTests[sounderName] = 'Yes';
       sounderTypes[sounderName] = 'Horn';
@@ -367,7 +411,7 @@ class _CreateSiteScreenState extends State<CreateSiteScreen> {
 
     for (int i = 1; i <= relayCount; i++) {
       final relayName = 'Relay $i';
-      relayTexts[relayName] = '';
+      relayTexts[relayName] = relayName; // Initialize with relay name
       relayTests[relayName] = 'No';
       relayStates[relayName] = 'Enable';
       relayGroups[relayName] = 'Group A';
@@ -747,11 +791,13 @@ class _CreateSiteScreenState extends State<CreateSiteScreen> {
                                         _installerEmailController,
                                     siteDescriptionController:
                                         _siteDescriptionController,
+                                    validationErrors: _validationErrors,
                                   ),
                                   PanelSelectionPage(
                                     selectedPanelType: selectedPanelType,
                                     panelNameController: _panelNameController,
                                     onPanelTypeChanged: _onPanelTypeChanged,
+                                    validationErrors: _validationErrors,
                                   ),
                                   GeneralSettingsPage(
                                     levelTimeout: levelTimeout,

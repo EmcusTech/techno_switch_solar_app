@@ -145,12 +145,23 @@ class _ZoneSettingsPageState extends State<ZoneSettingsPage> {
                           border: Border.all(color: Color(0xFFE0E0E0)),
                         ),
                         child: TextField(
+                          controller: TextEditingController(
+                              text: widget.zoneTexts[zoneName] ?? '',
+                            )
+                            ..selection = TextSelection.fromPosition(
+                              TextPosition(
+                                offset: widget.zoneTexts[zoneName]?.length ?? 0,
+                              ),
+                            ),
                           onChanged: (value) {
                             widget.onZoneFieldChanged(
                               zoneName,
                               'zoneText',
                               value,
                             );
+                          },
+                          onTapOutside: (value) {
+                            FocusScope.of(context).unfocus();
                           },
                           decoration: InputDecoration(
                             contentPadding: EdgeInsets.all(12),
