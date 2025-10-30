@@ -400,22 +400,6 @@ class _EventLogContentState extends State<_EventLogContent> {
                 ],
               ),
               Spacer(),
-            ],
-          ),
-          SizedBox(height: 15),
-          Divider(color: Color(0xFF000000).withAlpha(46), thickness: 1),
-          SizedBox(height: 15),
-          Row(
-            children: [
-              Text(
-                'Event Log',
-                style: GoogleFonts.inter(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF3D3D3D),
-                ),
-              ),
-              Spacer(),
               GestureDetector(
                 onTap:
                     () => setState(() {
@@ -479,7 +463,23 @@ class _EventLogContentState extends State<_EventLogContent> {
               ),
             ],
           ),
-          SizedBox(height: 20),
+          SizedBox(height: 15),
+          Divider(color: Color(0xFF000000).withAlpha(46), thickness: 1),
+          // SizedBox(height: 15),
+          // Row(
+          //   children: [
+          //     Text(
+          //       'Event Log',
+          //       style: GoogleFonts.inter(
+          //         fontSize: 16,
+          //         fontWeight: FontWeight.w700,
+          //         color: Color(0xFF3D3D3D),
+          //       ),
+          //     ),
+          //     Spacer(),
+          //   ],
+          // ),
+          // SizedBox(height: 8),
           Expanded(
             child: IndexedStack(
               index: _selectedViewIndex,
