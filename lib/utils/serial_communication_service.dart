@@ -1352,14 +1352,33 @@ class SerialCommunicationService {
     }
 
     String panelSource;
-    if (evtData[0] == 0 && evtData[1] == 0 && evtData[2] == 0) {
-      panelSource = "SOLAR";
-    } else if (evtData[0] == 1 && evtData[1] == 0 && evtData[2] == 0) {
-      panelSource = "Panel No.${evtData[0]}";
+    if (evtData[9] == EventConstants.evtTypeNetworkAddress) {
+      panelSource =
+          evtData[29] == 0
+              ? "Module"
+              : evtData[29] == 1
+              ? "Panel No. ${evtData[30]}"
+              : evtData[29] == 2
+              ? "Repeater No. ${evtData[30]}"
+              : evtData[29] == 3
+              ? "SOLAR"
+              : evtData[29] == 4
+              ? "Server No. ${evtData[30]}"
+              : "";
+    } else if (evtData[9] == EventConstants.evtTypeAccess) {
+      panelSource =
+          evtData[29] == 0
+              ? "Control"
+              : evtData[29] == 1
+              ? "Keyboard"
+              : evtData[29] == 2
+              ? "SOLAR"
+              : evtData[29] == 3
+              ? "Server"
+              : "";
     } else {
-      panelSource = "Panel ${evtData[0]}.${evtData[1]}.${evtData[2]}";
+      panelSource = "";
     }
-    // print('DEBUG: Panel source: $panelSource');
 
     if (eventId != 0) {
       LogModel logModel = LogModel(
