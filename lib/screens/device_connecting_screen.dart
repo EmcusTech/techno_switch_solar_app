@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -6,6 +8,7 @@ import 'package:usb_serial/usb_serial.dart';
 import 'package:techno_switch_solar_app/screens/access_code_screen.dart';
 import 'package:techno_switch_solar_app/screens/scanning_screen.dart';
 import 'package:techno_switch_solar_app/services/app_services.dart';
+import 'package:techno_switch_solar_app/utils/bluetooth/ble_notify_data_handler.dart';
 import 'package:lottie/lottie.dart';
 
 class DeviceConnectingScreen extends StatefulWidget {
@@ -31,6 +34,8 @@ class _DeviceConnectingScreenState extends State<DeviceConnectingScreen>
   String _connectionStatus = "Initializing...";
   bool _connectionFailed = false;
   String? _errorMessage;
+  StreamSubscription<BleHandshakeEvent>? _handshakeSubscription;
+  bool _passkeyScreenOpened = false;
 
   @override
   void initState() {
@@ -42,6 +47,13 @@ class _DeviceConnectingScreenState extends State<DeviceConnectingScreen>
 
     // Start connection attempt
     _connectToDevice();
+  }
+
+  @override
+  void dispose() {
+    _handshakeSubscription?.cancel();
+    _animationController.dispose();
+    super.dispose();
   }
 
   Future<void> _connectToDevice() async {
@@ -60,7 +72,6 @@ class _DeviceConnectingScreenState extends State<DeviceConnectingScreen>
       bool connected = false;
 
       if (widget.scanType == ScanType.bluetooth) {
-        // Handle BLE device connection
         BluetoothDevice device;
         if (widget.selectedDevice is ScanResult) {
           device = (widget.selectedDevice as ScanResult).device;
@@ -68,13 +79,14 @@ class _DeviceConnectingScreenState extends State<DeviceConnectingScreen>
           device = widget.selectedDevice as BluetoothDevice;
         }
 
+        _handshakeSubscription ??= AppServices.bleService.handshakeEvents
+            .listen(_handleHandshakeEvent);
+
         setState(() {
           _connectionStatus = "Establishing Bluetooth connection...";
         });
 
-        connected = await AppServices.serialService.connectToSpecificDevice(
-          device,
-        );
+        connected = await AppServices.bleService.connectToDevice(device);
       } else {
         // Handle USB device connection
         setState(() {
@@ -85,14 +97,19 @@ class _DeviceConnectingScreenState extends State<DeviceConnectingScreen>
       }
 
       if (connected && AppServices.isConnected) {
+        if (widget.scanType == ScanType.bluetooth) {
+          setState(() {
+            _connectionStatus = "Connected. Waiting for panel handshake...";
+          });
+          return;
+        }
+
         setState(() {
           _connectionStatus = "Connected successfully!";
         });
 
-        // Wait a moment to show success message
         await Future.delayed(const Duration(milliseconds: 800));
 
-        // Navigate to access code screen
         if (mounted) {
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(
@@ -110,6 +127,59 @@ class _DeviceConnectingScreenState extends State<DeviceConnectingScreen>
       }
     } catch (e) {
       _handleConnectionFailure("Connection error: $e");
+    }
+  }
+
+  void _handleHandshakeEvent(BleHandshakeEvent event) {
+    if (!mounted) return;
+
+    switch (event.type) {
+      case BleHandshakeEventType.stateChanged:
+        if (event.message != null) {
+          setState(() {
+            _connectionStatus = event.message!;
+          });
+        }
+        break;
+      case BleHandshakeEventType.encryptionKeyReceived:
+        setState(() {
+          _connectionStatus = "Encryption key received";
+        });
+        break;
+      case BleHandshakeEventType.authenticated:
+        setState(() {
+          _connectionStatus = "Authenticator packet accepted";
+        });
+        break;
+      case BleHandshakeEventType.passkeyRequested:
+        setState(() {
+          _connectionStatus = "Waiting for Level-3 passkey (30 seconds)";
+        });
+        if (!_passkeyScreenOpened) {
+          _passkeyScreenOpened = true;
+          Future.microtask(() {
+            if (!mounted) return;
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(
+                builder:
+                    (context) => AccessCodeScreen(
+                      selectedDevice: widget.selectedDevice,
+                      scanType: widget.scanType,
+                      isLiveEvent: widget.isLiveEvent,
+                    ),
+              ),
+            );
+          });
+        }
+        break;
+      case BleHandshakeEventType.passkeyAccepted:
+        setState(() {
+          _connectionStatus = "Passkey accepted";
+        });
+        break;
+      case BleHandshakeEventType.error:
+        _handleConnectionFailure(event.message ?? "Handshake error");
+        break;
     }
   }
 
@@ -432,11 +502,5 @@ class _DeviceConnectingScreenState extends State<DeviceConnectingScreen>
         ],
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
   }
 }

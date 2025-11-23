@@ -194,38 +194,19 @@ class SiteService {
   }) {
     final errors = <String, String>{};
 
+    // Required fields
     if (siteName.trim().isEmpty) {
       errors['siteName'] = 'Site name is required';
-    }
-
-    if (installerName.trim().isEmpty) {
-      errors['installerName'] = 'Installer name is required';
-    }
-
-    if (companyName.trim().isEmpty) {
-      errors['companyName'] = 'Company name is required';
     }
 
     if (saqccRegNumber.trim().isEmpty) {
       errors['saqccRegNumber'] = 'SAQCC registration number is required';
     }
 
-    if (buildingName.trim().isEmpty) {
-      errors['buildingName'] = 'Building name is required';
-    }
-
-    if (installerContactNumber.trim().isEmpty) {
-      errors['installerContactNumber'] = 'Contact number is required';
-    }
-
-    if (installerEmail.trim().isEmpty) {
-      errors['installerEmail'] = 'Email is required';
-    } else if (!_isValidEmail(installerEmail.trim())) {
+    // Optional fields - only validate format if provided
+    if (installerEmail.trim().isNotEmpty &&
+        !_isValidEmail(installerEmail.trim())) {
       errors['installerEmail'] = 'Please enter a valid email address';
-    }
-
-    if (siteDescription.trim().isEmpty) {
-      errors['siteDescription'] = 'Site description is required';
     }
 
     return errors;

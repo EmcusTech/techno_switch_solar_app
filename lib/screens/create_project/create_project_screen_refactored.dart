@@ -74,6 +74,7 @@ class _CreateSiteScreenRefactoredState
       );
 
       if (errors.isNotEmpty) {
+        print('errors: $errors');
         _showSnackBar('Please fix the errors in the form', isError: true);
         return;
       }

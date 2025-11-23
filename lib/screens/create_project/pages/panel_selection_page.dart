@@ -43,16 +43,32 @@ class _PanelSelectionPageState extends State<PanelSelectionPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Panel Name',
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color:
-                          widget.validationErrors?.containsKey('panelName') ==
-                                  true
-                              ? Color(0xFFEC1D24)
-                              : Color(0xFF696969),
+                  RichText(
+                    text: TextSpan(
+                      children: [
+                        TextSpan(
+                          text: 'Panel Name',
+                          style: GoogleFonts.inter(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color:
+                                widget.validationErrors?.containsKey(
+                                          'panelName',
+                                        ) ==
+                                        true
+                                    ? Color(0xFFEC1D24)
+                                    : Color(0xFF696969),
+                          ),
+                        ),
+                        TextSpan(
+                          text: ' *',
+                          style: GoogleFonts.inter(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFFEC1D24),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   SizedBox(height: 8),
@@ -103,16 +119,32 @@ class _PanelSelectionPageState extends State<PanelSelectionPage> {
                     ),
                   ],
                   SizedBox(height: 36),
-                  Text(
-                    'Panel Type',
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color:
-                          widget.validationErrors?.containsKey('panelType') ==
-                                  true
-                              ? Color(0xFFEC1D24)
-                              : Color(0xFF696969),
+                  RichText(
+                    text: TextSpan(
+                      children: [
+                        TextSpan(
+                          text: 'Panel Type',
+                          style: GoogleFonts.inter(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color:
+                                widget.validationErrors?.containsKey(
+                                          'panelType',
+                                        ) ==
+                                        true
+                                    ? Color(0xFFEC1D24)
+                                    : Color(0xFF696969),
+                          ),
+                        ),
+                        TextSpan(
+                          text: ' *',
+                          style: GoogleFonts.inter(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFFEC1D24),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   if (widget.validationErrors?.containsKey('panelType') ==

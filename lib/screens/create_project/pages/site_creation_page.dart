@@ -35,6 +35,7 @@ class _SiteCreationPageState extends State<SiteCreationPage> {
     required String hintText,
     String? validationKey,
     int? maxLines = 1,
+    bool isRequired = false,
   }) {
     final hasError =
         widget.validationErrors?.containsKey(validationKey) == true;
@@ -43,12 +44,27 @@ class _SiteCreationPageState extends State<SiteCreationPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: GoogleFonts.inter(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: hasError ? Color(0xFFEC1D24) : Color(0xFF696969),
+        RichText(
+          text: TextSpan(
+            children: [
+              TextSpan(
+                text: label,
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: hasError ? Color(0xFFEC1D24) : Color(0xFF696969),
+                ),
+              ),
+              if (isRequired)
+                TextSpan(
+                  text: ' *',
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFFEC1D24),
+                  ),
+                ),
+            ],
           ),
         ),
         SizedBox(height: 8),
@@ -120,6 +136,7 @@ class _SiteCreationPageState extends State<SiteCreationPage> {
                     controller: widget.siteNameController,
                     hintText: 'Enter Site Name',
                     validationKey: 'siteName',
+                    isRequired: true,
                   ),
                   SizedBox(height: 20),
                   _buildTextField(
@@ -141,6 +158,7 @@ class _SiteCreationPageState extends State<SiteCreationPage> {
                     controller: widget.saqccRegNumberController,
                     hintText: 'Enter SAQCC Registration Number',
                     validationKey: 'saqccRegNumber',
+                    isRequired: true,
                   ),
                   SizedBox(height: 20),
                   _buildTextField(

@@ -2,6 +2,7 @@ import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:techno_switch_solar_app/utils/serial_communication_service.dart';
 import 'package:techno_switch_solar_app/services/app_state.dart';
 import 'package:techno_switch_solar_app/services/bluetooth_connection_manager.dart';
+import 'package:techno_switch_solar_app/services/technoswitch_ble_service.dart';
 import 'dart:async';
 
 /// Singleton class to manage shared services across the app
@@ -21,8 +22,13 @@ class AppServices {
   static SerialCommunicationService get serialService =>
       SerialCommunicationService.instance;
 
+  /// Technoswitch Gas Panel BLE service (new frame protocol).
+  static TechnoswitchBleService get bleService =>
+      TechnoswitchBleService.instance;
+
   /// Check if device is currently connected
-  static bool get isConnected => serialService.isConnected;
+  static bool get isConnected =>
+      serialService.isConnected || bleService.isConnected;
 
   /// Get current connection state
   static PanelConnectionState get connectionState =>
@@ -66,6 +72,7 @@ class AppServices {
   /// Dispose all services (call when app closes)
   static Future<void> dispose() async {
     serialService.dispose();
+    await bleService.disconnect();
     AppState.dispose();
   }
 
@@ -84,6 +91,7 @@ class AppServices {
   /// Safely disconnect from the current device
   static Future<void> disconnect() async {
     await BluetoothConnectionManager.safeDisconnect();
+    await bleService.disconnect();
     AppState.reset();
   }
 

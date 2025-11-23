@@ -1,9 +1,13 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/screens/project_dashboard.dart';
 import 'package:techno_switch_solar_app/screens/log_retrieval_loading_screen.dart';
 import 'package:techno_switch_solar_app/screens/scanning_screen.dart';
+import 'package:techno_switch_solar_app/services/app_services.dart';
+import 'package:techno_switch_solar_app/utils/bluetooth/ble_notify_data_handler.dart';
 
 class AccessCodeScreen extends StatefulWidget {
   final dynamic
@@ -28,9 +32,14 @@ class _AccessCodeScreenState extends State<AccessCodeScreen> {
   late FocusNode _accessFocusNode;
   final GlobalKey _textFieldKey = GlobalKey();
 
-  // validation state
-  bool _isAccessCodeValid = false;
-  bool _showAccessCodeError = false;
+  bool _readyToContinue = false;
+  bool _isSubmitting = false;
+  String? _errorMessage;
+  String _statusMessage = 'Enter your access code';
+  StreamSubscription<BleHandshakeEvent>? _handshakeSubscription;
+  bool _navigatedAway = false;
+
+  bool get _isBleFlow => widget.scanType == ScanType.bluetooth;
   static const String _requiredAccessCode = "1974";
 
   @override
@@ -43,6 +52,13 @@ class _AccessCodeScreenState extends State<AccessCodeScreen> {
     _scrollController = ScrollController();
     _accessFocusNode = FocusNode();
     _accessFocusNode.addListener(_onFocusChange);
+
+    if (_isBleFlow) {
+      _statusMessage = 'Waiting for panel handshake...';
+      _handshakeSubscription = AppServices.bleService.handshakeEvents.listen(
+        _handleHandshakeEvent,
+      );
+    }
   }
 
   void _onFocusChange() {
@@ -68,14 +84,63 @@ class _AccessCodeScreenState extends State<AccessCodeScreen> {
     }
   }
 
+  void _handleHandshakeEvent(BleHandshakeEvent event) {
+    if (!_isBleFlow || !mounted) return;
+
+    switch (event.type) {
+      case BleHandshakeEventType.stateChanged:
+        if (event.message != null) {
+          setState(() {
+            _statusMessage = event.message!;
+          });
+        }
+        break;
+      case BleHandshakeEventType.passkeyRequested:
+        setState(() {
+          _statusMessage = 'Enter Level-3 passkey (timeout 30s)';
+          _errorMessage = null;
+        });
+        break;
+      case BleHandshakeEventType.passkeyAccepted:
+        setState(() {
+          _statusMessage = 'Passkey accepted';
+          _readyToContinue = true;
+          _isSubmitting = false;
+          _errorMessage = null;
+        });
+        break;
+      case BleHandshakeEventType.error:
+        setState(() {
+          _errorMessage = event.message ?? 'Passkey rejected by panel';
+          _isSubmitting = false;
+          _readyToContinue = false;
+        });
+        break;
+      default:
+        break;
+    }
+  }
+
   void _onAccessCodeChanged() {
+    if (_readyToContinue) {
+      setState(() {
+        _readyToContinue = false;
+      });
+    }
+
     final text = _accessCodeController.text.trim();
-    final valid = text == _requiredAccessCode;
-    setState(() {
-      _isAccessCodeValid = valid;
-      // Show error only when user typed something and it's invalid
-      _showAccessCodeError = text.isNotEmpty && !valid;
-    });
+
+    if (!_isBleFlow) {
+      setState(() {
+        _readyToContinue = text == _requiredAccessCode;
+        _errorMessage =
+            text.isEmpty || _readyToContinue ? null : 'Invalid code';
+      });
+    } else if (_errorMessage != null && !_isSubmitting) {
+      setState(() {
+        _errorMessage = null;
+      });
+    }
   }
 
   @override
@@ -142,6 +207,77 @@ class _AccessCodeScreenState extends State<AccessCodeScreen> {
     );
   }
 
+  void _handlePrimaryAction() {
+    if (_readyToContinue) {
+      _proceedNext();
+    } else {
+      _submitPasskey();
+    }
+  }
+
+  void _submitPasskey() {
+    final text = _accessCodeController.text.trim();
+    // if (text.length != 4) {
+    //   setState(() {
+    //     _errorMessage = 'Enter the 4-digit passkey';
+    //   });
+    //   return;
+    // }
+
+    if (_isBleFlow) {
+      if (text.isEmpty) {
+        setState(() {
+          _errorMessage = 'Enter the passkey provided by the panel';
+        });
+        return;
+      }
+      setState(() {
+        _isSubmitting = true;
+        _errorMessage = null;
+      });
+      AppServices.bleService.submitPasskey(text);
+    } else {
+      if (text != _requiredAccessCode) {
+        setState(() {
+          _errorMessage = 'Invalid access code!';
+          _readyToContinue = false;
+        });
+      } else {
+        setState(() {
+          _errorMessage = null;
+          _readyToContinue = true;
+        });
+      }
+    }
+  }
+
+  void _proceedNext() {
+    if (_navigatedAway) return;
+    _navigatedAway = true;
+
+    _accessCodeController.clear();
+    setState(() {
+      _readyToContinue = false;
+      _errorMessage = null;
+    });
+
+    if (widget.isLiveEvent == false) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder:
+              (context) => ProjectDashboardScreen(
+                panelName: 'RHINO2008',
+                panelVersionNo: '0.98',
+              ),
+        ),
+      );
+    } else {
+      Navigator.of(context).push(
+        MaterialPageRoute(builder: (context) => LogRetrievalLoadingScreen()),
+      );
+    }
+  }
+
   Widget _buildAccesCodeContainer(Color themePrimary) {
     return Container(
       decoration: BoxDecoration(
@@ -180,16 +316,17 @@ class _AccessCodeScreenState extends State<AccessCodeScreen> {
                 fontWeight: FontWeight.w700,
               ),
             ),
-            const SizedBox(height: 74),
+            const SizedBox(height: 24),
             Text(
-              'Enter your access code ',
+              _statusMessage,
+              textAlign: TextAlign.center,
               style: GoogleFonts.inter(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: Color(0xFF696969),
+                color: const Color(0xFF696969),
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 32),
             // TextField with dynamic border color based on validation state
             Container(
               key: _textFieldKey,
@@ -198,7 +335,7 @@ class _AccessCodeScreenState extends State<AccessCodeScreen> {
                 borderRadius: BorderRadius.circular(4),
                 border: Border.all(
                   color:
-                      _showAccessCodeError ? themePrimary : Color(0xFFE0E0E0),
+                      _errorMessage != null ? themePrimary : Color(0xFFE0E0E0),
                   width: 1.5,
                 ),
               ),
@@ -208,7 +345,7 @@ class _AccessCodeScreenState extends State<AccessCodeScreen> {
                   focusNode: _accessFocusNode,
                   textAlign: TextAlign.center,
                   controller: _accessCodeController,
-                  maxLength: 4,
+                  // maxLength: 4,
                   showCursor: true,
                   obscureText: true,
                   obscuringCharacter: "*",
@@ -230,14 +367,14 @@ class _AccessCodeScreenState extends State<AccessCodeScreen> {
               ),
             ),
 
-            // Error message shown when code is invalid and user entered something
-            if (_showAccessCodeError) ...[
+            if (_errorMessage != null) ...[
               const SizedBox(height: 12),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Text(
-                    'Ïnvalid Access Code!',
+                    _errorMessage!,
+                    textAlign: TextAlign.center,
                     style: GoogleFonts.inter(
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
@@ -245,7 +382,7 @@ class _AccessCodeScreenState extends State<AccessCodeScreen> {
                     ),
                   ),
                   Text(
-                    'Please Try Again',
+                    'Please try again',
                     style: GoogleFonts.inter(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
@@ -262,7 +399,15 @@ class _AccessCodeScreenState extends State<AccessCodeScreen> {
   }
 
   Widget _buildBottomBar() {
-    final isButtonDisabled = !_isAccessCodeValid;
+    final String buttonLabel = _readyToContinue ? 'Continue' : 'Submit Passkey';
+    const String secondaryLabel = 'Back';
+    final String trimmedCode = _accessCodeController.text.trim();
+    final bool isButtonDisabled =
+        _readyToContinue
+            ? false
+            : _isBleFlow
+            ? (_isSubmitting || trimmedCode.isEmpty)
+            : trimmedCode != _requiredAccessCode;
 
     return Padding(
       padding: const EdgeInsets.all(20),
@@ -287,7 +432,7 @@ class _AccessCodeScreenState extends State<AccessCodeScreen> {
                     Icon(Icons.arrow_back, color: Color(0xFF49454F)),
                     const SizedBox(width: 6),
                     Text(
-                      'Back',
+                      secondaryLabel,
                       style: GoogleFonts.inter(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
@@ -300,45 +445,13 @@ class _AccessCodeScreenState extends State<AccessCodeScreen> {
           ),
           const Spacer(),
           GestureDetector(
-            onTap:
-                isButtonDisabled
-                    ? null
-                    : () {
-                      // Final guard: ensure code is valid before proceeding
-                      if (!_isAccessCodeValid) {
-                        setState(() {
-                          _showAccessCodeError = true;
-                        });
-                        return;
-                      }
-
-                      // Clear and navigate
-                      _accessCodeController.clear();
-                      setState(() {
-                        _isAccessCodeValid = false;
-                        _showAccessCodeError = false;
-                      });
-                      if (widget.isLiveEvent == false) {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder:
-                                (context) => ProjectDashboardScreen(
-                                  panelName: 'RHINO2008',
-                                  panelVersionNo: '0.98',
-                                ),
-                          ),
-                        );
-                      } else {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) => LogRetrievalLoadingScreen(),
-                          ),
-                        );
-                      }
-                    },
+            onTap: isButtonDisabled ? null : _handlePrimaryAction,
             child: Container(
               decoration: BoxDecoration(
-                color: isButtonDisabled ? Color(0xFFDADADA) : Color(0xFFEC1D24),
+                color:
+                    isButtonDisabled
+                        ? const Color(0xFFDADADA)
+                        : const Color(0xFFEC1D24),
                 borderRadius: BorderRadius.circular(28.5),
               ),
               child: Padding(
@@ -351,7 +464,7 @@ class _AccessCodeScreenState extends State<AccessCodeScreen> {
                 child: Row(
                   children: [
                     Text(
-                      'Retrieve Data',
+                      buttonLabel,
                       style: GoogleFonts.inter(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
@@ -359,7 +472,19 @@ class _AccessCodeScreenState extends State<AccessCodeScreen> {
                       ),
                     ),
                     const SizedBox(width: 13),
-                    Icon(Icons.arrow_forward, color: Colors.white),
+                    if (_isSubmitting && !_readyToContinue)
+                      SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.white,
+                          ),
+                        ),
+                      )
+                    else
+                      Icon(Icons.arrow_forward, color: Colors.white),
                   ],
                 ),
               ),
@@ -372,6 +497,7 @@ class _AccessCodeScreenState extends State<AccessCodeScreen> {
 
   @override
   void dispose() {
+    _handshakeSubscription?.cancel();
     _accessCodeController.dispose();
     _accessFocusNode.removeListener(_onFocusChange);
     _accessFocusNode.dispose();
