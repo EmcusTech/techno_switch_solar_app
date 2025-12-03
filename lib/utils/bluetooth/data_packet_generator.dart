@@ -184,7 +184,7 @@ List<int> generateDataPacketFromPayload(String hexPayLoad) {
 Future<Uint8List> authMsgFrame() async {
   // String text = AppUtilConstants.geminiAuthKey;
 
-  List<int> payLoadData = convertStringToHex("Gemini-HyFire-APP");
+  List<int> payLoadData = convertStringToHex("TECHNOSWITCH-AUTH-APP");
   String hexPayLoad = bytesToHex(payLoadData);
   String hexLengthByte = calculateLengthByte(hexPayLoad);
   List<int> lengthByte = hexToBytes(hexLengthByte);

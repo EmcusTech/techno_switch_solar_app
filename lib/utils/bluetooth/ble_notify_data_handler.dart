@@ -189,19 +189,24 @@ class BleNotifyDataHandler extends GetxController {
   }
 
   Future<void> _handleEncryptionReqResponse(FrameData frame) async {
+    Logger('Encryption key -  frame: $frame');
     if (frame.payloadData.isEmpty) {
+      Logger('Encryption key -  empty response');
       _emitEvent(BleHandshakeEvent.error('Empty encryption response'));
       return;
     }
 
     final String status = frame.payloadData.first;
     if (status == _authenticationRequired) {
+      Logger('Encryption key -  authentication required');
       _emitEvent(BleHandshakeEvent.error('Authentication required by panel'));
       return;
     }
 
     final String keyHex =
         frame.payloadData.map((String byte) => byte.toLowerCase()).join();
+    Logger('Encryption key -  payload bytes: ${frame.payloadData}');
+    Logger('Encryption key -  (hex): $keyHex');
     await EncryptionKeyStore.instance.saveKey(keyHex);
     encryptionDecryptionState(EncryptionDecryptionState.enabled);
 
