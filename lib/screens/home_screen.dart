@@ -8,6 +8,7 @@ import 'package:techno_switch_solar_app/services/app_services.dart';
 import 'package:techno_switch_solar_app/services/app_state.dart';
 import 'package:techno_switch_solar_app/services/site_service.dart';
 import 'package:intl/intl.dart';
+import 'package:techno_switch_solar_app/utils/bluetooth/data_packet_generator.dart';
 import 'settings_screen.dart';
 import 'help_screen.dart';
 
@@ -230,7 +231,8 @@ class _HomeContentState extends State<_HomeContent> {
                 child: Padding(
                   padding: const EdgeInsets.all(30.0),
                   child: InkWell(
-                    onTap: () {
+                    onTap: () async {
+                      // await testPasskeyFrameGeneration('1974');
                       Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (context) => ScanningScreen(),

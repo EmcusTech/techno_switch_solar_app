@@ -64,8 +64,84 @@ class DataTransferManager {
     Function(bool)? dataWritten,
   }) async {
     List<int> passKeyValuePacket = await passKeyFrame(password);
-
+    Logger(
+      'passkey frame <<===========PasskeyValuePacket: $passKeyValuePacket===========>>',
+    );
     sendDataToBle(passKeyValuePacket, dataWritten: dataWritten);
+  }
+
+  void sendingNetworkPacketToBle({
+    Function(bool)? dataWritten,
+    int pktTxCnt = 0,
+    int pktRxCnt = 0,
+  }) async {
+    List<int> networkPacket = await networkPacketFrame(
+      pktTxCnt: pktTxCnt,
+      pktRxCnt: pktRxCnt,
+    );
+    Logger(
+      'network packet frame <<===========NetworkPacket: $networkPacket===========>>',
+    );
+    sendDataToBle(networkPacket, dataWritten: dataWritten);
+  }
+
+  void sendingDummyPacketToBle({
+    Function(bool)? dataWritten,
+    int pktTxCnt = 0,
+    int pktRxCnt = 0,
+    int logEvtSearchNumber = 999,
+  }) async {
+    List<int> dummyPacket = await dummyPacketFrame(
+      pktTxCnt: pktTxCnt,
+      pktRxCnt: pktRxCnt,
+      logEvtSearchNumber: logEvtSearchNumber,
+    );
+    Logger(
+      'dummy packet frame <<===========DummyPacket: $dummyPacket===========>>',
+    );
+    sendDataToBle(dummyPacket, dataWritten: dataWritten);
+  }
+
+  /// Sends CONTROL_RES_EVENT_REPORT command to BLE device.
+  ///
+  /// This command controls event reporting for different event printers.
+  /// The panel will respond with a CONTROL_MESSAGE message.
+  ///
+  /// Parameters:
+  ///   - dataWritten: Callback function called when data is written (optional)
+  ///   - pktTxCnt: Packet transmit counter (default: 0)
+  ///   - pktRxCnt: Packet receive counter (default: 0)
+  ///   - network: Network value (default: 0)
+  ///   - node: Node value (default: 0)
+  ///   - subnode: Sub-node value (default: 0)
+  ///   - module: Module value (default: 0)
+  ///   - eventBufferMask: Event buffer mask (default: 3 for Radio event printer)
+  ///   - eventBufferMode: Event buffer mode (default: 0 for Start)
+  void sendingControlResEventReportToBle({
+    Function(bool)? dataWritten,
+    int pktTxCnt = 0,
+    int pktRxCnt = 0,
+    int network = 0,
+    int node = 0,
+    int subnode = 0,
+    int module = 0,
+    int eventBufferMask = 3,
+    int eventBufferMode = 0,
+  }) async {
+    List<int> controlResEventReportPacket = await controlResEventReportFrame(
+      pktTxCnt: pktTxCnt,
+      pktRxCnt: pktRxCnt,
+      network: network,
+      node: node,
+      subnode: subnode,
+      module: module,
+      eventBufferMask: eventBufferMask,
+      eventBufferMode: eventBufferMode,
+    );
+    Logger(
+      'control res event report frame <<===========ControlResEventReportPacket: $controlResEventReportPacket===========>>',
+    );
+    sendDataToBle(controlResEventReportPacket, dataWritten: dataWritten);
   }
 
   void toggleLedButton() {
@@ -79,6 +155,7 @@ class DataTransferManager {
   void sendAuthPacket({Function(bool)? dataWritten}) async {
     /// Create a Gemini packet
     List<int> data = await authMsgFrame();
+    Logger("Authentication message -  data: $data");
     Logger("%%%%%%%%%%%%% AUTH MESSAGE SENT %%%%%%%%%%%%");
 
     /// Send the BLE data packet

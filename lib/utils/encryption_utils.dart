@@ -73,7 +73,9 @@ class EncryptionUtils {
         Encrypted.fromBase16(chipherText),
       );
       decryptedData = decrypted;
-      Logger(":::::::::::::::Decrypted data:::::: ${decryptedData.toString()}");
+      Logger(
+        ":::::::::::::::Decrypted data:::::: 1 ${decryptedData.toString()}",
+      );
     } on Exception catch (e) {
       Logger(":::::::::::::::::Catch:::::::::::::");
       Logger(e.toString());
@@ -94,7 +96,9 @@ class EncryptionUtils {
         Encrypted.fromBase16(chipherText),
       );
       decryptedData = decrypted;
-      Logger(":::::::::::::::Decrypted data:::::: ${decryptedData.toString()}");
+      Logger(
+        ":::::::::::::::Decrypted data:::::: 2 ${decryptedData.toString()}",
+      );
     } on Exception catch (e) {
       Logger(":::::::::::::::::Catch:::::::::::::");
       Logger(e.toString());
