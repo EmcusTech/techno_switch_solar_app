@@ -234,11 +234,17 @@ class BleNotifyDataHandler extends GetxController {
       case BleStateMachine.requestingNetworkPacket:
         _handleNetworkPacketResponse(frame);
         break;
+      case BleStateMachine.sendingPollingPacket1:
+        _handlePollingPacket1Response(frame);
+        break;
       case BleStateMachine.requestedPasskey:
         _handlePassKeyRequestResponse(frame, connectedDevice);
         break;
       case BleStateMachine.passkeyEntered:
         _handlePasskeyResponse(frame);
+        break;
+      case BleStateMachine.sendingPollingPacket2:
+        _handlePollingPacket2Response(frame);
         break;
       case BleStateMachine.sendingDummyPacket:
         _handleDummyPacketResponse(frame);
@@ -400,10 +406,9 @@ class BleNotifyDataHandler extends GetxController {
           technoswitchFrameBytes[4]; // Update rx counter from tx counter in response
       _pktTxCnt++;
 
-      // Now prompt for passkey
-      currentBleState(BleStateMachine.requestedPasskey);
-      _emitEvent(BleHandshakeEvent.passkeyPrompt());
-      Logger('Network packet response - State changed to: requestedPasskey');
+      // After network packet, send polling packet 1
+      Logger('Network packet response - Sending polling packet 1...');
+      _requestPollingPacket1();
     } else {
       Logger(
         'Network packet response - ERROR: Unexpected packet type: 0x${pktTyp.toRadixString(16).padLeft(2, '0')}',
@@ -414,6 +419,52 @@ class BleNotifyDataHandler extends GetxController {
         ),
       );
     }
+    Logger('========================================\n');
+  }
+
+  void _requestPollingPacket1() {
+    Logger('========================================');
+    Logger('TX/RX Logs - REQUESTING POLLING PACKET 1');
+    Logger('========================================');
+
+    currentBleState(BleStateMachine.sendingPollingPacket1);
+    _dataTransferManager.sendingPollingPacket1ToBle(
+      dataWritten: (bool isWritten) {
+        if (isWritten) {
+          Logger('Polling packet 1 - Frame written successfully');
+          Logger('Polling packet 1 - Waiting for panel response...');
+        } else {
+          Logger('Polling packet 1 - WARNING: Frame write may have failed');
+        }
+      },
+    );
+    Logger('========================================\n');
+  }
+
+  void _handlePollingPacket1Response(FrameData frame) {
+    Logger('========================================');
+    Logger('TX/RX Logs - POLLING PACKET 1 RESPONSE RECEIVED');
+    Logger('========================================');
+    Logger('Polling packet 1 response - frame: $frame');
+    Logger('Polling packet 1 response - payload data: ${frame.payloadData}');
+
+    if (frame.payloadData.isEmpty) {
+      Logger(
+        'Polling packet 1 response - ERROR: Empty polling packet 1 response',
+      );
+      _emitEvent(BleHandshakeEvent.error('Empty polling packet 1 response'));
+      return;
+    }
+
+    // Polling packet 1 response received successfully
+    Logger(
+      'Polling packet 1 response - SUCCESS: Polling packet 1 acknowledged',
+    );
+
+    // Now prompt for passkey
+    currentBleState(BleStateMachine.requestedPasskey);
+    _emitEvent(BleHandshakeEvent.passkeyPrompt());
+    Logger('Polling packet 1 response - State changed to: requestedPasskey');
     Logger('========================================\n');
   }
 
@@ -520,11 +571,9 @@ class BleNotifyDataHandler extends GetxController {
       Logger(
         'TX/RX Logs - Passkey response - SUCCESS: Passkey accepted by panel (Packet Type: ${pktTyp == 1 ? "NRM" : "ACK"})',
       );
-      // After passkey acceptance, send CONTROL_RES_EVENT_REPORT command
-      Logger(
-        'TX/RX Logs - Passkey response - Sending CONTROL_RES_EVENT_REPORT command...',
-      );
-      _requestControlResEventReport();
+      // After passkey acceptance, send polling packet 2
+      Logger('TX/RX Logs - Passkey response - Sending polling packet 2...');
+      _requestPollingPacket2();
     } else if (status == _invalidPassword) {
       Logger(
         'TX/RX Logs - Passkey response - ERROR: Invalid passkey (status: 0x09)',
@@ -546,6 +595,53 @@ class BleNotifyDataHandler extends GetxController {
         ),
       );
     }
+    Logger('========================================\n');
+  }
+
+  void _requestPollingPacket2() {
+    Logger('========================================');
+    Logger('TX/RX Logs - REQUESTING POLLING PACKET 2');
+    Logger('========================================');
+
+    currentBleState(BleStateMachine.sendingPollingPacket2);
+    _dataTransferManager.sendingPollingPacket2ToBle(
+      dataWritten: (bool isWritten) {
+        if (isWritten) {
+          Logger('Polling packet 2 - Frame written successfully');
+          Logger('Polling packet 2 - Waiting for panel response...');
+        } else {
+          Logger('Polling packet 2 - WARNING: Frame write may have failed');
+        }
+      },
+    );
+    Logger('========================================\n');
+  }
+
+  void _handlePollingPacket2Response(FrameData frame) {
+    Logger('========================================');
+    Logger('TX/RX Logs - POLLING PACKET 2 RESPONSE RECEIVED');
+    Logger('========================================');
+    Logger('Polling packet 2 response - frame: $frame');
+    Logger('Polling packet 2 response - payload data: ${frame.payloadData}');
+
+    if (frame.payloadData.isEmpty) {
+      Logger(
+        'Polling packet 2 response - ERROR: Empty polling packet 2 response',
+      );
+      _emitEvent(BleHandshakeEvent.error('Empty polling packet 2 response'));
+      return;
+    }
+
+    // Polling packet 2 response received successfully
+    Logger(
+      'Polling packet 2 response - SUCCESS: Polling packet 2 acknowledged',
+    );
+
+    // After polling packet 2, send CONTROL_RES_EVENT_REPORT command
+    Logger(
+      'Polling packet 2 response - Sending CONTROL_RES_EVENT_REPORT command...',
+    );
+    _requestControlResEventReport();
     Logger('========================================\n');
   }
 
@@ -837,6 +933,8 @@ enum BleStateMachine {
   timeOut,
   sendingAuthMessage,
   requestingNetworkPacket,
+  sendingPollingPacket1,
+  sendingPollingPacket2,
   sendingDummyPacket,
   connected,
 

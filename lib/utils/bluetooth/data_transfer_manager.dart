@@ -85,6 +85,22 @@ class DataTransferManager {
     sendDataToBle(networkPacket, dataWritten: dataWritten);
   }
 
+  void sendingPollingPacket1ToBle({Function(bool)? dataWritten}) async {
+    List<int> pollingPacket1 = await pollingPacket1Frame();
+    Logger(
+      'polling packet 1 frame <<===========PollingPacket1: $pollingPacket1===========>>',
+    );
+    sendDataToBle(pollingPacket1, dataWritten: dataWritten);
+  }
+
+  void sendingPollingPacket2ToBle({Function(bool)? dataWritten}) async {
+    List<int> pollingPacket2 = await pollingPacket2Frame();
+    Logger(
+      'polling packet 2 frame <<===========PollingPacket2: $pollingPacket2===========>>',
+    );
+    sendDataToBle(pollingPacket2, dataWritten: dataWritten);
+  }
+
   void sendingDummyPacketToBle({
     Function(bool)? dataWritten,
     int pktTxCnt = 0,

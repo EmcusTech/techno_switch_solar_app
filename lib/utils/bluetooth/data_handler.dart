@@ -332,9 +332,17 @@ class DataHandler {
           stepName = 'RECEIVE NETWORK PACKET RESPONSE';
           stepNumber = 6;
           break;
+        case BleStateMachine.sendingPollingPacket1:
+          stepName = 'RECEIVE POLLING PACKET 1 RESPONSE';
+          stepNumber = 7;
+          break;
         case BleStateMachine.passkeyEntered:
           stepName = 'RECEIVE PASSKEY RESPONSE';
           stepNumber = 8;
+          break;
+        case BleStateMachine.sendingPollingPacket2:
+          stepName = 'RECEIVE POLLING PACKET 2 RESPONSE';
+          stepNumber = 9;
           break;
         case BleStateMachine.sendingDummyPacket:
           stepName = 'RECEIVE DUMMY PACKET RESPONSE';

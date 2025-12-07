@@ -1257,6 +1257,16 @@ class _BleListenerHomeScreenState extends State<BleListenerHomeScreen> {
                   ),
                   textAlign: TextAlign.center,
                 ),
+                SizedBox(height: 16),
+                Text(
+                  'version 0.0.1',
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w400,
+                    color: Color(0xFF999999),
+                  ),
+                  textAlign: TextAlign.center,
+                ),
               ],
             ),
           ),

@@ -415,7 +415,10 @@ class _BleListenerScreenState extends State<BleListenerScreen> {
                                 controller: _scrollController,
                                 reverse: false,
                                 padding: EdgeInsets.all(16),
-                                itemCount: _receivedData.length - 2,
+                                itemCount:
+                                    _receivedData.length > 2
+                                        ? _receivedData.length - 2
+                                        : 0,
                                 itemBuilder: (context, index) {
                                   if (index == 0 || index == 1) {
                                     return Container();

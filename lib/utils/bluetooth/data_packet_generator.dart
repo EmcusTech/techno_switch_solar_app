@@ -160,7 +160,682 @@ Uint8List _buildOriginalTechnoswitchPasskeyFrame(
   // EOT
   frameBuffer[215] = frameEot;
 
-  return Uint8List.fromList(frameBuffer);
+  return Uint8List.fromList([
+    0xfe,
+    0x01,
+    0x00,
+    0x01,
+    0x02,
+    0x01,
+    0x05,
+    0x00,
+    0x00,
+    0x00,
+    0x83,
+    0x04,
+    0x04,
+    0x04,
+    0x31,
+    0x39,
+    0x37,
+    0x34,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x88,
+    0x09,
+    0xfd,
+  ]);
+}
+
+/// Builds the original Technoswitch frame structure for polling packet 1.
+///
+/// This creates a 216-byte frame with hardcoded values exactly as specified.
+/// Returns the exact hardcoded frame without calculating checksum.
+///
+/// Returns:
+///   A Uint8List representing the complete original Technoswitch frame (216 bytes)
+Uint8List _buildOriginalTechnoswitchPollingPacket1Frame() {
+  // Exact hardcoded polling packet 1 frame
+  return Uint8List.fromList([
+    0xfe,
+    0x01,
+    0x00,
+    0x00,
+    0x01,
+    0x00,
+    0x05,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x04,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0xEA,
+    0x0B,
+    0xfd,
+  ]);
+}
+
+/// Builds the original Technoswitch frame structure for polling packet 2.
+///
+/// This creates a 216-byte frame with hardcoded values exactly as specified.
+/// Returns the exact hardcoded frame without calculating checksum.
+///
+/// Returns:
+///   A Uint8List representing the complete original Technoswitch frame (216 bytes)
+Uint8List _buildOriginalTechnoswitchPollingPacket2Frame() {
+  // Exact hardcoded polling packet 2 frame
+  return Uint8List.fromList([
+    0xfe,
+    0x01,
+    0x00,
+    0x00,
+    0x03,
+    0x02,
+    0x05,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x04,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0xA1,
+    0x50,
+    0xfd,
+  ]);
 }
 
 /// Calculates Fletcher checksum for the original Technoswitch frame.
@@ -247,7 +922,224 @@ Uint8List _buildOriginalTechnoswitchNetworkPacketFrame(
   // EOT
   frameBuffer[215] = frameEot;
 
-  return Uint8List.fromList(frameBuffer);
+  return Uint8List.fromList([
+    0xfe,
+    0x01,
+    0x00,
+    0x04,
+    0x00,
+    0x00,
+    0x05,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x04,
+    0x01,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0xA3,
+    0x4E,
+    0xfd,
+  ]);
 }
 
 /// Builds the original Technoswitch frame structure for dummy packet.
@@ -919,6 +1811,220 @@ Future<Uint8List> dummyPacketFrame({
 
   Logger(
     'dummy packet frame <<===========Encrypted BLE Frame (${encryptedDataPacket.length} bytes) ready for transmission===========>>',
+  );
+
+  return encryptedDataPacket;
+}
+
+/// Constructs a frame for sending polling packet 1 to a BLE device.
+///
+/// This function uses a nested frame structure:
+/// 1. Builds the original Technoswitch frame (216 bytes) for polling packet 1
+/// 2. Wraps it in the new BLE format (SOF, CMD, TOF, PAYLOAD LEN, PAYLOAD (original frame), CRC, EOF)
+/// 3. Encrypts the entire new BLE frame
+///
+/// Returns:
+///   A Uint8List representing the encrypted BLE frame ready for transmission
+Future<Uint8List> pollingPacket1Frame() async {
+  Logger('========================================');
+  Logger('TX/RX Logs - STEP 6: SEND POLLING PACKET 1 (TX)');
+  Logger('========================================');
+  Logger(
+    'polling packet 1 frame <<===========Building nested frame for polling packet 1===========>>',
+  );
+
+  // Step 1: Build the original Technoswitch frame (216 bytes) - hardcoded
+  Uint8List originalFrame = _buildOriginalTechnoswitchPollingPacket1Frame();
+
+  Logger(
+    'polling packet 1 frame <<===========Original Technoswitch Frame (${originalFrame.length} bytes) built===========>>',
+  );
+
+  // Log original Technoswitch frame
+  String originalFrameHex = originalFrame
+      .map((b) => b.toRadixString(16).toUpperCase().padLeft(2, '0'))
+      .join(' ');
+  String originalFrameAscii = _bytesToAscii(originalFrame);
+  Logger(
+    'TX/RX Logs - Original Technoswitch Frame (${originalFrame.length} bytes):',
+  );
+  Logger('TX/RX Logs - Hex: $originalFrameHex');
+  Logger('TX/RX Logs - ASCII: $originalFrameAscii');
+  Logger('TX/RX Logs - Packet Type: 0x00 (Polling)');
+
+  // Step 2: Wrap the original frame in the new BLE format
+  int originalFrameLength = originalFrame.length; // 216 bytes
+
+  // Build new BLE frame header
+  Uint8List newBleFrame = Uint8List.fromList(<int>[
+    // SOF
+    PREAMBLE_FIRST_BYTE, // 0xAA
+    PREAMBLE_SECOND_BYTE, // 0x55
+    // CMD (using passkey command as placeholder - may need specific command)
+    (BleCommandsList.BLE_PASSKEY_REQ_CMD.value >> 8) & 0xFF, // MSB
+    BleCommandsList.BLE_PASSKEY_REQ_CMD.value & 0xFF, // LSB
+    // TOF (Small Data Frame: 0x02)
+    DATA_PACKET_FRAME_TYPE_BYTE, // 0x02
+    // PAYLOAD LEN (2 bytes, big-endian)
+    (originalFrameLength >> 8) & 0xFF, // MSB
+    originalFrameLength & 0xFF, // LSB
+    // PAYLOAD (original Technoswitch frame)
+    ...originalFrame,
+  ]);
+
+  Logger(
+    'polling packet 1 frame <<===========New BLE Frame header + payload (${newBleFrame.length} bytes)===========>>',
+  );
+
+  // Step 3: Calculate CRC-16 for new BLE frame (from SOF to end of PAYLOAD)
+  int calculatedCRC = convertCrc16(newBleFrame);
+  Logger(
+    "polling packet 1 frame <<===========Calculated CRC: $calculatedCRC (0x${calculatedCRC.toRadixString(16).toUpperCase().padLeft(4, '0')})===========>>",
+  );
+
+  // Step 4: Add CRC and EOF to new BLE frame
+  List<int> completeBleFrame = newBleFrame.toList();
+  completeBleFrame.addAll(intToBytesBigEndian(calculatedCRC));
+  completeBleFrame.add(END_OF_FRAME_FIRST_BYTE); // 0xEE
+  completeBleFrame.add(END_OF_FRAME_SECOND_BYTE); // 0xBB
+
+  Logger(
+    'polling packet 1 frame <<===========Complete New BLE Frame (${completeBleFrame.length} bytes) before encryption===========>>',
+  );
+
+  // Log complete non-encrypted BLE frame (before encryption)
+  String completeBleFrameHex = completeBleFrame
+      .map((b) => b.toRadixString(16).toUpperCase().padLeft(2, '0'))
+      .join(' ');
+  String completeBleFrameAscii = _bytesToAscii(completeBleFrame);
+  Logger(
+    'TX/RX Logs - Complete Non-encrypted BLE Frame (${completeBleFrame.length} bytes):',
+  );
+  Logger('TX/RX Logs - Hex: $completeBleFrameHex');
+  Logger('TX/RX Logs - ASCII: $completeBleFrameAscii');
+  Logger(
+    'TX/RX Logs - Command: 0x${BleCommandsList.BLE_PASSKEY_REQ_CMD.value.toRadixString(16).padLeft(4, '0')}',
+  );
+  Logger('TX/RX Logs - Frame Type: Small Data Frame (0x02)');
+  Logger(
+    'TX/RX Logs - Payload Length: 216 bytes (Original Technoswitch Frame)',
+  );
+  Logger('TX/RX Logs - ========================================\n');
+
+  // Step 5: Encrypt the entire new BLE frame
+  Uint8List encryptedDataPacket = await EncryptionUtils().encryptData(
+    data: completeBleFrame,
+  );
+
+  Logger(
+    'polling packet 1 frame <<===========Encrypted BLE Frame (${encryptedDataPacket.length} bytes) ready for transmission===========>>',
+  );
+
+  return encryptedDataPacket;
+}
+
+/// Constructs a frame for sending polling packet 2 to a BLE device.
+///
+/// This function uses a nested frame structure:
+/// 1. Builds the original Technoswitch frame (216 bytes) for polling packet 2
+/// 2. Wraps it in the new BLE format (SOF, CMD, TOF, PAYLOAD LEN, PAYLOAD (original frame), CRC, EOF)
+/// 3. Encrypts the entire new BLE frame
+///
+/// Returns:
+///   A Uint8List representing the encrypted BLE frame ready for transmission
+Future<Uint8List> pollingPacket2Frame() async {
+  Logger('========================================');
+  Logger('TX/RX Logs - STEP 8: SEND POLLING PACKET 2 (TX)');
+  Logger('========================================');
+  Logger(
+    'polling packet 2 frame <<===========Building nested frame for polling packet 2===========>>',
+  );
+
+  // Step 1: Build the original Technoswitch frame (216 bytes) - hardcoded
+  Uint8List originalFrame = _buildOriginalTechnoswitchPollingPacket2Frame();
+
+  Logger(
+    'polling packet 2 frame <<===========Original Technoswitch Frame (${originalFrame.length} bytes) built===========>>',
+  );
+
+  // Log original Technoswitch frame
+  String originalFrameHex = originalFrame
+      .map((b) => b.toRadixString(16).toUpperCase().padLeft(2, '0'))
+      .join(' ');
+  String originalFrameAscii = _bytesToAscii(originalFrame);
+  Logger(
+    'TX/RX Logs - Original Technoswitch Frame (${originalFrame.length} bytes):',
+  );
+  Logger('TX/RX Logs - Hex: $originalFrameHex');
+  Logger('TX/RX Logs - ASCII: $originalFrameAscii');
+  Logger('TX/RX Logs - Packet Type: 0x00 (Polling)');
+
+  // Step 2: Wrap the original frame in the new BLE format
+  int originalFrameLength = originalFrame.length; // 216 bytes
+
+  // Build new BLE frame header
+  Uint8List newBleFrame = Uint8List.fromList(<int>[
+    // SOF
+    PREAMBLE_FIRST_BYTE, // 0xAA
+    PREAMBLE_SECOND_BYTE, // 0x55
+    // CMD (using passkey command as placeholder - may need specific command)
+    (BleCommandsList.BLE_PASSKEY_REQ_CMD.value >> 8) & 0xFF, // MSB
+    BleCommandsList.BLE_PASSKEY_REQ_CMD.value & 0xFF, // LSB
+    // TOF (Small Data Frame: 0x02)
+    DATA_PACKET_FRAME_TYPE_BYTE, // 0x02
+    // PAYLOAD LEN (2 bytes, big-endian)
+    (originalFrameLength >> 8) & 0xFF, // MSB
+    originalFrameLength & 0xFF, // LSB
+    // PAYLOAD (original Technoswitch frame)
+    ...originalFrame,
+  ]);
+
+  Logger(
+    'polling packet 2 frame <<===========New BLE Frame header + payload (${newBleFrame.length} bytes)===========>>',
+  );
+
+  // Step 3: Calculate CRC-16 for new BLE frame (from SOF to end of PAYLOAD)
+  int calculatedCRC = convertCrc16(newBleFrame);
+  Logger(
+    "polling packet 2 frame <<===========Calculated CRC: $calculatedCRC (0x${calculatedCRC.toRadixString(16).toUpperCase().padLeft(4, '0')})===========>>",
+  );
+
+  // Step 4: Add CRC and EOF to new BLE frame
+  List<int> completeBleFrame = newBleFrame.toList();
+  completeBleFrame.addAll(intToBytesBigEndian(calculatedCRC));
+  completeBleFrame.add(END_OF_FRAME_FIRST_BYTE); // 0xEE
+  completeBleFrame.add(END_OF_FRAME_SECOND_BYTE); // 0xBB
+
+  Logger(
+    'polling packet 2 frame <<===========Complete New BLE Frame (${completeBleFrame.length} bytes) before encryption===========>>',
+  );
+
+  // Log complete non-encrypted BLE frame (before encryption)
+  String completeBleFrameHex = completeBleFrame
+      .map((b) => b.toRadixString(16).toUpperCase().padLeft(2, '0'))
+      .join(' ');
+  String completeBleFrameAscii = _bytesToAscii(completeBleFrame);
+  Logger(
+    'TX/RX Logs - Complete Non-encrypted BLE Frame (${completeBleFrame.length} bytes):',
+  );
+  Logger('TX/RX Logs - Hex: $completeBleFrameHex');
+  Logger('TX/RX Logs - ASCII: $completeBleFrameAscii');
+  Logger(
+    'TX/RX Logs - Command: 0x${BleCommandsList.BLE_PASSKEY_REQ_CMD.value.toRadixString(16).padLeft(4, '0')}',
+  );
+  Logger('TX/RX Logs - Frame Type: Small Data Frame (0x02)');
+  Logger(
+    'TX/RX Logs - Payload Length: 216 bytes (Original Technoswitch Frame)',
+  );
+  Logger('TX/RX Logs - ========================================\n');
+
+  // Step 5: Encrypt the entire new BLE frame
+  Uint8List encryptedDataPacket = await EncryptionUtils().encryptData(
+    data: completeBleFrame,
+  );
+
+  Logger(
+    'polling packet 2 frame <<===========Encrypted BLE Frame (${encryptedDataPacket.length} bytes) ready for transmission===========>>',
   );
 
   return encryptedDataPacket;
