@@ -65,7 +65,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
           useMaterial3: true,
         ),
-        home: const BleListenerHomeScreen(),
+        home: const HomeScreen(),
       ),
     );
   }

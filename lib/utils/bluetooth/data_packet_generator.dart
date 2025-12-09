@@ -85,15 +85,23 @@ Future<Uint8List> passKeyRequestFrame() async {
   return encryptedDataPacket;
 }
 
-/// Builds the original Technoswitch frame structure for passkey.
+/// Builds the original Technoswitch frame structure for passkey (access key).
 ///
-/// This creates a 216-byte frame following the original protocol:
-/// SOT (0xFE) + dest + origin + pktTyp + txp + rxp + payload header (7 bytes) +
-/// payload data (200 bytes) + CRC (2 bytes Fletcher) + EOT (0xFD)
+/// This creates a 216-byte frame following the C code structure:
+/// - Base: FE 01 00 01 (SOT, dest, origin, pktTyp=0x01)
+/// - Byte 4: u8_tx_pkt_cnt (incremented before calling)
+/// - Byte 5: u8_rx_pkt_cnt
+/// - Byte 6: 0x00 (network)
+/// - Byte 10: 0x83 (mode)
+/// - Byte 11: 0x00 (socket)
+/// - Byte 12: 0x04
+/// - Byte 13: 0x04
+/// - Bytes 14-17: passkey bytes (e.g., "1974" = 0x31 0x39 0x37 0x34)
+/// - Checksum calculated on bytes 0-212 (216-3)
 ///
 /// Parameters:
 ///   - passkey: The passkey string to embed in the frame
-///   - pktTxCnt: Packet transmit counter
+///   - pktTxCnt: Packet transmit counter (should be incremented before calling)
 ///   - pktRxCnt: Packet receive counter
 ///
 /// Returns:
@@ -103,63 +111,51 @@ Uint8List _buildOriginalTechnoswitchPasskeyFrame(
   int pktTxCnt,
   int pktRxCnt,
 ) {
-  // Original frame constants from serial_communication_service.dart
-  const int frameSot = 0xFE;
-  const int frameEot = 0xFD;
-  const int scriptOrig = 0;
-  const int scriptDest = 1;
-  const int packetTypeNrm = 1; // NRM packet type
-
-  // Payload header values (similar to access key request)
-  const int logNw = 0;
-  const int logNd = 0;
-  const int logSnd = 0;
-  const int logMo = 0;
-  const int logMd = 0x83; // Mode 0 (reverted from 2)
-  const int logSk = 0;
-  const int logCmd = 0x04; // Command for passkey/access key
-
-  // Build 216-byte frame buffer
+  // Build 216-byte frame buffer, initialized with FE 01 00
   List<int> frameBuffer = List.filled(216, 0);
 
-  // SOT
-  frameBuffer[0] = frameSot;
-  // dest
-  frameBuffer[1] = scriptDest;
-  // origin
-  frameBuffer[2] = scriptOrig;
-  // pktTyp (NRM = 1)
-  frameBuffer[3] = packetTypeNrm;
-  // txp
-  frameBuffer[4] = pktTxCnt & 0xFF;
-  // rxp
-  frameBuffer[5] = pktRxCnt & 0xFF;
+  // Base structure
+  frameBuffer[0] = 0xFE; // SOT
+  frameBuffer[1] = 0x01; // dest
+  frameBuffer[2] = 0x00; // origin
+  frameBuffer[3] = 0x01; // pktTyp (NRM)
 
-  // Payload header (7 bytes)
-  frameBuffer[6] = logNw; // nwk
-  frameBuffer[7] = logNd; // nod
-  frameBuffer[8] = logSnd; // subnod
-  frameBuffer[9] = logMo; // module
-  frameBuffer[10] = logMd; // mode
-  frameBuffer[11] = logSk; // sck
-  frameBuffer[12] = logCmd;
+  // Counters (tx should be incremented before calling)
+  frameBuffer[4] = pktTxCnt & 0xFF; // tx pkt num
+  frameBuffer[5] = pktRxCnt & 0xFF; // rx pkt num
+
+  // Payload header
+  frameBuffer[6] = 0x00; // network number
+  frameBuffer[7] = 0x00; // node
+  frameBuffer[8] = 0x00; // subnode
+  frameBuffer[9] = 0x00; // module
+  frameBuffer[10] = 0x83; // mode
+  frameBuffer[11] = 0x00; // socket number
+  frameBuffer[12] = 0x04; // cmd
   frameBuffer[13] = 0x04; // cmd
 
-  // Convert passkey string to bytes and place in payload (starting at offset 13)
+  // Convert passkey string to bytes and place in payload (starting at offset 14)
   List<int> passkeyBytes = passkey.codeUnits;
   int passkeyLength = passkeyBytes.length < 200 ? passkeyBytes.length : 200;
   for (int i = 0; i < passkeyLength; i++) {
     frameBuffer[14 + i] = passkeyBytes[i];
   }
 
-  // Calculate Fletcher checksum (from SOF to end of payload data, before CRC)
+  // Rest remains zeros (already filled by List.filled)
+
+  // Calculate Fletcher checksum on bytes 0-212 (216-3)
   int crc = _calculateFletcherChecksum(frameBuffer.sublist(0, 213));
   frameBuffer[213] = (crc >> 8) & 0xFF;
   frameBuffer[214] = crc & 0xFF;
 
   // EOT
-  frameBuffer[215] = frameEot;
+  frameBuffer[215] = 0xFD;
 
+  return Uint8List.fromList(frameBuffer);
+}
+
+/// DEPRECATED: Old hardcoded passkey packet (kept for reference)
+Uint8List _buildOriginalTechnoswitchPasskeyFrameOld(String passkey) {
   return Uint8List.fromList([
     0xfe,
     0x01,
@@ -380,7 +376,61 @@ Uint8List _buildOriginalTechnoswitchPasskeyFrame(
   ]);
 }
 
-/// Builds the original Technoswitch frame structure for polling packet 1.
+/// Builds the original Technoswitch frame structure for poll packet.
+///
+/// This creates a 216-byte frame following the C code structure:
+/// - Base: FE 01 00 00 (SOT, dest, origin, pktTyp=0x00)
+/// - Byte 4: (tx_pkt_cnt+1)
+/// - Byte 5: rx_pkt_cnt
+/// - Byte 6: 0x00 (network)
+/// - Byte 11: 0x00 (socket)
+/// - Checksum calculated on bytes 0-212 (216-3)
+///
+/// Parameters:
+///   - pktTxCnt: Packet transmit counter
+///   - pktRxCnt: Packet receive counter
+///
+/// Returns:
+///   A Uint8List representing the complete original Technoswitch frame (216 bytes)
+Uint8List _buildOriginalTechnoswitchPollPacketFrame(
+  int pktTxCnt,
+  int pktRxCnt,
+) {
+  // Build 216-byte frame buffer, initialized with FE 01 00 00
+  List<int> frameBuffer = List.filled(216, 0);
+
+  // Base structure
+  frameBuffer[0] = 0xFE; // SOT
+  frameBuffer[1] = 0x01; // dest
+  frameBuffer[2] = 0x00; // origin
+  frameBuffer[3] = 0x00; // pktTyp (poll packet)
+
+  // Dynamic counters
+  frameBuffer[4] = (pktTxCnt + 1) & 0xFF; // tx pkt num (incremented)
+  frameBuffer[5] = pktRxCnt & 0xFF; // rx pkt num
+
+  // Payload header
+  frameBuffer[6] = 0x00; // network number
+  frameBuffer[7] = 0x00; // node
+  frameBuffer[8] = 0x00; // subnode
+  frameBuffer[9] = 0x00; // module
+  frameBuffer[10] = 0x00; // mode
+  frameBuffer[11] = 0x00; // socket number
+
+  // Rest remains zeros (already filled by List.filled)
+
+  // Calculate Fletcher checksum on bytes 0-212 (216-3)
+  int crc = _calculateFletcherChecksum(frameBuffer.sublist(0, 213));
+  frameBuffer[213] = (crc >> 8) & 0xFF;
+  frameBuffer[214] = crc & 0xFF;
+
+  // EOT
+  frameBuffer[215] = 0xFD;
+
+  return Uint8List.fromList(frameBuffer);
+}
+
+/// Builds the original Technoswitch frame structure for polling packet 1 (DEPRECATED - use _buildOriginalTechnoswitchPollPacketFrame).
 ///
 /// This creates a 216-byte frame with hardcoded values exactly as specified.
 /// Returns the exact hardcoded frame without calculating checksum.
@@ -865,12 +915,17 @@ int _calculateFletcherChecksum(List<int> buffer) {
 
 /// Builds the original Technoswitch frame structure for network packet request.
 ///
-/// This creates a 216-byte frame following the original protocol:
-/// SOT (0xFE) + dest + origin + pktTyp (NWK=0x04) + txp + rxp + payload header (7 bytes) +
-/// payload data (200 bytes, all zeros) + CRC (2 bytes Fletcher) + EOT (0xFD)
+/// This creates a 216-byte frame following the C code structure:
+/// - Base: FE 01 00 04 (SOT, dest, origin, pktTyp=0x04)
+/// - Byte 4: 0x00 (tx_pkt_cnt, reset to 0)
+/// - Byte 5: 0x00 (rx_pkt_cnt)
+/// - Byte 6: 0x05 (network)
+/// - Byte 11: 0x02 (socket)
+/// - Byte 12: 0x01
+/// - Checksum calculated on bytes 0-212 (216-3)
 ///
 /// Parameters:
-///   - pktTxCnt: Packet transmit counter
+///   - pktTxCnt: Packet transmit counter (should be 0, reset before sending)
 ///   - pktRxCnt: Packet receive counter
 ///
 /// Returns:
@@ -879,49 +934,43 @@ Uint8List _buildOriginalTechnoswitchNetworkPacketFrame(
   int pktTxCnt,
   int pktRxCnt,
 ) {
-  // Original frame constants from serial_communication_service.dart
-  const int frameSot = 0xFE;
-  const int frameEot = 0xFD;
-  const int scriptOrig = 0;
-  const int scriptDest = 1;
-  const int packetTypeNwk = 4; // NWK packet type
-
-  // Build 216-byte frame buffer
+  // Build 216-byte frame buffer, initialized with FE 01 00
   List<int> frameBuffer = List.filled(216, 0);
 
-  // SOT
-  frameBuffer[0] = frameSot;
-  // dest
-  frameBuffer[1] = scriptDest;
-  // origin
-  frameBuffer[2] = scriptOrig;
-  // pktTyp (NWK = 4)
-  frameBuffer[3] = packetTypeNwk;
-  // txp
-  frameBuffer[4] = pktTxCnt & 0xFF;
-  // rxp
-  frameBuffer[5] = pktRxCnt & 0xFF;
+  // Base structure
+  frameBuffer[0] = 0xFE; // SOT
+  frameBuffer[1] = 0x01; // dest
+  frameBuffer[2] = 0x00; // origin
+  frameBuffer[3] = 0x04; // pktTyp (NWK)
 
-  // Payload header (7 bytes) - all zeros for network packet
-  frameBuffer[6] = 5; // nwk
-  frameBuffer[7] = 0; // nod
-  frameBuffer[8] = 0; // subnod
-  frameBuffer[9] = 0; // module
-  frameBuffer[10] = 0; // mode
-  frameBuffer[11] = 5; // sck
-  frameBuffer[12] = 0; // cmd
+  // Counters (reset tx to 0)
+  frameBuffer[4] = 0x00; // tx pkt num (reset)
+  frameBuffer[5] = 0x00; // rx pkt num
 
-  // Payload data (200 bytes) - all zeros for network packet request
-  // Already filled with zeros by List.filled(216, 0)
+  // Payload header
+  frameBuffer[6] = 0x05; // network number
+  frameBuffer[7] = 0x00; // node
+  frameBuffer[8] = 0x00; // subnode
+  frameBuffer[9] = 0x00; // module
+  frameBuffer[10] = 0x00; // mode
+  frameBuffer[11] = 0x02; // socket number
+  frameBuffer[12] = 0x01; // cmd
 
-  // Calculate Fletcher checksum (from SOF to end of payload data, before CRC)
+  // Rest remains zeros (already filled by List.filled)
+
+  // Calculate Fletcher checksum on bytes 0-212 (216-3)
   int crc = _calculateFletcherChecksum(frameBuffer.sublist(0, 213));
   frameBuffer[213] = (crc >> 8) & 0xFF;
   frameBuffer[214] = crc & 0xFF;
 
   // EOT
-  frameBuffer[215] = frameEot;
+  frameBuffer[215] = 0xFD;
 
+  return Uint8List.fromList(frameBuffer);
+}
+
+/// DEPRECATED: Old hardcoded network packet (kept for reference)
+Uint8List _buildOriginalTechnoswitchNetworkPacketFrameOld() {
   return Uint8List.fromList([
     0xfe,
     0x01,
@@ -1456,35 +1505,18 @@ Future<Uint8List> networkPacketFrame({
   int pktTxCnt = 0,
   int pktRxCnt = 0,
 }) async {
-  Logger('========================================');
-  Logger('TX/RX Logs - STEP 5: SEND NETWORK PACKET (TX)');
-  Logger('========================================');
-  Logger(
-    'network packet frame <<===========Building nested frame for network packet request===========>>',
-  );
-
   // Step 1: Build the original Technoswitch frame (216 bytes)
   Uint8List originalFrame = _buildOriginalTechnoswitchNetworkPacketFrame(
     pktTxCnt,
     pktRxCnt,
   );
-
-  Logger(
-    'network packet frame <<===========Original Technoswitch Frame (${originalFrame.length} bytes) built===========>>',
-  );
-
-  // Log original Technoswitch frame
+  // Log original Technoswitch frame (TX)
   String originalFrameHex = originalFrame
       .map((b) => b.toRadixString(16).toUpperCase().padLeft(2, '0'))
       .join(' ');
-  String originalFrameAscii = _bytesToAscii(originalFrame);
   Logger(
-    'TX/RX Logs - Original Technoswitch Frame (${originalFrame.length} bytes):',
+    'TX/RX ORIGINAL TECHNOSWITCH LOGS [NETWORK] - TX Frame: $originalFrameHex',
   );
-  Logger('TX/RX Logs - Hex: $originalFrameHex');
-  Logger('TX/RX Logs - ASCII: $originalFrameAscii');
-  Logger('TX/RX Logs - Packet Type: NWK (0x04)');
-  Logger('TX/RX Logs - TX Counter: $pktTxCnt, RX Counter: $pktRxCnt');
 
   // Step 2: Wrap the original frame in the new BLE format
   // New BLE Format: SOF (2) + CMD (2) + TOF (1) + PAYLOAD LEN (2) + PAYLOAD (216) + CRC (2) + EOF (2)
@@ -1508,52 +1540,25 @@ Future<Uint8List> networkPacketFrame({
     ...originalFrame,
   ]);
 
-  Logger(
-    'network packet frame <<===========New BLE Frame header + payload (${newBleFrame.length} bytes)===========>>',
-  );
-
   // Step 3: Calculate CRC-16 for new BLE frame (from SOF to end of PAYLOAD)
   int calculatedCRC = convertCrc16(newBleFrame);
-  Logger(
-    "network packet frame <<===========Calculated CRC: $calculatedCRC (0x${calculatedCRC.toRadixString(16).toUpperCase().padLeft(4, '0')})===========>>",
-  );
 
   // Step 4: Add CRC and EOF to new BLE frame
   List<int> completeBleFrame = newBleFrame.toList();
   completeBleFrame.addAll(intToBytesBigEndian(calculatedCRC));
   completeBleFrame.add(END_OF_FRAME_FIRST_BYTE); // 0xEE
   completeBleFrame.add(END_OF_FRAME_SECOND_BYTE); // 0xBB
-
-  Logger(
-    'network packet frame <<===========Complete New BLE Frame (${completeBleFrame.length} bytes) before encryption===========>>',
-  );
-
-  // Log complete non-encrypted BLE frame (before encryption)
+  // Log complete non-encrypted BLE frame (TX)
   String completeBleFrameHex = completeBleFrame
       .map((b) => b.toRadixString(16).toUpperCase().padLeft(2, '0'))
       .join(' ');
-  String completeBleFrameAscii = _bytesToAscii(completeBleFrame);
   Logger(
-    'TX/RX Logs - Complete Non-encrypted BLE Frame (${completeBleFrame.length} bytes):',
+    'TX/RX COMPLETE TECHNOSWITCH LOGS [NETWORK] - TX BLE Frame (unencrypted): $completeBleFrameHex',
   );
-  Logger('TX/RX Logs - Hex: $completeBleFrameHex');
-  Logger('TX/RX Logs - ASCII: $completeBleFrameAscii');
-  Logger(
-    'TX/RX Logs - Command: 0x${BleCommandsList.BLE_PASSKEY_REQ_CMD.value.toRadixString(16).padLeft(4, '0')}',
-  );
-  Logger('TX/RX Logs - Frame Type: Small Data Frame (0x02)');
-  Logger(
-    'TX/RX Logs - Payload Length: 216 bytes (Original Technoswitch Frame)',
-  );
-  Logger('TX/RX Logs - ========================================\n');
 
   // Step 5: Encrypt the entire new BLE frame
   Uint8List encryptedDataPacket = await EncryptionUtils().encryptData(
     data: completeBleFrame,
-  );
-
-  Logger(
-    'network packet frame <<===========Encrypted BLE Frame (${encryptedDataPacket.length} bytes) ready for transmission===========>>',
   );
 
   return encryptedDataPacket;
@@ -1568,44 +1573,29 @@ Future<Uint8List> networkPacketFrame({
 ///
 /// Parameters:
 ///   - hexPayLoad: The passkey string to send
+///   - pktTxCnt: Packet transmit counter (should be incremented before calling)
+///   - pktRxCnt: Packet receive counter
 ///
 /// Returns:
 ///   A Uint8List representing the encrypted BLE frame ready for transmission
-Future<Uint8List> passKeyFrame(String hexPayLoad) async {
-  Logger('========================================');
-  Logger('TX/RX Logs - STEP 7: SEND PASSKEY (TX)');
-  Logger('========================================');
-  Logger(
-    'passkey frame <<===========Building nested frame for passkey: $hexPayLoad===========>>',
-  );
-
+Future<Uint8List> passKeyFrame(
+  String hexPayLoad, {
+  int pktTxCnt = 0,
+  int pktRxCnt = 0,
+}) async {
   // Step 1: Build the original Technoswitch frame (216 bytes)
-  // Using default packet counters (can be adjusted if needed)
-  int pktTxCnt = 0;
-  int pktRxCnt = 0;
   Uint8List originalFrame = _buildOriginalTechnoswitchPasskeyFrame(
     hexPayLoad,
     pktTxCnt,
     pktRxCnt,
   );
-
-  Logger(
-    'passkey frame <<===========Original Technoswitch Frame (${originalFrame.length} bytes) built===========>>',
-  );
-
-  // Log original Technoswitch frame
+  // Log original Technoswitch frame (TX)
   String originalFrameHex = originalFrame
       .map((b) => b.toRadixString(16).toUpperCase().padLeft(2, '0'))
       .join(' ');
-  String originalFrameAscii = _bytesToAscii(originalFrame);
   Logger(
-    'TX/RX Logs - Original Technoswitch Frame (${originalFrame.length} bytes):',
+    'TX/RX ORIGINAL TECHNOSWITCH LOGS [PASSKEY] - TX Frame: $originalFrameHex',
   );
-  Logger('TX/RX Logs - Hex: $originalFrameHex');
-  Logger('TX/RX Logs - ASCII: $originalFrameAscii');
-  Logger('TX/RX Logs - Passkey Value: "$hexPayLoad"');
-  Logger('TX/RX Logs - Packet Type: NRM (0x01)');
-  Logger('TX/RX Logs - TX Counter: $pktTxCnt, RX Counter: $pktRxCnt');
 
   // Step 2: Wrap the original frame in the new BLE format
   // New BLE Format: SOF (2) + CMD (2) + TOF (1) + PAYLOAD LEN (2) + PAYLOAD (216) + CRC (2) + EOF (2)
@@ -1628,52 +1618,25 @@ Future<Uint8List> passKeyFrame(String hexPayLoad) async {
     ...originalFrame,
   ]);
 
-  Logger(
-    'passkey frame <<===========New BLE Frame header + payload (${newBleFrame.length} bytes)===========>>',
-  );
-
   // Step 3: Calculate CRC-16 for new BLE frame (from SOF to end of PAYLOAD)
   int calculatedCRC = convertCrc16(newBleFrame);
-  Logger(
-    "passkey frame <<===========Calculated CRC: $calculatedCRC (0x${calculatedCRC.toRadixString(16).toUpperCase().padLeft(4, '0')})===========>>",
-  );
 
   // Step 4: Add CRC and EOF to new BLE frame
   List<int> completeBleFrame = newBleFrame.toList();
   completeBleFrame.addAll(intToBytesBigEndian(calculatedCRC));
   completeBleFrame.add(END_OF_FRAME_FIRST_BYTE); // 0xEE
   completeBleFrame.add(END_OF_FRAME_SECOND_BYTE); // 0xBB
-
-  Logger(
-    'passkey frame <<===========Complete New BLE Frame (${completeBleFrame.length} bytes) before encryption===========>>',
-  );
-
-  // Log complete non-encrypted BLE frame (before encryption)
+  // Log complete non-encrypted BLE frame (TX)
   String completeBleFrameHex = completeBleFrame
       .map((b) => b.toRadixString(16).toUpperCase().padLeft(2, '0'))
       .join(' ');
-  String completeBleFrameAscii = _bytesToAscii(completeBleFrame);
   Logger(
-    'TX/RX Logs - Complete Non-encrypted BLE Frame (${completeBleFrame.length} bytes):',
+    'TX/RX COMPLETE TECHNOSWITCH LOGS [PASSKEY] - TX BLE Frame (unencrypted): $completeBleFrameHex',
   );
-  Logger('TX/RX Logs - Hex: $completeBleFrameHex');
-  Logger('TX/RX Logs - ASCII: $completeBleFrameAscii');
-  Logger(
-    'TX/RX Logs - Command: 0x${BleCommandsList.BLE_PASSKEY_REQ_CMD.value.toRadixString(16).padLeft(4, '0')}',
-  );
-  Logger('TX/RX Logs - Frame Type: Small Data Frame (0x02)');
-  Logger(
-    'TX/RX Logs - Payload Length: 216 bytes (Original Technoswitch Frame)',
-  );
-  Logger('TX/RX Logs - ========================================\n');
 
   // Step 5: Encrypt the entire new BLE frame
   Uint8List encryptedDataPacket = await EncryptionUtils().encryptData(
     data: completeBleFrame,
-  );
-
-  Logger(
-    'passkey frame <<===========Encrypted BLE Frame (${encryptedDataPacket.length} bytes) ready for transmission===========>>',
   );
 
   return encryptedDataPacket;
@@ -1816,41 +1779,32 @@ Future<Uint8List> dummyPacketFrame({
   return encryptedDataPacket;
 }
 
-/// Constructs a frame for sending polling packet 1 to a BLE device.
+/// Constructs a frame for sending poll packet to a BLE device.
 ///
 /// This function uses a nested frame structure:
-/// 1. Builds the original Technoswitch frame (216 bytes) for polling packet 1
+/// 1. Builds the original Technoswitch frame (216 bytes) for poll packet with dynamic counters
 /// 2. Wraps it in the new BLE format (SOF, CMD, TOF, PAYLOAD LEN, PAYLOAD (original frame), CRC, EOF)
 /// 3. Encrypts the entire new BLE frame
 ///
+/// Parameters:
+///   - pktTxCnt: Packet transmit counter
+///   - pktRxCnt: Packet receive counter
+///
 /// Returns:
 ///   A Uint8List representing the encrypted BLE frame ready for transmission
-Future<Uint8List> pollingPacket1Frame() async {
-  Logger('========================================');
-  Logger('TX/RX Logs - STEP 6: SEND POLLING PACKET 1 (TX)');
-  Logger('========================================');
-  Logger(
-    'polling packet 1 frame <<===========Building nested frame for polling packet 1===========>>',
+Future<Uint8List> pollPacketFrame({int pktTxCnt = 0, int pktRxCnt = 0}) async {
+  // Step 1: Build the original Technoswitch frame (216 bytes) with dynamic counters
+  Uint8List originalFrame = _buildOriginalTechnoswitchPollPacketFrame(
+    pktTxCnt,
+    pktRxCnt,
   );
-
-  // Step 1: Build the original Technoswitch frame (216 bytes) - hardcoded
-  Uint8List originalFrame = _buildOriginalTechnoswitchPollingPacket1Frame();
-
-  Logger(
-    'polling packet 1 frame <<===========Original Technoswitch Frame (${originalFrame.length} bytes) built===========>>',
-  );
-
-  // Log original Technoswitch frame
+  // Log original Technoswitch frame (TX)
   String originalFrameHex = originalFrame
       .map((b) => b.toRadixString(16).toUpperCase().padLeft(2, '0'))
       .join(' ');
-  String originalFrameAscii = _bytesToAscii(originalFrame);
   Logger(
-    'TX/RX Logs - Original Technoswitch Frame (${originalFrame.length} bytes):',
+    'TX/RX ORIGINAL TECHNOSWITCH LOGS [POLL] - TX Frame: $originalFrameHex',
   );
-  Logger('TX/RX Logs - Hex: $originalFrameHex');
-  Logger('TX/RX Logs - ASCII: $originalFrameAscii');
-  Logger('TX/RX Logs - Packet Type: 0x00 (Polling)');
 
   // Step 2: Wrap the original frame in the new BLE format
   int originalFrameLength = originalFrame.length; // 216 bytes
@@ -1860,7 +1814,7 @@ Future<Uint8List> pollingPacket1Frame() async {
     // SOF
     PREAMBLE_FIRST_BYTE, // 0xAA
     PREAMBLE_SECOND_BYTE, // 0x55
-    // CMD (using passkey command as placeholder - may need specific command)
+    // CMD (using passkey command as placeholder)
     (BleCommandsList.BLE_PASSKEY_REQ_CMD.value >> 8) & 0xFF, // MSB
     BleCommandsList.BLE_PASSKEY_REQ_CMD.value & 0xFF, // LSB
     // TOF (Small Data Frame: 0x02)
@@ -1872,159 +1826,25 @@ Future<Uint8List> pollingPacket1Frame() async {
     ...originalFrame,
   ]);
 
-  Logger(
-    'polling packet 1 frame <<===========New BLE Frame header + payload (${newBleFrame.length} bytes)===========>>',
-  );
-
   // Step 3: Calculate CRC-16 for new BLE frame (from SOF to end of PAYLOAD)
   int calculatedCRC = convertCrc16(newBleFrame);
-  Logger(
-    "polling packet 1 frame <<===========Calculated CRC: $calculatedCRC (0x${calculatedCRC.toRadixString(16).toUpperCase().padLeft(4, '0')})===========>>",
-  );
 
   // Step 4: Add CRC and EOF to new BLE frame
   List<int> completeBleFrame = newBleFrame.toList();
   completeBleFrame.addAll(intToBytesBigEndian(calculatedCRC));
   completeBleFrame.add(END_OF_FRAME_FIRST_BYTE); // 0xEE
   completeBleFrame.add(END_OF_FRAME_SECOND_BYTE); // 0xBB
-
-  Logger(
-    'polling packet 1 frame <<===========Complete New BLE Frame (${completeBleFrame.length} bytes) before encryption===========>>',
-  );
-
-  // Log complete non-encrypted BLE frame (before encryption)
+  // Log complete non-encrypted BLE frame (TX)
   String completeBleFrameHex = completeBleFrame
       .map((b) => b.toRadixString(16).toUpperCase().padLeft(2, '0'))
       .join(' ');
-  String completeBleFrameAscii = _bytesToAscii(completeBleFrame);
   Logger(
-    'TX/RX Logs - Complete Non-encrypted BLE Frame (${completeBleFrame.length} bytes):',
+    'TX/RX COMPLETE TECHNOSWITCH LOGS [POLL] - TX BLE Frame (unencrypted): $completeBleFrameHex',
   );
-  Logger('TX/RX Logs - Hex: $completeBleFrameHex');
-  Logger('TX/RX Logs - ASCII: $completeBleFrameAscii');
-  Logger(
-    'TX/RX Logs - Command: 0x${BleCommandsList.BLE_PASSKEY_REQ_CMD.value.toRadixString(16).padLeft(4, '0')}',
-  );
-  Logger('TX/RX Logs - Frame Type: Small Data Frame (0x02)');
-  Logger(
-    'TX/RX Logs - Payload Length: 216 bytes (Original Technoswitch Frame)',
-  );
-  Logger('TX/RX Logs - ========================================\n');
 
   // Step 5: Encrypt the entire new BLE frame
   Uint8List encryptedDataPacket = await EncryptionUtils().encryptData(
     data: completeBleFrame,
-  );
-
-  Logger(
-    'polling packet 1 frame <<===========Encrypted BLE Frame (${encryptedDataPacket.length} bytes) ready for transmission===========>>',
-  );
-
-  return encryptedDataPacket;
-}
-
-/// Constructs a frame for sending polling packet 2 to a BLE device.
-///
-/// This function uses a nested frame structure:
-/// 1. Builds the original Technoswitch frame (216 bytes) for polling packet 2
-/// 2. Wraps it in the new BLE format (SOF, CMD, TOF, PAYLOAD LEN, PAYLOAD (original frame), CRC, EOF)
-/// 3. Encrypts the entire new BLE frame
-///
-/// Returns:
-///   A Uint8List representing the encrypted BLE frame ready for transmission
-Future<Uint8List> pollingPacket2Frame() async {
-  Logger('========================================');
-  Logger('TX/RX Logs - STEP 8: SEND POLLING PACKET 2 (TX)');
-  Logger('========================================');
-  Logger(
-    'polling packet 2 frame <<===========Building nested frame for polling packet 2===========>>',
-  );
-
-  // Step 1: Build the original Technoswitch frame (216 bytes) - hardcoded
-  Uint8List originalFrame = _buildOriginalTechnoswitchPollingPacket2Frame();
-
-  Logger(
-    'polling packet 2 frame <<===========Original Technoswitch Frame (${originalFrame.length} bytes) built===========>>',
-  );
-
-  // Log original Technoswitch frame
-  String originalFrameHex = originalFrame
-      .map((b) => b.toRadixString(16).toUpperCase().padLeft(2, '0'))
-      .join(' ');
-  String originalFrameAscii = _bytesToAscii(originalFrame);
-  Logger(
-    'TX/RX Logs - Original Technoswitch Frame (${originalFrame.length} bytes):',
-  );
-  Logger('TX/RX Logs - Hex: $originalFrameHex');
-  Logger('TX/RX Logs - ASCII: $originalFrameAscii');
-  Logger('TX/RX Logs - Packet Type: 0x00 (Polling)');
-
-  // Step 2: Wrap the original frame in the new BLE format
-  int originalFrameLength = originalFrame.length; // 216 bytes
-
-  // Build new BLE frame header
-  Uint8List newBleFrame = Uint8List.fromList(<int>[
-    // SOF
-    PREAMBLE_FIRST_BYTE, // 0xAA
-    PREAMBLE_SECOND_BYTE, // 0x55
-    // CMD (using passkey command as placeholder - may need specific command)
-    (BleCommandsList.BLE_PASSKEY_REQ_CMD.value >> 8) & 0xFF, // MSB
-    BleCommandsList.BLE_PASSKEY_REQ_CMD.value & 0xFF, // LSB
-    // TOF (Small Data Frame: 0x02)
-    DATA_PACKET_FRAME_TYPE_BYTE, // 0x02
-    // PAYLOAD LEN (2 bytes, big-endian)
-    (originalFrameLength >> 8) & 0xFF, // MSB
-    originalFrameLength & 0xFF, // LSB
-    // PAYLOAD (original Technoswitch frame)
-    ...originalFrame,
-  ]);
-
-  Logger(
-    'polling packet 2 frame <<===========New BLE Frame header + payload (${newBleFrame.length} bytes)===========>>',
-  );
-
-  // Step 3: Calculate CRC-16 for new BLE frame (from SOF to end of PAYLOAD)
-  int calculatedCRC = convertCrc16(newBleFrame);
-  Logger(
-    "polling packet 2 frame <<===========Calculated CRC: $calculatedCRC (0x${calculatedCRC.toRadixString(16).toUpperCase().padLeft(4, '0')})===========>>",
-  );
-
-  // Step 4: Add CRC and EOF to new BLE frame
-  List<int> completeBleFrame = newBleFrame.toList();
-  completeBleFrame.addAll(intToBytesBigEndian(calculatedCRC));
-  completeBleFrame.add(END_OF_FRAME_FIRST_BYTE); // 0xEE
-  completeBleFrame.add(END_OF_FRAME_SECOND_BYTE); // 0xBB
-
-  Logger(
-    'polling packet 2 frame <<===========Complete New BLE Frame (${completeBleFrame.length} bytes) before encryption===========>>',
-  );
-
-  // Log complete non-encrypted BLE frame (before encryption)
-  String completeBleFrameHex = completeBleFrame
-      .map((b) => b.toRadixString(16).toUpperCase().padLeft(2, '0'))
-      .join(' ');
-  String completeBleFrameAscii = _bytesToAscii(completeBleFrame);
-  Logger(
-    'TX/RX Logs - Complete Non-encrypted BLE Frame (${completeBleFrame.length} bytes):',
-  );
-  Logger('TX/RX Logs - Hex: $completeBleFrameHex');
-  Logger('TX/RX Logs - ASCII: $completeBleFrameAscii');
-  Logger(
-    'TX/RX Logs - Command: 0x${BleCommandsList.BLE_PASSKEY_REQ_CMD.value.toRadixString(16).padLeft(4, '0')}',
-  );
-  Logger('TX/RX Logs - Frame Type: Small Data Frame (0x02)');
-  Logger(
-    'TX/RX Logs - Payload Length: 216 bytes (Original Technoswitch Frame)',
-  );
-  Logger('TX/RX Logs - ========================================\n');
-
-  // Step 5: Encrypt the entire new BLE frame
-  Uint8List encryptedDataPacket = await EncryptionUtils().encryptData(
-    data: completeBleFrame,
-  );
-
-  Logger(
-    'polling packet 2 frame <<===========Encrypted BLE Frame (${encryptedDataPacket.length} bytes) ready for transmission===========>>',
   );
 
   return encryptedDataPacket;
@@ -2065,34 +1885,31 @@ Uint8List _buildOriginalTechnoswitchControlResEventReportFrame(
   const int scriptDest = 1;
   const int packetTypeNrm = 1; // NRM packet type
 
-  // Payload header values according to CONTROL_RES_EVENT_REPORT specification
-  const int mode = 0x83; // MODE = 0x83
-  const int socket = 0; // SOCKET = Reserved (0)
-  const int controlResEventReport = 0x0B; // CONTROL_RES_EVENT_REPORT = 0x0B
-
-  // Build 216-byte frame buffer
+  // Build 216-byte frame buffer, initialized with FE 01 00
   List<int> frameBuffer = List.filled(216, 0);
 
-  // Frame header
-  frameBuffer[0] = frameSot; // SOT
-  frameBuffer[1] = scriptDest; // dest
-  frameBuffer[2] = scriptOrig; // origin
-  frameBuffer[3] = packetTypeNrm; // pktTyp (NRM = 1)
-  frameBuffer[4] = pktTxCnt & 0xFF; // txp
-  frameBuffer[5] = pktRxCnt & 0xFF; // rxp
+  // Base structure
+  frameBuffer[0] = 0xFE; // SOT
+  frameBuffer[1] = 0x01; // dest
+  frameBuffer[2] = 0x00; // origin
+  frameBuffer[3] = 0x01; // pktTyp (NRM)
 
-  // Payload header (7 bytes)
-  frameBuffer[6] = network & 0xFF; // NETWORK
-  frameBuffer[7] = node & 0xFF; // NODE
-  frameBuffer[8] = subnode & 0xFF; // SUBNODE
-  frameBuffer[9] = module & 0xFF; // MODULE
-  frameBuffer[10] = mode; // MODE (0x83)
-  frameBuffer[11] = socket; // SOCKET (Reserved, 0)
-  frameBuffer[12] = controlResEventReport; // CONTROL_RES_EVENT_REPORT (0x0B)
+  // Counters (tx should be incremented before calling)
+  frameBuffer[4] = pktTxCnt & 0xFF; // tx pkt num
+  frameBuffer[5] = pktRxCnt & 0xFF; // rx pkt num
 
-  // Data payload
-  frameBuffer[13] = eventBufferMask & 0xFF; // EVENT_BUFFER_MASK (3)
-  frameBuffer[14] = eventBufferMode & 0xFF; // EVENT_BUFFER_MODE (0)
+  // Payload header (matching C code exactly)
+  frameBuffer[6] = 0x00; // network number
+  frameBuffer[7] = 0x00; // node
+  frameBuffer[8] = 0x00; // subnode
+  frameBuffer[9] = 0x00; // module
+  frameBuffer[10] = 0x83; // mode
+  frameBuffer[11] = 0x04; // socket number (0x04 for CONTROL_RES_EVENT_REPORT)
+  frameBuffer[12] = 0x0B; // CONTROL_RES_EVENT_REPORT command
+  frameBuffer[13] = 0x03; // EVENT_BUFFER_MASK (0x03)
+  frameBuffer[14] =
+      eventBufferMode &
+      0xFF; // EVENT_BUFFER_MODE (0x00 for start, 0x01 for stop)
 
   // Rest of payload (200 bytes) remains zeros (already filled by List.filled(216, 0))
 
@@ -2136,13 +1953,6 @@ Future<Uint8List> controlResEventReportFrame({
   int eventBufferMask = 3,
   int eventBufferMode = 0,
 }) async {
-  Logger('========================================');
-  Logger('TX/RX Logs - CONTROL_RES_EVENT_REPORT: SEND COMMAND (TX)');
-  Logger('========================================');
-  Logger(
-    'control res event report frame <<===========Building nested frame for CONTROL_RES_EVENT_REPORT===========>>',
-  );
-
   // Step 1: Build the original Technoswitch frame (216 bytes)
   Uint8List originalFrame =
       _buildOriginalTechnoswitchControlResEventReportFrame(
@@ -2156,26 +1966,13 @@ Future<Uint8List> controlResEventReportFrame({
         eventBufferMode: eventBufferMode,
       );
 
-  Logger(
-    'control res event report frame <<===========Original Technoswitch Frame (${originalFrame.length} bytes) built===========>>',
-  );
-
-  // Log original Technoswitch frame
+  // Log original Technoswitch frame (TX)
   String originalFrameHex = originalFrame
       .map((b) => b.toRadixString(16).toUpperCase().padLeft(2, '0'))
       .join(' ');
-  String originalFrameAscii = _bytesToAscii(originalFrame);
   Logger(
-    'TX/RX Logs - Original Technoswitch Frame (${originalFrame.length} bytes):',
+    'TX/RX ORIGINAL TECHNOSWITCH LOGS [CONTROL_RES_EVENT_REPORT] - TX Frame: $originalFrameHex',
   );
-  Logger('TX/RX Logs - Hex: $originalFrameHex');
-  Logger('TX/RX Logs - ASCII: $originalFrameAscii');
-  Logger('TX/RX Logs - Packet Type: NRM (0x01)');
-  Logger('TX/RX Logs - Mode: 0x83, Command: 0x0B (CONTROL_RES_EVENT_REPORT)');
-  Logger(
-    'TX/RX Logs - EVENT_BUFFER_MASK: $eventBufferMask, EVENT_BUFFER_MODE: $eventBufferMode',
-  );
-  Logger('TX/RX Logs - TX Counter: $pktTxCnt, RX Counter: $pktRxCnt');
 
   // Step 2: Wrap the original frame in the new BLE format
   int originalFrameLength = originalFrame.length; // 216 bytes
@@ -2197,66 +1994,25 @@ Future<Uint8List> controlResEventReportFrame({
     ...originalFrame,
   ]);
 
-  Logger(
-    'control res event report frame <<===========New BLE Frame header + payload (${newBleFrame.length} bytes)===========>>',
-  );
-
-  // Log non-encrypted TX data (before encryption)
-  String txHex = newBleFrame
-      .map((b) => b.toRadixString(16).toUpperCase().padLeft(2, '0'))
-      .join(' ');
-  String txAscii = _bytesToAscii(newBleFrame);
-  Logger('TX/RX Logs - Non-encrypted TX Data (${newBleFrame.length} bytes):');
-  Logger('TX/RX Logs - Hex: $txHex');
-  Logger('TX/RX Logs - ASCII: $txAscii');
-  Logger(
-    'TX/RX Logs - Command: 0x${BleCommandsList.BLE_CONTROL_RES_EVENT_REPORT_CMD.value.toRadixString(16).padLeft(4, '0')}',
-  );
-  Logger('TX/RX Logs - Frame Type: Small Data Frame (0x02)');
-  Logger('TX/RX Logs - Payload Length: $originalFrameLength bytes');
-
   // Step 3: Calculate CRC-16 for new BLE frame (from SOF to end of PAYLOAD)
   int calculatedCRC = convertCrc16(newBleFrame);
-  Logger(
-    "control res event report frame <<===========Calculated CRC: $calculatedCRC (0x${calculatedCRC.toRadixString(16).toUpperCase().padLeft(4, '0')})===========>>",
-  );
 
   // Step 4: Add CRC and EOF to new BLE frame
   List<int> completeBleFrame = newBleFrame.toList();
   completeBleFrame.addAll(intToBytesBigEndian(calculatedCRC));
   completeBleFrame.add(END_OF_FRAME_FIRST_BYTE); // 0xEE
   completeBleFrame.add(END_OF_FRAME_SECOND_BYTE); // 0xBB
-
-  Logger(
-    'control res event report frame <<===========Complete New BLE Frame (${completeBleFrame.length} bytes) before encryption===========>>',
-  );
-
-  // Log complete non-encrypted BLE frame (before encryption)
+  // Log complete non-encrypted BLE frame (TX)
   String completeBleFrameHex = completeBleFrame
       .map((b) => b.toRadixString(16).toUpperCase().padLeft(2, '0'))
       .join(' ');
-  String completeBleFrameAscii = _bytesToAscii(completeBleFrame);
   Logger(
-    'TX/RX Logs - Complete Non-encrypted BLE Frame (${completeBleFrame.length} bytes):',
+    'TX/RX COMPLETE TECHNOSWITCH LOGS [CONTROL_RES_EVENT_REPORT] - TX BLE Frame (unencrypted): $completeBleFrameHex',
   );
-  Logger('TX/RX Logs - Hex: $completeBleFrameHex');
-  Logger('TX/RX Logs - ASCII: $completeBleFrameAscii');
-  Logger(
-    'TX/RX Logs - Command: 0x${BleCommandsList.BLE_CONTROL_RES_EVENT_REPORT_CMD.value.toRadixString(16).padLeft(4, '0')}',
-  );
-  Logger('TX/RX Logs - Frame Type: Small Data Frame (0x02)');
-  Logger(
-    'TX/RX Logs - Payload Length: 216 bytes (Original Technoswitch Frame)',
-  );
-  Logger('TX/RX Logs - ========================================\n');
 
   // Step 5: Encrypt the entire new BLE frame
   Uint8List encryptedDataPacket = await EncryptionUtils().encryptData(
     data: completeBleFrame,
-  );
-
-  Logger(
-    'control res event report frame <<===========Encrypted BLE Frame (${encryptedDataPacket.length} bytes) ready for transmission===========>>',
   );
 
   return encryptedDataPacket;
@@ -3052,9 +2808,6 @@ int getLargeDataBleCommandByState(LargePacketModule largePacketModule) {
 
     case LargePacketModule.sendingZoneData:
       return BleCommandsList.BLE_SEND_ZONE_DETAILS_BLE_CMD.value;
-
-    default:
-      return BleCommandsList.BLE_LARGE_DATA_REQ_CMD.value;
   }
 }
 
@@ -3105,9 +2858,20 @@ Future<List<Uint8List>> generateListOfWithOutFFLargePacketsFromPayload(
   int sequenceNumber = 1,
   bool isResending = false,
 }) async {
+  Logger('=== PACKET LIST GENERATION (Without FF Skipping) ===');
+  Logger('Input payload size: ${payload.length} bytes');
+  Logger('Sequence number: $sequenceNumber');
+  Logger('Is resending: $isResending');
+
   List<Uint8List> largePacketsList = <Uint8List>[];
   List<List<int>> payLoadChunks = await DataHandler()
       .generateChunksForFirmwareUpgradePayload(payload);
+
+  Logger('Payload chunks created: ${payLoadChunks.length} chunks');
+  Logger(
+    'Chunk sizes: ${payLoadChunks.map((chunk) => chunk.length).join(', ')} bytes',
+  );
+
   for (int i = 0; i < payLoadChunks.length; i++) {
     Uint8List? tempLargeDataPacket;
     if (isResending && i == sequenceNumber - 1) {
@@ -3129,9 +2893,18 @@ Future<List<Uint8List>> generateListOfWithOutFFLargePacketsFromPayload(
       );
     }
     largePacketsList.add(tempLargeDataPacket);
+
+    if (i < 3 || i == payLoadChunks.length - 1) {
+      Logger('Packet[$i]: ${tempLargeDataPacket.length} bytes');
+    }
   }
-  Logger(largePacketsList.length.toString());
-  Logger("largePacketsList.length.toString()");
+
+  Logger('Total packets generated: ${largePacketsList.length}');
+  Logger(
+    'Total packet data size: ${largePacketsList.fold<int>(0, (sum, packet) => sum + packet.length)} bytes',
+  );
+  Logger('=== PACKET LIST GENERATION COMPLETE (Without FF Skipping) ===');
+
   return largePacketsList;
 }
 
@@ -3140,12 +2913,22 @@ Future<List<Uint8List>> generateListOfWithoutSkippingFFLargePacketsFromPayload(
   int sequenceNumber = 1,
   bool isResending = false,
 }) async {
+  Logger('=== PACKET LIST GENERATION (Without Skipping FF) ===');
+  Logger('Input payload size: ${payload.length} bytes');
+  Logger('Sequence number: $sequenceNumber');
+  Logger('Is resending: $isResending');
+
   List<Uint8List> largePacketsList = <Uint8List>[];
   List<List<int>> payLoadChunks = await DataHandler()
       .generateChunksForFirmwareUpgradeWithFullPayload(payload);
 
+  Logger('Payload chunks created: ${payLoadChunks.length} chunks');
+  Logger(
+    'Chunk sizes: ${payLoadChunks.map((chunk) => chunk.length).join(', ')} bytes',
+  );
+
   for (int i = 0; i < payLoadChunks.length; i++) {
-    Logger("Packet $i : ${payLoadChunks[i]}");
+    Logger("Processing chunk $i: ${payLoadChunks[i].length} bytes");
     Uint8List tempLargeDataPacket;
 
     // Always generate the packet without skipping any FF chunks
@@ -3169,7 +2952,17 @@ Future<List<Uint8List>> generateListOfWithoutSkippingFFLargePacketsFromPayload(
     }
 
     largePacketsList.add(tempLargeDataPacket);
+
+    if (i < 3 || i == payLoadChunks.length - 1) {
+      Logger('Packet[$i] generated: ${tempLargeDataPacket.length} bytes');
+    }
   }
+
+  Logger('Total packets generated: ${largePacketsList.length}');
+  Logger(
+    'Total packet data size: ${largePacketsList.fold<int>(0, (sum, packet) => sum + packet.length)} bytes',
+  );
+  Logger('=== PACKET LIST GENERATION COMPLETE (Without Skipping FF) ===');
 
   return largePacketsList;
 }

@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/screens/scanned_screen.dart';
+import 'package:techno_switch_solar_app/screens/device_connecting_screen.dart';
 import 'package:techno_switch_solar_app/widgets/scanning_widget.dart';
 import 'package:usb_serial/usb_serial.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -775,8 +776,25 @@ class _ScanningScreenState extends State<ScanningScreen>
                   curve: Curves.easeOutBack,
                   child: GestureDetector(
                     onTap: () {
-                      // optional: navigate or show details
-                      // Navigator.push(...);
+                      // Stop scanning before connecting
+                      if (_isScanning) {
+                        _stopScanning();
+                      }
+
+                      // Navigate to device connecting screen
+                      if (mounted) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder:
+                                (context) => DeviceConnectingScreen(
+                                  selectedDevice: device,
+                                  scanType: _selectedScanType!,
+                                  isLiveEvent: widget.isLiveEvent,
+                                ),
+                          ),
+                        );
+                      }
                     },
                     child: Material(
                       color: Colors.white.withOpacity(0.95),

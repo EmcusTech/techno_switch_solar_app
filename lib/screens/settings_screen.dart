@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:techno_switch_solar_app/controllers/updates_controller.dart';
+import 'package:techno_switch_solar_app/widgets/firmware_upgrade_bottom_sheet.dart';
 
 class SettingsScreen extends StatefulWidget {
   final String panelName;
@@ -185,6 +188,23 @@ class _SettingsContentState extends State<_SettingsContent> {
           _settingTile(title: 'Extinguishing out Settings', onTap: () {}),
           _settingTile(title: 'L-Bus Settings', onTap: () {}),
           _settingTile(title: 'Panel Information', onTap: () {}),
+          _settingTile(
+            title: 'Firmware Upgrade',
+            onTap: () {
+              // Ensure UpdatesController is registered
+              if (!Get.isRegistered<UpdatesController>()) {
+                Get.put(UpdatesController());
+              }
+              showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                backgroundColor: Colors.transparent,
+                isDismissible: false,
+                enableDrag: true,
+                builder: (context) => FirmwareUpgradeBottomSheet(),
+              );
+            },
+          ),
           SizedBox(height: 80),
         ],
       ),
@@ -192,11 +212,11 @@ class _SettingsContentState extends State<_SettingsContent> {
   }
 
   Widget _settingTile({required String title, required VoidCallback onTap}) {
-    return Column(
-      children: [
-        GestureDetector(
-          onTap: onTap,
-          child: Padding(
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          Padding(
             padding: const EdgeInsets.symmetric(vertical: 15),
             child: Row(
               children: [
@@ -224,9 +244,9 @@ class _SettingsContentState extends State<_SettingsContent> {
               ],
             ),
           ),
-        ),
-        Divider(color: Colors.black.withValues(alpha: 0.18), thickness: 1),
-      ],
+          Divider(color: Colors.black.withValues(alpha: 0.18), thickness: 1),
+        ],
+      ),
     );
   }
 }

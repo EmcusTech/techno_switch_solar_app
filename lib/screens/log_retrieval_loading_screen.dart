@@ -9,6 +9,16 @@ import 'package:techno_switch_solar_app/screens/event_log_screen.dart';
 import 'package:techno_switch_solar_app/utils/serial_communication_service.dart';
 import 'package:techno_switch_solar_app/services/app_services.dart';
 import 'package:techno_switch_solar_app/services/navigation_service.dart';
+import 'package:techno_switch_solar_app/utils/bluetooth/ble_notify_data_handler.dart';
+import 'package:techno_switch_solar_app/utils/bluetooth/bt_utils.dart';
+import 'package:techno_switch_solar_app/utils/bluetooth/data_handler.dart';
+import 'package:techno_switch_solar_app/utils/bluetooth/data_helper.dart';
+import 'package:techno_switch_solar_app/utils/bluetooth/data_transfer_manager.dart';
+import 'package:techno_switch_solar_app/utils/event_constants.dart';
+import 'package:techno_switch_solar_app/utils/timestamp_converter.dart';
+import 'package:techno_switch_solar_app/models/frame_data.dart';
+import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:get/get.dart';
 
 class LogRetrievalLoadingScreen extends StatefulWidget {
   const LogRetrievalLoadingScreen({super.key});
@@ -33,8 +43,17 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
   int _logsCount = 0;
   StreamSubscription? _logSubscription;
   StreamSubscription? _statusSubscription;
+  StreamSubscription? _handshakeSubscription;
+  StreamSubscription? _bleNotificationSubscription;
   String? _capturedPanelId; // Capture panel ID before potential disconnect
   static const int totalExpectedLogs = 1000; // Total logs expected
+
+  // BLE handler
+  BleNotifyDataHandler? _bleHandler;
+  BluetoothDevice? _connectedBleDevice;
+  bool _isReceivingLogs = false;
+  int _logEvtSearchNumber = 999; // Start from 999 and decrement
+  Timer? _logRetrievalTimeout;
 
   @override
   void initState() {
@@ -63,39 +82,169 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
     _startLogRetrieval();
   }
 
-  void _startLogRetrieval() {
-    // Check if already connected and start log retrieval
-    if (AppServices.isConnected) {
-      // Capture the panel ID before starting log retrieval (before potential disconnect)
+  void _startLogRetrieval() async {
+    // ========== NEW BLE LOG RETRIEVAL IMPLEMENTATION ==========
+    // Check BLE connection first
+    final btUtils = BtUtils();
+    final connectedDevice = await btUtils.getConnectedDevices();
+
+    if (connectedDevice != null && Get.isRegistered<BleNotifyDataHandler>()) {
+      // BLE connection detected
+      _bleHandler = Get.find<BleNotifyDataHandler>();
+
+      // Verify BLE state is connected
+      if (_bleHandler!.currentBleState.value == BleStateMachine.connected) {
+        setState(() {
+          _connectionStatus = "BLE Connected - Starting log retrieval...";
+        });
+
+        // Capture panel ID if available
+        _capturedPanelId = connectedDevice.platformName;
+        print("DEBUG: LogRetrieval - BLE Device: $_capturedPanelId");
+
+        // Listen to handshake events for responses
+        _handshakeSubscription = _bleHandler!.handshakeEvents.listen((event) {
+          print("DEBUG: LogRetrieval - Handshake event: ${event.type}");
+          if (event.type == BleHandshakeEventType.error) {
+            setState(() {
+              _connectionStatus = "Error: ${event.message ?? 'Unknown error'}";
+            });
+          }
+        });
+
+        // Store connected device for notification listening
+        _connectedBleDevice = connectedDevice;
+
+        // Set up BLE notification listener for log packets
+        _setupBleNotificationListener();
+
+        // Send CONTROL_RES_EVENT_REPORT command
+        try {
+          _bleHandler!.requestControlResEventReport();
+
+          setState(() {
+            _connectionStatus =
+                "CONTROL_RES_EVENT_REPORT sent - Waiting for logs...";
+            _isReceivingLogs = true;
+          });
+
+          // Set timeout for log retrieval (30 seconds)
+          _logRetrievalTimeout = Timer(Duration(seconds: 30), () {
+            if (mounted && _isReceivingLogs) {
+              _completeLogRetrieval();
+            }
+          });
+        } catch (e) {
+          setState(() {
+            _connectionStatus = "Error sending command: $e";
+          });
+        }
+      } else {
+        setState(() {
+          _connectionStatus =
+              "BLE not fully connected. State: ${_bleHandler!.currentBleState.value.name}";
+        });
+      }
+    }
+    // ========== OLD USB SERIAL IMPLEMENTATION (COMMENTED OUT) ==========
+    // Fallback to USB Serial if BLE not connected
+    else if (AppServices.isConnected) {
+      // // Check if already connected and start log retrieval
+      // if (AppServices.isConnected) {
+      //   // Capture the panel ID before starting log retrieval (before potential disconnect)
+      //   _capturedPanelId = AppServices.serialService.currentPanelId;
+      //   print("DEBUG: LogRetrieval - Captured panel ID: $_capturedPanelId");
+
+      //   _connectionStatus = "Starting log retrieval...";
+
+      //   // Listen to log stream
+      //   _logSubscription = _serialService.logStream.listen((logModel) {
+      //     setState(() {
+      //       _retrievedLogs.add(logModel);
+      //       _logsCount = _retrievedLogs.length;
+      //       // Update progress based on logs retrieved out of total expected
+      //       _progress = (_logsCount / totalExpectedLogs).clamp(0.0, 1.0);
+      //     });
+      //   });
+
+      //   // Listen to status stream
+      //   _statusSubscription = _serialService.statusStream.listen((status) {
+      //     setState(() {
+      //       _connectionStatus = status;
+      //       print("DEBUG: LogRetrieval - Status: $status");
+
+      //       // Check if log retrieval is completed
+      //       if (status.contains("Completed") || status.contains("Disconnected")) {
+      //         // Set progress to 100% if completed
+      //         _progress = 1.0;
+      //         // Small delay before navigation to show completion
+      //         Future.delayed(Duration(milliseconds: 500), () {
+      //           if (mounted) {
+      //             // Navigate to EventLogScreen with retrieved logs and captured panel ID
+      //             Navigator.of(context).pushReplacement(
+      //               MaterialPageRoute(
+      //                 builder:
+      //                     (context) => EventLogScreen(
+      //                       logDataList: _retrievedLogs,
+      //                       panelName: 'RHINO2008',
+      //                       panelVersionNo: '0.98',
+      //                       isStandalone: true, // This is standalone mode
+      //                       panelId:
+      //                           _capturedPanelId, // Pass the captured panel ID
+      //                     ),
+      //               ),
+      //             );
+      //           }
+      //         });
+      //       }
+      //     });
+      //   });
+
+      //   // Start the actual log retrieval process
+      //   _serialService.startLogRetrieval();
+      // } else {
+      //   _connectionStatus = "Device not connected";
+      //   // Fallback navigation after 5 seconds if not connected
+      //   // _controller.forward();
+      //   _controller.addStatusListener((status) {
+      //     if (status == AnimationStatus.completed) {
+      //       // Navigator.of(context).pushReplacement(
+      //       //   MaterialPageRoute(
+      //       //     builder:
+      //       //         (context) => EventLogScreen(
+      //       //           logDataList: [], // Empty list if not connected
+      //       //           panelName: 'RHINO2008',
+      //       //           panelVersionNo: '0.98',
+      //       //         ),
+      //       //   ),
+      //       // );
+      //     }
+      //   });
+      // }
+
+      // Original USB serial flow
       _capturedPanelId = AppServices.serialService.currentPanelId;
       print("DEBUG: LogRetrieval - Captured panel ID: $_capturedPanelId");
 
       _connectionStatus = "Starting log retrieval...";
 
-      // Listen to log stream
       _logSubscription = _serialService.logStream.listen((logModel) {
         setState(() {
           _retrievedLogs.add(logModel);
           _logsCount = _retrievedLogs.length;
-          // Update progress based on logs retrieved out of total expected
           _progress = (_logsCount / totalExpectedLogs).clamp(0.0, 1.0);
         });
       });
 
-      // Listen to status stream
       _statusSubscription = _serialService.statusStream.listen((status) {
         setState(() {
           _connectionStatus = status;
           print("DEBUG: LogRetrieval - Status: $status");
 
-          // Check if log retrieval is completed
           if (status.contains("Completed") || status.contains("Disconnected")) {
-            // Set progress to 100% if completed
             _progress = 1.0;
-            // Small delay before navigation to show completion
             Future.delayed(Duration(milliseconds: 500), () {
               if (mounted) {
-                // Navigate to EventLogScreen with retrieved logs and captured panel ID
                 Navigator.of(context).pushReplacement(
                   MaterialPageRoute(
                     builder:
@@ -103,9 +252,8 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
                           logDataList: _retrievedLogs,
                           panelName: 'RHINO2008',
                           panelVersionNo: '0.98',
-                          isStandalone: true, // This is standalone mode
-                          panelId:
-                              _capturedPanelId, // Pass the captured panel ID
+                          isStandalone: true,
+                          panelId: _capturedPanelId,
                         ),
                   ),
                 );
@@ -115,7 +263,6 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
         });
       });
 
-      // Start the actual log retrieval process
       _serialService.startLogRetrieval();
     } else {
       _connectionStatus = "Device not connected";
@@ -133,6 +280,288 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
           //         ),
           //   ),
           // );
+        }
+      });
+    }
+  }
+
+  // Set up BLE notification listener for log packets
+  void _setupBleNotificationListener() async {
+    if (_connectedBleDevice == null) return;
+
+    try {
+      // Get the read characteristic directly
+      final services = await _connectedBleDevice!.discoverServices();
+      BluetoothCharacteristic? readChar;
+
+      for (var service in services) {
+        if (service.uuid.toString().toUpperCase() ==
+            BtUtils().primaryServiceGuid.toString().toUpperCase()) {
+          for (var char in service.characteristics) {
+            if (char.uuid.toString().toUpperCase() ==
+                BtUtils().primaryReadCharGuid.toString().toUpperCase()) {
+              readChar = char;
+              break;
+            }
+          }
+          break;
+        }
+      }
+
+      if (readChar != null && readChar.properties.notify) {
+        // Listen to the characteristic stream directly
+        _bleNotificationSubscription = readChar.onValueReceived.listen((
+          List<int> data,
+        ) {
+          _handleBleNotification(data);
+        });
+
+        // Ensure notifications are enabled
+        await readChar.setNotifyValue(true);
+        print(
+          "DEBUG: LogRetrieval - BLE notifications enabled for log packets",
+        );
+      } else {
+        setState(() {
+          _connectionStatus = "Failed to find read characteristic";
+        });
+      }
+    } catch (e) {
+      print("DEBUG: LogRetrieval - Error setting up notifications: $e");
+      setState(() {
+        _connectionStatus = "Error: $e";
+      });
+    }
+  }
+
+  // Handle incoming BLE notifications
+  void _handleBleNotification(List<int> rxData) async {
+    if (rxData.isEmpty || !_isReceivingLogs) return;
+
+    try {
+      // Decrypt the frame if encryption is enabled
+      final bool shouldDecrypt =
+          _bleHandler != null &&
+          _bleHandler!.encryptionDecryptionState.value ==
+              EncryptionDecryptionState.enabled;
+
+      FrameData? frame;
+      if (shouldDecrypt) {
+        try {
+          frame = await DataHandler().decryptTheDataPacketWithoutConversion(
+            rxData,
+          );
+        } catch (e) {
+          print("DEBUG: LogRetrieval - Failed to decrypt frame: $e");
+          return;
+        }
+      } else {
+        // Parse non-encrypted frame
+        frame = DataTransferManager().parseRxFrame(rxData);
+      }
+
+      if (frame == null) {
+        print("DEBUG: LogRetrieval - Failed to parse frame");
+        return;
+      }
+
+      // Extract nested Technoswitch frame from payload
+      List<int> technoswitchFrameBytes = convertStringListToHex(
+        frame.payloadData,
+      );
+
+      // Validate Technoswitch frame structure (should be 216 bytes)
+      if (technoswitchFrameBytes.length != 216) {
+        print(
+          "DEBUG: LogRetrieval - Invalid frame length: ${technoswitchFrameBytes.length}",
+        );
+        return;
+      }
+
+      // Validate frame markers
+      const int frameSot = 0xFE;
+      const int frameEot = 0xFD;
+      if (technoswitchFrameBytes[0] != frameSot ||
+          technoswitchFrameBytes[215] != frameEot) {
+        print("DEBUG: LogRetrieval - Invalid frame markers");
+        return;
+      }
+
+      // Check if this is a log packet
+      // Log packets have: pktTyp=NRM (0x01), mode=2 (dbSetupReq), cmd=2 (eventStatusCmd)
+      int pktTyp = technoswitchFrameBytes[3];
+      int mode = technoswitchFrameBytes[10];
+      int cmd = technoswitchFrameBytes[12];
+
+      const int packetTypeNrm = 1; // NRM packet type
+      const int dbSetupReq = 2; // Mode for database setup request
+      const int eventStatusCmd = 2; // Command for event status
+
+      if (pktTyp == packetTypeNrm &&
+          mode == dbSetupReq &&
+          cmd == eventStatusCmd) {
+        // This is a log packet - process it
+        print("DEBUG: LogRetrieval - Log packet received");
+        _processLogPacket(technoswitchFrameBytes);
+
+        // Decrement search number
+        if (_logEvtSearchNumber > 0) {
+          _logEvtSearchNumber--;
+        } else {
+          // Reached end of logs
+          _completeLogRetrieval();
+        }
+      } else {
+        print(
+          "DEBUG: LogRetrieval - Non-log packet: pktTyp=$pktTyp, mode=$mode, cmd=$cmd",
+        );
+      }
+    } catch (e) {
+      print("DEBUG: LogRetrieval - Error processing notification: $e");
+    }
+  }
+
+  // Process log packet and convert to LogModel
+  void _processLogPacket(List<int> evtData) {
+    try {
+      // Extract timestamp (bytes 12-16)
+      List<int> timestamp = evtData.sublist(12, 16);
+      int timestampDecimal =
+          timestamp[3] |
+          (timestamp[2] << 8) |
+          (timestamp[1] << 16) |
+          (timestamp[0] << 24);
+
+      // Use current time if timestamp is invalid
+      DateTime eventTime =
+          timestampDecimal != 0x00
+              ? TimestampConverter.clockTimeFromTimeStamp(timestampDecimal)
+              : DateTime.now();
+
+      // Extract Event ID (bytes 126-129)
+      int eventId =
+          (evtData[126] << 24) |
+          (evtData[127] << 16) |
+          (evtData[128] << 8) |
+          (evtData[129] << 0);
+
+      // Extract event text (bytes 42-124)
+      String evtTextAscii;
+      List<int> evtText = evtData.sublist(42, 124);
+      if (evtText.length > 1 && evtText[1] != 0x00) {
+        int textLen = evtText[1];
+        List<int> evtTextValue = evtText.sublist(2, 2 + textLen);
+        evtTextAscii = String.fromCharCodes(evtTextValue);
+      } else {
+        evtTextAscii = "NO-TEXT";
+      }
+
+      // Extract panel source
+      String panelSource;
+      if (evtData[9] == EventConstants.evtTypeNetworkAddress) {
+        panelSource =
+            evtData[29] == 0
+                ? "Module"
+                : evtData[29] == 1
+                ? "Panel No. ${evtData[30]}"
+                : evtData[29] == 2
+                ? "Repeater No. ${evtData[30]}"
+                : evtData[29] == 3
+                ? "SOLAR"
+                : evtData[29] == 4
+                ? "Server No. ${evtData[30]}"
+                : "";
+      } else if (evtData[9] == EventConstants.evtTypeAccess) {
+        panelSource =
+            evtData[29] == 0
+                ? "Control"
+                : evtData[29] == 1
+                ? "Keyboard"
+                : evtData[29] == 2
+                ? "SOLAR"
+                : evtData[29] == 3
+                ? "Server"
+                : "";
+      } else {
+        panelSource = "";
+      }
+
+      // Create LogModel if event ID is valid
+      if (eventId != 0) {
+        LogModel logModel = LogModel(
+          panelText: panelSource,
+          eventId: (eventId + 1).toString(),
+          eventDateTime: eventTime,
+          panelNo: evtData[0].toString(),
+          lBusNo: evtData[1].toString(),
+          moduleNo: evtData[2].toString(),
+          eventStatus: EventConstants.getEventStatusValue(evtData[10]),
+          eventClass: EventConstants.getEventClassValue(evtData[7]),
+          eventSource: panelSource,
+          eventType: EventConstants.getEventType(evtData[9]),
+          eventSubType: EventConstants.getEventDescription(
+            evtData[9],
+            evtData[11],
+          ),
+          identifier: EventConstants.getEventIdentifier(
+            evtData[9],
+            evtData[29],
+            evtData[30],
+            evtData[31],
+          ),
+          text: evtTextAscii,
+          isValid: timestampDecimal != 0x00,
+          retrievedAt: DateTime.now(),
+        );
+
+        // Add log to list and update UI
+        if (mounted) {
+          setState(() {
+            _retrievedLogs.add(logModel);
+            _logsCount = _retrievedLogs.length;
+            _progress = (_logsCount / totalExpectedLogs).clamp(0.0, 1.0);
+            _connectionStatus =
+                "Receiving logs... $_logsCount logs received (${(_progress * 100).toInt()}%)";
+          });
+        }
+
+        print(
+          "DEBUG: LogRetrieval - Log $_logsCount received: ${logModel.eventType}",
+        );
+      }
+    } catch (e) {
+      print("DEBUG: LogRetrieval - Error processing log packet: $e");
+    }
+  }
+
+  // Complete log retrieval and navigate to EventLogScreen
+  void _completeLogRetrieval() {
+    if (!_isReceivingLogs) return;
+
+    _isReceivingLogs = false;
+    _logRetrievalTimeout?.cancel();
+
+    if (mounted) {
+      setState(() {
+        _progress = 1.0;
+        _connectionStatus = "Log retrieval completed. Total: $_logsCount logs";
+      });
+
+      // Small delay before navigation to show completion
+      Future.delayed(Duration(milliseconds: 500), () {
+        if (mounted) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder:
+                  (context) => EventLogScreen(
+                    logDataList: _retrievedLogs,
+                    panelName: 'RHINO2008',
+                    panelVersionNo: '0.98',
+                    isStandalone: true,
+                    panelId: _capturedPanelId,
+                  ),
+            ),
+          );
         }
       });
     }
@@ -244,6 +673,20 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
                   fontSize: 14,
                   fontWeight: FontWeight.w400,
                 ),
+              ),
+            ),
+            // Show connection status
+            Padding(
+              padding: const EdgeInsets.only(top: 130),
+              child: Text(
+                _connectionStatus,
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w400,
+                  color: Color(0xFF918F8F),
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 2,
               ),
             ),
             Padding(
@@ -391,6 +834,9 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
     _timer?.cancel();
     _logSubscription?.cancel();
     _statusSubscription?.cancel();
+    _handshakeSubscription?.cancel();
+    _bleNotificationSubscription?.cancel();
+    _logRetrievalTimeout?.cancel();
     super.dispose();
   }
 }

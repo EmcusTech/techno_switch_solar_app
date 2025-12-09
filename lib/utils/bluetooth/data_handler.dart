@@ -103,7 +103,13 @@ class DataHandler {
     List<int> payload,
   ) async {
     List<List<int>> payloadChunkList = <List<int>>[];
-    int chunkSize = enBLE_PAYLOAD_SIZE_PER_PACKET;
+    // Firmware upgrade uses 256-byte chunks (no sequence number)
+    int chunkSize =
+        256; // Changed from 484 (482 + 2 sequence) to 256 bytes without sequence number
+
+    Logger(
+      'Firmware Upgrade: Using chunk size ${chunkSize} bytes (no sequence number)',
+    );
 
     // Step 1: Generate chunks from payload
     for (int i = 0; i < payload.length - 100; i += chunkSize) {
@@ -119,16 +125,16 @@ class DataHandler {
         continue; // Skip this chunk
       }
 
-      // Add the non-skipped chunk to the list
+      // Add the non-skipped chunk to the list (no sequence number added)
       payloadChunkList.add(tempSubList);
     }
 
-    // Step 3: Adding sequence numbers to the payload chunks
-    for (int j = 0; j < payloadChunkList.length; j++) {
-      List<int> sequenceNumber = intToBytesLittleEndian(j + 1);
-
-      payloadChunkList[j].insertAll(0, sequenceNumber);
-    }
+    // OLD CODE (commented out - sequence number removed):
+    // // Step 3: Adding sequence numbers to the payload chunks
+    // for (int j = 0; j < payloadChunkList.length; j++) {
+    //   List<int> sequenceNumber = intToBytesLittleEndian(j + 1);
+    //   payloadChunkList[j].insertAll(0, sequenceNumber);
+    // }
 
     return payloadChunkList;
   }
@@ -137,36 +143,40 @@ class DataHandler {
     List<int> payload,
   ) async {
     List<List<int>> payloadChunkList = <List<int>>[];
-    int chunkSize = enBLE_PAYLOAD_SIZE_PER_PACKET;
+    // Firmware upgrade uses 256-byte chunks (no sequence number)
+    int chunkSize =
+        256; // Changed from 484 (482 + 2 sequence) to 256 bytes without sequence number
 
-    int tempSequenceNumber = 0;
-    bool isGoneThroughFF = false;
+    Logger(
+      'Firmware Upgrade: Using chunk size ${chunkSize} bytes (no sequence number)',
+    );
 
     // Step 1: Generate chunks from the complete payload
     for (int i = 0; i < payload.length; i += chunkSize) {
-      tempSequenceNumber = tempSequenceNumber + 1;
       List<int> tempSubList = payload.sublist(
         i,
         i + chunkSize > payload.length ? payload.length : i + chunkSize,
       );
 
+      // Step 2: Check if the chunk is full of 0xFF and skip if it is
       if (tempSubList.every((int e) => e == 0xFF)) {
-        isGoneThroughFF = true;
         continue; // Skip this chunk
       }
 
-      if (isGoneThroughFF) {
-        List<int> sequenceNumber = intToBytesLittleEndian(
-          tempSequenceNumber - 1,
-        );
-        List<int> chunkSizeByes = intToBytesLittleEndian(chunkSize);
-        payloadChunkList.add(<int>[...sequenceNumber, ...chunkSizeByes]);
-        isGoneThroughFF = false;
-      }
-      List<int> sequenceNumber = intToBytesLittleEndian(tempSequenceNumber);
-      tempSubList.insertAll(0, sequenceNumber);
+      // OLD CODE (commented out - sequence number removed):
+      // bool isGoneThroughFF = false;
+      // if (isGoneThroughFF) {
+      //   List<int> sequenceNumber = intToBytesLittleEndian(
+      //     tempSequenceNumber - 1,
+      //   );
+      //   List<int> chunkSizeByes = intToBytesLittleEndian(chunkSize);
+      //   payloadChunkList.add(<int>[...sequenceNumber, ...chunkSizeByes]);
+      //   isGoneThroughFF = false;
+      // }
+      // List<int> sequenceNumber = intToBytesLittleEndian(tempSequenceNumber);
+      // tempSubList.insertAll(0, sequenceNumber);
 
-      // Add the chunk to the list (no skipping logic)
+      // Add the chunk to the list (no sequence number added)
       payloadChunkList.add(tempSubList);
     }
 
@@ -332,17 +342,21 @@ class DataHandler {
           stepName = 'RECEIVE NETWORK PACKET RESPONSE';
           stepNumber = 6;
           break;
-        case BleStateMachine.sendingPollingPacket1:
-          stepName = 'RECEIVE POLLING PACKET 1 RESPONSE';
+        case BleStateMachine.sendingPollPacket:
+          stepName = 'RECEIVE POLL PACKET RESPONSE';
           stepNumber = 7;
           break;
-        case BleStateMachine.passkeyEntered:
-          stepName = 'RECEIVE PASSKEY RESPONSE';
+        case BleStateMachine.sendingPasskeyPacket:
+          stepName = 'PASSKEY PACKET SENT (response in poll packet)';
           stepNumber = 8;
           break;
-        case BleStateMachine.sendingPollingPacket2:
-          stepName = 'RECEIVE POLLING PACKET 2 RESPONSE';
+        case BleStateMachine.sendingControlResEventReport:
+          stepName = 'CONTROL_RES_EVENT_REPORT SENT (response in poll packet)';
           stepNumber = 9;
+          break;
+        case BleStateMachine.receivingEventLogs:
+          stepName = 'RECEIVE EVENT LOG DATA';
+          stepNumber = 10;
           break;
         case BleStateMachine.sendingDummyPacket:
           stepName = 'RECEIVE DUMMY PACKET RESPONSE';

@@ -23,6 +23,7 @@ import 'package:techno_switch_solar_app/utils/bluetooth/ble_notify_data_handler.
 import 'package:techno_switch_solar_app/utils/bluetooth/data_handler.dart';
 import 'package:techno_switch_solar_app/utils/bluetooth/data_helper.dart';
 import 'package:techno_switch_solar_app/utils/logger.dart';
+import 'package:techno_switch_solar_app/controllers/updates_controller.dart';
 import 'bt_utils.dart';
 import 'data_packet_generator.dart';
 
@@ -62,8 +63,14 @@ class DataTransferManager {
   void sendingPasskeyToBle(
     String password, {
     Function(bool)? dataWritten,
+    int pktTxCnt = 0,
+    int pktRxCnt = 0,
   }) async {
-    List<int> passKeyValuePacket = await passKeyFrame(password);
+    List<int> passKeyValuePacket = await passKeyFrame(
+      password,
+      pktTxCnt: pktTxCnt,
+      pktRxCnt: pktRxCnt,
+    );
     Logger(
       'passkey frame <<===========PasskeyValuePacket: $passKeyValuePacket===========>>',
     );
@@ -85,20 +92,19 @@ class DataTransferManager {
     sendDataToBle(networkPacket, dataWritten: dataWritten);
   }
 
-  void sendingPollingPacket1ToBle({Function(bool)? dataWritten}) async {
-    List<int> pollingPacket1 = await pollingPacket1Frame();
-    Logger(
-      'polling packet 1 frame <<===========PollingPacket1: $pollingPacket1===========>>',
+  void sendingPollPacketToBle({
+    Function(bool)? dataWritten,
+    int pktTxCnt = 0,
+    int pktRxCnt = 0,
+  }) async {
+    List<int> pollPacket = await pollPacketFrame(
+      pktTxCnt: pktTxCnt,
+      pktRxCnt: pktRxCnt,
     );
-    sendDataToBle(pollingPacket1, dataWritten: dataWritten);
-  }
-
-  void sendingPollingPacket2ToBle({Function(bool)? dataWritten}) async {
-    List<int> pollingPacket2 = await pollingPacket2Frame();
     Logger(
-      'polling packet 2 frame <<===========PollingPacket2: $pollingPacket2===========>>',
+      'poll packet frame <<===========PollPacket: $pollPacket===========>>',
     );
-    sendDataToBle(pollingPacket2, dataWritten: dataWritten);
+    sendDataToBle(pollPacket, dataWritten: dataWritten);
   }
 
   void sendingDummyPacketToBle({
@@ -1300,11 +1306,17 @@ class DataTransferManager {
     int packetsSentCount = 0;
     Logger("Sequence Number");
     Logger(sequenceNumber.toString());
-    // Get.lazyPut(() => UpdatesController());
-    // final UpdatesController forUpdateController = Get.find<UpdatesController>();
-    // InstallationController installerController =
-    //     Get.find<InstallationController>();
-    // Calculate the initial progress value
+
+    // Get UpdatesController if available for progress tracking
+    UpdatesController? forUpdateController;
+    try {
+      if (Get.isRegistered<UpdatesController>()) {
+        forUpdateController = Get.find<UpdatesController>();
+      }
+    } catch (e) {
+      // UpdatesController not available, continue without progress tracking
+      Logger('UpdatesController not available: $e');
+    }
 
     ///if the sequenceNumber != 1 then we will send the packet 3 times to the ble with few delay
     if (isResending) {
@@ -1337,47 +1349,22 @@ class DataTransferManager {
       await sendDataToBleWithResponse(
         largePacketsList[i],
         dataWritten: (bool isWritten) {
-          // double value = forUpdateController.progressbarIndex.value;
-          // if ((forUpdateController.tempCurrentIndex.value + 1) == i) {
-          //   forUpdateController.tempCurrentIndex(i);
-          //   value = forUpdateController.progressbarIndex.value + 1;
-          //   Logger("value.toString()");
-          //   Logger(value.toString());
-          //   Logger(forUpdateController.totalPacketLength.toString());
-          //   forUpdateController.progressbarIndex(value);
-          //   forUpdateController.progressbarCount(
-          //     forUpdateController.progressbarIndex.value /
-          //         forUpdateController.totalPacketLength,
-          //   );
-          // } else {
-          //   Logger("Difference came on $sequenceNumber");
-          //   Logger(
-          //     "Current index ${forUpdateController.tempCurrentIndex.value}",
-          //   );
-          //   Logger("Ongoing index $i");
-          // }
-
-          // if (Get.find<BleNotifyDataHandler>().currentLargePacketModule.value !=
-          //     LargePacketModule.sendingProjectData) {
-          //   installerController.progressBarValues(
-          //     (i + 1) / largePacketsList.length,
-          //   );
-          // }
-
-          // if (Get.find<BleNotifyDataHandler>().currentLargePacketModule.value ==
-          //     LargePacketModule.panelNetworkData) {
-          //   int totalPacketsToSend = largePacketsList.length * 21;
-          //   installerController.progressBarForNetworkDataValues(
-          //     (installerController.currentSendingNetworkIndex *
-          //             largePacketsList.length) /
-          //         totalPacketsToSend,
-          //   );
-          // }
-          // Logger(
-          //   "||||||||||||||||||||||||||||||||||Large Data Written ($i)($isWritten)||Progress : ${(installerController.progressBarValues.value * 100).toStringAsFixed(1)}%||||Length: ${largePacketsList.length}||||||||||||||||||||||||||||",
-          // );
-          // Logger(largePacketsList[i].toString());
-          // if (isWritten) {}
+          // Update progress for firmware upgrade
+          if (forUpdateController != null &&
+              Get.find<BleNotifyDataHandler>().currentLargePacketModule.value ==
+                  LargePacketModule.firmWareUpgrade) {
+            if ((forUpdateController.tempCurrentIndex.value + 1) == i) {
+              forUpdateController.tempCurrentIndex(i);
+              int value = forUpdateController.progressbarIndex.value + 1;
+              forUpdateController.progressbarIndex(value);
+              if (forUpdateController.totalPacketLength.value > 0) {
+                forUpdateController.progressbarCount(
+                  forUpdateController.progressbarIndex.value.toDouble() /
+                      forUpdateController.totalPacketLength.value.toDouble(),
+                );
+              }
+            }
+          }
         },
       );
       await Future<dynamic>.delayed(const Duration(milliseconds: 1));
