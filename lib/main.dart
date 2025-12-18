@@ -1,15 +1,47 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_logs/flutter_logs.dart';
+import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/screens/ble_listener_home_screen.dart';
 import 'package:techno_switch_solar_app/screens/home_screen.dart';
 import 'package:techno_switch_solar_app/services/app_services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/services.dart';
 
+final BleManager ble = BleManager();
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Initialize app services
   await AppServices.initialize();
+
+  await FlutterLogs.initLogs(
+    logLevelsEnabled: <LogLevel>[
+      LogLevel.INFO,
+      LogLevel.WARNING,
+      LogLevel.ERROR,
+      LogLevel.SEVERE,
+    ],
+    timeStampFormat: TimeStampFormat.TIME_FORMAT_READABLE,
+    directoryStructure: DirectoryStructure.SINGLE_FILE_FOR_DAY,
+    logTypesEnabled: <String>["techno_switch", "BLELogs"],
+    logFileExtension: LogFileExtension.LOG,
+    logsWriteDirectoryName: "TechnoSwitchLogs",
+    logsExportDirectoryName: "TechnoSwitchLogs/Exported",
+    debugFileOperations: true,
+    isDebuggable: true,
+    logsRetentionPeriodInDays: 7,
+    zipsRetentionPeriodInDays: 3,
+    autoDeleteZipOnExport: true,
+    autoClearLogs: true,
+    enabled: true,
+  );
+
+  FlutterLogs.logInfo(
+    "TechnoSwitchLogs",
+    "<${DateTime.now()}>",
+    "----------------------setUpLogs: Setting up logs..-----------------",
+  );
 
   SystemChrome.setSystemUIOverlayStyle(
     SystemUiOverlayStyle(
@@ -20,6 +52,9 @@ void main() async {
     ),
   );
   runApp(const MyApp());
+
+  // Start BLE state machine
+  // ble.bleProcess.runStateMachine();
 }
 
 class MyApp extends StatefulWidget {

@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/screens/device_connecting_screen.dart';
 import 'package:techno_switch_solar_app/screens/scanning_screen.dart';
 import 'package:techno_switch_solar_app/services/navigation_service.dart';
 import 'package:usb_serial/usb_serial.dart';
-import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+// import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
 class ScannedScreen extends StatefulWidget {
   final List<dynamic>
@@ -314,10 +315,9 @@ class _ScannedScreenState extends State<ScannedScreen> {
   String _getDeviceName(dynamic device) {
     if (widget.scanType == ScanType.usb && device is UsbDevice) {
       return device.productName ?? 'USB Solar Device';
-    } else if (widget.scanType == ScanType.bluetooth && device is ScanResult) {
-      return device.device.platformName.isNotEmpty
-          ? device.device.platformName
-          : 'BLE Solar Device';
+    } else if (widget.scanType == ScanType.bluetooth &&
+        device is DiscoveredDevice) {
+      return device.name.isNotEmpty ? device.name : 'BLE Solar Device';
     }
     return 'Unknown Device';
   }
@@ -325,8 +325,9 @@ class _ScannedScreenState extends State<ScannedScreen> {
   String _getDeviceInfo(dynamic device) {
     if (widget.scanType == ScanType.usb && device is UsbDevice) {
       return 'VID: ${device.vid?.toRadixString(16) ?? 'Unknown'} | PID: ${device.pid?.toRadixString(16) ?? 'Unknown'}';
-    } else if (widget.scanType == ScanType.bluetooth && device is ScanResult) {
-      return 'MAC: ${device.device.remoteId} | RSSI: ${device.rssi} dBm';
+    } else if (widget.scanType == ScanType.bluetooth &&
+        device is DiscoveredDevice) {
+      return 'MAC: ${device.id} | RSSI: ${device.rssi} dBm';
     }
     return 'No information available';
   }

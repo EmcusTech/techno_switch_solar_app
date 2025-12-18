@@ -1,20 +1,34 @@
 import 'dart:async';
-import 'dart:io';
-import 'package:flutter_blue_plus/flutter_blue_plus.dart' as fbp;
+
+import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:techno_switch_solar_app/utils/bluetooth_constants.dart';
 
 class BluetoothService {
-  StreamSubscription<List<fbp.ScanResult>>? _scanSub;
-  final StreamController<List<fbp.ScanResult>> _resultsController =
-      StreamController<List<fbp.ScanResult>>.broadcast();
+  /// flutter_reactive_ble instance
+  final FlutterReactiveBle _ble = FlutterReactiveBle();
 
-  fbp.BluetoothDevice? _connectedDevice;
-  fbp.BluetoothCharacteristic? _readCharacteristic;
-  fbp.BluetoothCharacteristic? _writeCharacteristic;
+  /// Scan handling
+  StreamSubscription<DiscoveredDevice>? _scanSub;
+  final List<DiscoveredDevice> _scanResults = [];
+  final StreamController<List<DiscoveredDevice>> _resultsController =
+      StreamController<List<DiscoveredDevice>>.broadcast();
 
-  Stream<List<fbp.ScanResult>> get scanResultsStream =>
+  /// Connection handling
+  StreamSubscription<ConnectionStateUpdate>? _connectionSub;
+  DiscoveredDevice? _connectedDevice;
+
+  /// Characteristics
+  QualifiedCharacteristic? _readCharacteristic;
+  QualifiedCharacteristic? _writeCharacteristic;
+
+  /// Public scan stream
+  Stream<List<DiscoveredDevice>> get scanResultsStream =>
       _resultsController.stream;
+
+  /* -------------------------------------------------------------------------- */
+  /*                               PERMISSIONS                                   */
+  /* -------------------------------------------------------------------------- */
 
   Future<void> requestPermissions() async {
     await Permission.bluetooth.request();
@@ -24,96 +38,204 @@ class BluetoothService {
     await Permission.location.request();
   }
 
+  /* -------------------------------------------------------------------------- */
+  /*                         BLUETOOTH STATE (IMPORTANT)                         */
+  /* -------------------------------------------------------------------------- */
+
+  /// flutter_reactive_ble CANNOT turn Bluetooth ON/OFF
+  /// This only checks whether Bluetooth is usable
   Future<bool> ensurePoweredOn() async {
-    if (await fbp.FlutterBluePlus.isSupported == false) return false;
-    await fbp.FlutterBluePlus.turnOn();
-    return true;
+    final status = await _ble.statusStream.first;
+    return status == BleStatus.ready;
   }
 
-  Future<void> startScanning({
-    Duration timeout = const Duration(seconds: 4),
-  }) async {
-    if (Platform.isAndroid) {
-      print("SCAN START SCAN:::::::::::::::::::");
-      await fbp.FlutterBluePlus.startScan(
-        androidScanMode: fbp.AndroidScanMode.lowLatency,
-        continuousUpdates: true,
-        removeIfGone: const Duration(seconds: 5),
-        timeout: const Duration(seconds: 10),
-        withServices: [fbp.Guid(BleUuids.primaryServiceUuid)],
-      );
-    } else {
-      await fbp.FlutterBluePlus.startScan(
-        continuousUpdates: true,
-        timeout: const Duration(seconds: 10),
-        removeIfGone: const Duration(seconds: 5),
-        withServices: [fbp.Guid(BleUuids.primaryServiceUuid)],
-      );
-    }
+  /* -------------------------------------------------------------------------- */
+  /*                                   SCAN                                     */
+  /* -------------------------------------------------------------------------- */
+
+  Future<void> startScanning() async {
+    // Clear stale devices
+    _scanResults.clear();
+
     await _scanSub?.cancel();
-    _scanSub = fbp.FlutterBluePlus.scanResults.listen((results) {
-      _resultsController.add(results);
-    });
+
+    _scanSub = _ble
+        .scanForDevices(
+          withServices: [BleUuids.primaryService],
+          scanMode: ScanMode.lowLatency,
+        )
+        .listen(
+          (device) {
+            final exists = _scanResults.any((d) => d.id == device.id);
+
+            if (!exists) {
+              _scanResults.add(device);
+              _resultsController.add(List.unmodifiable(_scanResults));
+            }
+          },
+          onError: (e) {
+            // Scan errors are non-fatal but should be logged
+            print('Scan error: $e');
+          },
+        );
   }
 
   Future<void> stopScanning() async {
-    await fbp.FlutterBluePlus.stopScan();
     await _scanSub?.cancel();
     _scanSub = null;
   }
 
-  Future<bool> connect(
-    fbp.BluetoothDevice device, {
-    Duration timeout = const Duration(seconds: 10),
+  /* -------------------------------------------------------------------------- */
+  /*                                 CONNECT                                    */
+  /* -------------------------------------------------------------------------- */
+
+  Future<void> connect(
+    DiscoveredDevice device, {
+    Duration timeout = const Duration(seconds: 8),
   }) async {
+    // Defensive cleanup
+    await disconnect();
+
+    final connectionStream = _ble.connectToDevice(
+      id: device.id,
+      connectionTimeout: const Duration(seconds: 8),
+    );
+
+    final Completer<void> connectedCompleter = Completer();
     _connectedDevice = device;
-    await device.connect(timeout: timeout).onError((error, stackTrace) async {
-      // ignore if already connected
-    });
 
-    final services = await device.discoverServices();
-    for (final service in services) {
-      if (service.uuid == BleUuids.primaryService) {
-        for (final characteristic in service.characteristics) {
-          if (characteristic.uuid == BleUuids.primaryReadChar) {
-            _readCharacteristic = characteristic;
-          }
-          if (characteristic.uuid == BleUuids.primaryWriteChar) {
-            _writeCharacteristic = characteristic;
-          }
-        }
-        break;
+    // _connectionSub = _ble
+    //     .connectToDevice(id: device.id, connectionTimeout: timeout)
+    //     .listen(
+    //       (update) async {
+    //         switch (update.connectionState) {
+    //           case DeviceConnectionState.connected:
+    //             await _prepareCharacteristics(device);
+    //             completer.complete(true);
+    //             break;
+
+    //           case DeviceConnectionState.disconnected:
+    //             if (!completer.isCompleted) {
+    //               completer.complete(false);
+    //             }
+    //             await disconnect();
+    //             break;
+
+    //           case DeviceConnectionState.connecting:
+    //             // no-op
+    //             break;
+    //           default:
+    //             break;
+    //         }
+    //       },
+    //       onError: (e) {
+    //         if (!completer.isCompleted) {
+    //           completer.complete(false);
+    //         }
+    //       },
+    //     );
+
+    connectionStream.listen((update) {
+      print("Connection state: ${update.connectionState}");
+
+      if (update.connectionState == DeviceConnectionState.connected) {
+        print("Connected!");
+
+        _readCharacteristic = QualifiedCharacteristic(
+          serviceId: BleUuids.primaryService,
+          characteristicId: BleUuids.primaryReadChar,
+          deviceId: device.id,
+        );
+
+        _writeCharacteristic = QualifiedCharacteristic(
+          serviceId: BleUuids.primaryService,
+          characteristicId: BleUuids.primaryWriteChar,
+          deviceId: device.id,
+        );
+
+        connectedCompleter.complete();
       }
-    }
 
-    if (_readCharacteristic == null || _writeCharacteristic == null) {
-      await disconnect();
-      return false;
-    }
-
-    await _readCharacteristic!.setNotifyValue(true);
-    return true;
+      if (update.connectionState == DeviceConnectionState.disconnected) {
+        print("Disconnected.");
+      }
+    });
+    await _ble.requestMtu(
+      deviceId: device.id,
+      mtu: 247, // safe value
+    );
+    await Future.delayed(const Duration(milliseconds: 200));
+    await connectedCompleter.future;
   }
 
-  Stream<List<int>>? get notifyStream => _readCharacteristic?.onValueReceived;
+  /* -------------------------------------------------------------------------- */
+  /*                          CHARACTERISTIC SETUP                               */
+  /* -------------------------------------------------------------------------- */
+
+  Future<void> _prepareCharacteristics(DiscoveredDevice device) async {
+    _readCharacteristic = QualifiedCharacteristic(
+      serviceId: BleUuids.primaryService,
+      characteristicId: BleUuids.primaryReadChar,
+      deviceId: device.id,
+    );
+
+    _writeCharacteristic = QualifiedCharacteristic(
+      serviceId: BleUuids.primaryService,
+      characteristicId: BleUuids.primaryWriteChar,
+      deviceId: device.id,
+    );
+  }
+
+  /* -------------------------------------------------------------------------- */
+  /*                                NOTIFY                                      */
+  /* -------------------------------------------------------------------------- */
+
+  Stream<List<int>>? get notifyStream {
+    if (_readCharacteristic == null) return null;
+
+    return _ble.subscribeToCharacteristic(_readCharacteristic!);
+  }
+
+  /* -------------------------------------------------------------------------- */
+  /*                                  WRITE                                     */
+  /* -------------------------------------------------------------------------- */
 
   Future<void> write(List<int> data, {bool withoutResponse = true}) async {
     if (_writeCharacteristic == null) return;
-    await _writeCharacteristic!.write(data, withoutResponse: withoutResponse);
-  }
 
-  Future<void> disconnect() async {
-    try {
-      await _connectedDevice?.disconnect();
-    } finally {
-      _connectedDevice = null;
-      _readCharacteristic = null;
-      _writeCharacteristic = null;
+    if (withoutResponse) {
+      await _ble.writeCharacteristicWithoutResponse(
+        _writeCharacteristic!,
+        value: data,
+      );
+    } else {
+      await _ble.writeCharacteristicWithResponse(
+        _writeCharacteristic!,
+        value: data,
+      );
     }
   }
 
+  /* -------------------------------------------------------------------------- */
+  /*                                DISCONNECT                                  */
+  /* -------------------------------------------------------------------------- */
+
+  Future<void> disconnect() async {
+    await _connectionSub?.cancel();
+    _connectionSub = null;
+
+    _connectedDevice = null;
+    _readCharacteristic = null;
+    _writeCharacteristic = null;
+  }
+
+  /* -------------------------------------------------------------------------- */
+  /*                                  CLEANUP                                   */
+  /* -------------------------------------------------------------------------- */
+
   void dispose() {
     _scanSub?.cancel();
+    _connectionSub?.cancel();
     _resultsController.close();
   }
 }

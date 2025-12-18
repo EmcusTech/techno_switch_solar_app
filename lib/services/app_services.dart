@@ -1,4 +1,5 @@
-import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+// import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 import 'package:techno_switch_solar_app/utils/serial_communication_service.dart';
 import 'package:techno_switch_solar_app/services/app_state.dart';
 import 'package:techno_switch_solar_app/services/bluetooth_connection_manager.dart';
@@ -35,7 +36,7 @@ class AppServices {
       serialService.connectionState;
 
   /// Get connected device
-  static BluetoothDevice? get connectedDevice => serialService.connectedDevice;
+  static DiscoveredDevice? get connectedDevice => serialService.connectedDevice;
 
   /// Initialize services (call once at app startup)
   static Future<void> initialize() async {
@@ -55,9 +56,7 @@ class AppServices {
 
       // Update device name when connected
       if (service.connectedDevice != null) {
-        AppState.updateConnectedDeviceName(
-          service.connectedDevice!.platformName,
-        );
+        AppState.updateConnectedDeviceName(service.connectedDevice!.name);
       } else {
         AppState.updateConnectedDeviceName(null);
       }
@@ -103,7 +102,7 @@ class AppServices {
   }
 
   /// Get available devices
-  static Future<List<BluetoothDevice>> scanForDevices() async {
+  static Future<List<DiscoveredDevice>> scanForDevices() async {
     return await serialService.scanForDevices();
   }
 

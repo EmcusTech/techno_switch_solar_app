@@ -3,8 +3,9 @@ import 'dart:io';
 import 'dart:math';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+// import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:percent_indicator/percent_indicator.dart';
@@ -16,8 +17,9 @@ import 'package:techno_switch_solar_app/utils/bluetooth/ble_notify_data_handler.
 import 'package:techno_switch_solar_app/utils/bluetooth/bt_utils.dart';
 import 'package:techno_switch_solar_app/utils/bluetooth_service.dart'
     as app_bluetooth;
-import 'package:techno_switch_solar_app/utils/logger.dart';
+import 'package:techno_switch_solar_app/utils/logger.dart' as logger;
 import 'package:techno_switch_solar_app/widgets/scanning_widget.dart';
+import 'package:usb_serial/usb_serial.dart';
 
 enum FirmwareType { mainPanel, bleChip }
 
@@ -58,7 +60,7 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
   bool _isScanning = false;
   bool _isConnecting = false;
   List<dynamic> _discoveredDevices = []; // Can be ScanResult or BluetoothDevice
-  BluetoothDevice? _selectedDevice;
+  DiscoveredDevice? _selectedDevice;
   StreamSubscription<BleHandshakeEvent>? _handshakeSubscription;
   bool _handshakeComplete = false;
   String _connectionStatus = '';
@@ -70,6 +72,8 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
       app_bluetooth.BluetoothService();
   StreamSubscription? _bleResultsSub;
   late final AnimationController _sweepController;
+
+  StreamSubscription<DeviceConnectionState>? _connectionSub;
 
   // Slot assignment (stable positions)
   final Map<String, int> _assignedSlot = {}; // deviceKey -> slotIndex
@@ -98,7 +102,7 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
         _bleHandler = Get.put(BleNotifyDataHandler());
       }
     } catch (e) {
-      Logger('BleNotifyDataHandler not available: $e');
+      logger.Logger('BleNotifyDataHandler not available: $e');
       _bleHandler = Get.put(BleNotifyDataHandler());
     }
 
@@ -186,7 +190,7 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
 
   Future<void> _checkInitialConnection() async {
     final btUtils = BtUtils();
-    final connectedDevice = await btUtils.getConnectedDevices();
+    final connectedDevice = await btUtils.getConnectedDevice();
 
     if (connectedDevice != null && Get.isRegistered<BleNotifyDataHandler>()) {
       final handler = Get.find<BleNotifyDataHandler>();
@@ -280,7 +284,9 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
                 onChanged: (value) {
                   setState(() {
                     _testMode = value;
-                    Logger('Test Mode ${value ? "ENABLED" : "DISABLED"}');
+                    logger.Logger(
+                      'Test Mode ${value ? "ENABLED" : "DISABLED"}',
+                    );
                   });
                 },
                 activeColor: Color(0xFFEC1D24),
@@ -465,7 +471,7 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
                   if (_testMode) {
                     // Skip connection step in test mode
                     _currentStep = FirmwareUpgradeStep.chooseType;
-                    Logger(
+                    logger.Logger(
                       'TEST MODE: Skipping BLE connection step, going directly to Choose Type',
                     );
                   } else {
@@ -498,7 +504,7 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
   Future<bool> _checkBleConnection() async {
     try {
       final btUtils = BtUtils();
-      final connectedDevice = await btUtils.getConnectedDevices();
+      final connectedDevice = await btUtils.getConnectedDevice();
       if (connectedDevice == null) return false;
 
       // Check if BLE handler is registered and state is connected
@@ -509,7 +515,7 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
 
       return false;
     } catch (e) {
-      Logger('Error checking BLE connection: $e');
+      logger.Logger('Error checking BLE connection: $e');
       return false;
     }
   }
@@ -623,7 +629,7 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  _selectedDevice?.platformName ?? 'Connected Device',
+                  _selectedDevice?.name ?? 'Connected Device',
                   style: GoogleFonts.inter(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
@@ -872,19 +878,17 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
             separatorBuilder: (context, index) => SizedBox(height: 12),
             itemBuilder: (context, index) {
               final device = _discoveredDevices[index];
-              BluetoothDevice? bluetoothDevice;
+              DiscoveredDevice? bluetoothDevice;
 
-              if (device is ScanResult) {
-                bluetoothDevice = device.device;
-              } else if (device is BluetoothDevice) {
+              if (device is DiscoveredDevice) {
                 bluetoothDevice = device;
               }
 
               if (bluetoothDevice == null) return SizedBox();
 
               final deviceName =
-                  bluetoothDevice.platformName.isNotEmpty
-                      ? bluetoothDevice.platformName
+                  bluetoothDevice.name.isNotEmpty
+                      ? bluetoothDevice.name
                       : 'Unknown Device';
 
               return GestureDetector(
@@ -914,7 +918,7 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
                             ),
                             SizedBox(height: 4),
                             Text(
-                              bluetoothDevice.remoteId.str,
+                              bluetoothDevice.id,
                               style: GoogleFonts.inter(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w400,
@@ -1042,9 +1046,7 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
       });
 
       // Start scanning
-      await _bluetoothService.startScanning(
-        timeout: const Duration(seconds: 10),
-      );
+      await _bluetoothService.startScanning();
 
       // Auto-stop after 15 seconds
       Future.delayed(const Duration(seconds: 15), () {
@@ -1060,7 +1062,7 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
         }
       });
     } catch (e) {
-      Logger('Error scanning for devices: $e');
+      logger.Logger('Error scanning for devices: $e');
       setState(() {
         _isScanning = false;
         _errorMessage = 'Error scanning for devices: $e';
@@ -1070,46 +1072,77 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
 
   // Device key computation (from scanning_screen.dart)
   String? _computeStableKey(dynamic device) {
-    try {
-      if (device == null) return null;
-
-      if (device is ScanResult) {
-        return device.device.remoteId.str;
-      }
-
-      if (device is Map) {
-        final map = device;
-        final candidates = <String?>[
-          map['address']?.toString(),
-          map['id']?.toString(),
-          map['deviceId']?.toString(),
-          map['mac']?.toString(),
-          map['uuid']?.toString(),
-        ];
-        for (var c in candidates) {
-          if (c != null && c.isNotEmpty) return 'field:$c';
-        }
-      }
-
-      final dyn = device;
-      try {
-        final remoteId = (dyn as dynamic).remoteId;
-        if (remoteId != null) {
-          final str = (remoteId as dynamic).str;
-          if (str != null && str.toString().isNotEmpty) return str.toString();
-        }
-      } catch (_) {}
-
-      try {
-        final id = (dyn as dynamic).id;
-        if (id != null && id.toString().isNotEmpty) return 'id:$id';
-      } catch (_) {}
-
-      return device.toString();
-    } catch (e) {
-      Logger('Error computing stable key: $e');
+    if (device == null) {
       return null;
     }
+
+    if (device is DiscoveredDevice) {
+      return 'ble:${device.id}';
+    }
+
+    if (device is UsbDevice) {
+      return 'usb:${device.vid}:${device.pid}';
+    }
+
+    if (device is Map) {
+      final candidates = <String?>[
+        device['id']?.toString(),
+        device['deviceId']?.toString(),
+        device['address']?.toString(),
+        device['mac']?.toString(),
+        device['uuid']?.toString(),
+      ];
+
+      for (final c in candidates) {
+        if (c != null && c.isNotEmpty) {
+          return 'map:$c';
+        }
+      }
+    }
+
+    return device.toString();
+
+    // //
+    // try {
+    //   if (device == null) return null;
+
+    //   if (device is ScanResult) {
+    //     return device.device.remoteId.str;
+    //   }
+
+    //   if (device is Map) {
+    //     final map = device;
+    //     final candidates = <String?>[
+    //       map['address']?.toString(),
+    //       map['id']?.toString(),
+    //       map['deviceId']?.toString(),
+    //       map['mac']?.toString(),
+    //       map['uuid']?.toString(),
+    //     ];
+    //     for (var c in candidates) {
+    //       if (c != null && c.isNotEmpty) return 'field:$c';
+    //     }
+    //   }
+
+    //   final dyn = device;
+    //   try {
+    //     final remoteId = (dyn as dynamic).remoteId;
+    //     if (remoteId != null) {
+    //       final str = (remoteId as dynamic).str;
+    //       if (str != null && str.toString().isNotEmpty) return str.toString();
+    //     }
+    //   } catch (_) {}
+
+    //   try {
+    //     final id = (dyn as dynamic).id;
+    //     if (id != null && id.toString().isNotEmpty) return 'id:$id';
+    //   } catch (_) {}
+
+    //   return device.toString();
+    // } catch (e) {
+    //   logger.Logger('Error computing stable key: $e');
+    //   return null;
+    // }
   }
 
   int? _findFreeSlot() {
@@ -1199,30 +1232,52 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
   }
 
   String _deviceLabel(dynamic device) {
-    try {
-      if (device is ScanResult) {
-        final name = device.device.platformName;
-        if (name.isNotEmpty) return name;
-        return device.device.remoteId.str;
+    if (device is DiscoveredDevice) {
+      if (device.name.isNotEmpty) {
+        return device.name;
       }
 
-      final dyn = device;
-      try {
-        final platformName = (dyn as dynamic).platformName;
-        if (platformName != null && platformName.toString().isNotEmpty) {
-          return platformName.toString();
-        }
-      } catch (_) {}
-
-      try {
-        final name = (dyn as dynamic).name;
-        if (name != null && name.toString().isNotEmpty) return name.toString();
-      } catch (_) {}
-
-      return 'Unknown Device';
-    } catch (_) {
-      return device.toString();
+      return 'BLE-${device.id.substring(0, 5)}';
     }
+
+    if (device is UsbDevice) {
+      return device.productName ?? 'USB Device';
+    }
+
+    if (device is Map) {
+      final name = device['name']?.toString();
+      if (name != null && name.isNotEmpty) {
+        return name;
+      }
+    }
+
+    return 'Unknown Device';
+
+    // //
+    // try {
+    //   if (device is ScanResult) {
+    //     final name = device.device.platformName;
+    //     if (name.isNotEmpty) return name;
+    //     return device.device.remoteId.str;
+    //   }
+
+    //   final dyn = device;
+    //   try {
+    //     final platformName = (dyn as dynamic).platformName;
+    //     if (platformName != null && platformName.toString().isNotEmpty) {
+    //       return platformName.toString();
+    //     }
+    //   } catch (_) {}
+
+    //   try {
+    //     final name = (dyn as dynamic).name;
+    //     if (name != null && name.toString().isNotEmpty) return name.toString();
+    //   } catch (_) {}
+
+    //   return 'Unknown Device';
+    // } catch (_) {
+    //   return device.toString();
+    // }
   }
 
   List<Widget> _buildSlotWidgets(
@@ -1240,122 +1295,119 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
       final dy = center + fixedRadius * sin(angle);
 
       final deviceKey = _slotToDevice[slot];
-      if (deviceKey != null && _lastSeen.containsKey(deviceKey)) {
-        dynamic device;
-        try {
-          device = _discoveredDevices.firstWhere(
-            (d) => _computeStableKey(d) == deviceKey,
-          );
-        } catch (_) {
-          device = null;
-        }
-        if (device != null) {
-          final label = _deviceLabel(device);
-          final justAssigned = _justAssigned.containsKey(deviceKey);
-          final scanResult = device is ScanResult ? device : null;
-          final bluetoothDevice =
-              scanResult?.device ?? (device is BluetoothDevice ? device : null);
+      if (deviceKey == null || !_lastSeen.containsKey(deviceKey)) continue;
 
-          // Card position: center the card at dx,dy (clamped)
-          final left = (dx - cardWidth / 2).clamp(4.0, radarSize - cardWidth);
-          final top = (dy - cardHeight / 2).clamp(4.0, radarSize - cardHeight);
+      DiscoveredDevice? device;
+      try {
+        device = _discoveredDevices.firstWhere(
+          (d) => _computeStableKey(d) == deviceKey,
+        );
+      } catch (_) {
+        device = null;
+      }
 
-          widgets.add(
-            Positioned(
-              key: ValueKey('card-$deviceKey'),
-              left: left,
-              top: top,
-              width: cardWidth,
-              height: cardHeight,
-              child: GestureDetector(
-                onTap: () {
-                  if (bluetoothDevice != null) {
-                    // Stop scanning before connecting
-                    if (_isScanning) {
-                      _bluetoothService.stopScanning();
-                      setState(() {
-                        _isScanning = false;
-                      });
-                    }
-                    _connectToDevice(bluetoothDevice);
-                  }
-                },
-                child: AnimatedOpacity(
-                  duration: const Duration(milliseconds: 260),
-                  opacity: 1.0,
-                  child: AnimatedScale(
-                    scale: justAssigned ? 1.06 : 1.0,
-                    duration: const Duration(milliseconds: 420),
-                    curve: Curves.easeOutBack,
-                    child: Material(
-                      color: Colors.white.withOpacity(0.95),
-                      elevation: 6,
+      if (device == null) continue;
+
+      final label = _deviceLabel(device);
+      final justAssigned = _justAssigned.containsKey(deviceKey);
+
+      // Center the card at dx/dy and clamp within radar
+      final left = (dx - cardWidth / 2).clamp(4.0, radarSize - cardWidth);
+      final top = (dy - cardHeight / 2).clamp(4.0, radarSize - cardHeight);
+
+      widgets.add(
+        Positioned(
+          key: ValueKey('card-$deviceKey'),
+          left: left,
+          top: top,
+          width: cardWidth,
+          height: cardHeight,
+          child: GestureDetector(
+            onTap: () {
+              // Stop scanning before connecting
+              if (_isScanning) {
+                _bluetoothService.stopScanning();
+                setState(() {
+                  _isScanning = false;
+                });
+              }
+              _connectToDevice(device!);
+            },
+            child: AnimatedOpacity(
+              duration: const Duration(milliseconds: 260),
+              opacity: 1.0,
+              child: AnimatedScale(
+                scale: justAssigned ? 1.06 : 1.0,
+                duration: const Duration(milliseconds: 420),
+                curve: Curves.easeOutBack,
+                child: Material(
+                  color: Colors.white.withOpacity(0.95),
+                  elevation: 6,
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(12),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(12),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.12),
-                              blurRadius: 8,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.12),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
                         ),
-                        child: Column(
-                          children: [
-                            Container(
-                              height: cardHeight * 0.7,
-                              width: double.infinity,
-                              decoration: BoxDecoration(
-                                color: Colors.grey.shade50,
-                                borderRadius: const BorderRadius.only(
-                                  topLeft: Radius.circular(12),
-                                  topRight: Radius.circular(12),
-                                ),
-                              ),
-                              child: Center(
-                                child: Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: SvgPicture.asset(
-                                    'assets/svgs/panel_icon.svg',
-                                    width: cardWidth * 0.4,
-                                    height: cardWidth * 0.4,
-                                  ),
-                                ),
+                      ],
+                    ),
+                    child: Column(
+                      children: [
+                        Container(
+                          height: cardHeight * 0.7,
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade50,
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(12),
+                              topRight: Radius.circular(12),
+                            ),
+                          ),
+                          child: Center(
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: SvgPicture.asset(
+                                'assets/svgs/panel_icon.svg',
+                                width: cardWidth * 0.4,
+                                height: cardWidth * 0.4,
                               ),
                             ),
-                            Expanded(
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 6,
-                                ),
-                                child: Text(
-                                  label,
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                  textAlign: TextAlign.center,
-                                  style: GoogleFonts.inter(
-                                    fontSize: 9,
-                                    color: Colors.black87,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
-                      ),
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 6,
+                            ),
+                            child: Text(
+                              label,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.inter(
+                                fontSize: 9,
+                                color: Colors.black87,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
               ),
             ),
-          );
-        }
-      }
+          ),
+        ),
+      );
     }
+
     return widgets;
   }
 
@@ -1363,7 +1415,7 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
     return (slotIndex * (2 * pi / maxSlots));
   }
 
-  Future<void> _connectToDevice(BluetoothDevice device) async {
+  Future<void> _connectToDevice(DiscoveredDevice device) async {
     // Stop scanning if still active
     if (_isScanning) {
       _bluetoothService.stopScanning();
@@ -1375,7 +1427,7 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
     setState(() {
       _isConnecting = true;
       _selectedDevice = device;
-      _connectionStatus = 'Connecting to ${device.platformName}...';
+      _connectionStatus = 'Connecting to ${device.name}...';
       _errorMessage = null;
       _passkeyError = null;
     });
@@ -1387,20 +1439,50 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
     );
 
     try {
-      final connected = await AppServices.bleService.connectToDevice(device);
-      if (!connected) {
-        setState(() {
-          _isConnecting = false;
-          _errorMessage = 'Failed to connect to device';
-        });
-        return;
-      }
-
       setState(() {
-        _connectionStatus = 'Connected. Waiting for handshake...';
+        _isConnecting = true;
+        _errorMessage = null;
       });
+
+      _connectionSub = AppServices.bleService
+          .connectToDevice(device)
+          .listen(
+            (state) {
+              switch (state) {
+                case DeviceConnectionState.connecting:
+                  setState(() {
+                    _connectionStatus = 'Connecting...';
+                  });
+                  break;
+
+                case DeviceConnectionState.connected:
+                  setState(() {
+                    _connectionStatus = 'Connected. Waiting for handshake...';
+                    _isConnecting = false;
+                  });
+                  break;
+
+                case DeviceConnectionState.disconnected:
+                  setState(() {
+                    _isConnecting = false;
+                    _errorMessage = 'Device disconnected';
+                  });
+                  _connectionSub?.cancel();
+                  break;
+                default:
+                  break;
+              }
+            },
+            onError: (e) {
+              logger.Logger('Error connecting to device: $e');
+              setState(() {
+                _isConnecting = false;
+                _errorMessage = 'Connection error: $e';
+              });
+            },
+          );
     } catch (e) {
-      Logger('Error connecting to device: $e');
+      logger.Logger('Error connecting to device: $e');
       setState(() {
         _isConnecting = false;
         _errorMessage = 'Connection error: $e';
@@ -1468,7 +1550,7 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
     try {
       await AppServices.bleService.submitPasskey(passkey);
     } catch (e) {
-      Logger('Error submitting passkey: $e');
+      logger.Logger('Error submitting passkey: $e');
       setState(() {
         _passkeyError = 'Error submitting passkey: $e';
       });
@@ -1857,7 +1939,7 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
                           ? null
                           : () {
                             if (_testMode && !isCrcMatched) {
-                              Logger(
+                              logger.Logger(
                                 'TEST MODE: Proceeding despite CRC validation failure',
                               );
                             }
@@ -2098,7 +2180,7 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
         try {
           await _controller.readAndSplitBinFile(result.files.single.path!);
         } catch (e) {
-          Logger('Error processing file: $e');
+          logger.Logger('Error processing file: $e');
           // File might still be selected even if processing fails
         }
 
@@ -2112,7 +2194,7 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
         });
       }
     } catch (e) {
-      Logger('Error picking file: $e');
+      logger.Logger('Error picking file: $e');
       setState(() {
         _isUploading = false;
         _errorMessage = 'Error selecting file: $e';
@@ -2128,7 +2210,7 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
       if (!_testMode) {
         // Check BLE connection before starting
         final btUtils = BtUtils();
-        final connectedDevice = await btUtils.getConnectedDevices();
+        final connectedDevice = await btUtils.getConnectedDevice();
 
         if (connectedDevice == null) {
           setState(() {
@@ -2148,7 +2230,7 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
           return;
         }
       } else {
-        Logger('TEST MODE: Skipping BLE connection checks');
+        logger.Logger('TEST MODE: Skipping BLE connection checks');
       }
 
       // Set status to upgrading immediately
@@ -2171,7 +2253,7 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
       await _controller.processMismatchedMCUs(mismatchedIndexes);
 
       if (_testMode) {
-        Logger(
+        logger.Logger(
           'TEST MODE: File processing completed. Starting BLE simulation...',
         );
         // In test mode, simulate BLE responses to show progress
@@ -2198,7 +2280,7 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
         }
       }
     } catch (e) {
-      Logger('Error starting firmware upgrade: $e');
+      logger.Logger('Error starting firmware upgrade: $e');
       _controller.downloadingStatus.value = DownloadStatus.failed;
       setState(() {
         _errorMessage = 'Error starting upgrade: ${e.toString()}';

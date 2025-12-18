@@ -1,5 +1,6 @@
-import 'package:flutter_blue_plus/flutter_blue_plus.dart' as fbp;
+// import 'package:flutter_blue_plus/flutter_blue_plus.dart' as fbp;
 
+import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 class BleUuids {
   static const String primaryServiceUuid =
       "D973F2F0-B19E-11E2-9E96-0800200C9A66";
@@ -8,7 +9,7 @@ class BleUuids {
   static const String primaryWriteCharUuid =
       "D973F2F2-B19E-11E2-9E96-0800200C9A66";
 
-  static final fbp.Guid primaryService = fbp.Guid(primaryServiceUuid);
-  static final fbp.Guid primaryReadChar = fbp.Guid(primaryReadCharUuid);
-  static final fbp.Guid primaryWriteChar = fbp.Guid(primaryWriteCharUuid);
+  static final Uuid primaryService = Uuid.parse(primaryServiceUuid);
+  static final Uuid primaryReadChar = Uuid.parse(primaryReadCharUuid);
+  static final Uuid primaryWriteChar = Uuid.parse(primaryWriteCharUuid);
 }

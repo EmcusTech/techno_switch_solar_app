@@ -92,9 +92,7 @@ class _ScanningScreenState extends State<ScanningScreen>
         await _bleResultsSub?.cancel();
         _bleResultsSub = _bluetooth_service_scanListener();
         try {
-          await _bluetoothService.startScanning(
-            timeout: const Duration(seconds: 2),
-          );
+          await _bluetoothService.startScanning();
         } catch (_) {}
       }
     }
@@ -407,8 +405,11 @@ class _ScanningScreenState extends State<ScanningScreen>
     _autoStopTimer?.cancel();
     _countdownTimer?.cancel();
 
-    if (_selectedScanType == ScanType.bluetooth)
+    if (_selectedScanType == ScanType.bluetooth) {
       _bluetoothService.stopScanning();
+    }
+
+    Future.delayed(const Duration(milliseconds: 300));
 
     if (mounted) {
       Navigator.pushReplacement(

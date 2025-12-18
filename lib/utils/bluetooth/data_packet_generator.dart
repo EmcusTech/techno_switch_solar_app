@@ -1516,6 +1516,7 @@ Future<Uint8List> networkPacketFrame({
       .join(' ');
   Logger(
     'TX/RX ORIGINAL TECHNOSWITCH LOGS [NETWORK] - TX Frame: $originalFrameHex',
+    type: LogType.ble,
   );
 
   // Step 2: Wrap the original frame in the new BLE format
@@ -1595,6 +1596,7 @@ Future<Uint8List> passKeyFrame(
       .join(' ');
   Logger(
     'TX/RX ORIGINAL TECHNOSWITCH LOGS [PASSKEY] - TX Frame: $originalFrameHex',
+    type: LogType.ble,
   );
 
   // Step 2: Wrap the original frame in the new BLE format
@@ -1804,6 +1806,7 @@ Future<Uint8List> pollPacketFrame({int pktTxCnt = 0, int pktRxCnt = 0}) async {
       .join(' ');
   Logger(
     'TX/RX ORIGINAL TECHNOSWITCH LOGS [POLL] - TX Frame: $originalFrameHex',
+    type: LogType.ble,
   );
 
   // Step 2: Wrap the original frame in the new BLE format
@@ -1972,6 +1975,7 @@ Future<Uint8List> controlResEventReportFrame({
       .join(' ');
   Logger(
     'TX/RX ORIGINAL TECHNOSWITCH LOGS [CONTROL_RES_EVENT_REPORT] - TX Frame: $originalFrameHex',
+    type: LogType.ble,
   );
 
   // Step 2: Wrap the original frame in the new BLE format

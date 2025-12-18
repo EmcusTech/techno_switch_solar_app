@@ -1,10 +1,11 @@
 import 'dart:async';
 
-import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+// import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 import 'package:get/get.dart';
 import 'package:techno_switch_solar_app/utils/bluetooth/ble_notify_data_handler.dart';
 import 'package:techno_switch_solar_app/utils/bluetooth/bt_utils.dart';
-import 'package:techno_switch_solar_app/utils/logger.dart';
+import 'package:techno_switch_solar_app/utils/logger.dart' as logger;
 
 class TechnoswitchBleService {
   TechnoswitchBleService._() {
@@ -29,45 +30,58 @@ class TechnoswitchBleService {
   bool get isConnected => _isConnected;
 
   /// Scans for nearby BLE devices and returns the first batch of results.
-  Future<List<ScanResult>> scanForDevices() async {
-    final Completer<List<ScanResult>> completer = Completer<List<ScanResult>>();
+  Future<List<DiscoveredDevice>> scanForDevices({
+    Duration duration = const Duration(seconds: 15),
+  }) async {
+    final List<DiscoveredDevice> devices = [];
 
-    await _btUtils.scanDevices((List<ScanResult> results) {
-      if (!completer.isCompleted) {
-        completer.complete(List<ScanResult>.from(results));
-      }
+    //this starts the scan process, the moment we kisten to the stream, we are actively starting
+    //scan process
+    final StreamSubscription sub = _btUtils.scanResultsStream.listen((results) {
+      devices
+        ..clear()
+        ..addAll(results);
     });
 
-    return completer.future.timeout(
-      const Duration(seconds: 15),
-      onTimeout: () {
-        if (!completer.isCompleted) {
-          completer.complete(<ScanResult>[]);
-        }
-        return <ScanResult>[];
-      },
-    );
+    await Future.delayed(duration);
+
+    //this stops the scan process
+    await sub.cancel();
+
+    return List.unmodifiable(devices);
+
+    // final Completer<List<ScanResult>> completer = Completer<List<ScanResult>>();
+
+    // await _btUtils.scanDevices((List<ScanResult> results) {
+    //   if (!completer.isCompleted) {
+    //     completer.complete(List<ScanResult>.from(results));
+    //   }
+    // });
+
+    // return completer.future.timeout(
+    //   const Duration(seconds: 15),
+    //   onTimeout: () {
+    //     if (!completer.isCompleted) {
+    //       completer.complete(<ScanResult>[]);
+    //     }
+    //     return <ScanResult>[];
+    //   },
+    // );
   }
 
   /// Connects to the provided [device] and kicks off the handshake flow.
-  Future<bool> connectToDevice(BluetoothDevice device) async {
-    final Completer<bool> completer = Completer<bool>();
+  Stream<DeviceConnectionState> connectToDevice(
+    DiscoveredDevice device,
+  ) async* {
+    final stream = _btUtils.connectToDevice(device);
 
-    await _btUtils.connectToDevice(device, (bool connected) {
-      if (!completer.isCompleted) {
-        completer.complete(connected);
+    await for (final state in stream) {
+      if (state == DeviceConnectionState.connected) {
+        await _bleHandler.enableNotifyForCallBack(device: device);
+        _isConnected = true;
       }
-    });
-
-    final bool connected = await completer.future;
-    if (!connected) {
-      Logger('TechnoswitchBleService: failed to connect to device');
-      return false;
+      yield state;
     }
-
-    await _bleHandler.enableNotifyForCallBack();
-    _isConnected = true;
-    return true;
   }
 
   Future<void> disconnect() async {
