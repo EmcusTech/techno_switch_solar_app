@@ -317,6 +317,8 @@ class _DeviceConnectingScreenState extends State<DeviceConnectingScreen>
                       _buildDeviceInfo(),
                       const SizedBox(height: 24),
                       _buildStatusText(),
+                      const SizedBox(height: 16),
+                      _buildValidEventLogsDisplay(),
                       if (_connectionFailed) ...[
                         const SizedBox(height: 16),
                         _buildErrorMessage(),
@@ -579,6 +581,44 @@ class _DeviceConnectingScreenState extends State<DeviceConnectingScreen>
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildValidEventLogsDisplay() {
+    return ValueListenableBuilder<int>(
+      valueListenable: ble.bleProcess.validEventLogCount,
+      builder: (context, validLogCount, child) {
+        if (validLogCount == 0) {
+          return const SizedBox.shrink(); // Hide when count is 0
+        }
+
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          decoration: BoxDecoration(
+            color: Color(0xFFEC1D24).withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: Color(0xFFEC1D24).withOpacity(0.3),
+              width: 1,
+            ),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.event_note, color: Color(0xFFEC1D24), size: 20),
+              const SizedBox(width: 8),
+              Text(
+                'Valid Event Logs: $validLogCount',
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFFEC1D24),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

@@ -1,7 +1,8 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
-import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+// import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 import 'package:techno_switch_solar_app/models/log_model.dart';
 import 'package:techno_switch_solar_app/services/panel_service.dart';
 import 'package:techno_switch_solar_app/utils/bluetooth_constants.dart';
@@ -115,9 +116,9 @@ class SerialCommunicationService {
   static const int logCmd = 2;
   static const int logEvtSearchMethod = 0x04;
 
-  BluetoothDevice? _device;
-  BluetoothCharacteristic? _txCharacteristic;
-  BluetoothCharacteristic? _rxCharacteristic;
+  DiscoveredDevice? _device;
+  QualifiedCharacteristic? _txCharacteristic;
+  QualifiedCharacteristic? _rxCharacteristic;
   StreamSubscription? _characteristicSubscription;
   StreamSubscription? _scanSubscription;
   PanelConnectionState _connectionState = PanelConnectionState.notConnected;
@@ -156,7 +157,7 @@ class SerialCommunicationService {
   bool get isConnected =>
       _connectionState == PanelConnectionState.connected ||
       _connectionState == PanelConnectionState.processing;
-  BluetoothDevice? get connectedDevice => _device;
+  DiscoveredDevice? get connectedDevice => _device;
   String? get currentPanelId {
     // print("DEBUG: Getting currentPanelId: $_currentPanelId");
     return _currentPanelId;
@@ -175,20 +176,20 @@ class SerialCommunicationService {
       // Test 1: Simple string (like your working test app)
       String testString = "HELLO";
       List<int> stringBytes = testString.codeUnits;
-      await _txCharacteristic!.write(
-        Uint8List.fromList(stringBytes),
-        withoutResponse: false,
-      );
+      // await _txCharacteristic!.write(
+      //   Uint8List.fromList(stringBytes),
+      //   withoutResponse: false,
+      // );
       _statusStreamController.add("String ping sent: '$testString'");
 
       // await Future.delayed(Duration(milliseconds: 1000));
 
       // Test 2: Simple binary (SOT + EOT)
       List<int> binaryPing = [0xFE, 0xFD];
-      await _txCharacteristic!.write(
-        Uint8List.fromList(binaryPing),
-        withoutResponse: false,
-      );
+      // await _txCharacteristic!.write(
+      //   Uint8List.fromList(binaryPing),
+      //   withoutResponse: false,
+      // );
       _statusStreamController.add(
         "Binary ping sent: ${binaryPing.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
       );
@@ -208,10 +209,10 @@ class SerialCommunicationService {
         0x00,
         0x00,
       ];
-      await _txCharacteristic!.write(
-        Uint8List.fromList(networkSample),
-        withoutResponse: false,
-      );
+      // await _txCharacteristic!.write(
+      //   Uint8List.fromList(networkSample),
+      //   withoutResponse: false,
+      // );
       _statusStreamController.add(
         "Network sample sent: ${networkSample.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
       );
@@ -234,10 +235,10 @@ class SerialCommunicationService {
         "📤 As bytes: ${commandBytes.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
       );
 
-      await _txCharacteristic!.write(
-        Uint8List.fromList(commandBytes),
-        withoutResponse: false,
-      );
+      // await _txCharacteristic!.write(
+      //   Uint8List.fromList(commandBytes),
+      //   withoutResponse: false,
+      // );
       _statusStreamController.add("✅ String command sent successfully");
 
       // Wait a bit to see if we get a response
@@ -266,26 +267,26 @@ class SerialCommunicationService {
       // await Future.delayed(Duration(milliseconds: 2000));
 
       // Test 2: Single byte
-      await _txCharacteristic!.write(
-        Uint8List.fromList([0x48]),
-        withoutResponse: false,
-      ); // 'H'
+      // await _txCharacteristic!.write(
+      //   Uint8List.fromList([0x48]),
+      //   withoutResponse: false,
+      // ); // 'H'
       _statusStreamController.add("📤 Sent single byte: 0x48 ('H')");
       // await Future.delayed(Duration(milliseconds: 1000));
 
       // Test 3: Empty write
-      await _txCharacteristic!.write(
-        Uint8List.fromList([]),
-        withoutResponse: false,
-      );
+      // await _txCharacteristic!.write(
+      //   Uint8List.fromList([]),
+      //   withoutResponse: false,
+      // );
       _statusStreamController.add("📤 Sent empty packet");
       // await Future.delayed(Duration(milliseconds: 1000));
 
       // Test 4: Simple binary sequence
-      await _txCharacteristic!.write(
-        Uint8List.fromList([0x01, 0x02, 0x03]),
-        withoutResponse: false,
-      );
+      // await _txCharacteristic!.write(
+      //   Uint8List.fromList([0x01, 0x02, 0x03]),
+      //   withoutResponse: false,
+      // );
       _statusStreamController.add("📤 Sent binary sequence: 01 02 03");
 
       _statusStreamController.add(
@@ -297,59 +298,59 @@ class SerialCommunicationService {
   }
 
   /// Scan for available BLE devices
-  Future<List<BluetoothDevice>> scanForDevices({
+  Future<List<DiscoveredDevice>> scanForDevices({
     Duration timeout = const Duration(seconds: 10),
   }) async {
-    List<BluetoothDevice> foundDevices = [];
+    List<DiscoveredDevice> foundDevices = [];
 
     try {
       // Check if Bluetooth is available and enabled
-      if (await FlutterBluePlus.isSupported == false) {
+      if (false) {
         _statusStreamController.add("Bluetooth not supported on this device");
         return foundDevices;
       }
 
       // Check if already scanning and stop if needed
-      if (FlutterBluePlus.isScanningNow) {
-        await FlutterBluePlus.stopScan();
-      }
+      // if (FlutterBluePlus.isScanningNow) {
+      //   await FlutterBluePlus.stopScan();
+      // }
 
       _statusStreamController.add("Scanning for BLE devices...");
 
       // Start scanning
-      if (Platform.isAndroid) {
-        // print("SCAN START SCAN:::::::::::::::::::");
-        await FlutterBluePlus.startScan(
-          androidScanMode: AndroidScanMode.lowLatency,
-          continuousUpdates: true,
-          removeIfGone: const Duration(seconds: 5),
-          timeout: const Duration(seconds: 10),
-          withServices: [Guid(BleUuids.primaryServiceUuid)],
-        );
-      } else {
-        await FlutterBluePlus.startScan(
-          continuousUpdates: true,
-          timeout: const Duration(seconds: 10),
-          removeIfGone: const Duration(seconds: 5),
-          withServices: [Guid(BleUuids.primaryServiceUuid)],
-        );
-      }
+      // if (Platform.isAndroid) {
+      //   // print("SCAN START SCAN:::::::::::::::::::");
+      //   await FlutterBluePlus.startScan(
+      //     androidScanMode: AndroidScanMode.lowLatency,
+      //     continuousUpdates: true,
+      //     removeIfGone: const Duration(seconds: 5),
+      //     timeout: const Duration(seconds: 10),
+      //     withServices: [Guid(BleUuids.primaryServiceUuid)],
+      //   );
+      // } else {
+      //   await FlutterBluePlus.startScan(
+      //     continuousUpdates: true,
+      //     timeout: const Duration(seconds: 10),
+      //     removeIfGone: const Duration(seconds: 5),
+      //     withServices: [Guid(BleUuids.primaryServiceUuid)],
+      //   );
+      // }
 
       // Listen to scan results
-      _scanSubscription = FlutterBluePlus.scanResults.listen((results) {
-        for (ScanResult result in results) {
-          final device = result.device;
-          if (device.platformName.isNotEmpty &&
-              !foundDevices.any((d) => d.remoteId == device.remoteId)) {
-            foundDevices.add(device);
-            _statusStreamController.add("Found device: ${device.platformName}");
-          }
-        }
-      });
+      // _scanSubscription = FlutterBluePlus.scanResults.listen((results) {
+      //   for (ScanResult result in results) {
+      //     final device = result.device;
+      //     if (device.platformName.isNotEmpty &&
+      //         !foundDevices.any((d) => d.remoteId == device.remoteId)) {
+      //       foundDevices.add(device);
+      //       _statusStreamController.add("Found device: ${device.platformName}");
+      //     }
+      //   }
+      // });
 
       // Wait for scan to complete
       // await Future.delayed(timeout + const Duration(seconds: 1));
-      await FlutterBluePlus.stopScan();
+      // await FlutterBluePlus.stopScan();
       _scanSubscription?.cancel();
 
       _statusStreamController.add(
@@ -363,53 +364,53 @@ class SerialCommunicationService {
   }
 
   /// Connect to a specific BLE device
-  Future<bool> connectToSpecificDevice(BluetoothDevice device) async {
+  Future<bool> connectToSpecificDevice(DiscoveredDevice device) async {
     try {
-      _statusStreamController.add("Connecting to: ${device.platformName}");
+      _statusStreamController.add("Connecting to: ${device.name}");
 
       // Connect to device
-      await device.connect(timeout: const Duration(seconds: 10));
+      // await device.connect(timeout: const Duration(seconds: 10));
       _device = device;
 
       // Discover services
-      List<BluetoothService> services = await device.discoverServices();
+      // List<BluetoothService> services = await device.discoverServices();
 
       // Find specific characteristics using exact UUIDs (like your working test app)
-      BluetoothCharacteristic? txChar; // Write characteristic
-      BluetoothCharacteristic? rxChar; // Read/Notify characteristic
+      QualifiedCharacteristic? txChar; // Write characteristic
+      QualifiedCharacteristic? rxChar; // Read/Notify characteristic
 
-      for (BluetoothService service in services) {
-        _statusStreamController.add("Found service: ${service.uuid}");
+      // for (BluetoothService service in services) {
+      //   _statusStreamController.add("Found service: ${service.uuid}");
 
-        for (BluetoothCharacteristic char in service.characteristics) {
-          _statusStreamController.add(
-            "Found characteristic: ${char.uuid} - Properties: ${char.properties}",
-          );
+      //   for (BluetoothCharacteristic char in service.characteristics) {
+      //     _statusStreamController.add(
+      //       "Found characteristic: ${char.uuid} - Properties: ${char.properties}",
+      //     );
 
-          // Match exact UUIDs from your working test app
-          String charUuidUpper = char.uuid.toString().toUpperCase();
+      //     // Match exact UUIDs from your working test app
+      //     String charUuidUpper = char.uuid.toString().toUpperCase();
 
-          // TX characteristic (Write) - d973f2f2-b19e-11e2-9e96-0800200c9a66
-          if (charUuidUpper == BleUuids.primaryWriteCharUuid.toUpperCase()) {
-            txChar = char;
-            _statusStreamController.add(
-              "Found TX characteristic (Write): ${char.uuid}",
-            );
-          }
+      //     // TX characteristic (Write) - d973f2f2-b19e-11e2-9e96-0800200c9a66
+      //     if (charUuidUpper == BleUuids.primaryWriteCharUuid.toUpperCase()) {
+      //       txChar = char;
+      //       _statusStreamController.add(
+      //         "Found TX characteristic (Write): ${char.uuid}",
+      //       );
+      //     }
 
-          // RX characteristic (Read/Notify) - d973f2f1-b19e-11e2-9e96-0800200c9a66
-          if (charUuidUpper == BleUuids.primaryReadCharUuid.toUpperCase()) {
-            rxChar = char;
-            _statusStreamController.add(
-              "Found RX characteristic (Read): ${char.uuid}",
-            );
-          }
-        }
-      }
+      //     // RX characteristic (Read/Notify) - d973f2f1-b19e-11e2-9e96-0800200c9a66
+      //     if (charUuidUpper == BleUuids.primaryReadCharUuid.toUpperCase()) {
+      //       rxChar = char;
+      //       _statusStreamController.add(
+      //         "Found RX characteristic (Read): ${char.uuid}",
+      //       );
+      //     }
+      //   }
+      // }
 
       if (txChar == null || rxChar == null) {
         _statusStreamController.add("Suitable characteristics not found");
-        await device.disconnect();
+        // await device.disconnect();
         return false;
       }
 
@@ -421,29 +422,29 @@ class SerialCommunicationService {
         _statusStreamController.add(
           "Setting up notifications on RX characteristic...",
         );
-        await _rxCharacteristic!.setNotifyValue(true);
-        _statusStreamController.add(
-          "✅ Notifications enabled on ${_rxCharacteristic!.uuid}",
-        );
+        // await _rxCharacteristic!.setNotifyValue(true);
+        // _statusStreamController.add(
+        //   "✅ Notifications enabled on ${_rxCharacteristic!.uuid}",
+        // );
 
-        _characteristicSubscription = _rxCharacteristic!.onValueReceived.listen(
-          _onDataReceived,
-          onError: (error) {
-            _statusStreamController.add("❌ Characteristic error: $error");
-            disconnect();
-          },
-        );
+        // _characteristicSubscription = _rxCharacteristic!.onValueReceived.listen(
+        //   _onDataReceived,
+        //   onError: (error) {
+        //     _statusStreamController.add("❌ Characteristic error: $error");
+        //     disconnect();
+        //   },
+        // );
         _statusStreamController.add(
           "✅ Listening for data on RX characteristic",
         );
       } catch (e) {
         _statusStreamController.add("❌ Failed to setup notifications: $e");
-        await device.disconnect();
+        // await device.disconnect();
         return false;
       }
 
       _connectionState = PanelConnectionState.connected;
-      _statusStreamController.add("Connected to: ${device.platformName}");
+      _statusStreamController.add("Connected to: ${device.name}");
 
       // Register/update panel in database
       try {
@@ -468,12 +469,10 @@ class SerialCommunicationService {
       // Don't auto-start communication process - it will be started manually from Event Log screen
       return true;
     } catch (e) {
-      _statusStreamController.add(
-        "Failed to connect to ${device.platformName}: $e",
-      );
+      _statusStreamController.add("Failed to connect to ${device.name}: $e");
       if (_device != null) {
         try {
-          await _device!.disconnect();
+          // await _device!.disconnect();
         } catch (_) {}
         _device = null;
       }
@@ -486,156 +485,156 @@ class SerialCommunicationService {
       _statusStreamController.add("Starting BLE scan...");
 
       // Check if Bluetooth is available and enabled
-      if (await FlutterBluePlus.isSupported == false) {
-        _statusStreamController.add("Bluetooth not supported on this device");
-        return false;
-      }
+      // if (await FlutterBluePlus.isSupported == false) {
+      //   _statusStreamController.add("Bluetooth not supported on this device");
+      //   return false;
+      // }
 
       // Check if already scanning and stop if needed
-      if (FlutterBluePlus.isScanningNow) {
-        await FlutterBluePlus.stopScan();
-      }
+      // if (FlutterBluePlus.isScanningNow) {
+      //   await FlutterBluePlus.stopScan();
+      // }
 
-      List<BluetoothDevice> foundDevices = [];
+      // List<BluetoothDevice> foundDevices = [];
 
       // Start scanning
-      FlutterBluePlus.startScan(
-        timeout: const Duration(seconds: 10),
-        withServices:
-            [], // Scan for all devices - you can specify service UUIDs if known
-      );
+      // FlutterBluePlus.startScan(
+      //   timeout: const Duration(seconds: 10),
+      //   withServices:
+      //       [], // Scan for all devices - you can specify service UUIDs if known
+      // );
 
       // Listen to scan results
-      _scanSubscription = FlutterBluePlus.scanResults.listen((results) {
-        for (ScanResult result in results) {
-          final device = result.device;
-          if (device.platformName.isNotEmpty &&
-              !foundDevices.any((d) => d.remoteId == device.remoteId)) {
-            foundDevices.add(device);
-            _statusStreamController.add("Found device: ${device.platformName}");
-          }
-        }
-      });
+      // _scanSubscription = FlutterBluePlus.scanResults.listen((results) {
+      //   for (ScanResult result in results) {
+      //     final device = result.device;
+      //     if (device.platformName.isNotEmpty &&
+      //         !foundDevices.any((d) => d.remoteId == device.remoteId)) {
+      //       foundDevices.add(device);
+      //       _statusStreamController.add("Found device: ${device.platformName}");
+      //     }
+      //   }
+      // });
 
       // Wait for scan to complete
       // await Future.delayed(const Duration(seconds: 11));
-      await FlutterBluePlus.stopScan();
+      // await FlutterBluePlus.stopScan();
       _scanSubscription?.cancel();
 
-      if (foundDevices.isEmpty) {
-        _statusStreamController.add("No BLE devices found");
-        return false;
-      }
+      // if (foundDevices.isEmpty) {
+      //   _statusStreamController.add("No BLE devices found");
+      //   return false;
+      // }
 
       // Try to connect to devices
-      for (BluetoothDevice device in foundDevices) {
-        // If a specific device name is provided, only try that device
-        if (deviceName != null && device.platformName != deviceName) {
-          continue;
-        }
+      // for (BluetoothDevice device in foundDevices) {
+      //   // If a specific device name is provided, only try that device
+      //   if (deviceName != null && device.platformName != deviceName) {
+      //     continue;
+      //   }
 
-        try {
-          _statusStreamController.add(
-            "Trying to connect to: ${device.platformName}",
-          );
+      //   try {
+      //     _statusStreamController.add(
+      //       "Trying to connect to: ${device.platformName}",
+      //     );
 
-          // Connect to device
-          await device.connect(timeout: const Duration(seconds: 10));
-          _device = device;
+      //     // Connect to device
+      //     await device.connect(timeout: const Duration(seconds: 10));
+      //     _device = device;
 
-          // Discover services
-          List<BluetoothService> services = await device.discoverServices();
+      //     // Discover services
+      //     List<BluetoothService> services = await device.discoverServices();
 
-          // Find specific characteristics using exact UUIDs (like your working test app)
-          BluetoothCharacteristic? txChar; // Write characteristic
-          BluetoothCharacteristic? rxChar; // Read/Notify characteristic
+      //     // Find specific characteristics using exact UUIDs (like your working test app)
+      //     BluetoothCharacteristic? txChar; // Write characteristic
+      //     BluetoothCharacteristic? rxChar; // Read/Notify characteristic
 
-          for (BluetoothService service in services) {
-            _statusStreamController.add("Found service: ${service.uuid}");
+      //     for (BluetoothService service in services) {
+      //       _statusStreamController.add("Found service: ${service.uuid}");
 
-            for (BluetoothCharacteristic char in service.characteristics) {
-              _statusStreamController.add(
-                "Found characteristic: ${char.uuid} - Properties: ${char.properties}",
-              );
+      //       for (BluetoothCharacteristic char in service.characteristics) {
+      //         _statusStreamController.add(
+      //           "Found characteristic: ${char.uuid} - Properties: ${char.properties}",
+      //         );
 
-              // Match exact UUIDs from your working test app
-              String charUuidUpper = char.uuid.toString().toUpperCase();
+      //         // Match exact UUIDs from your working test app
+      //         String charUuidUpper = char.uuid.toString().toUpperCase();
 
-              // TX characteristic (Write) - d973f2f2-b19e-11e2-9e96-0800200c9a66
-              if (charUuidUpper ==
-                  BleUuids.primaryWriteCharUuid.toUpperCase()) {
-                txChar = char;
-                _statusStreamController.add(
-                  "Found TX characteristic (Write): ${char.uuid}",
-                );
-              }
+      //         // TX characteristic (Write) - d973f2f2-b19e-11e2-9e96-0800200c9a66
+      //         if (charUuidUpper ==
+      //             BleUuids.primaryWriteCharUuid.toUpperCase()) {
+      //           txChar = char;
+      //           _statusStreamController.add(
+      //             "Found TX characteristic (Write): ${char.uuid}",
+      //           );
+      //         }
 
-              // RX characteristic (Read/Notify) - d973f2f1-b19e-11e2-9e96-0800200c9a66
-              if (charUuidUpper == BleUuids.primaryReadCharUuid.toUpperCase()) {
-                rxChar = char;
-                _statusStreamController.add(
-                  "Found RX characteristic (Read): ${char.uuid}",
-                );
-              }
-            }
-          }
+      //         // RX characteristic (Read/Notify) - d973f2f1-b19e-11e2-9e96-0800200c9a66
+      //         if (charUuidUpper == BleUuids.primaryReadCharUuid.toUpperCase()) {
+      //           rxChar = char;
+      //           _statusStreamController.add(
+      //             "Found RX characteristic (Read): ${char.uuid}",
+      //           );
+      //         }
+      //       }
+      //     }
 
-          if (txChar == null || rxChar == null) {
-            _statusStreamController.add("Suitable characteristics not found");
-            await device.disconnect();
-            continue; // Try next device
-          }
+      //     if (txChar == null || rxChar == null) {
+      //       _statusStreamController.add("Suitable characteristics not found");
+      //       await device.disconnect();
+      //       continue; // Try next device
+      //     }
 
-          _txCharacteristic = txChar;
-          _rxCharacteristic = rxChar;
+      //     _txCharacteristic = txChar;
+      //     _rxCharacteristic = rxChar;
 
-          // Subscribe to notifications with better error handling
-          try {
-            _statusStreamController.add(
-              "Setting up notifications on RX characteristic...",
-            );
-            await _rxCharacteristic!.setNotifyValue(true);
-            _statusStreamController.add(
-              "✅ Notifications enabled on ${_rxCharacteristic!.uuid}",
-            );
+      //     // Subscribe to notifications with better error handling
+      //     try {
+      //       _statusStreamController.add(
+      //         "Setting up notifications on RX characteristic...",
+      //       );
+      //       await _rxCharacteristic!.setNotifyValue(true);
+      //       _statusStreamController.add(
+      //         "✅ Notifications enabled on ${_rxCharacteristic!.uuid}",
+      //       );
 
-            _characteristicSubscription = _rxCharacteristic!.onValueReceived
-                .listen(
-                  _onDataReceived,
-                  onError: (error) {
-                    _statusStreamController.add(
-                      "❌ Characteristic error: $error",
-                    );
-                    disconnect();
-                  },
-                );
-            _statusStreamController.add(
-              "✅ Listening for data on RX characteristic",
-            );
-          } catch (e) {
-            _statusStreamController.add("❌ Failed to setup notifications: $e");
-            await device.disconnect();
-            continue; // Try next device
-          }
+      //       _characteristicSubscription = _rxCharacteristic!.onValueReceived
+      //           .listen(
+      //             _onDataReceived,
+      //             onError: (error) {
+      //               _statusStreamController.add(
+      //                 "❌ Characteristic error: $error",
+      //               );
+      //               disconnect();
+      //             },
+      //           );
+      //       _statusStreamController.add(
+      //         "✅ Listening for data on RX characteristic",
+      //       );
+      //     } catch (e) {
+      //       _statusStreamController.add("❌ Failed to setup notifications: $e");
+      //       await device.disconnect();
+      //       continue; // Try next device
+      //     }
 
-          _connectionState = PanelConnectionState.connected;
-          _statusStreamController.add("Connected to: ${device.platformName}");
+      //     _connectionState = PanelConnectionState.connected;
+      //     _statusStreamController.add("Connected to: ${device.platformName}");
 
-          // Don't auto-start communication process - it will be started manually from Event Log screen
-          return true;
-        } catch (e) {
-          _statusStreamController.add(
-            "Failed to connect to ${device.platformName}: $e",
-          );
-          if (_device != null) {
-            try {
-              await _device!.disconnect();
-            } catch (_) {}
-            _device = null;
-          }
-          continue; // Try next device
-        }
-      }
+      //     // Don't auto-start communication process - it will be started manually from Event Log screen
+      //     return true;
+      //   } catch (e) {
+      //     _statusStreamController.add(
+      //       "Failed to connect to ${device.platformName}: $e",
+      //     );
+      //     if (_device != null) {
+      //       try {
+      //         await _device!.disconnect();
+      //       } catch (_) {}
+      //       _device = null;
+      //     }
+      //     continue; // Try next device
+      //   }
+      // }
 
       _statusStreamController.add("Failed to connect to any device");
       return false;
@@ -958,13 +957,13 @@ class SerialCommunicationService {
           for (int i = 0; i < data.length; i += maxMtu) {
             int end = (i + maxMtu < data.length) ? i + maxMtu : data.length;
             Uint8List chunk = data.sublist(i, end);
-            await _txCharacteristic!.write(chunk, withoutResponse: false);
+            // await _txCharacteristic!.write(chunk, withoutResponse: false);
             // await Future.delayed(
             //   const Duration(milliseconds: 20),
             // ); // Small delay between chunks
           }
         } else {
-          await _txCharacteristic!.write(data, withoutResponse: false);
+          // await _txCharacteristic!.write(data, withoutResponse: false);
         }
 
         // await Future.delayed(
@@ -1439,7 +1438,7 @@ class SerialCommunicationService {
     // Disconnect BLE device
     if (_device != null) {
       try {
-        await _device!.disconnect();
+        // await _device!.disconnect();
       } catch (e) {
         // Ignore disconnect errors
         // print('Disconnect error: $e');
