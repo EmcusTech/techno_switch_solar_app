@@ -2,6 +2,9 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'ble_manager.dart';
 import 'ble_frame.dart';
+import '../models/log_model.dart';
+import '../utils/event_constants.dart';
+import '../utils/timestamp_converter.dart';
 
 class BleProcess {
   final BleManager bleManager;
@@ -14,6 +17,10 @@ class BleProcess {
 
   // ValueNotifier to expose valid event log count to UI
   final ValueNotifier<int> validEventLogCount = ValueNotifier<int>(0);
+
+  // ValueNotifier to expose list of valid event logs to UI
+  final ValueNotifier<List<LogModel>> validEventLogs =
+      ValueNotifier<List<LogModel>>([]);
 
   // BleStates bleStateMachineState = BleStates.IDLE;
   BleStates bleCurrentState = BleStates.IDLE;
@@ -100,6 +107,21 @@ class BleProcess {
         validEventLogNum++;
         // Update the ValueNotifier to notify UI listeners
         validEventLogCount.value = validEventLogNum;
+
+        // Parse and store the valid log entry
+        try {
+          LogModel? parsedLog = _parseEventLogFromPayload(
+            rx.payload,
+            rxLastEvtLogNum,
+          );
+          if (parsedLog != null) {
+            final currentLogs = List<LogModel>.from(validEventLogs.value);
+            currentLogs.add(parsedLog);
+            validEventLogs.value = currentLogs;
+          }
+        } catch (e) {
+          print("Error parsing event log: $e");
+        }
       }
 
       if (rx.payload[12] == 0x02) read1000Logs++;
@@ -114,7 +136,7 @@ class BleProcess {
     // ----- READY FOR NEXT FRAME -----
     processNextOtaFrame = true;
 
-    if (read1000Logs == 1030) {
+    if (read1000Logs == 1000) {
       print("<<<<<< COMPLETED 1000 EVENT LOGS >>>>>>>");
       processNextOtaFrame = false;
     }
@@ -164,10 +186,139 @@ class BleProcess {
     print("RX timeout cancelled from BleManager");
   }
 
+  /// Parse event log data from payload
+  LogModel? _parseEventLogFromPayload(List<int> payload, int eventLogNum) {
+    try {
+      // Check if payload has enough data (should be 216 bytes for full packet)
+      if (payload.length < 130) {
+        print("Payload too short for event log parsing");
+        return null;
+      }
+
+      // Extract timestamp (bytes 12-16) - little endian
+      List<int> timestamp = payload.sublist(25, 29);
+      int timestampDecimal =
+          timestamp[3] |
+          (timestamp[2] << 8) |
+          (timestamp[1] << 16) |
+          (timestamp[0] << 24);
+
+      // Use current time if timestamp is invalid
+      DateTime eventTime =
+          timestampDecimal != 0x00
+              ? TimestampConverter.clockTimeFromTimeStamp(timestampDecimal)
+              : DateTime.now();
+
+      // Extract Event ID (bytes 126-129) - big endian
+
+      //not using in the protocol document of 110
+      int eventId = 0;
+      if (payload.length >= 130) {
+        eventId =
+            (payload[126] << 24) |
+            (payload[127] << 16) |
+            (payload[128] << 8) |
+            (payload[129] << 0);
+      }
+
+      // Extract event text (bytes 42-124)
+      String evtTextAscii = "System-Text---------1";
+      if (payload.length >= 124) {
+        List<int> evtText = payload.sublist(55, 137);
+        if (evtText.length > 1 && evtText[1] != 0x00) {
+          int textLen = evtText[1];
+          if (textLen > 0 && textLen < evtText.length - 2) {
+            List<int> evtTextValue = evtText.sublist(2, 2 + textLen);
+            evtTextAscii = String.fromCharCodes(evtTextValue);
+          }
+        }
+      }
+
+      // Extract panel source
+      String panelSource = "";
+      if (payload.length >= 31) {
+        if (payload[22] == EventConstants.evtTypeNetworkAddress) {
+          panelSource =
+              payload[42] == 0
+                  ? "Module"
+                  : payload[42] == 1
+                  ? "Panel No. ${payload[43]}"
+                  : payload[42] == 2
+                  ? "Repeater No. ${payload[43]}"
+                  : payload[42] == 3
+                  ? "SOLAR"
+                  : payload[42] == 4
+                  ? "Server No. ${payload[43]}"
+                  : payload[42] == 5
+                  ? "RADIO"
+                  : "";
+        } else if (payload[22] == EventConstants.evtTypeAccess) {
+          panelSource =
+              payload[42] == 0
+                  ? "Control"
+                  : payload[42] == 1
+                  ? "Keyboard"
+                  : payload[42] == 2
+                  ? "SOLAR"
+                  : payload[42] == 3
+                  ? "Server"
+                  : payload[42] == 4
+                  ? "RADIO"
+                  : "";
+        } else {
+          panelSource = "Panel No. 1";
+        }
+      }
+
+      // Create LogModel
+      return LogModel(
+        panelText: panelSource,
+        eventId: eventLogNum.toString(),
+        eventDateTime: eventTime,
+        panelNo: payload.length > 0 ? payload[13].toString() : null,
+        lBusNo: payload.length > 1 ? payload[14].toString() : null,
+        moduleNo: payload.length > 2 ? payload[15].toString() : null,
+        eventStatus:
+            payload.length > 10
+                ? EventConstants.getEventStatusValue(payload[23])
+                : null,
+        eventClass:
+            payload.length > 7
+                ? EventConstants.getEventClassValue(payload[20])
+                : null,
+        eventSource: panelSource,
+        eventType:
+            payload.length > 9
+                ? EventConstants.getEventType(payload[22])
+                : null,
+        eventSubType:
+            payload.length > 11
+                ? EventConstants.getEventDescription(payload[22], payload[24])
+                : null,
+        identifier:
+            payload.length >= 32
+                ? EventConstants.getEventIdentifier(
+                  payload[22],
+                  payload[42],
+                  payload[43],
+                  payload[44],
+                )
+                : null,
+        text: evtTextAscii,
+        isValid: timestampDecimal != 0x00,
+        retrievedAt: DateTime.now(),
+      );
+    } catch (e) {
+      print("Error parsing event log from payload: $e");
+      return null;
+    }
+  }
+
   // Dispose method to clean up resources
   void dispose() {
     _rxTimeoutTimer?.cancel();
     validEventLogCount.dispose();
+    validEventLogs.dispose();
   }
 
   // Call this after every TX
