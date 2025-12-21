@@ -1,4 +1,5 @@
 // event_log_screen_sync_headers.dart
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -11,6 +12,7 @@ import 'package:techno_switch_solar_app/services/site_service.dart';
 import 'package:techno_switch_solar_app/widgets/site_creation_dialog.dart';
 import 'package:techno_switch_solar_app/screens/simple_site_creation_screen.dart';
 import 'package:techno_switch_solar_app/screens/site_screen.dart';
+import 'package:techno_switch_solar_app/screens/device_connecting_screen.dart';
 
 class EventLogScreen extends StatefulWidget {
   final List<LogModel> logDataList;
@@ -66,7 +68,7 @@ class _EventLogContent extends StatefulWidget {
 }
 
 class _EventLogContentState extends State<_EventLogContent> {
-  bool _isListSelected = true;
+  bool _isListSelected = false;
   int _selectedViewIndex = 0; // 0 for list, 1 for table
   List<LogModel> _displayLogs = [];
   String? _storedPanelId;
@@ -274,6 +276,7 @@ class _EventLogContentState extends State<_EventLogContent> {
   void initState() {
     super.initState();
     _storedPanelId = widget.panelId ?? AppServices.serialService.currentPanelId;
+    // Initialize with widget data if provided, otherwise will be updated via ValueListenableBuilder
     _displayLogs =
         widget.logDataList.where((log) => log.isValid == true).toList();
   }
@@ -399,7 +402,13 @@ class _EventLogContentState extends State<_EventLogContent> {
                   ),
                 ],
               ),
-              Spacer(),
+            ],
+          ),
+          SizedBox(height: 15),
+          Divider(color: Color(0xFF000000).withAlpha(46), thickness: 1),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
               GestureDetector(
                 onTap:
                     () => setState(() {
@@ -430,7 +439,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                           'assets/svgs/list_deselected_icon.svg',
                         ),
               ),
-              SizedBox(width: 21),
+              SizedBox(width: 5),
               GestureDetector(
                 onTap:
                     () => setState(() {
@@ -464,29 +473,70 @@ class _EventLogContentState extends State<_EventLogContent> {
             ],
           ),
           SizedBox(height: 15),
-          Divider(color: Color(0xFF000000).withAlpha(46), thickness: 1),
-          // SizedBox(height: 15),
-          // Row(
-          //   children: [
-          //     Text(
-          //       'Event Log',
-          //       style: GoogleFonts.inter(
-          //         fontSize: 16,
-          //         fontWeight: FontWeight.w700,
-          //         color: Color(0xFF3D3D3D),
-          //       ),
-          //     ),
-          //     Spacer(),
-          //   ],
-          // ),
-          // SizedBox(height: 8),
+          // Progress bar and stats
+          ValueListenableBuilder<int>(
+            valueListenable: ble.bleProcess.read1000LogsCount,
+            builder: (context, readCount, child) {
+              return ValueListenableBuilder<List<LogModel>>(
+                valueListenable: ble.bleProcess.validEventLogs,
+                builder: (context, validLogs, child) {
+                  final progress = readCount / 1000.0;
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Progress: $readCount / 1000',
+                            style: GoogleFonts.inter(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF3D3D3D),
+                            ),
+                          ),
+                          Text(
+                            'Valid Logs: ${validLogs.length}',
+                            style: GoogleFonts.inter(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFFEC1D24),
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 8),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(4),
+                        child: LinearProgressIndicator(
+                          value: progress,
+                          minHeight: 8,
+                          backgroundColor: Color(0xFFE0E0E0),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Color(0xFFEC1D24),
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              );
+            },
+          ),
+          SizedBox(height: 15),
+          // Logs display using ValueListenableBuilder
           Expanded(
-            child: IndexedStack(
-              index: _selectedViewIndex,
-              children: [
-                _LogListView(displayLogs: _displayLogs),
-                _LogTableView(displayLogs: _displayLogs),
-              ],
+            child: ValueListenableBuilder<List<LogModel>>(
+              valueListenable: ble.bleProcess.validEventLogs,
+              builder: (context, validLogs, child) {
+                return IndexedStack(
+                  index: _selectedViewIndex,
+                  children: [
+                    _LogListView(displayLogs: validLogs),
+                    _LogTableView(displayLogs: validLogs),
+                  ],
+                );
+              },
             ),
           ),
           SizedBox(height: 8),
@@ -556,6 +606,79 @@ class _LogListViewState extends State<_LogListView>
   void initState() {
     super.initState();
     _sortedLogs = List.from(widget.displayLogs);
+  }
+
+  @override
+  void didUpdateWidget(_LogListView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Update _sortedLogs when displayLogs changes
+    if (widget.displayLogs.length != oldWidget.displayLogs.length ||
+        !listEquals(widget.displayLogs, oldWidget.displayLogs)) {
+      setState(() {
+        _sortedLogs = List.from(widget.displayLogs);
+        // Re-apply sorting if there was a sort active
+        if (_sortColumn != null) {
+          _sortedLogs.sort((a, b) {
+            int comparison = 0;
+
+            switch (_sortColumn) {
+              case 'eventId':
+                final aId = int.tryParse(a.eventId ?? '0') ?? 0;
+                final bId = int.tryParse(b.eventId ?? '0') ?? 0;
+                comparison = aId.compareTo(bId);
+                break;
+              case 'dateTime':
+                if (a.eventDateTime != null && b.eventDateTime != null) {
+                  comparison = a.eventDateTime!.compareTo(b.eventDateTime!);
+                } else if (a.eventDateTime != null) {
+                  comparison = 1;
+                } else if (b.eventDateTime != null) {
+                  comparison = -1;
+                }
+                break;
+              case 'status':
+                comparison = (a.eventStatus ?? '').compareTo(
+                  b.eventStatus ?? '',
+                );
+                break;
+              case 'class':
+                comparison = (a.eventClass ?? '').compareTo(b.eventClass ?? '');
+                break;
+              case 'type':
+                comparison = (a.eventType ?? '').compareTo(b.eventType ?? '');
+                break;
+              case 'subType':
+                comparison = (a.eventSubType ?? '').compareTo(
+                  b.eventSubType ?? '',
+                );
+                break;
+              case 'source':
+                comparison = (a.eventSource ?? '').compareTo(
+                  b.eventSource ?? '',
+                );
+                break;
+              case 'identifier':
+                comparison = (a.identifier ?? '').compareTo(b.identifier ?? '');
+                break;
+              case 'text':
+                comparison = (a.text ?? '').compareTo(b.text ?? '');
+                break;
+              case 'panelNo':
+                comparison = (a.panelNo ?? '').compareTo(b.panelNo ?? '');
+                break;
+              case 'moduleNo':
+                comparison = (a.moduleNo ?? '').compareTo(b.moduleNo ?? '');
+                break;
+              case 'lBusNo':
+                comparison = (a.lBusNo ?? '').compareTo(b.lBusNo ?? '');
+                break;
+            }
+
+            return _sortAscending ? comparison : -comparison;
+          });
+        }
+      });
+    }
   }
 
   @override

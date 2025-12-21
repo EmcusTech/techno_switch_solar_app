@@ -18,9 +18,14 @@ class BleProcess {
   // ValueNotifier to expose valid event log count to UI
   final ValueNotifier<int> validEventLogCount = ValueNotifier<int>(0);
 
+  // ValueNotifier to expose read1000Logs count to UI for progress tracking
+  final ValueNotifier<int> read1000LogsCount = ValueNotifier<int>(0);
+
   // ValueNotifier to expose list of valid event logs to UI
   final ValueNotifier<List<LogModel>> validEventLogs =
       ValueNotifier<List<LogModel>>([]);
+
+  final ValueNotifier<bool> isValidLogRecieved = ValueNotifier<bool>(false);
 
   // BleStates bleStateMachineState = BleStates.IDLE;
   BleStates bleCurrentState = BleStates.IDLE;
@@ -115,6 +120,7 @@ class BleProcess {
             rxLastEvtLogNum,
           );
           if (parsedLog != null) {
+            isValidLogRecieved.value = true;
             final currentLogs = List<LogModel>.from(validEventLogs.value);
             currentLogs.add(parsedLog);
             validEventLogs.value = currentLogs;
@@ -124,7 +130,10 @@ class BleProcess {
         }
       }
 
-      if (rx.payload[12] == 0x02) read1000Logs++;
+      if (rx.payload[12] == 0x02) {
+        read1000Logs++;
+        read1000LogsCount.value = read1000Logs;
+      }
 
       print(
         "EventLog: 0x${rxLastEvtLogNum.toRadixString(16)} "
@@ -319,6 +328,8 @@ class BleProcess {
     _rxTimeoutTimer?.cancel();
     validEventLogCount.dispose();
     validEventLogs.dispose();
+    read1000LogsCount.dispose();
+    isValidLogRecieved.dispose();
   }
 
   // Call this after every TX

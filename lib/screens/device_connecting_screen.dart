@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/utils/bluetooth_constants.dart';
 import 'package:usb_serial/usb_serial.dart';
 import 'package:techno_switch_solar_app/screens/access_code_screen.dart';
@@ -12,9 +11,10 @@ import 'package:techno_switch_solar_app/screens/scanning_screen.dart';
 import 'package:techno_switch_solar_app/services/app_services.dart';
 import 'package:techno_switch_solar_app/utils/bluetooth/ble_notify_data_handler.dart';
 import 'package:lottie/lottie.dart';
-import 'package:intl/intl.dart';
-import 'package:techno_switch_solar_app/models/log_model.dart';
+import 'package:techno_switch_solar_app/screens/event_log_screen.dart';
+import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 
+// Shared BLE instance used across screens
 final BleManager ble = BleManager();
 
 class DeviceConnectingScreen extends StatefulWidget {
@@ -61,6 +61,9 @@ class _DeviceConnectingScreenState extends State<DeviceConnectingScreen>
     // _connectToDevice();
     ble.bleProcess.runStateMachine();
 
+    // Listen for first valid log to navigate to event log screen
+    ble.bleProcess.isValidLogRecieved.addListener(_onFirstValidLogReceived);
+
     // _handshakeSubscription ??= AppServices.bleService.handshakeEvents.listen(
     //   _handleHandshakeEvent,
     // );
@@ -68,8 +71,27 @@ class _DeviceConnectingScreenState extends State<DeviceConnectingScreen>
     // BtUtils().connectToDevice(widget.selectedDevice);
   }
 
+  void _onFirstValidLogReceived() {
+    if (ble.bleProcess.isValidLogRecieved.value && mounted) {
+      // Navigate to event log screen when first valid log is received
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder:
+              (context) => EventLogScreen(
+                logDataList: [], // Will be populated via ValueListenableBuilder
+                panelName: _getDeviceName(),
+                panelVersionNo:
+                    'N/A', // You may want to get this from somewhere
+                isStandalone: true,
+              ),
+        ),
+      );
+    }
+  }
+
   @override
   void dispose() {
+    ble.bleProcess.isValidLogRecieved.removeListener(_onFirstValidLogReceived);
     _handshakeSubscription?.cancel();
     _animationController.dispose();
     super.dispose();
@@ -319,8 +341,6 @@ class _DeviceConnectingScreenState extends State<DeviceConnectingScreen>
                       _buildDeviceInfo(),
                       const SizedBox(height: 24),
                       _buildStatusText(),
-                      const SizedBox(height: 16),
-                      _buildValidEventLogsDisplay(),
                       if (_connectionFailed) ...[
                         const SizedBox(height: 16),
                         _buildErrorMessage(),
@@ -581,209 +601,6 @@ class _DeviceConnectingScreenState extends State<DeviceConnectingScreen>
               ),
             ),
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildValidEventLogsDisplay() {
-    return ValueListenableBuilder<List<LogModel>>(
-      valueListenable: ble.bleProcess.validEventLogs,
-      builder: (context, logs, child) {
-        if (logs.isEmpty) {
-          return const SizedBox.shrink();
-        }
-
-        return Container(
-          margin: const EdgeInsets.symmetric(horizontal: 0, vertical: 8),
-          constraints: BoxConstraints(
-            maxHeight: MediaQuery.of(context).size.height * 0.4,
-          ),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: Color(0xFFB9B9B9).withOpacity(0.31),
-              width: 1,
-            ),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Header
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-                decoration: BoxDecoration(
-                  color: Color(0xFFEC1D24).withOpacity(0.1),
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(12),
-                    topRight: Radius.circular(12),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.event_note, color: Color(0xFFEC1D24), size: 20),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Valid Event Logs (${logs.length})',
-                      style: GoogleFonts.inter(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFFEC1D24),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              // Logs List
-              Flexible(
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: logs.length,
-                  itemBuilder: (context, index) {
-                    final log = logs[index];
-                    return _buildLogItem(log, index == logs.length - 1);
-                  },
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildLogItem(LogModel log, bool isLast) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        border: Border(
-          bottom:
-              isLast
-                  ? BorderSide.none
-                  : BorderSide(
-                    color: Color(0xFFB9B9B9).withOpacity(0.2),
-                    width: 1,
-                  ),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (log.eventId != null)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: Color(0xFFEC1D24).withOpacity(0.1),
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: Text(
-                'ID: ${log.eventId}',
-                style: GoogleFonts.inter(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w500,
-                  color: Color(0xFFEC1D24),
-                ),
-              ),
-            ),
-          if (log.eventDateTime != null) ...[
-            const SizedBox(height: 4),
-            Text(
-              DateFormat('dd-MM-yyyy hh:mm:ss a').format(log.eventDateTime!),
-              style: GoogleFonts.inter(
-                fontSize: 12,
-                fontWeight: FontWeight.w400,
-                color: Color(0xFF918F8F),
-              ),
-            ),
-          ],
-          Text("Evt Sub Type"),
-          if (log.eventSubType != null && log.eventSubType!.isNotEmpty) ...[
-            const SizedBox(height: 4),
-            Text(
-              log.eventSubType!,
-              style: GoogleFonts.inter(
-                fontSize: 12,
-                fontWeight: FontWeight.w400,
-                color: Color(0xFF3D3D3D),
-              ),
-            ),
-          ],
-          Text("Text"),
-          if (log.text != null && log.text!.isNotEmpty) ...[
-            const SizedBox(height: 4),
-            Text(
-              log.text!,
-              style: GoogleFonts.inter(
-                fontSize: 12,
-                fontWeight: FontWeight.w400,
-                color: Color(0xFF696969),
-              ),
-            ),
-          ],
-          Text("Status"),
-          if (log.eventStatus != null && log.eventStatus!.isNotEmpty) ...[
-            const SizedBox(height: 4),
-            Text(
-              log.eventStatus!,
-              style: GoogleFonts.inter(
-                fontSize: 12,
-                fontWeight: FontWeight.w400,
-                color: Color(0xFF696969),
-              ),
-            ),
-          ],
-          Text("Event Class"),
-          if (log.eventClass != null && log.eventClass!.isNotEmpty) ...[
-            const SizedBox(height: 4),
-            Text(
-              log.eventClass!,
-              style: GoogleFonts.inter(
-                fontSize: 12,
-                fontWeight: FontWeight.w400,
-                color: Color(0xFF696969),
-              ),
-            ),
-          ],
-          Text("Event Type"),
-          if (log.eventType != null && log.eventType!.isNotEmpty) ...[
-            const SizedBox(height: 4),
-            Text(
-              log.eventType!,
-              style: GoogleFonts.inter(
-                fontSize: 12,
-                fontWeight: FontWeight.w400,
-                color: Color(0xFF696969),
-              ),
-            ),
-          ],
-          Text("Source"),
-          if (log.eventSource != null && log.eventSource!.isNotEmpty) ...[
-            const SizedBox(height: 4),
-            Text(
-              log.eventSource!,
-              style: GoogleFonts.inter(
-                fontSize: 12,
-                fontWeight: FontWeight.w400,
-                color: Color(0xFF696969),
-              ),
-            ),
-          ],
-          Text("Identifier"),
-          if (log.identifier != null && log.identifier!.isNotEmpty) ...[
-            const SizedBox(height: 4),
-            Text(
-              log.identifier!,
-              style: GoogleFonts.inter(
-                fontSize: 12,
-                fontWeight: FontWeight.w400,
-                color: Color(0xFF696969),
-              ),
-            ),
-          ],
         ],
       ),
     );

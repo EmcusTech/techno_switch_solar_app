@@ -1,13 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_logs/flutter_logs.dart';
-import 'package:techno_switch_solar_app/ble/ble_manager.dart';
-import 'package:techno_switch_solar_app/screens/ble_listener_home_screen.dart';
 import 'package:techno_switch_solar_app/screens/home_screen.dart';
 import 'package:techno_switch_solar_app/services/app_services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/services.dart';
-
-final BleManager ble = BleManager();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -52,9 +48,6 @@ void main() async {
     ),
   );
   runApp(const MyApp());
-
-  // Start BLE state machine
-  // ble.bleProcess.runStateMachine();
 }
 
 class MyApp extends StatefulWidget {
