@@ -54,7 +54,7 @@ void main() async {
   runApp(const MyApp());
 
   // Start BLE state machine
-  // ble.bleProcess.runStateMachine();
+  ble.bleProcess.runStateMachine();
 }
 
 class MyApp extends StatefulWidget {
