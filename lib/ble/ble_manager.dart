@@ -43,8 +43,10 @@ enum OtaProcessState {
   sendPollPacket,
   sendAccessKeyPacket,
   sendControlCmdPacket,
+  sendStopCntrlCmdPkt,
   sendContinuousPollPacket,
   otaWaitRsp,
+  notInUse,
 }
 
 const String BLE_AUTHN_MSG = "TECHNOSWITCH-AUTH-APP";
@@ -69,7 +71,14 @@ class BleManager {
   DiscoveredDevice? selectedDevice;
   QualifiedCharacteristic? notifyChar;
   QualifiedCharacteristic? writeChar;
-  // StreamSubscription<DiscoveredDevice>? _scanSub;
+  StreamSubscription<DiscoveredDevice>? _scanSub;
+  // Prevent duplicate poll writes while waiting for notify
+  bool _pollInFlight = false;
+  int receivedPollCount = 0;
+  StreamSubscription<ConnectionStateUpdate>? _connectionSub;
+  bool _connectedOnce = false;
+  bool _isGattConnected = false;
+  StreamSubscription<List<int>>? _notifySub;
 
   // BLE state machine
   late BleProcess bleProcess;
@@ -79,88 +88,132 @@ class BleManager {
     bleProcess = BleProcess(this);
   }
 
-  bool get isConnected => selectedDevice != null;
+  bool get isConnected => _isGattConnected;
 
   /// SCAN & CONNECT
-  Future<void> scanAndConnect({required DiscoveredDevice device}) async {
-    // print("Requesting permissions...");
+  Future<void> connectToKnownDevice({
+    int maxRetries = 3,
+    required DiscoveredDevice device,
+  }) async {
+    int attempt = 0;
 
-    // await [
-    //   Permission.bluetoothScan,
-    //   Permission.bluetoothConnect,
-    //   Permission.location,
-    // ].request();
+    while (attempt < maxRetries) {
+      attempt++;
+      print("BLE connect attempt $attempt / $maxRetries");
 
-    // if (await Permission.bluetoothScan.isDenied ||
-    //     await Permission.location.isDenied) {
-    //   print("Permissions not granted!");
-    //   return;
-    // }
+      try {
+        selectedDevice = device;
+        await _connectOnce(device);
+        print("BLE connected successfully");
+        return; // ✅ SUCCESS
+      } catch (e) {
+        print("BLE attempt $attempt failed: $e");
 
-    // print("Permissions granted. Starting scan...");
+        await _notifySub?.cancel();
+        await _connectionSub?.cancel();
 
-    // final Completer<DiscoveredDevice> deviceCompleter = Completer();
+        _notifySub = null;
+        _connectionSub = null;
+        _connectedOnce = false;
+        _isGattConnected = false;
+        selectedDevice = null;
 
-    // _scanSub = flutterReactiveBle
-    //     .scanForDevices(
-    //       withServices: [serviceUuid],
-    //       scanMode: ScanMode.lowLatency,
-    //     )
-    //     .listen((device) {
-    //       print("Found: ${device.name} (${device.id})");
+        // ---- RESET PROTOCOL STATE ----
+        bleCurrentState = BleStates.REQ_ENCY_KEY;
+        bleStateMachineState = BleStates.REQ_ENCY_KEY;
+        bleAESKey.clear();
+        _pollInFlight = false;
+        receivedPollCount = 0;
 
-    //       // Stop as soon as we find a matching device
-    //       if (!deviceCompleter.isCompleted) {
-    //         deviceCompleter.complete(device);
-    //       }
-    //     });
+        if (attempt >= maxRetries) {
+          print("Max BLE retry attempts reached");
+          rethrow;
+        }
 
-    selectedDevice = device;
-    print("Device selected: ${selectedDevice!.name}");
-    // await _scanSub?.cancel();
-    // await Future.delayed(const Duration(milliseconds: 300));
+        // BLE stack cooldown (important)
+        await Future.delayed(const Duration(seconds: 1));
+      }
+    }
+  }
 
-    final connectionStream = flutterReactiveBle.connectToDevice(
-      id: selectedDevice!.id,
-      connectionTimeout: const Duration(seconds: 8),
-    );
+  Future<void> _connectOnce(DiscoveredDevice device) async {
+    await [
+      Permission.bluetoothConnect,
+      Permission.bluetoothScan, // still required on Android 12+
+      Permission.location,
+    ].request();
+
+    if (await Permission.bluetoothConnect.isDenied ||
+        await Permission.location.isDenied) {
+      throw Exception("Bluetooth permissions not granted");
+    }
 
     final Completer<void> connectedCompleter = Completer();
 
-    connectionStream.listen((update) {
-      print("Connection state: ${update.connectionState}");
+    _connectionSub = flutterReactiveBle
+        .connectToDevice(
+          id: device.id,
+          connectionTimeout: const Duration(seconds: 10),
+        )
+        .listen(
+          (update) async {
+            print("Connection state: ${update.connectionState}");
 
-      if (update.connectionState == DeviceConnectionState.connected) {
-        print("Connected!");
+            if (update.connectionState == DeviceConnectionState.connected) {
+              _isGattConnected = true;
 
-        notifyChar = QualifiedCharacteristic(
-          characteristicId: notifyUuid,
-          serviceId: serviceUuid,
-          deviceId: selectedDevice!.id,
+              if (_connectedOnce) return; // 🔒 HARD GUARD
+              _connectedOnce = true;
+
+              notifyChar = QualifiedCharacteristic(
+                characteristicId: notifyUuid,
+                serviceId: serviceUuid,
+                deviceId: device.id,
+              );
+
+              writeChar = QualifiedCharacteristic(
+                characteristicId: writeUuid,
+                serviceId: serviceUuid,
+                deviceId: device.id,
+              );
+
+              await Future.delayed(const Duration(milliseconds: 100));
+              await flutterReactiveBle.requestMtu(
+                deviceId: device.id,
+                mtu: 247,
+              );
+
+              bleProcess.deviceConnectState =
+                  DeviceConnectState.registerNotifyHandler;
+
+              Get.find<BleLogController>().enableNotify();
+
+              if (!connectedCompleter.isCompleted) {
+                connectedCompleter.complete();
+              }
+            }
+
+            if (update.connectionState == DeviceConnectionState.disconnected) {
+              _isGattConnected = false;
+              _connectedOnce = false;
+
+              await _notifySub?.cancel();
+              _notifySub = null;
+
+              if (!connectedCompleter.isCompleted) {
+                connectedCompleter.completeError(
+                  Exception("Disconnected during connection"),
+                );
+              }
+            }
+          },
+          onError: (e) {
+            if (!connectedCompleter.isCompleted) {
+              connectedCompleter.completeError(e);
+            }
+          },
         );
 
-        writeChar = QualifiedCharacteristic(
-          characteristicId: writeUuid,
-          serviceId: serviceUuid,
-          deviceId: selectedDevice!.id,
-        );
-
-        connectedCompleter.complete();
-        bleProcess.deviceConnectState =
-            DeviceConnectState.registerNotifyHandler;
-        print("Start register handler");
-        Get.find<BleLogController>().enableNotify();
-      }
-
-      if (update.connectionState == DeviceConnectionState.disconnected) {
-        print("Disconnected.");
-      }
-    });
-    await flutterReactiveBle.requestMtu(
-      deviceId: selectedDevice!.id,
-      mtu: 247, // safe value
-    );
-    await Future.delayed(const Duration(milliseconds: 200));
     await connectedCompleter.future;
   }
 
@@ -168,13 +221,15 @@ class BleManager {
   Future<void> registerNotifyHandler() async {
     print("Register notify handler");
 
+    if (_notifySub != null) return;
+
     if (!isConnected) {
       print("Device disconnected before notification start");
       return;
     }
 
     // Subscribe to notifications
-    flutterReactiveBle
+    _notifySub = flutterReactiveBle
         .subscribeToCharacteristic(notifyChar!)
         .listen(
           (data) => notificationHandler(Uint8List.fromList(data)),
@@ -192,14 +247,31 @@ class BleManager {
   /// DISCONNECT
   Future<void> disconnectHandler() async {
     print("Disconnecting device...");
-    // Implement disconnect if needed
+
+    await _notifySub?.cancel();
+    await _connectionSub?.cancel();
+
+    _notifySub = null;
+    _connectionSub = null;
+
+    _isGattConnected = false;
+    _connectedOnce = false;
     selectedDevice = null;
   }
 
   /// SHUTDOWN
   Future<void> shutdown() async {
     print("Shutdown BLE");
-    // await _scanSub?.cancel();
+    await _scanSub?.cancel();
+    await _notifySub?.cancel();
+    await _connectionSub?.cancel();
+
+    _scanSub = null;
+    _notifySub = null;
+    _connectionSub = null;
+
+    _isGattConnected = false;
+    _connectedOnce = false;
   }
 
   // ----------------------
@@ -207,10 +279,12 @@ class BleManager {
   // ----------------------
   Future<void> notificationHandler(Uint8List data) async {
     print(
-      "--------notify received----- RX TIME:${DateTime.now().toIso8601String()}",
+      "TX/RX: --------notify received----- RX TIME:${DateTime.now().toIso8601String()}",
     );
     txData = 1;
     bleProcess.cancelRxTimeout();
+    // Any notify received implies previous write completed → allow next poll
+    _pollInFlight = false;
     if (bleCurrentState == BleStates.REQ_ENCY_KEY) {
       print("Encryption key req response");
       bleRxFrame = bleParseAndUpdateRxFrame(data, data.length);
@@ -248,6 +322,8 @@ class BleManager {
         print("Validation failed");
       }
     } else {
+      receivedPollCount++;
+      print("The Received RX count is : $receivedPollCount");
       Uint8List decryptedData = aes.aesDecrypt(bleAESKey["AES_KEY"], data);
       bleParseAndUpdateRxFrame(decryptedData, decryptedData.length);
 
@@ -379,6 +455,9 @@ class BleManager {
         print("Sending plain data: length ${dataToSend.length}");
       }
 
+      print(
+        "::::::Data Written:::$dataToSend::TX Time${DateTime.now().toIso8601String()}}",
+      );
       await flutterReactiveBle.writeCharacteristicWithResponse(
         writeChar!,
         value: dataToSend,
@@ -411,11 +490,15 @@ class BleManager {
           frameBytes,
         );
         // await Future.delayed(const Duration(milliseconds: 300));
+        print(
+          "::::::Data Written:::$encryptedData::TX Time${DateTime.now().toIso8601String()}}",
+        );
         await flutterReactiveBle.writeCharacteristicWithResponse(
           writeChar!,
           value: encryptedData,
         );
       } else {
+        print("::::::Data Written:::::");
         await flutterReactiveBle.writeCharacteristicWithResponse(
           writeChar!,
           value: frameBytes,
@@ -434,6 +517,8 @@ class BleManager {
     Uint8List reqFrameBytes = aes.convertToBytes(reqFrame);
 
     print("Framed key req Frame: $reqFrame after bytes convert $reqFrameBytes");
+
+    print("TX/RX: TRANSMIT: enc key request : $reqFrameBytes");
 
     // Send using BLE
     await sendData(reqFrameBytes);
@@ -457,7 +542,7 @@ class BleManager {
     Uint8List frameBytes = Uint8List.fromList(authnMsgFrame);
 
     print("Framed Authn Msg: $authnMsgFrame");
-    print("Frame bytes: $frameBytes");
+    print("TX/RX: TRANSMIT: Auth Frame bytes: $frameBytes");
 
     // Send using your sendData function which handles encryption
     await sendData(frameBytes);
@@ -483,13 +568,22 @@ class BleManager {
     u8Pkt[214] = checksum & 0xFF;
     u8Pkt[215] = 0xFD;
 
-    print("TRANSMIT:");
-    print(u8Pkt.map((e) => e.toRadixString(16).padLeft(2, '0')).join(' '));
+    print(
+      "TX/RX: TRANSMIT: Network Packet time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((e) => e.toRadixString(16).padLeft(2, '0')).join(' ')}",
+    );
+    // print(u8Pkt.map((e) => e.toRadixString(16).padLeft(2, '0')).join(' '));
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt); // see step 4
   }
 
   Future<void> sendPollPacket() async {
+    // Guard: skip if a previous poll write is still awaiting notify
+    if (_pollInFlight) {
+      print("Skipping poll: previous write still in-flight");
+      return;
+    }
+    _pollInFlight = true;
+    // await Future.delayed(Duration(milliseconds: 200));
     // Create the 216-byte poll packet
     List<int> pollPkt = List.filled(216, 0);
     pollPkt[0] = 0xFE;
@@ -513,14 +607,21 @@ class BleManager {
     pollPkt[214] = checksum & 0xFF;
     pollPkt[215] = 0xFD;
 
-    print("TRANSMIT:");
     print(
-      pollPkt
-          .map((e) => e.toRadixString(16).padLeft(2, '0').toUpperCase())
-          .join(' '),
+      "TX/RX: TRANSMIT: Poll Packet time: ${DateTime.now().toIso8601String()}, packet: ${pollPkt.map((e) => e.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
     );
+    // print(
+    //   pollPkt
+    //       .map((e) => e.toRadixString(16).padLeft(2, '0').toUpperCase())
+    //       .join(' '),
+    // );
 
     await sendSmallDataFrame(0x1000, 216, pollPkt);
+  }
+
+  // Allow BleProcess to clear in-flight on timeout
+  void resetPollInFlight() {
+    _pollInFlight = false;
   }
 
   Future<void> sendAccessKeyPkt() async {
@@ -554,17 +655,20 @@ class BleManager {
     pkt[214] = checksum & 0xFF;
     pkt[215] = 0xFD;
 
-    print("TRANSMIT:");
     print(
-      pkt
-          .map((e) => e.toRadixString(16).padLeft(2, '0').toUpperCase())
-          .join(' '),
+      "TX/RX: TRANSMIT: Access Key Packet time: ${DateTime.now().toIso8601String()}, packet: ${pkt.map((e) => e.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ').toString()}",
     );
+    // print(
+    //   pkt
+    //       .map((e) => e.toRadixString(16).padLeft(2, '0').toUpperCase())
+    //       .join(' ')
+    //       .toString(),
+    // );
 
     await sendSmallDataFrame(0x1000, 216, pkt);
   }
 
-  Future<void> sendCntrlCmdPkt() async {
+  Future<void> sendStartCntrlCmdPkt() async {
     // Update global counters
     u8TxPktCnt += 1;
 
@@ -590,12 +694,15 @@ class BleManager {
     u8_pkt[214] = checksum & 0xFF;
     u8_pkt[215] = 0xFD;
 
-    print("TRANSMIT:");
     print(
-      u8_pkt
-          .map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase())
-          .join(' '),
+      "TX/RX: TRANSMIT: Start Control Command time: ${DateTime.now().toIso8601String()}, packet: ${u8_pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
     );
+
+    // print(
+    //   u8_pkt
+    //       .map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase())
+    //       .join(' '),
+    // );
 
     await sendSmallDataFrame(0x1000, 216, u8_pkt);
   }
@@ -618,7 +725,7 @@ class BleManager {
     u8_pkt[11] = 0x04; // socket number
     u8_pkt[12] = 0x0B; // command byte 1
     u8_pkt[13] = 0x03; // command byte 2
-    u8_pkt[14] = 0x01; // Stop : Event Buffer Mode
+    u8_pkt[14] = 0x01; // Event Buffer Mode -> Stop
 
     // Compute checksum on first 213 bytes
     int checksum = toolsFletcherChecksum(u8_pkt.sublist(0, 213));
@@ -627,12 +734,14 @@ class BleManager {
     u8_pkt[214] = checksum & 0xFF;
     u8_pkt[215] = 0xFD;
 
-    print("TRANSMIT:");
     print(
-      u8_pkt
-          .map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase())
-          .join(' '),
+      "TX/RX: TRANSMIT: Stop Control Command time: ${DateTime.now().toIso8601String()}, packet: ${u8_pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
     );
+    // print(
+    //   u8_pkt
+    //       .map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase())
+    //       .join(' '),
+    // );
 
     await sendSmallDataFrame(0x1000, 216, u8_pkt);
   }

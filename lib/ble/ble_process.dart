@@ -16,6 +16,10 @@ class BleProcess {
   int checkForAccessKeyCmdRsp = 0;
   int validEventLogNum = 0;
   int read1000Logs = 0;
+  bool logRetreivalEnded = false;
+
+  DateTime? logStartingTime;
+  DateTime? logEndTime;
 
   // ValueNotifier to expose valid event log count to UI
   final ValueNotifier<int> validEventLogCount = ValueNotifier<int>(0);
@@ -37,6 +41,8 @@ class BleProcess {
   int txData = 1;
 
   int pollWaitRspTimeoutCnt = 0;
+
+  int receivedPollCount = 0;
 
   BleProcess(this.bleManager);
 
@@ -71,34 +77,37 @@ class BleProcess {
         print("NEXT: CONTINUOUS POLL PACKET");
         bleManager.otaProcessState = OtaProcessState.sendContinuousPollPacket;
         checkForAccessKeyCmdRsp = 1;
-        startRxTimeout();
-        await bleManager.sendPollPacket();
         break;
 
       case OtaProcessState.sendContinuousPollPacket:
         bleManager.otaProcessState = OtaProcessState.sendContinuousPollPacket;
-
-        //Don't send poll if waiting for specific responses
-        if (checkForAccessKeyCmdRsp == 1 || checkForCtrlCmdRsp == 1) {
-          //skip sending poll, let response check handle it below
-          break;
-        }
-
-        if (rx.payload[3] == 0x03) {
-          Get.find<BleLogController>().restartNetworkFlow();
-        } else {
-          startRxTimeout();
-          await bleManager.sendPollPacket();
-        }
-
         break;
 
       case OtaProcessState.sendControlCmdPacket:
         print("Control cmd received → Next continuous poll");
-        bleManager.otaProcessState = OtaProcessState.sendContinuousPollPacket;
+        bleManager.otaProcessState =
+            logRetreivalEnded
+                ? OtaProcessState.notInUse
+                : OtaProcessState.sendContinuousPollPacket;
         checkForCtrlCmdRsp = 1;
-        startRxTimeout();
-        await bleManager.sendPollPacket();
+        //the poll for the control cmd will be send down in the if else condition's
+        break;
+
+      case OtaProcessState.sendStopCntrlCmdPkt:
+        print("Sending Stop Control Command");
+        if (checkForCtrlCmdRsp == 1) {
+          logRetreivalEnded = true;
+          bleManager.otaProcessState = OtaProcessState.sendStopCntrlCmdPkt;
+          break;
+        } else {
+          bleManager.otaProcessState = OtaProcessState.sendControlCmdPacket;
+          checkForAccessKeyCmdRsp = 0;
+          startRxTimeout();
+          await bleManager.sendStartCntrlCmdPkt();
+          break;
+        }
+
+      case OtaProcessState.notInUse:
         break;
 
       default:
@@ -111,10 +120,10 @@ class BleProcess {
 
       if (String.fromCharCodes(rx.payload.sublist(14, 18)) == "1974") {
         print("ACCESS KEY RECEIVED → NEXT CONTROL CMD");
-        bleManager.otaProcessState = OtaProcessState.sendControlCmdPacket;
+        bleManager.otaProcessState = OtaProcessState.sendStopCntrlCmdPkt;
         checkForAccessKeyCmdRsp = 0;
         startRxTimeout();
-        await bleManager.sendCntrlCmdPkt();
+        await bleManager.sendStopCntrlCmdPkt();
       } else {
         print("ACCESS KEY not found, polling again");
         startRxTimeout();
@@ -127,9 +136,12 @@ class BleProcess {
       print(
         "Checking CONTROL CMD RSP Value ${rx.payload[10]}:::::${rx.payload[10] == 0x83} ",
       );
-      if (rx.payload[10] == 0x83) {
+      if (rx.payload[3] == 0x03) {
+        Get.find<BleLogController>().restartNetworkFlow();
+      } else if (rx.payload[10] == 0x83) {
         print("CONTROL CMD RESPONSE RECEIVED");
         checkForCtrlCmdRsp = 2;
+        logStartingTime = DateTime.now();
         // Continue with normal polling now that we got the response
         startRxTimeout();
         await bleManager.sendPollPacket();
@@ -140,6 +152,10 @@ class BleProcess {
         await bleManager.sendPollPacket();
       }
     } else if (checkForCtrlCmdRsp == 2) {
+      receivedPollCount++;
+      print(
+        "Total Received logs after control cmd response found: $receivedPollCount",
+      );
       int rxLastEvtLogNum =
           rx.payload[19] |
           (rx.payload[18] << 8) |
@@ -179,6 +195,11 @@ class BleProcess {
         "Read1000: $read1000Logs"
         "time: ${DateTime.now().toIso8601String()}",
       );
+
+      if (read1000Logs != 1000) {
+        startRxTimeout();
+        await bleManager.sendPollPacket();
+      }
     }
 
     // ----- READY FOR NEXT FRAME -----
@@ -186,30 +207,27 @@ class BleProcess {
 
     if (read1000Logs == 1000) {
       print("<<<<<< COMPLETED 1000 EVENT LOGS >>>>>>>");
+      logEndTime = DateTime.now();
+      print(
+        "Time Taken for 1000 logs ${formatDuration(logEndTime!.difference(logStartingTime!))}",
+      );
       processNextOtaFrame = false;
+      // startRxTimeout();
       await bleManager.sendStopCntrlCmdPkt();
     }
+  }
+
+  String formatDuration(Duration d) {
+    final m = d.inMinutes;
+    final s = d.inSeconds.remainder(60);
+    return '$m:${s.toString().padLeft(2, '0')}';
   }
 
   /// MAIN BLE STATE MACHINE
   Future<void> bleProcess() async {
     // await Future.delayed(const Duration(milliseconds: 200));
-    print("bleStateMachineState: ${bleManager.bleCurrentState}");
+    // print("bleStateMachineState: ${bleManager.bleCurrentState}");
     switch (bleManager.bleStateMachineState) {
-      // case BleStates.REQ_ENCY_KEY:
-      //   print("Send encry req frame");
-      //   await bleManager.sendAesKeyReq();
-      //   bleManager.bleStateMachineState = BleStates.PROCESS_WAIT_RSP;
-      //   bleCurrentState = BleStates.REQ_ENCY_KEY;
-      //   break;
-
-      // case BleStates.SEND_AUTHN_MSG:
-      //   print("Send authn msg frame");
-      //   await bleManager.sendAuthnMsg();
-      //   bleManager.bleStateMachineState = BleStates.PROCESS_WAIT_RSP;
-      //   bleCurrentState = BleStates.SEND_AUTHN_MSG;
-      //   break;
-
       case BleStates.PROCESS_PANEL_EVT_LOG_READ:
         bleCurrentState = BleStates.PROCESS_PANEL_EVT_LOG_READ;
         await handleTsEvtLogRead();
@@ -217,7 +235,7 @@ class BleProcess {
 
       case BleStates.PROCESS_WAIT_RSP:
         print("Waiting state");
-        await Future.delayed(const Duration(seconds: 1));
+        // await Future.delayed(const Duration(seconds: 1));
         break;
 
       case BleStates.IDLE:
@@ -394,10 +412,12 @@ class BleProcess {
     _rxTimeoutTimer?.cancel();
 
     // Start a new 10-second timer
-    _rxTimeoutTimer = Timer(const Duration(seconds: 3), () {
+    _rxTimeoutTimer = Timer(const Duration(seconds: 5), () async {
       print("RX timeout: no response received. Sending next packet anyway.");
+      // Allow next poll in case in-flight guard is set
+      bleManager.resetPollInFlight();
       processNextOtaFrame = true;
-      handleTsEvtLogRead(); // trigger next TX
+      await handleTsEvtLogRead(); // trigger next TX
     });
   }
 
@@ -406,9 +426,9 @@ class BleProcess {
     if (processNextOtaFrame) {
       startRxTimeout();
       processNextOtaFrame = false;
-      print(
-        "TS EVT LOG READ STATE: ${bleManager.otaProcessState}, processNextOtaFrame: $processNextOtaFrame",
-      );
+      // print(
+      //   "TS EVT LOG READ STATE: ${bleManager.otaProcessState}, processNextOtaFrame: $processNextOtaFrame",
+      // );
 
       switch (bleManager.otaProcessState) {
         case OtaProcessState.sendNetworkPacket:
@@ -421,15 +441,21 @@ class BleProcess {
           await bleManager.sendAccessKeyPkt();
           break;
         case OtaProcessState.sendControlCmdPacket:
-          await bleManager.sendCntrlCmdPkt();
+          await bleManager.sendStartCntrlCmdPkt();
+          break;
+        case OtaProcessState.sendStopCntrlCmdPkt:
+          await bleManager.sendStopCntrlCmdPkt();
           break;
         case OtaProcessState.sendContinuousPollPacket:
           await bleManager.sendPollPacket();
           break;
+        case OtaProcessState.notInUse:
+          break;
         case OtaProcessState.otaWaitRsp:
-          await Future.delayed(const Duration(milliseconds: 100));
+          // await Future.delayed(const Duration(milliseconds: 100));
           break;
       }
+      startRxTimeout();
     } else {
       await Future.delayed(const Duration(milliseconds: 10));
     }
@@ -438,25 +464,8 @@ class BleProcess {
   /// RUN STATE MACHINE LOOP
   Future<void> runStateMachine() async {
     while (true) {
-      await Future.delayed(Duration(milliseconds: 200));
       try {
         await bleProcess();
-        // switch (deviceConnectState) {
-        //   case DeviceConnectState.notConnected:
-        //     print("Start connect");
-        //     await bleManager.scanAndConnect(de);
-        //     deviceConnectState = DeviceConnectState.registerNotifyHandler;
-        //     break;
-        //   case DeviceConnectState.registerNotifyHandler:
-        //     print("Start register handler");
-        //     await bleManager.registerNotifyHandler();
-        //     break;
-        //   case DeviceConnectState.running:
-        //     print("<<<<<<<<<<<<<<  BLE PROCESS RUNNING >>>>>>>>>>>>>>>>>>>>");
-        //     await bleProcess();
-        //     break;
-        // }
-        // await Future.delayed(const Duration(milliseconds: 100));
       } catch (e) {
         print("Exception in state machine: $e");
         await bleManager.shutdown();

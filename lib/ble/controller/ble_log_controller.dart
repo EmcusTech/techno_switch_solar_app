@@ -4,11 +4,11 @@ import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/ble/ble_process.dart';
 
 class BleLogController extends GetxController {
-  final BleManager bleManager = BleManager();
+  final BleManager bleManager = Get.find<BleManager>();
   late final BleProcess bleProcess = BleProcess(bleManager);
 
   connectToDevice({required DiscoveredDevice device}) async {
-    await bleManager.scanAndConnect(device: device);
+    await bleManager.connectToKnownDevice(device: device);
   }
 
   enableNotify() async {

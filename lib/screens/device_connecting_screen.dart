@@ -17,11 +17,10 @@ import 'package:techno_switch_solar_app/screens/event_log_screen.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 
 // Shared BLE instance used across screens
-final BleManager ble = BleManager();
+final BleManager ble = Get.find<BleManager>();
 
 class DeviceConnectingScreen extends StatefulWidget {
-  final DiscoveredDevice
-  selectedDevice;
+  final DiscoveredDevice selectedDevice;
   final ScanType scanType;
   final bool? isLiveEvent;
 
