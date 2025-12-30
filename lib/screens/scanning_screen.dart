@@ -1,6 +1,5 @@
 // scanning_screen.dart
 import 'dart:async';
-import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:techno_switch_solar_app/screens/event_log_screen.dart';
 import 'package:techno_switch_solar_app/screens/log_history_screen.dart';
 import 'package:techno_switch_solar_app/screens/log_retrieval_loading_screen.dart';
 import 'package:techno_switch_solar_app/screens/settings_screen.dart';

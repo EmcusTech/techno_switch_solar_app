@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_logs/flutter_logs.dart';
+import 'package:get/get.dart';
+import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/screens/home_screen.dart';
 import 'package:techno_switch_solar_app/services/app_services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -47,6 +49,7 @@ void main() async {
       systemNavigationBarIconBrightness: Brightness.light, // For white icons
     ),
   );
+  Get.put(BleLogController());
   runApp(const MyApp());
 }
 

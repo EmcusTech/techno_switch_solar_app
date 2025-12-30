@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
+import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'ble_frame.dart';
 import 'aes_key.dart' as aes;
 import 'ble_process.dart';
@@ -67,7 +69,7 @@ class BleManager {
   DiscoveredDevice? selectedDevice;
   QualifiedCharacteristic? notifyChar;
   QualifiedCharacteristic? writeChar;
-  StreamSubscription<DiscoveredDevice>? _scanSub;
+  // StreamSubscription<DiscoveredDevice>? _scanSub;
 
   // BLE state machine
   late BleProcess bleProcess;
@@ -80,43 +82,43 @@ class BleManager {
   bool get isConnected => selectedDevice != null;
 
   /// SCAN & CONNECT
-  Future<void> scanAndConnect() async {
-    print("Requesting permissions...");
+  Future<void> scanAndConnect({required DiscoveredDevice device}) async {
+    // print("Requesting permissions...");
 
-    await [
-      Permission.bluetoothScan,
-      Permission.bluetoothConnect,
-      Permission.location,
-    ].request();
+    // await [
+    //   Permission.bluetoothScan,
+    //   Permission.bluetoothConnect,
+    //   Permission.location,
+    // ].request();
 
-    if (await Permission.bluetoothScan.isDenied ||
-        await Permission.location.isDenied) {
-      print("Permissions not granted!");
-      return;
-    }
+    // if (await Permission.bluetoothScan.isDenied ||
+    //     await Permission.location.isDenied) {
+    //   print("Permissions not granted!");
+    //   return;
+    // }
 
-    print("Permissions granted. Starting scan...");
+    // print("Permissions granted. Starting scan...");
 
-    final Completer<DiscoveredDevice> deviceCompleter = Completer();
+    // final Completer<DiscoveredDevice> deviceCompleter = Completer();
 
-    _scanSub = flutterReactiveBle
-        .scanForDevices(
-      withServices: [serviceUuid],
-      scanMode: ScanMode.lowLatency,
-    )
-        .listen((device) {
-      print("Found: ${device.name} (${device.id})");
+    // _scanSub = flutterReactiveBle
+    //     .scanForDevices(
+    //       withServices: [serviceUuid],
+    //       scanMode: ScanMode.lowLatency,
+    //     )
+    //     .listen((device) {
+    //       print("Found: ${device.name} (${device.id})");
 
-      // Stop as soon as we find a matching device
-      if (!deviceCompleter.isCompleted) {
-        deviceCompleter.complete(device);
-      }
-    });
+    //       // Stop as soon as we find a matching device
+    //       if (!deviceCompleter.isCompleted) {
+    //         deviceCompleter.complete(device);
+    //       }
+    //     });
 
-    selectedDevice = await deviceCompleter.future;
+    selectedDevice = device;
     print("Device selected: ${selectedDevice!.name}");
-    await _scanSub?.cancel();
-    await Future.delayed(const Duration(milliseconds: 300));
+    // await _scanSub?.cancel();
+    // await Future.delayed(const Duration(milliseconds: 300));
 
     final connectionStream = flutterReactiveBle.connectToDevice(
       id: selectedDevice!.id,
@@ -144,6 +146,10 @@ class BleManager {
         );
 
         connectedCompleter.complete();
+        bleProcess.deviceConnectState =
+            DeviceConnectState.registerNotifyHandler;
+        print("Start register handler");
+        Get.find<BleLogController>().enableNotify();
       }
 
       if (update.connectionState == DeviceConnectionState.disconnected) {
@@ -172,14 +178,15 @@ class BleManager {
         .subscribeToCharacteristic(notifyChar!)
         .listen(
           (data) => notificationHandler(Uint8List.fromList(data)),
-      onError: (e) {
-        print("Notification subscription error: $e");
-      },
-    );
+          onError: (e) {
+            print("Notification subscription error: $e");
+          },
+        );
 
     print("Listening for notifications...");
     await Future.delayed(const Duration(milliseconds: 300));
-    bleProcess.deviceConnectState = DeviceConnectState.running;
+    print("---Notification handler registered----");
+    bleProcess.requestENCKey();
   }
 
   /// DISCONNECT
@@ -192,13 +199,16 @@ class BleManager {
   /// SHUTDOWN
   Future<void> shutdown() async {
     print("Shutdown BLE");
-    await _scanSub?.cancel();
+    // await _scanSub?.cancel();
   }
 
   // ----------------------
   // Notification Handler
   // ----------------------
   Future<void> notificationHandler(Uint8List data) async {
+    print(
+      "--------notify received----- RX TIME:${DateTime.now().toIso8601String()}",
+    );
     txData = 1;
     bleProcess.cancelRxTimeout();
     if (bleCurrentState == BleStates.REQ_ENCY_KEY) {
@@ -212,11 +222,12 @@ class BleManager {
         bleAESKey["AES_KEY"] = bleRxFrame.payload;
         print("Received key: ${bleAESKey['AES_KEY']}");
 
-        await Future.delayed(Duration(seconds: 1));
+        await Future.delayed(Duration(milliseconds: 300));
         bleStateMachineState = BleStates.SEND_AUTHN_MSG;
         bleCurrentState = BleStates.SEND_AUTHN_MSG;
 
         print("handler bleStateMachineState: $bleStateMachineState");
+        bleProcess.sendAuthPacket();
       } else {
         print("Validation failed");
       }
@@ -226,11 +237,13 @@ class BleManager {
       bleParseAndUpdateRxFrame(decryptedData, decryptedData.length);
 
       if (bleValidateRxFrame(bleRxFrame)) {
-        print("Validation success");
+        print("AUTH KEY Validation success");
         await Future.delayed(Duration(seconds: 1));
         bleCurrentState = BleStates.PROCESS_PANEL_EVT_LOG_READ;
         bleStateMachineState = BleStates.PROCESS_PANEL_EVT_LOG_READ;
         print("Current state: $bleStateMachineState");
+        // Send Network Packet
+        Get.find<BleLogController>().sendNetworkPacket();
       } else {
         print("Validation failed");
       }
@@ -287,10 +300,10 @@ class BleManager {
   }
 
   static crcCcittFalse(
-      List<int> data, {
-        int poly = 0x1021,
-        int initVal = 0xFFFF,
-      }) {
+    List<int> data, {
+    int poly = 0x1021,
+    int initVal = 0xFFFF,
+  }) {
     int crc = initVal;
 
     for (int byte in data) {
@@ -307,11 +320,11 @@ class BleManager {
   }
 
   List<int> bleFrameFormat(
-      int cmd,
-      int typeOfFrame,
-      int dataLen,
-      List<int> data,
-      ) {
+    int cmd,
+    int typeOfFrame,
+    int dataLen,
+    List<int> data,
+  ) {
     if (cmd <= 0 || typeOfFrame <= 0 || dataLen <= 0 || data.isEmpty) {
       return [];
     }
@@ -376,11 +389,11 @@ class BleManager {
   }
 
   Future<void> sendSmallDataFrame(
-      int cmd,
-      int length,
-      List<int> data, {
-        bool encrypt = true,
-      }) async {
+    int cmd,
+    int length,
+    List<int> data, {
+    bool encrypt = true,
+  }) async {
     if (writeChar == null) return;
 
     List<int> frame = bleFrameFormat(
@@ -569,6 +582,43 @@ class BleManager {
     u8_pkt[11] = 0x04; // socket number
     u8_pkt[12] = 0x0B; // command byte 1
     u8_pkt[13] = 0x03; // command byte 2
+
+    // Compute checksum on first 213 bytes
+    int checksum = toolsFletcherChecksum(u8_pkt.sublist(0, 213));
+
+    u8_pkt[213] = (checksum >> 8) & 0xFF;
+    u8_pkt[214] = checksum & 0xFF;
+    u8_pkt[215] = 0xFD;
+
+    print("TRANSMIT:");
+    print(
+      u8_pkt
+          .map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase())
+          .join(' '),
+    );
+
+    await sendSmallDataFrame(0x1000, 216, u8_pkt);
+  }
+
+  Future<void> sendStopCntrlCmdPkt() async {
+    // Update global counters
+    u8TxPktCnt += 1;
+
+    // Create 216-byte buffer
+    Uint8List u8_pkt = Uint8List(216);
+    u8_pkt[0] = 0xFE;
+    u8_pkt[1] = 0x01;
+    u8_pkt[2] = 0x00;
+
+    u8_pkt[3] = 0x01; // pkt type
+    u8_pkt[4] = u8TxPktCnt & 0xFF; // tx pkt num
+    u8_pkt[5] = u8RxPktCnt & 0xFF; // rx pkt num
+    u8_pkt[6] = 0x00; // network number
+    u8_pkt[10] = 0x83; // mode
+    u8_pkt[11] = 0x04; // socket number
+    u8_pkt[12] = 0x0B; // command byte 1
+    u8_pkt[13] = 0x03; // command byte 2
+    u8_pkt[14] = 0x01; // Stop : Event Buffer Mode
 
     // Compute checksum on first 213 bytes
     int checksum = toolsFletcherChecksum(u8_pkt.sublist(0, 213));

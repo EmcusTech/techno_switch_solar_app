@@ -3,7 +3,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/utils/bluetooth_constants.dart';
 import 'package:usb_serial/usb_serial.dart';
 import 'package:techno_switch_solar_app/screens/access_code_screen.dart';
@@ -18,8 +20,8 @@ import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 final BleManager ble = BleManager();
 
 class DeviceConnectingScreen extends StatefulWidget {
-  final dynamic
-  selectedDevice; // Can be BluetoothDevice or UsbDevice or ScanResult
+  final DiscoveredDevice
+  selectedDevice;
   final ScanType scanType;
   final bool? isLiveEvent;
 
@@ -59,7 +61,9 @@ class _DeviceConnectingScreenState extends State<DeviceConnectingScreen>
 
     // Start connection attempt
     // _connectToDevice();
-    ble.bleProcess.runStateMachine();
+    // ble.bleProcess.runStateMachine();
+
+    Get.find<BleLogController>().connectToDevice(device: widget.selectedDevice);
 
     // Listen for first valid log to navigate to event log screen
     ble.bleProcess.isValidLogRecieved.addListener(_onFirstValidLogReceived);
@@ -285,11 +289,11 @@ class _DeviceConnectingScreenState extends State<DeviceConnectingScreen>
       return "BLE Device";
     }
 
-    if (widget.scanType == ScanType.usb) {
-      if (device is UsbDevice) {
-        return device.productName ?? "USB Device";
-      }
-    }
+    // if (widget.scanType == ScanType.usb) {
+    //   if (device is UsbDevice) {
+    //     return device.productName ?? "USB Device";
+    //   }
+    // }
 
     return "Unknown Device";
 

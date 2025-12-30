@@ -11,7 +11,6 @@ import 'package:techno_switch_solar_app/utils/serial_communication_service.dart'
 import 'package:techno_switch_solar_app/services/app_services.dart';
 import 'package:techno_switch_solar_app/services/navigation_service.dart';
 import 'package:techno_switch_solar_app/utils/bluetooth/ble_notify_data_handler.dart';
-import 'package:techno_switch_solar_app/utils/bluetooth/bt_utils.dart';
 import 'package:techno_switch_solar_app/utils/bluetooth/data_handler.dart';
 import 'package:techno_switch_solar_app/utils/bluetooth/data_helper.dart';
 import 'package:techno_switch_solar_app/utils/bluetooth/data_transfer_manager.dart';
@@ -19,7 +18,6 @@ import 'package:techno_switch_solar_app/utils/event_constants.dart';
 import 'package:techno_switch_solar_app/utils/timestamp_converter.dart';
 import 'package:techno_switch_solar_app/models/frame_data.dart';
 // import 'package:flutter_blue_plus/flutter_blue_plus.dart';
-import 'package:get/get.dart';
 
 class LogRetrievalLoadingScreen extends StatefulWidget {
   const LogRetrievalLoadingScreen({super.key});

@@ -25,14 +25,8 @@ BleRxFrame bleParseAndUpdateRxFrame(Uint8List frame, int frameLen) {
 
   int count = 0;
 
-  print(frame.toString());
-  print("RECEIVED:");
-
   print(
-    frame
-        .sublist(7, frameLen - 4)
-        .map((b) => b.toRadixString(16).padLeft(2, '0'))
-        .join(" "),
+    "TX/RX: RECEIVED: time: ${DateTime.now().toIso8601String()}, frame: ${frame.sublist(7, frameLen - 4).map((b) => b.toRadixString(16).padLeft(2, '0')).join(" ")}",
   );
 
   // SOF
@@ -48,6 +42,9 @@ BleRxFrame bleParseAndUpdateRxFrame(Uint8List frame, int frameLen) {
 
   // Payload length
   int payloadLen = (frame[count] << 8) | frame[count + 1];
+  print(
+    "frame desc: payload bytes:${frame[count + 1]}, ${frame[count]} frame length: $frameLen, count: $count, payloadLength: $payloadLen}",
+  );
   count += 2;
 
   if (frameLen < count + payloadLen + 4) {

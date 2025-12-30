@@ -8,7 +8,6 @@ import 'package:techno_switch_solar_app/services/app_services.dart';
 import 'package:techno_switch_solar_app/services/app_state.dart';
 import 'package:techno_switch_solar_app/services/site_service.dart';
 import 'package:intl/intl.dart';
-import 'package:techno_switch_solar_app/utils/bluetooth/data_packet_generator.dart';
 import 'settings_screen.dart';
 import 'help_screen.dart';
 
