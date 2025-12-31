@@ -30,4 +30,18 @@ class BleLogController extends GetxController {
     await Future.delayed(Duration(seconds: 7));
     sendNetworkPacket();
   }
+
+  Future<void> restartLogRetrieval() async {
+    final bleManager = Get.find<BleManager>();
+    final bleProcess = bleManager.bleProcess;
+
+    print("🔄 Restarting BLE log retrieval");
+
+    bleProcess.resetProcessState();
+    bleManager.resetProtocolState();
+
+    // Kick off again
+    await bleManager.sendNetworkPacket();
+    bleProcess.runStateMachine();
+  }
 }

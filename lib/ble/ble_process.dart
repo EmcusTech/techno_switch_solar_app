@@ -37,6 +37,8 @@ class BleProcess {
 
   final ValueNotifier<String> processDesc = ValueNotifier<String>("");
 
+  final ValueNotifier<String> connectedDeviceId = ValueNotifier<String>("");
+
   // BleStates bleStateMachineState = BleStates.IDLE;
   BleStates bleCurrentState = BleStates.IDLE;
   DeviceConnectState deviceConnectState = DeviceConnectState.notConnected;
@@ -233,6 +235,38 @@ class BleProcess {
     }
   }
 
+  void resetProcessState() {
+    // Terminal guards
+    isOtaCompleted = false;
+    processNextOtaFrame = true;
+    logRetreivalEnded = false;
+
+    // Counters
+    checkForCtrlCmdRsp = 0;
+    checkForAccessKeyCmdRsp = 0;
+    validEventLogNum = 0;
+    read1000Logs = 0;
+    receivedPollCount = 0;
+
+    // Time tracking
+    logStartingTime = null;
+    logEndTime = null;
+
+    // OTA state
+    bleManager.otaProcessState = OtaProcessState.sendNetworkPacket;
+
+    // RX timeout
+    _rxTimeoutTimer?.cancel();
+    _rxTimeoutTimer = null;
+
+    // UI notifiers
+    validEventLogCount.value = 0;
+    read1000LogsCount.value = 0;
+    validEventLogs.value = [];
+    isValidLogRecieved.value = false;
+    processDesc.value = "Restarting log retrieval...";
+  }
+
   String formatDuration(Duration d) {
     final m = d.inMinutes;
     final s = d.inSeconds.remainder(60);
@@ -262,7 +296,7 @@ class BleProcess {
     }
 
     if (!bleManager.isConnected) {
-      await bleManager.disconnectHandler();
+      await bleManager.disconnectHandler(connectedDeviceId.value);
     }
   }
 
@@ -496,7 +530,7 @@ class BleProcess {
         await bleProcess();
       } catch (e) {
         print("Exception in state machine: $e");
-        await bleManager.shutdown();
+        await bleManager.shutdown(connectedDeviceId.value);
         break;
       }
     }

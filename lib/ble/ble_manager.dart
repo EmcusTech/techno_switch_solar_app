@@ -92,7 +92,22 @@ class BleManager {
 
   ValueNotifier<String> get processDesc => bleProcess.processDesc;
 
+  ValueNotifier<String> get connectedDeviceId => bleProcess.connectedDeviceId;
+
   bool get isConnected => _isGattConnected;
+
+  void resetProtocolState() {
+    // Packet counters
+    u8TxPktCnt = 0;
+    u8RxPktCnt = 0;
+    receivedPollCount = 0;
+
+    // Poll guards
+    _pollInFlight = false;
+
+    // OTA state
+    otaProcessState = OtaProcessState.sendNetworkPacket;
+  }
 
   /// SCAN & CONNECT
   Future<void> connectToKnownDevice({
@@ -179,6 +194,7 @@ class BleManager {
             print("Connection state: ${update.connectionState}");
 
             if (update.connectionState == DeviceConnectionState.connected) {
+              connectedDeviceId.value = device.id;
               _isGattConnected = true;
 
               if (_connectedOnce) return;
@@ -187,8 +203,8 @@ class BleManager {
               //Let Android finish bonding internally
               await Future.delayed(const Duration(milliseconds: 300));
 
-              //GATT CACHE REFRESH (Android only)
-              await _refreshGattIfNeeded(device.id);
+              // //GATT CACHE REFRESH (Android only)
+              // await _refreshGattIfNeeded(device.id);
 
               //Small safety delay
               await Future.delayed(const Duration(milliseconds: 200));
@@ -273,8 +289,10 @@ class BleManager {
   }
 
   /// DISCONNECT
-  Future<void> disconnectHandler() async {
+  Future<void> disconnectHandler(String deviceId) async {
     print("Disconnecting device...");
+    //GATT CACHE REFRESH (Android only)
+    await _refreshGattIfNeeded(deviceId);
 
     await _notifySub?.cancel();
     await _connectionSub?.cancel();
@@ -288,8 +306,9 @@ class BleManager {
   }
 
   /// SHUTDOWN
-  Future<void> shutdown() async {
+  Future<void> shutdown(String deviceId) async {
     print("Shutdown BLE");
+    await _refreshGattIfNeeded(deviceId);
     await _scanSub?.cancel();
     await _notifySub?.cancel();
     await _connectionSub?.cancel();
