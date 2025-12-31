@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -88,6 +90,8 @@ class BleManager {
     bleProcess = BleProcess(this);
   }
 
+  ValueNotifier<String> get processDesc => bleProcess.processDesc;
+
   bool get isConnected => _isGattConnected;
 
   /// SCAN & CONNECT
@@ -127,12 +131,27 @@ class BleManager {
 
         if (attempt >= maxRetries) {
           print("Max BLE retry attempts reached");
+          processDesc.value =
+              "Max BLE retry attempts reached, please scan again and connect.";
           rethrow;
         }
 
         // BLE stack cooldown (important)
         await Future.delayed(const Duration(seconds: 1));
       }
+    }
+  }
+
+  Future<void> _refreshGattIfNeeded(String deviceId) async {
+    //Only works in Android
+    if (!Platform.isAndroid) return;
+
+    try {
+      print("🔄 Clearing GATT cache...");
+      await flutterReactiveBle.clearGattCache(deviceId);
+      print("✅ GATT cache cleared");
+    } catch (e) {
+      print("⚠️ GATT cache clear failed: $e");
     }
   }
 
@@ -162,8 +181,17 @@ class BleManager {
             if (update.connectionState == DeviceConnectionState.connected) {
               _isGattConnected = true;
 
-              if (_connectedOnce) return; // 🔒 HARD GUARD
+              if (_connectedOnce) return;
               _connectedOnce = true;
+
+              //Let Android finish bonding internally
+              await Future.delayed(const Duration(milliseconds: 300));
+
+              //GATT CACHE REFRESH (Android only)
+              await _refreshGattIfNeeded(device.id);
+
+              //Small safety delay
+              await Future.delayed(const Duration(milliseconds: 200));
 
               notifyChar = QualifiedCharacteristic(
                 characteristicId: notifyUuid,
@@ -177,7 +205,6 @@ class BleManager {
                 deviceId: device.id,
               );
 
-              await Future.delayed(const Duration(milliseconds: 100));
               await flutterReactiveBle.requestMtu(
                 deviceId: device.id,
                 mtu: 247,
@@ -204,6 +231,7 @@ class BleManager {
                 connectedCompleter.completeError(
                   Exception("Disconnected during connection"),
                 );
+                processDesc.value = "Disconnected during connection";
               }
             }
           },
@@ -278,6 +306,11 @@ class BleManager {
   // Notification Handler
   // ----------------------
   Future<void> notificationHandler(Uint8List data) async {
+    if (bleProcess.isOtaCompleted ||
+        otaProcessState == OtaProcessState.notInUse) {
+      print("RX ignored after OTA completion");
+      return;
+    }
     print(
       "TX/RX: --------notify received----- RX TIME:${DateTime.now().toIso8601String()}",
     );
@@ -307,8 +340,8 @@ class BleManager {
       }
     } else if (bleCurrentState == BleStates.SEND_AUTHN_MSG) {
       print("Authn msg response");
-      Uint8List decryptedData = aes.aesDecrypt(bleAESKey["AES_KEY"], data);
-      bleParseAndUpdateRxFrame(decryptedData, decryptedData.length);
+      // Uint8List decryptedData = aes.aesDecrypt(bleAESKey["AES_KEY"], data);
+      bleParseAndUpdateRxFrame(data, data.length);
 
       if (bleValidateRxFrame(bleRxFrame)) {
         print("AUTH KEY Validation success");
@@ -324,8 +357,8 @@ class BleManager {
     } else {
       receivedPollCount++;
       print("The Received RX count is : $receivedPollCount");
-      Uint8List decryptedData = aes.aesDecrypt(bleAESKey["AES_KEY"], data);
-      bleParseAndUpdateRxFrame(decryptedData, decryptedData.length);
+      // Uint8List decryptedData = aes.aesDecrypt(bleAESKey["AES_KEY"], data);
+      bleParseAndUpdateRxFrame(data, data.length);
 
       if (bleValidateRxFrame(bleRxFrame)) {
         await bleProcess.bleRxFrameProcess(bleRxFrame);
@@ -445,15 +478,19 @@ class BleManager {
     try {
       Uint8List dataToSend;
 
+      //Encryption and Decryption is disabled
       // Encrypt if in proper state
       // await Future.delayed(const Duration(milliseconds: 300));
-      if (encrypt && (bleCurrentState.index > BleStates.REQ_ENCY_KEY.index)) {
-        dataToSend = aes.aesEncrypt(bleAESKey["AES_KEY"], frame);
-        print("Sending encrypted data: length ${dataToSend.length}");
-      } else {
-        dataToSend = frame;
-        print("Sending plain data: length ${dataToSend.length}");
-      }
+      // if (encrypt && (bleCurrentState.index > BleStates.REQ_ENCY_KEY.index)) {
+      //   dataToSend = aes.aesEncrypt(bleAESKey["AES_KEY"], frame);
+      //   print("Sending encrypted data: length ${dataToSend.length}");
+      // } else {
+      //   dataToSend = frame;
+      //   print("Sending plain data: length ${dataToSend.length}");
+      // }
+
+      dataToSend = frame;
+      print("Sending plain data: length ${dataToSend.length}");
 
       print(
         "::::::Data Written:::$dataToSend::TX Time${DateTime.now().toIso8601String()}}",
@@ -484,26 +521,33 @@ class BleManager {
     Uint8List frameBytes = aes.convertToBytes(frame);
 
     try {
-      if (encrypt) {
-        List<int> encryptedData = aes.aesEncrypt(
-          bleAESKey["AES_KEY"],
-          frameBytes,
-        );
-        // await Future.delayed(const Duration(milliseconds: 300));
-        print(
-          "::::::Data Written:::$encryptedData::TX Time${DateTime.now().toIso8601String()}}",
-        );
-        await flutterReactiveBle.writeCharacteristicWithResponse(
-          writeChar!,
-          value: encryptedData,
-        );
-      } else {
-        print("::::::Data Written:::::");
-        await flutterReactiveBle.writeCharacteristicWithResponse(
-          writeChar!,
-          value: frameBytes,
-        );
-      }
+      //Encrption and Decryption is disabled
+      // if (encrypt) {
+      //   List<int> encryptedData = aes.aesEncrypt(
+      //     bleAESKey["AES_KEY"],
+      //     frameBytes,
+      //   );
+      //   // await Future.delayed(const Duration(milliseconds: 300));
+      //   print(
+      //     "::::::Data Written:::$encryptedData::TX Time${DateTime.now().toIso8601String()}}",
+      //   );
+      //   await flutterReactiveBle.writeCharacteristicWithResponse(
+      //     writeChar!,
+      //     value: encryptedData,
+      //   );
+      // } else {
+      //   print("::::::Data Written:::::");
+      //   await flutterReactiveBle.writeCharacteristicWithResponse(
+      //     writeChar!,
+      //     value: frameBytes,
+      //   );
+      // }
+
+      print("::::::Data Written:::::");
+      await flutterReactiveBle.writeCharacteristicWithResponse(
+        writeChar!,
+        value: frameBytes,
+      );
     } catch (e) {
       print("Send frame failed: $e");
     }
@@ -577,6 +621,11 @@ class BleManager {
   }
 
   Future<void> sendPollPacket() async {
+    if (bleProcess.isOtaCompleted ||
+        otaProcessState == OtaProcessState.notInUse) {
+      print("Poll blocked (OTA completed / notInUse)");
+      return;
+    }
     // Guard: skip if a previous poll write is still awaiting notify
     if (_pollInFlight) {
       print("Skipping poll: previous write still in-flight");

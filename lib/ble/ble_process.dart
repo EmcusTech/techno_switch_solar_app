@@ -21,6 +21,8 @@ class BleProcess {
   DateTime? logStartingTime;
   DateTime? logEndTime;
 
+  bool isOtaCompleted = false;
+
   // ValueNotifier to expose valid event log count to UI
   final ValueNotifier<int> validEventLogCount = ValueNotifier<int>(0);
 
@@ -32,6 +34,8 @@ class BleProcess {
       ValueNotifier<List<LogModel>>([]);
 
   final ValueNotifier<bool> isValidLogRecieved = ValueNotifier<bool>(false);
+
+  final ValueNotifier<String> processDesc = ValueNotifier<String>("");
 
   // BleStates bleStateMachineState = BleStates.IDLE;
   BleStates bleCurrentState = BleStates.IDLE;
@@ -95,6 +99,7 @@ class BleProcess {
 
       case OtaProcessState.sendStopCntrlCmdPkt:
         print("Sending Stop Control Command");
+        processDesc.value = "Sending Stop Control Command";
         if (checkForCtrlCmdRsp == 1) {
           logRetreivalEnded = true;
           bleManager.otaProcessState = OtaProcessState.sendStopCntrlCmdPkt;
@@ -162,6 +167,8 @@ class BleProcess {
           (rx.payload[17] << 16) |
           (rx.payload[16] << 24);
 
+      processDesc.value = "Filtering Valid Logs";
+
       if (rxLastEvtLogNum != 0) {
         validEventLogNum++;
         // Update the ValueNotifier to notify UI listeners
@@ -205,15 +212,24 @@ class BleProcess {
     // ----- READY FOR NEXT FRAME -----
     processNextOtaFrame = true;
 
-    if (read1000Logs == 1000) {
+    if (read1000Logs >= 1000 && !isOtaCompleted) {
       print("<<<<<< COMPLETED 1000 EVENT LOGS >>>>>>>");
+
+      isOtaCompleted = true;
+      processNextOtaFrame = false;
+
+      bleManager.otaProcessState = OtaProcessState.notInUse;
+      cancelRxTimeout();
+
+      processDesc.value = "Log retrieval completed";
+
       logEndTime = DateTime.now();
       print(
         "Time Taken for 1000 logs ${formatDuration(logEndTime!.difference(logStartingTime!))}",
       );
-      processNextOtaFrame = false;
-      // startRxTimeout();
+
       await bleManager.sendStopCntrlCmdPkt();
+      return;
     }
   }
 
@@ -252,12 +268,14 @@ class BleProcess {
 
   requestENCKey() async {
     print("Send encry req frame");
+    processDesc.value = "Send Encryption Key Request";
     await bleManager.sendAesKeyReq();
     bleManager.bleStateMachineState = BleStates.PROCESS_WAIT_RSP;
     bleCurrentState = BleStates.REQ_ENCY_KEY;
   }
 
   sendAuthPacket() async {
+    processDesc.value = "Sending Auth Packet";
     await bleManager.sendAuthnMsg();
     bleManager.bleStateMachineState = BleStates.PROCESS_WAIT_RSP;
     bleCurrentState = BleStates.SEND_AUTHN_MSG;
@@ -408,12 +426,16 @@ class BleProcess {
 
   // Call this after every TX
   void startRxTimeout() {
+    if (isOtaCompleted) return;
     // Cancel any existing timer
     _rxTimeoutTimer?.cancel();
 
     // Start a new 10-second timer
     _rxTimeoutTimer = Timer(const Duration(seconds: 5), () async {
-      print("RX timeout: no response received. Sending next packet anyway.");
+      if (isOtaCompleted) return;
+      print("RX timeout: No response received. Sending next packet anyway.");
+
+      processDesc.value = "No response received. Retrying...";
       // Allow next poll in case in-flight guard is set
       bleManager.resetPollInFlight();
       processNextOtaFrame = true;
@@ -423,6 +445,11 @@ class BleProcess {
 
   /// HANDLE OTA EVENT LOG
   Future<void> handleTsEvtLogRead() async {
+    if (isOtaCompleted ||
+        bleManager.otaProcessState == OtaProcessState.notInUse) {
+      return;
+    }
+
     if (processNextOtaFrame) {
       startRxTimeout();
       processNextOtaFrame = false;
@@ -432,6 +459,7 @@ class BleProcess {
 
       switch (bleManager.otaProcessState) {
         case OtaProcessState.sendNetworkPacket:
+          processDesc.value = "Sending Network Packet";
           await bleManager.sendNetworkPacket();
           break;
         case OtaProcessState.sendPollPacket:
@@ -463,7 +491,7 @@ class BleProcess {
 
   /// RUN STATE MACHINE LOOP
   Future<void> runStateMachine() async {
-    while (true) {
+    while (!isOtaCompleted) {
       try {
         await bleProcess();
       } catch (e) {
@@ -472,5 +500,7 @@ class BleProcess {
         break;
       }
     }
+
+    print("BLE State Machine exited cleanly");
   }
 }

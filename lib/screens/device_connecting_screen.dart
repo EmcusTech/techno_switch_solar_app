@@ -100,6 +100,42 @@ class _DeviceConnectingScreenState extends State<DeviceConnectingScreen>
     super.dispose();
   }
 
+  Widget _buildStatusText() {
+    return ValueListenableBuilder<String>(
+      valueListenable: ble.processDesc,
+      builder: (context, value, _) {
+        return Column(
+          children: [
+            Text(
+              value,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.inter(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color:
+                    _connectionFailed
+                        ? const Color(0xFFEC1D24)
+                        : const Color(0xFF3D3D3D),
+              ),
+            ),
+            if (!_connectionFailed) ...[
+              const SizedBox(height: 8),
+              Text(
+                'Please wait...',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w400,
+                  color: const Color(0xFF918F8F),
+                ),
+              ),
+            ],
+          ],
+        );
+      },
+    );
+  }
+
   Future<void> _connectToDevice() async {
     if (widget.selectedDevice == null) {
       _handleConnectionFailure("No Device selected");
@@ -459,34 +495,6 @@ class _DeviceConnectingScreenState extends State<DeviceConnectingScreen>
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildStatusText() {
-    return Column(
-      children: [
-        Text(
-          _connectionStatus,
-          textAlign: TextAlign.center,
-          style: GoogleFonts.inter(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: _connectionFailed ? Color(0xFFEC1D24) : Color(0xFF3D3D3D),
-          ),
-        ),
-        if (!_connectionFailed) ...[
-          const SizedBox(height: 8),
-          Text(
-            'Please wait...',
-            textAlign: TextAlign.center,
-            style: GoogleFonts.inter(
-              fontSize: 14,
-              fontWeight: FontWeight.w400,
-              color: Color(0xFF918F8F),
-            ),
-          ),
-        ],
-      ],
     );
   }
 
