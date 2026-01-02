@@ -21,7 +21,15 @@ class BleProcess {
   DateTime? logStartingTime;
   DateTime? logEndTime;
 
+  bool _isStateMachineRunning = false;
+  bool _restartRequested = false;
+
   bool isOtaCompleted = false;
+
+  // RX timeout retry control
+  static const int maxRxRetries = 3;
+  int rxTimeoutRetryCount = 0;
+  int nackRetryCount = 0;
 
   // ValueNotifier to expose valid event log count to UI
   final ValueNotifier<int> validEventLogCount = ValueNotifier<int>(0);
@@ -53,7 +61,10 @@ class BleProcess {
   BleProcess(this.bleManager);
 
   Future<void> bleRxFrameProcess(BleRxFrame rx) async {
+    //RX received → reset retry counter
+    rxTimeoutRetryCount = 0;
     pollWaitRspTimeoutCnt = 0;
+    nackRetryCount = 0;
 
     bleManager.u8RxPktCnt = rx.payload[4];
 
@@ -143,16 +154,24 @@ class BleProcess {
       print(
         "Checking CONTROL CMD RSP Value ${rx.payload[10]}:::::${rx.payload[10] == 0x83} ",
       );
-      if (rx.payload[3] == 0x03) {
+      if (rx.payload[3] == 0x03 && nackRetryCount < 3) {
         Get.find<BleLogController>().restartNetworkFlow();
       } else if (rx.payload[10] == 0x83) {
+        // nackRetryCount = 0;
         print("CONTROL CMD RESPONSE RECEIVED");
         checkForCtrlCmdRsp = 2;
         logStartingTime = DateTime.now();
         // Continue with normal polling now that we got the response
         startRxTimeout();
         await bleManager.sendPollPacket();
+      } else if (nackRetryCount == 3) {
+        isOtaCompleted = true;
+        processNextOtaFrame = false;
+
+        bleManager.otaProcessState = OtaProcessState.notInUse;
+        cancelRxTimeout();
       } else {
+        // nackRetryCount = 0;
         // Response not found, send poll again
         print("CONTROL CMD RSP not found, polling again");
         startRxTimeout();
@@ -223,7 +242,7 @@ class BleProcess {
       bleManager.otaProcessState = OtaProcessState.notInUse;
       cancelRxTimeout();
 
-      processDesc.value = "Log retrieval completed";
+      processDesc.value = "";
 
       logEndTime = DateTime.now();
       print(
@@ -296,7 +315,7 @@ class BleProcess {
     }
 
     if (!bleManager.isConnected) {
-      await bleManager.disconnectHandler(connectedDeviceId.value);
+      await bleManager.disconnectHandler(deviceId: connectedDeviceId.value);
     }
   }
 
@@ -461,19 +480,48 @@ class BleProcess {
   // Call this after every TX
   void startRxTimeout() {
     if (isOtaCompleted) return;
-    // Cancel any existing timer
+
     _rxTimeoutTimer?.cancel();
 
-    // Start a new 10-second timer
     _rxTimeoutTimer = Timer(const Duration(seconds: 5), () async {
       if (isOtaCompleted) return;
-      print("RX timeout: No response received. Sending next packet anyway.");
 
-      processDesc.value = "No response received. Retrying...";
-      // Allow next poll in case in-flight guard is set
+      rxTimeoutRetryCount++;
+
+      print("RX timeout [$rxTimeoutRetryCount / $maxRxRetries] — no response");
+
+      processDesc.value =
+          "No response from device (${rxTimeoutRetryCount}/$maxRxRetries)";
+
+      //Exceeded retry limit → HARD FAIL
+      if (rxTimeoutRetryCount >= maxRxRetries) {
+        print("RX retry limit reached. Shutting down BLE.");
+
+        processDesc.value = "Device not responding. Please scan and retry.";
+
+        // Stop everything
+        isOtaCompleted = true;
+        processNextOtaFrame = false;
+        bleManager.otaProcessState = OtaProcessState.notInUse;
+
+        _rxTimeoutTimer?.cancel();
+
+        // Full BLE shutdown
+        await bleManager.shutdown(deviceId: connectedDeviceId.value);
+
+        // Optional: tell controller/UI explicitly
+        Get.find<BleLogController>().onBleFatalError(
+          "Device not responding. Please scan again.",
+        );
+
+        return;
+      }
+
+      // 🔁 Retry allowed
       bleManager.resetPollInFlight();
       processNextOtaFrame = true;
-      await handleTsEvtLogRead(); // trigger next TX
+
+      await handleTsEvtLogRead();
     });
   }
 
@@ -525,15 +573,23 @@ class BleProcess {
 
   /// RUN STATE MACHINE LOOP
   Future<void> runStateMachine() async {
-    while (!isOtaCompleted) {
+    if (_isStateMachineRunning) return;
+
+    _isStateMachineRunning = true;
+
+    while (!isOtaCompleted && !_restartRequested) {
       try {
         await bleProcess();
+        await Future.delayed(const Duration(milliseconds: 5));
       } catch (e) {
         print("Exception in state machine: $e");
-        await bleManager.shutdown(connectedDeviceId.value);
+        // await bleManager.shutdown(connectedDeviceId.value);
         break;
       }
     }
+
+    _isStateMachineRunning = false;
+    _restartRequested = false;
 
     print("BLE State Machine exited cleanly");
   }

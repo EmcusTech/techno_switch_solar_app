@@ -31,6 +31,28 @@ class BleLogController extends GetxController {
     sendNetworkPacket();
   }
 
+  //FATAL BLE ERROR ENTRY POINT
+  void onBleFatalError(String message) {
+    print("BLE FATAL ERROR: $message");
+
+    // Optional: stop any running state machine
+    bleProcess.cancelRxTimeout();
+
+    // Navigate user back to scan screen OR show dialog
+    // You decide UI behavior here
+    Get.snackbar(
+      "Connection Lost",
+      message,
+      snackPosition: SnackPosition.BOTTOM,
+      duration: const Duration(seconds: 4),
+    );
+
+    // Optional hard reset of internal states
+    bleProcess.resetProcessState();
+    bleManager.resetProtocolState();
+    bleManager.shutdown();
+  }
+
   Future<void> restartLogRetrieval() async {
     final bleManager = Get.find<BleManager>();
     final bleProcess = bleManager.bleProcess;

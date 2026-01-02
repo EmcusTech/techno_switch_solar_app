@@ -110,9 +110,9 @@ class _ScanningScreenState extends State<ScanningScreen>
       }
     });
 
-    _autoStopTimer = Timer(const Duration(seconds: _scanDurationSeconds), () {
-      _stopScanning();
-    });
+    // _autoStopTimer = Timer(const Duration(seconds: _scanDurationSeconds), () {
+    //   _stopScanning();
+    // });
   }
 
   // small wrapper to get stream subscription with proper casting
@@ -216,8 +216,9 @@ class _ScanningScreenState extends State<ScanningScreen>
 
       try {
         final name = (dyn as dynamic).name;
-        if (name != null && name.toString().isNotEmpty)
+        if (name != null && name.toString().isNotEmpty) {
           return 'name:${name.toString()}';
+        }
       } catch (_) {}
 
       try {
@@ -236,10 +237,12 @@ class _ScanningScreenState extends State<ScanningScreen>
   String _bytesToHex(dynamic b) {
     try {
       if (b == null) return '';
-      if (b is List<int>)
+      if (b is List<int>) {
         return b.map((e) => e.toRadixString(16).padLeft(2, '0')).join();
-      if (b is Uint8List)
+      }
+      if (b is Uint8List) {
         return b.map((e) => e.toRadixString(16).padLeft(2, '0')).join();
+      }
       if (b is Map) {
         final vals = <int>[];
         for (var entry in b.entries) {
@@ -364,12 +367,14 @@ class _ScanningScreenState extends State<ScanningScreen>
         final ad = (dyn as dynamic).advertisementData;
         if (ad != null) {
           final advName = (ad as dynamic).advName ?? (ad as dynamic).localName;
-          if (advName != null && advName.toString().isNotEmpty)
+          if (advName != null && advName.toString().isNotEmpty) {
             return advName.toString();
+          }
         }
       } catch (_) {}
-      if (device is Map)
+      if (device is Map) {
         return (device['name'] ?? device['id'] ?? 'unknown').toString();
+      }
       final name = (dyn as dynamic).name;
       final id = (dyn as dynamic).id;
       return (name ?? id ?? 'unknown').toString();
@@ -388,7 +393,7 @@ class _ScanningScreenState extends State<ScanningScreen>
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
           style: GoogleFonts.inter(
-            fontSize: 8,
+            fontSize: 12,
             color: Colors.black87,
             fontWeight: FontWeight.w600,
           ),
@@ -585,7 +590,7 @@ class _ScanningScreenState extends State<ScanningScreen>
     final double center = radarSize / 2;
     final double fixedRadius = radarSize * 0.38;
     const double cardWidth = 120;
-    const double cardHeight = 140;
+    const double cardHeight = 150;
 
     return Stack(
       alignment: Alignment.center,
@@ -600,39 +605,39 @@ class _ScanningScreenState extends State<ScanningScreen>
             ),
           ],
         ),
-        Center(
-          child: SizedBox(
-            width: radarSize,
-            height: radarSize,
-            child: Stack(
-              children: [
-                Positioned.fill(
-                  child: CustomPaint(
-                    painter: _RadarPainter(sweepAnimation: _sweepController),
-                  ),
-                ),
-                Positioned.fill(
-                  child: AnimatedBuilder(
-                    animation: _sweep_controller_proxy(),
-                    builder:
-                        (c, _) => CustomPaint(
-                          painter: _SweepPainter(
-                            progress: _sweepController.value,
-                          ),
-                        ),
-                  ),
-                ),
-                ..._buildSlotWidgets(
-                  radarSize,
-                  center,
-                  fixedRadius,
-                  cardWidth,
-                  cardHeight,
-                ),
-              ],
-            ),
-          ),
-        ),
+        // Center(
+        //   child: SizedBox(
+        //     width: radarSize,
+        //     height: radarSize,
+        //     child: Stack(
+        //       children: [
+        //         Positioned.fill(
+        //           child: CustomPaint(
+        //             painter: _RadarPainter(sweepAnimation: _sweepController),
+        //           ),
+        //         ),
+        //         Positioned.fill(
+        //           child: AnimatedBuilder(
+        //             animation: _sweep_controller_proxy(),
+        //             builder:
+        //                 (c, _) => CustomPaint(
+        //                   painter: _SweepPainter(
+        //                     progress: _sweepController.value,
+        //                   ),
+        //                 ),
+        //           ),
+        //         ),
+        //         ..._buildSlotWidgets(
+        //           radarSize,
+        //           center,
+        //           fixedRadius,
+        //           cardWidth,
+        //           cardHeight,
+        //         ),
+        //       ],
+        //     ),
+        //   ),
+        // ),
         Align(alignment: Alignment.center, child: ScanningAnimation()),
         Positioned(
           top: 50,
@@ -725,7 +730,159 @@ class _ScanningScreenState extends State<ScanningScreen>
             const SizedBox(height: 20),
           ],
         ),
+        Center(
+          child: SizedBox(
+            width: radarSize,
+            height: radarSize,
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: CustomPaint(
+                    painter: _RadarPainter(sweepAnimation: _sweepController),
+                  ),
+                ),
+                Positioned.fill(
+                  child: AnimatedBuilder(
+                    animation: _sweep_controller_proxy(),
+                    builder:
+                        (c, _) => CustomPaint(
+                          painter: _SweepPainter(
+                            progress: _sweepController.value,
+                          ),
+                        ),
+                  ),
+                ),
+                // ..._buildSlotWidgets(
+                //   radarSize,
+                //   center,
+                //   fixedRadius,
+                //   cardWidth,
+                //   cardHeight,
+                // ),
+              ],
+            ),
+          ),
+        ),
+        Positioned(
+          top: MediaQuery.sizeOf(context).height * 0.2,
+          left: 20,
+          width: radarSize,
+          height: radarSize,
+          child: Stack(
+            children: [..._buildGridSlotWidgets(maxWidth: radarSize)],
+          ),
+        ),
       ],
+    );
+  }
+
+  List<Widget> _buildGridSlotWidgets({required double maxWidth}) {
+    const int columns = 3;
+    const double spacing = 12;
+    const double cardWidth = 120;
+    const double cardHeight = 150;
+
+    final widgets = <Widget>[];
+
+    // Sort slots so order is stable
+    final slots = _slotToDevice.keys.toList()..sort();
+
+    for (int i = 0; i < slots.length; i++) {
+      final slot = slots[i];
+      final deviceKey = _slotToDevice[slot];
+      if (deviceKey == null) continue;
+
+      final device = _discoveredDevices.firstWhere(
+        (d) => _deviceKeyByObject(d) == deviceKey,
+        orElse: () => null,
+      );
+      if (device == null) continue;
+
+      final row = i ~/ columns;
+      final col = i % columns;
+
+      final left = col * (cardWidth + spacing);
+      final top = row * (cardHeight + spacing);
+
+      final justAssigned = _justAssigned.containsKey(deviceKey);
+
+      widgets.add(
+        AnimatedPositioned(
+          key: ValueKey(deviceKey),
+          left: left,
+          top: top,
+          width: cardWidth,
+          height: cardHeight,
+          duration: const Duration(milliseconds: 420),
+          curve: Curves.easeOutCubic,
+          child: _AnimatedGridCard(
+            child: _buildDeviceCard(device),
+            highlight: justAssigned,
+          ),
+        ),
+      );
+    }
+
+    return widgets;
+  }
+
+  Widget _buildDeviceCard(dynamic device) {
+    final label = _deviceLabel(device);
+
+    return GestureDetector(
+      onTap: () {
+        if (_isScanning) _stopScanning();
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder:
+                (_) => DeviceConnectingScreen(
+                  selectedDevice: device,
+                  scanType: _selectedScanType!,
+                  isLiveEvent: widget.isLiveEvent,
+                ),
+          ),
+        );
+      },
+      child: Material(
+        elevation: 6,
+        borderRadius: BorderRadius.circular(12),
+        color: Colors.white,
+        child: Column(
+          children: [
+            Container(
+              height: 90,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade50,
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(12),
+                ),
+              ),
+              child: Center(
+                child: SvgPicture.asset('assets/svgs/panel_icon.svg'),
+              ),
+            ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(10),
+                child: Align(
+                  alignment: Alignment.topLeft,
+                  child: Text(
+                    label,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -776,6 +933,7 @@ class _ScanningScreenState extends State<ScanningScreen>
                   curve: Curves.easeOutBack,
                   child: GestureDetector(
                     onTap: () {
+                      print("hey hey hey");
                       // Stop scanning before connecting
                       if (_isScanning) {
                         _stopScanning();
@@ -815,7 +973,7 @@ class _ScanningScreenState extends State<ScanningScreen>
                           children: [
                             // image area (top)
                             Container(
-                              height: cardHeight * 0.8,
+                              height: cardHeight * 0.6,
                               width: double.infinity,
                               decoration: BoxDecoration(
                                 color: Colors.grey.shade50,
@@ -986,4 +1144,105 @@ class _SweepPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _SweepPainter oldDelegate) =>
       oldDelegate.progress != progress;
+}
+
+class _AnimatedGridCard extends StatefulWidget {
+  final Widget child;
+  final bool highlight;
+
+  const _AnimatedGridCard({required this.child, required this.highlight});
+
+  @override
+  State<_AnimatedGridCard> createState() => _AnimatedGridCardState();
+}
+
+class _AnimatedGridCardState extends State<_AnimatedGridCard>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 360),
+    )..forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: _controller,
+      child: ScaleTransition(
+        scale: Tween(begin: 0.92, end: 1.0).animate(
+          CurvedAnimation(parent: _controller, curve: Curves.easeOutBack),
+        ),
+        child: Stack(
+          children: [widget.child, if (widget.highlight) const _PulseGlow()],
+        ),
+      ),
+    );
+  }
+}
+
+class _PulseGlow extends StatefulWidget {
+  const _PulseGlow();
+
+  @override
+  State<_PulseGlow> createState() => _PulseGlowState();
+}
+
+class _PulseGlowState extends State<_PulseGlow>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    )..repeat(reverse: true);
+
+    Future.delayed(const Duration(milliseconds: 900), () {
+      if (mounted) _controller.stop();
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned.fill(
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (_, __) {
+          return Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.green.withOpacity(
+                    0.25 * (1 - _controller.value),
+                  ),
+                  blurRadius: 18,
+                  spreadRadius: 2,
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
 }

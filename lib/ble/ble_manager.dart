@@ -81,6 +81,7 @@ class BleManager {
   bool _connectedOnce = false;
   bool _isGattConnected = false;
   StreamSubscription<List<int>>? _notifySub;
+  bool isBleDisconnected = true;
 
   // BLE state machine
   late BleProcess bleProcess;
@@ -109,12 +110,32 @@ class BleManager {
     otaProcessState = OtaProcessState.sendNetworkPacket;
   }
 
+  Future<void> safeDisconnect() async {
+    final deviceId = connectedDeviceId.value;
+    if (deviceId.isEmpty) return;
+
+    try {
+      bleProcess.cancelRxTimeout();
+      await disconnectHandler(deviceId: deviceId);
+    } catch (e) {
+      debugPrint("Safe disconnect failed: $e");
+    } finally {
+      connectedDeviceId.value = "";
+    }
+  }
+
   /// SCAN & CONNECT
   Future<void> connectToKnownDevice({
     int maxRetries = 3,
     required DiscoveredDevice device,
   }) async {
     int attempt = 0;
+
+    if (isConnected) {
+      print("Return from here");
+      shutdown();
+      return;
+    }
 
     while (attempt < maxRetries) {
       attempt++;
@@ -162,11 +183,11 @@ class BleManager {
     if (!Platform.isAndroid) return;
 
     try {
-      print("🔄 Clearing GATT cache...");
+      print("Clearing GATT cache...");
       await flutterReactiveBle.clearGattCache(deviceId);
-      print("✅ GATT cache cleared");
+      print("GATT cache cleared");
     } catch (e) {
-      print("⚠️ GATT cache clear failed: $e");
+      print("GATT cache clear failed: $e");
     }
   }
 
@@ -194,6 +215,7 @@ class BleManager {
             print("Connection state: ${update.connectionState}");
 
             if (update.connectionState == DeviceConnectionState.connected) {
+              isBleDisconnected = false;
               connectedDeviceId.value = device.id;
               _isGattConnected = true;
 
@@ -207,7 +229,7 @@ class BleManager {
               // await _refreshGattIfNeeded(device.id);
 
               //Small safety delay
-              await Future.delayed(const Duration(milliseconds: 200));
+              // await Future.delayed(const Duration(milliseconds: 200));
 
               notifyChar = QualifiedCharacteristic(
                 characteristicId: notifyUuid,
@@ -234,9 +256,14 @@ class BleManager {
               if (!connectedCompleter.isCompleted) {
                 connectedCompleter.complete();
               }
+
+              // await Future.delayed(const Duration(seconds: 10), () {
+              //   shutdown(device.id);
+              // });
             }
 
             if (update.connectionState == DeviceConnectionState.disconnected) {
+              isBleDisconnected = true;
               _isGattConnected = false;
               _connectedOnce = false;
 
@@ -289,10 +316,12 @@ class BleManager {
   }
 
   /// DISCONNECT
-  Future<void> disconnectHandler(String deviceId) async {
+  Future<void> disconnectHandler({String? deviceId}) async {
     print("Disconnecting device...");
-    //GATT CACHE REFRESH (Android only)
-    await _refreshGattIfNeeded(deviceId);
+    if (deviceId != null && deviceId.isNotEmpty) {
+      //GATT CACHE REFRESH (Android only)
+      await _refreshGattIfNeeded(deviceId);
+    }
 
     await _notifySub?.cancel();
     await _connectionSub?.cancel();
@@ -306,27 +335,53 @@ class BleManager {
   }
 
   /// SHUTDOWN
-  Future<void> shutdown(String deviceId) async {
+  Future<void> shutdown({String? deviceId}) async {
     print("Shutdown BLE");
-    await _refreshGattIfNeeded(deviceId);
+    if (deviceId != null && deviceId.isNotEmpty) {
+      //GATT CACHE REFRESH (Android only)
+      await _refreshGattIfNeeded(deviceId);
+    }
+
+    // Cancel all subscriptions
     await _scanSub?.cancel();
     await _notifySub?.cancel();
     await _connectionSub?.cancel();
 
+    // Cancel any pending timeouts in BleProcess
+    bleProcess.cancelRxTimeout();
+
+    // Reset all state
+    resetProtocolState();
+    bleProcess.resetProcessState();
+
+    // Reset BLE state machine
+    bleCurrentState = BleStates.REQ_ENCY_KEY;
+    bleStateMachineState = BleStates.REQ_ENCY_KEY;
+
+    // Clear encryption key
+    bleAESKey.clear();
+
+    // Reset connection state
     _scanSub = null;
     _notifySub = null;
     _connectionSub = null;
-
     _isGattConnected = false;
     _connectedOnce = false;
+    selectedDevice = null;
+    notifyChar = null;
+    writeChar = null;
+    isBleDisconnected = true;
   }
 
   // ----------------------
   // Notification Handler
   // ----------------------
   Future<void> notificationHandler(Uint8List data) async {
-    if (bleProcess.isOtaCompleted ||
-        otaProcessState == OtaProcessState.notInUse) {
+    print("bleprocess: ${bleProcess.isOtaCompleted}");
+    print("otaProcessState: $otaProcessState");
+    if ((bleProcess.isOtaCompleted ||
+            otaProcessState == OtaProcessState.notInUse) &&
+        isBleDisconnected) {
       print("RX ignored after OTA completion");
       return;
     }

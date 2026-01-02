@@ -69,75 +69,120 @@ class _EventLogContent extends StatefulWidget {
 
 class _EventLogContentState extends State<_EventLogContent> {
   bool _isListSelected = false;
-  int _selectedViewIndex = 0; // 0 for list, 1 for table
-  List<LogModel> _displayLogs = [];
-  String? _storedPanelId;
+  int _selectedViewIndex = 1;
 
   final PanelService _panelService = PanelService();
   final SiteService _siteService = SiteService();
 
+  // Future<void> _handleBackNavigation() async {
+  //   final bleManager = ble;
+  //   final logs = bleManager.bleProcess.validEventLogs.value;
+  //   final deviceId = bleManager.connectedDeviceId.value;
+
+  //   //Stop BLE cleanly
+  //   if (bleManager.isConnected) {
+  //     await bleManager.safeDisconnect();
+  //   }
+
+  //   //No logs? Just go back to scanning
+  //   if (logs.isEmpty) {
+  //     await NavigationService.navigateBackToScanning(context);
+  //     return;
+  //   }
+
+  //   //Decide persistence flow
+  //   if (widget.isStandalone) {
+  //     final shouldSave = await showSiteCreationDialog(
+  //       context,
+  //       logCount: logs.length,
+  //     );
+
+  //     if (shouldSave == true) {
+  //       Navigator.of(context).pushReplacement(
+  //         MaterialPageRoute(
+  //           builder:
+  //               (_) => SimpleSiteCreationScreen(
+  //                 retrievedLogs: logs,
+  //                 panelName: widget.panelName,
+  //                 panelVersionNo: widget.panelVersionNo,
+  //                 panelId: deviceId.isNotEmpty ? deviceId : widget.panelId,
+  //               ),
+  //         ),
+  //       );
+  //       return;
+  //     }
+  //   }
+
+  //   // 4️⃣ Default fallback
+  //   await NavigationService.navigateBackToScanning(context);
+  // }
+
   Future<void> _handleBackNavigation() async {
-    final panelIdToUse =
-        _storedPanelId ?? AppServices.serialService.currentPanelId;
+    final bleManager = ble;
+    final logs = bleManager.bleProcess.validEventLogs.value;
+    final panelIdToUse = bleManager.connectedDeviceId.value;
 
-    AppServices.serialService.disconnect();
+    // AppServices.serialService.disconnect();
 
-    if (widget.isStandalone && _displayLogs.isNotEmpty) {
-      if (panelIdToUse != null) {
-        final existingPanel = await _panelService.getPanelByPanelId(
-          panelIdToUse,
+    //Stop BLE cleanly
+    if (bleManager.isConnected) {
+      await bleManager.shutdown(deviceId: panelIdToUse);
+    }
+
+    //No logs? Just go back to scanning
+    if (logs.isEmpty) {
+      await NavigationService.navigateBackToScanning(context);
+      return;
+    }
+
+    if (widget.isStandalone && logs.isNotEmpty) {
+      final existingPanel = await _panelService.getPanelByPanelId(panelIdToUse);
+      if (existingPanel != null && existingPanel.siteId != null) {
+        final existingSite = await _siteService.getSiteById(
+          existingPanel.siteId!,
         );
-        if (existingPanel != null && existingPanel.siteId != null) {
-          final existingSite = await _siteService.getSiteById(
-            existingPanel.siteId!,
+        if (existingSite != null) {
+          final shouldNavigateToSite = await _showExistingSiteDialog(
+            context,
+            existingSite.siteName,
+            logs.length,
           );
-          if (existingSite != null) {
-            final shouldNavigateToSite = await _showExistingSiteDialog(
-              context,
-              existingSite.siteName,
-              _displayLogs.length,
+
+          if (shouldNavigateToSite == true) {
+            await _siteService.storeLogs(logs, siteId: existingSite.id!);
+
+            final allSitesWithLogCount =
+                await _siteService.getSitesWithLogCount();
+            final updatedSiteWithLogCount = allSitesWithLogCount.firstWhere(
+              (siteWithLogCount) => siteWithLogCount.site.id == existingSite.id,
+              orElse:
+                  () => SiteWithLogCount(
+                    site: existingSite,
+                    logCount: logs.length,
+                    lastLogRetrieved: DateTime.now(),
+                  ),
             );
 
-            if (shouldNavigateToSite == true) {
-              await _siteService.storeLogs(
-                _displayLogs,
-                siteId: existingSite.id!,
-              );
-
-              final allSitesWithLogCount =
-                  await _siteService.getSitesWithLogCount();
-              final updatedSiteWithLogCount = allSitesWithLogCount.firstWhere(
-                (siteWithLogCount) =>
-                    siteWithLogCount.site.id == existingSite.id,
-                orElse:
-                    () => SiteWithLogCount(
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(
+                builder:
+                    (context) => SiteScreen(
                       site: existingSite,
-                      logCount: _displayLogs.length,
-                      lastLogRetrieved: DateTime.now(),
+                      siteWithLogCount: updatedSiteWithLogCount,
                     ),
-              );
-
-              Navigator.of(context).pushAndRemoveUntil(
-                MaterialPageRoute(
-                  builder:
-                      (context) => SiteScreen(
-                        site: existingSite,
-                        siteWithLogCount: updatedSiteWithLogCount,
-                      ),
-                ),
-                (route) => false,
-              );
-            } else {
-              await NavigationService.navigateBackToScanning(context);
-            }
-            return;
+              ),
+              (route) => false,
+            );
+          } else {
+            await NavigationService.navigateBackToScanning(context);
           }
+          return;
         }
       }
 
       final shouldCreateSite = await showSiteCreationDialog(
         context,
-        logCount: _displayLogs.length,
+        logCount: logs.length,
       );
 
       if (shouldCreateSite == true) {
@@ -145,7 +190,7 @@ class _EventLogContentState extends State<_EventLogContent> {
           MaterialPageRoute(
             builder:
                 (context) => SimpleSiteCreationScreen(
-                  retrievedLogs: _displayLogs,
+                  retrievedLogs: logs,
                   panelName: widget.panelName,
                   panelVersionNo: widget.panelVersionNo,
                   panelId: panelIdToUse,
@@ -273,15 +318,6 @@ class _EventLogContentState extends State<_EventLogContent> {
   }
 
   @override
-  void initState() {
-    super.initState();
-    _storedPanelId = widget.panelId ?? AppServices.serialService.currentPanelId;
-    // Initialize with widget data if provided, otherwise will be updated via ValueListenableBuilder
-    _displayLogs =
-        widget.logDataList.where((log) => log.isValid == true).toList();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Container(
       decoration: const BoxDecoration(
@@ -384,15 +420,12 @@ class _EventLogContentState extends State<_EventLogContent> {
                           ),
                         ),
                         TextSpan(
-                          text:
-                              AppServices.isConnected
-                                  ? 'connected'
-                                  : 'disconnected',
+                          text: ble.isConnected ? 'connected' : 'disconnected',
                           style: GoogleFonts.inter(
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
                             color:
-                                AppServices.isConnected
+                                ble.isConnected
                                     ? Color(0xFF00A706)
                                     : Color(0xFFEC1D24),
                           ),
@@ -493,6 +526,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
                               color: Color(0xFF3D3D3D),
+                              fontFeatures: [FontFeature.tabularFigures()],
                             ),
                           ),
                           Text(
@@ -501,6 +535,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
                               color: Color(0xFFEC1D24),
+                              fontFeatures: [FontFeature.tabularFigures()],
                             ),
                           ),
                         ],

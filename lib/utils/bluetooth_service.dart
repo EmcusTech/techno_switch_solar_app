@@ -1,7 +1,9 @@
 import 'dart:async';
 
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
+import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/utils/bluetooth_constants.dart';
 
 class BluetoothService {
@@ -25,6 +27,8 @@ class BluetoothService {
   /// Public scan stream
   Stream<List<DiscoveredDevice>> get scanResultsStream =>
       _resultsController.stream;
+
+  final BleManager ble = Get.find<BleManager>();
 
   /* -------------------------------------------------------------------------- */
   /*                               PERMISSIONS                                   */
@@ -54,6 +58,12 @@ class BluetoothService {
   /* -------------------------------------------------------------------------- */
 
   Future<void> startScanning() async {
+    print("The scanning initial status is: ${ble.isConnected}");
+    if (ble.isConnected) {
+      ble.shutdown();
+    }
+
+    await Future.delayed(const Duration(seconds: 2));
     // Clear stale devices
     _scanResults.clear();
 
