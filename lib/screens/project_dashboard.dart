@@ -1,22 +1,29 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:techno_switch_solar_app/screens/device_connecting_screen.dart';
 import 'package:techno_switch_solar_app/screens/log_history_screen.dart';
 import 'package:techno_switch_solar_app/screens/log_retrieval_loading_screen.dart';
+import 'package:techno_switch_solar_app/screens/scanning_screen.dart';
 import 'package:techno_switch_solar_app/screens/settings_screen.dart';
 import 'package:techno_switch_solar_app/screens/test_mode_screen.dart';
+import 'package:techno_switch_solar_app/utils/bluetooth/ble_notify_data_handler.dart';
 
 class ProjectDashboardScreen extends StatefulWidget {
   final String panelVersionNo;
   final String panelName;
   final int? siteId;
   final String? siteName;
+  final DiscoveredDevice selectedDevice;
   const ProjectDashboardScreen({
     super.key,
     required this.panelVersionNo,
     required this.panelName,
     this.siteId,
     this.siteName,
+    required this.selectedDevice,
   });
 
   @override
@@ -30,6 +37,7 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
     _ProjectDashboardContent(
       panelName: widget.panelName,
       panelVersionNo: widget.panelVersionNo,
+      selectedDevice: widget.selectedDevice,
     ),
     SettingsScreen(
       panelName: widget.panelName,
@@ -148,9 +156,11 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
 class _ProjectDashboardContent extends StatefulWidget {
   final String panelName;
   final String panelVersionNo;
+  final DiscoveredDevice selectedDevice;
   const _ProjectDashboardContent({
     required this.panelName,
     required this.panelVersionNo,
+    required this.selectedDevice,
   });
 
   @override
@@ -233,8 +243,8 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
             children: [
               SvgPicture.asset(
                 'assets/svgs/panel_icon.svg',
-                height: 81,
-                width: 81,
+                height: 62,
+                width: 62,
               ),
               SizedBox(width: 14),
               Column(
@@ -247,6 +257,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
                     ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                   Text(
                     widget.panelVersionNo,
@@ -256,27 +267,35 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                       color: Color(0xFF979797),
                     ),
                   ),
-                  RichText(
-                    text: TextSpan(
-                      children: [
-                        TextSpan(
-                          text: 'status : ',
-                          style: GoogleFonts.inter(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color: Color(0xFF979797),
-                          ),
+                  ValueListenableBuilder(
+                    valueListenable: ble.isConnectedNotifier,
+                    builder: (context, isConnected, child) {
+                      return RichText(
+                        text: TextSpan(
+                          children: [
+                            TextSpan(
+                              text: 'status : ',
+                              style: GoogleFonts.inter(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                                color: Color(0xFF979797),
+                              ),
+                            ),
+                            TextSpan(
+                              text: isConnected ? 'connected' : 'disconnected',
+                              style: GoogleFonts.inter(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                                color:
+                                    isConnected
+                                        ? Color(0xFF00A706)
+                                        : Color(0xFFEC1D24),
+                              ),
+                            ),
+                          ],
                         ),
-                        TextSpan(
-                          text: 'connected',
-                          style: GoogleFonts.inter(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color: Color(0xFF00A706),
-                          ),
-                        ),
-                      ],
-                    ),
+                      );
+                    },
                   ),
                 ],
               ),
@@ -425,7 +444,11 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 onTap: () {
                   Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (context) => LogRetrievalLoadingScreen(),
+                      builder:
+                          (context) => DeviceConnectingScreen(
+                            scanType: ScanType.bluetooth,
+                            selectedDevice: widget.selectedDevice,
+                          ),
                     ),
                   );
                 },

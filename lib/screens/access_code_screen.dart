@@ -266,6 +266,7 @@ class _AccessCodeScreenState extends State<AccessCodeScreen> {
         MaterialPageRoute(
           builder:
               (context) => ProjectDashboardScreen(
+                selectedDevice: widget.selectedDevice,
                 panelName: 'RHINO2008',
                 panelVersionNo: '0.98',
               ),

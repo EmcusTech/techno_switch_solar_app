@@ -120,6 +120,39 @@ class BleManager {
     otaProcessState = OtaProcessState.sendNetworkPacket;
   }
 
+  /// Reset log retrieval protocol state
+  /// This resets the BLE state machine to initial state for log retrieval
+  void resetLogRetrievalState() {
+    bleCurrentState = BleStates.REQ_ENCY_KEY;
+    bleStateMachineState = BleStates.REQ_ENCY_KEY;
+    bleAESKey.clear();
+    _pollInFlight = false;
+    receivedPollCount = 0;
+  }
+
+  /// Initialize and start log retrieval process
+  /// Call this method when you want to start log retrieval after connection
+  /// This will reset the protocol state and begin the encryption handshake
+  Future<void> startLogRetrieval() async {
+    if (!isConnected) {
+      throw Exception("Device not connected. Cannot start log retrieval.");
+    }
+
+    if (notifyChar == null || writeChar == null) {
+      throw Exception(
+        "BLE characteristics not initialized. Cannot start log retrieval.",
+      );
+    }
+
+    // Reset protocol state to initial values
+    resetLogRetrievalState();
+    resetProtocolState();
+
+    // Start the encryption key request process
+    // This will trigger the authentication flow which eventually leads to log retrieval
+    await registerNotifyHandler();
+  }
+
   Future<void> safeDisconnect() async {
     final deviceId = connectedDeviceId.value;
     if (deviceId.isEmpty) return;
@@ -170,11 +203,7 @@ class BleManager {
         selectedDevice = null;
 
         // ---- RESET PROTOCOL STATE ----
-        bleCurrentState = BleStates.REQ_ENCY_KEY;
-        bleStateMachineState = BleStates.REQ_ENCY_KEY;
-        bleAESKey.clear();
-        _pollInFlight = false;
-        receivedPollCount = 0;
+        resetLogRetrievalState();
 
         if (attempt >= maxRetries) {
           print("Max BLE retry attempts reached");
@@ -264,7 +293,8 @@ class BleManager {
               bleProcess.deviceConnectState =
                   DeviceConnectState.registerNotifyHandler;
 
-              Get.find<BleLogController>().enableNotify();
+              // Log retrieval will now be started manually via startLogRetrieval()
+              // Removed automatic call: Get.find<BleLogController>().enableNotify();
 
               if (!connectedCompleter.isCompleted) {
                 connectedCompleter.complete();

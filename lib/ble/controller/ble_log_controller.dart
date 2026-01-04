@@ -15,6 +15,13 @@ class BleLogController extends GetxController {
     await bleManager.registerNotifyHandler();
   }
 
+  /// Start log retrieval process
+  /// This initializes the protocol state and begins the encryption handshake
+  /// which will eventually start retrieving logs from the device
+  Future<void> startLogRetrieval() async {
+    await bleManager.startLogRetrieval();
+  }
+
   sendNetworkPacket() async {
     await bleManager.sendNetworkPacket();
   }
@@ -22,6 +29,8 @@ class BleLogController extends GetxController {
   startContinouspolling() {
     bleProcess.runStateMachine();
   }
+
+  bool get isConnected => bleManager.isConnected;
 
   restartNetworkFlow() async {
     print(

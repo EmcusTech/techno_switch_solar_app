@@ -63,7 +63,7 @@ class _DeviceConnectingScreenState extends State<DeviceConnectingScreen>
     // _connectToDevice();
     // ble.bleProcess.runStateMachine();
 
-    Get.find<BleLogController>().connectToDevice(device: widget.selectedDevice);
+    Get.find<BleLogController>().startLogRetrieval();
 
     // Listen for first valid log to navigate to event log screen
     ble.bleProcess.isValidLogRecieved.addListener(_onFirstValidLogReceived);

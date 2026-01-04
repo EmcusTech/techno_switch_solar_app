@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/models/panel_model.dart';
@@ -301,17 +302,25 @@ class _SiteScreenState extends State<SiteScreen> {
 
         return GestureDetector(
           onTap: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder:
-                    (context) => ProjectDashboardScreen(
-                      panelName: panel.panelName,
-                      panelVersionNo: panel.deviceDisplayInfo,
-                      siteId: widget.site.id!,
-                      siteName: widget.site.siteName,
-                    ),
-              ),
-            );
+            // Navigator.of(context).push(
+            //   MaterialPageRoute(
+            //     builder:
+            //         (context) => ProjectDashboardScreen(
+            //           selectedDevice: DiscoveredDevice(
+            //             name: panel.panelName,
+            //             id: panel.panelId,
+            //             rssi: 0,
+            //             serviceData: {},
+            //             manufacturerData: [],
+            //             serviceUuids: [],
+            //           ),
+            //           panelName: panel.panelName,
+            //           panelVersionNo: panel.deviceDisplayInfo,
+            //           siteId: widget.site.id!,
+            //           siteName: widget.site.siteName,
+            //         ),
+            //   ),
+            // );
           },
           child: Container(
             decoration: BoxDecoration(

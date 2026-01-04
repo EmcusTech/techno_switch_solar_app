@@ -2,8 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/screens/device_connecting_screen.dart';
+import 'package:techno_switch_solar_app/screens/event_log_screen.dart';
+import 'package:techno_switch_solar_app/screens/project_dashboard.dart';
 import 'package:techno_switch_solar_app/screens/scanning_screen.dart';
 import 'package:techno_switch_solar_app/services/navigation_service.dart';
 import 'package:usb_serial/usb_serial.dart';
@@ -488,11 +492,11 @@ class _ScannedScreenState extends State<ScannedScreen> {
         return SizedBox(height: 10);
       },
       itemBuilder: (context, index) {
-        final device = widget.discoveredDevices[index];
+        final DiscoveredDevice device = widget.discoveredDevices[index];
         return GestureDetector(
           onTap: () {
             showPasswordPopup(
-              onCall: () {
+              onCall: () async {
                 Navigator.of(context).pop();
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
@@ -504,16 +508,33 @@ class _ScannedScreenState extends State<ScannedScreen> {
                     ),
                   ),
                 );
-                Navigator.of(context).pushReplacement(
-                  MaterialPageRoute(
-                    builder:
-                        (context) => DeviceConnectingScreen(
-                          selectedDevice: device,
-                          isLiveEvent: widget.isLiveEvent,
-                          scanType: widget.scanType,
-                        ),
-                  ),
+                await Get.find<BleLogController>().connectToDevice(
+                  device: device,
                 );
+
+                if (Get.find<BleLogController>().isConnected) {
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(
+                      builder:
+                          (context) => ProjectDashboardScreen(
+                            selectedDevice: device,
+                            panelVersionNo: device.id,
+                            panelName: device.name,
+                          ),
+                    ),
+                  );
+                }
+
+                // Navigator.of(context).pushReplacement(
+                //   MaterialPageRoute(
+                //     builder:
+                //         (context) => DeviceConnectingScreen(
+                //           selectedDevice: device,
+                //           isLiveEvent: widget.isLiveEvent,
+                //           scanType: widget.scanType,
+                //         ),
+                //   ),
+                // );
               },
             );
             // Pass the selected device to DeviceConnectingScreen
