@@ -61,9 +61,9 @@ class BluetoothService {
     print("The scanning initial status is: ${ble.isConnected}");
     if (ble.isConnected) {
       ble.shutdown();
+      await Future.delayed(const Duration(seconds: 2));
     }
 
-    await Future.delayed(const Duration(seconds: 2));
     // Clear stale devices
     _scanResults.clear();
 

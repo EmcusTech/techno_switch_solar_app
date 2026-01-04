@@ -504,7 +504,7 @@ class _ScannedScreenState extends State<ScannedScreen> {
                     ),
                   ),
                 );
-                Navigator.of(context).push(
+                Navigator.of(context).pushReplacement(
                   MaterialPageRoute(
                     builder:
                         (context) => DeviceConnectingScreen(

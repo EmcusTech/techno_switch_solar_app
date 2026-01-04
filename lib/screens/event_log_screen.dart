@@ -400,38 +400,49 @@ class _EventLogContentState extends State<_EventLogContent> {
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                  Text(
-                    widget.panelVersionNo,
-                    style: GoogleFonts.inter(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: Color(0xFF979797),
-                    ),
+                  ValueListenableBuilder(
+                    valueListenable: ble.connectedDeviceId,
+                    builder: (context, deviceId, child) {
+                      return Text(
+                        deviceId.isEmpty ? 'N/A' : deviceId,
+                        style: GoogleFonts.inter(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: Color(0xFF979797),
+                        ),
+                      );
+                    },
                   ),
-                  RichText(
-                    text: TextSpan(
-                      children: [
-                        TextSpan(
-                          text: 'status : ',
-                          style: GoogleFonts.inter(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color: Color(0xFF979797),
-                          ),
+
+                  ValueListenableBuilder(
+                    valueListenable: ble.isConnectedNotifier,
+                    builder: (context, isConnected, child) {
+                      return RichText(
+                        text: TextSpan(
+                          children: [
+                            TextSpan(
+                              text: 'status : ',
+                              style: GoogleFonts.inter(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                                color: Color(0xFF979797),
+                              ),
+                            ),
+                            TextSpan(
+                              text: isConnected ? 'connected' : 'disconnected',
+                              style: GoogleFonts.inter(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                                color:
+                                    isConnected
+                                        ? Color(0xFF00A706)
+                                        : Color(0xFFEC1D24),
+                              ),
+                            ),
+                          ],
                         ),
-                        TextSpan(
-                          text: ble.isConnected ? 'connected' : 'disconnected',
-                          style: GoogleFonts.inter(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color:
-                                ble.isConnected
-                                    ? Color(0xFF00A706)
-                                    : Color(0xFFEC1D24),
-                          ),
-                        ),
-                      ],
-                    ),
+                      );
+                    },
                   ),
                 ],
               ),

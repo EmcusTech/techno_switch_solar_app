@@ -93,9 +93,19 @@ class BleManager {
 
   ValueNotifier<String> get processDesc => bleProcess.processDesc;
 
+  ValueNotifier<bool> get maxBleConnectionRetriesReached =>
+      bleProcess.maxBleConnectionRetriesReached;
+
+  ValueNotifier<bool> get maxOtherPacketsRetriesReached =>
+      bleProcess.maxOtherPacketsRetriesReached;
+
   ValueNotifier<String> get connectedDeviceId => bleProcess.connectedDeviceId;
 
-  bool get isConnected => _isGattConnected;
+  final ValueNotifier<bool> _isConnectedNotifier = ValueNotifier<bool>(false);
+
+  ValueNotifier<bool> get isConnectedNotifier => _isConnectedNotifier;
+
+  bool get isConnected => _isConnectedNotifier.value;
 
   void resetProtocolState() {
     // Packet counters
@@ -138,6 +148,7 @@ class BleManager {
     }
 
     while (attempt < maxRetries) {
+      maxBleConnectionRetriesReached.value = false;
       attempt++;
       print("BLE connect attempt $attempt / $maxRetries");
 
@@ -169,6 +180,7 @@ class BleManager {
           print("Max BLE retry attempts reached");
           processDesc.value =
               "Max BLE retry attempts reached, please scan again and connect.";
+          maxBleConnectionRetriesReached.value = true;
           rethrow;
         }
 
@@ -215,6 +227,7 @@ class BleManager {
             print("Connection state: ${update.connectionState}");
 
             if (update.connectionState == DeviceConnectionState.connected) {
+              _isConnectedNotifier.value = true;
               isBleDisconnected = false;
               connectedDeviceId.value = device.id;
               _isGattConnected = true;
@@ -263,6 +276,7 @@ class BleManager {
             }
 
             if (update.connectionState == DeviceConnectionState.disconnected) {
+              _isConnectedNotifier.value = false;
               isBleDisconnected = true;
               _isGattConnected = false;
               _connectedOnce = false;
@@ -332,6 +346,7 @@ class BleManager {
     _isGattConnected = false;
     _connectedOnce = false;
     selectedDevice = null;
+    _isConnectedNotifier.value = false;
   }
 
   /// SHUTDOWN
@@ -371,6 +386,7 @@ class BleManager {
     notifyChar = null;
     writeChar = null;
     isBleDisconnected = true;
+    _isConnectedNotifier.value = false;
   }
 
   // ----------------------
@@ -424,6 +440,9 @@ class BleManager {
         bleStateMachineState = BleStates.PROCESS_PANEL_EVT_LOG_READ;
         print("Current state: $bleStateMachineState");
         // Send Network Packet
+        bleProcess.startOtherPacketsRxTimeout(
+          timeout: const Duration(seconds: 5),
+        );
         Get.find<BleLogController>().sendNetworkPacket();
       } else {
         print("Validation failed");

@@ -49,7 +49,8 @@ class _DeviceConnectingScreenState extends State<DeviceConnectingScreen>
   Uuid primaryWriteCharGuid = BleUuids.primaryWriteChar;
   QualifiedCharacteristic? readCharacteristic;
   QualifiedCharacteristic? writeCharacteristic;
-
+  bool _maxBleConnectionRetriesReached = false;
+  bool _maxOtherPacketsRetriesReached = false;
   @override
   void initState() {
     super.initState();
@@ -67,11 +68,32 @@ class _DeviceConnectingScreenState extends State<DeviceConnectingScreen>
     // Listen for first valid log to navigate to event log screen
     ble.bleProcess.isValidLogRecieved.addListener(_onFirstValidLogReceived);
 
+    ble.maxBleConnectionRetriesReached.addListener(
+      _onMaxBleConnectionRetriesReached,
+    );
+
+    ble.maxOtherPacketsRetriesReached.addListener(
+      _onMaxOtherPacketsRetriesReached,
+    );
+
     // _handshakeSubscription ??= AppServices.bleService.handshakeEvents.listen(
     //   _handleHandshakeEvent,
     // );
 
     // BtUtils().connectToDevice(widget.selectedDevice);
+  }
+
+  void _onMaxBleConnectionRetriesReached() {
+    setState(() {
+      _maxBleConnectionRetriesReached =
+          ble.maxBleConnectionRetriesReached.value;
+    });
+  }
+
+  void _onMaxOtherPacketsRetriesReached() {
+    setState(() {
+      _maxOtherPacketsRetriesReached = ble.maxOtherPacketsRetriesReached.value;
+    });
   }
 
   void _onFirstValidLogReceived() {
@@ -118,7 +140,9 @@ class _DeviceConnectingScreenState extends State<DeviceConnectingScreen>
                         : const Color(0xFF3D3D3D),
               ),
             ),
-            if (!_connectionFailed) ...[
+            if (!_connectionFailed &&
+                !_maxBleConnectionRetriesReached &&
+                !_maxOtherPacketsRetriesReached) ...[
               const SizedBox(height: 8),
               Text(
                 'Please wait...',
@@ -401,9 +425,17 @@ class _DeviceConnectingScreenState extends State<DeviceConnectingScreen>
     return AnimatedBuilder(
       animation: _animationController,
       builder: (context, child) {
-        return Lottie.asset(
-          'assets/jsons/ble_connecting.json',
-          animate: !_connectionFailed,
+        return ValueListenableBuilder(
+          valueListenable: ble.maxBleConnectionRetriesReached,
+          builder: (context, value, _) {
+            return Lottie.asset(
+              'assets/jsons/ble_connecting.json',
+              animate:
+                  !_connectionFailed &&
+                  !_maxBleConnectionRetriesReached &&
+                  !_maxOtherPacketsRetriesReached,
+            );
+          },
         );
         // return Container(
         //   width: 150,

@@ -11,6 +11,7 @@ import '../utils/timestamp_converter.dart';
 class BleProcess {
   final BleManager bleManager;
   Timer? _rxTimeoutTimer;
+  Timer? _otherPacketsRxTimeoutTimer;
 
   int checkForCtrlCmdRsp = 0;
   int checkForAccessKeyCmdRsp = 0;
@@ -46,6 +47,13 @@ class BleProcess {
   final ValueNotifier<String> processDesc = ValueNotifier<String>("");
 
   final ValueNotifier<String> connectedDeviceId = ValueNotifier<String>("");
+
+  final ValueNotifier<bool> maxBleConnectionRetriesReached =
+      ValueNotifier<bool>(false);
+
+  final ValueNotifier<bool> maxOtherPacketsRetriesReached = ValueNotifier<bool>(
+    false,
+  );
 
   // BleStates bleStateMachineState = BleStates.IDLE;
   BleStates bleCurrentState = BleStates.IDLE;
@@ -283,7 +291,6 @@ class BleProcess {
     read1000LogsCount.value = 0;
     validEventLogs.value = [];
     isValidLogRecieved.value = false;
-    processDesc.value = "Restarting log retrieval...";
   }
 
   String formatDuration(Duration d) {
@@ -337,6 +344,7 @@ class BleProcess {
   // Public method to cancel timer
   void cancelRxTimeout() {
     _rxTimeoutTimer?.cancel();
+    _otherPacketsRxTimeoutTimer?.cancel();
     print("RX timeout cancelled from BleManager");
   }
 
@@ -479,11 +487,13 @@ class BleProcess {
 
   // Call this after every TX
   void startRxTimeout() {
+    print("ksdajcnajscnkjabsc");
+    maxOtherPacketsRetriesReached.value = false;
     if (isOtaCompleted) return;
 
     _rxTimeoutTimer?.cancel();
 
-    _rxTimeoutTimer = Timer(const Duration(seconds: 5), () async {
+    _rxTimeoutTimer = Timer(const Duration(seconds: 2), () async {
       if (isOtaCompleted) return;
 
       rxTimeoutRetryCount++;
@@ -495,24 +505,26 @@ class BleProcess {
 
       //Exceeded retry limit → HARD FAIL
       if (rxTimeoutRetryCount >= maxRxRetries) {
-        print("RX retry limit reached. Shutting down BLE.");
+        print("RX retry limit reached. Restarting network flow.");
 
-        processDesc.value = "Device not responding. Please scan and retry.";
+        processDesc.value = "Device not responding. Restarting network flow.";
 
         // Stop everything
-        isOtaCompleted = true;
-        processNextOtaFrame = false;
-        bleManager.otaProcessState = OtaProcessState.notInUse;
+        bleManager.bleProcess.resetProcessState();
 
-        _rxTimeoutTimer?.cancel();
+        bleCurrentState = BleStates.PROCESS_PANEL_EVT_LOG_READ;
+        bleManager.bleCurrentState = BleStates.PROCESS_PANEL_EVT_LOG_READ;
+        bleManager.bleStateMachineState = BleStates.PROCESS_PANEL_EVT_LOG_READ;
 
         // Full BLE shutdown
-        await bleManager.shutdown(deviceId: connectedDeviceId.value);
+        // await bleManager.shutdown(deviceId: connectedDeviceId.value);
+        startOtherPacketsRxTimeout(timeout: const Duration(seconds: 12));
+        Get.find<BleLogController>().restartNetworkFlow();
 
         // Optional: tell controller/UI explicitly
-        Get.find<BleLogController>().onBleFatalError(
-          "Device not responding. Please scan again.",
-        );
+        // Get.find<BleLogController>().onBleFatalError(
+        //   "Device not responding. Please scan again.",
+        // );
 
         return;
       }
@@ -523,6 +535,21 @@ class BleProcess {
 
       await handleTsEvtLogRead();
     });
+  }
+
+  void startOtherPacketsRxTimeout({Duration? timeout}) {
+    cancelRxTimeout();
+
+    _otherPacketsRxTimeoutTimer = Timer(
+      timeout ?? const Duration(seconds: 12),
+      () async {
+        maxOtherPacketsRetriesReached.value = true;
+        print("No response from device, please scan and connect again");
+        processDesc.value =
+            "No response from device, please scan and connect again";
+        bleManager.shutdown();
+      },
+    );
   }
 
   /// HANDLE OTA EVENT LOG
