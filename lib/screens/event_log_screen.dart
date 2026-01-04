@@ -518,57 +518,58 @@ class _EventLogContentState extends State<_EventLogContent> {
           ),
           SizedBox(height: 15),
           // Progress bar and stats
-          ValueListenableBuilder<int>(
-            valueListenable: ble.bleProcess.read1000LogsCount,
-            builder: (context, readCount, child) {
-              return ValueListenableBuilder<List<LogModel>>(
-                valueListenable: ble.bleProcess.validEventLogs,
-                builder: (context, validLogs, child) {
-                  final progress = readCount / 1000.0;
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Progress: $readCount / 1000',
-                            style: GoogleFonts.inter(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFF3D3D3D),
-                              fontFeatures: [FontFeature.tabularFigures()],
-                            ),
-                          ),
-                          Text(
-                            'Valid Logs: ${validLogs.length}',
-                            style: GoogleFonts.inter(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFFEC1D24),
-                              fontFeatures: [FontFeature.tabularFigures()],
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 8),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(4),
-                        child: LinearProgressIndicator(
-                          value: progress,
-                          minHeight: 8,
-                          backgroundColor: Color(0xFFE0E0E0),
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            Color(0xFFEC1D24),
-                          ),
-                        ),
-                      ),
-                    ],
-                  );
-                },
-              );
-            },
-          ),
+          // ValueListenableBuilder<int>(
+          //   valueListenable: ble.bleProcess.read1000LogsCount,
+          //   builder: (context, readCount, child) {
+          //     return ValueListenableBuilder<List<LogModel>>(
+          //       valueListenable: ble.bleProcess.validEventLogs,
+          //       builder: (context, validLogs, child) {
+          //         final progress = readCount / 1000.0;
+          //         return Column(
+          //           crossAxisAlignment: CrossAxisAlignment.start,
+          //           children: [
+          //             Row(
+          //               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          //               children: [
+          //                 Text(
+          //                   'Progress: $readCount / 1000',
+          //                   style: GoogleFonts.inter(
+          //                     fontSize: 14,
+          //                     fontWeight: FontWeight.w600,
+          //                     color: Color(0xFF3D3D3D),
+          //                     fontFeatures: [FontFeature.tabularFigures()],
+          //                   ),
+          //                 ),
+          //                 Text(
+          //                   'Valid Logs: ${validLogs.length}',
+          //                   style: GoogleFonts.inter(
+          //                     fontSize: 14,
+          //                     fontWeight: FontWeight.w600,
+          //                     color: Color(0xFFEC1D24),
+          //                     fontFeatures: [FontFeature.tabularFigures()],
+          //                   ),
+          //                 ),
+          //               ],
+          //             ),
+          //             SizedBox(height: 8),
+          //             ClipRRect(
+          //               borderRadius: BorderRadius.circular(4),
+          //               child: LinearProgressIndicator(
+          //                 value: progress,
+          //                 minHeight: 8,
+          //                 backgroundColor: Color(0xFFE0E0E0),
+          //                 valueColor: AlwaysStoppedAnimation<Color>(
+          //                   Color(0xFFEC1D24),
+          //                 ),
+          //               ),
+          //             ),
+          //           ],
+          //         );
+          //       },
+          //     );
+          //   },
+          // ),
+          _buildProgressBar(),
           SizedBox(height: 15),
           // Logs display using ValueListenableBuilder
           Expanded(
@@ -590,6 +591,71 @@ class _EventLogContentState extends State<_EventLogContent> {
       ),
     );
   }
+}
+
+Widget _buildProgressBar() {
+  return ValueListenableBuilder<int>(
+    valueListenable: ble.bleProcess.read1000LogsCount,
+    builder: (context, readCount, child) {
+      return ValueListenableBuilder<List<LogModel>>(
+        valueListenable: ble.bleProcess.validEventLogs,
+        builder: (context, validLogs, child) {
+          final progress = readCount / 1000.0;
+          return Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: Color(0xFFB9B9B9).withOpacity(0.31),
+                width: 1,
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Progress: $readCount / 1000',
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF3D3D3D),
+                        fontFeatures: [FontFeature.tabularFigures()],
+                      ),
+                    ),
+                    Text(
+                      'Valid Logs: ${validLogs.length}',
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFFEC1D24),
+                        fontFeatures: [FontFeature.tabularFigures()],
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 8),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: LinearProgressIndicator(
+                    value: progress,
+                    minHeight: 8,
+                    backgroundColor: Color(0xFFE0E0E0),
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      Color(0xFFEC1D24),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      );
+    },
+  );
 }
 
 // ---------- UPDATED _LogListView: header + rows share one horizontal scroll ----------

@@ -7,7 +7,6 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/utils/bluetooth_constants.dart';
-import 'package:usb_serial/usb_serial.dart';
 import 'package:techno_switch_solar_app/screens/access_code_screen.dart';
 import 'package:techno_switch_solar_app/screens/scanning_screen.dart';
 import 'package:techno_switch_solar_app/services/app_services.dart';
@@ -15,6 +14,7 @@ import 'package:techno_switch_solar_app/utils/bluetooth/ble_notify_data_handler.
 import 'package:lottie/lottie.dart';
 import 'package:techno_switch_solar_app/screens/event_log_screen.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
+import 'package:techno_switch_solar_app/models/log_model.dart';
 
 // Shared BLE instance used across screens
 final BleManager ble = Get.find<BleManager>();
@@ -51,6 +51,7 @@ class _DeviceConnectingScreenState extends State<DeviceConnectingScreen>
   QualifiedCharacteristic? writeCharacteristic;
   bool _maxBleConnectionRetriesReached = false;
   bool _maxOtherPacketsRetriesReached = false;
+  bool _firstLogReceived = false;
   @override
   void initState() {
     super.initState();
@@ -63,7 +64,7 @@ class _DeviceConnectingScreenState extends State<DeviceConnectingScreen>
     // _connectToDevice();
     // ble.bleProcess.runStateMachine();
 
-    Get.find<BleLogController>().startLogRetrieval();
+    // Get.find<BleLogController>().startLogRetrieval();
 
     // Listen for first valid log to navigate to event log screen
     ble.bleProcess.isValidLogRecieved.addListener(_onFirstValidLogReceived);
@@ -98,20 +99,26 @@ class _DeviceConnectingScreenState extends State<DeviceConnectingScreen>
 
   void _onFirstValidLogReceived() {
     if (ble.bleProcess.isValidLogRecieved.value && mounted) {
-      // Navigate to event log screen when first valid log is received
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder:
-              (context) => EventLogScreen(
-                logDataList: [], // Will be populated via ValueListenableBuilder
-                panelName: _getDeviceName(),
-                panelVersionNo:
-                    'N/A', // You may want to get this from somewhere
-                isStandalone: true,
-              ),
-        ),
-      );
+      // Instead of navigating, just set state to show button
+      setState(() {
+        _firstLogReceived = true;
+      });
     }
+  }
+
+  // Add method to navigate to EventLogScreen
+  void _navigateToEventLogScreen() {
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder:
+            (context) => EventLogScreen(
+              logDataList: [], // Will be populated via ValueListenableBuilder
+              panelName: _getDeviceName(),
+              panelVersionNo: 'N/A',
+              isStandalone: true,
+            ),
+      ),
+    );
   }
 
   @override
@@ -404,6 +411,16 @@ class _DeviceConnectingScreenState extends State<DeviceConnectingScreen>
                       _buildDeviceInfo(),
                       const SizedBox(height: 24),
                       _buildStatusText(),
+                      // Add progress bar
+                      if (!_connectionFailed) ...[
+                        const SizedBox(height: 24),
+                        _buildProgressBar(),
+                      ],
+                      // Add button when first log is received
+                      if (_firstLogReceived) ...[
+                        const SizedBox(height: 16),
+                        _buildViewLogsButton(),
+                      ],
                       if (_connectionFailed) ...[
                         const SizedBox(height: 16),
                         _buildErrorMessage(),
@@ -560,6 +577,106 @@ class _DeviceConnectingScreenState extends State<DeviceConnectingScreen>
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  // Add progress bar widget
+  Widget _buildProgressBar() {
+    return ValueListenableBuilder<int>(
+      valueListenable: ble.bleProcess.read1000LogsCount,
+      builder: (context, readCount, child) {
+        return ValueListenableBuilder<List<LogModel>>(
+          valueListenable: ble.bleProcess.validEventLogs,
+          builder: (context, validLogs, child) {
+            final progress = readCount / 1000.0;
+            return Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: Color(0xFFB9B9B9).withOpacity(0.31),
+                  width: 1,
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Progress: $readCount / 1000',
+                        style: GoogleFonts.inter(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF3D3D3D),
+                          fontFeatures: [FontFeature.tabularFigures()],
+                        ),
+                      ),
+                      Text(
+                        'Valid Logs: ${validLogs.length}',
+                        style: GoogleFonts.inter(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFFEC1D24),
+                          fontFeatures: [FontFeature.tabularFigures()],
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 8),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(4),
+                    child: LinearProgressIndicator(
+                      value: progress,
+                      minHeight: 8,
+                      backgroundColor: Color(0xFFE0E0E0),
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        Color(0xFFEC1D24),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  // Add button widget for navigating to EventLogScreen
+  Widget _buildViewLogsButton() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+      child: GestureDetector(
+        onTap: _navigateToEventLogScreen,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          decoration: BoxDecoration(
+            color: Color(0xFFEC1D24),
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: Color(0xFFEC1D24).withOpacity(0.3),
+                blurRadius: 8,
+                offset: Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Center(
+            child: Text(
+              'View Event Logs',
+              style: GoogleFonts.inter(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
