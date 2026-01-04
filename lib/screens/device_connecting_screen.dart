@@ -52,6 +52,7 @@ class _DeviceConnectingScreenState extends State<DeviceConnectingScreen>
   bool _maxBleConnectionRetriesReached = false;
   bool _maxOtherPacketsRetriesReached = false;
   bool _firstLogReceived = false;
+  bool _hasNavigatedToEventLog = false;
   @override
   void initState() {
     super.initState();
@@ -60,14 +61,15 @@ class _DeviceConnectingScreenState extends State<DeviceConnectingScreen>
       duration: const Duration(seconds: 2),
     )..repeat();
 
-    // Start connection attempt
-    // _connectToDevice();
-    // ble.bleProcess.runStateMachine();
+    // Reset state when screen is initialized (for retry scenarios)
+    _firstLogReceived = false;
+    _hasNavigatedToEventLog = false;
 
-    // Get.find<BleLogController>().startLogRetrieval();
-
-    // Listen for first valid log to navigate to event log screen
+    // Listen for first valid log to show button
     ble.bleProcess.isValidLogRecieved.addListener(_onFirstValidLogReceived);
+
+    // Listen for log retrieval completion (1000 logs read)
+    ble.bleProcess.read1000LogsCount.addListener(_onLogRetrievalCompleted);
 
     ble.maxBleConnectionRetriesReached.addListener(
       _onMaxBleConnectionRetriesReached,
@@ -106,6 +108,21 @@ class _DeviceConnectingScreenState extends State<DeviceConnectingScreen>
     }
   }
 
+  // Add listener for log retrieval completion
+  void _onLogRetrievalCompleted() {
+    if (mounted &&
+        ble.bleProcess.read1000LogsCount.value >= 1000 &&
+        !_hasNavigatedToEventLog) {
+      _hasNavigatedToEventLog = true;
+      // Wait a brief moment for final processing, then navigate
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (mounted) {
+          _navigateToEventLogScreen();
+        }
+      });
+    }
+  }
+
   // Add method to navigate to EventLogScreen
   void _navigateToEventLogScreen() {
     Navigator.of(context).pushReplacement(
@@ -124,6 +141,7 @@ class _DeviceConnectingScreenState extends State<DeviceConnectingScreen>
   @override
   void dispose() {
     ble.bleProcess.isValidLogRecieved.removeListener(_onFirstValidLogReceived);
+    ble.bleProcess.read1000LogsCount.removeListener(_onLogRetrievalCompleted);
     _handshakeSubscription?.cancel();
     _animationController.dispose();
     super.dispose();
@@ -650,7 +668,7 @@ class _DeviceConnectingScreenState extends State<DeviceConnectingScreen>
   // Add button widget for navigating to EventLogScreen
   Widget _buildViewLogsButton() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+      padding: const EdgeInsets.symmetric(vertical: 12),
       child: GestureDetector(
         onTap: _navigateToEventLogScreen,
         child: Container(
