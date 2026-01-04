@@ -5,8 +5,6 @@ import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
-import 'package:techno_switch_solar_app/screens/device_connecting_screen.dart';
-import 'package:techno_switch_solar_app/screens/event_log_screen.dart';
 import 'package:techno_switch_solar_app/screens/project_dashboard.dart';
 import 'package:techno_switch_solar_app/screens/scanning_screen.dart';
 import 'package:techno_switch_solar_app/services/navigation_service.dart';
@@ -483,6 +481,114 @@ class _ScannedScreenState extends State<ScannedScreen> {
     );
   }
 
+  void _showConnectingDialog({
+    required DiscoveredDevice device,
+    required BuildContext context,
+  }) {
+    final bleController = Get.find<BleLogController>();
+    final connectionNotifier = bleController.bleManager.isConnectedNotifier;
+    bool hasNavigated = false;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return ValueListenableBuilder<bool>(
+          valueListenable: connectionNotifier,
+          builder: (context, isConnected, child) {
+            // When connected, wait 1 second then navigate
+            if (isConnected && !hasNavigated) {
+              hasNavigated = true;
+              Future.delayed(const Duration(seconds: 2), () {
+                if (context.mounted && hasNavigated) {
+                  Navigator.of(context).pop(); // Close dialog
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(
+                      builder:
+                          (context) => ProjectDashboardScreen(
+                            selectedDevice: device,
+                            panelVersionNo: device.id,
+                            panelName: device.name,
+                          ),
+                    ),
+                  );
+                }
+              });
+            }
+
+            return Dialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Icon
+                    Container(
+                      width: 64,
+                      height: 64,
+                      decoration: BoxDecoration(
+                        color:
+                            isConnected
+                                ? Colors.green.withValues(alpha: 0.1)
+                                : Color(0xFFFBDEE1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Center(
+                        child:
+                            isConnected
+                                ? Icon(
+                                  Icons.check_circle,
+                                  size: 32,
+                                  color: Colors.green,
+                                )
+                                : CircularProgressIndicator(
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Color(0xFFEC1D24),
+                                  ),
+                                ),
+                      ),
+                    ),
+                    SizedBox(height: 16),
+                    // Title
+                    Text(
+                      isConnected ? 'Device Connected!' : 'Connecting...',
+                      style: GoogleFonts.inter(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF3D3D3D),
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    SizedBox(height: 8),
+                    // Subtitle
+                    Text(
+                      isConnected
+                          ? 'Preparing to navigate...'
+                          : 'Please wait while we connect to ${device.name}',
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w400,
+                        color: Color(0xFF918F8F),
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   Widget _buildDevicesList() {
     return ListView.separated(
       physics: NeverScrollableScrollPhysics(),
@@ -508,22 +614,14 @@ class _ScannedScreenState extends State<ScannedScreen> {
                     ),
                   ),
                 );
+
+                // Show connecting dialog
+                _showConnectingDialog(device: device, context: context);
+
+                // Start connection
                 await Get.find<BleLogController>().connectToDevice(
                   device: device,
                 );
-
-                if (Get.find<BleLogController>().isConnected) {
-                  Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(
-                      builder:
-                          (context) => ProjectDashboardScreen(
-                            selectedDevice: device,
-                            panelVersionNo: device.id,
-                            panelName: device.name,
-                          ),
-                    ),
-                  );
-                }
 
                 // Navigator.of(context).pushReplacement(
                 //   MaterialPageRoute(
