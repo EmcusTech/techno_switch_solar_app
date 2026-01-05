@@ -6,13 +6,15 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:techno_switch_solar_app/models/log_model.dart';
 import 'package:techno_switch_solar_app/screens/home_screen.dart';
-import 'package:techno_switch_solar_app/services/app_services.dart';
+import 'package:techno_switch_solar_app/services/event_log_csv_exporter.dart';
+import 'package:techno_switch_solar_app/services/event_log_excel_exporter.dart';
+import 'package:techno_switch_solar_app/services/event_log_pdf_exporter.dart';
 import 'package:techno_switch_solar_app/services/navigation_service.dart';
 import 'package:techno_switch_solar_app/services/panel_service.dart';
 import 'package:techno_switch_solar_app/services/site_service.dart';
+import 'package:techno_switch_solar_app/utils/export_tile.dart';
 import 'package:techno_switch_solar_app/widgets/site_creation_dialog.dart';
 import 'package:techno_switch_solar_app/screens/simple_site_creation_screen.dart';
-import 'package:techno_switch_solar_app/screens/site_screen.dart';
 import 'package:techno_switch_solar_app/screens/device_connecting_screen.dart';
 
 class EventLogScreen extends StatefulWidget {
@@ -314,60 +316,179 @@ class _EventLogContentState extends State<_EventLogContent> {
     );
   }
 
+  void _showExportBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: false,
+      builder: (_) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Drag handle
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+
+              Text(
+                'Export',
+                style: GoogleFonts.inter(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF3A3A3A),
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
+              // ExportTile(
+              //   icon: Icons.table_chart_outlined,
+              //   title: 'Export as Excel',
+              //   onTap: () async {
+              //     Navigator.pop(context);
+              //     final logs = ble.bleProcess.validEventLogs.value;
+              //     if (logs.isEmpty) return;
+
+              //     await EventLogExcelExporter.export(logs);
+              //   },
+              // ),
+
+              // ExportTile(
+              //   icon: Icons.description_outlined,
+              //   title: 'Export as CSV',
+              //   onTap: () async {
+              //     Navigator.pop(context);
+              //     final logs = ble.bleProcess.validEventLogs.value;
+              //     if (logs.isEmpty) return;
+
+              //     await EventLogCsvExporter.export(logs);
+              //   },
+              // ),
+              ExportTile(
+                icon: Icons.ios_share,
+                title: 'Export as PDF',
+                onTap: () async {
+                  Navigator.pop(context);
+                  final logs = ble.bleProcess.validEventLogs.value;
+                  if (logs.isEmpty) return;
+
+                  await EventLogPdfExporter.export(
+                    logs: logs,
+                    panelName: widget.panelName,
+                    panelVersion: widget.panelVersionNo,
+                  );
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0xFFF6EBEB), Colors.white],
-        ),
-      ),
-      child: Stack(
-        children: [
-          SvgPicture.asset('assets/svgs/background_1.svg'),
-          Padding(
-            padding: EdgeInsets.only(top: 24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              mainAxisSize: MainAxisSize.max,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Row(
-                    children: [
-                      GestureDetector(
-                        onTap: () async => await _handleBackNavigation(),
-                        child: SvgPicture.asset(
-                          'assets/svgs/arrow_back_icon.svg',
-                        ),
-                      ),
-                      SizedBox(width: 8),
-                      Text(
-                        'Event Log Retrieval',
-                        style: GoogleFonts.inter(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(height: 19),
-                Expanded(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(35),
-                    ),
-                    child: _buildLogStatus(),
-                  ),
-                ),
-              ],
-            ),
+    return PopScope(
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) {
+          _handleBackNavigation();
+        }
+      },
+      child: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFFF6EBEB), Colors.white],
           ),
-        ],
+        ),
+        child: Stack(
+          children: [
+            SvgPicture.asset('assets/svgs/background_1.svg'),
+            Padding(
+              padding: EdgeInsets.only(top: 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisSize: MainAxisSize.max,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: Row(
+                      children: [
+                        GestureDetector(
+                          onTap: () async => await _handleBackNavigation(),
+                          child: SvgPicture.asset(
+                            'assets/svgs/arrow_back_icon.svg',
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Event Log Retrieval',
+                          style: GoogleFonts.inter(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const Spacer(),
+                        IconButton(
+                          icon: const Icon(
+                            Icons.ios_share,
+                            color: Colors.black,
+                          ),
+                          onPressed: () => _showExportBottomSheet(context),
+                        ),
+
+                        // IconButton(
+                        //   tooltip: 'Export PDF',
+                        //   icon: const Icon(
+                        //     Icons.picture_as_pdf,
+                        //     color: Color(0xFFEC1D24),
+                        //   ),
+                        //   onPressed: () async {
+                        //     final logs = ble.bleProcess.validEventLogs.value;
+
+                        //     if (logs.isEmpty) return;
+
+                        //     await EventLogPdfExporter.export(
+                        //       logs: logs,
+                        //       panelName: widget.panelName,
+                        //       panelVersion: widget.panelVersionNo,
+                        //     );
+                        //   },
+                        // ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: 19),
+                  Expanded(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(35),
+                      ),
+                      child: _buildLogStatus(),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
