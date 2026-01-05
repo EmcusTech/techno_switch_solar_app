@@ -53,6 +53,7 @@ class _DeviceConnectingScreenState extends State<DeviceConnectingScreen>
   bool _maxOtherPacketsRetriesReached = false;
   bool _firstLogReceived = false;
   bool _hasNavigatedToEventLog = false;
+  bool _allowExit = false;
   @override
   void initState() {
     super.initState();
@@ -149,8 +150,87 @@ class _DeviceConnectingScreenState extends State<DeviceConnectingScreen>
     ble.bleProcess.processDesc.value = "";
 
     await ble.sendStopCntrlCmdPkt();
+    _allowExit = true;
     if (mounted) {
       Navigator.of(context).pop();
+    }
+  }
+
+  // Show confirmation dialog before stopping log retrieval
+  Future<void> _showStopConfirmationDialog() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Row(
+            children: [
+              Icon(
+                Icons.warning_amber_rounded,
+                color: Color(0xFFEC1D24),
+                size: 28,
+              ),
+              SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Stop Log Retrieval',
+                  style: GoogleFonts.inter(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF3A3A3A),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          content: Text(
+            'Are you sure you want to stop the log retrieval process? This action cannot be undone.',
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              fontWeight: FontWeight.w400,
+              color: Color(0xFF666666),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: Text(
+                'Cancel',
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF666666),
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Color(0xFFEC1D24),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                elevation: 0,
+              ),
+              child: Text(
+                'Yes, Stop',
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed == true && mounted) {
+      await _sendStopControlCommand();
     }
   }
 
@@ -420,53 +500,60 @@ class _DeviceConnectingScreenState extends State<DeviceConnectingScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFFF6EBEB), Colors.white],
+    return PopScope(
+      canPop: _allowExit,
+      child: Scaffold(
+        body: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0xFFF6EBEB), Colors.white],
+            ),
           ),
-        ),
-        child: Stack(
-          children: [
-            SvgPicture.asset('assets/svgs/background_1.svg'),
-            SafeArea(
-              child: Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(24.0),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Spacer(),
-                      _buildConnectionAnimation(),
-                      const SizedBox(height: 20),
-                      _buildDeviceInfo(),
-                      const SizedBox(height: 24),
-                      _buildStatusText(),
-                      // Add progress bar
-                      if (!_connectionFailed) ...[
-                        const SizedBox(height: 24),
-                        _buildProgressBar(),
+          child: Stack(
+            children: [
+              SvgPicture.asset('assets/svgs/background_1.svg'),
+              SafeArea(
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24.0),
+                    child: Stack(
+                      children: [
+                        Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            // const Spacer(),
+                            _buildConnectionAnimation(),
+                            const SizedBox(height: 20),
+                            _buildDeviceInfo(),
+                            const SizedBox(height: 24),
+                            _buildStatusText(),
+                            // Add progress bar
+                            if (!_connectionFailed) ...[
+                              const SizedBox(height: 56),
+                              _buildProgressBar(),
+                            ],
+
+                            // if (_connectionFailed) ...[
+                            //   const SizedBox(height: 16),
+                            //   _buildErrorMessage(),
+                            // ],
+                            // const Spacer(),
+                            // if (_connectionFailed) _buildRetryButton(),
+                          ],
+                        ),
+                        Align(
+                          alignment: Alignment.bottomCenter,
+                          child: _buildCancelLogRetrievalButton(),
+                        ),
                       ],
-                      // Add button when first log is received
-                      ...[
-                        const SizedBox(height: 16),
-                        _buildCancelLogRetrievalButton(),
-                      ],
-                      if (_connectionFailed) ...[
-                        const SizedBox(height: 16),
-                        _buildErrorMessage(),
-                      ],
-                      const Spacer(),
-                      if (_connectionFailed) _buildRetryButton(),
-                    ],
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -720,8 +807,9 @@ class _DeviceConnectingScreenState extends State<DeviceConnectingScreen>
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 12),
       child: GestureDetector(
-        onTap: _sendStopControlCommand,
+        onTap: _showStopConfirmationDialog,
         child: Container(
+          height: 55,
           padding: const EdgeInsets.symmetric(vertical: 16),
           decoration: BoxDecoration(
             color: Color(0xFFEC1D24),

@@ -196,7 +196,7 @@ class BleProcess {
           (rx.payload[17] << 16) |
           (rx.payload[16] << 24);
 
-      processDesc.value = "Filtering Valid Logs";
+      processDesc.value = "Fetching Valid Logs";
 
       if (rxLastEvtLogNum != 0) {
         validEventLogNum++;
@@ -487,7 +487,6 @@ class BleProcess {
 
   // Call this after every TX
   void startRxTimeout() {
-    print("ksdajcnajscnkjabsc");
     maxOtherPacketsRetriesReached.value = false;
     if (isOtaCompleted) return;
 

@@ -451,68 +451,81 @@ class _EventLogContentState extends State<_EventLogContent> {
           SizedBox(height: 15),
           Divider(color: Color(0xFF000000).withAlpha(46), thickness: 1),
           Row(
-            mainAxisAlignment: MainAxisAlignment.end,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              GestureDetector(
-                onTap:
-                    () => setState(() {
-                      _isListSelected = true;
-                      _selectedViewIndex = 0;
-                    }),
-                child:
-                    _isListSelected
-                        ? Container(
-                          height: 28,
-                          width: 28,
-                          decoration: BoxDecoration(
-                            color: Color(0xFFEC1D24),
-                            borderRadius: BorderRadius.circular(5),
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(2.0),
-                            child: SvgPicture.asset(
-                              'assets/svgs/list_deselected_icon.svg',
-                              colorFilter: ColorFilter.mode(
-                                Colors.white,
-                                BlendMode.srcIn,
-                              ),
-                            ),
-                          ),
-                        )
-                        : SvgPicture.asset(
-                          'assets/svgs/list_deselected_icon.svg',
-                        ),
+              Text(
+                "Logs View",
+                style: GoogleFonts.inter(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF3A3A3A),
+                ),
               ),
-              SizedBox(width: 5),
-              GestureDetector(
-                onTap:
-                    () => setState(() {
-                      _isListSelected = false;
-                      _selectedViewIndex = 1;
-                    }),
-                child:
-                    _isListSelected
-                        ? SvgPicture.asset(
-                          'assets/svgs/table_deselected_icon.svg',
-                        )
-                        : Container(
-                          height: 28,
-                          width: 28,
-                          decoration: BoxDecoration(
-                            color: Color(0xFFEC1D24),
-                            borderRadius: BorderRadius.circular(5),
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(4.0),
-                            child: SvgPicture.asset(
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  GestureDetector(
+                    onTap:
+                        () => setState(() {
+                          _isListSelected = true;
+                          _selectedViewIndex = 0;
+                        }),
+                    child:
+                        _isListSelected
+                            ? Container(
+                              height: 28,
+                              width: 28,
+                              decoration: BoxDecoration(
+                                color: Color(0xFFEC1D24),
+                                borderRadius: BorderRadius.circular(5),
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.all(2.0),
+                                child: SvgPicture.asset(
+                                  'assets/svgs/list_deselected_icon.svg',
+                                  colorFilter: ColorFilter.mode(
+                                    Colors.white,
+                                    BlendMode.srcIn,
+                                  ),
+                                ),
+                              ),
+                            )
+                            : SvgPicture.asset(
+                              'assets/svgs/list_deselected_icon.svg',
+                            ),
+                  ),
+                  SizedBox(width: 5),
+                  GestureDetector(
+                    onTap:
+                        () => setState(() {
+                          _isListSelected = false;
+                          _selectedViewIndex = 1;
+                        }),
+                    child:
+                        _isListSelected
+                            ? SvgPicture.asset(
                               'assets/svgs/table_deselected_icon.svg',
-                              colorFilter: ColorFilter.mode(
-                                Colors.white,
-                                BlendMode.srcIn,
+                            )
+                            : Container(
+                              height: 28,
+                              width: 28,
+                              decoration: BoxDecoration(
+                                color: Color(0xFFEC1D24),
+                                borderRadius: BorderRadius.circular(5),
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.all(4.0),
+                                child: SvgPicture.asset(
+                                  'assets/svgs/table_deselected_icon.svg',
+                                  colorFilter: ColorFilter.mode(
+                                    Colors.white,
+                                    BlendMode.srcIn,
+                                  ),
+                                ),
                               ),
                             ),
-                          ),
-                        ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -569,8 +582,8 @@ class _EventLogContentState extends State<_EventLogContent> {
           //     );
           //   },
           // ),
-          _buildProgressBar(),
-          SizedBox(height: 15),
+          // _buildProgressBar(),
+          // SizedBox(height: 15),
           // Logs display using ValueListenableBuilder
           Expanded(
             child: ValueListenableBuilder<List<LogModel>>(
