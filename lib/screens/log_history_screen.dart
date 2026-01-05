@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/models/log_retrieval_model.dart';
+import 'package:techno_switch_solar_app/screens/device_connecting_screen.dart';
 import 'package:techno_switch_solar_app/screens/event_log_screen.dart';
 import 'package:techno_switch_solar_app/services/log_retrieval_service.dart';
 
@@ -300,27 +301,35 @@ class LogHistoryScreenState extends State<LogHistoryScreen> {
                       color: Color(0xFF979797),
                     ),
                   ),
-                  RichText(
-                    text: TextSpan(
-                      children: [
-                        TextSpan(
-                          text: 'status : ',
-                          style: GoogleFonts.inter(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color: Color(0xFF979797),
-                          ),
+                  ValueListenableBuilder(
+                    valueListenable: ble.isConnectedNotifier,
+                    builder: (context, isConnected, child) {
+                      return RichText(
+                        text: TextSpan(
+                          children: [
+                            TextSpan(
+                              text: 'status : ',
+                              style: GoogleFonts.inter(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                                color: Color(0xFF979797),
+                              ),
+                            ),
+                            TextSpan(
+                              text: isConnected ? 'connected' : 'disconnected',
+                              style: GoogleFonts.inter(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                                color:
+                                    isConnected
+                                        ? Color(0xFF00A706)
+                                        : Color(0xFFEC1D24),
+                              ),
+                            ),
+                          ],
                         ),
-                        TextSpan(
-                          text: 'connected',
-                          style: GoogleFonts.inter(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color: Color(0xFF00A706),
-                          ),
-                        ),
-                      ],
-                    ),
+                      );
+                    },
                   ),
                 ],
               ),

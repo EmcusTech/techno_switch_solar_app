@@ -3,6 +3,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/controllers/updates_controller.dart';
+import 'package:techno_switch_solar_app/screens/device_connecting_screen.dart';
 import 'package:techno_switch_solar_app/widgets/firmware_upgrade_bottom_sheet.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -120,8 +121,8 @@ class _SettingsContentState extends State<_SettingsContent> {
             children: [
               SvgPicture.asset(
                 'assets/svgs/panel_icon.svg',
-                height: 81,
-                width: 81,
+                height: 62,
+                width: 62,
               ),
               SizedBox(width: 14),
               Column(
@@ -143,27 +144,35 @@ class _SettingsContentState extends State<_SettingsContent> {
                       color: Color(0xFF979797),
                     ),
                   ),
-                  RichText(
-                    text: TextSpan(
-                      children: [
-                        TextSpan(
-                          text: 'status : ',
-                          style: GoogleFonts.inter(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color: Color(0xFF979797),
-                          ),
+                  ValueListenableBuilder(
+                    valueListenable: ble.isConnectedNotifier,
+                    builder: (context, isConnected, child) {
+                      return RichText(
+                        text: TextSpan(
+                          children: [
+                            TextSpan(
+                              text: 'status : ',
+                              style: GoogleFonts.inter(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                                color: Color(0xFF979797),
+                              ),
+                            ),
+                            TextSpan(
+                              text: isConnected ? 'connected' : 'disconnected',
+                              style: GoogleFonts.inter(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                                color:
+                                    isConnected
+                                        ? Color(0xFF00A706)
+                                        : Color(0xFFEC1D24),
+                              ),
+                            ),
+                          ],
                         ),
-                        TextSpan(
-                          text: 'connected',
-                          style: GoogleFonts.inter(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color: Color(0xFF00A706),
-                          ),
-                        ),
-                      ],
-                    ),
+                      );
+                    },
                   ),
                 ],
               ),

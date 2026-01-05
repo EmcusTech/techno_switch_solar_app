@@ -203,7 +203,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                       ),
                       SizedBox(width: 8),
                       Text(
-                        'Project Name',
+                        'Project Dashboard',
                         style: GoogleFonts.inter(
                           fontSize: 20,
                           fontWeight: FontWeight.w700,
