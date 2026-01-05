@@ -13,6 +13,7 @@ import 'package:techno_switch_solar_app/services/navigation_service.dart';
 import 'package:techno_switch_solar_app/services/panel_service.dart';
 import 'package:techno_switch_solar_app/services/site_service.dart';
 import 'package:techno_switch_solar_app/utils/export_tile.dart';
+import 'package:techno_switch_solar_app/utils/event_constants.dart';
 import 'package:techno_switch_solar_app/widgets/site_creation_dialog.dart';
 import 'package:techno_switch_solar_app/screens/simple_site_creation_screen.dart';
 import 'package:techno_switch_solar_app/screens/device_connecting_screen.dart';
@@ -74,8 +75,25 @@ class _EventLogContentState extends State<_EventLogContent> {
   bool _isListSelected = false;
   int _selectedViewIndex = 1;
 
+  // Filter state
+  DateTime? _fromDate;
+  DateTime? _toDate;
+  Set<String> _selectedStatuses = {};
+  Set<String> _selectedEventClasses = {};
+  String? _alarmCount;
+  List<LogModel> _filteredLogs = [];
+  bool _filtersApplied = false;
+  int _textFieldResetKey = 0;
+
   final PanelService _panelService = PanelService();
   final SiteService _siteService = SiteService();
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize filtered logs with all logs
+    _filteredLogs = List.from(widget.logDataList);
+  }
 
   // Future<void> _handleBackNavigation() async {
   //   final bleManager = ble;
@@ -401,6 +419,110 @@ class _EventLogContentState extends State<_EventLogContent> {
     );
   }
 
+  void _applyFilters() {
+    setState(() {
+      final allLogs = ble.bleProcess.validEventLogs.value;
+      _filteredLogs =
+          allLogs.where((log) {
+            // Date filter
+            if (_fromDate != null || _toDate != null) {
+              if (log.eventDateTime == null) return false;
+              final logDate = DateTime(
+                log.eventDateTime!.year,
+                log.eventDateTime!.month,
+                log.eventDateTime!.day,
+              );
+              if (_fromDate != null) {
+                final fromDate = DateTime(
+                  _fromDate!.year,
+                  _fromDate!.month,
+                  _fromDate!.day,
+                );
+                if (logDate.isBefore(fromDate)) return false;
+              }
+              if (_toDate != null) {
+                final toDate = DateTime(
+                  _toDate!.year,
+                  _toDate!.month,
+                  _toDate!.day,
+                ).add(Duration(days: 1)); // Include the entire end date
+                if (logDate.isAfter(toDate.subtract(Duration(seconds: 1))))
+                  return false;
+              }
+            }
+
+            // Status filter
+            if (_selectedStatuses.isNotEmpty) {
+              if (log.eventStatus == null ||
+                  !_selectedStatuses.contains(log.eventStatus)) {
+                return false;
+              }
+            }
+
+            // Event Class filter
+            if (_selectedEventClasses.isNotEmpty) {
+              if (log.eventClass == null ||
+                  !_selectedEventClasses.contains(log.eventClass)) {
+                return false;
+              }
+            }
+
+            // Alarm Count filter (if provided)
+            if (_alarmCount != null && _alarmCount!.isNotEmpty) {
+              final count = int.tryParse(_alarmCount!);
+              if (count != null) {
+                // Assuming alarm count might be related to event ID or some other field
+                // Adjust this logic based on your requirements
+                final eventId = int.tryParse(log.eventId ?? '0') ?? 0;
+                if (eventId != count) return false;
+              }
+            }
+
+            return true;
+          }).toList();
+      _filtersApplied =
+          _fromDate != null ||
+          _toDate != null ||
+          _selectedStatuses.isNotEmpty ||
+          _selectedEventClasses.isNotEmpty ||
+          (_alarmCount != null && _alarmCount!.isNotEmpty);
+    });
+  }
+
+  void _resetFilters() {
+    setState(() {
+      _fromDate = null;
+      _toDate = null;
+      _selectedStatuses.clear();
+      _selectedEventClasses.clear();
+      _alarmCount = null;
+      _filtersApplied = false;
+      _textFieldResetKey++; // Force TextField to reset
+      _filteredLogs = List.from(ble.bleProcess.validEventLogs.value);
+    });
+  }
+
+  Future<void> _selectDate(BuildContext context, bool isFromDate) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate:
+          isFromDate
+              ? (_fromDate ?? DateTime.now())
+              : (_toDate ?? DateTime.now()),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+    if (picked != null) {
+      setState(() {
+        if (isFromDate) {
+          _fromDate = picked;
+        } else {
+          _toDate = picked;
+        }
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return PopScope(
@@ -445,12 +567,20 @@ class _EventLogContentState extends State<_EventLogContent> {
                           ),
                         ),
                         const Spacer(),
+
                         IconButton(
                           icon: const Icon(
                             Icons.ios_share,
                             color: Colors.black,
                           ),
                           onPressed: () => _showExportBottomSheet(context),
+                        ),
+                        IconButton(
+                          icon: const Icon(
+                            Icons.filter_alt_outlined,
+                            color: Colors.black,
+                          ),
+                          onPressed: () => _showFilterBottomSheet(context),
                         ),
 
                         // IconButton(
@@ -490,6 +620,421 @@ class _EventLogContentState extends State<_EventLogContent> {
           ],
         ),
       ),
+    );
+  }
+
+  void _showFilterBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (_) {
+        return StatefulBuilder(
+          builder: (context, sheetSetState) {
+            return Container(
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+              ),
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Drag handle
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      margin: const EdgeInsets.only(bottom: 16),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade300,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+
+                  Text(
+                    'Filter',
+                    style: GoogleFonts.inter(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF3A3A3A),
+                    ),
+                  ),
+                  SizedBox(height: 24),
+
+                  // Select Date Section
+                  Text(
+                    'Select Date:',
+                    style: GoogleFonts.inter(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF3A3A3A),
+                    ),
+                  ),
+                  SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => _selectDate(context, true),
+                          child: Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 14,
+                            ),
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Color(0xFFD7D7D7)),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              children: [
+                                Text(
+                                  _fromDate != null
+                                      ? DateFormat(
+                                        'dd/MM/yyyy',
+                                      ).format(_fromDate!)
+                                      : 'From',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                    color:
+                                        _fromDate != null
+                                            ? Color(0xFF3A3A3A)
+                                            : Color(0xFF979797),
+                                  ),
+                                ),
+                                Spacer(),
+                                Icon(
+                                  Icons.calendar_today,
+                                  size: 18,
+                                  color: Color(0xFF979797),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: 12),
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => _selectDate(context, false),
+                          child: Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 14,
+                            ),
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Color(0xFFD7D7D7)),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              children: [
+                                Text(
+                                  _toDate != null
+                                      ? DateFormat(
+                                        'dd/MM/yyyy',
+                                      ).format(_toDate!)
+                                      : 'To',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                    color:
+                                        _toDate != null
+                                            ? Color(0xFF3A3A3A)
+                                            : Color(0xFF979797),
+                                  ),
+                                ),
+                                Spacer(),
+                                Icon(
+                                  Icons.calendar_today,
+                                  size: 18,
+                                  color: Color(0xFF979797),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 24),
+
+                  // Status Section - Show in rows (max 3 per row)
+                  Text(
+                    'Status:',
+                    style: GoogleFonts.inter(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF3A3A3A),
+                    ),
+                  ),
+                  SizedBox(height: 12),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children:
+                        EventConstants.statusEventStatusValue.skip(1).map((
+                          status,
+                        ) {
+                          return SizedBox(
+                            width: (MediaQuery.of(context).size.width - 56) / 3,
+                            child: SizedBox(
+                              width:
+                                  (MediaQuery.of(context).size.width - 56) / 3,
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(6),
+                                onTap: () {
+                                  sheetSetState(() {
+                                    if (_selectedStatuses.contains(status)) {
+                                      _selectedStatuses.remove(status);
+                                    } else {
+                                      _selectedStatuses.add(status);
+                                    }
+                                  });
+                                },
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    Checkbox(
+                                      materialTapTargetSize:
+                                          MaterialTapTargetSize.shrinkWrap,
+                                      visualDensity: VisualDensity.compact,
+                                      value: _selectedStatuses.contains(status),
+                                      activeColor: const Color(0xFFEC1D24),
+                                      onChanged: (value) {
+                                        sheetSetState(() {
+                                          if (value == true) {
+                                            _selectedStatuses.add(status);
+                                          } else {
+                                            _selectedStatuses.remove(status);
+                                          }
+                                        });
+                                      },
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Expanded(
+                                      child: Text(
+                                        status,
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: GoogleFonts.inter(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w500,
+                                          color: const Color(0xFF3A3A3A),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                  ),
+                  SizedBox(height: 24),
+
+                  // Event Class Section - Show max 3 per row
+                  Text(
+                    'Event Class:',
+                    style: GoogleFonts.inter(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF3A3A3A),
+                    ),
+                  ),
+                  SizedBox(height: 12),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children:
+                        EventConstants.statusEventClassNames.skip(1).map((
+                          eventClass,
+                        ) {
+                          // Map "Release" to "Ext. Release" and "Evacuation" to "Fire" for UI
+                          String displayName = eventClass;
+                          if (eventClass == "Release")
+                            displayName = "Ext. Release";
+                          if (eventClass == "Evacuation") displayName = "Fire";
+
+                          return SizedBox(
+                            width: (MediaQuery.of(context).size.width - 56) / 3,
+                            child: SizedBox(
+                              width:
+                                  (MediaQuery.of(context).size.width - 56) / 3,
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(6),
+                                onTap: () {
+                                  sheetSetState(() {
+                                    if (_selectedEventClasses.contains(
+                                      eventClass,
+                                    )) {
+                                      _selectedEventClasses.remove(eventClass);
+                                    } else {
+                                      _selectedEventClasses.add(eventClass);
+                                    }
+                                  });
+                                },
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    Checkbox(
+                                      materialTapTargetSize:
+                                          MaterialTapTargetSize.shrinkWrap,
+                                      visualDensity: VisualDensity.compact,
+                                      value: _selectedEventClasses.contains(
+                                        eventClass,
+                                      ),
+                                      activeColor: const Color(0xFFEC1D24),
+                                      onChanged: (value) {
+                                        sheetSetState(() {
+                                          if (value == true) {
+                                            _selectedEventClasses.add(
+                                              eventClass,
+                                            );
+                                          } else {
+                                            _selectedEventClasses.remove(
+                                              eventClass,
+                                            );
+                                          }
+                                        });
+                                      },
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Expanded(
+                                      child: Text(
+                                        displayName,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: GoogleFonts.inter(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w500,
+                                          color: const Color(0xFF3A3A3A),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                  ),
+                  SizedBox(height: 24),
+
+                  // Alarm Count Section
+                  Text(
+                    'Alarm Count:',
+                    style: GoogleFonts.inter(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF3A3A3A),
+                    ),
+                  ),
+                  SizedBox(height: 12),
+                  TextField(
+                    key: ValueKey('alarm_count_$_textFieldResetKey'),
+                    onChanged: (value) {
+                      setState(() {
+                        _alarmCount = value.isEmpty ? null : value;
+                      });
+                    },
+                    keyboardType: TextInputType.number,
+                    decoration: InputDecoration(
+                      hintText: 'Enter Alarm Count',
+                      hintStyle: GoogleFonts.inter(
+                        fontSize: 14,
+                        color: Color(0xFF979797),
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: Color(0xFFD7D7D7)),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: Color(0xFFD7D7D7)),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(
+                          color: Color(0xFFEC1D24),
+                          width: 2,
+                        ),
+                      ),
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 14,
+                      ),
+                    ),
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: Color(0xFF3A3A3A),
+                    ),
+                  ),
+                  SizedBox(height: 32),
+
+                  // Action Buttons
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () {
+                            _resetFilters();
+                            Navigator.pop(context);
+                          },
+                          style: OutlinedButton.styleFrom(
+                            padding: EdgeInsets.symmetric(vertical: 14),
+                            side: BorderSide(color: Color(0xFFD7D7D7)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          child: Text(
+                            'Reset',
+                            style: GoogleFonts.inter(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF3A3A3A),
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            _applyFilters();
+                            Navigator.pop(context);
+                          },
+                          style: ElevatedButton.styleFrom(
+                            padding: EdgeInsets.symmetric(vertical: 14),
+                            backgroundColor: Color(0xFFEC1D24),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            elevation: 0,
+                          ),
+                          child: Text(
+                            'Apply Now',
+                            style: GoogleFonts.inter(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 20),
+                ],
+              ),
+            );
+          },
+        );
+      },
     );
   }
 
@@ -568,6 +1113,7 @@ class _EventLogContentState extends State<_EventLogContent> {
           ),
           SizedBox(height: 15),
           Divider(color: Color(0xFF000000).withAlpha(46), thickness: 1),
+
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -648,70 +1194,19 @@ class _EventLogContentState extends State<_EventLogContent> {
             ],
           ),
           SizedBox(height: 15),
-          // Progress bar and stats
-          // ValueListenableBuilder<int>(
-          //   valueListenable: ble.bleProcess.read1000LogsCount,
-          //   builder: (context, readCount, child) {
-          //     return ValueListenableBuilder<List<LogModel>>(
-          //       valueListenable: ble.bleProcess.validEventLogs,
-          //       builder: (context, validLogs, child) {
-          //         final progress = readCount / 1000.0;
-          //         return Column(
-          //           crossAxisAlignment: CrossAxisAlignment.start,
-          //           children: [
-          //             Row(
-          //               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          //               children: [
-          //                 Text(
-          //                   'Progress: $readCount / 1000',
-          //                   style: GoogleFonts.inter(
-          //                     fontSize: 14,
-          //                     fontWeight: FontWeight.w600,
-          //                     color: Color(0xFF3D3D3D),
-          //                     fontFeatures: [FontFeature.tabularFigures()],
-          //                   ),
-          //                 ),
-          //                 Text(
-          //                   'Valid Logs: ${validLogs.length}',
-          //                   style: GoogleFonts.inter(
-          //                     fontSize: 14,
-          //                     fontWeight: FontWeight.w600,
-          //                     color: Color(0xFFEC1D24),
-          //                     fontFeatures: [FontFeature.tabularFigures()],
-          //                   ),
-          //                 ),
-          //               ],
-          //             ),
-          //             SizedBox(height: 8),
-          //             ClipRRect(
-          //               borderRadius: BorderRadius.circular(4),
-          //               child: LinearProgressIndicator(
-          //                 value: progress,
-          //                 minHeight: 8,
-          //                 backgroundColor: Color(0xFFE0E0E0),
-          //                 valueColor: AlwaysStoppedAnimation<Color>(
-          //                   Color(0xFFEC1D24),
-          //                 ),
-          //               ),
-          //             ),
-          //           ],
-          //         );
-          //       },
-          //     );
-          //   },
-          // ),
-          // _buildProgressBar(),
-          // SizedBox(height: 15),
-          // Logs display using ValueListenableBuilder
           Expanded(
             child: ValueListenableBuilder<List<LogModel>>(
               valueListenable: ble.bleProcess.validEventLogs,
               builder: (context, validLogs, child) {
+                // Use filtered logs if filters are applied, otherwise use all logs
+                final logsToDisplay =
+                    _filtersApplied ? _filteredLogs : validLogs;
+
                 return IndexedStack(
                   index: _selectedViewIndex,
                   children: [
-                    _LogListView(displayLogs: validLogs),
-                    _LogTableView(displayLogs: validLogs),
+                    _LogListView(displayLogs: logsToDisplay),
+                    _LogTableView(displayLogs: logsToDisplay),
                   ],
                 );
               },
