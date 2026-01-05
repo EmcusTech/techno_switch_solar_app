@@ -138,6 +138,22 @@ class _DeviceConnectingScreenState extends State<DeviceConnectingScreen>
     );
   }
 
+  //send stop control command
+  Future<void> _sendStopControlCommand() async {
+    ble.bleProcess.isOtaCompleted = true;
+    ble.bleProcess.processNextOtaFrame = false;
+
+    ble.otaProcessState = OtaProcessState.notInUse;
+    ble.bleProcess.cancelRxTimeout();
+
+    ble.bleProcess.processDesc.value = "";
+
+    await ble.sendStopCntrlCmdPkt();
+    if (mounted) {
+      Navigator.of(context).pop();
+    }
+  }
+
   @override
   void dispose() {
     ble.bleProcess.isValidLogRecieved.removeListener(_onFirstValidLogReceived);
@@ -435,9 +451,9 @@ class _DeviceConnectingScreenState extends State<DeviceConnectingScreen>
                         _buildProgressBar(),
                       ],
                       // Add button when first log is received
-                      if (_firstLogReceived) ...[
+                      ...[
                         const SizedBox(height: 16),
-                        _buildViewLogsButton(),
+                        _buildCancelLogRetrievalButton(),
                       ],
                       if (_connectionFailed) ...[
                         const SizedBox(height: 16),
@@ -687,6 +703,40 @@ class _DeviceConnectingScreenState extends State<DeviceConnectingScreen>
           child: Center(
             child: Text(
               'View Event Logs',
+              style: GoogleFonts.inter(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Add button widget for canceling log retrieval
+  Widget _buildCancelLogRetrievalButton() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: GestureDetector(
+        onTap: _sendStopControlCommand,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          decoration: BoxDecoration(
+            color: Color(0xFFEC1D24),
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: Color(0xFFEC1D24).withOpacity(0.3),
+                blurRadius: 8,
+                offset: Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Center(
+            child: Text(
+              'Cancel Log Retrieval',
               style: GoogleFonts.inter(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
