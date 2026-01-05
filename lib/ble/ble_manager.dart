@@ -82,6 +82,7 @@ class BleManager {
   bool _isGattConnected = false;
   StreamSubscription<List<int>>? _notifySub;
   bool isBleDisconnected = true;
+  bool isLogRetrievalDoneOnce = false;
 
   // BLE state machine
   late BleProcess bleProcess;
@@ -150,7 +151,20 @@ class BleManager {
 
     // Start the encryption key request process
     // This will trigger the authentication flow which eventually leads to log retrieval
-    await registerNotifyHandler();
+    if (!isLogRetrievalDoneOnce) {
+      await registerNotifyHandler();
+      isLogRetrievalDoneOnce = true;
+    } else {
+      bleProcess.resetProcessState();
+      bleCurrentState = BleStates.PROCESS_PANEL_EVT_LOG_READ;
+      bleStateMachineState = BleStates.PROCESS_PANEL_EVT_LOG_READ;
+      print("Current state: $bleStateMachineState");
+      // Send Network Packet
+      bleProcess.startOtherPacketsRxTimeout(
+        timeout: const Duration(seconds: 5),
+      );
+      Get.find<BleLogController>().sendNetworkPacket();
+    }
   }
 
   Future<void> safeDisconnect() async {
@@ -417,6 +431,7 @@ class BleManager {
     writeChar = null;
     isBleDisconnected = true;
     _isConnectedNotifier.value = false;
+    isLogRetrievalDoneOnce = false;
   }
 
   // ----------------------
