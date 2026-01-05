@@ -5,6 +5,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
+import 'package:techno_switch_solar_app/screens/home_screen.dart';
 import 'package:techno_switch_solar_app/screens/project_dashboard.dart';
 import 'package:techno_switch_solar_app/screens/scanning_screen.dart';
 import 'package:techno_switch_solar_app/services/navigation_service.dart';
@@ -487,16 +488,27 @@ class _ScannedScreenState extends State<ScannedScreen> {
   }) {
     final bleController = Get.find<BleLogController>();
     final connectionNotifier = bleController.bleManager.isConnectedNotifier;
+    final maxBleConnectionRetriesReachedNotifier =
+        bleController.bleManager.maxBleConnectionRetriesReached;
     bool hasNavigated = false;
+
+    final mergedListenable = Listenable.merge([
+      connectionNotifier,
+      maxBleConnectionRetriesReachedNotifier,
+    ]);
 
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) {
-        return ValueListenableBuilder<bool>(
-          valueListenable: connectionNotifier,
-          builder: (context, isConnected, child) {
-            // When connected, wait 1 second then navigate
+        return ListenableBuilder(
+          listenable: mergedListenable,
+          builder: (context, _) {
+            final isConnected = connectionNotifier.value;
+            final maxBleConnectionRetriesReached =
+                maxBleConnectionRetriesReachedNotifier.value;
+            // When connected, wait 2 second then navigate
+
             if (isConnected && !hasNavigated) {
               hasNavigated = true;
               Future.delayed(const Duration(seconds: 2), () {
@@ -558,7 +570,11 @@ class _ScannedScreenState extends State<ScannedScreen> {
                     SizedBox(height: 16),
                     // Title
                     Text(
-                      isConnected ? 'Device Connected!' : 'Connecting...',
+                      isConnected
+                          ? 'Device Connected!'
+                          : maxBleConnectionRetriesReached
+                          ? 'Max Connection Retries Reached!'
+                          : 'Connecting...',
                       style: GoogleFonts.inter(
                         fontSize: 20,
                         fontWeight: FontWeight.w700,
@@ -571,6 +587,8 @@ class _ScannedScreenState extends State<ScannedScreen> {
                     Text(
                       isConnected
                           ? 'Preparing to navigate...'
+                          : maxBleConnectionRetriesReached
+                          ? 'Please scan again and connect to the device'
                           : 'Please wait while we connect to ${device.name}',
                       style: GoogleFonts.inter(
                         fontSize: 14,

@@ -5,6 +5,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:techno_switch_solar_app/models/log_model.dart';
+import 'package:techno_switch_solar_app/screens/home_screen.dart';
 import 'package:techno_switch_solar_app/services/app_services.dart';
 import 'package:techno_switch_solar_app/services/navigation_service.dart';
 import 'package:techno_switch_solar_app/services/panel_service.dart';
@@ -124,10 +125,10 @@ class _EventLogContentState extends State<_EventLogContent> {
 
     // AppServices.serialService.disconnect();
 
-    //Stop BLE cleanly
-    if (bleManager.isConnected) {
-      await bleManager.shutdown(deviceId: panelIdToUse);
-    }
+    // //Stop BLE cleanly
+    // if (bleManager.isConnected) {
+    //   await bleManager.shutdown(deviceId: panelIdToUse);
+    // }
 
     //No logs? Just go back to scanning
     if (logs.isEmpty) {
@@ -163,16 +164,12 @@ class _EventLogContentState extends State<_EventLogContent> {
                   ),
             );
 
-            Navigator.of(context).pushAndRemoveUntil(
-              MaterialPageRoute(
-                builder:
-                    (context) => SiteScreen(
-                      site: existingSite,
-                      siteWithLogCount: updatedSiteWithLogCount,
-                    ),
-              ),
-              (route) => false,
-            );
+            if (mounted) {
+              Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute(builder: (context) => HomeScreen()),
+                (route) => false,
+              );
+            }
           } else {
             await NavigationService.navigateBackToScanning(context);
           }

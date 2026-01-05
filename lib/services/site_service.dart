@@ -125,14 +125,34 @@ class SiteService {
 
     // Create a log retrieval session if associated with a site
     if (siteId != null && logs.isNotEmpty) {
-      final site = await getSiteById(siteId);
-      if (site != null) {
-        await _logRetrievalService.createLogRetrievalSession(
-          siteId: siteId,
-          siteName: site.siteName,
-          logs: logs,
+      try {
+        print(
+          'DEBUG: Creating log retrieval session for siteId: $siteId, logCount: ${logs.length}',
         );
+        final site = await getSiteById(siteId);
+        if (site != null) {
+          print('DEBUG: Site found: ${site.siteName}');
+          final logRetrieval = await _logRetrievalService
+              .createLogRetrievalSession(
+                siteId: siteId,
+                siteName: site.siteName,
+                logs: logs,
+              );
+          print(
+            'DEBUG: Log retrieval session created successfully: ${logRetrieval.sessionName}',
+          );
+        } else {
+          print('DEBUG: ERROR - Site not found for siteId: $siteId');
+        }
+      } catch (e, stackTrace) {
+        print('DEBUG: ERROR creating log retrieval session: $e');
+        print('DEBUG: Stack trace: $stackTrace');
+        // Don't throw - log retrieval failure shouldn't block log storage
       }
+    } else {
+      print(
+        'DEBUG: Skipping log retrieval session creation - siteId: $siteId, logs.isEmpty: ${logs.isEmpty}',
+      );
     }
   }
 

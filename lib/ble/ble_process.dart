@@ -412,7 +412,7 @@ class BleProcess {
                   : payload[42] == 4
                   ? "Server No. ${payload[43]}"
                   : payload[42] == 5
-                  ? "RADIO"
+                  ? "Arcnet No. 0"
                   : "";
         } else if (payload[22] == EventConstants.evtTypeAccess) {
           panelSource =
@@ -425,7 +425,7 @@ class BleProcess {
                   : payload[42] == 3
                   ? "Server"
                   : payload[42] == 4
-                  ? "RADIO"
+                  ? "Arcnet No. 0"
                   : "";
         } else {
           panelSource = "Panel No. 1";

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/models/log_retrieval_model.dart';
+import 'package:techno_switch_solar_app/screens/event_log_screen.dart';
 import 'package:techno_switch_solar_app/services/log_retrieval_service.dart';
 
 class LogHistoryScreen extends StatefulWidget {
@@ -32,9 +33,11 @@ class LogHistoryScreenState extends State<LogHistoryScreen> {
 
   Future<void> _loadLogHistory() async {
     try {
+      print('DEBUG: Loading log history for siteId: ${widget.siteId}');
       final retrievals = await _logRetrievalService.getLogRetrievalsForSite(
         widget.siteId,
       );
+      print('DEBUG: Found ${retrievals.length} log retrieval sessions');
       setState(() {
         _logRetrievals = retrievals;
         _isLoading = false;
@@ -117,70 +120,85 @@ class LogHistoryScreenState extends State<LogHistoryScreen> {
     final String formattedDate =
         "${dateRetrieved.day.toString().padLeft(2, '0')}/${dateRetrieved.month.toString().padLeft(2, '0')}/${dateRetrieved.year} - ${dateRetrieved.hour.toString().padLeft(2, '0')}:${dateRetrieved.minute.toString().padLeft(2, '0')} ${dateRetrieved.hour >= 12 ? 'PM' : 'AM'}";
 
-    return Container(
-      padding: EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Color(0xFFE9ECEF)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 8,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 50,
-            height: 50,
-            decoration: BoxDecoration(
-              color: Color(0xFFDC3545).withOpacity(0.1),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              Icons.description_outlined,
-              color: Color(0xFFDC3545),
-              size: 20,
-            ),
-          ),
-          SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  logRetrieval.sessionName,
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.black,
-                  ),
+    return GestureDetector(
+      onTap: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder:
+                (context) => EventLogScreen(
+                  logDataList: [],
+                  panelName: widget.panelName,
+                  panelVersionNo: widget.panelVersionNo,
+                  isStandalone: true,
                 ),
-                SizedBox(height: 4),
-                Text(
-                  'Log Records : ${logRetrieval.logCount}',
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w400,
-                    color: Color(0xFF696969),
-                  ),
-                ),
-                SizedBox(height: 2),
-                Text(
-                  'Date Retrieved : $formattedDate',
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w400,
-                    color: Color(0xFF767676),
-                  ),
-                ),
-              ],
-            ),
           ),
-        ],
+        );
+      },
+      child: Container(
+        padding: EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Color(0xFFE9ECEF)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 8,
+              offset: Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                color: Color(0xFFDC3545).withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.description_outlined,
+                color: Color(0xFFDC3545),
+                size: 20,
+              ),
+            ),
+            SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    logRetrieval.sessionName,
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.black,
+                    ),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    'Log Records : ${logRetrieval.logCount}',
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w400,
+                      color: Color(0xFF696969),
+                    ),
+                  ),
+                  SizedBox(height: 2),
+                  Text(
+                    'Date Retrieved : $formattedDate',
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w400,
+                      color: Color(0xFF767676),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -259,8 +277,8 @@ class LogHistoryScreenState extends State<LogHistoryScreen> {
             children: [
               SvgPicture.asset(
                 'assets/svgs/panel_icon.svg',
-                height: 81,
-                width: 81,
+                height: 62,
+                width: 62,
               ),
               SizedBox(width: 14),
               Column(

@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 import 'package:flutter_svg/svg.dart';
@@ -198,6 +200,7 @@ class _SiteScreenState extends State<SiteScreen> {
               ),
               GestureDetector(
                 onTap: () {
+                  print('DEBUG: Navigating to site detail screen');
                   Navigator.of(context).push(
                     MaterialPageRoute(
                       builder:
@@ -302,25 +305,25 @@ class _SiteScreenState extends State<SiteScreen> {
 
         return GestureDetector(
           onTap: () {
-            // Navigator.of(context).push(
-            //   MaterialPageRoute(
-            //     builder:
-            //         (context) => ProjectDashboardScreen(
-            //           selectedDevice: DiscoveredDevice(
-            //             name: panel.panelName,
-            //             id: panel.panelId,
-            //             rssi: 0,
-            //             serviceData: {},
-            //             manufacturerData: [],
-            //             serviceUuids: [],
-            //           ),
-            //           panelName: panel.panelName,
-            //           panelVersionNo: panel.deviceDisplayInfo,
-            //           siteId: widget.site.id!,
-            //           siteName: widget.site.siteName,
-            //         ),
-            //   ),
-            // );
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder:
+                    (context) => ProjectDashboardScreen(
+                      selectedDevice: DiscoveredDevice(
+                        name: panel.panelName,
+                        id: panel.panelId,
+                        rssi: 0,
+                        serviceData: {},
+                        manufacturerData: Uint8List(0),
+                        serviceUuids: [],
+                      ),
+                      panelName: panel.panelName,
+                      panelVersionNo: panel.deviceDisplayInfo,
+                      siteId: widget.site.id!,
+                      siteName: widget.site.siteName,
+                    ),
+              ),
+            );
           },
           child: Container(
             decoration: BoxDecoration(

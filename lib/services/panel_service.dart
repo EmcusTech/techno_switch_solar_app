@@ -122,9 +122,43 @@ class PanelService {
 
   /// Assign panel to site
   Future<bool> assignPanelToSite(String panelId, int siteId) async {
+    // Check if panel exists, if not create it first
+    var panel = await getPanelByPanelId(panelId);
+
+    if (panel == null) {
+      // Panel doesn't exist, create it with minimal info
+      // This can happen if panel was never registered during connection
+      final now = DateTime.now();
+
+      // Detect device type from panel ID format
+      String deviceType = 'bluetooth'; // Default
+      if (panelId.startsWith('BT_') || panelId.startsWith('BLUETOOTH_')) {
+        deviceType = 'bluetooth';
+      } else if (panelId.startsWith('USB_')) {
+        deviceType = 'usb';
+      } else if (RegExp(
+        r'^[0-9A-F]{2}(:[0-9A-F]{2}){5}$',
+        caseSensitive: false,
+      ).hasMatch(panelId)) {
+        // MAC address format (e.g., DC:ED:12:B1:56:37)
+        deviceType = 'bluetooth';
+      }
+
+      panel = PanelModel(
+        panelId: panelId,
+        panelName: 'Panel $panelId', // Fallback name
+        deviceType: deviceType,
+        deviceInfo: jsonEncode({'panelId': panelId}),
+        siteId: null, // Will be set below
+        createdAt: now,
+        updatedAt: now,
+        lastConnected: now,
+      );
+      await _databaseHelper.upsertPanel(panel);
+    }
+
     // Check if panel is already assigned to another site
-    final panel = await getPanelByPanelId(panelId);
-    if (panel?.siteId != null && panel!.siteId != siteId) {
+    if (panel.siteId != null && panel.siteId != siteId) {
       throw Exception('Panel is already assigned to another site');
     }
 

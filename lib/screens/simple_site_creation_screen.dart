@@ -210,6 +210,21 @@ class _SimpleSiteCreationScreenState extends State<SimpleSiteCreationScreen> {
 
       if (panelIdToAssociate != null) {
         try {
+          // Debug: Check if panel exists before assignment
+          final existingPanel = await _siteService.getPanelByPanelId(
+            panelIdToAssociate,
+          );
+          print(
+            'DEBUG: Panel exists before assignment: ${existingPanel != null}',
+          );
+          if (existingPanel != null) {
+            print('DEBUG: Existing panel details: ${existingPanel.toString()}');
+          } else {
+            print(
+              'DEBUG: Panel does not exist - will be created during assignment',
+            );
+          }
+
           final success = await _siteService.associateCurrentPanelWithSite(
             panelIdToAssociate,
             site.id!,
