@@ -304,7 +304,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
 
                 SizedBox(height: 24),
 
-                // Password Input Field
+                // Password Input Field + CTA
                 ValueListenableBuilder<bool?>(
                   valueListenable: isAccessKeyValid,
                   builder: (_, isAccessKeyValidValue, __) {
@@ -328,174 +328,134 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                       });
                     }
 
-                    return TextField(
-                      controller: _controller,
-                      keyboardType: TextInputType.number,
-                      obscureText: true,
-                      maxLength: 4,
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.inter(
-                        fontSize: 24,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 8,
-                        color: Color(0xFF3D3D3D),
-                      ),
-                      inputFormatters: [
-                        FilteringTextInputFormatter.digitsOnly,
-                        LengthLimitingTextInputFormatter(4),
+                    return Column(
+                      children: [
+                        TextField(
+                          controller: _controller,
+                          keyboardType: TextInputType.number,
+                          obscureText: true,
+                          maxLength: 4,
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.inter(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 8,
+                            color: Color(0xFF3D3D3D),
+                          ),
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                            LengthLimitingTextInputFormatter(4),
+                          ],
+                          onChanged: (val) {
+                            accessKey.value = val;
+                            if (val.length == 4) {
+                              errorText.value = null;
+                              onCall();
+                            }
+                          },
+                          decoration: InputDecoration(
+                            hintText: '••••',
+                            hintStyle: GoogleFonts.inter(
+                              fontSize: 24,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: 8,
+                              color: Color(0xFFD0D0D0),
+                            ),
+                            errorText:
+                                isAccessKeyValidValue == false
+                                    ? "Invalid access key. Try again."
+                                    : null,
+                            errorStyle: GoogleFonts.inter(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w400,
+                              color: Color(0xFFEC1D24),
+                            ),
+                            counterText: '',
+                            filled: true,
+                            fillColor: Color(0xFFF8F8F8),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(
+                                color:
+                                    isAccessKeyValidValue == false
+                                        ? Color(0xFFEC1D24)
+                                        : Color(0xFFD0D0D0),
+                                width: 1,
+                              ),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(
+                                color:
+                                    isAccessKeyValidValue == false
+                                        ? Color(0xFFEC1D24)
+                                        : Color(0xFFD0D0D0),
+                                width: 1,
+                              ),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(
+                                color: Color(0xFFEC1D24),
+                                width: 2,
+                              ),
+                            ),
+                            errorBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(
+                                color: Color(0xFFEC1D24),
+                                width: 1,
+                              ),
+                            ),
+                            focusedErrorBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(
+                                color: Color(0xFFEC1D24),
+                                width: 2,
+                              ),
+                            ),
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 16,
+                            ),
+                          ),
+                        ),
+
+                        SizedBox(height: 16),
+
+                        // Cancel Button only (auto-submit on 4 digits)
+                        SizedBox(
+                          width: double.infinity,
+                          child: GestureDetector(
+                            onTap: () {
+                              Navigator.of(context).pop();
+                            },
+                            child: Container(
+                              height: 48,
+                              decoration: BoxDecoration(
+                                color: Color(0xFFEFEEEE),
+                                borderRadius: BorderRadius.circular(24),
+                                border: Border.all(
+                                  color: Color(0xFFD0D0D0),
+                                  width: 1,
+                                ),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  'Cancel',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color: Color(0xFF666666),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
                       ],
-                      decoration: InputDecoration(
-                        hintText: '••••',
-                        hintStyle: GoogleFonts.inter(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 8,
-                          color: Color(0xFFD0D0D0),
-                        ),
-                        errorText:
-                            isAccessKeyValidValue == false
-                                ? "Invalid access key. Try again."
-                                : null,
-                        errorStyle: GoogleFonts.inter(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w400,
-                          color: Color(0xFFEC1D24),
-                        ),
-                        counterText: '',
-                        filled: true,
-                        fillColor: Color(0xFFF8F8F8),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(
-                            color:
-                                isAccessKeyValidValue == false
-                                    ? Color(0xFFEC1D24)
-                                    : Color(0xFFD0D0D0),
-                            width: 1,
-                          ),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(
-                            color:
-                                isAccessKeyValidValue == false
-                                    ? Color(0xFFEC1D24)
-                                    : Color(0xFFD0D0D0),
-                            width: 1,
-                          ),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(
-                            color: Color(0xFFEC1D24),
-                            width: 2,
-                          ),
-                        ),
-                        errorBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(
-                            color: Color(0xFFEC1D24),
-                            width: 1,
-                          ),
-                        ),
-                        focusedErrorBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(
-                            color: Color(0xFFEC1D24),
-                            width: 2,
-                          ),
-                        ),
-                        contentPadding: EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 16,
-                        ),
-                      ),
                     );
                   },
-                ),
-
-                SizedBox(height: 24),
-
-                // Buttons
-                Row(
-                  children: [
-                    // Cancel Button
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () {
-                          Navigator.of(context).pop();
-                        },
-                        child: Container(
-                          height: 48,
-                          decoration: BoxDecoration(
-                            color: Color(0xFFEFEEEE),
-                            borderRadius: BorderRadius.circular(24),
-                            border: Border.all(
-                              color: Color(0xFFD0D0D0),
-                              width: 1,
-                            ),
-                          ),
-                          child: Center(
-                            child: Text(
-                              isAccessKeyValid.value == true
-                                  ? 'Valid'
-                                  : 'Cancel',
-                              style: GoogleFonts.inter(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: Color(0xFF666666),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    SizedBox(width: 12),
-
-                    // Verify Button
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () async {
-                          final entered = _controller.text;
-
-                          accessKey.value = entered;
-
-                          if (entered.length != 4) {
-                            errorText.value = 'Must be exactly 4 digits';
-                            return;
-                          }
-
-                          // Trigger the BLE access key verification flow
-                          onCall();
-                        },
-                        child: Container(
-                          height: 48,
-                          decoration: BoxDecoration(
-                            color: Color(0xFFEC1D24),
-                            borderRadius: BorderRadius.circular(24),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Color(0xFFEC1D24).withValues(alpha: 0.3),
-                                blurRadius: 8,
-                                offset: Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: Center(
-                            child: Text(
-                              'Verify',
-                              style: GoogleFonts.inter(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
                 ),
               ],
             ),
@@ -726,11 +686,146 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
             children: [
               GestureDetector(
                 onTap: () {
+                  final bleController = Get.find<BleLogController>();
+                  // If not connected, show an alert and return
+                  if (!bleController.isConnected) {
+                    showDialog(
+                      context: context,
+                      barrierDismissible: false,
+                      builder: (context) {
+                        return Dialog(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Container(
+                            padding: const EdgeInsets.all(24),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Container(
+                                  width: 64,
+                                  height: 64,
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFFBDEE1),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Center(
+                                    child: Icon(
+                                      Icons.bluetooth_disabled,
+                                      color: Color(0xFFEC1D24),
+                                      size: 32,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  'Device not connected',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w700,
+                                    color: const Color(0xFF3D3D3D),
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'BLE device is not connected. Please scan and connect again.',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w400,
+                                    color: const Color(0xFF666666),
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                                const SizedBox(height: 20),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: GestureDetector(
+                                        onTap: () {
+                                          Navigator.of(context).pop();
+                                        },
+                                        child: Container(
+                                          height: 48,
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFFEFEEEE),
+                                            borderRadius: BorderRadius.circular(
+                                              24,
+                                            ),
+                                            border: Border.all(
+                                              color: const Color(0xFFD0D0D0),
+                                              width: 1,
+                                            ),
+                                          ),
+                                          child: Center(
+                                            child: Text(
+                                              'Close',
+                                              style: GoogleFonts.inter(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.w600,
+                                                color: const Color(0xFF666666),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: GestureDetector(
+                                        onTap: () {
+                                          Navigator.of(context).pop();
+                                          Navigator.of(context).pop();
+                                        },
+                                        child: Container(
+                                          height: 48,
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFFEC1D24),
+                                            borderRadius: BorderRadius.circular(
+                                              24,
+                                            ),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: const Color(
+                                                  0xFFEC1D24,
+                                                ).withOpacity(0.3),
+                                                blurRadius: 8,
+                                                offset: const Offset(0, 4),
+                                              ),
+                                            ],
+                                          ),
+                                          child: Center(
+                                            child: Text(
+                                              'Scan Again',
+                                              style: GoogleFonts.inter(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.w600,
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    );
+                    return;
+                  }
+
                   showPasswordPopup(
                     onCall: () {
                       print("access key is valid");
-                      Get.find<BleLogController>().startLogRetrieval();
-                      // if access key is valid pop the popup
+                      bleController.startLogRetrieval();
                     },
                   );
                   // Get.find<BleLogController>().startLogRetrieval();
