@@ -55,6 +55,10 @@ class BleProcess {
     false,
   );
 
+  final ValueNotifier<bool> isAccessKeyValid = ValueNotifier<bool>(false);
+
+  final ValueNotifier<String> accessKey = ValueNotifier<String>("");
+
   // BleStates bleStateMachineState = BleStates.IDLE;
   BleStates bleCurrentState = BleStates.IDLE;
   DeviceConnectState deviceConnectState = DeviceConnectState.notConnected;
@@ -144,12 +148,20 @@ class BleProcess {
     if (checkForAccessKeyCmdRsp == 1) {
       print("Checking ACCESS KEY CMD RSP...");
 
-      if (String.fromCharCodes(rx.payload.sublist(14, 18)) == "1974") {
+      if (rx.payload[13] != 0x0a &&
+          String.fromCharCodes(rx.payload.sublist(14, 18)) == accessKey.value) {
+        isAccessKeyValid.value = true;
         print("ACCESS KEY RECEIVED → NEXT CONTROL CMD");
         bleManager.otaProcessState = OtaProcessState.sendStopCntrlCmdPkt;
         checkForAccessKeyCmdRsp = 0;
         startRxTimeout();
         await bleManager.sendStopCntrlCmdPkt();
+      } else if (rx.payload[13] == 0x0a &&
+          String.fromCharCodes(rx.payload.sublist(14, 18)) == accessKey.value) {
+        isAccessKeyValid.value = false;
+        processDesc.value = "Wrong password. Try again.";
+        resetProcessState();
+        return;
       } else {
         print("ACCESS KEY not found, polling again");
         startRxTimeout();

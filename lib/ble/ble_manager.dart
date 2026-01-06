@@ -108,6 +108,10 @@ class BleManager {
 
   bool get isConnected => _isConnectedNotifier.value;
 
+  ValueNotifier<String> get accessKey => bleProcess.accessKey;
+
+  ValueNotifier<bool> get isAccessKeyValid => bleProcess.isAccessKeyValid;
+
   void resetProtocolState() {
     // Packet counters
     u8TxPktCnt = 0;
@@ -830,10 +834,11 @@ class BleManager {
     pkt[13] = 0x04;
 
     // "1974"
-    pkt[14] = 0x31; // '1'
-    pkt[15] = 0x39; // '9'
-    pkt[16] = 0x37; // '7'
-    pkt[17] = 0x34; // '4'
+    List<int> accessKeyBytes = accessKey.value.codeUnits;
+    pkt[14] = accessKeyBytes[0];
+    pkt[15] = accessKeyBytes[1];
+    pkt[16] = accessKeyBytes[2];
+    pkt[17] = accessKeyBytes[3];
 
     // Compute checksum on first 213 bytes
     int checksum = toolsFletcherChecksum(pkt.sublist(0, 216 - 3));

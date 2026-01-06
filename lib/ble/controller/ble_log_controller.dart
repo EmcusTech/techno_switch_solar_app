@@ -5,7 +5,9 @@ import 'package:techno_switch_solar_app/ble/ble_process.dart';
 
 class BleLogController extends GetxController {
   final BleManager bleManager = Get.find<BleManager>();
-  late final BleProcess bleProcess = BleProcess(bleManager);
+  // Reuse the shared BleProcess instance from the manager so all screens
+  // listen to the same ValueNotifiers.
+  late final BleProcess bleProcess = bleManager.bleProcess;
 
   connectToDevice({required DiscoveredDevice device}) async {
     await bleManager.connectToKnownDevice(device: device);
