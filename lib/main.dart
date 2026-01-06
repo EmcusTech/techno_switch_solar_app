@@ -44,15 +44,17 @@ void main() async {
     "----------------------setUpLogs: Setting up logs..-----------------",
   );
 
-  SystemChrome.setSystemUIOverlayStyle(
-    SystemUiOverlayStyle(
-      systemNavigationBarColor: Color(
-        0xffEC1D24,
-      ), // Match your bottom nav color
-      systemNavigationBarIconBrightness: Brightness.light, // For white icons
-      statusBarBrightness: Brightness.light,
-    ),
-  );
+  // SystemChrome.setSystemUIOverlayStyle(
+  //   SystemUiOverlayStyle(
+  //     systemNavigationBarColor: Color(
+  //       0xffEC1D24,
+  //     ), // Match your bottom nav color
+  //     systemNavigationBarIconBrightness: Brightness.light, // For white icons
+  //     // statusBarBrightness: Brightness.light,
+  //     // statusBarColor: Colors.transparent,
+  //     statusBarIconBrightness: Brightness.dark,
+  //   ),
+  // );
   Get.put(BleLogController());
   runApp(const MyApp());
 }

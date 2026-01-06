@@ -26,7 +26,7 @@ class _TestModeScreenState extends State<TestModeScreen> {
           children: [
             SvgPicture.asset('assets/svgs/background_1.svg'),
             Padding(
-              padding: EdgeInsets.only(top: 54),
+              padding: EdgeInsets.only(top: 24),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 mainAxisSize: MainAxisSize.max,
@@ -149,7 +149,11 @@ class _TestModeScreenState extends State<TestModeScreen> {
     );
   }
 
-  Widget _buildTestModeOption(String title, String iconPath, VoidCallback onTap) {
+  Widget _buildTestModeOption(
+    String title,
+    String iconPath,
+    VoidCallback onTap,
+  ) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -157,10 +161,7 @@ class _TestModeScreenState extends State<TestModeScreen> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: Color(0xFFE0E0E0),
-            width: 1,
-          ),
+          border: Border.all(color: Color(0xFFE0E0E0), width: 1),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.05),
@@ -202,11 +203,7 @@ class _TestModeScreenState extends State<TestModeScreen> {
                 ),
               ),
               Spacer(),
-              Icon(
-                Icons.arrow_forward_ios,
-                size: 16,
-                color: Color(0xFF3D3D3D),
-              ),
+              Icon(Icons.arrow_forward_ios, size: 16, color: Color(0xFF3D3D3D)),
             ],
           ),
         ),

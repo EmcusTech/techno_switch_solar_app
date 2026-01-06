@@ -1071,10 +1071,10 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
             CupertinoActivityIndicator(
               radius: 20,
               color: Color(0xFFEC1D24),
-              animating:
-                  !_connectionFailed &&
-                  !_maxBleConnectionRetriesReached &&
-                  !_maxOtherPacketsRetriesReached,
+              // animating:
+              //     !_connectionFailed &&
+              //     !_maxBleConnectionRetriesReached &&
+              //     !_maxOtherPacketsRetriesReached,
             ),
             Padding(
               padding: const EdgeInsets.only(top: 100),
@@ -1106,29 +1106,29 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
                         textAlign: TextAlign.center,
                         maxLines: 2,
                       ),
-                      if (_connectionFailed && _errorMessage != null) ...[
-                        SizedBox(height: 8),
-                        Text(
-                          _errorMessage!,
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFFEC1D24),
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                      if (_firstLogReceived) ...[
-                        SizedBox(height: 6),
-                        Text(
-                          'First valid log received',
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                            color: Color(0xFF3A3A3A),
-                          ),
-                        ),
-                      ],
+                      // if (_connectionFailed && _errorMessage != null) ...[
+                      //   SizedBox(height: 8),
+                      //   Text(
+                      //     _errorMessage!,
+                      //     style: GoogleFonts.inter(
+                      //       fontSize: 12,
+                      //       fontWeight: FontWeight.w600,
+                      //       color: Color(0xFFEC1D24),
+                      //     ),
+                      //     textAlign: TextAlign.center,
+                      //   ),
+                      // ],
+                      // if (_firstLogReceived) ...[
+                      //   SizedBox(height: 6),
+                      //   Text(
+                      //     'First valid log received',
+                      //     style: GoogleFonts.inter(
+                      //       fontSize: 12,
+                      //       fontWeight: FontWeight.w500,
+                      //       color: Color(0xFF3A3A3A),
+                      //     ),
+                      //   ),
+                      // ],
                     ],
                   );
                 },
@@ -1214,7 +1214,7 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
           color: Color(0xFFEC1D24),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(28.5),
           boxShadow: [
             BoxShadow(
               color: Color(0xFFEC1D24).withOpacity(0.3),

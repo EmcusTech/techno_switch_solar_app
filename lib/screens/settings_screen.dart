@@ -61,7 +61,7 @@ class _SettingsContentState extends State<_SettingsContent> {
         children: [
           SvgPicture.asset('assets/svgs/background_1.svg'),
           Padding(
-            padding: EdgeInsets.only(top: 54),
+            padding: EdgeInsets.only(top: 24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               mainAxisSize: MainAxisSize.max,
@@ -80,7 +80,7 @@ class _SettingsContentState extends State<_SettingsContent> {
                       ),
                       SizedBox(width: 8),
                       Text(
-                        'Project Name',
+                        'Project Settings',
                         style: GoogleFonts.inter(
                           fontSize: 20,
                           fontWeight: FontWeight.w700,

@@ -218,7 +218,7 @@ class LogHistoryScreenState extends State<LogHistoryScreen> {
         children: [
           SvgPicture.asset('assets/svgs/background_1.svg'),
           Padding(
-            padding: EdgeInsets.only(top: 54),
+            padding: EdgeInsets.only(top: 24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               mainAxisSize: MainAxisSize.max,
@@ -237,7 +237,7 @@ class LogHistoryScreenState extends State<LogHistoryScreen> {
                       ),
                       SizedBox(width: 8),
                       Text(
-                        'Project Name',
+                        'Log History',
                         style: GoogleFonts.inter(
                           fontSize: 20,
                           fontWeight: FontWeight.w700,

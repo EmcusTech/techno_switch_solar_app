@@ -188,7 +188,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
         children: [
           SvgPicture.asset('assets/svgs/background_1.svg'),
           Padding(
-            padding: EdgeInsets.only(top: 54),
+            padding: EdgeInsets.only(top: 24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               mainAxisSize: MainAxisSize.max,
@@ -236,6 +236,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     bleProcess.accessKey.value = "";
 
     final TextEditingController _controller = TextEditingController();
+    final FocusNode _focusNode = FocusNode();
     final ValueNotifier<String?> errorText = ValueNotifier(null);
     final accessKey = bleProcess.accessKey;
     final ValueNotifier<bool?> isAccessKeyValid = bleProcess.isAccessKeyValid;
@@ -337,6 +338,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                       children: [
                         TextField(
                           controller: _controller,
+                          focusNode: _focusNode,
                           keyboardType: TextInputType.number,
                           obscureText: true,
                           maxLength: 4,
@@ -443,6 +445,18 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                               status = "Validating access key...";
                             } else if (isAccessKeyValidValue == true) {
                               status = "Validation success";
+                            }
+                            // If invalid, re-focus the field to show keyboard
+                            if (isAccessKeyValidValue == false) {
+                              // Clear previous entry on failure
+                              if (_controller.text.isNotEmpty) {
+                                _controller.clear();
+                              }
+                              WidgetsBinding.instance.addPostFrameCallback((_) {
+                                if (_focusNode.canRequestFocus) {
+                                  _focusNode.requestFocus();
+                                }
+                              });
                             }
                             return status == null
                                 ? const SizedBox.shrink()
