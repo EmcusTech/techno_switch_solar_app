@@ -159,7 +159,7 @@ class _SettingsContentState extends State<_SettingsContent> {
                               ),
                             ),
                             TextSpan(
-                              text: isConnected ? 'connected' : 'disconnected',
+                              text: isConnected ? 'Connected' : 'Disconnected',
                               style: GoogleFonts.inter(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w500,

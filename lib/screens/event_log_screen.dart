@@ -1092,7 +1092,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                               ),
                             ),
                             TextSpan(
-                              text: isConnected ? 'connected' : 'disconnected',
+                              text: isConnected ? 'Connected' : 'Disconnected',
                               style: GoogleFonts.inter(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w500,
