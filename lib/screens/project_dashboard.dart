@@ -313,7 +313,10 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                     if (isAccessKeyValidValue == true &&
                         !_navigatingToDeviceConnecting) {
                       _navigatingToDeviceConnecting = true;
-                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                      WidgetsBinding.instance.addPostFrameCallback((_) async {
+                        if (!mounted) return;
+                        // Briefly show success before navigating
+                        await Future.delayed(const Duration(seconds: 1));
                         if (!mounted) return;
                         Navigator.of(context).pop();
                         Navigator.of(context).push(
@@ -350,6 +353,13 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                             accessKey.value = val;
                             if (val.length == 4) {
                               errorText.value = null;
+                              // reset validation state for new attempt
+                              bleProcess.isAccessKeyValid.value = null;
+                              // Dismiss keyboard and start validation
+                              FocusScope.of(context).unfocus();
+                              // Provide immediate feedback while validating
+                              bleProcess.processDesc.value =
+                                  "Validating access key...";
                               onCall();
                             }
                           },
@@ -421,38 +431,65 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                           ),
                         ),
 
+                        const SizedBox(height: 12),
+                        // Status text during validation/success
+                        Builder(
+                          builder: (_) {
+                            String? status;
+                            if (_controller.text.length == 4 &&
+                                isAccessKeyValidValue == null) {
+                              status = "Validating access key...";
+                            } else if (isAccessKeyValidValue == true) {
+                              status = "Validation success";
+                            }
+                            return status == null
+                                ? const SizedBox.shrink()
+                                : Text(
+                                  status,
+                                  style: GoogleFonts.inter(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: const Color(0xFF3D3D3D),
+                                  ),
+                                );
+                          },
+                        ),
+
                         SizedBox(height: 16),
 
-                        // Cancel Button only (auto-submit on 4 digits)
-                        SizedBox(
-                          width: double.infinity,
-                          child: GestureDetector(
-                            onTap: () {
-                              Navigator.of(context).pop();
-                            },
-                            child: Container(
-                              height: 48,
-                              decoration: BoxDecoration(
-                                color: Color(0xFFEFEEEE),
-                                borderRadius: BorderRadius.circular(24),
-                                border: Border.all(
-                                  color: Color(0xFFD0D0D0),
-                                  width: 1,
+                        // Cancel Button only when not validating or already successful
+                        if (!(_controller.text.length == 4 &&
+                                isAccessKeyValidValue == null) &&
+                            isAccessKeyValidValue != true)
+                          SizedBox(
+                            width: double.infinity,
+                            child: GestureDetector(
+                              onTap: () {
+                                Navigator.of(context).pop();
+                              },
+                              child: Container(
+                                height: 48,
+                                decoration: BoxDecoration(
+                                  color: Color(0xFFEFEEEE),
+                                  borderRadius: BorderRadius.circular(24),
+                                  border: Border.all(
+                                    color: Color(0xFFD0D0D0),
+                                    width: 1,
+                                  ),
                                 ),
-                              ),
-                              child: Center(
-                                child: Text(
-                                  'Cancel',
-                                  style: GoogleFonts.inter(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                    color: Color(0xFF666666),
+                                child: Center(
+                                  child: Text(
+                                    'Cancel',
+                                    style: GoogleFonts.inter(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      color: Color(0xFF666666),
+                                    ),
                                   ),
                                 ),
                               ),
                             ),
                           ),
-                        ),
                       ],
                     );
                   },
