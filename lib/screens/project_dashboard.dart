@@ -7,6 +7,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/screens/device_connecting_screen.dart';
 import 'package:techno_switch_solar_app/screens/log_history_screen.dart';
+import 'package:techno_switch_solar_app/screens/log_retrieval_loading_screen.dart'
+    hide ble;
 import 'package:techno_switch_solar_app/screens/scanning_screen.dart';
 import 'package:techno_switch_solar_app/screens/settings_screen.dart';
 import 'package:techno_switch_solar_app/screens/test_mode_screen.dart';
@@ -322,7 +324,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                         Navigator.of(context).push(
                           MaterialPageRoute(
                             builder:
-                                (context) => DeviceConnectingScreen(
+                                (context) => LogRetrievalLoadingScreen(
                                   scanType: ScanType.bluetooth,
                                   selectedDevice: widget.selectedDevice,
                                 ),

@@ -274,7 +274,14 @@ class _AccessCodeScreenState extends State<AccessCodeScreen> {
       );
     } else {
       Navigator.of(context).push(
-        MaterialPageRoute(builder: (context) => LogRetrievalLoadingScreen()),
+        MaterialPageRoute(
+          builder:
+              (context) => LogRetrievalLoadingScreen(
+                selectedDevice: widget.selectedDevice,
+                scanType: widget.scanType,
+                isLiveEvent: widget.isLiveEvent,
+              ),
+        ),
       );
     }
   }

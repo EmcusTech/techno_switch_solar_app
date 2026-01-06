@@ -2,25 +2,42 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
+import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/models/log_model.dart';
 import 'dart:async';
+import 'package:techno_switch_solar_app/screens/access_code_screen.dart';
 import 'package:techno_switch_solar_app/screens/event_log_screen.dart';
-import 'package:techno_switch_solar_app/utils/serial_communication_service.dart';
-import 'package:techno_switch_solar_app/services/app_services.dart';
-import 'package:techno_switch_solar_app/services/navigation_service.dart';
 import 'package:techno_switch_solar_app/utils/bluetooth/ble_notify_data_handler.dart';
 import 'package:techno_switch_solar_app/utils/bluetooth/data_handler.dart';
 import 'package:techno_switch_solar_app/utils/bluetooth/data_helper.dart';
 import 'package:techno_switch_solar_app/utils/bluetooth/data_transfer_manager.dart';
+import 'package:techno_switch_solar_app/utils/bluetooth_constants.dart';
 import 'package:techno_switch_solar_app/utils/event_constants.dart';
+import 'package:techno_switch_solar_app/services/app_services.dart';
+import 'package:techno_switch_solar_app/services/navigation_service.dart';
+import 'package:techno_switch_solar_app/screens/scanning_screen.dart';
+import 'package:techno_switch_solar_app/utils/serial_communication_service.dart';
 import 'package:techno_switch_solar_app/utils/timestamp_converter.dart';
 import 'package:techno_switch_solar_app/models/frame_data.dart';
 // import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
+// Shared BLE instance used across screens
+final BleManager ble = Get.find<BleManager>();
+
 class LogRetrievalLoadingScreen extends StatefulWidget {
-  const LogRetrievalLoadingScreen({super.key});
+  final dynamic selectedDevice;
+  final ScanType scanType;
+  final bool? isLiveEvent;
+
+  const LogRetrievalLoadingScreen({
+    super.key,
+    this.selectedDevice,
+    required this.scanType,
+    this.isLiveEvent = false,
+  });
 
   @override
   State<LogRetrievalLoadingScreen> createState() =>
@@ -34,15 +51,29 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
   late Animation<double> _animation;
   double _progress = 0.0;
   Timer? _timer;
+  String _connectionStatus = "Initializing...";
+  bool _connectionFailed = false;
+  String? _errorMessage;
+  StreamSubscription<BleHandshakeEvent>? _handshakeSubscription;
+  StreamSubscription<DeviceConnectionState>? _connectionSub;
+  bool _passkeyScreenOpened = false;
+  Uuid primaryServiceGuid = BleUuids.primaryService;
+  Uuid primaryReadCharGuid = BleUuids.primaryReadChar;
+  Uuid primaryWriteCharGuid = BleUuids.primaryWriteChar;
+  QualifiedCharacteristic? readCharacteristic;
+  QualifiedCharacteristic? writeCharacteristic;
+  bool _maxBleConnectionRetriesReached = false;
+  bool _maxOtherPacketsRetriesReached = false;
+  bool _firstLogReceived = false;
+  bool _hasNavigatedToEventLog = false;
+  bool _allowExit = false;
 
   // Log retrieval state
   late SerialCommunicationService _serialService;
   List<LogModel> _retrievedLogs = [];
-  String _connectionStatus = "Disconnected";
   int _logsCount = 0;
   StreamSubscription? _logSubscription;
   StreamSubscription? _statusSubscription;
-  StreamSubscription? _handshakeSubscription;
   StreamSubscription? _bleNotificationSubscription;
   String? _capturedPanelId; // Capture panel ID before potential disconnect
   static const int totalExpectedLogs = 1000; // Total logs expected
@@ -64,6 +95,7 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
 
     // Initialize serial service
     _serialService = AppServices.serialService;
+    _capturedPanelId = _serialService.currentPanelId;
 
     _controller = AnimationController(
       duration: const Duration(seconds: 5),
@@ -76,6 +108,30 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
           _progress = _animation.value;
         });
       });
+
+    // Reset state when screen is initialized (for retry scenarios)
+    _firstLogReceived = false;
+    _hasNavigatedToEventLog = false;
+
+    // Listen for first valid log to show button
+    ble.bleProcess.isValidLogRecieved.addListener(_onFirstValidLogReceived);
+
+    // Listen for log retrieval completion (1000 logs read)
+    ble.bleProcess.read1000LogsCount.addListener(_onLogRetrievalCompleted);
+
+    ble.maxBleConnectionRetriesReached.addListener(
+      _onMaxBleConnectionRetriesReached,
+    );
+
+    ble.maxOtherPacketsRetriesReached.addListener(
+      _onMaxOtherPacketsRetriesReached,
+    );
+
+    // Keep notification handler referenced for analyzer and future wiring
+    final _ = _handleBleNotification;
+
+    // Start BLE connection flow with existing device selection
+    _connectToDevice();
 
     // Start log retrieval instead of animation
     // _startLogRetrieval();
@@ -333,6 +389,355 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
   //   }
   // }
 
+  void _onMaxBleConnectionRetriesReached() {
+    setState(() {
+      _maxBleConnectionRetriesReached =
+          ble.maxBleConnectionRetriesReached.value;
+      if (_maxBleConnectionRetriesReached) {
+        _connectionFailed = true;
+        _errorMessage = "Maximum BLE connection retries reached";
+        _connectionStatus = _errorMessage!;
+      }
+    });
+  }
+
+  void _onMaxOtherPacketsRetriesReached() {
+    setState(() {
+      _maxOtherPacketsRetriesReached = ble.maxOtherPacketsRetriesReached.value;
+      if (_maxOtherPacketsRetriesReached) {
+        _connectionFailed = true;
+        _errorMessage = "Maximum packet retries reached";
+        _connectionStatus = _errorMessage!;
+      }
+    });
+  }
+
+  void _onFirstValidLogReceived() {
+    if (ble.bleProcess.isValidLogRecieved.value && mounted) {
+      setState(() {
+        _firstLogReceived = true;
+      });
+    }
+  }
+
+  // Add listener for log retrieval completion
+  void _onLogRetrievalCompleted() {
+    if (mounted &&
+        ble.bleProcess.read1000LogsCount.value >= 1000 &&
+        !_hasNavigatedToEventLog) {
+      _hasNavigatedToEventLog = true;
+      // Wait a brief moment for final processing, then navigate
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (mounted) {
+          _navigateToEventLogScreen();
+        }
+      });
+    }
+  }
+
+  // Add method to navigate to EventLogScreen
+  void _navigateToEventLogScreen() {
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder:
+            (context) => EventLogScreen(
+              logDataList: ble.bleProcess.validEventLogs.value,
+              panelName: _getDeviceName(),
+              panelVersionNo: 'N/A',
+              isStandalone: true,
+            ),
+      ),
+    );
+  }
+
+  //send stop control command
+  Future<void> _sendStopControlCommand() async {
+    ble.bleProcess.isOtaCompleted = true;
+    ble.bleProcess.processNextOtaFrame = false;
+
+    ble.otaProcessState = OtaProcessState.notInUse;
+    ble.bleProcess.cancelRxTimeout();
+
+    ble.bleProcess.processDesc.value = "";
+
+    await ble.sendStopCntrlCmdPkt();
+    _allowExit = true;
+    if (mounted) {
+      Navigator.of(context).pop();
+    }
+  }
+
+  // Show confirmation dialog before stopping log retrieval
+  Future<void> _showStopConfirmationDialog() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Row(
+            children: [
+              Icon(
+                Icons.warning_amber_rounded,
+                color: Color(0xFFEC1D24),
+                size: 28,
+              ),
+              SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Stop Log Retrieval',
+                  style: GoogleFonts.inter(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF3A3A3A),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          content: Text(
+            'Are you sure you want to stop the log retrieval process? This action cannot be undone.',
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              fontWeight: FontWeight.w400,
+              color: Color(0xFF666666),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: Text(
+                'Cancel',
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF666666),
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Color(0xFFEC1D24),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                elevation: 0,
+              ),
+              child: Text(
+                'Yes, Stop',
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed == true && mounted) {
+      await _sendStopControlCommand();
+    }
+  }
+
+  Future<void> _connectToDevice() async {
+    if (widget.selectedDevice == null) {
+      _handleConnectionFailure("No Device selected");
+      return;
+    }
+
+    if (widget.scanType == ScanType.bluetooth &&
+        widget.selectedDevice is! DiscoveredDevice) {
+      _handleConnectionFailure("Invalid BLE Device selected");
+      return;
+    }
+
+    setState(() {
+      _connectionStatus = "Connecting to ${_getDeviceName()}";
+    });
+
+    try {
+      if (widget.scanType == ScanType.bluetooth) {
+        final DiscoveredDevice device =
+            widget.selectedDevice as DiscoveredDevice;
+        _connectedBleDevice = device;
+
+        /// listen to handshake events only once
+        _handshakeSubscription ??= AppServices.bleService.handshakeEvents
+            .listen(_handleHandshakeEvent);
+
+        setState(() {
+          _connectionStatus = "Establishing Bluetooth connection...";
+        });
+
+        /// 🔥 LISTEN to the BLE connection stream
+        _connectionSub = AppServices.bleService
+            .connectToDevice(device)
+            .listen(
+              (DeviceConnectionState state) async {
+                switch (state) {
+                  case DeviceConnectionState.connecting:
+                    setState(() {
+                      _connectionStatus = "Connecting...";
+                    });
+                    break;
+
+                  case DeviceConnectionState.connected:
+                    setState(() {
+                      _connectionStatus =
+                          "Connected. Waiting for BLE handshake...";
+                    });
+                    readCharacteristic = QualifiedCharacteristic(
+                      characteristicId: primaryReadCharGuid,
+                      serviceId: primaryServiceGuid,
+                      deviceId: device.id,
+                    );
+
+                    writeCharacteristic = QualifiedCharacteristic(
+                      characteristicId: primaryWriteCharGuid,
+                      serviceId: primaryServiceGuid,
+                      deviceId: device.id,
+                    );
+                    break;
+
+                  case DeviceConnectionState.disconnected:
+                    _handleConnectionFailure("Device disconnected");
+                    await _connectionSub?.cancel();
+                    break;
+                  default:
+                    print("reached defualt when connecting");
+                    break;
+                }
+              },
+              onError: (e) {
+                _handleConnectionFailure("Connection error: $e");
+              },
+            );
+      } else {
+        // USB path (unchanged logic)
+        setState(() {
+          _connectionStatus = "Establishing USB connection...";
+        });
+
+        // await AppServices.serialService.connectToDevice();
+      }
+    } catch (e) {
+      _handleConnectionFailure("Connection error: $e");
+    }
+  }
+
+  void _handleHandshakeEvent(BleHandshakeEvent event) async {
+    if (!mounted) return;
+
+    switch (event.type) {
+      case BleHandshakeEventType.stateChanged:
+        if (event.message != null) {
+          setState(() {
+            _connectionStatus = event.message!;
+          });
+        }
+        break;
+
+      case BleHandshakeEventType.encryptionKeyReceived:
+        setState(() {
+          _connectionStatus = "Encryption key received";
+        });
+        break;
+
+      case BleHandshakeEventType.authenticated:
+        setState(() {
+          _connectionStatus = "Device authenticated successfully";
+        });
+
+        await Future.delayed(const Duration(milliseconds: 300));
+
+        if (!mounted) return;
+
+        if (widget.isLiveEvent == false) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder:
+                  (context) => AccessCodeScreen(
+                    scanType: widget.scanType,
+                    selectedDevice: widget.selectedDevice,
+                    isLiveEvent: widget.isLiveEvent,
+                  ),
+            ),
+          );
+        }
+        break;
+
+      case BleHandshakeEventType.passkeyRequested:
+        setState(() {
+          _connectionStatus = "Submitting passkey automatically...";
+        });
+
+        if (!_passkeyScreenOpened) {
+          _passkeyScreenOpened = true;
+
+          Future.microtask(() async {
+            if (!mounted) return;
+            try {
+              await AppServices.bleService.submitPasskey("1974");
+              setState(() {
+                _connectionStatus = "Passkey submitted: 1974";
+              });
+            } catch (e) {
+              setState(() {
+                _connectionStatus = "Error submitting passkey: $e";
+              });
+            }
+          });
+        }
+        break;
+
+      case BleHandshakeEventType.passkeyAccepted:
+        setState(() {
+          _connectionStatus = "Passkey accepted";
+        });
+        break;
+
+      case BleHandshakeEventType.error:
+        _handleConnectionFailure(event.message ?? "Handshake error");
+        break;
+    }
+  }
+
+  void _handleConnectionFailure(String error) {
+    setState(() {
+      _connectionFailed = true;
+      _errorMessage = error;
+      _connectionStatus = "Connection Failed";
+    });
+    _controller.stop();
+  }
+
+  String _getDeviceName() {
+    final device = widget.selectedDevice ?? _connectedBleDevice;
+
+    if (device == null) {
+      return "Unknown Device";
+    }
+
+    if (widget.scanType == ScanType.bluetooth) {
+      if (device is DiscoveredDevice) {
+        if (device.name.isNotEmpty) {
+          return device.name;
+        }
+        return "BLE-${device.id.substring(0, 5)}";
+      }
+      return "BLE Device";
+    }
+
+    return "Unknown Device";
+  }
+
+  // ignore: unused_element
   // Handle incoming BLE notifications
   void _handleBleNotification(List<int> rxData) async {
     if (rxData.isEmpty || !_isReceivingLogs) return;
@@ -568,57 +973,57 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        height: MediaQuery.sizeOf(context).height,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFFF6EBEB), Colors.white],
-          ),
-        ),
-        child: Stack(
-          children: [
-            SvgPicture.asset('assets/svgs/background_1.svg'),
-            Padding(
-              padding: EdgeInsets.only(top: 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                mainAxisSize: MainAxisSize.max,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    child: Row(
-                      children: [
-                        GestureDetector(
-                          onTap: () async {
-                            // Disconnect Bluetooth when going back
-                            await NavigationService.navigateBackToScanning(
-                              context,
-                            );
-                          },
-                          child: SvgPicture.asset(
-                            'assets/svgs/arrow_back_icon.svg',
-                          ),
-                        ),
-                        SizedBox(width: 8),
-                        Text(
-                          'Event Log Retrieval ',
-                          style: GoogleFonts.inter(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  SizedBox(height: 19),
-                  _buildRetrievingLogsContainer(),
-                ],
-              ),
+    return PopScope(
+      canPop: _allowExit,
+      child: Scaffold(
+        body: Container(
+          height: MediaQuery.sizeOf(context).height,
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0xFFF6EBEB), Colors.white],
             ),
-          ],
+          ),
+          child: Stack(
+            children: [
+              SvgPicture.asset('assets/svgs/background_1.svg'),
+              Padding(
+                padding: EdgeInsets.only(top: 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  mainAxisSize: MainAxisSize.max,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: Row(
+                        children: [
+                          GestureDetector(
+                            onTap: () async {
+                              _showStopConfirmationDialog();
+                            },
+                            child: SvgPicture.asset(
+                              'assets/svgs/arrow_back_icon.svg',
+                            ),
+                          ),
+                          SizedBox(width: 8),
+                          Text(
+                            'Event Log Retrieval ',
+                            style: GoogleFonts.inter(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: 19),
+                    _buildRetrievingLogsContainer(),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -663,7 +1068,14 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
                 ),
               ),
             ),
-            CupertinoActivityIndicator(radius: 20, color: Color(0xFFEC1D24)),
+            CupertinoActivityIndicator(
+              radius: 20,
+              color: Color(0xFFEC1D24),
+              animating:
+                  !_connectionFailed &&
+                  !_maxBleConnectionRetriesReached &&
+                  !_maxOtherPacketsRetriesReached,
+            ),
             Padding(
               padding: const EdgeInsets.only(top: 100),
               child: Text(
@@ -677,15 +1089,49 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
             // Show connection status
             Padding(
               padding: const EdgeInsets.only(top: 130),
-              child: Text(
-                _connectionStatus,
-                style: GoogleFonts.inter(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w400,
-                  color: Color(0xFF918F8F),
-                ),
-                textAlign: TextAlign.center,
-                maxLines: 2,
+              child: ValueListenableBuilder<String>(
+                valueListenable: ble.processDesc,
+                builder: (context, value, _) {
+                  final statusText =
+                      value.isNotEmpty ? value : _connectionStatus;
+                  return Column(
+                    children: [
+                      Text(
+                        statusText,
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w400,
+                          color: Color(0xFF918F8F),
+                        ),
+                        textAlign: TextAlign.center,
+                        maxLines: 2,
+                      ),
+                      if (_connectionFailed && _errorMessage != null) ...[
+                        SizedBox(height: 8),
+                        Text(
+                          _errorMessage!,
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFFEC1D24),
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                      if (_firstLogReceived) ...[
+                        SizedBox(height: 6),
+                        Text(
+                          'First valid log received',
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: Color(0xFF3A3A3A),
+                          ),
+                        ),
+                      ],
+                    ],
+                  );
+                },
               ),
             ),
             Padding(
@@ -696,52 +1142,96 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
                   crossAxisAlignment: CrossAxisAlignment.center,
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    Text(
-                      '${(_progress * 100).toInt()}%',
-                      style: GoogleFonts.inter(
-                        fontSize: 38,
-                        fontWeight: FontWeight.w700,
-                      ),
-                      maxLines: 1,
-                    ),
-                    // SizedBox(height: 8),
-                    // Text(
-                    //   '$_logsCount / $totalExpectedLogs logs',
-                    //   style: GoogleFonts.inter(
-                    //     fontSize: 16,
-                    //     fontWeight: FontWeight.w500,
-                    //     color: Color(0xFF918F8F),
-                    //   ),
-                    //   maxLines: 1,
-                    // ),
-                    SizedBox(height: 23),
-                    LinearPercentIndicator(
-                      lineHeight: 11.0,
-                      percent: _progress,
-                      backgroundColor: Color(0xFFD9D9D9),
-                      progressColor: Color(0xFFEC1D24),
-                      barRadius: Radius.circular(20),
-                    ),
-                    SizedBox(height: 10),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 10),
-                        child: Text(
-                          'Fetching Logs...',
-                          style: GoogleFonts.inter(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w400,
-                          ),
-                          maxLines: 1,
-                        ),
-                      ),
+                    ValueListenableBuilder<int>(
+                      valueListenable: ble.bleProcess.read1000LogsCount,
+                      builder: (context, readCount, _) {
+                        final percent =
+                            (readCount / 1000.0).clamp(0.0, 1.0).toDouble();
+                        final displayProgress =
+                            readCount == 0 ? _progress : percent;
+                        return Column(
+                          children: [
+                            Text(
+                              '${(displayProgress * 100).toInt()}%',
+                              style: GoogleFonts.inter(
+                                fontSize: 38,
+                                fontWeight: FontWeight.w700,
+                              ),
+                              maxLines: 1,
+                            ),
+                            SizedBox(height: 23),
+                            LinearPercentIndicator(
+                              lineHeight: 11.0,
+                              percent: displayProgress,
+                              backgroundColor: Color(0xFFD9D9D9),
+                              progressColor: Color(0xFFEC1D24),
+                              barRadius: Radius.circular(20),
+                            ),
+                            SizedBox(height: 10),
+                            Align(
+                              alignment: Alignment.centerLeft,
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                ),
+                                child: Text(
+                                  'Fetching Logs... ($readCount/1000)',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w400,
+                                  ),
+                                  maxLines: 1,
+                                ),
+                              ),
+                            ),
+                          ],
+                        );
+                      },
                     ),
                   ],
                 ),
               ),
             ),
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: Padding(
+                padding: const EdgeInsets.only(left: 24, right: 24, bottom: 24),
+                child: _buildCancelLogRetrievalButton(),
+              ),
+            ),
           ],
+        ),
+      ),
+    );
+  }
+
+  // Add button widget for canceling log retrieval
+  Widget _buildCancelLogRetrievalButton() {
+    return GestureDetector(
+      onTap: _showStopConfirmationDialog,
+      child: Container(
+        height: 55,
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(
+          color: Color(0xFFEC1D24),
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Color(0xFFEC1D24).withOpacity(0.3),
+              blurRadius: 8,
+              offset: Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Center(
+          child: Text(
+            'Cancel Log Retrieval',
+            style: GoogleFonts.inter(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
+          ),
         ),
       ),
     );
@@ -836,6 +1326,15 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
     _handshakeSubscription?.cancel();
     _bleNotificationSubscription?.cancel();
     _logRetrievalTimeout?.cancel();
+    _connectionSub?.cancel();
+    ble.bleProcess.isValidLogRecieved.removeListener(_onFirstValidLogReceived);
+    ble.bleProcess.read1000LogsCount.removeListener(_onLogRetrievalCompleted);
+    ble.maxBleConnectionRetriesReached.removeListener(
+      _onMaxBleConnectionRetriesReached,
+    );
+    ble.maxOtherPacketsRetriesReached.removeListener(
+      _onMaxOtherPacketsRetriesReached,
+    );
     super.dispose();
   }
 }
