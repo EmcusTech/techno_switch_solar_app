@@ -110,7 +110,7 @@ class BleManager {
 
   ValueNotifier<String> get accessKey => bleProcess.accessKey;
 
-  ValueNotifier<bool> get isAccessKeyValid => bleProcess.isAccessKeyValid;
+  ValueNotifier<bool?> get isAccessKeyValid => bleProcess.isAccessKeyValid;
 
   void resetProtocolState() {
     // Packet counters

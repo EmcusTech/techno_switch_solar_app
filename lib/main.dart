@@ -50,6 +50,7 @@ void main() async {
         0xffEC1D24,
       ), // Match your bottom nav color
       systemNavigationBarIconBrightness: Brightness.light, // For white icons
+      statusBarBrightness: Brightness.light,
     ),
   );
   Get.put(BleLogController());

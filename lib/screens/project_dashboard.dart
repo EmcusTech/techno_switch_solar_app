@@ -228,13 +228,15 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     // Reset navigation guard each time the dialog opens
     _navigatingToDeviceConnecting = false;
 
+    // Reset previous access-key validation state
+    final bleProcess = Get.find<BleLogController>().bleProcess;
+    bleProcess.isAccessKeyValid.value = null;
+    bleProcess.accessKey.value = "";
+
     final TextEditingController _controller = TextEditingController();
     final ValueNotifier<String?> errorText = ValueNotifier(null);
-    final bleController = Get.find<BleLogController>();
-    // Use the shared BleProcess instance so listeners and writers align
-    final bleProcess = bleController.bleProcess;
     final accessKey = bleProcess.accessKey;
-    final ValueNotifier<bool> isAccessKeyValid = bleProcess.isAccessKeyValid;
+    final ValueNotifier<bool?> isAccessKeyValid = bleProcess.isAccessKeyValid;
 
     showDialog(
       context: context,
@@ -366,7 +368,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide(
                             color:
-                                isAccessKeyValid == false
+                                isAccessKeyValidValue == false
                                     ? Color(0xFFEC1D24)
                                     : Color(0xFFD0D0D0),
                             width: 1,
@@ -376,7 +378,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide(
                             color:
-                                isAccessKeyValid == false
+                                isAccessKeyValidValue == false
                                     ? Color(0xFFEC1D24)
                                     : Color(0xFFD0D0D0),
                             width: 1,
@@ -435,7 +437,9 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                           ),
                           child: Center(
                             child: Text(
-                              isAccessKeyValid.value ? 'Valid' : 'Cancel',
+                              isAccessKeyValid.value == true
+                                  ? 'Valid'
+                                  : 'Cancel',
                               style: GoogleFonts.inter(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,

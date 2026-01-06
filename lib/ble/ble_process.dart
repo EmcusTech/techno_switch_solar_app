@@ -55,7 +55,8 @@ class BleProcess {
     false,
   );
 
-  final ValueNotifier<bool> isAccessKeyValid = ValueNotifier<bool>(false);
+  // null = not yet validated, true/false = result
+  final ValueNotifier<bool?> isAccessKeyValid = ValueNotifier<bool?>(null);
 
   final ValueNotifier<String> accessKey = ValueNotifier<String>("");
 
