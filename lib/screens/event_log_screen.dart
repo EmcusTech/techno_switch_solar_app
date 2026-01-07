@@ -88,11 +88,25 @@ class _EventLogContentState extends State<_EventLogContent> {
   final PanelService _panelService = PanelService();
   final SiteService _siteService = SiteService();
 
+  // Keep logs sorted by eventId (numeric if possible)
+  List<LogModel> _sortLogsByEventId(List<LogModel> logs) {
+    final sorted = List<LogModel>.from(logs);
+    sorted.sort((a, b) {
+      final aNum = int.tryParse(a.eventId ?? '');
+      final bNum = int.tryParse(b.eventId ?? '');
+      if (aNum != null && bNum != null) return aNum.compareTo(bNum);
+      if (aNum != null) return -1;
+      if (bNum != null) return 1;
+      return (a.eventId ?? '').compareTo(b.eventId ?? '');
+    });
+    return sorted;
+  }
+
   @override
   void initState() {
     super.initState();
     // Initialize filtered logs with all logs
-    _filteredLogs = List.from(widget.logDataList);
+    _filteredLogs = _sortLogsByEventId(widget.logDataList);
   }
 
   // Future<void> _handleBackNavigation() async {
@@ -421,7 +435,7 @@ class _EventLogContentState extends State<_EventLogContent> {
 
   void _applyFilters() {
     setState(() {
-      final allLogs = ble.bleProcess.validEventLogs.value;
+      final allLogs = _sortLogsByEventId(ble.bleProcess.validEventLogs.value);
       _filteredLogs =
           allLogs.where((log) {
             // Date filter
@@ -480,6 +494,7 @@ class _EventLogContentState extends State<_EventLogContent> {
 
             return true;
           }).toList();
+      _filteredLogs = _sortLogsByEventId(_filteredLogs);
       _filtersApplied =
           _fromDate != null ||
           _toDate != null ||
@@ -498,7 +513,7 @@ class _EventLogContentState extends State<_EventLogContent> {
       _alarmCount = null;
       _filtersApplied = false;
       _textFieldResetKey++; // Force TextField to reset
-      _filteredLogs = List.from(ble.bleProcess.validEventLogs.value);
+      _filteredLogs = _sortLogsByEventId(ble.bleProcess.validEventLogs.value);
     });
   }
 
@@ -1335,9 +1350,10 @@ class _EventLogContentState extends State<_EventLogContent> {
             child: ValueListenableBuilder<List<LogModel>>(
               valueListenable: ble.bleProcess.validEventLogs,
               builder: (context, validLogs, child) {
+                final baseLogs = _sortLogsByEventId(validLogs);
                 // Use filtered logs if filters are applied, otherwise use all logs
                 final logsToDisplay =
-                    _filtersApplied ? _filteredLogs : validLogs;
+                    _filtersApplied ? _filteredLogs : baseLogs;
 
                 return IndexedStack(
                   index: _selectedViewIndex,

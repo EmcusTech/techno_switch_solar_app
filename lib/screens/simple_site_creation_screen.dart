@@ -492,7 +492,7 @@ class _SimpleSiteCreationScreenState extends State<SimpleSiteCreationScreen> {
                                                     ),
                                                   )
                                                   : Text(
-                                                    'Create Site & Save Logs',
+                                                    'Create Site',
                                                     style: GoogleFonts.inter(
                                                       fontSize: 14,
                                                       fontWeight:
