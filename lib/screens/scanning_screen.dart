@@ -831,19 +831,19 @@ class _ScanningScreenState extends State<ScanningScreen>
 
     return GestureDetector(
       onTap: () {
-        if (_isScanning) _stopScanning();
+        // if (_isScanning) _stopScanning();
 
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder:
-                (_) => DeviceConnectingScreen(
-                  selectedDevice: device,
-                  scanType: _selectedScanType!,
-                  isLiveEvent: widget.isLiveEvent,
-                ),
-          ),
-        );
+        // Navigator.push(
+        //   context,
+        //   MaterialPageRoute(
+        //     builder:
+        //         (_) => DeviceConnectingScreen(
+        //           selectedDevice: device,
+        //           scanType: _selectedScanType!,
+        //           isLiveEvent: widget.isLiveEvent,
+        //         ),
+        //   ),
+        // );
       },
       child: Container(
         decoration: BoxDecoration(
