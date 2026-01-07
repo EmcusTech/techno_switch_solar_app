@@ -111,7 +111,7 @@ class EventConstants {
       "External Supervisory on",
       "External supply fault",
       "Sounders disabled",
-      "Event buffer cleared",
+      "Event log cleared",
       "Non-volatile text changed",
       "Firmware changed",
       "Firmware check-sum error",
@@ -151,7 +151,23 @@ class EventConstants {
     ],
 
     // 3 - Restart
-    ["-"],
+    [
+      "Other",
+      "Power-On",
+      "Brown-out",
+      "External reset pin",
+      "Watchdog Timeout",
+      "JTAG reset",
+      "CPU error",
+      "OCD",
+      "JTAG hard reset",
+      "Software reset",
+      "Deep software reset",
+      "Voltage monitoring reset 0",
+      "Voltage monitoring reset 1",
+      "Voltage monitoring reset 2",
+      "Independent watchdog",
+    ],
 
     // 4 - Network
     [
@@ -478,6 +494,96 @@ class EventConstants {
     } else if (evttype == evtTypeSupervisedInput) {
       returnIdentifier =
           "Input No. $rxpar0 ${supervisoryFaultParam12Name[rxpar1]} ${supervisoryFaultParam12Name[rxpar2]}";
+    } else if (evttype == evtTypeRestart) {
+      if (rxpar0 == 4) {
+        if (rxpar1 == 0) {
+          returnIdentifier = "-";
+        } else if (rxpar1 == 1) {
+          returnIdentifier = "Time-out";
+        } else if (rxpar1 == 2) {
+          returnIdentifier = "Initialisation fault";
+        } else if (rxpar1 == 3) {
+          returnIdentifier = "Application restart";
+        } else if (rxpar1 == 4) {
+          returnIdentifier = "Communication time-out";
+        } else if (rxpar1 == 5) {
+          returnIdentifier = "Excessive communication NAKs";
+        } else if (rxpar1 == 6) {
+          returnIdentifier = "Invalid RTOS queue";
+        } else if (rxpar1 == 7) {
+          returnIdentifier = "Invalid RTOS queue depth";
+        } else if (rxpar1 == 8) {
+          returnIdentifier = "Invalid RTOS semaphore";
+        } else if (rxpar1 == 9) {
+          returnIdentifier = "Invalid RTOS process";
+        } else if (rxpar1 == 10) {
+          returnIdentifier = "Invalid RTOS timer";
+        } else if (rxpar1 == 11) {
+          returnIdentifier = "Invalid RTOS mailbox";
+        } else if (rxpar1 == 12) {
+          returnIdentifier = "Corrupted RTOS mailbox";
+        } else if (rxpar1 == 13) {
+          returnIdentifier = "Flash not ready";
+        } else if (rxpar1 == 14) {
+          returnIdentifier = "Database error";
+        } else if (rxpar1 == 15) {
+          returnIdentifier = "System restart";
+        } else if (rxpar1 == 16) {
+          returnIdentifier = "Invalid network";
+        } else if (rxpar1 == 17) {
+          returnIdentifier = "Invalid network address";
+        } else if (rxpar1 == 18) {
+          returnIdentifier = "Serial SRAM error";
+        } else if (rxpar1 == 19) {
+          returnIdentifier = "Serial FLASH error";
+        } else if (rxpar1 == 20) {
+          returnIdentifier = "Memory copy error";
+        } else if (rxpar1 == 21) {
+          returnIdentifier = "Serial FLASH not ready";
+        } else if (rxpar1 == 22) {
+          returnIdentifier = "Serial SRAMnot ready";
+        } else if (rxpar1 == 23) {
+          returnIdentifier = "ADC fault";
+        } else if (rxpar1 == 24) {
+          returnIdentifier = "INTC unhandled interrupt";
+        } else if (rxpar1 == 25) {
+          returnIdentifier = "SER_FLASH installation";
+        } else if (rxpar1 == 26) {
+          returnIdentifier = "RTC fault";
+        } else if (rxpar1 == 27) {
+          returnIdentifier = "USB fault";
+        }
+      } else if (rxpar0 == 14) {
+        if (rxpar1 == 0) {
+          returnIdentifier = "-";
+        } else if (rxpar1 == 1) {
+          returnIdentifier = "Time-out";
+        } else if (rxpar1 == 2) {
+          returnIdentifier = "Initialisation fault";
+        } else if (rxpar1 == 3) {
+          returnIdentifier = "Application restart";
+        } else if (rxpar1 == 4) {
+          returnIdentifier = "Communication time-out";
+        } else if (rxpar1 == 5) {
+          returnIdentifier = "Excessive communication NAKs";
+        } else if (rxpar1 == 6) {
+          returnIdentifier = "Invalid RTOS queue";
+        } else if (rxpar1 == 7) {
+          returnIdentifier = "Invalid RTOS queue depth";
+        } else if (rxpar1 == 8) {
+          returnIdentifier = "Invalid RTOS semaphore";
+        } else if (rxpar1 == 9) {
+          returnIdentifier = "Invalid RTOS process";
+        } else if (rxpar1 == 10) {
+          returnIdentifier = "Invalid RTOS timer";
+        } else if (rxpar1 == 11) {
+          returnIdentifier = "Invalid RTOS mailbox";
+        } else if (rxpar1 == 12) {
+          returnIdentifier = "Corrupted RTOS mailbox";
+        } else if (rxpar1 == 13) {
+          returnIdentifier = "Flash not ready";
+        }
+      }
     }
 
     // try {

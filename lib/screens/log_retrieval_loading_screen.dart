@@ -1108,7 +1108,7 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
               ),
             ),
             Padding(
-              padding: const EdgeInsets.only(left: 24, right: 24, bottom: 100),
+              padding: const EdgeInsets.only(left: 24, right: 24, bottom: 120),
               child: Align(
                 alignment: Alignment.bottomCenter,
                 child: Column(

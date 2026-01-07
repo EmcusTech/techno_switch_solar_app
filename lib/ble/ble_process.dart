@@ -468,7 +468,12 @@ class BleProcess {
                 : null,
         eventSubType:
             payload.length > 11
-                ? EventConstants.getEventDescription(payload[22], payload[24])
+                ? EventConstants.getEventDescription(
+                  payload[22],
+                  payload[22] == EventConstants.evtTypeRestart
+                      ? payload[42]
+                      : payload[24],
+                )
                 : null,
         identifier:
             payload.length >= 32
