@@ -1197,6 +1197,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                     style: GoogleFonts.inter(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
+                      color: Color(0xff3D3D3D),
                     ),
                   ),
                   ValueListenableBuilder(
@@ -1418,6 +1419,21 @@ Widget _buildProgressBar() {
       );
     },
   );
+}
+
+enum DataType {
+  id,
+  dateTime,
+  status,
+  eventClass,
+  type,
+  subType,
+  source,
+  identifier,
+  text,
+  panelNo,
+  moduleNo,
+  lBusNo,
 }
 
 // ---------- UPDATED _LogListView: header + rows share one horizontal scroll ----------
@@ -1675,8 +1691,8 @@ class _LogListViewState extends State<_LogListView>
               child: Text(
                 text,
                 style: GoogleFonts.inter(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 12,
                   color: isActive ? Color(0xFFEC1D24) : Color(0xFF3A3A3A),
                 ),
               ),
@@ -1685,7 +1701,7 @@ class _LogListViewState extends State<_LogListView>
             if (isActive)
               Icon(
                 _sortAscending ? Icons.arrow_upward : Icons.arrow_downward,
-                size: 16,
+                size: 12,
                 color: Color(0xFFEC1D24),
               )
             else
@@ -1696,17 +1712,25 @@ class _LogListViewState extends State<_LogListView>
     );
   }
 
-  Widget _buildDataCell(String text, double width) {
+  Widget _buildDataCell(String text, double width, DataType dataType) {
+    TextStyle textStyle = TextStyle();
+    if (dataType == DataType.id) {
+      textStyle = GoogleFonts.inter(
+        fontSize: 13,
+        fontWeight: FontWeight.bold,
+        color: Color(0xff696969),
+      );
+    } else if (dataType == DataType.dateTime) {
+      textStyle = GoogleFonts.inter(fontSize: 12, color: Color(0xff696969));
+    } else {
+      textStyle = GoogleFonts.inter(fontSize: 13, color: Color(0xff696969));
+    }
     return Container(
       width: width,
       padding: const EdgeInsets.symmetric(horizontal: 8),
       child: Text(
         text,
-        style: GoogleFonts.inter(
-          fontSize: 14,
-          fontWeight: FontWeight.w600,
-          color: Color(0xFF696969),
-        ),
+        style: textStyle,
         maxLines: 2,
         overflow: TextOverflow.ellipsis,
       ),
@@ -1758,7 +1782,11 @@ class _LogListViewState extends State<_LogListView>
                             child: Row(
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
-                                _buildDataCell(log.eventId ?? '', wEventId),
+                                _buildDataCell(
+                                  log.eventId ?? '',
+                                  wEventId,
+                                  DataType.id,
+                                ),
                                 _buildDataCell(
                                   log.eventDateTime != null
                                       ? DateFormat(
@@ -1766,32 +1794,58 @@ class _LogListViewState extends State<_LogListView>
                                       ).format(log.eventDateTime!)
                                       : '',
                                   wDateTime,
+                                  DataType.dateTime,
                                 ),
                                 _buildDataCell(
                                   log.eventStatus ?? '',
                                   wEventStatus,
+                                  DataType.status,
                                 ),
                                 _buildDataCell(
                                   log.eventClass ?? '',
                                   wEventClass,
+                                  DataType.eventClass,
                                 ),
-                                _buildDataCell(log.eventType ?? '', wEventType),
+                                _buildDataCell(
+                                  log.eventType ?? '',
+                                  wEventType,
+                                  DataType.type,
+                                ),
                                 _buildDataCell(
                                   log.eventSubType ?? '',
                                   wEventSubType,
+                                  DataType.subType,
                                 ),
                                 _buildDataCell(
                                   log.eventSource ?? '',
                                   wEventSource,
+                                  DataType.source,
                                 ),
                                 _buildDataCell(
                                   log.identifier ?? '',
                                   wIdentifier,
+                                  DataType.identifier,
                                 ),
-                                _buildDataCell(log.text ?? '', wText),
-                                _buildDataCell(log.panelNo ?? '', wPanelNo),
-                                _buildDataCell(log.moduleNo ?? '', wModuleNo),
-                                _buildDataCell(log.lBusNo ?? '', wLbusNo),
+                                _buildDataCell(
+                                  log.text ?? '',
+                                  wText,
+                                  DataType.text,
+                                ),
+                                _buildDataCell(
+                                  log.panelNo ?? '',
+                                  wPanelNo,
+                                  DataType.panelNo,
+                                ),
+                                _buildDataCell(
+                                  log.moduleNo ?? '',
+                                  wModuleNo,
+                                  DataType.moduleNo,
+                                ),
+                                _buildDataCell(
+                                  log.lBusNo ?? '',
+                                  wLbusNo,
+                                  DataType.lBusNo,
+                                ),
                               ],
                             ),
                           ),
