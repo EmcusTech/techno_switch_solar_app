@@ -333,15 +333,15 @@ class LogHistoryScreenState extends State<LogHistoryScreen> {
                   ),
                 ],
               ),
-              Spacer(),
-              Transform.rotate(
-                angle: 180 * 3.14159 / 360,
-                child: Icon(
-                  Icons.arrow_forward_ios,
-                  size: 18,
-                  color: Color(0xFF696969),
-                ),
-              ),
+              // Spacer(),
+              // Transform.rotate(
+              //   angle: 180 * 3.14159 / 360,
+              //   child: Icon(
+              //     Icons.arrow_forward_ios,
+              //     size: 18,
+              //     color: Color(0xFF696969),
+              //   ),
+              // ),
             ],
           ),
           SizedBox(height: 10),

@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class ExportTile extends StatelessWidget {
-  final IconData icon;
+  final String iconPath;
   final String title;
   final VoidCallback onTap;
 
   const ExportTile({
     super.key,
-    required this.icon,
+    required this.iconPath,
     required this.title,
     required this.onTap,
   });
@@ -22,7 +23,7 @@ class ExportTile extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 14),
         child: Row(
           children: [
-            Icon(icon, size: 22, color: const Color(0xFFEC1D24)),
+            SvgPicture.asset(iconPath),
             const SizedBox(width: 16),
             Expanded(
               child: Text(

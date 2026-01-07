@@ -522,7 +522,7 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
               style: ElevatedButton.styleFrom(
                 backgroundColor: Color(0xFFEC1D24),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(28.5),
                 ),
                 elevation: 0,
               ),
@@ -1076,60 +1076,33 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
               //     !_maxBleConnectionRetriesReached &&
               //     !_maxOtherPacketsRetriesReached,
             ),
-            Padding(
-              padding: const EdgeInsets.only(top: 100),
-              child: Text(
-                'Please Wait...',
-                style: GoogleFonts.inter(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w400,
-                ),
-              ),
-            ),
+            // Padding(
+            //   padding: const EdgeInsets.only(top: 100),
+            //   child: Text(
+            //     'Please Wait...',
+            //     style: GoogleFonts.inter(
+            //       fontSize: 14,
+            //       fontWeight: FontWeight.w400,
+            //     ),
+            //   ),
+            // ),
             // Show connection status
             Padding(
-              padding: const EdgeInsets.only(top: 130),
+              padding: const EdgeInsets.only(top: 80),
               child: ValueListenableBuilder<String>(
                 valueListenable: ble.processDesc,
                 builder: (context, value, _) {
                   final statusText =
                       value.isNotEmpty ? value : _connectionStatus;
-                  return Column(
-                    children: [
-                      Text(
-                        statusText,
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w400,
-                          color: Color(0xFF918F8F),
-                        ),
-                        textAlign: TextAlign.center,
-                        maxLines: 2,
-                      ),
-                      // if (_connectionFailed && _errorMessage != null) ...[
-                      //   SizedBox(height: 8),
-                      //   Text(
-                      //     _errorMessage!,
-                      //     style: GoogleFonts.inter(
-                      //       fontSize: 12,
-                      //       fontWeight: FontWeight.w600,
-                      //       color: Color(0xFFEC1D24),
-                      //     ),
-                      //     textAlign: TextAlign.center,
-                      //   ),
-                      // ],
-                      // if (_firstLogReceived) ...[
-                      //   SizedBox(height: 6),
-                      //   Text(
-                      //     'First valid log received',
-                      //     style: GoogleFonts.inter(
-                      //       fontSize: 12,
-                      //       fontWeight: FontWeight.w500,
-                      //       color: Color(0xFF3A3A3A),
-                      //     ),
-                      //   ),
-                      // ],
-                    ],
+                  return Text(
+                    statusText,
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w400,
+                      color: Color(0xFF918F8F),
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
                   );
                 },
               ),
@@ -1175,7 +1148,7 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
                                   horizontal: 10,
                                 ),
                                 child: Text(
-                                  'Fetching Logs... ($readCount/1000)',
+                                  'Fetching Logs...',
                                   style: GoogleFonts.inter(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w400,

@@ -779,8 +779,8 @@ class _ScanningScreenState extends State<ScanningScreen>
   List<Widget> _buildGridSlotWidgets({required double maxWidth}) {
     const int columns = 3;
     const double spacing = 12;
-    const double cardWidth = 120;
-    const double cardHeight = 150;
+    const double cardWidth = 100;
+    const double cardHeight = 130;
 
     final widgets = <Widget>[];
 
@@ -816,8 +816,8 @@ class _ScanningScreenState extends State<ScanningScreen>
           duration: const Duration(milliseconds: 420),
           curve: Curves.easeOutCubic,
           child: _AnimatedGridCard(
-            child: _buildDeviceCard(device),
             highlight: justAssigned,
+            child: _buildDeviceCard(device),
           ),
         ),
       );
@@ -845,42 +845,55 @@ class _ScanningScreenState extends State<ScanningScreen>
           ),
         );
       },
-      child: Material(
-        elevation: 6,
-        borderRadius: BorderRadius.circular(12),
-        color: Colors.white,
-        child: Column(
-          children: [
-            Container(
-              height: 90,
-              decoration: BoxDecoration(
-                color: Colors.grey.shade50,
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(12),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Color(0xFFEC1D24).withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFFEC1D24), width: 2),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(10.0),
+          child: Column(
+            children: [
+              Text(
+                "TECHNOSWITCH",
+                style: GoogleFonts.inter(
+                  fontSize: 8,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF3D3D3D).withValues(alpha: 0.5),
                 ),
               ),
-              child: Center(
-                child: SvgPicture.asset('assets/svgs/panel_icon.svg'),
+              SizedBox(height: 6),
+              SvgPicture.asset(
+                'assets/svgs/panel_icon.svg',
+                width: 60,
+                height: 60,
               ),
-            ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(10),
+              SizedBox(height: 6),
+              Expanded(
                 child: Align(
                   alignment: Alignment.topLeft,
                   child: Text(
                     label,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
                     style: GoogleFonts.inter(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
+                      fontSize: 8,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

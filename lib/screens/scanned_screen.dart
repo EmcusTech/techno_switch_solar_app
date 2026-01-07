@@ -138,49 +138,16 @@ class _ScannedScreenState extends State<ScannedScreen> {
       child: Column(
         children: [
           SizedBox(height: 48),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Devices Identified',
-                    style: GoogleFonts.inter(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF3D3D3D),
-                    ),
-                  ),
-                  Text(
-                    '${widget.scanType == ScanType.usb ? 'USB' : 'Bluetooth'} Scan Results',
-                    style: GoogleFonts.inter(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w400,
-                      color: Color(0xFF918F8F),
-                    ),
-                  ),
-                ],
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              'Panels Identified',
+              style: GoogleFonts.inter(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF3D3D3D),
               ),
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color:
-                      widget.discoveredDevices.isEmpty
-                          ? Colors.orange
-                          : Colors.green,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  '${widget.discoveredDevices.length}',
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
           SizedBox(height: 20),
           widget.discoveredDevices.isEmpty
