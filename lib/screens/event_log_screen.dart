@@ -177,36 +177,27 @@ class _EventLogContentState extends State<_EventLogContent> {
           existingPanel.siteId!,
         );
         if (existingSite != null) {
-          final shouldNavigateToSite = await _showExistingSiteDialog(
-            context,
-            existingSite.siteName,
-            logs.length,
+          await _siteService.storeLogs(logs, siteId: existingSite.id!);
+
+          final allSitesWithLogCount =
+              await _siteService.getSitesWithLogCount();
+          final updatedSiteWithLogCount = allSitesWithLogCount.firstWhere(
+            (siteWithLogCount) => siteWithLogCount.site.id == existingSite.id,
+            orElse:
+                () => SiteWithLogCount(
+                  site: existingSite,
+                  logCount: logs.length,
+                  lastLogRetrieved: DateTime.now(),
+                ),
           );
 
-          if (shouldNavigateToSite == true) {
-            await _siteService.storeLogs(logs, siteId: existingSite.id!);
-
-            final allSitesWithLogCount =
-                await _siteService.getSitesWithLogCount();
-            final updatedSiteWithLogCount = allSitesWithLogCount.firstWhere(
-              (siteWithLogCount) => siteWithLogCount.site.id == existingSite.id,
-              orElse:
-                  () => SiteWithLogCount(
-                    site: existingSite,
-                    logCount: logs.length,
-                    lastLogRetrieved: DateTime.now(),
-                  ),
+          if (mounted) {
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(builder: (context) => HomeScreen()),
+              (route) => false,
             );
-
-            if (mounted) {
-              Navigator.of(context).pushAndRemoveUntil(
-                MaterialPageRoute(builder: (context) => HomeScreen()),
-                (route) => false,
-              );
-            }
-          } else {
-            await NavigationService.navigateBackToScanning(context);
           }
+
           return;
         }
       }

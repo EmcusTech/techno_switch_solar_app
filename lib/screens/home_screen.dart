@@ -304,24 +304,27 @@ class _HomeContentState extends State<_HomeContent> {
             children: [
               GestureDetector(
                 onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => CreateSiteScreenRefactored(),
-                    ),
-                  );
+                  // Navigator.of(context).push(
+                  //   MaterialPageRoute(
+                  //     builder: (context) => CreateSiteScreenRefactored(),
+                  //   ),
+                  // );
                 },
                 child: _buildQuickLinkItem(
                   'assets/svgs/new_project_icon.svg',
                   'New Site',
+                  isEnabled: false,
                 ),
               ),
               _buildQuickLinkItem(
                 'assets/svgs/open_project_icon.svg',
                 'Open Site',
+                isEnabled: false,
               ),
               _buildQuickLinkItem(
                 'assets/svgs/maintenance_icon.svg',
                 'Live Events',
+                isEnabled: false,
               ),
               GestureDetector(
                 onTap: () {
@@ -343,22 +346,40 @@ class _HomeContentState extends State<_HomeContent> {
     );
   }
 
-  Widget _buildQuickLinkItem(String imagePath, String text) {
+  Widget _buildQuickLinkItem(
+    String imagePath,
+    String text, {
+    bool? isEnabled = true,
+  }) {
     return Column(
       children: [
         Container(
           width: 64,
           height: 64,
           decoration: BoxDecoration(
+            color:
+                isEnabled == true ? Colors.transparent : Colors.grey.shade200,
             border: Border.all(
-              color: Color(0xFFEC1D24).withValues(alpha: 0.31),
+              color:
+                  isEnabled == true
+                      ? Color(0xFFEC1D24).withValues(alpha: 0.31)
+                      : Colors.grey.shade200,
               width: 1,
             ),
             shape: BoxShape.circle,
           ),
           child: Padding(
             padding: const EdgeInsets.all(17.0),
-            child: SvgPicture.asset(imagePath),
+            child: SvgPicture.asset(
+              imagePath,
+              colorFilter:
+                  isEnabled == true
+                      ? null
+                      : ColorFilter.mode(
+                        Color(0xFFEC1D24).withValues(alpha: 0.31),
+                        BlendMode.srcIn,
+                      ),
+            ),
           ),
         ),
         SizedBox(height: 11),
