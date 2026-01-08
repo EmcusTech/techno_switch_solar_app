@@ -4,6 +4,7 @@ import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lottie/lottie.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/screens/home_screen.dart';
 import 'package:techno_switch_solar_app/screens/log_retrieval_loading_screen.dart';
@@ -291,10 +292,9 @@ class _ScannedScreenState extends State<ScannedScreen> {
                                   size: 32,
                                   color: Colors.green,
                                 )
-                                : CircularProgressIndicator(
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                    Color(0xFFEC1D24),
-                                  ),
+                                : Lottie.asset(
+                                  'assets/jsons/ble_connecting.json',
+                                  animate: !maxBleConnectionRetriesReached,
                                 ),
                       ),
                     ),
@@ -328,6 +328,30 @@ class _ScannedScreenState extends State<ScannedScreen> {
                       ),
                       textAlign: TextAlign.center,
                     ),
+                    SizedBox(height: 16),
+                    if (maxBleConnectionRetriesReached)
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFEC1D24),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(24.5),
+                            ),
+                          ),
+                          onPressed: () {
+                            Navigator.of(dialogContext).pop();
+                          },
+                          child: Text(
+                            'OK',
+                            style: GoogleFonts.inter(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
                   ],
                 ),
               ),
