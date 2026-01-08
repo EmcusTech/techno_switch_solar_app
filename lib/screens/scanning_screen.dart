@@ -3,12 +3,16 @@ import 'dart:async';
 import 'dart:math';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lottie/lottie.dart';
+import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
+import 'package:techno_switch_solar_app/screens/log_retrieval_loading_screen.dart';
+import 'package:techno_switch_solar_app/screens/project_dashboard.dart';
 import 'package:techno_switch_solar_app/screens/scanned_screen.dart';
-import 'package:techno_switch_solar_app/screens/device_connecting_screen.dart';
 import 'package:techno_switch_solar_app/widgets/scanning_widget.dart';
 import 'package:usb_serial/usb_serial.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -51,6 +55,8 @@ class _ScanningScreenState extends State<ScanningScreen>
 
   // UI: track which keys were just assigned to pulse them
   final Map<String, bool> _justAssigned = {};
+
+  bool _navigatingToDeviceConnecting = false;
 
   @override
   void initState() {
@@ -482,6 +488,23 @@ class _ScanningScreenState extends State<ScanningScreen>
     );
   }
 
+  void _stopScanningForConnection() {
+    if (mounted) setState(() => _isScanning = false);
+    _scanTimer?.cancel();
+    _autoStopTimer?.cancel();
+    _countdownTimer?.cancel();
+
+    if (_selectedScanType == ScanType.bluetooth) {
+      _bluetoothService.stopScanning();
+    }
+  }
+
+  Future<void> _onDeviceSelected(DiscoveredDevice device) async {
+    _stopScanningForConnection();
+    _showConnectingDialog(device: device, context: context);
+    await Get.find<BleLogController>().connectToDevice(device: device);
+  }
+
   void _stopScanning() {
     if (mounted) setState(() => _isScanning = false);
 
@@ -667,10 +690,6 @@ class _ScanningScreenState extends State<ScanningScreen>
 
   Widget _buildScanningView() {
     const double radarSize = 340; // slightly larger for more space
-    final double center = radarSize / 2;
-    final double fixedRadius = radarSize * 0.38;
-    const double cardWidth = 120;
-    const double cardHeight = 150;
 
     return Stack(
       alignment: Alignment.center,
@@ -910,21 +929,7 @@ class _ScanningScreenState extends State<ScanningScreen>
     final label = device.name;
 
     return GestureDetector(
-      onTap: () {
-        // if (_isScanning) _stopScanning();
-
-        // Navigator.push(
-        //   context,
-        //   MaterialPageRoute(
-        //     builder:
-        //         (_) => DeviceConnectingScreen(
-        //           selectedDevice: device,
-        //           scanType: _selectedScanType!,
-        //           isLiveEvent: widget.isLiveEvent,
-        //         ),
-        //   ),
-        // );
-      },
+      onTap: () => _onDeviceSelected(device),
       child: Container(
         decoration: BoxDecoration(
           color: Color(0xFFEC1D24).withValues(alpha: 0.1),
@@ -979,6 +984,7 @@ class _ScanningScreenState extends State<ScanningScreen>
   // Small proxy function so analyzer doesn't complain about using controller directly in AnimatedBuilder
   Animation<double> _sweep_controller_proxy() => _sweepController;
 
+  // ignore: unused_element
   List<Widget> _buildSlotWidgets(
     double radarSize,
     double center,
@@ -1021,28 +1027,7 @@ class _ScanningScreenState extends State<ScanningScreen>
                 duration: const Duration(milliseconds: 420),
                 curve: Curves.easeOutBack,
                 child: GestureDetector(
-                  onTap: () {
-                    print("hey hey hey");
-                    // Stop scanning before connecting
-                    if (_isScanning) {
-                      _stopScanning();
-                    }
-
-                    // Navigate to device connecting screen
-                    if (mounted) {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder:
-                              (context) => DeviceConnectingScreen(
-                                selectedDevice: device,
-                                scanType: _selectedScanType!,
-                                isLiveEvent: widget.isLiveEvent,
-                              ),
-                        ),
-                      );
-                    }
-                  },
+                  onTap: () => _onDeviceSelected(device),
                   child: Material(
                     color: Colors.white.withOpacity(0.95),
                     elevation: 6,
@@ -1147,6 +1132,7 @@ class _ScanningScreenState extends State<ScanningScreen>
   }
 
   // helper to show a short represention of device for logs (kept for debug if needed)
+  // ignore: unused_element
   String _shortRepr(dynamic d) {
     try {
       if (d == null) return 'null';
@@ -1164,6 +1150,427 @@ class _ScanningScreenState extends State<ScanningScreen>
     } catch (e) {
       return d.toString();
     }
+  }
+
+  void _showConnectingDialog({
+    required DiscoveredDevice device,
+    required BuildContext context,
+  }) {
+    final bleController = Get.find<BleLogController>();
+    final connectionNotifier = bleController.bleManager.isConnectedNotifier;
+    final maxBleConnectionRetriesReached =
+        bleController.bleManager.maxBleConnectionRetriesReached;
+    bool hasNavigated = false;
+
+    final mergedListenable = Listenable.merge([
+      connectionNotifier,
+      maxBleConnectionRetriesReached,
+    ]);
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return ListenableBuilder(
+          listenable: mergedListenable,
+          builder: (context, _) {
+            final isConnected = connectionNotifier.value;
+            final maxRetries = maxBleConnectionRetriesReached.value;
+
+            if (isConnected && !hasNavigated) {
+              hasNavigated = true;
+              Future.delayed(const Duration(seconds: 2), () {
+                if (context.mounted && hasNavigated) {
+                  Navigator.of(context).pop();
+                  if (widget.isLiveEvent == true) {
+                    showPasswordPopup(
+                      device: device,
+                      onCall: () {
+                        bleController.startLogRetrieval();
+                      },
+                    );
+                  } else {
+                    Navigator.of(context).pushReplacement(
+                      MaterialPageRoute(
+                        builder:
+                            (context) => ProjectDashboardScreen(
+                              selectedDevice: device,
+                              panelVersionNo: device.id,
+                              panelName: device.name,
+                            ),
+                      ),
+                    );
+                  }
+                }
+              });
+            }
+
+            return Dialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 64,
+                      height: 64,
+                      decoration: BoxDecoration(
+                        color:
+                            isConnected
+                                ? Colors.green.withValues(alpha: 0.1)
+                                : const Color(0xFFFBDEE1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Center(
+                        child:
+                            isConnected
+                                ? const Icon(
+                                  Icons.check_circle,
+                                  size: 32,
+                                  color: Colors.green,
+                                )
+                                : Lottie.asset(
+                                  'assets/jsons/ble_connecting.json',
+                                  animate: !maxRetries,
+                                ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      isConnected
+                          ? 'Device Connected!'
+                          : maxRetries
+                          ? 'Max Connection Retries Reached!'
+                          : 'Connecting...',
+                      style: GoogleFonts.inter(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF3D3D3D),
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      isConnected
+                          ? 'Preparing to navigate...'
+                          : maxRetries
+                          ? 'Please scan again and connect to the device'
+                          : 'Please wait while we connect to ${device.name}',
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w400,
+                        color: const Color(0xFF918F8F),
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 16),
+                    if (maxRetries)
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFEC1D24),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(24.5),
+                            ),
+                          ),
+                          onPressed: () {
+                            Navigator.of(dialogContext).pop();
+                          },
+                          child: Text(
+                            'OK',
+                            style: GoogleFonts.inter(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void showPasswordPopup({
+    required Function() onCall,
+    required DiscoveredDevice device,
+  }) {
+    _navigatingToDeviceConnecting = false;
+
+    final bleProcess = Get.find<BleLogController>().bleProcess;
+    bleProcess.isAccessKeyValid.value = null;
+    bleProcess.accessKey.value = "";
+
+    final TextEditingController _controller = TextEditingController();
+    final FocusNode _focusNode = FocusNode();
+    final accessKey = bleProcess.accessKey;
+    final ValueNotifier<bool?> isAccessKeyValid = bleProcess.isAccessKeyValid;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 64,
+                  height: 64,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFFBDEE1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: SvgPicture.asset(
+                      'assets/svgs/lock_icon.svg',
+                      height: 32,
+                      width: 32,
+                      colorFilter: const ColorFilter.mode(
+                        Color(0xFFEC1D24),
+                        BlendMode.srcIn,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Enter 4-Digit Password',
+                  style: GoogleFonts.inter(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF3D3D3D),
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Please enter the password to continue',
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w400,
+                    color: const Color(0xFF918F8F),
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                ValueListenableBuilder<bool?>(
+                  valueListenable: isAccessKeyValid,
+                  builder: (_, isAccessKeyValidValue, __) {
+                    if (isAccessKeyValidValue == true &&
+                        !_navigatingToDeviceConnecting) {
+                      _navigatingToDeviceConnecting = true;
+                      WidgetsBinding.instance.addPostFrameCallback((_) async {
+                        if (!mounted) return;
+                        await Future.delayed(const Duration(seconds: 1));
+                        if (!mounted) return;
+                        Navigator.of(context).pop();
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder:
+                                (context) => LogRetrievalLoadingScreen(
+                                  scanType: ScanType.bluetooth,
+                                  selectedDevice: device,
+                                  isLiveEvent: widget.isLiveEvent,
+                                ),
+                          ),
+                        );
+                      });
+                    }
+
+                    return Column(
+                      children: [
+                        TextField(
+                          controller: _controller,
+                          focusNode: _focusNode,
+                          keyboardType: TextInputType.number,
+                          obscureText: true,
+                          maxLength: 4,
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.inter(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 8,
+                            color: const Color(0xFF3D3D3D),
+                          ),
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                            LengthLimitingTextInputFormatter(4),
+                          ],
+                          onChanged: (val) {
+                            accessKey.value = val;
+                            if (val.length == 4) {
+                              bleProcess.isAccessKeyValid.value = null;
+                              FocusScope.of(context).unfocus();
+                              bleProcess.processDesc.value =
+                                  "Validating access key...";
+                              onCall();
+                            }
+                          },
+                          decoration: InputDecoration(
+                            hintText: '••••',
+                            hintStyle: GoogleFonts.inter(
+                              fontSize: 24,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: 8,
+                              color: const Color(0xFFD0D0D0),
+                            ),
+                            errorText:
+                                isAccessKeyValidValue == false
+                                    ? "Invalid access key. Try again."
+                                    : null,
+                            errorStyle: GoogleFonts.inter(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w400,
+                              color: const Color(0xFFEC1D24),
+                            ),
+                            counterText: '',
+                            filled: true,
+                            fillColor: const Color(0xFFF8F8F8),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(
+                                color:
+                                    isAccessKeyValidValue == false
+                                        ? const Color(0xFFEC1D24)
+                                        : const Color(0xFFD0D0D0),
+                                width: 1,
+                              ),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(
+                                color:
+                                    isAccessKeyValidValue == false
+                                        ? const Color(0xFFEC1D24)
+                                        : const Color(0xFFD0D0D0),
+                                width: 1,
+                              ),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(
+                                color: Color(0xFFEC1D24),
+                                width: 2,
+                              ),
+                            ),
+                            errorBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(
+                                color: Color(0xFFEC1D24),
+                                width: 1,
+                              ),
+                            ),
+                            focusedErrorBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(
+                                color: Color(0xFFEC1D24),
+                                width: 2,
+                              ),
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 16,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Builder(
+                          builder: (_) {
+                            String? status;
+                            if (_controller.text.length == 4 &&
+                                isAccessKeyValidValue == null) {
+                              status = "Validating access key...";
+                            } else if (isAccessKeyValidValue == true) {
+                              status = "Validation success";
+                            }
+                            if (isAccessKeyValidValue == false) {
+                              if (_controller.text.isNotEmpty) {
+                                _controller.clear();
+                              }
+                              WidgetsBinding.instance.addPostFrameCallback((_) {
+                                if (_focusNode.canRequestFocus) {
+                                  _focusNode.requestFocus();
+                                }
+                              });
+                            }
+                            return status == null
+                                ? const SizedBox.shrink()
+                                : Text(
+                                  status,
+                                  style: GoogleFonts.inter(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: const Color(0xFF3D3D3D),
+                                  ),
+                                );
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                        if (!(_controller.text.length == 4 &&
+                                isAccessKeyValidValue == null) &&
+                            isAccessKeyValidValue != true)
+                          SizedBox(
+                            width: double.infinity,
+                            child: GestureDetector(
+                              onTap: () {
+                                Navigator.of(context).pop();
+                              },
+                              child: Container(
+                                height: 48,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFEFEEEE),
+                                  borderRadius: BorderRadius.circular(24),
+                                  border: Border.all(
+                                    color: const Color(0xFFD0D0D0),
+                                    width: 1,
+                                  ),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    'Cancel',
+                                    style: GoogleFonts.inter(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      color: const Color(0xFF666666),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 }
 
