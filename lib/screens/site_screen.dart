@@ -87,6 +87,7 @@ class _SiteScreenState extends State<SiteScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
+        height: double.infinity,
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
@@ -335,7 +336,10 @@ class _SiteScreenState extends State<SiteScreen> {
               borderRadius: BorderRadius.circular(8),
             ),
             child: Padding(
-              padding: const EdgeInsets.all(18.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 18.0,
+                vertical: 12.0,
+              ),
               child: Row(
                 children: [
                   Image.asset('assets/images/panel_icon.png'),

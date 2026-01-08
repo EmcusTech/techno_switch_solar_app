@@ -544,57 +544,61 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 width: 62,
               ),
               SizedBox(width: 14),
-              Column(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    widget.panelName,
-                    style: GoogleFonts.inter(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.panelName,
+                      style: GoogleFonts.inter(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  Text(
-                    widget.panelVersionNo,
-                    style: GoogleFonts.inter(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: Color(0xFF979797),
+                    Text(
+                      widget.panelVersionNo,
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF979797),
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
-                  ),
-                  ValueListenableBuilder(
-                    valueListenable: ble.isConnectedNotifier,
-                    builder: (context, isConnected, child) {
-                      return RichText(
-                        text: TextSpan(
-                          children: [
-                            TextSpan(
-                              text: 'status : ',
-                              style: GoogleFonts.inter(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                                color: Color(0xFF979797),
+                    ValueListenableBuilder(
+                      valueListenable: ble.isConnectedNotifier,
+                      builder: (context, isConnected, child) {
+                        return RichText(
+                          text: TextSpan(
+                            children: [
+                              TextSpan(
+                                text: 'status : ',
+                                style: GoogleFonts.inter(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color: Color(0xFF979797),
+                                ),
                               ),
-                            ),
-                            TextSpan(
-                              text: isConnected ? 'Connected' : 'Disconnected',
-                              style: GoogleFonts.inter(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                                color:
-                                    isConnected
-                                        ? Color(0xFF00A706)
-                                        : Color(0xFFEC1D24),
+                              TextSpan(
+                                text:
+                                    isConnected ? 'Connected' : 'Disconnected',
+                                style: GoogleFonts.inter(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color:
+                                      isConnected
+                                          ? Color(0xFF00A706)
+                                          : Color(0xFFEC1D24),
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-                ],
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
               ),
               // Spacer(),
               // Transform.rotate(

@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:techno_switch_solar_app/models/panel_model.dart';
 import 'package:techno_switch_solar_app/screens/create_project/create_project_screen_refactored.dart';
+import 'package:techno_switch_solar_app/screens/project_dashboard.dart';
 import 'package:techno_switch_solar_app/screens/scanning_screen.dart';
 import 'package:techno_switch_solar_app/screens/site_screen.dart';
 import 'package:techno_switch_solar_app/services/app_services.dart';
@@ -145,11 +148,13 @@ class _HomeContentState extends State<_HomeContent> {
   final SiteService _siteService = SiteService();
   List<SiteWithLogCount> _sites = [];
   bool _isLoading = true;
+  List<PanelModel> _panels = [];
 
   @override
   void initState() {
     super.initState();
     _loadSites();
+    _loadPanels();
   }
 
   Future<void> _loadSites() async {
@@ -388,7 +393,7 @@ class _HomeContentState extends State<_HomeContent> {
               ),
               if (_sites.isNotEmpty)
                 Text(
-                  '${_sites.length} site${_sites.length == 1 ? '' : 's'}',
+                  'View All',
                   style: GoogleFonts.inter(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
@@ -402,6 +407,46 @@ class _HomeContentState extends State<_HomeContent> {
         ],
       ),
     );
+  }
+
+  Future<void> _loadPanels() async {
+    // try {
+    //   print(
+    //     'DEBUG: Loading panels for site ${widget.site.id} (${widget.site.siteName})',
+    //   );
+
+    //   // First, check if any panels exist at all
+    //   final allPanels = await _siteService.getAllPanels();
+    //   print('DEBUG: Total panels in database: ${allPanels.length}');
+    //   for (int i = 0; i < allPanels.length; i++) {
+    //     print(
+    //       'DEBUG: All Panel $i: ${allPanels[i].panelId} - ${allPanels[i].panelName} (siteId: ${allPanels[i].siteId})',
+    //     );
+    //   }
+
+    //   // Check unassigned panels
+    //   final unassignedPanels = await _siteService.getUnassignedPanels();
+    //   print('DEBUG: Unassigned panels: ${unassignedPanels.length}');
+
+    //   // Now check panels for this specific site
+    //   final panels = await _siteService.getSitePanels(widget.site.id!);
+    //   print('DEBUG: Loaded ${panels.length} panels for site ${widget.site.id}');
+    //   for (int i = 0; i < panels.length; i++) {
+    //     print(
+    //       'DEBUG: Site Panel $i: ${panels[i].panelId} - ${panels[i].panelName}',
+    //     );
+    //   }
+
+    //   setState(() {
+    //     _panels = panels;
+    //     _isLoading = false;
+    //   });
+    // } catch (error) {
+    //   setState(() {
+    //     _isLoading = false;
+    //   });
+    //   print('Error loading panels: $error');
+    // }
   }
 
   Widget _buildRecentSitesItem() {
@@ -483,6 +528,26 @@ class _HomeContentState extends State<_HomeContent> {
                     ),
               ),
             );
+
+            // Navigator.of(context).push(
+            //   MaterialPageRoute(
+            //     builder:
+            //         (context) => ProjectDashboardScreen(
+            //           selectedDevice: DiscoveredDevice(
+            //             name: panel.panelName,
+            //             id: panel.panelId,
+            //             rssi: 0,
+            //             serviceData: {},
+            //             manufacturerData: Uint8List(0),
+            //             serviceUuids: [],
+            //           ),
+            //           panelName: panel.panelName,
+            //           panelVersionNo: panel.deviceDisplayInfo,
+            //           siteId: widget.site.id!,
+            //           siteName: widget.site.siteName,
+            //         ),
+            //   ),
+            // );
           },
           child: Container(
             decoration: BoxDecoration(

@@ -706,11 +706,19 @@ class _ScannedScreenState extends State<ScannedScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          _getDeviceName(device),
+                          _getDeviceName(device).split('_').first,
                           style: GoogleFonts.inter(
                             fontSize: 14,
                             fontWeight: FontWeight.w700,
                             color: Color(0xFF3D3D3D),
+                          ),
+                        ),
+                        Text(
+                          _getDeviceName(device).split('_').last,
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF918F8F),
                           ),
                         ),
                         Text(
@@ -749,7 +757,7 @@ class _ScannedScreenState extends State<ScannedScreen> {
       return 'VID: ${device.vid?.toRadixString(16) ?? 'Unknown'} | PID: ${device.pid?.toRadixString(16) ?? 'Unknown'}';
     } else if (widget.scanType == ScanType.bluetooth &&
         device is DiscoveredDevice) {
-      return 'MAC: ${device.id} | RSSI: ${device.rssi} dBm';
+      return 'RSSI: ${device.rssi} dBm';
     }
     return 'No information available';
   }

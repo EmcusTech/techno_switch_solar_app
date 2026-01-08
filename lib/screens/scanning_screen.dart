@@ -3,6 +3,7 @@ import 'dart:async';
 import 'dart:math';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -453,28 +454,14 @@ class _ScanningScreenState extends State<ScanningScreen>
     return _computeStableKey(device);
   }
 
-  String _deviceLabel(dynamic device) {
-    try {
-      final dyn = device;
-      try {
-        final ad = (dyn as dynamic).advertisementData;
-        if (ad != null) {
-          final advName = (ad as dynamic).advName ?? (ad as dynamic).localName;
-          if (advName != null && advName.toString().isNotEmpty) {
-            return advName.toString();
-          }
-        }
-      } catch (_) {}
-      if (device is Map) {
-        return (device['name'] ?? device['id'] ?? 'unknown').toString();
-      }
-      final name = (dyn as dynamic).name;
-      final id = (dyn as dynamic).id;
-      return (name ?? id ?? 'unknown').toString();
-    } catch (_) {
-      return device.toString();
-    }
-  }
+  // String _deviceLabel(DiscoveredDevice device) {
+  //   try {
+  //     final name = device.name;
+  //     return name;
+  //   } catch (_) {
+  //     return device.toString();
+  //   }
+  // }
 
   // Builds a small details widget to show under the image
   Widget _deviceDetailsWidget(String label, String meta) {
@@ -919,8 +906,8 @@ class _ScanningScreenState extends State<ScanningScreen>
     return widgets;
   }
 
-  Widget _buildDeviceCard(dynamic device) {
-    final label = _deviceLabel(device);
+  Widget _buildDeviceCard(DiscoveredDevice device) {
+    final label = device.name;
 
     return GestureDetector(
       onTap: () {
@@ -971,17 +958,14 @@ class _ScanningScreenState extends State<ScanningScreen>
               ),
               SizedBox(height: 6),
               Expanded(
-                child: Align(
-                  alignment: Alignment.topLeft,
-                  child: Text(
-                    label,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.inter(
-                      fontSize: 8,
-                      fontWeight: FontWeight.bold,
-                    ),
+                child: Text(
+                  label.split('_').last,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
@@ -1011,123 +995,121 @@ class _ScanningScreenState extends State<ScanningScreen>
 
       final deviceKey = _slotToDevice[slot];
       if (deviceKey != null && _lastSeen.containsKey(deviceKey)) {
-        final device = _discoveredDevices.firstWhere(
+        final DiscoveredDevice device = _discoveredDevices.firstWhere(
           (d) => _deviceKeyByObject(d) == deviceKey,
           orElse: () => null,
         );
-        if (device != null) {
-          final label = _deviceLabel(device);
-          final justAssigned = _justAssigned.containsKey(deviceKey);
+        final label = device.name;
+        final justAssigned = _justAssigned.containsKey(deviceKey);
 
-          // Card position: center the card at dx,dy (clamped)
-          final left = (dx - cardWidth / 2).clamp(4.0, radarSize - cardWidth);
-          final top = (dy - cardHeight / 2).clamp(4.0, radarSize - cardHeight);
+        // Card position: center the card at dx,dy (clamped)
+        final left = (dx - cardWidth / 2).clamp(4.0, radarSize - cardWidth);
+        final top = (dy - cardHeight / 2).clamp(4.0, radarSize - cardHeight);
 
-          widgets.add(
-            Positioned(
-              key: ValueKey('card-$deviceKey'),
-              left: left,
-              top: top,
-              width: cardWidth,
-              height: cardHeight,
-              child: AnimatedOpacity(
-                duration: const Duration(milliseconds: 260),
-                opacity: 1.0,
-                child: AnimatedScale(
-                  scale: justAssigned ? 1.06 : 1.0,
-                  duration: const Duration(milliseconds: 420),
-                  curve: Curves.easeOutBack,
-                  child: GestureDetector(
-                    onTap: () {
-                      print("hey hey hey");
-                      // Stop scanning before connecting
-                      if (_isScanning) {
-                        _stopScanning();
-                      }
+        widgets.add(
+          Positioned(
+            key: ValueKey('card-$deviceKey'),
+            left: left,
+            top: top,
+            width: cardWidth,
+            height: cardHeight,
+            child: AnimatedOpacity(
+              duration: const Duration(milliseconds: 260),
+              opacity: 1.0,
+              child: AnimatedScale(
+                scale: justAssigned ? 1.06 : 1.0,
+                duration: const Duration(milliseconds: 420),
+                curve: Curves.easeOutBack,
+                child: GestureDetector(
+                  onTap: () {
+                    print("hey hey hey");
+                    // Stop scanning before connecting
+                    if (_isScanning) {
+                      _stopScanning();
+                    }
 
-                      // Navigate to device connecting screen
-                      if (mounted) {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder:
-                                (context) => DeviceConnectingScreen(
-                                  selectedDevice: device,
-                                  scanType: _selectedScanType!,
-                                  isLiveEvent: widget.isLiveEvent,
-                                ),
+                    // Navigate to device connecting screen
+                    if (mounted) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder:
+                              (context) => DeviceConnectingScreen(
+                                selectedDevice: device,
+                                scanType: _selectedScanType!,
+                                isLiveEvent: widget.isLiveEvent,
+                              ),
+                        ),
+                      );
+                    }
+                  },
+                  child: Material(
+                    color: Colors.white.withOpacity(0.95),
+                    elevation: 6,
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.12),
+                            blurRadius: 8,
+                            offset: const Offset(0, 4),
                           ),
-                        );
-                      }
-                    },
-                    child: Material(
-                      color: Colors.white.withOpacity(0.95),
-                      elevation: 6,
-                      borderRadius: BorderRadius.circular(12),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(12),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.12),
-                              blurRadius: 8,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          children: [
-                            // image area (top)
-                            Container(
-                              height: cardHeight * 0.6,
-                              width: double.infinity,
-                              decoration: BoxDecoration(
-                                color: Colors.grey.shade50,
-                                borderRadius: const BorderRadius.only(
-                                  topLeft: Radius.circular(12),
-                                  topRight: Radius.circular(12),
-                                ),
-                              ),
-                              child: Center(
-                                child: Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: SvgPicture.asset(
-                                    'assets/svgs/panel_icon.svg',
-                                    width: cardWidth * 0.5,
-                                    height: cardWidth * 0.5,
-                                  ),
-                                ),
+                        ],
+                      ),
+                      child: Column(
+                        children: [
+                          // image area (top)
+                          Container(
+                            height: cardHeight * 0.6,
+                            width: double.infinity,
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade50,
+                              borderRadius: const BorderRadius.only(
+                                topLeft: Radius.circular(12),
+                                topRight: Radius.circular(12),
                               ),
                             ),
-
-                            // details area (bottom)
-                            Expanded(
+                            child: Center(
                               child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 8,
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    _deviceDetailsWidget(
-                                      label,
-                                      _shortMeta(device),
-                                    ),
-                                  ],
+                                padding: const EdgeInsets.all(8.0),
+                                child: SvgPicture.asset(
+                                  'assets/svgs/panel_icon.svg',
+                                  width: cardWidth * 0.5,
+                                  height: cardWidth * 0.5,
                                 ),
                               ),
                             ),
-                          ],
-                        ),
+                          ),
+
+                          // details area (bottom)
+                          Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 8,
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  _deviceDetailsWidget(
+                                    label,
+                                    _shortMeta(device),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
                 ),
               ),
             ),
-          );
-        }
+          ),
+        );
       }
     }
     return widgets;

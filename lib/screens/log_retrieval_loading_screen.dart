@@ -10,6 +10,7 @@ import 'package:techno_switch_solar_app/models/log_model.dart';
 import 'dart:async';
 import 'package:techno_switch_solar_app/screens/access_code_screen.dart';
 import 'package:techno_switch_solar_app/screens/event_log_screen.dart';
+import 'package:techno_switch_solar_app/screens/log_retreival_completed_screen.dart';
 import 'package:techno_switch_solar_app/utils/bluetooth/ble_notify_data_handler.dart';
 import 'package:techno_switch_solar_app/utils/bluetooth/data_handler.dart';
 import 'package:techno_switch_solar_app/utils/bluetooth/data_helper.dart';
@@ -440,11 +441,10 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
         builder:
-            (context) => EventLogScreen(
-              logDataList: ble.bleProcess.validEventLogs.value,
+            (context) => LogRetrievalCompletedScreen(
+              logs: _retrievedLogs,
+              panelId: _capturedPanelId ?? '',
               panelName: _getDeviceName(),
-              panelVersionNo: 'N/A',
-              isStandalone: true,
             ),
       ),
     );
@@ -957,15 +957,25 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(
               builder:
-                  (context) => EventLogScreen(
-                    logDataList: _retrievedLogs,
-                    panelName: 'RHINO2008',
-                    panelVersionNo: '0.98',
-                    isStandalone: true,
-                    panelId: _capturedPanelId,
+                  (context) => LogRetrievalCompletedScreen(
+                    logs: _retrievedLogs,
+                    panelId: _capturedPanelId ?? '',
+                    panelName: _getDeviceName(),
                   ),
             ),
           );
+          // Navigator.of(context).pushReplacement(
+          //   MaterialPageRoute(
+          //     builder:
+          //         (context) => EventLogScreen(
+          //           logDataList: _retrievedLogs,
+          //           panelName: 'RHINO2008',
+          //           panelVersionNo: '0.98',
+          //           isStandalone: true,
+          //           panelId: _capturedPanelId,
+          //         ),
+          //   ),
+          // );
         }
       });
     }
