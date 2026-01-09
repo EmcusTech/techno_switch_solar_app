@@ -180,14 +180,15 @@ Future<bool?> showSiteCreationDialog(
   return showDialog<bool>(
     context: context,
     barrierDismissible: false,
-    builder: (BuildContext context) {
+    useRootNavigator: true,
+    builder: (dialogContext) {
       return SiteCreationDialog(
         logCount: logCount,
         onCreateSite: () {
-          Navigator.of(context).pop(true);
+          Navigator.of(dialogContext, rootNavigator: true).pop(true);
         },
         onSkip: () {
-          Navigator.of(context).pop(false);
+          Navigator.of(dialogContext, rootNavigator: true).pop(false);
         },
       );
     },

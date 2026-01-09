@@ -88,6 +88,7 @@ class _EventLogContentState extends State<_EventLogContent> {
   List<LogModel> _filteredLogs = [];
   bool _filtersApplied = false;
   int _textFieldResetKey = 0;
+  bool _isHandlingBack = false;
 
   final PanelService _panelService = PanelService();
   final SiteService _siteService = SiteService();
@@ -188,82 +189,90 @@ class _EventLogContentState extends State<_EventLogContent> {
   // }
 
   Future<void> _handleBackNavigation() async {
-    if (widget.isHistoryView) {
-      Navigator.of(context).pop();
-      return;
-    }
+    if (_isHandlingBack) return;
+    _isHandlingBack = true;
+    try {
+      if (widget.isHistoryView) {
+        Navigator.of(context).pop();
+        return;
+      }
 
-    final bleManager = ble;
-    final logs = bleManager.bleProcess.validEventLogs.value;
-    final panelIdToUse = bleManager.connectedDeviceId.value;
+      final bleManager = ble;
+      final logs = bleManager.bleProcess.validEventLogs.value;
+      final panelIdToUse = bleManager.connectedDeviceId.value;
 
-    // AppServices.serialService.disconnect();
+      // AppServices.serialService.disconnect();
 
-    // //Stop BLE cleanly
-    // if (bleManager.isConnected) {
-    //   await bleManager.shutdown(deviceId: panelIdToUse);
-    // }
+      // //Stop BLE cleanly
+      // if (bleManager.isConnected) {
+      //   await bleManager.shutdown(deviceId: panelIdToUse);
+      // }
 
-    //No logs? Just go back to scanning
-    if (logs.isEmpty) {
-      await NavigationService.navigateBackToScanning(context);
-      return;
-    }
+      //No logs? Just go back to scanning
+      if (logs.isEmpty) {
+        await NavigationService.navigateBackToScanning(context);
+        return;
+      }
 
-    if (widget.isStandalone && logs.isNotEmpty) {
-      final existingPanel = await _panelService.getPanelByPanelId(panelIdToUse);
-      if (existingPanel != null && existingPanel.siteId != null) {
-        final existingSite = await _siteService.getSiteById(
-          existingPanel.siteId!,
+      if (widget.isStandalone && logs.isNotEmpty) {
+        final existingPanel = await _panelService.getPanelByPanelId(
+          panelIdToUse,
         );
-        if (existingSite != null) {
-          await _siteService.storeLogs(logs, siteId: existingSite.id!);
-
-          final allSitesWithLogCount =
-              await _siteService.getSitesWithLogCount();
-          final updatedSiteWithLogCount = allSitesWithLogCount.firstWhere(
-            (siteWithLogCount) => siteWithLogCount.site.id == existingSite.id,
-            orElse:
-                () => SiteWithLogCount(
-                  site: existingSite,
-                  logCount: logs.length,
-                  lastLogRetrieved: DateTime.now(),
-                ),
+        if (existingPanel != null && existingPanel.siteId != null) {
+          final existingSite = await _siteService.getSiteById(
+            existingPanel.siteId!,
           );
+          if (existingSite != null) {
+            await _siteService.storeLogs(logs, siteId: existingSite.id!);
 
-          if (mounted) {
-            Navigator.of(context).pushAndRemoveUntil(
-              MaterialPageRoute(builder: (context) => HomeScreen()),
-              (route) => false,
+            final allSitesWithLogCount =
+                await _siteService.getSitesWithLogCount();
+            final updatedSiteWithLogCount = allSitesWithLogCount.firstWhere(
+              (siteWithLogCount) => siteWithLogCount.site.id == existingSite.id,
+              orElse:
+                  () => SiteWithLogCount(
+                    site: existingSite,
+                    logCount: logs.length,
+                    lastLogRetrieved: DateTime.now(),
+                  ),
             );
-          }
 
+            if (mounted) {
+              Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute(builder: (context) => HomeScreen()),
+                (route) => false,
+              );
+            }
+
+            return;
+          }
+        }
+
+        final shouldCreateSite = await showSiteCreationDialog(
+          context,
+          logCount: logs.length,
+        );
+
+        if (shouldCreateSite == true) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder:
+                  (context) => SimpleSiteCreationScreen(
+                    retrievedLogs: logs,
+                    panelName: widget.panelName,
+                    panelVersionNo: widget.panelVersionNo,
+                    panelId: panelIdToUse,
+                  ),
+            ),
+          );
           return;
         }
       }
 
-      final shouldCreateSite = await showSiteCreationDialog(
-        context,
-        logCount: logs.length,
-      );
-
-      if (shouldCreateSite == true) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder:
-                (context) => SimpleSiteCreationScreen(
-                  retrievedLogs: logs,
-                  panelName: widget.panelName,
-                  panelVersionNo: widget.panelVersionNo,
-                  panelId: panelIdToUse,
-                ),
-          ),
-        );
-        return;
-      }
+      await NavigationService.navigateBackToScanning(context);
+    } finally {
+      _isHandlingBack = false;
     }
-
-    await NavigationService.navigateBackToScanning(context);
   }
 
   Future<bool?> _showExistingSiteDialog(
@@ -590,10 +599,9 @@ class _EventLogContentState extends State<_EventLogContent> {
             );
 
     return PopScope(
-      onPopInvokedWithResult: (didPop, result) {
-        if (didPop) {
-          _handleBackNavigation();
-        }
+      canPop: false,
+      onPopInvoked: (didPop) async {
+        await _handleBackNavigation();
       },
       child: Container(
         decoration: const BoxDecoration(
