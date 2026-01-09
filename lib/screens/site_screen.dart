@@ -11,6 +11,7 @@ import 'package:techno_switch_solar_app/screens/site_detail_screen.dart';
 import 'package:techno_switch_solar_app/screens/project_dashboard.dart';
 import 'package:techno_switch_solar_app/services/site_service.dart';
 import 'package:techno_switch_solar_app/services/log_retrieval_service.dart';
+import 'package:techno_switch_solar_app/services/panel_service.dart';
 import 'package:intl/intl.dart';
 
 class SiteScreen extends StatefulWidget {
@@ -29,8 +30,10 @@ class SiteScreen extends StatefulWidget {
 class _SiteScreenState extends State<SiteScreen> {
   final SiteService _siteService = SiteService();
   final LogRetrievalService _logRetrievalService = LogRetrievalService();
+  final PanelService _panelService = PanelService();
   List<PanelModel> _panels = [];
   bool _isLoading = true;
+  bool _isDeletingSite = false;
   int? _lastRetrievalLogCount;
   DateTime? _lastRetrievalDate;
 
@@ -101,6 +104,149 @@ class _SiteScreenState extends State<SiteScreen> {
       _isLoading = true;
     });
     await _loadPanels();
+  }
+
+  Future<void> _confirmDeleteSite() async {
+    if (widget.site.id == null || _isDeletingSite) return;
+
+    final shouldDelete = await showDialog<bool>(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Delete site?'),
+            content: Text(
+              'This will remove "${widget.site.siteName}". Logs will be deleted and panels will be unassigned.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text(
+                  'Delete',
+                  style: TextStyle(color: Color(0xFFEC1D24)),
+                ),
+              ),
+            ],
+          ),
+    );
+
+    if (shouldDelete == true) {
+      await _deleteSite();
+    }
+  }
+
+  Future<void> _deleteSite() async {
+    setState(() {
+      _isDeletingSite = true;
+    });
+
+    try {
+      final deleted = await _siteService.deleteSite(widget.site.id!);
+      if (!mounted) return;
+
+      if (deleted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Site "${widget.site.siteName}" deleted'),
+            backgroundColor: const Color(0xFFEC1D24),
+          ),
+        );
+        Navigator.of(context).pop(true);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Unable to delete site'),
+            backgroundColor: Color(0xFFEC1D24),
+          ),
+        );
+      }
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error deleting site: $error'),
+          backgroundColor: const Color(0xFFEC1D24),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isDeletingSite = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _confirmDeletePanel(PanelModel panel) async {
+    final shouldDelete = await showDialog<bool>(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Delete panel?'),
+            content: Text(
+              'Remove panel "${panel.panelName}" (${panel.panelId}) from this site?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text(
+                  'Delete',
+                  style: TextStyle(color: Color(0xFFEC1D24)),
+                ),
+              ),
+            ],
+          ),
+    );
+
+    if (shouldDelete == true) {
+      await _deletePanel(panel);
+    }
+  }
+
+  Future<void> _deletePanel(PanelModel panel) async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final deleted = await _panelService.deletePanel(panel.panelId);
+      if (!mounted) return;
+
+      if (deleted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Panel "${panel.panelName}" deleted'),
+            backgroundColor: const Color(0xFFEC1D24),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Unable to delete panel'),
+            backgroundColor: Color(0xFFEC1D24),
+          ),
+        );
+      }
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error deleting panel: $error'),
+          backgroundColor: const Color(0xFFEC1D24),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        await _loadPanels();
+      }
+    }
   }
 
   Widget _buildLastLogSummary() {
@@ -286,34 +432,52 @@ class _SiteScreenState extends State<SiteScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                widget.site.siteName,
-                style: GoogleFonts.inter(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF3D3D3D),
+              Expanded(
+                child: Text(
+                  widget.site.siteName,
+                  style: GoogleFonts.inter(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF3D3D3D),
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
-              GestureDetector(
-                onTap: () {
-                  print('DEBUG: Navigating to site detail screen');
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder:
-                          (context) => SiteDetailScreen(
-                            siteWithLogCount: widget.siteWithLogCount,
-                          ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      print('DEBUG: Navigating to site detail screen');
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder:
+                              (context) => SiteDetailScreen(
+                                siteWithLogCount: widget.siteWithLogCount,
+                              ),
+                        ),
+                      );
+                    },
+                    child: Text(
+                      'Site Details',
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFFEC1D24),
+                      ),
                     ),
-                  );
-                },
-                child: Text(
-                  'Site Details',
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: Color(0xFFEC1D24),
                   ),
-                ),
+                  const SizedBox(width: 12),
+                  IconButton(
+                    icon: const Icon(
+                      Icons.delete_outline,
+                      color: Color(0xFFEC1D24),
+                    ),
+                    tooltip: 'Delete site',
+                    onPressed: _isDeletingSite ? null : _confirmDeleteSite,
+                  ),
+                ],
               ),
               // if (_panels.isNotEmpty)
               //   Text(
@@ -489,7 +653,14 @@ class _SiteScreenState extends State<SiteScreen> {
                     ),
                   ),
                   SizedBox(width: 8),
-                  SvgPicture.asset('assets/svgs/arrow_right_colored_icon.svg'),
+                  IconButton(
+                    icon: const Icon(
+                      Icons.delete_outline,
+                      color: Color(0xFFEC1D24),
+                    ),
+                    tooltip: 'Delete panel',
+                    onPressed: () => _confirmDeletePanel(panel),
+                  ),
                 ],
               ),
             ),

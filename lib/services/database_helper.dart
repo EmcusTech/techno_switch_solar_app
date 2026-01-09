@@ -26,6 +26,10 @@ class DatabaseHelper {
       version: 5, // Increment version to add retrieval_id column to logs table
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
+      // Ensure SQLite enforces foreign keys for cascading behavior
+      onConfigure: (db) async {
+        await db.execute('PRAGMA foreign_keys = ON');
+      },
     );
   }
 
@@ -227,7 +231,26 @@ class DatabaseHelper {
   /// Delete a site and all its associated logs
   Future<int> deleteSite(int id) async {
     final db = await database;
-    return await db.delete('sites', where: 'id = ?', whereArgs: [id]);
+
+    return await db.transaction((txn) async {
+      // Remove logs and retrieval sessions first to avoid orphans
+      await txn.delete('logs', where: 'site_id = ?', whereArgs: [id]);
+      await txn.delete('log_retrievals', where: 'site_id = ?', whereArgs: [id]);
+
+      // Unassign any panels that were linked to this site
+      await txn.update(
+        'panels',
+        {
+          'site_id': null,
+          'updated_at': DateTime.now().millisecondsSinceEpoch,
+        },
+        where: 'site_id = ?',
+        whereArgs: [id],
+      );
+
+      // Finally remove the site itself
+      return await txn.delete('sites', where: 'id = ?', whereArgs: [id]);
+    });
   }
 
   /// Search sites by name

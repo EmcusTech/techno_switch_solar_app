@@ -573,8 +573,8 @@ class _HomeContentState extends State<_HomeContent> {
         final site = siteWithLogCount.site;
 
         return GestureDetector(
-          onTap: () {
-            Navigator.of(context).push(
+          onTap: () async {
+            final deleted = await Navigator.of(context).push<bool>(
               MaterialPageRoute(
                 builder:
                     (context) => SiteScreen(
@@ -584,25 +584,9 @@ class _HomeContentState extends State<_HomeContent> {
               ),
             );
 
-            // Navigator.of(context).push(
-            //   MaterialPageRoute(
-            //     builder:
-            //         (context) => ProjectDashboardScreen(
-            //           selectedDevice: DiscoveredDevice(
-            //             name: panel.panelName,
-            //             id: panel.panelId,
-            //             rssi: 0,
-            //             serviceData: {},
-            //             manufacturerData: Uint8List(0),
-            //             serviceUuids: [],
-            //           ),
-            //           panelName: panel.panelName,
-            //           panelVersionNo: panel.deviceDisplayInfo,
-            //           siteId: widget.site.id!,
-            //           siteName: widget.site.siteName,
-            //         ),
-            //   ),
-            // );
+            if (deleted == true) {
+              await _refreshSites();
+            }
           },
           child: Container(
             decoration: BoxDecoration(
