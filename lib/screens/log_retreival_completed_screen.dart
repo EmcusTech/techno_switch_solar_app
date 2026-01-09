@@ -98,12 +98,13 @@ class _LogRetrievalCompletedScreenState
               child: Padding(
                 padding: const EdgeInsets.only(top: 45),
                 child: Text(
-                  'Retrieval Complete!',
+                  'Event Log Retrieval\nCompleted!',
                   style: GoogleFonts.inter(
                     fontSize: 24,
                     fontWeight: FontWeight.w600,
                     color: Color(0xFF00A706),
                   ),
+                  textAlign: TextAlign.center,
                 ),
               ),
             ),
@@ -113,8 +114,9 @@ class _LogRetrievalCompletedScreenState
                 SvgPicture.asset('assets/svgs/check_circle_icon.svg'),
                 SizedBox(height: 20),
                 Text(
-                  "Retrieved Successfully!",
+                  "Event Log Retrieved\nSuccessfully!",
                   style: GoogleFonts.inter(fontSize: 20),
+                  textAlign: TextAlign.center,
                 ),
               ],
             ),

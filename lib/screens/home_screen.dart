@@ -57,6 +57,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       extendBody: true,
       body: _screens[_selectedIndex],
       bottomNavigationBar: Container(
@@ -515,48 +516,12 @@ class _HomeContentState extends State<_HomeContent> {
     }
 
     if (_sites.isEmpty) {
-      return Container(
-        width: double.infinity,
-        padding: EdgeInsets.symmetric(vertical: 32, horizontal: 16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          border: Border.all(
-            color: Color(0xFFB9B9B9).withValues(alpha: 0.31),
-            width: 1,
-          ),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Column(
-          children: [
-            SvgPicture.asset(
-              'assets/svgs/new_project_icon.svg',
-              height: 48,
-              width: 48,
-              colorFilter: ColorFilter.mode(
-                Color(0xFFEC1D24).withValues(alpha: 0.5),
-                BlendMode.srcIn,
-              ),
-            ),
-            SizedBox(height: 16),
-            Text(
-              'No Sites Yet',
-              style: GoogleFonts.inter(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF3D3D3D),
-              ),
-            ),
-            SizedBox(height: 8),
-            Text(
-              'Create your first site to get started',
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                fontWeight: FontWeight.w400,
-                color: Color(0xFF666666),
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
+      return Text(
+        'No Sites Yet',
+        style: GoogleFonts.inter(
+          fontSize: 14,
+          fontWeight: FontWeight.w400,
+          color: Color(0xFF3D3D3D),
         ),
       );
     }
