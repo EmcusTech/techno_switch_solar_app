@@ -19,7 +19,7 @@
     <uses-feature android:name="android.hardware.bluetooth_le" android:required="false" />
     
     <application
-        android:label="techno_switch_solar_app"
+        android:label="@string/app_name"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

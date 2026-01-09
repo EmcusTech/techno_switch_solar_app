@@ -122,9 +122,9 @@ class _ScanningScreenState extends State<ScanningScreen>
       }
     });
 
-    // _autoStopTimer = Timer(const Duration(seconds: _scanDurationSeconds), () {
-    //   _stopScanning();
-    // });
+    _autoStopTimer = Timer(const Duration(seconds: _scanDurationSeconds), () {
+      _stopScanning();
+    });
   }
 
   // small wrapper to get stream subscription with proper casting
