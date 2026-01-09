@@ -23,7 +23,7 @@ class DatabaseHelper {
     String path = join(await getDatabasesPath(), 'techno_switch_solar.db');
     return await openDatabase(
       path,
-      version: 4, // Increment version to add is_valid column to logs table
+      version: 5, // Increment version to add retrieval_id column to logs table
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -47,11 +47,26 @@ class DatabaseHelper {
       )
     ''');
 
+    // Create log_retrievals table
+    await db.execute('''
+      CREATE TABLE log_retrievals (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        site_id INTEGER NOT NULL,
+        session_name TEXT NOT NULL,
+        log_count INTEGER NOT NULL,
+        retrieval_date INTEGER NOT NULL,
+        created_at INTEGER NOT NULL,
+        updated_at INTEGER NOT NULL,
+        FOREIGN KEY (site_id) REFERENCES sites (id) ON DELETE CASCADE
+      )
+    ''');
+
     // Create logs table
     await db.execute('''
       CREATE TABLE logs (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         site_id INTEGER,
+        retrieval_id INTEGER,
         panel_text TEXT,
         event_id TEXT,
         event_date_time INTEGER,
@@ -67,7 +82,8 @@ class DatabaseHelper {
         text TEXT,
         retrieved_at INTEGER NOT NULL,
         is_valid INTEGER,
-        FOREIGN KEY (site_id) REFERENCES sites (id) ON DELETE CASCADE
+        FOREIGN KEY (site_id) REFERENCES sites (id) ON DELETE CASCADE,
+        FOREIGN KEY (retrieval_id) REFERENCES log_retrievals (id) ON DELETE SET NULL
       )
     ''');
 
@@ -87,25 +103,12 @@ class DatabaseHelper {
       )
     ''');
 
-    // Create log_retrievals table
-    await db.execute('''
-      CREATE TABLE log_retrievals (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        site_id INTEGER NOT NULL,
-        session_name TEXT NOT NULL,
-        log_count INTEGER NOT NULL,
-        retrieval_date INTEGER NOT NULL,
-        created_at INTEGER NOT NULL,
-        updated_at INTEGER NOT NULL,
-        FOREIGN KEY (site_id) REFERENCES sites (id) ON DELETE CASCADE
-      )
-    ''');
-
     // Create indexes for better performance
     await db.execute('CREATE INDEX idx_logs_site_id ON logs (site_id)');
     await db.execute(
       'CREATE INDEX idx_logs_event_date ON logs (event_date_time)',
     );
+    await db.execute('CREATE INDEX idx_logs_retrieval_id ON logs (retrieval_id)');
     await db.execute('CREATE INDEX idx_sites_created_at ON sites (created_at)');
     await db.execute('CREATE INDEX idx_panels_panel_id ON panels (panel_id)');
     await db.execute('CREATE INDEX idx_panels_site_id ON panels (site_id)');
@@ -165,6 +168,12 @@ class DatabaseHelper {
     if (oldVersion < 4) {
       // Add is_valid column to logs table if upgrading from version 3
       await db.execute('ALTER TABLE logs ADD COLUMN is_valid INTEGER');
+    }
+
+    if (oldVersion < 5) {
+      // Add retrieval_id column to logs table to link logs to retrieval sessions
+      await db.execute('ALTER TABLE logs ADD COLUMN retrieval_id INTEGER');
+      await db.execute('CREATE INDEX idx_logs_retrieval_id ON logs (retrieval_id)');
     }
   }
 
@@ -278,6 +287,44 @@ class DatabaseHelper {
       'logs',
       where: 'site_id IS NULL',
       orderBy: 'retrieved_at DESC',
+    );
+
+    return List.generate(maps.length, (i) {
+      return LogModel.fromMap(maps[i]);
+    });
+  }
+
+  /// Get all logs belonging to a specific retrieval session
+  Future<List<LogModel>> getLogsByRetrievalId(int retrievalId) async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.query(
+      'logs',
+      where: 'retrieval_id = ?',
+      whereArgs: [retrievalId],
+      orderBy: 'event_date_time DESC, retrieved_at DESC',
+    );
+
+    return List.generate(maps.length, (i) {
+      return LogModel.fromMap(maps[i]);
+    });
+  }
+
+  /// Get logs for a site within a retrieved_at range (fallback for older data)
+  Future<List<LogModel>> getLogsBySiteIdAndRetrievedRange(
+    int siteId,
+    DateTime start,
+    DateTime end,
+  ) async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.query(
+      'logs',
+      where: 'site_id = ? AND retrieved_at >= ? AND retrieved_at < ?',
+      whereArgs: [
+        siteId,
+        start.millisecondsSinceEpoch,
+        end.millisecondsSinceEpoch,
+      ],
+      orderBy: 'event_date_time DESC, retrieved_at DESC',
     );
 
     return List.generate(maps.length, (i) {

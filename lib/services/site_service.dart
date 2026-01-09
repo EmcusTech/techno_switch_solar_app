@@ -1,6 +1,7 @@
 import '../models/site_model.dart';
 import '../models/log_model.dart';
 import '../models/panel_model.dart';
+import '../models/log_retrieval_model.dart';
 import 'database_helper.dart';
 import 'panel_service.dart';
 import 'log_retrieval_service.dart';
@@ -111,19 +112,10 @@ class SiteService {
 
   /// Store logs and optionally associate them with a site
   Future<void> storeLogs(List<LogModel> logs, {int? siteId}) async {
-    final logsWithSiteId =
-        logs
-            .map(
-              (log) => log.copyWith(
-                siteId: siteId,
-                retrievedAt: log.retrievedAt ?? DateTime.now(),
-              ),
-            )
-            .toList();
+    LogRetrievalModel? retrievalSession;
+    DateTime retrievalTimestamp = DateTime.now();
 
-    await _databaseHelper.insertLogs(logsWithSiteId);
-
-    // Create a log retrieval session if associated with a site
+    // Create a retrieval session first (so we can link logs to it)
     if (siteId != null && logs.isNotEmpty) {
       try {
         print(
@@ -132,14 +124,14 @@ class SiteService {
         final site = await getSiteById(siteId);
         if (site != null) {
           print('DEBUG: Site found: ${site.siteName}');
-          final logRetrieval = await _logRetrievalService
-              .createLogRetrievalSession(
-                siteId: siteId,
-                siteName: site.siteName,
-                logs: logs,
-              );
+          retrievalSession = await _logRetrievalService.createLogRetrievalSession(
+            siteId: siteId,
+            siteName: site.siteName,
+            logs: logs,
+          );
+          retrievalTimestamp = retrievalSession.retrievalDate;
           print(
-            'DEBUG: Log retrieval session created successfully: ${logRetrieval.sessionName}',
+            'DEBUG: Log retrieval session created successfully: ${retrievalSession.sessionName}',
           );
         } else {
           print('DEBUG: ERROR - Site not found for siteId: $siteId');
@@ -154,6 +146,19 @@ class SiteService {
         'DEBUG: Skipping log retrieval session creation - siteId: $siteId, logs.isEmpty: ${logs.isEmpty}',
       );
     }
+
+    final logsWithSiteId =
+        logs
+            .map(
+              (log) => log.copyWith(
+                siteId: siteId,
+                retrievalId: retrievalSession?.id,
+                retrievedAt: log.retrievedAt ?? retrievalTimestamp,
+              ),
+            )
+            .toList();
+
+    await _databaseHelper.insertLogs(logsWithSiteId);
   }
 
   /// Get orphaned logs (logs not associated with any site)

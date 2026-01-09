@@ -6,8 +6,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:techno_switch_solar_app/models/log_model.dart';
 import 'package:techno_switch_solar_app/screens/home_screen.dart';
-import 'package:techno_switch_solar_app/services/event_log_csv_exporter.dart';
-import 'package:techno_switch_solar_app/services/event_log_excel_exporter.dart';
 import 'package:techno_switch_solar_app/services/event_log_pdf_exporter.dart';
 import 'package:techno_switch_solar_app/services/navigation_service.dart';
 import 'package:techno_switch_solar_app/services/panel_service.dart';
@@ -24,6 +22,7 @@ class EventLogScreen extends StatefulWidget {
   final String panelName;
   final bool isStandalone; // True if accessed without site context
   final String? panelId; // Panel ID to preserve across disconnects
+  final bool isHistoryView; // True when viewing saved logs from history
   const EventLogScreen({
     super.key,
     required this.logDataList,
@@ -31,6 +30,7 @@ class EventLogScreen extends StatefulWidget {
     required this.panelName,
     this.isStandalone = false,
     this.panelId,
+    this.isHistoryView = false,
   });
 
   @override
@@ -48,6 +48,7 @@ class _EventLogScreenState extends State<EventLogScreen> {
         panelVersionNo: widget.panelVersionNo,
         isStandalone: widget.isStandalone,
         panelId: widget.panelId,
+        isHistoryView: widget.isHistoryView,
       ),
     );
   }
@@ -59,12 +60,14 @@ class _EventLogContent extends StatefulWidget {
   final String panelVersionNo;
   final bool isStandalone;
   final String? panelId;
+  final bool isHistoryView;
   const _EventLogContent({
     required this.logDataList,
     required this.panelName,
     required this.panelVersionNo,
     required this.isStandalone,
     this.panelId,
+    this.isHistoryView = false,
   });
 
   @override
@@ -74,6 +77,7 @@ class _EventLogContent extends StatefulWidget {
 class _EventLogContentState extends State<_EventLogContent> {
   bool _isListSelected = false;
   int _selectedViewIndex = 1;
+  bool _useProvidedLogs = false;
 
   // Filter state
   DateTime? _fromDate;
@@ -102,11 +106,42 @@ class _EventLogContentState extends State<_EventLogContent> {
     return sorted;
   }
 
+  List<LogModel> _getBaseLogs() {
+    final sourceLogs =
+        _useProvidedLogs
+            ? widget.logDataList
+            : ble.bleProcess.validEventLogs.value;
+    return _sortLogsByEventId(sourceLogs);
+  }
+
+  List<LogModel> _getDisplayLogs() {
+    final baseLogs = _getBaseLogs();
+    return _filtersApplied ? _filteredLogs : baseLogs;
+  }
+
   @override
   void initState() {
     super.initState();
-    // Initialize filtered logs with all logs
-    _filteredLogs = _sortLogsByEventId(widget.logDataList);
+    _useProvidedLogs = widget.logDataList.isNotEmpty;
+    // Initialize filtered logs with whichever source we have on load
+    final initialLogs =
+        widget.logDataList.isNotEmpty
+            ? widget.logDataList
+            : ble.bleProcess.validEventLogs.value;
+    _filteredLogs = _sortLogsByEventId(initialLogs);
+  }
+
+  @override
+  void didUpdateWidget(_EventLogContent oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!listEquals(widget.logDataList, oldWidget.logDataList)) {
+      _useProvidedLogs = widget.logDataList.isNotEmpty;
+      _filteredLogs = _sortLogsByEventId(
+        widget.logDataList.isNotEmpty
+            ? widget.logDataList
+            : ble.bleProcess.validEventLogs.value,
+      );
+    }
   }
 
   // Future<void> _handleBackNavigation() async {
@@ -153,6 +188,11 @@ class _EventLogContentState extends State<_EventLogContent> {
   // }
 
   Future<void> _handleBackNavigation() async {
+    if (widget.isHistoryView) {
+      Navigator.of(context).pop();
+      return;
+    }
+
     final bleManager = ble;
     final logs = bleManager.bleProcess.validEventLogs.value;
     final panelIdToUse = bleManager.connectedDeviceId.value;
@@ -407,7 +447,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                 title: 'Export as PDF',
                 onTap: () async {
                   Navigator.pop(context);
-                  final logs = ble.bleProcess.validEventLogs.value;
+                  final logs = _filtersApplied ? _filteredLogs : _getBaseLogs();
                   if (logs.isEmpty) return;
 
                   await EventLogPdfExporter.export(
@@ -426,7 +466,7 @@ class _EventLogContentState extends State<_EventLogContent> {
 
   void _applyFilters() {
     setState(() {
-      final allLogs = _sortLogsByEventId(ble.bleProcess.validEventLogs.value);
+      final allLogs = _getBaseLogs();
       _filteredLogs =
           allLogs.where((log) {
             // Date filter
@@ -504,7 +544,7 @@ class _EventLogContentState extends State<_EventLogContent> {
       _alarmCount = null;
       _filtersApplied = false;
       _textFieldResetKey++; // Force TextField to reset
-      _filteredLogs = _sortLogsByEventId(ble.bleProcess.validEventLogs.value);
+      _filteredLogs = _getBaseLogs();
     });
   }
 
@@ -536,6 +576,19 @@ class _EventLogContentState extends State<_EventLogContent> {
 
   @override
   Widget build(BuildContext context) {
+    final Widget logsSection =
+        _useProvidedLogs
+            ? _buildLogStatus(_getDisplayLogs())
+            : ValueListenableBuilder<List<LogModel>>(
+              valueListenable: ble.bleProcess.validEventLogs,
+              builder: (context, validLogs, child) {
+                final baseLogs = _sortLogsByEventId(validLogs);
+                final logsToDisplay =
+                    _filtersApplied ? _filteredLogs : baseLogs;
+                return _buildLogStatus(logsToDisplay);
+              },
+            );
+
     return PopScope(
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) {
@@ -641,7 +694,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(35),
                       ),
-                      child: _buildLogStatus(),
+                      child: logsSection,
                     ),
                   ),
                 ],
@@ -1180,7 +1233,7 @@ class _EventLogContentState extends State<_EventLogContent> {
     );
   }
 
-  Widget _buildLogStatus() {
+  Widget _buildLogStatus(List<LogModel> logsToDisplay) {
     return Padding(
       padding: const EdgeInsets.only(left: 20, right: 20, top: 20),
       child: Column(
@@ -1338,22 +1391,12 @@ class _EventLogContentState extends State<_EventLogContent> {
           ),
           SizedBox(height: 15),
           Expanded(
-            child: ValueListenableBuilder<List<LogModel>>(
-              valueListenable: ble.bleProcess.validEventLogs,
-              builder: (context, validLogs, child) {
-                final baseLogs = _sortLogsByEventId(validLogs);
-                // Use filtered logs if filters are applied, otherwise use all logs
-                final logsToDisplay =
-                    _filtersApplied ? _filteredLogs : baseLogs;
-
-                return IndexedStack(
-                  index: _selectedViewIndex,
-                  children: [
-                    _LogListView(displayLogs: logsToDisplay),
-                    _LogTableView(displayLogs: logsToDisplay),
-                  ],
-                );
-              },
+            child: IndexedStack(
+              index: _selectedViewIndex,
+              children: [
+                _LogListView(displayLogs: logsToDisplay),
+                _LogTableView(displayLogs: logsToDisplay),
+              ],
             ),
           ),
           SizedBox(height: 8),

@@ -1,6 +1,7 @@
 class LogModel {
   final int? id; // Database ID for stored logs
   final int? siteId; // Foreign key to associate log with a site
+  final int? retrievalId; // Foreign key to associate log with a retrieval session
   final String? panelText;
   final String? eventId;
   final DateTime? eventDateTime;
@@ -20,6 +21,7 @@ class LogModel {
   LogModel({
     this.id,
     this.siteId,
+    this.retrievalId,
     this.panelText,
     this.eventId,
     this.eventDateTime,
@@ -42,6 +44,7 @@ class LogModel {
     return {
       'id': id,
       'site_id': siteId,
+      'retrieval_id': retrievalId,
       'panel_text': panelText,
       'event_id': eventId,
       'event_date_time': eventDateTime?.millisecondsSinceEpoch,
@@ -67,6 +70,7 @@ class LogModel {
     return LogModel(
       id: map['id']?.toInt(),
       siteId: map['site_id']?.toInt(),
+      retrievalId: map['retrieval_id']?.toInt(),
       panelText: map['panel_text'],
       eventId: map['event_id'],
       eventDateTime:
@@ -95,6 +99,7 @@ class LogModel {
   LogModel copyWith({
     int? id,
     int? siteId,
+    int? retrievalId,
     String? panelText,
     String? eventId,
     DateTime? eventDateTime,
@@ -114,6 +119,7 @@ class LogModel {
     return LogModel(
       id: id ?? this.id,
       siteId: siteId ?? this.siteId,
+      retrievalId: retrievalId ?? this.retrievalId,
       panelText: panelText ?? this.panelText,
       eventId: eventId ?? this.eventId,
       eventDateTime: eventDateTime ?? this.eventDateTime,
@@ -134,6 +140,6 @@ class LogModel {
 
   @override
   String toString() {
-    return 'LogModel{id: $id, siteId: $siteId, panelText: $panelText, eventId: $eventId, eventDateTime: $eventDateTime, panelNo: $panelNo, lBusNo: $lBusNo, moduleNo: $moduleNo, eventStatus: $eventStatus, eventClass: $eventClass, eventSource: $eventSource, eventType: $eventType, eventSubType: $eventSubType, identifier: $identifier, text: $text, retrievedAt: $retrievedAt, isValid: $isValid}';
+    return 'LogModel{id: $id, siteId: $siteId, retrievalId: $retrievalId, panelText: $panelText, eventId: $eventId, eventDateTime: $eventDateTime, panelNo: $panelNo, lBusNo: $lBusNo, moduleNo: $moduleNo, eventStatus: $eventStatus, eventClass: $eventClass, eventSource: $eventSource, eventType: $eventType, eventSubType: $eventSubType, identifier: $identifier, text: $text, retrievedAt: $retrievedAt, isValid: $isValid}';
   }
 }

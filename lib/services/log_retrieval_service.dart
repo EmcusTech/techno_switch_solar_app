@@ -112,4 +112,29 @@ class LogRetrievalService {
       'lastRetrieval': sortedRetrievals.last.retrievalDate,
     };
   }
+
+  /// Get the logs that belong to a specific retrieval session.
+  /// Tries direct retrieval_id linkage first, then falls back to the retrieval date range
+  /// for backwards compatibility with logs stored before the retrieval_id column existed.
+  Future<List<LogModel>> getLogsForRetrieval(LogRetrievalModel retrieval) async {
+    if (retrieval.id == null) return [];
+
+    // Primary lookup: by retrieval_id
+    final linkedLogs = await _databaseHelper.getLogsByRetrievalId(retrieval.id!);
+    if (linkedLogs.isNotEmpty) return linkedLogs;
+
+    // Fallback lookup: match by site and retrieved_at on the same day
+    final startOfDay = DateTime(
+      retrieval.retrievalDate.year,
+      retrieval.retrievalDate.month,
+      retrieval.retrievalDate.day,
+    );
+    final endOfDay = startOfDay.add(const Duration(days: 1));
+
+    return await _databaseHelper.getLogsBySiteIdAndRetrievedRange(
+      retrieval.siteId,
+      startOfDay,
+      endOfDay,
+    );
+  }
 }

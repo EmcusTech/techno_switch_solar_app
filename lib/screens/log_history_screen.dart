@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:techno_switch_solar_app/models/log_model.dart';
 import 'package:techno_switch_solar_app/models/log_retrieval_model.dart';
 import 'package:techno_switch_solar_app/screens/device_connecting_screen.dart';
 import 'package:techno_switch_solar_app/screens/event_log_screen.dart';
@@ -122,19 +123,7 @@ class LogHistoryScreenState extends State<LogHistoryScreen> {
         "${dateRetrieved.day.toString().padLeft(2, '0')}/${dateRetrieved.month.toString().padLeft(2, '0')}/${dateRetrieved.year} - ${dateRetrieved.hour.toString().padLeft(2, '0')}:${dateRetrieved.minute.toString().padLeft(2, '0')} ${dateRetrieved.hour >= 12 ? 'PM' : 'AM'}";
 
     return GestureDetector(
-      onTap: () {
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder:
-                (context) => EventLogScreen(
-                  logDataList: [],
-                  panelName: widget.panelName,
-                  panelVersionNo: widget.panelVersionNo,
-                  isStandalone: true,
-                ),
-          ),
-        );
-      },
+      onTap: () => _openLogSession(logRetrieval),
       child: Container(
         padding: EdgeInsets.all(16),
         decoration: BoxDecoration(
@@ -202,6 +191,55 @@ class LogHistoryScreenState extends State<LogHistoryScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _openLogSession(LogRetrievalModel logRetrieval) async {
+    if (logRetrieval.id == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Unable to open this log session (missing id).'),
+        ),
+      );
+      return;
+    }
+
+    // Show a lightweight loading dialog while we fetch logs from storage
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder:
+          (_) => const Center(
+            child: CircularProgressIndicator(color: Color(0xFFEC1D24)),
+          ),
+    );
+
+    try {
+      final List<LogModel> logs = await _logRetrievalService
+          .getLogsForRetrieval(logRetrieval);
+
+      if (mounted) {
+        Navigator.of(context, rootNavigator: true).pop(); // close loader
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder:
+                (context) => EventLogScreen(
+                  logDataList: logs,
+                  panelName: widget.panelName,
+                  panelVersionNo: widget.panelVersionNo,
+                  isStandalone: false,
+                  isHistoryView: true,
+                ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.of(context, rootNavigator: true).pop();
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to load logs: $e')));
+      }
+    }
   }
 
   @override
