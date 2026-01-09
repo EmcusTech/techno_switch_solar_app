@@ -1,15 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:techno_switch_solar_app/models/panel_model.dart';
-import 'package:techno_switch_solar_app/screens/create_project/create_project_screen_refactored.dart';
-import 'package:techno_switch_solar_app/screens/project_dashboard.dart';
 import 'package:techno_switch_solar_app/screens/scanning_screen.dart';
 import 'package:techno_switch_solar_app/screens/site_screen.dart';
 import 'package:techno_switch_solar_app/services/app_services.dart';
 import 'package:techno_switch_solar_app/services/app_state.dart';
 import 'package:techno_switch_solar_app/services/site_service.dart';
+import 'package:techno_switch_solar_app/services/log_retrieval_service.dart';
 import 'package:intl/intl.dart';
 import 'settings_screen.dart';
 import 'help_screen.dart';
@@ -146,20 +143,22 @@ class _HomeContent extends StatefulWidget {
 
 class _HomeContentState extends State<_HomeContent> {
   final SiteService _siteService = SiteService();
+  final LogRetrievalService _logRetrievalService = LogRetrievalService();
   List<SiteWithLogCount> _sites = [];
   bool _isLoading = true;
-  List<PanelModel> _panels = [];
+  Map<int, int> _lastRetrievalCounts = {};
+  Map<int, DateTime?> _lastRetrievalDates = {};
 
   @override
   void initState() {
     super.initState();
     _loadSites();
-    _loadPanels();
   }
 
   Future<void> _loadSites() async {
     try {
       final sites = await _siteService.getSitesWithLogCount();
+      await _loadLatestRetrievals(sites);
       setState(() {
         _sites = sites;
         _isLoading = false;
@@ -430,44 +429,76 @@ class _HomeContentState extends State<_HomeContent> {
     );
   }
 
-  Future<void> _loadPanels() async {
-    // try {
-    //   print(
-    //     'DEBUG: Loading panels for site ${widget.site.id} (${widget.site.siteName})',
-    //   );
+  Future<void> _loadLatestRetrievals(List<SiteWithLogCount> sites) async {
+    final counts = <int, int>{};
+    final dates = <int, DateTime?>{};
 
-    //   // First, check if any panels exist at all
-    //   final allPanels = await _siteService.getAllPanels();
-    //   print('DEBUG: Total panels in database: ${allPanels.length}');
-    //   for (int i = 0; i < allPanels.length; i++) {
-    //     print(
-    //       'DEBUG: All Panel $i: ${allPanels[i].panelId} - ${allPanels[i].panelName} (siteId: ${allPanels[i].siteId})',
-    //     );
-    //   }
+    for (final siteWithCount in sites) {
+      final siteId = siteWithCount.site.id;
+      if (siteId == null) continue;
 
-    //   // Check unassigned panels
-    //   final unassignedPanels = await _siteService.getUnassignedPanels();
-    //   print('DEBUG: Unassigned panels: ${unassignedPanels.length}');
+      try {
+        final latest = await _logRetrievalService.getMostRecentLogRetrieval(
+          siteId,
+        );
+        if (latest != null) {
+          counts[siteId] = latest.logCount;
+          dates[siteId] = latest.retrievalDate;
+        } else {
+          dates[siteId] = siteWithCount.lastLogRetrieved;
+        }
+      } catch (_) {
+        dates[siteId] = siteWithCount.lastLogRetrieved;
+      }
+    }
 
-    //   // Now check panels for this specific site
-    //   final panels = await _siteService.getSitePanels(widget.site.id!);
-    //   print('DEBUG: Loaded ${panels.length} panels for site ${widget.site.id}');
-    //   for (int i = 0; i < panels.length; i++) {
-    //     print(
-    //       'DEBUG: Site Panel $i: ${panels[i].panelId} - ${panels[i].panelName}',
-    //     );
-    //   }
+    _lastRetrievalCounts = counts;
+    _lastRetrievalDates = dates;
+  }
 
-    //   setState(() {
-    //     _panels = panels;
-    //     _isLoading = false;
-    //   });
-    // } catch (error) {
-    //   setState(() {
-    //     _isLoading = false;
-    //   });
-    //   print('Error loading panels: $error');
-    // }
+  Widget _buildLastLogSummary(SiteWithLogCount siteWithLogCount) {
+    final siteId = siteWithLogCount.site.id;
+    final int lastLogCount =
+        siteId != null
+            ? (_lastRetrievalCounts[siteId] ?? siteWithLogCount.logCount)
+            : siteWithLogCount.logCount;
+    final DateTime? lastLogDate =
+        siteId != null
+            ? (_lastRetrievalDates[siteId] ?? siteWithLogCount.lastLogRetrieved)
+            : siteWithLogCount.lastLogRetrieved;
+
+    if (lastLogCount <= 0) {
+      return const SizedBox(height: 4);
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 4),
+      child: Row(
+        children: [
+          const Icon(Icons.timeline, size: 12, color: Color(0xFF00A706)),
+          const SizedBox(width: 4),
+          Text(
+            '$lastLogCount log${lastLogCount == 1 ? '' : 's'}',
+            style: GoogleFonts.inter(
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+              color: const Color(0xFF00A706),
+            ),
+          ),
+          if (lastLogDate != null) ...[
+            const SizedBox(width: 8),
+            Text(
+              'Last: ${DateFormat('MMM d').format(lastLogDate)}',
+              style: GoogleFonts.inter(
+                fontSize: 11,
+                fontWeight: FontWeight.w400,
+                color: const Color(0xFF918F8F),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
   }
 
   Widget _buildRecentSitesItem() {
@@ -612,49 +643,7 @@ class _HomeContentState extends State<_HomeContent> {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        if (siteWithLogCount.logCount > 0) ...[
-                          SizedBox(height: 4),
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.timeline,
-                                size: 12,
-                                color: Color(0xFF00A706),
-                              ),
-                              SizedBox(width: 4),
-                              Text(
-                                '${siteWithLogCount.logCount} log${siteWithLogCount.logCount == 1 ? '' : 's'}',
-                                style: GoogleFonts.inter(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w500,
-                                  color: Color(0xFF00A706),
-                                ),
-                              ),
-                              if (siteWithLogCount.lastLogRetrieved !=
-                                  null) ...[
-                                SizedBox(width: 8),
-                                Text(
-                                  'Last: ${DateFormat('MMM d').format(siteWithLogCount.lastLogRetrieved!)}',
-                                  style: GoogleFonts.inter(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w400,
-                                    color: Color(0xFF918F8F),
-                                  ),
-                                ),
-                              ],
-                            ],
-                          ),
-                        ] else ...[
-                          SizedBox(height: 4),
-                          Text(
-                            'No logs yet',
-                            style: GoogleFonts.inter(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w400,
-                              color: Color(0xFF918F8F),
-                            ),
-                          ),
-                        ],
+                        _buildLastLogSummary(siteWithLogCount),
                       ],
                     ),
                   ),
