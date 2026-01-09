@@ -870,8 +870,17 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                                     Expanded(
                                       child: GestureDetector(
                                         onTap: () {
-                                          Navigator.of(context).pop();
-                                          Navigator.of(context).pop();
+                                          final navigator = Navigator.of(
+                                            context,
+                                          );
+                                          navigator.pop(); // close dialog
+                                          navigator.pushAndRemoveUntil(
+                                            MaterialPageRoute(
+                                              builder:
+                                                  (_) => const ScanningScreen(),
+                                            ),
+                                            (route) => route.isFirst,
+                                          );
                                         },
                                         child: Container(
                                           height: 48,
