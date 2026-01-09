@@ -401,16 +401,18 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                                     );
                                     navigator?.maybePop();
 
-                                    WidgetsBinding.instance
-                                        .addPostFrameCallback((_) {
-                                          if (!mounted) return;
-                                          Navigator.of(dialogContext).push(
-                                            MaterialPageRoute(
-                                              builder: (_) =>
+                                    WidgetsBinding.instance.addPostFrameCallback((
+                                      _,
+                                    ) {
+                                      if (!mounted) return;
+                                      Navigator.of(dialogContext).push(
+                                        MaterialPageRoute(
+                                          builder:
+                                              (_) =>
                                                   const LogRetrievalFailedScreen(),
-                                            ),
-                                          );
-                                        });
+                                        ),
+                                      );
+                                    });
                                   }
                                 },
                               );
@@ -607,7 +609,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      widget.panelName,
+                      widget.panelName.split('_').first,
                       style: GoogleFonts.inter(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
@@ -615,7 +617,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                       overflow: TextOverflow.ellipsis,
                     ),
                     Text(
-                      widget.panelVersionNo,
+                      widget.panelName.split('_').last,
                       style: GoogleFonts.inter(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,

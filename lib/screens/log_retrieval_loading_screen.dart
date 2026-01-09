@@ -10,6 +10,7 @@ import 'package:techno_switch_solar_app/models/log_model.dart';
 import 'dart:async';
 import 'package:techno_switch_solar_app/screens/access_code_screen.dart';
 import 'package:techno_switch_solar_app/screens/log_retreival_completed_screen.dart';
+import 'package:techno_switch_solar_app/screens/log_retreival_failed_screen.dart';
 import 'package:techno_switch_solar_app/utils/bluetooth/ble_notify_data_handler.dart';
 import 'package:techno_switch_solar_app/utils/bluetooth/data_handler.dart';
 import 'package:techno_switch_solar_app/utils/bluetooth/data_helper.dart';
@@ -67,6 +68,7 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
   // ignore: unused_field
   bool _firstLogReceived = false;
   bool _hasNavigatedToEventLog = false;
+  bool _navigatedToFailure = false;
   bool _allowExit = false;
 
   // Log retrieval state
@@ -458,6 +460,18 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
     );
   }
 
+  void _navigateToFailureScreen() {
+    if (!mounted || _navigatedToFailure) return;
+    _navigatedToFailure = true;
+    final navigator = Navigator.of(context, rootNavigator: true);
+    if (navigator.canPop()) {
+      navigator.popUntil((route) => route is PageRoute);
+    }
+    navigator.pushReplacement(
+      MaterialPageRoute(builder: (_) => const LogRetrievalFailedScreen()),
+    );
+  }
+
   //send stop control command
   Future<void> _sendStopControlCommand() async {
     ble.bleProcess.isOtaCompleted = true;
@@ -723,6 +737,7 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
       _connectionStatus = "Connection Failed";
     });
     _controller.stop();
+    _navigateToFailureScreen();
   }
 
   String _getDeviceName() {

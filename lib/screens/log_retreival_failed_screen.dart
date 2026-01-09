@@ -16,9 +16,7 @@ class _LogRetrievalFailedScreenState extends State<LogRetrievalFailedScreen> {
   void initState() {
     Future.delayed(const Duration(seconds: 4), () {
       if (mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => HomeScreen()),
-        );
+        Navigator.pop(context);
       }
     });
     super.initState();
