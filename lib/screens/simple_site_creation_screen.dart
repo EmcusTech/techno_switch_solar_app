@@ -49,14 +49,14 @@ class _SimpleSiteCreationScreenState extends State<SimpleSiteCreationScreen> {
     print(
       "DEBUG: SimpleSiteCreationScreen initialized with panel ID: ${widget.panelId}",
     );
-    _siteNameController = TextEditingController(text: 'test new');
-    _installerNameController = TextEditingController(text: 'test');
-    _companyNameController = TextEditingController(text: 'test');
-    _saqccRegNumberController = TextEditingController(text: '1234567890');
-    _buildingNameController = TextEditingController(text: 'test');
-    _installerContactNumberController = TextEditingController(text: 'test');
-    _installerEmailController = TextEditingController(text: 'test@test.com');
-    _siteDescriptionController = TextEditingController(text: 'test');
+    _siteNameController = TextEditingController();
+    _installerNameController = TextEditingController();
+    _companyNameController = TextEditingController();
+    _saqccRegNumberController = TextEditingController();
+    _buildingNameController = TextEditingController();
+    _installerContactNumberController = TextEditingController();
+    _installerEmailController = TextEditingController();
+    _siteDescriptionController = TextEditingController();
   }
 
   @override
