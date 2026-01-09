@@ -9,7 +9,6 @@ import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/models/log_model.dart';
 import 'dart:async';
 import 'package:techno_switch_solar_app/screens/access_code_screen.dart';
-import 'package:techno_switch_solar_app/screens/event_log_screen.dart';
 import 'package:techno_switch_solar_app/screens/log_retreival_completed_screen.dart';
 import 'package:techno_switch_solar_app/utils/bluetooth/ble_notify_data_handler.dart';
 import 'package:techno_switch_solar_app/utils/bluetooth/data_handler.dart';
@@ -18,7 +17,6 @@ import 'package:techno_switch_solar_app/utils/bluetooth/data_transfer_manager.da
 import 'package:techno_switch_solar_app/utils/bluetooth_constants.dart';
 import 'package:techno_switch_solar_app/utils/event_constants.dart';
 import 'package:techno_switch_solar_app/services/app_services.dart';
-import 'package:techno_switch_solar_app/services/navigation_service.dart';
 import 'package:techno_switch_solar_app/screens/scanning_screen.dart';
 import 'package:techno_switch_solar_app/utils/serial_communication_service.dart';
 import 'package:techno_switch_solar_app/utils/timestamp_converter.dart';
@@ -53,6 +51,7 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
   double _progress = 0.0;
   Timer? _timer;
   String _connectionStatus = "Initializing...";
+  // ignore: unused_field
   bool _connectionFailed = false;
   String? _errorMessage;
   StreamSubscription<BleHandshakeEvent>? _handshakeSubscription;
@@ -65,6 +64,7 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
   QualifiedCharacteristic? writeCharacteristic;
   bool _maxBleConnectionRetriesReached = false;
   bool _maxOtherPacketsRetriesReached = false;
+  // ignore: unused_field
   bool _firstLogReceived = false;
   bool _hasNavigatedToEventLog = false;
   bool _allowExit = false;
@@ -438,7 +438,15 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
 
   // Add method to navigate to EventLogScreen
   void _navigateToEventLogScreen() {
-    Navigator.of(context).pushReplacement(
+    if (!mounted) return;
+    final navigator = Navigator.of(context, rootNavigator: true);
+
+    // Ensure any open popups (e.g., Cancel dialog) are closed before navigating
+    if (navigator.canPop()) {
+      navigator.popUntil((route) => route is PageRoute);
+    }
+
+    navigator.pushReplacement(
       MaterialPageRoute(
         builder:
             (context) => LogRetrievalCompletedScreen(
@@ -954,16 +962,7 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
       // Small delay before navigation to show completion
       Future.delayed(Duration(milliseconds: 500), () {
         if (mounted) {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(
-              builder:
-                  (context) => LogRetrievalCompletedScreen(
-                    logs: _retrievedLogs,
-                    panelId: _capturedPanelId ?? '',
-                    panelName: _getDeviceName(),
-                  ),
-            ),
-          );
+          _navigateToEventLogScreen();
           // Navigator.of(context).pushReplacement(
           //   MaterialPageRoute(
           //     builder:
