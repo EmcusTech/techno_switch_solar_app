@@ -8,6 +8,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/screens/log_retrieval_loading_screen.dart';
+import 'package:techno_switch_solar_app/screens/log_retreival_failed_screen.dart';
 import 'package:techno_switch_solar_app/screens/project_dashboard.dart';
 import 'package:techno_switch_solar_app/screens/scanning_screen.dart';
 import 'package:techno_switch_solar_app/services/navigation_service.dart';
@@ -381,88 +382,6 @@ class _ScannedScreenState extends State<ScannedScreen> {
       accessKeyValidationTimer = null;
     }
 
-    void showAccessKeyTimeoutDialog(BuildContext ctx) {
-      showDialog(
-        context: ctx,
-        builder:
-            (timeoutCtx) => Dialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Container(
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 64,
-                      height: 64,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFFFBDEE1),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Center(
-                        child: Icon(
-                          Icons.hourglass_bottom,
-                          color: Color(0xFFEC1D24),
-                          size: 32,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      "Access key validation timed out",
-                      style: GoogleFonts.inter(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF3D3D3D),
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      "Please connect again.",
-                      style: GoogleFonts.inter(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w400,
-                        color: const Color(0xFF666666),
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 20),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFEC1D24),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(24),
-                          ),
-                        ),
-                        onPressed: () {
-                          Navigator.of(timeoutCtx, rootNavigator: true).pop();
-                        },
-                        child: Text(
-                          'OK',
-                          style: GoogleFonts.inter(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-      );
-    }
-
     final TextEditingController _controller = TextEditingController();
     final FocusNode _focusNode = FocusNode();
     final ValueNotifier<String?> errorText = ValueNotifier(null);
@@ -602,13 +521,18 @@ class _ScannedScreenState extends State<ScannedScreen> {
                                     );
                                     navigator?.maybePop();
 
-                                    WidgetsBinding.instance
-                                        .addPostFrameCallback((_) {
-                                          if (!mounted) return;
-                                          showAccessKeyTimeoutDialog(
-                                            dialogContext,
-                                          );
-                                        });
+                                    WidgetsBinding.instance.addPostFrameCallback((
+                                      _,
+                                    ) {
+                                      if (!mounted) return;
+                                      Navigator.of(dialogContext).push(
+                                        MaterialPageRoute(
+                                          builder:
+                                              (_) =>
+                                                  const LogRetrievalFailedScreen(),
+                                        ),
+                                      );
+                                    });
                                   }
                                 },
                               );
