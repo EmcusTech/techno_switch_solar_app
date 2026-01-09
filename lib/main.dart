@@ -3,10 +3,9 @@ import 'package:flutter_logs/flutter_logs.dart';
 import 'package:get/get.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
-import 'package:techno_switch_solar_app/screens/home_screen.dart';
+import 'package:techno_switch_solar_app/screens/splash_screen.dart';
 import 'package:techno_switch_solar_app/services/app_services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:flutter/services.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -102,7 +101,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
           useMaterial3: true,
         ),
-        home: const HomeScreen(),
+        home: const SplashScreen(),
       ),
     );
   }
