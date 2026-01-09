@@ -10,6 +10,7 @@ import 'package:techno_switch_solar_app/screens/scanning_screen.dart';
 import 'package:techno_switch_solar_app/screens/site_detail_screen.dart';
 import 'package:techno_switch_solar_app/screens/project_dashboard.dart';
 import 'package:techno_switch_solar_app/services/site_service.dart';
+import 'package:techno_switch_solar_app/services/log_retrieval_service.dart';
 import 'package:intl/intl.dart';
 
 class SiteScreen extends StatefulWidget {
@@ -27,13 +28,17 @@ class SiteScreen extends StatefulWidget {
 
 class _SiteScreenState extends State<SiteScreen> {
   final SiteService _siteService = SiteService();
+  final LogRetrievalService _logRetrievalService = LogRetrievalService();
   List<PanelModel> _panels = [];
   bool _isLoading = true;
+  int? _lastRetrievalLogCount;
+  DateTime? _lastRetrievalDate;
 
   @override
   void initState() {
     super.initState();
     _loadPanels();
+    _loadLatestRetrievalInfo();
   }
 
   Future<void> _loadPanels() async {
@@ -76,11 +81,72 @@ class _SiteScreenState extends State<SiteScreen> {
     }
   }
 
+  Future<void> _loadLatestRetrievalInfo() async {
+    try {
+      final latest = await _logRetrievalService.getMostRecentLogRetrieval(
+        widget.site.id!,
+      );
+      if (!mounted) return;
+      setState(() {
+        _lastRetrievalLogCount = latest?.logCount;
+        _lastRetrievalDate = latest?.retrievalDate;
+      });
+    } catch (error) {
+      print('Error loading latest retrieval info: $error');
+    }
+  }
+
   Future<void> _refreshSites() async {
     setState(() {
       _isLoading = true;
     });
     await _loadPanels();
+  }
+
+  Widget _buildLastLogSummary() {
+    final int? lastLogCount = _lastRetrievalLogCount;
+    final DateTime? lastLogDate =
+        _lastRetrievalDate ?? widget.siteWithLogCount.lastLogRetrieved;
+
+    if ((lastLogCount ?? 0) <= 0) {
+      return Padding(
+        padding: const EdgeInsets.only(top: 4),
+        child: Text(
+          'No logs yet',
+          style: GoogleFonts.inter(
+            fontSize: 11,
+            fontWeight: FontWeight.w400,
+            color: Color(0xFF918F8F),
+          ),
+        ),
+      );
+    }
+
+    return Row(
+      children: [
+        Icon(Icons.timeline, size: 12, color: const Color(0xFF00A706)),
+        const SizedBox(width: 4),
+        Text(
+          '$lastLogCount log${lastLogCount == 1 ? '' : 's'}',
+          style: GoogleFonts.inter(
+            fontSize: 11,
+            fontWeight: FontWeight.w500,
+            color: const Color(0xFF00A706),
+          ),
+        ),
+        if (lastLogDate != null) ...[
+          const SizedBox(width: 8),
+          Text(
+            'Last: ${DateFormat('MMM d').format(lastLogDate)}',
+            style: GoogleFonts.inter(
+              fontSize: 11,
+              fontWeight: FontWeight.w400,
+              color: const Color(0xFF918F8F),
+            ),
+          ),
+        ],
+      ],
+    );
   }
 
   @override
@@ -418,49 +484,7 @@ class _SiteScreenState extends State<SiteScreen> {
                         //     ),
                         //   ),
                         // ],
-                        if (widget.siteWithLogCount.logCount > 0) ...[
-                          // SizedBox(height: 4),
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.timeline,
-                                size: 12,
-                                color: Color(0xFF00A706),
-                              ),
-                              SizedBox(width: 4),
-                              Text(
-                                '${widget.siteWithLogCount.logCount} log${widget.siteWithLogCount.logCount == 1 ? '' : 's'}',
-                                style: GoogleFonts.inter(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w500,
-                                  color: Color(0xFF00A706),
-                                ),
-                              ),
-                              if (widget.siteWithLogCount.lastLogRetrieved !=
-                                  null) ...[
-                                SizedBox(width: 8),
-                                Text(
-                                  'Last: ${DateFormat('MMM d').format(widget.siteWithLogCount.lastLogRetrieved!)}',
-                                  style: GoogleFonts.inter(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w400,
-                                    color: Color(0xFF918F8F),
-                                  ),
-                                ),
-                              ],
-                            ],
-                          ),
-                        ] else ...[
-                          SizedBox(height: 4),
-                          Text(
-                            'No logs yet',
-                            style: GoogleFonts.inter(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w400,
-                              color: Color(0xFF918F8F),
-                            ),
-                          ),
-                        ],
+                        _buildLastLogSummary(),
                       ],
                     ),
                   ),
