@@ -1314,6 +1314,13 @@ class _ScanningScreenState extends State<ScanningScreen>
     bleProcess.isAccessKeyValid.value = null;
     bleProcess.accessKey.value = "";
 
+    Timer? accessKeyValidationTimer;
+
+    void cancelAccessKeyTimer() {
+      accessKeyValidationTimer?.cancel();
+      accessKeyValidationTimer = null;
+    }
+
     final TextEditingController _controller = TextEditingController();
     final FocusNode _focusNode = FocusNode();
     final accessKey = bleProcess.accessKey;
@@ -1322,7 +1329,7 @@ class _ScanningScreenState extends State<ScanningScreen>
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) {
+      builder: (dialogContext) {
         return Dialog(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
@@ -1379,6 +1386,9 @@ class _ScanningScreenState extends State<ScanningScreen>
                 ValueListenableBuilder<bool?>(
                   valueListenable: isAccessKeyValid,
                   builder: (_, isAccessKeyValidValue, __) {
+                    if (isAccessKeyValidValue != null) {
+                      cancelAccessKeyTimer();
+                    }
                     if (isAccessKeyValidValue == true &&
                         !_navigatingToDeviceConnecting) {
                       _navigatingToDeviceConnecting = true;
@@ -1386,8 +1396,8 @@ class _ScanningScreenState extends State<ScanningScreen>
                         if (!mounted) return;
                         await Future.delayed(const Duration(seconds: 1));
                         if (!mounted) return;
-                        Navigator.of(context).pop();
-                        Navigator.of(context).push(
+                        Navigator.of(dialogContext, rootNavigator: true).pop();
+                        Navigator.of(dialogContext).push(
                           MaterialPageRoute(
                             builder:
                                 (context) => LogRetrievalLoadingScreen(
@@ -1423,7 +1433,25 @@ class _ScanningScreenState extends State<ScanningScreen>
                             accessKey.value = val;
                             if (val.length == 4) {
                               bleProcess.isAccessKeyValid.value = null;
-                              FocusScope.of(context).unfocus();
+                              cancelAccessKeyTimer();
+                              accessKeyValidationTimer =
+                                  Timer(const Duration(seconds: 10), () {
+                                if (!mounted) return;
+                                if (isAccessKeyValid.value == null) {
+                                  final navigator = Navigator.maybeOf(
+                                    dialogContext,
+                                    rootNavigator: true,
+                                  );
+                                  navigator?.maybePop();
+                                  Get.snackbar(
+                                    "Access key validation timed out",
+                                    "Please connect again.",
+                                    snackPosition: SnackPosition.BOTTOM,
+                                    duration: const Duration(seconds: 4),
+                                  );
+                                }
+                              });
+                              FocusScope.of(dialogContext).unfocus();
                               bleProcess.processDesc.value =
                                   "Validating access key...";
                               onCall();
@@ -1536,7 +1564,8 @@ class _ScanningScreenState extends State<ScanningScreen>
                             width: double.infinity,
                             child: GestureDetector(
                               onTap: () {
-                                Navigator.of(context).pop();
+                                cancelAccessKeyTimer();
+                                Navigator.of(dialogContext).pop();
                               },
                               child: Container(
                                 height: 48,

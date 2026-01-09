@@ -111,22 +111,68 @@ class _SiteScreenState extends State<SiteScreen> {
 
     final shouldDelete = await showDialog<bool>(
       context: context,
+      barrierDismissible: false,
       builder:
           (context) => AlertDialog(
-            title: const Text('Delete site?'),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            title: Row(
+              children: [
+                Icon(
+                  Icons.warning_amber_rounded,
+                  color: const Color(0xFFEC1D24),
+                  size: 28,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Delete Site',
+                    style: GoogleFonts.inter(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF3A3A3A),
+                    ),
+                  ),
+                ),
+              ],
+            ),
             content: Text(
               'This will remove "${widget.site.siteName}". Logs will be deleted and panels will be unassigned.',
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                fontWeight: FontWeight.w400,
+                color: const Color(0xFF666666),
+              ),
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(false),
-                child: const Text('Cancel'),
+                child: Text(
+                  'Cancel',
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF666666),
+                  ),
+                ),
               ),
-              TextButton(
+              ElevatedButton(
                 onPressed: () => Navigator.of(context).pop(true),
-                child: const Text(
-                  'Delete',
-                  style: TextStyle(color: Color(0xFFEC1D24)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFEC1D24),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(28.5),
+                  ),
+                  elevation: 0,
+                ),
+                child: Text(
+                  'Delete Site',
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
                 ),
               ),
             ],
@@ -183,22 +229,68 @@ class _SiteScreenState extends State<SiteScreen> {
   Future<void> _confirmDeletePanel(PanelModel panel) async {
     final shouldDelete = await showDialog<bool>(
       context: context,
+      barrierDismissible: false,
       builder:
           (context) => AlertDialog(
-            title: const Text('Delete panel?'),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            title: Row(
+              children: [
+                Icon(
+                  Icons.warning_amber_rounded,
+                  color: const Color(0xFFEC1D24),
+                  size: 28,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Delete Panel',
+                    style: GoogleFonts.inter(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF3A3A3A),
+                    ),
+                  ),
+                ),
+              ],
+            ),
             content: Text(
               'Remove panel "${panel.panelName}" (${panel.panelId}) from this site?',
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                fontWeight: FontWeight.w400,
+                color: const Color(0xFF666666),
+              ),
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(false),
-                child: const Text('Cancel'),
+                child: Text(
+                  'Cancel',
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF666666),
+                  ),
+                ),
               ),
-              TextButton(
+              ElevatedButton(
                 onPressed: () => Navigator.of(context).pop(true),
-                child: const Text(
-                  'Delete',
-                  style: TextStyle(color: Color(0xFFEC1D24)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFEC1D24),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(28.5),
+                  ),
+                  elevation: 0,
+                ),
+                child: Text(
+                  'Delete Panel',
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
                 ),
               ),
             ],
@@ -469,13 +561,17 @@ class _SiteScreenState extends State<SiteScreen> {
                     ),
                   ),
                   const SizedBox(width: 12),
-                  IconButton(
-                    icon: const Icon(
-                      Icons.delete_outline,
-                      color: Color(0xFFEC1D24),
+                  GestureDetector(
+                    onTap: () {
+                      _confirmDeleteSite();
+                    },
+                    child: SvgPicture.asset(
+                      "assets/svgs/delete_icon.svg",
+                      colorFilter: ColorFilter.mode(
+                        Color(0xFFEC1D24),
+                        BlendMode.srcIn,
+                      ),
                     ),
-                    tooltip: 'Delete site',
-                    onPressed: _isDeletingSite ? null : _confirmDeleteSite,
                   ),
                 ],
               ),
@@ -653,14 +749,26 @@ class _SiteScreenState extends State<SiteScreen> {
                     ),
                   ),
                   SizedBox(width: 8),
-                  IconButton(
-                    icon: const Icon(
-                      Icons.delete_outline,
-                      color: Color(0xFFEC1D24),
+                  GestureDetector(
+                    onTap: () {
+                      _confirmDeletePanel(panel);
+                    },
+                    child: SvgPicture.asset(
+                      "assets/svgs/delete_icon.svg",
+                      colorFilter: ColorFilter.mode(
+                        Color(0xFFEC1D24),
+                        BlendMode.srcIn,
+                      ),
                     ),
-                    tooltip: 'Delete panel',
-                    onPressed: () => _confirmDeletePanel(panel),
                   ),
+                  // IconButton(
+                  //   icon: const Icon(
+                  //     Icons.delete_outline,
+                  //     color: Color(0xFFEC1D24),
+                  //   ),
+                  //   tooltip: 'Delete panel',
+                  //   onPressed: () => _confirmDeletePanel(panel),
+                  // ),
                 ],
               ),
             ),

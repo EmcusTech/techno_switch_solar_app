@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
@@ -6,7 +7,6 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
-import 'package:techno_switch_solar_app/screens/home_screen.dart';
 import 'package:techno_switch_solar_app/screens/log_retrieval_loading_screen.dart';
 import 'package:techno_switch_solar_app/screens/project_dashboard.dart';
 import 'package:techno_switch_solar_app/screens/scanning_screen.dart';
@@ -374,6 +374,13 @@ class _ScannedScreenState extends State<ScannedScreen> {
     bleProcess.isAccessKeyValid.value = null;
     bleProcess.accessKey.value = "";
 
+    Timer? accessKeyValidationTimer;
+
+    void cancelAccessKeyTimer() {
+      accessKeyValidationTimer?.cancel();
+      accessKeyValidationTimer = null;
+    }
+
     final TextEditingController _controller = TextEditingController();
     final FocusNode _focusNode = FocusNode();
     final ValueNotifier<String?> errorText = ValueNotifier(null);
@@ -383,7 +390,7 @@ class _ScannedScreenState extends State<ScannedScreen> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) {
+      builder: (dialogContext) {
         return Dialog(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
@@ -450,6 +457,9 @@ class _ScannedScreenState extends State<ScannedScreen> {
                 ValueListenableBuilder<bool?>(
                   valueListenable: isAccessKeyValid,
                   builder: (_, isAccessKeyValidValue, __) {
+                    if (isAccessKeyValidValue != null) {
+                      cancelAccessKeyTimer();
+                    }
                     // Auto-close on success and navigate, but defer to next frame
                     // to avoid build-phase setState/overlay errors.
                     if (isAccessKeyValidValue == true &&
@@ -460,8 +470,8 @@ class _ScannedScreenState extends State<ScannedScreen> {
                         // Briefly show success before navigating
                         await Future.delayed(const Duration(seconds: 1));
                         if (!mounted) return;
-                        Navigator.of(context).pop();
-                        Navigator.of(context).push(
+                        Navigator.of(dialogContext, rootNavigator: true).pop();
+                        Navigator.of(dialogContext).push(
                           MaterialPageRoute(
                             builder:
                                 (context) => LogRetrievalLoadingScreen(
@@ -498,9 +508,29 @@ class _ScannedScreenState extends State<ScannedScreen> {
                             if (val.length == 4) {
                               errorText.value = null;
                               // reset validation state for new attempt
+                              cancelAccessKeyTimer();
+                              accessKeyValidationTimer = Timer(
+                                const Duration(seconds: 10),
+                                () {
+                                  if (!mounted) return;
+                                  if (isAccessKeyValid.value == null) {
+                                    final navigator = Navigator.maybeOf(
+                                      dialogContext,
+                                      rootNavigator: true,
+                                    );
+                                    navigator?.maybePop();
+                                    Get.snackbar(
+                                      "Access key validation timed out",
+                                      "Please connect again.",
+                                      snackPosition: SnackPosition.BOTTOM,
+                                      duration: const Duration(seconds: 4),
+                                    );
+                                  }
+                                },
+                              );
                               bleProcess.isAccessKeyValid.value = null;
                               // Dismiss keyboard and start validation
-                              FocusScope.of(context).unfocus();
+                              FocusScope.of(dialogContext).unfocus();
                               // Provide immediate feedback while validating
                               bleProcess.processDesc.value =
                                   "Validating access key...";
@@ -621,7 +651,8 @@ class _ScannedScreenState extends State<ScannedScreen> {
                             width: double.infinity,
                             child: GestureDetector(
                               onTap: () {
-                                Navigator.of(context).pop();
+                                cancelAccessKeyTimer();
+                                Navigator.of(dialogContext).pop();
                               },
                               child: Container(
                                 height: 48,
