@@ -54,6 +54,9 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
   ];
 
   void _onItemTapped(int index) {
+    if (index == 1 || index == 2) {
+      return;
+    }
     setState(() {
       _selectedIndex = index;
     });
@@ -61,6 +64,45 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    const disabledIndexes = [1, 2];
+
+    Color itemColor(int index) {
+      if (disabledIndexes.contains(index)) {
+        return Colors.grey;
+      }
+      return _selectedIndex == index ? Colors.white : Colors.black;
+    }
+
+    Widget navItem({
+      required int index,
+      required String label,
+      required String asset,
+    }) {
+      final color = itemColor(index);
+
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SvgPicture.asset(
+            asset,
+            height: 24,
+            width: 24,
+            colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              fontWeight:
+                  _selectedIndex == index ? FontWeight.w600 : FontWeight.w500,
+              color: color,
+            ),
+          ),
+        ],
+      );
+    }
+
     return Scaffold(
       extendBody: true,
       body: _screens[_selectedIndex],
@@ -81,72 +123,50 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
             topRight: Radius.circular(32),
           ),
           child: BottomNavigationBar(
-            iconSize: 24,
-            items: <BottomNavigationBarItem>[
-              BottomNavigationBarItem(
-                icon: SvgPicture.asset(
-                  'assets/svgs/dashboard_icon.svg',
-                  height: 24,
-                  width: 24,
-                  colorFilter: ColorFilter.mode(
-                    _selectedIndex == 0 ? Colors.white : Colors.grey,
-                    BlendMode.srcIn,
-                  ),
-                ),
-                label: 'Dashboard',
-              ),
-              BottomNavigationBarItem(
-                icon: SvgPicture.asset(
-                  'assets/svgs/setting_icon.svg',
-                  height: 24,
-                  width: 24,
-                  colorFilter: ColorFilter.mode(
-                    _selectedIndex == 1 ? Colors.white : Colors.grey,
-                    BlendMode.srcIn,
-                  ),
-                ),
-                label: 'Settings',
-              ),
-              BottomNavigationBarItem(
-                icon: SvgPicture.asset(
-                  'assets/svgs/test_mode_icon.svg',
-                  height: 24,
-                  width: 24,
-                  colorFilter: ColorFilter.mode(
-                    _selectedIndex == 2 ? Colors.white : Colors.grey,
-                    BlendMode.srcIn,
-                  ),
-                ),
-                label: 'Test Mode',
-              ),
-              BottomNavigationBarItem(
-                icon: SvgPicture.asset(
-                  'assets/svgs/log_history_icon.svg',
-                  height: 24,
-                  width: 24,
-                  colorFilter: ColorFilter.mode(
-                    _selectedIndex == 3 ? Colors.white : Colors.grey,
-                    BlendMode.srcIn,
-                  ),
-                ),
-                label: 'Log History',
-              ),
-            ],
-            currentIndex: _selectedIndex,
-            selectedItemColor: Colors.white,
-            unselectedItemColor: Colors.grey,
-            onTap: _onItemTapped,
-            backgroundColor: Color(0xffEC1D24),
+            backgroundColor: const Color(0xffEC1D24),
             elevation: 0,
             type: BottomNavigationBarType.fixed,
-            selectedLabelStyle: GoogleFonts.inter(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-            ),
-            unselectedLabelStyle: GoogleFonts.inter(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-            ),
+            currentIndex: _selectedIndex,
+            showSelectedLabels: false,
+            showUnselectedLabels: false,
+            onTap: (index) {
+              if (disabledIndexes.contains(index)) return; // 🚫 disabled
+              _onItemTapped(index);
+            },
+            items: [
+              BottomNavigationBarItem(
+                icon: navItem(
+                  index: 0,
+                  label: 'Dashboard',
+                  asset: 'assets/svgs/dashboard_icon.svg',
+                ),
+                label: '',
+              ),
+              BottomNavigationBarItem(
+                icon: navItem(
+                  index: 1,
+                  label: 'Settings',
+                  asset: 'assets/svgs/setting_icon.svg',
+                ),
+                label: '',
+              ),
+              BottomNavigationBarItem(
+                icon: navItem(
+                  index: 2,
+                  label: 'Test Mode',
+                  asset: 'assets/svgs/test_mode_icon.svg',
+                ),
+                label: '',
+              ),
+              BottomNavigationBarItem(
+                icon: navItem(
+                  index: 3,
+                  label: 'Log History',
+                  asset: 'assets/svgs/log_history_icon.svg',
+                ),
+                label: '',
+              ),
+            ],
           ),
         ),
       ),
@@ -647,34 +667,42 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
               _peripheralTile(
                 peripheralName: 'Relay(1/2)',
                 iconPath: 'assets/svgs/peripheral_relay_icon.svg',
+                isDisabled: true,
               ),
               _peripheralTile(
                 peripheralName: 'Input(2/2)',
                 iconPath: 'assets/svgs/peripheral_input_icon.svg',
+                isDisabled: true,
               ),
               _peripheralTile(
                 peripheralName: 'Zones(3/3)',
                 iconPath: 'assets/svgs/peripheral_zones_icon.svg',
+                isDisabled: true,
               ),
               _peripheralTile(
                 peripheralName: 'Sounder(3/3)',
                 iconPath: 'assets/svgs/peripheral_sounder_icon.svg',
+                isDisabled: true,
               ),
               _peripheralTile(
                 peripheralName: 'Prog/Hold(2/2)',
                 iconPath: 'assets/svgs/peripheral_prog_hold_icon.svg',
+                isDisabled: true,
               ),
               _peripheralTile(
                 peripheralName: 'Aux(2/2)',
                 iconPath: 'assets/svgs/peripheral_aux_icon.svg',
+                isDisabled: true,
               ),
               _peripheralTile(
                 peripheralName: 'L-Bus(2/2)',
                 iconPath: 'assets/svgs/peripheral_l_bus_icon.svg',
+                isDisabled: true,
               ),
               _peripheralTile(
                 peripheralName: 'Ext Out(1/1)',
                 iconPath: 'assets/svgs/peripheral_ext_out_icon.svg',
+                isDisabled: true,
               ),
             ],
           ),
@@ -686,6 +714,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
   Widget _peripheralTile({
     required String peripheralName,
     required String iconPath,
+    bool? isDisabled = false,
   }) {
     return Column(
       children: [
@@ -699,6 +728,12 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
             child: Center(
               child: SvgPicture.asset(
                 iconPath,
+                colorFilter: ColorFilter.mode(
+                  isDisabled == true
+                      ? Color(0xFF666666).withValues(alpha: 0.2)
+                      : Color(0xFFEC1D24),
+                  BlendMode.srcIn,
+                ),
                 // height: 24,
                 // width: 24,
               ),
@@ -904,30 +939,37 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
               _peripheralTile(
                 peripheralName: 'Service Due',
                 iconPath: 'assets/svgs/panel_action_service_due_icon.svg',
+                isDisabled: true,
               ),
               _peripheralTile(
                 peripheralName: 'Factory Prog',
                 iconPath: 'assets/svgs/panel_action_factory_prog_icon.svg',
+                isDisabled: true,
               ),
               _peripheralTile(
                 peripheralName: 'Config Log',
                 iconPath: 'assets/svgs/panel_action_config_log_icon.svg',
+                isDisabled: true,
               ),
               _peripheralTile(
                 peripheralName: 'Test Mode',
                 iconPath: 'assets/svgs/peripheral_prog_hold_icon.svg',
+                isDisabled: true,
               ),
               _peripheralTile(
                 peripheralName: 'Aux(2/2)',
                 iconPath: 'assets/svgs/peripheral_aux_icon.svg',
+                isDisabled: true,
               ),
               _peripheralTile(
                 peripheralName: 'L-Bus(2/2)',
                 iconPath: 'assets/svgs/peripheral_l_bus_icon.svg',
+                isDisabled: true,
               ),
               _peripheralTile(
                 peripheralName: 'Ext Out(1/1)',
                 iconPath: 'assets/svgs/peripheral_ext_out_icon.svg',
+                isDisabled: true,
               ),
             ],
           ),

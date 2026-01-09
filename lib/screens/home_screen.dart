@@ -46,6 +46,9 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _onItemTapped(int index) {
+    if (index == 1 || index == 2) {
+      return;
+    }
     setState(() {
       _selectedIndex = index;
     });
@@ -417,7 +420,7 @@ class _HomeContentState extends State<_HomeContent> {
                   style: GoogleFonts.inter(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
-                    color: Color(0xFF666666),
+                    color: Color(0xFF666666).withValues(alpha: 0.2),
                   ),
                 ),
             ],
