@@ -763,6 +763,7 @@ class _SiteScreenState extends State<SiteScreen> {
           },
           itemBuilder: (context, index) {
             final panel = _panels[index];
+            final panelName = '${panel.panelName}_${panel.panelId}';
 
             return GestureDetector(
               onTap: () {
@@ -778,7 +779,7 @@ class _SiteScreenState extends State<SiteScreen> {
                             manufacturerData: Uint8List(0),
                             serviceUuids: [],
                           ),
-                          panelName: panel.panelName,
+                          panelName: panelName,
                           panelVersionNo: panel.deviceDisplayInfo,
                           siteId: widget.site.id!,
                           siteName: widget.site.siteName,

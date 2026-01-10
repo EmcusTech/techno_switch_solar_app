@@ -249,8 +249,16 @@ class SiteService {
   }
 
   /// Assign panel to site (used when connecting to panel within a site)
-  Future<bool> assignPanelToSite(String panelId, int siteId) async {
-    return await _panelService.assignPanelToSite(panelId, siteId);
+  Future<bool> assignPanelToSite(
+    String panelId,
+    int siteId, {
+    String? panelName,
+  }) async {
+    return await _panelService.assignPanelToSite(
+      panelId,
+      siteId,
+      panelName: panelName,
+    );
   }
 
   /// Get unassigned panels (panels not associated with any site)
@@ -266,10 +274,15 @@ class SiteService {
   /// Associate the currently connected panel with a site when creating a site after log retrieval
   Future<bool> associateCurrentPanelWithSite(
     String? panelId,
-    int siteId,
-  ) async {
+    int siteId, {
+    String? panelName,
+  }) async {
     if (panelId == null) return false;
-    return await _panelService.assignPanelToSite(panelId, siteId);
+    return await _panelService.assignPanelToSite(
+      panelId,
+      siteId,
+      panelName: panelName,
+    );
   }
 
   /// Check if a panel can be assigned to a site

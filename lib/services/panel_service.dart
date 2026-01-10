@@ -121,15 +121,19 @@ class PanelService {
   }
 
   /// Assign panel to site
-  Future<bool> assignPanelToSite(String panelId, int siteId) async {
+  Future<bool> assignPanelToSite(
+    String panelId,
+    int siteId, {
+    String? panelName,
+  }) async {
     // Check if panel exists, if not create it first
     var panel = await getPanelByPanelId(panelId);
+
+    final now = DateTime.now();
 
     if (panel == null) {
       // Panel doesn't exist, create it with minimal info
       // This can happen if panel was never registered during connection
-      final now = DateTime.now();
-
       // Detect device type from panel ID format
       String deviceType = 'bluetooth'; // Default
       if (panelId.startsWith('BT_') || panelId.startsWith('BLUETOOTH_')) {
@@ -146,7 +150,10 @@ class PanelService {
 
       panel = PanelModel(
         panelId: panelId,
-        panelName: 'Panel $panelId', // Fallback name
+        panelName:
+            (panelName ?? '').trim().isNotEmpty
+                ? panelName!.trim()
+                : 'Panel $panelId', // Fallback name
         deviceType: deviceType,
         deviceInfo: jsonEncode({'panelId': panelId}),
         siteId: null, // Will be set below
@@ -155,6 +162,14 @@ class PanelService {
         lastConnected: now,
       );
       await _databaseHelper.upsertPanel(panel);
+    } else if ((panelName ?? '').trim().isNotEmpty &&
+        panel.panelName != panelName!.trim()) {
+      // Update panel name if a better one was provided
+      final updatedPanel = panel.copyWith(
+        panelName: panelName.trim(),
+        updatedAt: now,
+      );
+      await _databaseHelper.upsertPanel(updatedPanel);
     }
 
     // Check if panel is already assigned to another site

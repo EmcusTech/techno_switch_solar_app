@@ -229,7 +229,10 @@ class _EventLogContentState extends State<_EventLogContent> {
 
       final bleManager = ble;
       final logs = bleManager.bleProcess.validEventLogs.value;
-      final panelIdToUse = bleManager.connectedDeviceId.value;
+      // Prefer resolved panelId from BLE panel name / provided panelId (not deviceId)
+      final panelIdToUse = _resolvedPanelId(
+        bleManager.bleProcess.panelName.value,
+      );
 
       // AppServices.serialService.disconnect();
 
@@ -284,7 +287,8 @@ class _EventLogContentState extends State<_EventLogContent> {
         );
         final resolvedName = _resolvedPanelName(ble.bleProcess.panelName.value);
         final displayName = _panelDisplayName(resolvedName);
-        print('displayName: $displayName');
+        final resolvedPanelId = _resolvedPanelId(resolvedName);
+        print('displayName: $displayName, panelId: $resolvedPanelId');
 
         if (shouldCreateSite == true) {
           Navigator.of(context).pushReplacement(
@@ -294,7 +298,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                     retrievedLogs: logs,
                     panelName: displayName,
                     panelVersionNo: widget.panelVersionNo,
-                    panelId: widget.panelName.split('_').last,
+                    panelId: resolvedPanelId,
                   ),
             ),
           );
@@ -1311,7 +1315,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                           ),
                         ),
                         Text(
-                          widget.panelName.split('_').last,
+                          displayId,
                           style: GoogleFonts.inter(
                             fontSize: 14,
                             fontWeight: FontWeight.w500,

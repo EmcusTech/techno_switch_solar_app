@@ -228,6 +228,7 @@ class _SimpleSiteCreationScreenState extends State<SimpleSiteCreationScreen> {
           final success = await _siteService.associateCurrentPanelWithSite(
             panelIdToAssociate,
             site.id!,
+            panelName: widget.panelName,
           );
           print('DEBUG: Panel association success: $success');
         } catch (e) {
