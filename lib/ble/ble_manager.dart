@@ -102,6 +102,8 @@ class BleManager {
 
   ValueNotifier<String> get connectedDeviceId => bleProcess.connectedDeviceId;
 
+  ValueNotifier<String> get panelName => bleProcess.panelName;
+
   final ValueNotifier<bool> _isConnectedNotifier = ValueNotifier<bool>(false);
 
   ValueNotifier<bool> get isConnectedNotifier => _isConnectedNotifier;

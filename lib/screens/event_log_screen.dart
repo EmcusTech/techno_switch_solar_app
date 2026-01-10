@@ -93,6 +93,36 @@ class _EventLogContentState extends State<_EventLogContent> {
   final PanelService _panelService = PanelService();
   final SiteService _siteService = SiteService();
 
+  // Resolve panel name using live BLE value when available
+  String _resolvedPanelName([String? panelNameValue]) {
+    final live = (panelNameValue ?? ble.bleProcess.panelName.value).trim();
+    return live.isNotEmpty ? live : widget.panelName;
+  }
+
+  // Prefer provided panelId, otherwise derive from panel name (no deviceId fallback)
+  String _resolvedPanelId([String? panelNameValue]) {
+    if ((widget.panelId ?? '').isNotEmpty) {
+      return widget.panelId!;
+    }
+
+    final name = _resolvedPanelName(panelNameValue);
+    final parts = name.split('_');
+    if (parts.length > 1 && parts.last.isNotEmpty) return parts.last;
+    return name;
+  }
+
+  String _panelDisplayName(String name) {
+    final parts = name.split('_');
+    return parts.isNotEmpty ? parts.first : name;
+  }
+
+  String _panelDisplayId(String name) {
+    final parts = name.split('_');
+    if (parts.length > 1 && parts.last.isNotEmpty) return parts.last;
+    if ((widget.panelId ?? '').isNotEmpty) return widget.panelId!;
+    return name;
+  }
+
   // Keep logs sorted by eventId (numeric if possible)
   List<LogModel> _sortLogsByEventId(List<LogModel> logs) {
     final sorted = List<LogModel>.from(logs);
@@ -252,6 +282,9 @@ class _EventLogContentState extends State<_EventLogContent> {
           context,
           logCount: logs.length,
         );
+        final resolvedName = _resolvedPanelName(ble.bleProcess.panelName.value);
+        final displayName = _panelDisplayName(resolvedName);
+        print('displayName: $displayName');
 
         if (shouldCreateSite == true) {
           Navigator.of(context).pushReplacement(
@@ -259,7 +292,7 @@ class _EventLogContentState extends State<_EventLogContent> {
               builder:
                   (context) => SimpleSiteCreationScreen(
                     retrievedLogs: logs,
-                    panelName: widget.panelName,
+                    panelName: displayName,
                     panelVersionNo: widget.panelVersionNo,
                     panelId: widget.panelName.split('_').last,
                   ),
@@ -461,7 +494,7 @@ class _EventLogContentState extends State<_EventLogContent> {
 
                   await EventLogPdfExporter.export(
                     logs: logs,
-                    panelName: widget.panelName,
+                    panelName: _resolvedPanelName(),
                     panelVersion: widget.panelVersionNo,
                   );
                 },
@@ -1256,61 +1289,72 @@ class _EventLogContentState extends State<_EventLogContent> {
               ),
               SizedBox(width: 14),
               Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      widget.panelName.split('_').first,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.inter(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xff3D3D3D),
-                      ),
-                    ),
-                    Text(
-                      widget.panelName.split('_').last,
-                      style: GoogleFonts.inter(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: Color(0xFF979797),
-                      ),
-                    ),
+                child: ValueListenableBuilder(
+                  valueListenable: ble.bleProcess.panelName,
+                  builder: (context, panelNameValue, _) {
+                    final resolvedName = _resolvedPanelName(panelNameValue);
+                    final displayName = _panelDisplayName(resolvedName);
+                    final displayId = _panelDisplayId(resolvedName);
 
-                    ValueListenableBuilder(
-                      valueListenable: ble.isConnectedNotifier,
-                      builder: (context, isConnected, child) {
-                        return RichText(
-                          text: TextSpan(
-                            children: [
-                              TextSpan(
-                                text: 'status : ',
-                                style: GoogleFonts.inter(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                  color: Color(0xFF979797),
-                                ),
-                              ),
-                              TextSpan(
-                                text:
-                                    isConnected ? 'Connected' : 'Disconnected',
-                                style: GoogleFonts.inter(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                  color:
-                                      isConnected
-                                          ? Color(0xFF00A706)
-                                          : Color(0xFFEC1D24),
-                                ),
-                              ),
-                            ],
+                    return Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          displayName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.inter(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xff3D3D3D),
                           ),
-                        );
-                      },
-                    ),
-                  ],
+                        ),
+                        Text(
+                          widget.panelName.split('_').last,
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: Color(0xFF979797),
+                          ),
+                        ),
+
+                        ValueListenableBuilder(
+                          valueListenable: ble.isConnectedNotifier,
+                          builder: (context, isConnected, child) {
+                            return RichText(
+                              text: TextSpan(
+                                children: [
+                                  TextSpan(
+                                    text: 'status : ',
+                                    style: GoogleFonts.inter(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                      color: Color(0xFF979797),
+                                    ),
+                                  ),
+                                  TextSpan(
+                                    text:
+                                        isConnected
+                                            ? 'Connected'
+                                            : 'Disconnected',
+                                    style: GoogleFonts.inter(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                      color:
+                                          isConnected
+                                              ? Color(0xFF00A706)
+                                              : Color(0xFFEC1D24),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    );
+                  },
                 ),
               ),
             ],
