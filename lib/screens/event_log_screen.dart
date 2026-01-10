@@ -261,7 +261,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                     retrievedLogs: logs,
                     panelName: widget.panelName,
                     panelVersionNo: widget.panelVersionNo,
-                    panelId: panelIdToUse,
+                    panelId: widget.panelName.split('_').last,
                   ),
             ),
           );
@@ -1261,7 +1261,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      widget.panelName,
+                      widget.panelName.split('_').first,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: GoogleFonts.inter(
@@ -1270,18 +1270,13 @@ class _EventLogContentState extends State<_EventLogContent> {
                         color: Color(0xff3D3D3D),
                       ),
                     ),
-                    ValueListenableBuilder(
-                      valueListenable: ble.connectedDeviceId,
-                      builder: (context, deviceId, child) {
-                        return Text(
-                          deviceId.isEmpty ? 'N/A' : deviceId,
-                          style: GoogleFonts.inter(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color: Color(0xFF979797),
-                          ),
-                        );
-                      },
+                    Text(
+                      widget.panelName.split('_').last,
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF979797),
+                      ),
                     ),
 
                     ValueListenableBuilder(
