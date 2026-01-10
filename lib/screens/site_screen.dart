@@ -13,6 +13,7 @@ import 'package:techno_switch_solar_app/services/site_service.dart';
 import 'package:techno_switch_solar_app/services/log_retrieval_service.dart';
 import 'package:techno_switch_solar_app/services/panel_service.dart';
 import 'package:intl/intl.dart';
+import 'package:techno_switch_solar_app/widgets/common/common_cta_button.dart';
 
 class SiteScreen extends StatefulWidget {
   final SiteModel site;
@@ -399,12 +400,20 @@ class _SiteScreenState extends State<SiteScreen> {
             colors: [Color(0xFFF6EBEB), Colors.white],
           ),
         ),
-        child: RefreshIndicator(
-          onRefresh: _refreshSites,
-          child: SingleChildScrollView(
-            physics: AlwaysScrollableScrollPhysics(),
-            child: Column(children: [_buildHeader(context), _buildPanels()]),
-          ),
+        child: Stack(
+          children: [
+            _buildHeader(context),
+            Padding(
+              padding: const EdgeInsets.only(top: 330),
+              child: Column(
+                children: [
+                  _buildSiteDetails(),
+                  SizedBox(height: 20),
+                  _buildPanels(),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -515,76 +524,167 @@ class _SiteScreenState extends State<SiteScreen> {
     );
   }
 
+  Widget _buildSiteDetails() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Container(
+        // height: 100,
+        width: double.infinity,
+        decoration: BoxDecoration(borderRadius: BorderRadius.circular(8)),
+        child: Column(
+          children: [
+            Container(
+              decoration: BoxDecoration(
+                color: Color(0xFFFFE2E2),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(8)),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.only(
+                  left: 20,
+                  right: 20,
+                  top: 15,
+                  bottom: 15,
+                ),
+                child: Row(
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            SvgPicture.asset('assets/svgs/location_icon.svg'),
+                            SizedBox(width: 8),
+                            Text(
+                              widget.site.siteName,
+                              style: GoogleFonts.inter(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF3A3A3A),
+                              ),
+                            ),
+                          ],
+                        ),
+                        Text(
+                          'Site Information',
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            color: Color(0xFF737373),
+                          ),
+                        ),
+                      ],
+                    ),
+                    Spacer(),
+                    GestureDetector(
+                      onTap: () {
+                        _confirmDeleteSite();
+                      },
+                      child: SvgPicture.asset(
+                        'assets/svgs/delete_icon.svg',
+                        colorFilter: ColorFilter.mode(
+                          Color(0xFFFF6467),
+                          BlendMode.srcIn,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(bottom: Radius.circular(8)),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 15,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        SvgPicture.asset('assets/svgs/site_calender_icon.svg'),
+                        SizedBox(width: 12),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Created',
+                              style: GoogleFonts.inter(
+                                fontSize: 12,
+                                color: Color(0xFF737373),
+                              ),
+                            ),
+                            Text(
+                              DateFormat(
+                                'MMM d, y',
+                              ).format(widget.siteWithLogCount.site.createdAt),
+                              style: GoogleFonts.inter(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w400,
+                                color: Color(0xFF737373),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 16),
+                    CommonCtaButton(
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder:
+                                (context) => SiteDetailScreen(
+                                  siteWithLogCount: widget.siteWithLogCount,
+                                ),
+                          ),
+                        );
+                      },
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          SvgPicture.asset('assets/svgs/details_icon.svg'),
+                          SizedBox(width: 8),
+                          Text(
+                            'View Site Details',
+                            style: GoogleFonts.inter(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildPanels() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(height: 48),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Text(
-                  widget.site.siteName,
-                  style: GoogleFonts.inter(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF3D3D3D),
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  GestureDetector(
-                    onTap: () {
-                      print('DEBUG: Navigating to site detail screen');
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder:
-                              (context) => SiteDetailScreen(
-                                siteWithLogCount: widget.siteWithLogCount,
-                              ),
-                        ),
-                      );
-                    },
-                    child: Text(
-                      'Site Details',
-                      style: GoogleFonts.inter(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: Color(0xFFEC1D24),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  GestureDetector(
-                    onTap: () {
-                      _confirmDeleteSite();
-                    },
-                    child: SvgPicture.asset(
-                      "assets/svgs/delete_icon.svg",
-                      colorFilter: ColorFilter.mode(
-                        Color(0xFFEC1D24),
-                        BlendMode.srcIn,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              // if (_panels.isNotEmpty)
-              //   Text(
-              //     '${_panels.length} panel${_panels.length == 1 ? '' : 's'}',
-              //     style: GoogleFonts.inter(
-              //       fontSize: 14,
-              //       fontWeight: FontWeight.w500,
-              //       color: Color(0xFF666666),
-              //     ),
-              //   ),
-            ],
+          Text(
+            'Panels',
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: Color(0xFF3D3D3D),
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
           SizedBox(height: 20),
           _buildPanelItem(),
@@ -649,136 +749,143 @@ class _SiteScreenState extends State<SiteScreen> {
       );
     }
 
-    return ListView.separated(
-      physics: NeverScrollableScrollPhysics(),
-      shrinkWrap: true,
-      itemCount: _panels.length,
-      separatorBuilder: (context, index) {
-        return SizedBox(height: 10);
-      },
-      itemBuilder: (context, index) {
-        final panel = _panels[index];
+    return SizedBox(
+      height: MediaQuery.sizeOf(context).height - 650,
+      child: RefreshIndicator(
+        color: Color(0xFFEC1D24),
+        onRefresh: _refreshSites,
+        child: ListView.separated(
+          physics: AlwaysScrollableScrollPhysics(),
+          shrinkWrap: true,
+          itemCount: _panels.length,
+          separatorBuilder: (context, index) {
+            return SizedBox(height: 10);
+          },
+          itemBuilder: (context, index) {
+            final panel = _panels[index];
 
-        return GestureDetector(
-          onTap: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder:
-                    (context) => ProjectDashboardScreen(
-                      selectedDevice: DiscoveredDevice(
-                        name: panel.panelName,
-                        id: panel.panelId,
-                        rssi: 0,
-                        serviceData: {},
-                        manufacturerData: Uint8List(0),
-                        serviceUuids: [],
+            return GestureDetector(
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder:
+                        (context) => ProjectDashboardScreen(
+                          selectedDevice: DiscoveredDevice(
+                            name: panel.panelName,
+                            id: panel.panelId,
+                            rssi: 0,
+                            serviceData: {},
+                            manufacturerData: Uint8List(0),
+                            serviceUuids: [],
+                          ),
+                          panelName: panel.panelName,
+                          panelVersionNo: panel.deviceDisplayInfo,
+                          siteId: widget.site.id!,
+                          siteName: widget.site.siteName,
+                        ),
+                  ),
+                );
+              },
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  border: Border.all(
+                    color: Color(0xFFB9B9B9).withValues(alpha: 0.31),
+                    width: 1,
+                  ),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 18.0,
+                    vertical: 12.0,
+                  ),
+                  child: Row(
+                    children: [
+                      Image.asset(
+                        'assets/images/panel_icon.png',
+                        height: 62,
+                        width: 62,
                       ),
-                      panelName: panel.panelName,
-                      panelVersionNo: panel.deviceDisplayInfo,
-                      siteId: widget.site.id!,
-                      siteName: widget.site.siteName,
-                    ),
+                      SizedBox(width: 14.31),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              panel.panelName,
+                              style: GoogleFonts.inter(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFF3D3D3D),
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            Text(
+                              panel.panelId,
+                              style: GoogleFonts.inter(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w400,
+                                color: Color(0xFF918F8F),
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            // Text(
+                            //   '${panel.deviceType.toUpperCase()} • ${panel.deviceDisplayInfo}',
+                            //   style: GoogleFonts.inter(
+                            //     fontSize: 11,
+                            //     fontWeight: FontWeight.w400,
+                            //     color: Color(0xFF666666),
+                            //   ),
+                            //   maxLines: 1,
+                            //   overflow: TextOverflow.ellipsis,
+                            // ),
+                            // if (panel.lastConnected != null) ...[
+                            //   SizedBox(height: 2),
+                            //   Text(
+                            //     'Last connected: ${DateFormat('MMM d, y').format(panel.lastConnected!)}',
+                            //     style: GoogleFonts.inter(
+                            //       fontSize: 10,
+                            //       fontWeight: FontWeight.w400,
+                            //       color: Color(0xFF999999),
+                            //     ),
+                            //   ),
+                            // ],
+                            _buildLastLogSummary(),
+                          ],
+                        ),
+                      ),
+                      SizedBox(width: 8),
+                      GestureDetector(
+                        onTap: () {
+                          _confirmDeletePanel(panel);
+                        },
+                        child: SvgPicture.asset(
+                          "assets/svgs/delete_icon.svg",
+                          colorFilter: ColorFilter.mode(
+                            Color(0xFFFF6467),
+                            BlendMode.srcIn,
+                          ),
+                        ),
+                      ),
+                      // IconButton(
+                      //   icon: const Icon(
+                      //     Icons.delete_outline,
+                      //     color: Color(0xFFEC1D24),
+                      //   ),
+                      //   tooltip: 'Delete panel',
+                      //   onPressed: () => _confirmDeletePanel(panel),
+                      // ),
+                    ],
+                  ),
+                ),
               ),
             );
           },
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              border: Border.all(
-                color: Color(0xFFB9B9B9).withValues(alpha: 0.31),
-                width: 1,
-              ),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 18.0,
-                vertical: 12.0,
-              ),
-              child: Row(
-                children: [
-                  Image.asset(
-                    'assets/images/panel_icon.png',
-                    height: 62,
-                    width: 62,
-                  ),
-                  SizedBox(width: 14.31),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          panel.panelName,
-                          style: GoogleFonts.inter(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF3D3D3D),
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        Text(
-                          panel.panelId,
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w400,
-                            color: Color(0xFF918F8F),
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        // Text(
-                        //   '${panel.deviceType.toUpperCase()} • ${panel.deviceDisplayInfo}',
-                        //   style: GoogleFonts.inter(
-                        //     fontSize: 11,
-                        //     fontWeight: FontWeight.w400,
-                        //     color: Color(0xFF666666),
-                        //   ),
-                        //   maxLines: 1,
-                        //   overflow: TextOverflow.ellipsis,
-                        // ),
-                        // if (panel.lastConnected != null) ...[
-                        //   SizedBox(height: 2),
-                        //   Text(
-                        //     'Last connected: ${DateFormat('MMM d, y').format(panel.lastConnected!)}',
-                        //     style: GoogleFonts.inter(
-                        //       fontSize: 10,
-                        //       fontWeight: FontWeight.w400,
-                        //       color: Color(0xFF999999),
-                        //     ),
-                        //   ),
-                        // ],
-                        _buildLastLogSummary(),
-                      ],
-                    ),
-                  ),
-                  SizedBox(width: 8),
-                  GestureDetector(
-                    onTap: () {
-                      _confirmDeletePanel(panel);
-                    },
-                    child: SvgPicture.asset(
-                      "assets/svgs/delete_icon.svg",
-                      colorFilter: ColorFilter.mode(
-                        Color(0xFFEC1D24),
-                        BlendMode.srcIn,
-                      ),
-                    ),
-                  ),
-                  // IconButton(
-                  //   icon: const Icon(
-                  //     Icons.delete_outline,
-                  //     color: Color(0xFFEC1D24),
-                  //   ),
-                  //   tooltip: 'Delete panel',
-                  //   onPressed: () => _confirmDeletePanel(panel),
-                  // ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
+        ),
+      ),
     );
   }
 }
