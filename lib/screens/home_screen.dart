@@ -192,18 +192,18 @@ class _HomeContentState extends State<_HomeContent> {
           colors: [Color(0xFFF6EBEB), Colors.white],
         ),
       ),
-      child: RefreshIndicator(
-        onRefresh: _refreshSites,
-        child: SingleChildScrollView(
-          physics: AlwaysScrollableScrollPhysics(),
-          child: Column(
-            children: [
-              _buildHeader(context),
-              _buildQuickLinks(context),
-              _buildRecentSites(),
-            ],
+      child: Stack(
+        children: [
+          _buildHeader(context),
+          Padding(
+            padding: const EdgeInsets.only(top: 300),
+            child: _buildQuickLinks(context),
           ),
-        ),
+          Padding(
+            padding: const EdgeInsets.only(top: 400),
+            child: _buildRecentSites(),
+          ),
+        ],
       ),
     );
   }
@@ -479,20 +479,9 @@ class _HomeContentState extends State<_HomeContent> {
       padding: const EdgeInsets.only(top: 4),
       child: Row(
         children: [
-          const Icon(Icons.timeline, size: 12, color: Color(0xFF00A706)),
-          const SizedBox(width: 4),
-          Text(
-            '$lastLogCount log${lastLogCount == 1 ? '' : 's'}',
-            style: GoogleFonts.inter(
-              fontSize: 11,
-              fontWeight: FontWeight.w500,
-              color: const Color(0xFF00A706),
-            ),
-          ),
           if (lastLogDate != null) ...[
-            const SizedBox(width: 8),
             Text(
-              'Last: ${DateFormat('MMM d').format(lastLogDate)}',
+              'Created on ${DateFormat('MMM d').format(lastLogDate)}, ${DateFormat('yyyy').format(lastLogDate)} • ${DateFormat('hh:mm a').format(lastLogDate)}',
               style: GoogleFonts.inter(
                 fontSize: 11,
                 fontWeight: FontWeight.w400,
@@ -526,87 +515,92 @@ class _HomeContentState extends State<_HomeContent> {
       );
     }
 
-    return ListView.separated(
-      physics: NeverScrollableScrollPhysics(),
-      shrinkWrap: true,
-      itemCount: _sites.length,
-      separatorBuilder: (context, index) {
-        return SizedBox(height: 10);
-      },
-      itemBuilder: (context, index) {
-        final siteWithLogCount = _sites[index];
-        final site = siteWithLogCount.site;
+    return SizedBox(
+      height: MediaQuery.sizeOf(context).height - 550,
+      child: RefreshIndicator(
+        color: Color(0xFFEC1D24),
+        onRefresh: _refreshSites,
+        child: ListView.separated(
+          physics: AlwaysScrollableScrollPhysics(),
+          shrinkWrap: true,
+          itemCount: _sites.length,
+          separatorBuilder: (context, index) {
+            return SizedBox(height: 10);
+          },
+          itemBuilder: (context, index) {
+            final siteWithLogCount = _sites[index];
+            final site = siteWithLogCount.site;
 
-        return GestureDetector(
-          onTap: () async {
-            final deleted = await Navigator.of(context).push<bool>(
-              MaterialPageRoute(
-                builder:
-                    (context) => SiteScreen(
-                      site: site,
-                      siteWithLogCount: siteWithLogCount,
-                    ),
+            return GestureDetector(
+              onTap: () async {
+                final deleted = await Navigator.of(context).push<bool>(
+                  MaterialPageRoute(
+                    builder:
+                        (context) => SiteScreen(
+                          site: site,
+                          siteWithLogCount: siteWithLogCount,
+                        ),
+                  ),
+                );
+
+                if (deleted == true) {
+                  await _refreshSites();
+                }
+              },
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  border: Border.all(
+                    color: Color(0xFFB9B9B9).withValues(alpha: 0.31),
+                    width: 1,
+                  ),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 18.0,
+                    vertical: 8.0,
+                  ),
+                  child: Row(
+                    children: [
+                      Image.asset(
+                        'assets/images/panel_icon.png',
+                        height: 62,
+                        width: 62,
+                      ),
+                      SizedBox(width: 14.31),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              site.siteName,
+                              style: GoogleFonts.inter(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFF3D3D3D),
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            _buildLastLogSummary(siteWithLogCount),
+                          ],
+                        ),
+                      ),
+                      SizedBox(width: 8),
+                      Icon(
+                        Icons.arrow_forward_ios,
+                        size: 16,
+                        color: Color(0xFFEC1D24),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             );
-
-            if (deleted == true) {
-              await _refreshSites();
-            }
           },
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              border: Border.all(
-                color: Color(0xFFB9B9B9).withValues(alpha: 0.31),
-                width: 1,
-              ),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 18.0,
-                vertical: 8.0,
-              ),
-              child: Row(
-                children: [
-                  Image.asset('assets/images/panel_icon.png'),
-                  SizedBox(width: 14.31),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          site.siteName,
-                          style: GoogleFonts.inter(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF3D3D3D),
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        Text(
-                          '${site.installerName} • ${site.companyName}',
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w400,
-                            color: Color(0xFF918F8F),
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        _buildLastLogSummary(siteWithLogCount),
-                      ],
-                    ),
-                  ),
-                  SizedBox(width: 8),
-                  SvgPicture.asset('assets/svgs/arrow_right_icon.svg'),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
+        ),
+      ),
     );
   }
 }
