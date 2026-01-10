@@ -99,16 +99,14 @@ class _EventLogContentState extends State<_EventLogContent> {
     return live.isNotEmpty ? live : widget.panelName;
   }
 
-  // Prefer provided panelId, otherwise derive from panel name (no deviceId fallback)
-  String _resolvedPanelId([String? panelNameValue]) {
-    if ((widget.panelId ?? '').isNotEmpty) {
-      return widget.panelId!;
-    }
+  // Prefer provided panelId, otherwise derive from scanned device name (technoswitch_xxxx)
+  String _resolvedPanelId() {
+    if ((widget.panelId ?? '').isNotEmpty) return widget.panelId!;
 
-    final name = _resolvedPanelName(panelNameValue);
-    final parts = name.split('_');
+    final parts = widget.panelName.split('_');
     if (parts.length > 1 && parts.last.isNotEmpty) return parts.last;
-    return name;
+
+    return widget.panelName;
   }
 
   String _panelDisplayName(String name) {
@@ -116,11 +114,8 @@ class _EventLogContentState extends State<_EventLogContent> {
     return parts.isNotEmpty ? parts.first : name;
   }
 
-  String _panelDisplayId(String name) {
-    final parts = name.split('_');
-    if (parts.length > 1 && parts.last.isNotEmpty) return parts.last;
-    if ((widget.panelId ?? '').isNotEmpty) return widget.panelId!;
-    return name;
+  String _panelDisplayId() {
+    return _resolvedPanelId();
   }
 
   // Keep logs sorted by eventId (numeric if possible)
@@ -229,10 +224,8 @@ class _EventLogContentState extends State<_EventLogContent> {
 
       final bleManager = ble;
       final logs = bleManager.bleProcess.validEventLogs.value;
-      // Prefer resolved panelId from BLE panel name / provided panelId (not deviceId)
-      final panelIdToUse = _resolvedPanelId(
-        bleManager.bleProcess.panelName.value,
-      );
+      // Prefer resolved panelId from scanned device name / provided panelId (not deviceId or network name)
+      final panelIdToUse = _resolvedPanelId();
 
       // AppServices.serialService.disconnect();
 
@@ -287,7 +280,7 @@ class _EventLogContentState extends State<_EventLogContent> {
         );
         final resolvedName = _resolvedPanelName(ble.bleProcess.panelName.value);
         final displayName = _panelDisplayName(resolvedName);
-        final resolvedPanelId = _resolvedPanelId(resolvedName);
+        final resolvedPanelId = _resolvedPanelId();
         print('displayName: $displayName, panelId: $resolvedPanelId');
 
         if (shouldCreateSite == true) {
@@ -537,8 +530,9 @@ class _EventLogContentState extends State<_EventLogContent> {
                   _toDate!.month,
                   _toDate!.day,
                 ).add(Duration(days: 1)); // Include the entire end date
-                if (logDate.isAfter(toDate.subtract(Duration(seconds: 1))))
+                if (logDate.isAfter(toDate.subtract(Duration(seconds: 1)))) {
                   return false;
+                }
               }
             }
 
@@ -1048,10 +1042,12 @@ class _EventLogContentState extends State<_EventLogContent> {
                               ) {
                                 // Map "Release" to "Ext. Release" and "Evacuation" to "Fire" for UI
                                 String displayName = eventClass;
-                                if (eventClass == "Release")
+                                if (eventClass == "Release") {
                                   displayName = "Ext. Release";
-                                if (eventClass == "Evacuation")
+                                }
+                                if (eventClass == "Evacuation") {
                                   displayName = "Fire";
+                                }
 
                                 return SizedBox(
                                   width:
@@ -1298,7 +1294,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                   builder: (context, panelNameValue, _) {
                     final resolvedName = _resolvedPanelName(panelNameValue);
                     final displayName = _panelDisplayName(resolvedName);
-                    final displayId = _panelDisplayId(resolvedName);
+                    final displayId = _panelDisplayId();
 
                     return Column(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
