@@ -545,12 +545,8 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                               child: Container(
                                 height: 48,
                                 decoration: BoxDecoration(
-                                  color: Color(0xFFEFEEEE),
+                                  color: Color(0xFFEC1D24),
                                   borderRadius: BorderRadius.circular(24),
-                                  border: Border.all(
-                                    color: Color(0xFFD0D0D0),
-                                    width: 1,
-                                  ),
                                 ),
                                 child: Center(
                                   child: Text(
@@ -558,7 +554,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                                     style: GoogleFonts.inter(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w600,
-                                      color: Color(0xFF666666),
+                                      color: Colors.white,
                                     ),
                                   ),
                                 ),
@@ -964,7 +960,6 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
 
                   showPasswordPopup(
                     onCall: () {
-                      print("access key is valid");
                       bleController.startLogRetrieval();
                     },
                   );
