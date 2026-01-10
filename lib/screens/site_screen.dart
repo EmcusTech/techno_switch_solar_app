@@ -697,7 +697,11 @@ class _SiteScreenState extends State<SiteScreen> {
               ),
               child: Row(
                 children: [
-                  Image.asset('assets/images/panel_icon.png'),
+                  Image.asset(
+                    'assets/images/panel_icon.png',
+                    height: 62,
+                    width: 62,
+                  ),
                   SizedBox(width: 14.31),
                   Expanded(
                     child: Column(
