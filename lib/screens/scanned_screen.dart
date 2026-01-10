@@ -88,10 +88,13 @@ class _ScannedScreenState extends State<ScannedScreen> {
 
                       // Then navigate to scanning screen
                       if (context.mounted) {
-                        Navigator.of(context).pushReplacement(
+                        final navigator = Navigator.of(context);
+                        // navigator.pop(); // close dialog
+                        navigator.pushAndRemoveUntil(
                           MaterialPageRoute(
-                            builder: (context) => ScanningScreen(),
+                            builder: (_) => const ScanningScreen(),
                           ),
+                          (route) => route.isFirst,
                         );
                       }
                     },
