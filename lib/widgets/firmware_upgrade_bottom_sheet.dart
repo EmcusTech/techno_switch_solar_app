@@ -724,11 +724,7 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
   }
 
   Widget _buildScanningView() {
-    const double radarSize = 280; // Smaller for bottom sheet
-    final double center = radarSize / 2;
-    final double fixedRadius = radarSize * 0.35;
-    const double cardWidth = 100;
-    const double cardHeight = 120;
+    const double radarSize = 280; // compact for bottom sheet
 
     return Column(
       children: [
@@ -736,48 +732,34 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
           height: radarSize,
           width: double.infinity,
           child: Stack(
-            alignment: Alignment.center,
             children: [
-              // Radar background
-              SizedBox(
+              Positioned.fill(
+                child: CustomPaint(
+                  painter: _RadarPainter(sweepAnimation: _sweepController),
+                ),
+              ),
+              Positioned.fill(
+                child: AnimatedBuilder(
+                  animation: _sweepController,
+                  builder:
+                      (c, _) => CustomPaint(
+                        painter: _SweepPainter(
+                          progress: _sweepController.value,
+                        ),
+                      ),
+                ),
+              ),
+              Align(alignment: Alignment.center, child: ScanningAnimation()),
+              // Grid of devices over the radar
+              Positioned(
+                top: 0,
+                left: (MediaQuery.sizeOf(context).width - radarSize) / 2,
                 width: radarSize,
                 height: radarSize,
                 child: Stack(
-                  children: [
-                    Positioned.fill(
-                      child: IgnorePointer(
-                        child: CustomPaint(
-                          painter: _RadarPainter(
-                            sweepAnimation: _sweepController,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Positioned.fill(
-                      child: IgnorePointer(
-                        child: AnimatedBuilder(
-                          animation: _sweepController,
-                          builder:
-                              (c, _) => CustomPaint(
-                                painter: _SweepPainter(
-                                  progress: _sweepController.value,
-                                ),
-                              ),
-                        ),
-                      ),
-                    ),
-                    ..._buildSlotWidgets(
-                      radarSize,
-                      center,
-                      fixedRadius,
-                      cardWidth,
-                      cardHeight,
-                    ),
-                  ],
+                  children: [..._buildGridSlotWidgets(maxWidth: radarSize)],
                 ),
               ),
-              // Central scanning animation
-              ScanningAnimation(),
             ],
           ),
         ),
@@ -793,7 +775,7 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
         if (_discoveredDevices.isNotEmpty) ...[
           SizedBox(height: 8),
           Text(
-            '${_discoveredDevices.length} device(s) found - Tap on radar to connect',
+            '${_discoveredDevices.length} device(s) found - Tap to connect',
             style: GoogleFonts.inter(
               fontSize: 12,
               fontWeight: FontWeight.w500,
@@ -1423,6 +1405,116 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
     // }
   }
 
+  String? _deviceKeyByObject(dynamic device) {
+    return _computeStableKey(device);
+  }
+
+  List<Widget> _buildGridSlotWidgets({required double maxWidth}) {
+    const int columns = 3;
+    const double spacing = 12;
+    const double cardWidth = 100;
+    const double cardHeight = 130;
+
+    final widgets = <Widget>[];
+
+    final slots = _slotToDevice.keys.toList()..sort();
+
+    for (int i = 0; i < slots.length; i++) {
+      final slot = slots[i];
+      final deviceKey = _slotToDevice[slot];
+      if (deviceKey == null) continue;
+
+      final device = _discoveredDevices.firstWhere(
+        (d) => _deviceKeyByObject(d) == deviceKey,
+        orElse: () => null,
+      );
+      if (device == null) continue;
+
+      final row = i ~/ columns;
+      final col = i % columns;
+
+      final left = col * (cardWidth + spacing);
+      final top = row * (cardHeight + spacing);
+
+      final justAssigned = _justAssigned.containsKey(deviceKey);
+
+      widgets.add(
+        AnimatedPositioned(
+          key: ValueKey(deviceKey),
+          left: left,
+          top: top,
+          width: cardWidth,
+          height: cardHeight,
+          duration: const Duration(milliseconds: 420),
+          curve: Curves.easeOutCubic,
+          child: _AnimatedGridCard(
+            highlight: justAssigned,
+            child: _buildDeviceCard(device),
+          ),
+        ),
+      );
+    }
+
+    return widgets;
+  }
+
+  Widget _buildDeviceCard(DiscoveredDevice device) {
+    final label = device.name.isNotEmpty ? device.name : 'BLE-${device.id}';
+
+    return GestureDetector(
+      onTap: () => _connectToDevice(device),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Color(0xFFEC1D24).withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFFEC1D24), width: 2),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(10.0),
+          child: Column(
+            children: [
+              Text(
+                "TECHNOSWITCH",
+                style: GoogleFonts.inter(
+                  fontSize: 8,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF3D3D3D).withValues(alpha: 0.5),
+                ),
+              ),
+              SizedBox(height: 6),
+              SvgPicture.asset(
+                'assets/svgs/panel_icon.svg',
+                width: 60,
+                height: 60,
+              ),
+              SizedBox(height: 6),
+              Expanded(
+                child: Text(
+                  label.split('_').last,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ignore: unused_element
   List<Widget> _buildSlotWidgets(
     double radarSize,
     double center,
@@ -2494,4 +2586,105 @@ class _SweepPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _SweepPainter oldDelegate) =>
       oldDelegate.progress != progress;
+}
+
+class _AnimatedGridCard extends StatefulWidget {
+  final Widget child;
+  final bool highlight;
+
+  const _AnimatedGridCard({required this.child, required this.highlight});
+
+  @override
+  State<_AnimatedGridCard> createState() => _AnimatedGridCardState();
+}
+
+class _AnimatedGridCardState extends State<_AnimatedGridCard>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 360),
+    )..forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: _controller,
+      child: ScaleTransition(
+        scale: Tween(begin: 0.92, end: 1.0).animate(
+          CurvedAnimation(parent: _controller, curve: Curves.easeOutBack),
+        ),
+        child: Stack(
+          children: [widget.child, if (widget.highlight) const _PulseGlow()],
+        ),
+      ),
+    );
+  }
+}
+
+class _PulseGlow extends StatefulWidget {
+  const _PulseGlow();
+
+  @override
+  State<_PulseGlow> createState() => _PulseGlowState();
+}
+
+class _PulseGlowState extends State<_PulseGlow>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    )..repeat(reverse: true);
+
+    Future.delayed(const Duration(milliseconds: 900), () {
+      if (mounted) _controller.stop();
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned.fill(
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (_, __) {
+          return Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.green.withOpacity(
+                    0.25 * (1 - _controller.value),
+                  ),
+                  blurRadius: 18,
+                  spreadRadius: 2,
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
 }
