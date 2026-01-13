@@ -63,6 +63,8 @@ class BleProcess {
 
   final ValueNotifier<String> accessKey = ValueNotifier<String>("");
 
+  final ValueNotifier<int> bleManufacturerData = ValueNotifier<int>(0);
+
   // BleStates bleStateMachineState = BleStates.IDLE;
   BleStates bleCurrentState = BleStates.IDLE;
   DeviceConnectState deviceConnectState = DeviceConnectState.notConnected;

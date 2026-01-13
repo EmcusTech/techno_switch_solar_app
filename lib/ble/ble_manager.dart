@@ -114,6 +114,8 @@ class BleManager {
 
   ValueNotifier<bool?> get isAccessKeyValid => bleProcess.isAccessKeyValid;
 
+  ValueNotifier<int> get bleManufacturerData => bleProcess.bleManufacturerData;
+
   void resetProtocolState() {
     // Packet counters
     u8TxPktCnt = 0;
@@ -276,6 +278,8 @@ class BleManager {
             print("Connection state: ${update.connectionState}");
 
             if (update.connectionState == DeviceConnectionState.connected) {
+              print("Manufacturer data: ${device.manufacturerData.last}");
+              bleManufacturerData.value = device.manufacturerData.last;
               _isConnectedNotifier.value = true;
               isBleDisconnected = false;
               connectedDeviceId.value = device.id;
