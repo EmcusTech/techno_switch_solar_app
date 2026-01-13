@@ -1411,119 +1411,119 @@ class BleNotifyDataHandler extends GetxController {
     }
   }
 
-  void _handlePasskeyResponse(FrameData frame) {
-    logger.Logger('TX/RX Logs - ========================================');
-    logger.Logger('TX/RX Logs - PASSKEY RESPONSE RECEIVED');
-    logger.Logger('TX/RX Logs - ========================================');
-    logger.Logger('Passkey response - frame: $frame');
-    logger.Logger('Passkey response - payload data: ${frame.payloadData}');
+  // void _handlePasskeyResponse(FrameData frame) {
+  //   logger.Logger('TX/RX Logs - ========================================');
+  //   logger.Logger('TX/RX Logs - PASSKEY RESPONSE RECEIVED');
+  //   logger.Logger('TX/RX Logs - ========================================');
+  //   logger.Logger('Passkey response - frame: $frame');
+  //   logger.Logger('Passkey response - payload data: ${frame.payloadData}');
 
-    if (frame.payloadData.isEmpty) {
-      logger.Logger('Passkey response - ERROR: Empty passkey response');
-      _emitEvent(BleHandshakeEvent.error('Empty passkey response'));
-      return;
-    }
+  //   if (frame.payloadData.isEmpty) {
+  //     logger.Logger('Passkey response - ERROR: Empty passkey response');
+  //     _emitEvent(BleHandshakeEvent.error('Empty passkey response'));
+  //     return;
+  //   }
 
-    // The payload contains a nested Technoswitch frame (216 bytes)
-    // Convert hex strings to integers
-    List<int> technoswitchFrameBytes = convertStringListToHex(
-      frame.payloadData,
-    );
+  //   // The payload contains a nested Technoswitch frame (216 bytes)
+  //   // Convert hex strings to integers
+  //   List<int> technoswitchFrameBytes = convertStringListToHex(
+  //     frame.payloadData,
+  //   );
 
-    logger.Logger(
-      'Passkey response - Technoswitch frame length: ${technoswitchFrameBytes.length} bytes',
-    );
+  //   logger.Logger(
+  //     'Passkey response - Technoswitch frame length: ${technoswitchFrameBytes.length} bytes',
+  //   );
 
-    // Validate Technoswitch frame structure (should be 216 bytes)
-    if (technoswitchFrameBytes.length != 216) {
-      logger.Logger(
-        'Passkey response - ERROR: Invalid Technoswitch frame length: ${technoswitchFrameBytes.length} bytes (expected 216)',
-      );
-      _emitEvent(
-        BleHandshakeEvent.error(
-          'Invalid Technoswitch frame length: ${technoswitchFrameBytes.length}',
-        ),
-      );
-      return;
-    }
+  //   // Validate Technoswitch frame structure (should be 216 bytes)
+  //   if (technoswitchFrameBytes.length != 216) {
+  //     logger.Logger(
+  //       'Passkey response - ERROR: Invalid Technoswitch frame length: ${technoswitchFrameBytes.length} bytes (expected 216)',
+  //     );
+  //     _emitEvent(
+  //       BleHandshakeEvent.error(
+  //         'Invalid Technoswitch frame length: ${technoswitchFrameBytes.length}',
+  //       ),
+  //     );
+  //     return;
+  //   }
 
-    // Validate frame markers
-    const int frameSot = 0xFE;
-    const int frameEot = 0xFD;
-    if (technoswitchFrameBytes[0] != frameSot) {
-      logger.Logger(
-        'Passkey response - ERROR: Invalid SOT: 0x${technoswitchFrameBytes[0].toRadixString(16).padLeft(2, '0')} (expected 0xFE)',
-      );
-      _emitEvent(BleHandshakeEvent.error('Invalid Technoswitch frame SOT'));
-      return;
-    }
-    if (technoswitchFrameBytes[215] != frameEot) {
-      logger.Logger(
-        'Passkey response - ERROR: Invalid EOT: 0x${technoswitchFrameBytes[215].toRadixString(16).padLeft(2, '0')} (expected 0xFD)',
-      );
-      _emitEvent(BleHandshakeEvent.error('Invalid Technoswitch frame EOT'));
-      return;
-    }
+  //   // Validate frame markers
+  //   const int frameSot = 0xFE;
+  //   const int frameEot = 0xFD;
+  //   if (technoswitchFrameBytes[0] != frameSot) {
+  //     logger.Logger(
+  //       'Passkey response - ERROR: Invalid SOT: 0x${technoswitchFrameBytes[0].toRadixString(16).padLeft(2, '0')} (expected 0xFE)',
+  //     );
+  //     _emitEvent(BleHandshakeEvent.error('Invalid Technoswitch frame SOT'));
+  //     return;
+  //   }
+  //   if (technoswitchFrameBytes[215] != frameEot) {
+  //     logger.Logger(
+  //       'Passkey response - ERROR: Invalid EOT: 0x${technoswitchFrameBytes[215].toRadixString(16).padLeft(2, '0')} (expected 0xFD)',
+  //     );
+  //     _emitEvent(BleHandshakeEvent.error('Invalid Technoswitch frame EOT'));
+  //     return;
+  //   }
 
-    // Extract packet type and check status
-    // Structure: [0]SOT [1]dest [2]origin [3]pktTyp [4]txp [5]rxp [6-12]header [13+]payload
-    int pktTyp = technoswitchFrameBytes[3];
-    int mode = technoswitchFrameBytes[10];
-    int cmd = technoswitchFrameBytes[12];
-    int statusByte = technoswitchFrameBytes[13];
-    String status = statusByte.toRadixString(16).padLeft(2, '0').toUpperCase();
+  //   // Extract packet type and check status
+  //   // Structure: [0]SOT [1]dest [2]origin [3]pktTyp [4]txp [5]rxp [6-12]header [13+]payload
+  //   int pktTyp = technoswitchFrameBytes[3];
+  //   int mode = technoswitchFrameBytes[10];
+  //   int cmd = technoswitchFrameBytes[12];
+  //   int statusByte = technoswitchFrameBytes[13];
+  //   String status = statusByte.toRadixString(16).padLeft(2, '0').toUpperCase();
 
-    logger.Logger(
-      'TX/RX Logs - Passkey response - Technoswitch frame parsed successfully',
-    );
-    logger.Logger(
-      'TX/RX Logs - Passkey response - Packet Type: 0x${pktTyp.toRadixString(16).padLeft(2, '0')} (NRM=1, ACK=2)',
-    );
-    logger.Logger(
-      'TX/RX Logs - Passkey response - Mode: 0x${mode.toRadixString(16).padLeft(2, '0')}, Command: 0x${cmd.toRadixString(16).padLeft(2, '0')}',
-    );
-    logger.Logger(
-      'TX/RX Logs - Passkey response - Status byte at index 13: 0x$status (decimal: $statusByte)',
-    );
+  //   logger.Logger(
+  //     'TX/RX Logs - Passkey response - Technoswitch frame parsed successfully',
+  //   );
+  //   logger.Logger(
+  //     'TX/RX Logs - Passkey response - Packet Type: 0x${pktTyp.toRadixString(16).padLeft(2, '0')} (NRM=1, ACK=2)',
+  //   );
+  //   logger.Logger(
+  //     'TX/RX Logs - Passkey response - Mode: 0x${mode.toRadixString(16).padLeft(2, '0')}, Command: 0x${cmd.toRadixString(16).padLeft(2, '0')}',
+  //   );
+  //   logger.Logger(
+  //     'TX/RX Logs - Passkey response - Status byte at index 13: 0x$status (decimal: $statusByte)',
+  //   );
 
-    // Check packet type: NRM (0x01) or ACK (0x02) indicates success
-    // Similar to old way: accept both NRM and ACK packets
-    if (pktTyp == 1 || pktTyp == 2) {
-      // NRM (1) or ACK (2) packet received - treat as passkey accepted
-      logger.Logger(
-        'TX/RX Logs - Passkey response - SUCCESS: Passkey accepted by panel (Packet Type: ${pktTyp == 1 ? "NRM" : "ACK"})',
-      );
-      // After passkey acceptance, handshake is complete
-      // CONTROL_RES_EVENT_REPORT is a service command, not part of handshake
-      logger.Logger(
-        'TX/RX Logs - Passkey response - Handshake completed, connection established',
-      );
-      currentBleState(BleStateMachine.connected);
-      _emitEvent(BleHandshakeEvent.passkeyAccepted());
-      _emitStateChange('Handshake completed - Connection established');
-    } else if (status == _invalidPassword) {
-      logger.Logger(
-        'TX/RX Logs - Passkey response - ERROR: Invalid passkey (status: 0x09)',
-      );
-      _emitEvent(BleHandshakeEvent.error('Invalid passkey'));
-    } else if (status == _timeout) {
-      logger.Logger(
-        'TX/RX Logs - Passkey response - ERROR: Passkey validation timed out (status: 0x08)',
-      );
-      currentBleState(BleStateMachine.timeOut);
-      _emitEvent(BleHandshakeEvent.error('Passkey validation timed out'));
-    } else {
-      logger.Logger(
-        'TX/RX Logs - Passkey response - ERROR: Unexpected packet type: 0x${pktTyp.toRadixString(16).padLeft(2, '0')}',
-      );
-      _emitEvent(
-        BleHandshakeEvent.error(
-          'Unexpected passkey response: packet type 0x${pktTyp.toRadixString(16).padLeft(2, '0')}',
-        ),
-      );
-    }
-    logger.Logger('========================================\n');
-  }
+  //   // Check packet type: NRM (0x01) or ACK (0x02) indicates success
+  //   // Similar to old way: accept both NRM and ACK packets
+  //   if (pktTyp == 1 || pktTyp == 2) {
+  //     // NRM (1) or ACK (2) packet received - treat as passkey accepted
+  //     logger.Logger(
+  //       'TX/RX Logs - Passkey response - SUCCESS: Passkey accepted by panel (Packet Type: ${pktTyp == 1 ? "NRM" : "ACK"})',
+  //     );
+  //     // After passkey acceptance, handshake is complete
+  //     // CONTROL_RES_EVENT_REPORT is a service command, not part of handshake
+  //     logger.Logger(
+  //       'TX/RX Logs - Passkey response - Handshake completed, connection established',
+  //     );
+  //     currentBleState(BleStateMachine.connected);
+  //     _emitEvent(BleHandshakeEvent.passkeyAccepted());
+  //     _emitStateChange('Handshake completed - Connection established');
+  //   } else if (status == _invalidPassword) {
+  //     logger.Logger(
+  //       'TX/RX Logs - Passkey response - ERROR: Invalid passkey (status: 0x09)',
+  //     );
+  //     _emitEvent(BleHandshakeEvent.error('Invalid passkey'));
+  //   } else if (status == _timeout) {
+  //     logger.Logger(
+  //       'TX/RX Logs - Passkey response - ERROR: Passkey validation timed out (status: 0x08)',
+  //     );
+  //     currentBleState(BleStateMachine.timeOut);
+  //     _emitEvent(BleHandshakeEvent.error('Passkey validation timed out'));
+  //   } else {
+  //     logger.Logger(
+  //       'TX/RX Logs - Passkey response - ERROR: Unexpected packet type: 0x${pktTyp.toRadixString(16).padLeft(2, '0')}',
+  //     );
+  //     _emitEvent(
+  //       BleHandshakeEvent.error(
+  //         'Unexpected passkey response: packet type 0x${pktTyp.toRadixString(16).padLeft(2, '0')}',
+  //       ),
+  //     );
+  //   }
+  //   logger.Logger('========================================\n');
+  // }
 
   // Polling packet methods removed from handshake flow - kept for reference
   // The handshake now goes directly from passkey acceptance to CONTROL_RES_EVENT_REPORT
@@ -1651,100 +1651,100 @@ class BleNotifyDataHandler extends GetxController {
     logger.Logger('TX/RX Logs - ========================================\n');
   }
 
-  void _handleDummyPacketResponse(FrameData frame) {
-    logger.Logger('========================================');
-    logger.Logger('DUMMY PACKET RESPONSE RECEIVED');
-    logger.Logger('========================================');
-    logger.Logger('Dummy packet response - frame: $frame');
-    logger.Logger('Dummy packet response - payload data: ${frame.payloadData}');
+  // void _handleDummyPacketResponse(FrameData frame) {
+  //   logger.Logger('========================================');
+  //   logger.Logger('DUMMY PACKET RESPONSE RECEIVED');
+  //   logger.Logger('========================================');
+  //   logger.Logger('Dummy packet response - frame: $frame');
+  //   logger.Logger('Dummy packet response - payload data: ${frame.payloadData}');
 
-    if (frame.payloadData.isEmpty) {
-      logger.Logger(
-        'Dummy packet response - ERROR: Empty dummy packet response',
-      );
-      _emitEvent(BleHandshakeEvent.error('Empty dummy packet response'));
-      return;
-    }
+  //   if (frame.payloadData.isEmpty) {
+  //     logger.Logger(
+  //       'Dummy packet response - ERROR: Empty dummy packet response',
+  //     );
+  //     _emitEvent(BleHandshakeEvent.error('Empty dummy packet response'));
+  //     return;
+  //   }
 
-    // The payload contains a nested Technoswitch frame (216 bytes)
-    // Convert hex strings to integers
-    List<int> technoswitchFrameBytes = convertStringListToHex(
-      frame.payloadData,
-    );
+  //   // The payload contains a nested Technoswitch frame (216 bytes)
+  //   // Convert hex strings to integers
+  //   List<int> technoswitchFrameBytes = convertStringListToHex(
+  //     frame.payloadData,
+  //   );
 
-    logger.Logger(
-      'Dummy packet response - Technoswitch frame length: ${technoswitchFrameBytes.length} bytes',
-    );
+  //   logger.Logger(
+  //     'Dummy packet response - Technoswitch frame length: ${technoswitchFrameBytes.length} bytes',
+  //   );
 
-    // Validate Technoswitch frame structure (should be 216 bytes)
-    if (technoswitchFrameBytes.length != 216) {
-      logger.Logger(
-        'Dummy packet response - ERROR: Invalid Technoswitch frame length: ${technoswitchFrameBytes.length} bytes (expected 216)',
-      );
-      _emitEvent(
-        BleHandshakeEvent.error(
-          'Invalid Technoswitch frame length: ${technoswitchFrameBytes.length}',
-        ),
-      );
-      return;
-    }
+  //   // Validate Technoswitch frame structure (should be 216 bytes)
+  //   if (technoswitchFrameBytes.length != 216) {
+  //     logger.Logger(
+  //       'Dummy packet response - ERROR: Invalid Technoswitch frame length: ${technoswitchFrameBytes.length} bytes (expected 216)',
+  //     );
+  //     _emitEvent(
+  //       BleHandshakeEvent.error(
+  //         'Invalid Technoswitch frame length: ${technoswitchFrameBytes.length}',
+  //       ),
+  //     );
+  //     return;
+  //   }
 
-    // Validate frame markers
-    const int frameSot = 0xFE;
-    const int frameEot = 0xFD;
-    if (technoswitchFrameBytes[0] != frameSot) {
-      logger.Logger(
-        'Dummy packet response - ERROR: Invalid SOT: 0x${technoswitchFrameBytes[0].toRadixString(16).padLeft(2, '0')} (expected 0xFE)',
-      );
-      _emitEvent(BleHandshakeEvent.error('Invalid Technoswitch frame SOT'));
-      return;
-    }
-    if (technoswitchFrameBytes[215] != frameEot) {
-      logger.Logger(
-        'Dummy packet response - ERROR: Invalid EOT: 0x${technoswitchFrameBytes[215].toRadixString(16).padLeft(2, '0')} (expected 0xFD)',
-      );
-      _emitEvent(BleHandshakeEvent.error('Invalid Technoswitch frame EOT'));
-      return;
-    }
+  //   // Validate frame markers
+  //   const int frameSot = 0xFE;
+  //   const int frameEot = 0xFD;
+  //   if (technoswitchFrameBytes[0] != frameSot) {
+  //     logger.Logger(
+  //       'Dummy packet response - ERROR: Invalid SOT: 0x${technoswitchFrameBytes[0].toRadixString(16).padLeft(2, '0')} (expected 0xFE)',
+  //     );
+  //     _emitEvent(BleHandshakeEvent.error('Invalid Technoswitch frame SOT'));
+  //     return;
+  //   }
+  //   if (technoswitchFrameBytes[215] != frameEot) {
+  //     logger.Logger(
+  //       'Dummy packet response - ERROR: Invalid EOT: 0x${technoswitchFrameBytes[215].toRadixString(16).padLeft(2, '0')} (expected 0xFD)',
+  //     );
+  //     _emitEvent(BleHandshakeEvent.error('Invalid Technoswitch frame EOT'));
+  //     return;
+  //   }
 
-    // Check packet type - should be NRM (0x01)
-    int pktTyp = technoswitchFrameBytes[3];
-    logger.Logger(
-      'Dummy packet response - Packet type: 0x${pktTyp.toRadixString(16).padLeft(2, '0')}',
-    );
+  //   // Check packet type - should be NRM (0x01)
+  //   int pktTyp = technoswitchFrameBytes[3];
+  //   logger.Logger(
+  //     'Dummy packet response - Packet type: 0x${pktTyp.toRadixString(16).padLeft(2, '0')}',
+  //   );
 
-    // Check mode - should be DB_STATUS_INSTRUCT (0x83) or similar
-    int mode = technoswitchFrameBytes[10];
-    logger.Logger(
-      'Dummy packet response - Mode: 0x${mode.toRadixString(16).padLeft(2, '0')}',
-    );
+  //   // Check mode - should be DB_STATUS_INSTRUCT (0x83) or similar
+  //   int mode = technoswitchFrameBytes[10];
+  //   logger.Logger(
+  //     'Dummy packet response - Mode: 0x${mode.toRadixString(16).padLeft(2, '0')}',
+  //   );
 
-    if (pktTyp == 1) {
-      // NRM packet received successfully
-      logger.Logger(
-        'Dummy packet response - SUCCESS: Dummy packet acknowledged',
-      );
-      _pktRxCnt =
-          technoswitchFrameBytes[4]; // Update rx counter from tx counter in response
-      _pktTxCnt++;
+  //   if (pktTyp == 1) {
+  //     // NRM packet received successfully
+  //     logger.Logger(
+  //       'Dummy packet response - SUCCESS: Dummy packet acknowledged',
+  //     );
+  //     _pktRxCnt =
+  //         technoswitchFrameBytes[4]; // Update rx counter from tx counter in response
+  //     _pktTxCnt++;
 
-      // Now mark as connected
-      currentBleState(BleStateMachine.connected);
-      _emitEvent(BleHandshakeEvent.passkeyAccepted());
-      _emitStateChange('Handshake completed');
-      logger.Logger('Dummy packet response - State changed to: connected');
-    } else {
-      logger.Logger(
-        'Dummy packet response - ERROR: Unexpected packet type: 0x${pktTyp.toRadixString(16).padLeft(2, '0')}',
-      );
-      _emitEvent(
-        BleHandshakeEvent.error(
-          'Unexpected dummy packet response: packet type 0x${pktTyp.toRadixString(16).padLeft(2, '0')}',
-        ),
-      );
-    }
-    logger.Logger('========================================\n');
-  }
+  //     // Now mark as connected
+  //     currentBleState(BleStateMachine.connected);
+  //     _emitEvent(BleHandshakeEvent.passkeyAccepted());
+  //     _emitStateChange('Handshake completed');
+  //     logger.Logger('Dummy packet response - State changed to: connected');
+  //   } else {
+  //     logger.Logger(
+  //       'Dummy packet response - ERROR: Unexpected packet type: 0x${pktTyp.toRadixString(16).padLeft(2, '0')}',
+  //     );
+  //     _emitEvent(
+  //       BleHandshakeEvent.error(
+  //         'Unexpected dummy packet response: packet type 0x${pktTyp.toRadixString(16).padLeft(2, '0')}',
+  //       ),
+  //     );
+  //   }
+  //   logger.Logger('========================================\n');
+  // }
 
   void _emitStateChange([String? message]) {
     _emitEvent(
@@ -1764,201 +1764,201 @@ class BleNotifyDataHandler extends GetxController {
   }
 
   /// Handles MCU selection response
-  void _handleMcuSelectionProcess(
-    FrameData data,
-    DiscoveredDevice connectedDevice,
-  ) {
-    if (data.payloadData.isEmpty) {
-      logger.Logger('MCU Selection - Empty response');
-      return;
-    }
+  // void _handleMcuSelectionProcess(
+  //   FrameData data,
+  //   DiscoveredDevice connectedDevice,
+  // ) {
+  //   if (data.payloadData.isEmpty) {
+  //     logger.Logger('MCU Selection - Empty response');
+  //     return;
+  //   }
 
-    final String status = data.payloadData[0];
-    if (status == _ack) {
-      logger.Logger('MCU Selection - ACK received');
-      // Get UpdatesController if available
-      if (Get.isRegistered<UpdatesController>()) {
-        final UpdatesController updatesController =
-            Get.find<UpdatesController>();
+  //   final String status = data.payloadData[0];
+  //   if (status == _ack) {
+  //     logger.Logger('MCU Selection - ACK received');
+  //     // Get UpdatesController if available
+  //     if (Get.isRegistered<UpdatesController>()) {
+  //       final UpdatesController updatesController =
+  //           Get.find<UpdatesController>();
 
-        if (updatesController.typeData == updatesController.mainMcu) {
-          DataTransferManager().sendEofImageDataToBle(
-            updatesController.mainMcuLast100Byte,
-            dataWritten: (bool isWritten) {
-              if (isWritten) {
-                currentBleState(BleStateMachine.eofImageData);
-              }
-            },
-          );
-        } else if (updatesController.typeData == updatesController.rfMcu) {
-          DataTransferManager().sendEofImageDataToBle(
-            updatesController.rfMcuLast100Byte,
-            dataWritten: (bool isWritten) {
-              if (isWritten) {
-                currentBleState(BleStateMachine.eofImageData);
-              }
-            },
-          );
-        } else if (updatesController.typeData == updatesController.netMcu) {
-          DataTransferManager().sendEofImageDataToBle(
-            updatesController.netMcuLast100Byte,
-            dataWritten: (bool isWritten) {
-              if (isWritten) {
-                currentBleState(BleStateMachine.eofImageData);
-              }
-            },
-          );
-        } else {
-          DataTransferManager().sendDataSyncRequestPacket(
-            dataWritten: (bool isWritten) async {
-              if (isWritten) {
-                currentBleState(BleStateMachine.dataSyncRequest);
-              }
-            },
-          );
-        }
-      }
-    } else if (status == _nack) {
-      logger.Logger('MCU Selection - NACK received');
-      // Handle NACK - firmware upgrade failed
-    } else {
-      logger.Logger('MCU Selection - Unexpected response: $status');
-    }
-  }
+  //       if (updatesController.typeData == updatesController.mainMcu) {
+  //         DataTransferManager().sendEofImageDataToBle(
+  //           updatesController.mainMcuLast100Byte,
+  //           dataWritten: (bool isWritten) {
+  //             if (isWritten) {
+  //               currentBleState(BleStateMachine.eofImageData);
+  //             }
+  //           },
+  //         );
+  //       } else if (updatesController.typeData == updatesController.rfMcu) {
+  //         DataTransferManager().sendEofImageDataToBle(
+  //           updatesController.rfMcuLast100Byte,
+  //           dataWritten: (bool isWritten) {
+  //             if (isWritten) {
+  //               currentBleState(BleStateMachine.eofImageData);
+  //             }
+  //           },
+  //         );
+  //       } else if (updatesController.typeData == updatesController.netMcu) {
+  //         DataTransferManager().sendEofImageDataToBle(
+  //           updatesController.netMcuLast100Byte,
+  //           dataWritten: (bool isWritten) {
+  //             if (isWritten) {
+  //               currentBleState(BleStateMachine.eofImageData);
+  //             }
+  //           },
+  //         );
+  //       } else {
+  //         DataTransferManager().sendDataSyncRequestPacket(
+  //           dataWritten: (bool isWritten) async {
+  //             if (isWritten) {
+  //               currentBleState(BleStateMachine.dataSyncRequest);
+  //             }
+  //           },
+  //         );
+  //       }
+  //     }
+  //   } else if (status == _nack) {
+  //     logger.Logger('MCU Selection - NACK received');
+  //     // Handle NACK - firmware upgrade failed
+  //   } else {
+  //     logger.Logger('MCU Selection - Unexpected response: $status');
+  //   }
+  // }
 
   /// Handles EOF image data response
-  Future<void> _handleEofImageDataProcess(
-    FrameData data,
-    DiscoveredDevice connectedDevice,
-  ) async {
-    if (data.payloadData.isEmpty) {
-      logger.Logger('EOF Image Data - Empty response');
-      return;
-    }
+  // Future<void> _handleEofImageDataProcess(
+  //   FrameData data,
+  //   DiscoveredDevice connectedDevice,
+  // ) async {
+  //   if (data.payloadData.isEmpty) {
+  //     logger.Logger('EOF Image Data - Empty response');
+  //     return;
+  //   }
 
-    final String status = data.payloadData[0];
-    if (status == _ack) {
-      logger.Logger('EOF Image Data - ACK received');
-      DataTransferManager().sendDataSyncRequestPacket(
-        dataWritten: (bool isWritten) async {
-          if (isWritten) {
-            currentBleState(BleStateMachine.dataSyncRequest);
-          }
-        },
-      );
-    } else if (status == _nack) {
-      logger.Logger('EOF Image Data - NACK received');
-      // Handle NACK - firmware upgrade failed
-      if (Get.isRegistered<UpdatesController>()) {
-        final UpdatesController updatesController =
-            Get.find<UpdatesController>();
-        updatesController.downloadingStatus.value = DownloadStatus.failed;
-      }
-    } else {
-      logger.Logger('EOF Image Data - Unexpected response: $status');
-    }
-  }
+  //   final String status = data.payloadData[0];
+  //   if (status == _ack) {
+  //     logger.Logger('EOF Image Data - ACK received');
+  //     DataTransferManager().sendDataSyncRequestPacket(
+  //       dataWritten: (bool isWritten) async {
+  //         if (isWritten) {
+  //           currentBleState(BleStateMachine.dataSyncRequest);
+  //         }
+  //       },
+  //     );
+  //   } else if (status == _nack) {
+  //     logger.Logger('EOF Image Data - NACK received');
+  //     // Handle NACK - firmware upgrade failed
+  //     if (Get.isRegistered<UpdatesController>()) {
+  //       final UpdatesController updatesController =
+  //           Get.find<UpdatesController>();
+  //       updatesController.downloadingStatus.value = DownloadStatus.failed;
+  //     }
+  //   } else {
+  //     logger.Logger('EOF Image Data - Unexpected response: $status');
+  //   }
+  // }
 
   /// Handles data sync request response
-  void _handleDataSyncRequestProcess(
-    FrameData data,
-    DiscoveredDevice connectedDevice,
-  ) {
-    if (data.payloadData.isEmpty) {
-      logger.Logger('Data Sync Request - Empty response');
-      return;
-    }
+  // void _handleDataSyncRequestProcess(
+  //   FrameData data,
+  //   DiscoveredDevice connectedDevice,
+  // ) {
+  //   if (data.payloadData.isEmpty) {
+  //     logger.Logger('Data Sync Request - Empty response');
+  //     return;
+  //   }
 
-    final String status = data.payloadData[0];
-    if (status == _ack) {
-      logger.Logger('Data Sync Request - ACK received');
-      currentBleState(BleStateMachine.respondedDataSyncRequest);
+  //   final String status = data.payloadData[0];
+  //   if (status == _ack) {
+  //     logger.Logger('Data Sync Request - ACK received');
+  //     currentBleState(BleStateMachine.respondedDataSyncRequest);
 
-      // Start sending firmware data
-      if (Get.isRegistered<UpdatesController>()) {
-        final UpdatesController updatesController =
-            Get.find<UpdatesController>();
-        updatesController.sendFirmwareUpdateData();
-      }
-    } else if (status == _nack) {
-      logger.Logger('Data Sync Request - NACK received');
-    } else {
-      logger.Logger('Data Sync Request - Unexpected response: $status');
-    }
-  }
+  //     // Start sending firmware data
+  //     if (Get.isRegistered<UpdatesController>()) {
+  //       final UpdatesController updatesController =
+  //           Get.find<UpdatesController>();
+  //       updatesController.sendFirmwareUpdateData();
+  //     }
+  //   } else if (status == _nack) {
+  //     logger.Logger('Data Sync Request - NACK received');
+  //   } else {
+  //     logger.Logger('Data Sync Request - Unexpected response: $status');
+  //   }
+  // }
 
   /// Handles data start request response
-  void _handleDataStartRequestProcess(
-    FrameData data,
-    DiscoveredDevice connectedDevice,
-  ) {
-    if (data.payloadData.isEmpty) {
-      logger.Logger('Data Start Request - Empty response');
-      return;
-    }
+  // void _handleDataStartRequestProcess(
+  //   FrameData data,
+  //   DiscoveredDevice connectedDevice,
+  // ) {
+  //   if (data.payloadData.isEmpty) {
+  //     logger.Logger('Data Start Request - Empty response');
+  //     return;
+  //   }
 
-    final String status = data.payloadData[0];
-    if (status == _ack) {
-      logger.Logger('Data Start Request - ACK received');
-      currentBleState(BleStateMachine.respondedToDataStart);
-    } else if (status == _nack) {
-      logger.Logger('Data Start Request - NACK received');
-    } else {
-      logger.Logger('Data Start Request - Unexpected response: $status');
-    }
-  }
+  //   final String status = data.payloadData[0];
+  //   if (status == _ack) {
+  //     logger.Logger('Data Start Request - ACK received');
+  //     currentBleState(BleStateMachine.respondedToDataStart);
+  //   } else if (status == _nack) {
+  //     logger.Logger('Data Start Request - NACK received');
+  //   } else {
+  //     logger.Logger('Data Start Request - Unexpected response: $status');
+  //   }
+  // }
 
   /// Handles large packet process response
-  void _handleLargePacketProcess(
-    FrameData data,
-    DiscoveredDevice connectedDevice,
-  ) {
-    // Large packet responses are typically handled in DataTransferManager
-    // This can be used for progress tracking or error handling
-    logger.Logger('Large Packet Process - Response received');
-  }
+  // void _handleLargePacketProcess(
+  //   FrameData data,
+  //   DiscoveredDevice connectedDevice,
+  // ) {
+  //   // Large packet responses are typically handled in DataTransferManager
+  //   // This can be used for progress tracking or error handling
+  //   logger.Logger('Large Packet Process - Response received');
+  // }
 
   /// Handles data end request response
-  void _handleDataEndRequestProcess(
-    FrameData data,
-    DiscoveredDevice connectedDevice,
-  ) {
-    if (data.payloadData.isEmpty) {
-      logger.Logger('Data End Request - Empty response');
-      return;
-    }
+  // void _handleDataEndRequestProcess(
+  //   FrameData data,
+  //   DiscoveredDevice connectedDevice,
+  // ) {
+  //   if (data.payloadData.isEmpty) {
+  //     logger.Logger('Data End Request - Empty response');
+  //     return;
+  //   }
 
-    final String status = data.payloadData[0];
-    if (status == _ack) {
-      logger.Logger('Data End Request - ACK received');
-      currentBleState(BleStateMachine.respondToEndPacket);
+  //   final String status = data.payloadData[0];
+  //   if (status == _ack) {
+  //     logger.Logger('Data End Request - ACK received');
+  //     currentBleState(BleStateMachine.respondToEndPacket);
 
-      // Check if there are more MCUs to update
-      if (Get.isRegistered<UpdatesController>()) {
-        final UpdatesController updatesController =
-            Get.find<UpdatesController>();
-        if (updatesController.mismatchedMcuInfos.isNotEmpty) {
-          // Process next MCU
-          final MCUInfo nextMcu = updatesController.mismatchedMcuInfos[0];
-          updatesController.mismatchedMcuInfos.removeAt(0);
-          updatesController.readBinFile(nextMcu.byteData);
-          updatesController.selectedMcu(nextMcu.mcuType);
-        } else {
-          // All MCUs updated
-          updatesController.downloadingStatus.value = DownloadStatus.completed;
-        }
-      }
-    } else if (status == _nack) {
-      logger.Logger('Data End Request - NACK received');
-      if (Get.isRegistered<UpdatesController>()) {
-        final UpdatesController updatesController =
-            Get.find<UpdatesController>();
-        updatesController.downloadingStatus.value = DownloadStatus.failed;
-      }
-    } else {
-      logger.Logger('Data End Request - Unexpected response: $status');
-    }
-  }
+  //     // Check if there are more MCUs to update
+  //     if (Get.isRegistered<UpdatesController>()) {
+  //       final UpdatesController updatesController =
+  //           Get.find<UpdatesController>();
+  //       if (updatesController.mismatchedMcuInfos.isNotEmpty) {
+  //         // Process next MCU
+  //         final MCUInfo nextMcu = updatesController.mismatchedMcuInfos[0];
+  //         updatesController.mismatchedMcuInfos.removeAt(0);
+  //         updatesController.readBinFile(nextMcu.byteData);
+  //         updatesController.selectedMcu(nextMcu.mcuType);
+  //       } else {
+  //         // All MCUs updated
+  //         updatesController.downloadingStatus.value = DownloadStatus.completed;
+  //       }
+  //     }
+  //   } else if (status == _nack) {
+  //     logger.Logger('Data End Request - NACK received');
+  //     if (Get.isRegistered<UpdatesController>()) {
+  //       final UpdatesController updatesController =
+  //           Get.find<UpdatesController>();
+  //       updatesController.downloadingStatus.value = DownloadStatus.failed;
+  //     }
+  //   } else {
+  //     logger.Logger('Data End Request - Unexpected response: $status');
+  //   }
+  // }
 
   @override
   void onClose() {

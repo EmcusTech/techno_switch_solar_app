@@ -79,6 +79,7 @@ class BleManager {
   int receivedPollCount = 0;
   StreamSubscription<ConnectionStateUpdate>? _connectionSub;
   bool _connectedOnce = false;
+  // ignore: unused_field
   bool _isGattConnected = false;
   StreamSubscription<List<int>>? _notifySub;
   bool isBleDisconnected = true;
@@ -942,5 +943,41 @@ class BleManager {
     // );
 
     await sendSmallDataFrame(0x1000, 216, u8_pkt);
+  }
+
+  /// Sends a firmware packet directly (no Technoswitch framing).
+  /// Packet must already contain the 2-byte big-endian sequence header.
+  Future<void> sendFirmwarePacket(Uint8List packet) async {
+    if (!isConnected || writeChar == null) {
+      throw Exception("BLE not connected or write characteristic missing");
+    }
+    try {
+      await flutterReactiveBle.writeCharacteristicWithResponse(
+        writeChar!,
+        value: packet,
+      );
+    } catch (e) {
+      print("Send firmware packet failed: $e");
+      rethrow;
+    }
+  }
+
+  /// Sends a list of firmware packets sequentially with an optional delay.
+  Future<void> sendFirmwarePackets(
+    List<Uint8List> packets, {
+    Duration interPacketDelay = const Duration(milliseconds: 20),
+    void Function(int sent, int total)? onProgress,
+  }) async {
+    if (!isConnected || writeChar == null) {
+      throw Exception("BLE not connected or write characteristic missing");
+    }
+
+    for (int i = 0; i < packets.length; i++) {
+      await sendFirmwarePacket(packets[i]);
+      onProgress?.call(i + 1, packets.length);
+      if (i + 1 < packets.length) {
+        await Future.delayed(interPacketDelay);
+      }
+    }
   }
 }

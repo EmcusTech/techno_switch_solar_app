@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:math';
+import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
@@ -9,12 +10,14 @@ import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:percent_indicator/percent_indicator.dart';
-import 'package:techno_switch_solar_app/controllers/updates_controller.dart';
-import 'package:techno_switch_solar_app/models/mcu_info.dart';
-import 'package:techno_switch_solar_app/services/app_services.dart';
-import 'package:techno_switch_solar_app/services/firmware_upgrade_service.dart';
-import 'package:techno_switch_solar_app/utils/bluetooth/ble_notify_data_handler.dart';
-import 'package:techno_switch_solar_app/utils/bluetooth/bt_utils.dart';
+import '../ble/ble_manager.dart';
+import '../ble/controller/ble_log_controller.dart';
+import '../controllers/updates_controller.dart';
+import '../services/app_services.dart';
+import 'package:techno_switch_solar_app/services/firmware_upgrade_service.dart'
+    as fw;
+import '../utils/bluetooth/ble_notify_data_handler.dart';
+import '../utils/bluetooth/bt_utils.dart';
 import 'package:techno_switch_solar_app/utils/bluetooth_service.dart'
     as app_bluetooth;
 import 'package:techno_switch_solar_app/utils/logger.dart' as logger;
@@ -50,11 +53,11 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
   PlatformFile? _selectedFile;
   bool _isUploading = false;
   bool _isUpgrading = false;
+  bool _isValidating = false;
+  bool _testMode = true;
   String? _errorMessage;
   String? _currentBleStateMessage;
-
-  // Test mode flag - set to true to skip BLE connection for testing file processing
-  bool _testMode = true;
+  fw.FirmwareValidationResult? _validationResult;
 
   // BLE connection state
   bool _isScanning = false;
@@ -109,7 +112,7 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
     // Listen to download status changes
     _controller.downloadingStatus.listen((status) {
       if (mounted) {
-        if (status == DownloadStatus.upgrading) {
+        if (status == fw.DownloadStatus.upgrading) {
           setState(() {
             if (_currentStep == FirmwareUpgradeStep.fileDetails ||
                 _currentStep == FirmwareUpgradeStep.progress) {
@@ -117,13 +120,13 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
               _isUpgrading = true;
             }
           });
-        } else if (status == DownloadStatus.completed) {
+        } else if (status == fw.DownloadStatus.completed) {
           setState(() {
             _currentStep = FirmwareUpgradeStep.result;
             _isUpgrading = false;
             _errorMessage = null;
           });
-        } else if (status == DownloadStatus.failed) {
+        } else if (status == fw.DownloadStatus.failed) {
           setState(() {
             _currentStep = FirmwareUpgradeStep.result;
             _isUpgrading = false;
@@ -176,6 +179,54 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
 
     // Check initial connection status
     _checkInitialConnection();
+  }
+
+  Future<void> _sendPacketsOverBle() async {
+    if (_controller.packetResult == null ||
+        _controller.packetResult!.packets.isEmpty) {
+      throw Exception('No packets prepared');
+    }
+
+    // Basic BLE connection guard unless test mode (handled earlier)
+    final handler = _bleHandler;
+    if (handler.currentBleState.value != BleStateMachine.connected) {
+      throw Exception('Device not connected. Complete BLE handshake first.');
+    }
+
+    // Try to get BleManager via BleLogController if registered
+    BleManager? manager;
+    if (Get.isRegistered<BleLogController>()) {
+      manager = Get.find<BleLogController>().bleManager;
+    }
+
+    final packets = _controller.packetResult!.packets;
+    final logicalTotal = _controller.packetResult!.totalLogicalPackets;
+
+    int logicalIndex = 0;
+
+    if (manager != null) {
+      await manager.sendFirmwarePackets(
+        packets.map((p) => Uint8List.fromList(p.bytes)).toList(),
+        interPacketDelay: const Duration(milliseconds: 20),
+        onProgress: (sent, total) {
+          logicalIndex = sent;
+          _controller.progressbarIndex.value = logicalIndex;
+          _controller.progressbarCount.value =
+              logicalTotal == 0 ? 0 : logicalIndex / logicalTotal;
+        },
+      );
+    } else {
+      // Fallback: just simulate progress if manager unavailable
+      for (final _ in packets) {
+        logicalIndex++;
+        _controller.progressbarIndex.value = logicalIndex;
+        _controller.progressbarCount.value =
+            logicalTotal == 0 ? 0 : logicalIndex / logicalTotal;
+        await Future.delayed(const Duration(milliseconds: 20));
+      }
+    }
+
+    _controller.downloadingStatus.value = fw.DownloadStatus.completed;
   }
 
   @override
@@ -284,9 +335,6 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
                 onChanged: (value) {
                   setState(() {
                     _testMode = value;
-                    logger.Logger(
-                      'Test Mode ${value ? "ENABLED" : "DISABLED"}',
-                    );
                   });
                 },
                 activeColor: Color(0xFFEC1D24),
@@ -468,15 +516,10 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
             ElevatedButton(
               onPressed: () {
                 setState(() {
-                  if (_testMode) {
-                    // Skip connection step in test mode
-                    _currentStep = FirmwareUpgradeStep.chooseType;
-                    logger.Logger(
-                      'TEST MODE: Skipping BLE connection step, going directly to Choose Type',
-                    );
-                  } else {
-                    _currentStep = FirmwareUpgradeStep.connectDevice;
-                  }
+                  _currentStep =
+                      _testMode
+                          ? FirmwareUpgradeStep.chooseType
+                          : FirmwareUpgradeStep.connectDevice;
                 });
               },
               style: ElevatedButton.styleFrom(
@@ -1072,35 +1115,102 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
 
   // Device key computation (from scanning_screen.dart)
   String? _computeStableKey(dynamic device) {
-    if (device == null) {
-      return null;
-    }
+    try {
+      if (device == null) {
+        return null;
+      }
 
-    if (device is DiscoveredDevice) {
-      return 'ble:${device.id}';
-    }
+      if (device is DiscoveredDevice) {
+        return 'ble:${device.id}';
+      }
 
-    if (device is UsbDevice) {
-      return 'usb:${device.vid}:${device.pid}';
-    }
+      if (device is UsbDevice) {
+        return 'usb:${device.vid}:${device.pid}';
+      }
 
-    if (device is Map) {
-      final candidates = <String?>[
-        device['id']?.toString(),
-        device['deviceId']?.toString(),
-        device['address']?.toString(),
-        device['mac']?.toString(),
-        device['uuid']?.toString(),
-      ];
+      if (device is Map) {
+        final map = device;
+        final candidates = <String?>[
+          map['address']?.toString(),
+          map['id']?.toString(),
+          map['deviceId']?.toString(),
+          map['mac']?.toString(),
+          map['uuid']?.toString(),
+          map['peripheralId']?.toString(),
+        ];
 
-      for (final c in candidates) {
-        if (c != null && c.isNotEmpty) {
-          return 'map:$c';
+        for (final c in candidates) {
+          if (c != null && c.isNotEmpty) {
+            return 'field:$c';
+          }
+        }
+
+        if (map.containsKey('advertisementData')) {
+          final ad = map['advertisementData'];
+          try {
+            if (ad is Map && ad.containsKey('manufacturerData')) {
+              final manu = ad['manufacturerData'];
+              if (manu != null) {
+                final hex = _bytesToHex(manu);
+                if (hex.isNotEmpty) return 'manu:$hex';
+              }
+            }
+          } catch (_) {}
         }
       }
-    }
 
-    return device.toString();
+      final dyn = device;
+      try {
+        final a = (dyn as dynamic).address;
+        if (a != null && a.toString().isNotEmpty) return 'address:$a';
+      } catch (_) {}
+      try {
+        final i = (dyn as dynamic).id;
+        if (i != null && i.toString().isNotEmpty) return 'id:$i';
+      } catch (_) {}
+      try {
+        final mac = (dyn as dynamic).macAddress;
+        if (mac != null && mac.toString().isNotEmpty) return 'mac:$mac';
+      } catch (_) {}
+      try {
+        final uuid = (dyn as dynamic).uuid;
+        if (uuid != null && uuid.toString().isNotEmpty) return 'uuid:$uuid';
+      } catch (_) {}
+
+      try {
+        final ad = (dyn as dynamic).advertisementData;
+        if (ad != null) {
+          final manu = (ad as dynamic).manufacturerData;
+          if (manu != null) {
+            final hex = _bytesToHex(manu);
+            if (hex.isNotEmpty) return 'manu:$hex';
+          }
+          final su = (ad as dynamic).serviceUuids;
+          if (su != null) {
+            final s = su.toString();
+            if (s.isNotEmpty) return 'svc:$s';
+          }
+        }
+      } catch (_) {}
+
+      try {
+        final name = (dyn as dynamic).name;
+        if (name != null && name.toString().isNotEmpty) {
+          return 'name:${name.toString()}';
+        }
+      } catch (_) {}
+
+      try {
+        final full = device.toString();
+        if (full.isNotEmpty) {
+          final h = _simpleHash(full);
+          return 'ts:$h';
+        }
+      } catch (_) {}
+    } catch (e) {
+      logger.Logger('Error computing stable key: $e');
+    }
+    return null;
 
     // //
     // try {
@@ -1143,6 +1253,39 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
     //   logger.Logger('Error computing stable key: $e');
     //   return null;
     // }
+  }
+
+  String _bytesToHex(dynamic b) {
+    try {
+      if (b == null) return '';
+      if (b is List<int>) {
+        return b.map((e) => e.toRadixString(16).padLeft(2, '0')).join();
+      }
+      if (b is Uint8List) {
+        return b.map((e) => e.toRadixString(16).padLeft(2, '0')).join();
+      }
+      if (b is Map) {
+        final vals = <int>[];
+        for (var entry in b.entries) {
+          final v = entry.value;
+          if (v is int) vals.add(v);
+        }
+        return vals.map((e) => e.toRadixString(16).padLeft(2, '0')).join();
+      }
+      final s = b.toString();
+      if (RegExp(r'^[0-9a-fA-F]+$').hasMatch(s)) return s;
+      return '';
+    } catch (_) {
+      return '';
+    }
+  }
+
+  int _simpleHash(String s) {
+    int h = 0;
+    for (int i = 0; i < s.length; i++) {
+      h = (h * 31 + s.codeUnitAt(i)) & 0x7fffffff;
+    }
+    return h;
   }
 
   int? _findFreeSlot() {
@@ -1815,11 +1958,7 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
                 onPressed:
                     _selectedFile == null || _isUploading
                         ? null
-                        : () {
-                          setState(() {
-                            _currentStep = FirmwareUpgradeStep.fileDetails;
-                          });
-                        },
+                        : _goToFileDetails,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Color(0xFFEC1D24),
                   padding: EdgeInsets.symmetric(vertical: 16),
@@ -1847,127 +1986,143 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
   Widget _buildFileDetails() {
     if (_selectedFile == null) return SizedBox();
 
-    return Obx(() {
-      final isCrcMatched = _controller.isFileCrcMatched.value;
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            'File Details',
-            style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w700),
-          ),
-          SizedBox(height: 24),
-          _buildDetailRow('File Name', _selectedFile!.name),
-          SizedBox(height: 12),
-          _buildDetailRow(
-            'File Size',
-            '${(_selectedFile!.size / (1024 * 1024)).toStringAsFixed(2)} MB',
-          ),
-          SizedBox(height: 12),
-          _buildDetailRow(
-            'Firmware Type',
-            _selectedFirmwareType == FirmwareType.mainPanel
-                ? 'Main Panel Firmware'
-                : 'BLE Chip Firmware',
-          ),
-          SizedBox(height: 12),
-          _buildDetailRow(
-            'CRC Status',
-            isCrcMatched ? 'Valid' : 'Invalid',
-            valueColor: isCrcMatched ? Color(0xFF00A706) : Color(0xFFEC1D24),
-          ),
-          SizedBox(height: 32),
-          if (!isCrcMatched)
-            Container(
-              padding: EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Color(0xFFEC1D24).withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.warning, color: Color(0xFFEC1D24)),
-                  SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      _testMode
-                          ? 'File CRC validation failed. Test mode: You can proceed anyway.'
-                          : 'File CRC validation failed. Please select a valid firmware file.',
-                      style: GoogleFonts.inter(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w400,
-                        color: Color(0xFFEC1D24),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+    final result = _validationResult;
+    final isCrcMatched = _controller.isFileCrcMatched.value;
+    final expectedCrc = result?.expectedHex ?? '—';
+    final calculatedCrc = result?.calculatedHex ?? '—';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          'File Details',
+          style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w700),
+        ),
+        SizedBox(height: 24),
+        _buildDetailRow('File Name', _selectedFile!.name),
+        SizedBox(height: 12),
+        _buildDetailRow(
+          'File Size',
+          '${(_selectedFile!.size / (1024 * 1024)).toStringAsFixed(2)} MB',
+        ),
+        SizedBox(height: 12),
+        _buildDetailRow(
+          'Firmware Type',
+          _selectedFirmwareType == FirmwareType.mainPanel
+              ? 'Main Panel Firmware'
+              : 'BLE Chip Firmware',
+        ),
+        SizedBox(height: 12),
+        _buildDetailRow('Expected CRC', expectedCrc),
+        SizedBox(height: 12),
+        _buildDetailRow('Calculated CRC', calculatedCrc),
+        SizedBox(height: 12),
+        _buildDetailRow(
+          'CRC Status',
+          _isValidating
+              ? 'Validating...'
+              : isCrcMatched
+              ? 'Valid'
+              : 'Invalid',
+          valueColor:
+              _isValidating
+                  ? Color(0xFF979797)
+                  : isCrcMatched
+                  ? Color(0xFF00A706)
+                  : Color(0xFFEC1D24),
+        ),
+        if (_isValidating) ...[
+          SizedBox(height: 16),
+          Center(child: CircularProgressIndicator()),
+        ],
+        if (!_isValidating && !isCrcMatched)
+          Container(
+            margin: EdgeInsets.only(top: 24),
+            padding: EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Color(0xFFEC1D24).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
             ),
-          SizedBox(height: 24),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () {
-                    setState(() {
-                      _currentStep = FirmwareUpgradeStep.fileUpload;
-                    });
-                  },
-                  style: OutlinedButton.styleFrom(
-                    padding: EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    side: BorderSide(color: Color(0xFFEC1D24)),
-                  ),
+            child: Row(
+              children: [
+                Icon(Icons.warning, color: Color(0xFFEC1D24)),
+                SizedBox(width: 12),
+                Expanded(
                   child: Text(
-                    'Back',
+                    _validationResult?.error ??
+                        'File CRC validation failed. Please select a valid firmware file.',
                     style: GoogleFonts.inter(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
                       color: Color(0xFFEC1D24),
                     ),
                   ),
                 ),
-              ),
-              SizedBox(width: 16),
-              Expanded(
-                flex: 2,
-                child: ElevatedButton(
-                  onPressed:
-                      (!isCrcMatched && !_testMode)
-                          ? null
-                          : () {
-                            if (_testMode && !isCrcMatched) {
-                              logger.Logger(
-                                'TEST MODE: Proceeding despite CRC validation failure',
-                              );
-                            }
-                            _startFirmwareUpgrade();
-                          },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFFEC1D24),
-                    padding: EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    disabledBackgroundColor: Color(0xFFD9D9D9),
+              ],
+            ),
+          ),
+        SizedBox(height: 24),
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed:
+                    _isValidating
+                        ? null
+                        : () {
+                          setState(() {
+                            _currentStep = FirmwareUpgradeStep.fileUpload;
+                          });
+                        },
+                style: OutlinedButton.styleFrom(
+                  padding: EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Text(
-                    'Submit',
-                    style: GoogleFonts.inter(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
+                  side: BorderSide(color: Color(0xFFEC1D24)),
+                ),
+                child: Text(
+                  'Back',
+                  style: GoogleFonts.inter(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFFEC1D24),
                   ),
                 ),
               ),
-            ],
-          ),
-        ],
-      );
-    });
+            ),
+            SizedBox(width: 16),
+            Expanded(
+              flex: 2,
+              child: ElevatedButton(
+                onPressed:
+                    (_isValidating || !isCrcMatched)
+                        ? null
+                        : () {
+                          _startUpgrade();
+                        },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Color(0xFFEC1D24),
+                  padding: EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  disabledBackgroundColor: Color(0xFFD9D9D9),
+                ),
+                child: Text(
+                  'Continue',
+                  style: GoogleFonts.inter(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
   }
 
   Widget _buildDetailRow(String label, String value, {Color? valueColor}) {
@@ -2038,18 +2193,18 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
               ),
               textAlign: TextAlign.center,
             ),
-          SizedBox(height: 8),
-          LinearPercentIndicator(
-            lineHeight: 8,
-            percent: progress.clamp(0.0, 1.0),
-            backgroundColor: Color(0xFFD9D9D9),
-            progressColor: Color(0xFFEC1D24),
-            barRadius: Radius.circular(4),
-          ),
+          // SizedBox(height: 8),
+          // LinearPercentIndicator(
+          //   lineHeight: 8,
+          //   percent: progress.clamp(0.0, 1.0),
+          //   backgroundColor: Color(0xFFD9D9D9),
+          //   progressColor: Color(0xFFEC1D24),
+          //   barRadius: Radius.circular(4),
+          // ),
           SizedBox(height: 24),
           Text(
             _currentBleStateMessage ??
-                (status == DownloadStatus.upgrading
+                (status == fw.DownloadStatus.upgrading
                     ? 'Please wait while the firmware is being upgraded. Do not disconnect the device.'
                     : 'Processing...'),
             style: GoogleFonts.inter(
@@ -2066,7 +2221,7 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
 
   Widget _buildResult() {
     final isSuccess =
-        _controller.downloadingStatus.value == DownloadStatus.completed;
+        _controller.downloadingStatus.value == fw.DownloadStatus.completed;
     final message =
         _errorMessage ??
         (isSuccess
@@ -2119,7 +2274,7 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
           onPressed: () {
             Navigator.of(context).pop();
             // Reset state
-            _controller.downloadingStatus.value = DownloadStatus.downloading;
+            _controller.downloadingStatus.value = fw.DownloadStatus.downloading;
             _controller.isFileCrcMatched.value = false;
             _controller.selectedFirmwareFile = null;
             _controller.progressbarIndex.value = 0;
@@ -2169,24 +2324,10 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
 
         _controller.selectFirmwareFile(platformFile);
 
-        // Set firmware type in controller (0 = mainPanel, 1 = bleChip)
-        _controller.selectedFirmwareType =
-            _selectedFirmwareType == FirmwareType.bleChip ? 1 : 0;
-
-        // Validate CRC for local file
-        FirmwareUpgradeService().validateLocalFileCrc(platformFile);
-
-        // Process the file as single MCU firmware
-        try {
-          await _controller.readAndSplitBinFile(result.files.single.path!);
-        } catch (e) {
-          logger.Logger('Error processing file: $e');
-          // File might still be selected even if processing fails
-        }
-
         setState(() {
           _selectedFile = platformFile;
           _isUploading = false;
+          _validationResult = null;
         });
       } else {
         setState(() {
@@ -2202,91 +2343,88 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
     }
   }
 
-  Future<void> _startFirmwareUpgrade() async {
-    if (_selectedFile?.path == null) return;
+  Future<void> _goToFileDetails() async {
+    if (_selectedFile == null) return;
 
-    try {
-      // Skip BLE connection check in test mode
-      if (!_testMode) {
-        // Check BLE connection before starting
-        final btUtils = BtUtils();
-        final connectedDevice = await btUtils.getConnectedDevice();
+    setState(() {
+      _currentStep = FirmwareUpgradeStep.fileDetails;
+      _isValidating = true;
+      _validationResult = null;
+      _errorMessage = null;
+    });
 
-        if (connectedDevice == null) {
-          setState(() {
-            _errorMessage = 'Please connect to the device via Bluetooth first';
-            _currentStep = FirmwareUpgradeStep.result;
-          });
-          return;
-        }
+    final result = _controller.validateSelectedFile();
 
-        // Check if BLE state is connected
-        if (_bleHandler.currentBleState.value != BleStateMachine.connected) {
-          setState(() {
-            _errorMessage =
-                'Device is not fully connected. Please ensure the handshake is complete.';
-            _currentStep = FirmwareUpgradeStep.result;
-          });
-          return;
-        }
-      } else {
-        logger.Logger('TEST MODE: Skipping BLE connection checks');
+    setState(() {
+      _validationResult = result;
+      _isValidating = false;
+      if (result == null) {
+        _errorMessage = 'No file selected. Please upload again.';
+      } else if (!result.isValid) {
+        _errorMessage = result.error ?? 'CRC validation failed.';
       }
+    });
+  }
 
-      // Set status to upgrading immediately
-      _controller.downloadingStatus.value = DownloadStatus.upgrading;
+  Future<void> _startUpgrade() async {
+    _controller.downloadingStatus.value = fw.DownloadStatus.upgrading;
 
+    setState(() {
+      _isUpgrading = true;
+      _currentStep = FirmwareUpgradeStep.progress;
+      _currentBleStateMessage = 'Preparing packets...';
+      _errorMessage = null;
+    });
+
+    final prepared = await _controller.preparePackets();
+    if (!prepared || _controller.totalPacketLength.value == 0) {
       setState(() {
-        _isUpgrading = true;
-        _currentStep = FirmwareUpgradeStep.progress;
-        _currentBleStateMessage = 'Initializing firmware upgrade...';
-        _errorMessage = null;
-      });
-
-      // Process mismatched MCUs and start upgrade
-      // For now, we'll process all MCUs
-      final mismatchedIndexes = List.generate(
-        _controller.mcuInfoList.length,
-        (index) => index,
-      );
-
-      await _controller.processMismatchedMCUs(mismatchedIndexes);
-
-      if (_testMode) {
-        logger.Logger(
-          'TEST MODE: File processing completed. Starting BLE simulation...',
-        );
-        // In test mode, simulate BLE responses to show progress
-        // First, set up the MCU type data for simulation
-        if (_controller.mismatchedMcuInfos.isNotEmpty) {
-          final MCUInfo firstMcu = _controller.mismatchedMcuInfos[0];
-          _controller.typeData = _controller.getTypeDataForMcu(
-            firstMcu.mcuType,
-          );
-          _controller.mainMcuLast100Byte = firstMcu.last100Bytes;
-        }
-        // Start simulation (await to ensure it completes)
-        await _controller.simulateBleFirmwareUpgrade();
-      } else {
-        // The upgrade process will be handled by the BLE state machine
-        // Progress updates will come through the controller observables
-        // BLE state changes will update _currentBleStateMessage
-        // Start the actual BLE upgrade flow
-        if (_controller.mismatchedMcuInfos.isNotEmpty) {
-          final MCUInfo firstMcu = _controller.mismatchedMcuInfos[0];
-          _controller.mismatchedMcuInfos.removeAt(0);
-          _controller.readBinFile(firstMcu.byteData);
-          _controller.selectedMcu(firstMcu.mcuType);
-        }
-      }
-    } catch (e) {
-      logger.Logger('Error starting firmware upgrade: $e');
-      _controller.downloadingStatus.value = DownloadStatus.failed;
-      setState(() {
-        _errorMessage = 'Error starting upgrade: ${e.toString()}';
-        _currentStep = FirmwareUpgradeStep.result;
         _isUpgrading = false;
+        _currentStep = FirmwareUpgradeStep.result;
+        _errorMessage =
+            _controller.validationError ??
+            'No packets to process. Please re-upload the file.';
       });
+      _controller.downloadingStatus.value = fw.DownloadStatus.failed;
+      return;
+    }
+
+    // Test mode: skip BLE, just simulate
+    if (_testMode) {
+      setState(() {
+        _currentBleStateMessage = 'Simulating packet sends...';
+      });
+      await _controller.simulateUpgradeProgress();
+      final bool isSuccess =
+          _controller.downloadingStatus.value == fw.DownloadStatus.completed;
+      setState(() {
+        _isUpgrading = false;
+        _currentStep = FirmwareUpgradeStep.result;
+        _errorMessage = isSuccess ? null : 'Upgrade simulation failed.';
+        _currentBleStateMessage = null;
+      });
+      return;
+    }
+
+    // Real BLE path: send packets
+    try {
+      await _sendPacketsOverBle();
+      final bool isSuccess =
+          _controller.downloadingStatus.value == fw.DownloadStatus.completed;
+      setState(() {
+        _isUpgrading = false;
+        _currentStep = FirmwareUpgradeStep.result;
+        _errorMessage = isSuccess ? null : 'Firmware transfer failed.';
+        _currentBleStateMessage = null;
+      });
+    } catch (e) {
+      setState(() {
+        _isUpgrading = false;
+        _currentStep = FirmwareUpgradeStep.result;
+        _errorMessage = 'Error sending packets: $e';
+        _currentBleStateMessage = null;
+      });
+      _controller.downloadingStatus.value = fw.DownloadStatus.failed;
     }
   }
 }

@@ -1306,102 +1306,102 @@ class DataTransferManager {
   bool stopSendingData = false;
   bool loopGoingON = false;
 
-  Future<void> sendLargeDataPacketsOverBle({
-    required List<Uint8List> largePacketsList,
-    required int sequenceNumber,
-    required bool isResending,
-  }) async {
-    int packetsSentCount = 0;
-    logger.Logger("Sequence Number");
-    logger.Logger(sequenceNumber.toString());
+  // Future<void> sendLargeDataPacketsOverBle({
+  //   required List<Uint8List> largePacketsList,
+  //   required int sequenceNumber,
+  //   required bool isResending,
+  // }) async {
+  //   int packetsSentCount = 0;
+  //   logger.Logger("Sequence Number");
+  //   logger.Logger(sequenceNumber.toString());
 
-    // Get UpdatesController if available for progress tracking
-    UpdatesController? forUpdateController;
-    try {
-      if (Get.isRegistered<UpdatesController>()) {
-        forUpdateController = Get.find<UpdatesController>();
-      }
-    } catch (e) {
-      // UpdatesController not available, continue without progress tracking
-      logger.Logger('UpdatesController not available: $e');
-    }
+  //   // Get UpdatesController if available for progress tracking
+  //   UpdatesController? forUpdateController;
+  //   try {
+  //     if (Get.isRegistered<UpdatesController>()) {
+  //       forUpdateController = Get.find<UpdatesController>();
+  //     }
+  //   } catch (e) {
+  //     // UpdatesController not available, continue without progress tracking
+  //     logger.Logger('UpdatesController not available: $e');
+  //   }
 
-    ///if the sequenceNumber != 1 then we will send the packet 3 times to the ble with few delay
-    if (isResending) {
-      await sendDataToBleWithResponse(
-        largePacketsList[sequenceNumber - 1],
-        dataWritten: (bool isWritten) {
-          if (isWritten) {
-            logger.Logger(
-              "||||||||||||||||||||||||||||||||||Large Data Written resend (${sequenceNumber - 1})($isWritten)||||||||||||||||||||||||||||||||||",
-            );
-            Get.find<BleNotifyDataHandler>().currentBleState(
-              BleStateMachine.largeDataResended,
-            );
-          }
-        },
-      );
+  //   ///if the sequenceNumber != 1 then we will send the packet 3 times to the ble with few delay
+  //   if (isResending) {
+  //     await sendDataToBleWithResponse(
+  //       largePacketsList[sequenceNumber - 1],
+  //       dataWritten: (bool isWritten) {
+  //         if (isWritten) {
+  //           logger.Logger(
+  //             "||||||||||||||||||||||||||||||||||Large Data Written resend (${sequenceNumber - 1})($isWritten)||||||||||||||||||||||||||||||||||",
+  //           );
+  //           Get.find<BleNotifyDataHandler>().currentBleState(
+  //             BleStateMachine.largeDataResended,
+  //           );
+  //         }
+  //       },
+  //     );
 
-      Get.find<BleNotifyDataHandler>().lOngoingsequenceNumber =
-          sequenceNumber + 1;
-      Get.find<BleNotifyDataHandler>().lOnGoinglargePacketsList =
-          largePacketsList;
-      Get.find<BleNotifyDataHandler>().update();
-      return;
-    }
+  //     Get.find<BleNotifyDataHandler>().lOngoingsequenceNumber =
+  //         sequenceNumber + 1;
+  //     Get.find<BleNotifyDataHandler>().lOnGoinglargePacketsList =
+  //         largePacketsList;
+  //     Get.find<BleNotifyDataHandler>().update();
+  //     return;
+  //   }
 
-    logger.Logger("-- Going to start the loop From  ${sequenceNumber - 1} --");
+  //   logger.Logger("-- Going to start the loop From  ${sequenceNumber - 1} --");
 
-    for (int i = sequenceNumber - 1; i < largePacketsList.length; i++) {
-      await Future<dynamic>.delayed(const Duration(milliseconds: 1));
-      await sendDataToBleWithResponse(
-        largePacketsList[i],
-        dataWritten: (bool isWritten) {
-          // Update progress for firmware upgrade
-          if (forUpdateController != null &&
-              Get.find<BleNotifyDataHandler>().currentLargePacketModule.value ==
-                  LargePacketModule.firmWareUpgrade) {
-            if ((forUpdateController.tempCurrentIndex.value + 1) == i) {
-              forUpdateController.tempCurrentIndex(i);
-              int value = forUpdateController.progressbarIndex.value + 1;
-              forUpdateController.progressbarIndex(value);
-              if (forUpdateController.totalPacketLength.value > 0) {
-                forUpdateController.progressbarCount(
-                  forUpdateController.progressbarIndex.value.toDouble() /
-                      forUpdateController.totalPacketLength.value.toDouble(),
-                );
-              }
-            }
-          }
-        },
-      );
-      await Future<dynamic>.delayed(const Duration(milliseconds: 1));
-      if (stopSendingData) {
-        logger.Logger("--Breaking the loop--");
-        stopSendingData = false;
-        i = 0;
-        break;
-      }
-      packetsSentCount = i;
-      loopGoingON = true;
-    }
-    loopGoingON = false;
-    await Future<dynamic>.delayed(const Duration(milliseconds: 50));
-    if (packetsSentCount == largePacketsList.length - 1) {
-      await Future<dynamic>.delayed(const Duration(milliseconds: 1000));
-      if (Get.find<BleNotifyDataHandler>().currentBleState.value !=
-          BleStateMachine.dataEndRequest) {
-        sendLargeFrameEndDataPacket(
-          dataWritten: (bool isWritten) async {
-            logger.Logger("-- Sending End Packet --");
-            Get.find<BleNotifyDataHandler>().currentBleState(
-              BleStateMachine.dataEndRequest,
-            );
-          },
-        );
-      }
-    }
-  }
+  //   for (int i = sequenceNumber - 1; i < largePacketsList.length; i++) {
+  //     await Future<dynamic>.delayed(const Duration(milliseconds: 1));
+  //     await sendDataToBleWithResponse(
+  //       largePacketsList[i],
+  //       dataWritten: (bool isWritten) {
+  //         // Update progress for firmware upgrade
+  //         if (forUpdateController != null &&
+  //             Get.find<BleNotifyDataHandler>().currentLargePacketModule.value ==
+  //                 LargePacketModule.firmWareUpgrade) {
+  //           if ((forUpdateController.tempCurrentIndex.value + 1) == i) {
+  //             forUpdateController.tempCurrentIndex(i);
+  //             int value = forUpdateController.progressbarIndex.value + 1;
+  //             forUpdateController.progressbarIndex(value);
+  //             if (forUpdateController.totalPacketLength.value > 0) {
+  //               forUpdateController.progressbarCount(
+  //                 forUpdateController.progressbarIndex.value.toDouble() /
+  //                     forUpdateController.totalPacketLength.value.toDouble(),
+  //               );
+  //             }
+  //           }
+  //         }
+  //       },
+  //     );
+  //     await Future<dynamic>.delayed(const Duration(milliseconds: 1));
+  //     if (stopSendingData) {
+  //       logger.Logger("--Breaking the loop--");
+  //       stopSendingData = false;
+  //       i = 0;
+  //       break;
+  //     }
+  //     packetsSentCount = i;
+  //     loopGoingON = true;
+  //   }
+  //   loopGoingON = false;
+  //   await Future<dynamic>.delayed(const Duration(milliseconds: 50));
+  //   if (packetsSentCount == largePacketsList.length - 1) {
+  //     await Future<dynamic>.delayed(const Duration(milliseconds: 1000));
+  //     if (Get.find<BleNotifyDataHandler>().currentBleState.value !=
+  //         BleStateMachine.dataEndRequest) {
+  //       sendLargeFrameEndDataPacket(
+  //         dataWritten: (bool isWritten) async {
+  //           logger.Logger("-- Sending End Packet --");
+  //           Get.find<BleNotifyDataHandler>().currentBleState(
+  //             BleStateMachine.dataEndRequest,
+  //           );
+  //         },
+  //       );
+  //     }
+  //   }
+  // }
 
   // void sendUpgradeFirmwareDataPacketToBle(
   //     {dynamic Function(bool)? dataWritten}) async {
