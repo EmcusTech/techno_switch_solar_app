@@ -69,6 +69,7 @@ class FirmwarePacketService {
 
         logicalPacketCount++;
       } else {
+        print("Skipping packet: $sequence");
         skippedSequences.add(sequence);
       }
 

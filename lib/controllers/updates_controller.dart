@@ -88,7 +88,11 @@ class UpdatesController extends GetxController {
 
     int logicalIndex = 0;
 
-    for (final _ in packets) {
+    for (final packet in packets) {
+      print("Sending packet: ${packet.sequence}");
+      print(
+        "Packet: ${packet.bytes.map((e) => e.toRadixString(16).padLeft(2, '0')).join(' ')}",
+      );
       logicalIndex++;
 
       progressbarIndex.value = logicalIndex;
