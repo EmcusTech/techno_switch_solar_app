@@ -945,6 +945,75 @@ class BleManager {
     await sendSmallDataFrame(0x1000, 216, u8_pkt);
   }
 
+  /// Sends a jump firmware packet with Technoswitch framing.
+  Future<void> sendJumpFirmwarePacket() async {
+    if (!isConnected || writeChar == null) {
+      throw Exception("BLE not connected or write characteristic missing");
+    }
+
+    List<int> jumpFrame = bleFrameFormat(
+      0x1002,
+      0x02,
+      242,
+      List<int>.filled(242, 0x00),
+    );
+    try {
+      await flutterReactiveBle.writeCharacteristicWithResponse(
+        writeChar!,
+        value: jumpFrame,
+      );
+    } catch (e) {
+      print("Send firmware packet failed: $e");
+      rethrow;
+    }
+  }
+
+  /// Sends a start firmware packet with Technoswitch framing.
+  Future<void> sendStartFirmwarePacket() async {
+    if (!isConnected || writeChar == null) {
+      throw Exception("BLE not connected or write characteristic missing");
+    }
+
+    List<int> startFrame = bleFrameFormat(
+      0x1001,
+      0x02,
+      242,
+      List<int>.filled(242, 0x00),
+    );
+    try {
+      await flutterReactiveBle.writeCharacteristicWithResponse(
+        writeChar!,
+        value: startFrame,
+      );
+    } catch (e) {
+      print("Send firmware packet failed: $e");
+      rethrow;
+    }
+  }
+
+  /// Sends a end firmware packet with Technoswitch framing.
+  Future<void> sendEndFirmwarePacket() async {
+    if (!isConnected || writeChar == null) {
+      throw Exception("BLE not connected or write characteristic missing");
+    }
+
+    List<int> endFrame = bleFrameFormat(
+      0x1004,
+      0x02,
+      242,
+      List<int>.filled(242, 0x00),
+    );
+    try {
+      await flutterReactiveBle.writeCharacteristicWithResponse(
+        writeChar!,
+        value: endFrame,
+      );
+    } catch (e) {
+      print("Send firmware packet failed: $e");
+      rethrow;
+    }
+  }
+
   /// Sends a firmware packet directly (no Technoswitch framing).
   /// Packet must already contain the 2-byte big-endian sequence header.
   Future<void> sendFirmwarePacket(Uint8List packet) async {
