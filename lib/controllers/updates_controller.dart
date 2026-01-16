@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:get/get.dart';
+import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import '../models/ble/firmware/firmware_packet_model.dart';
 import '../services/firmware_packet_service.dart';
 import 'package:techno_switch_solar_app/services/firmware_upgrade_service.dart';
@@ -87,6 +89,14 @@ class UpdatesController extends GetxController {
     final logicalTotal = packetResult!.totalLogicalPackets;
 
     int logicalIndex = 0;
+
+    // await Get.find<BleLogController>().bleManager.sendStartFirmwarePacket();
+
+    // await Future.delayed(const Duration(milliseconds: 300));
+
+    // await Get.find<BleLogController>().bleManager.sendFirmwarePacket(
+    //   Uint8List.fromList(packets[0].bytes),
+    // );
 
     for (final packet in packets) {
       print("Sending packet: ${packet.sequence}");

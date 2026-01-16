@@ -26,7 +26,7 @@ BleRxFrame bleParseAndUpdateRxFrame(Uint8List frame, int frameLen) {
   int count = 0;
 
   print(
-    "TX/RX: RECEIVED: time: ${DateTime.now().toIso8601String()}, frame: ${frame.sublist(7, frameLen - 4).map((b) => b.toRadixString(16).padLeft(2, '0')).join(" ")}",
+    "TX/RX: RECEIVED: time: ${DateTime.now().toIso8601String()}, frame: ${frame.map((b) => b.toRadixString(16).padLeft(2, '0')).join(" ")}",
   );
 
   // SOF

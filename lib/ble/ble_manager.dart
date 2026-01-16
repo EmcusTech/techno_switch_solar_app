@@ -35,6 +35,9 @@ enum BleStates {
   PROCESS_PANEL_EVT_LOG_READ,
   PROCESS_WAIT_RSP,
   IDLE,
+  SEND_START_FIRMWARE_PACKET,
+  SEND_END_FIRMWARE_PACKET,
+  SEND_FIRMWARE_PACKET,
   // add other states
 }
 
@@ -130,6 +133,16 @@ class BleManager {
     otaProcessState = OtaProcessState.sendNetworkPacket;
   }
 
+  void resetFirmwareState() {
+    bleCurrentState = BleStates.SEND_START_FIRMWARE_PACKET;
+    bleStateMachineState = BleStates.SEND_START_FIRMWARE_PACKET;
+  }
+
+  void setFirmwareState(BleStates state) {
+    bleCurrentState = state;
+    bleStateMachineState = state;
+  }
+
   /// Reset log retrieval protocol state
   /// This resets the BLE state machine to initial state for log retrieval
   void resetLogRetrievalState() {
@@ -196,6 +209,8 @@ class BleManager {
     required DiscoveredDevice device,
   }) async {
     int attempt = 0;
+
+    print("Attempting to connect to device: ${device.id}");
 
     if (isConnected) {
       print("Return from here");
@@ -358,7 +373,7 @@ class BleManager {
   }
 
   /// REGISTER NOTIFICATIONS
-  Future<void> registerNotifyHandler() async {
+  Future<void> registerNotifyHandler({bool? isStartFirmware = false}) async {
     print("Register notify handler");
 
     if (_notifySub != null) return;
@@ -381,7 +396,9 @@ class BleManager {
     print("Listening for notifications...");
     await Future.delayed(const Duration(milliseconds: 300));
     print("---Notification handler registered----");
-    bleProcess.requestENCKey();
+    if (isStartFirmware != true) {
+      bleProcess.requestENCKey();
+    }
   }
 
   /// DISCONNECT
@@ -464,7 +481,17 @@ class BleManager {
     bleProcess.cancelRxTimeout();
     // Any notify received implies previous write completed → allow next poll
     _pollInFlight = false;
-    if (bleCurrentState == BleStates.REQ_ENCY_KEY) {
+    if (bleCurrentState == BleStates.SEND_START_FIRMWARE_PACKET) {
+      print("Start firmware packet response");
+      print(
+        "data: ${data.map((e) => e.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+      );
+    } else if (bleCurrentState == BleStates.SEND_FIRMWARE_PACKET) {
+      print("Firmware packet response");
+      print(
+        "data: ${data.map((e) => e.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+      );
+    } else if (bleCurrentState == BleStates.REQ_ENCY_KEY) {
       print("Encryption key req response");
       bleRxFrame = bleParseAndUpdateRxFrame(data, data.length);
       print(
@@ -968,17 +995,17 @@ class BleManager {
     }
   }
 
+  // packages/modules/Bluetooth/system/stack/include/gatt_api.h
   /// Sends a start firmware packet with Technoswitch framing.
   Future<void> sendStartFirmwarePacket() async {
     if (!isConnected || writeChar == null) {
       throw Exception("BLE not connected or write characteristic missing");
     }
+    await registerNotifyHandler(isStartFirmware: true);
 
-    List<int> startFrame = bleFrameFormat(
-      0x1001,
-      0x02,
-      242,
-      List<int>.filled(242, 0x00),
+    List<int> startFrame = bleFrameFormat(0x1001, 0x02, 1, [0x00]);
+    print(
+      "TX/RX: TRANSMIT: Start Firmware Packet time: ${DateTime.now().toIso8601String()}, packet: ${startFrame.map((e) => e.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
     );
     try {
       await flutterReactiveBle.writeCharacteristicWithResponse(
@@ -986,7 +1013,7 @@ class BleManager {
         value: startFrame,
       );
     } catch (e) {
-      print("Send firmware packet failed: $e");
+      print("Send firmware packet failed: Start Firmware Packet $e");
       rethrow;
     }
   }
@@ -997,12 +1024,7 @@ class BleManager {
       throw Exception("BLE not connected or write characteristic missing");
     }
 
-    List<int> endFrame = bleFrameFormat(
-      0x1004,
-      0x02,
-      242,
-      List<int>.filled(242, 0x00),
-    );
+    List<int> endFrame = bleFrameFormat(0x1004, 0x02, 1, [0x00]);
     try {
       await flutterReactiveBle.writeCharacteristicWithResponse(
         writeChar!,
@@ -1016,17 +1038,32 @@ class BleManager {
 
   /// Sends a firmware packet directly (no Technoswitch framing).
   /// Packet must already contain the 2-byte big-endian sequence header.
-  Future<void> sendFirmwarePacket(Uint8List packet) async {
+  Future<void> sendFirmwarePacket(
+    Uint8List packet, {
+    bool? isFirstPacketAfterSkip = false,
+  }) async {
     if (!isConnected || writeChar == null) {
       throw Exception("BLE not connected or write characteristic missing");
     }
+    print("isFirstPacketAfterSkip: $isFirstPacketAfterSkip");
+
+    List<int> firmwareFrame = bleFrameFormat(
+      isFirstPacketAfterSkip == true ? 0x1003 : 0x1002,
+      0x02,
+      packet.length,
+      packet.toList(),
+    );
+
     try {
       await flutterReactiveBle.writeCharacteristicWithResponse(
         writeChar!,
-        value: packet,
+        value: firmwareFrame,
+      );
+      print(
+        "TX/RX: TRANSMIT: Firmware Packet time: ${DateTime.now().toIso8601String()}, packet: ${firmwareFrame.map((e) => e.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
       );
     } catch (e) {
-      print("Send firmware packet failed: $e");
+      print("Send firmware packet failed: Firmware Packet $e");
       rethrow;
     }
   }

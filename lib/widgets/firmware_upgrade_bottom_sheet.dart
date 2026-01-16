@@ -9,7 +9,9 @@ import 'package:flutter_svg/svg.dart';
 // import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lottie/lottie.dart';
 import 'package:percent_indicator/percent_indicator.dart';
+import 'package:techno_switch_solar_app/models/ble/firmware/firmware_packet_model.dart';
 import '../ble/ble_manager.dart';
 import '../ble/controller/ble_log_controller.dart';
 import '../controllers/updates_controller.dart';
@@ -54,7 +56,7 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
   bool _isUploading = false;
   bool _isUpgrading = false;
   bool _isValidating = false;
-  bool _testMode = true;
+  bool _testMode = false;
   String? _errorMessage;
   String? _currentBleStateMessage;
   fw.FirmwareValidationResult? _validationResult;
@@ -187,11 +189,10 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
       throw Exception('No packets prepared');
     }
 
-    // Basic BLE connection guard unless test mode (handled earlier)
-    final handler = _bleHandler;
-    if (handler.currentBleState.value != BleStateMachine.connected) {
-      throw Exception('Device not connected. Complete BLE handshake first.');
-    }
+    // // Basic BLE connection guard unless test mode (handled earlier)
+    // if (_bleHandler.currentBleState.value != BleStateMachine.connected) {
+    //   throw Exception('Device not connected. Complete BLE handshake first.');
+    // }
 
     // Try to get BleManager via BleLogController if registered
     BleManager? manager;
@@ -205,25 +206,37 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
     int logicalIndex = 0;
 
     if (manager != null) {
-      await manager.sendFirmwarePackets(
-        packets.map((p) => Uint8List.fromList(p.bytes)).toList(),
-        interPacketDelay: const Duration(milliseconds: 20),
-        onProgress: (sent, total) {
-          logicalIndex = sent;
-          _controller.progressbarIndex.value = logicalIndex;
-          _controller.progressbarCount.value =
-              logicalTotal == 0 ? 0 : logicalIndex / logicalTotal;
-        },
-      );
-    } else {
-      // Fallback: just simulate progress if manager unavailable
-      for (final _ in packets) {
+      manager.resetFirmwareState();
+      await manager.sendStartFirmwarePacket();
+      await Future.delayed(const Duration(milliseconds: 300));
+      manager.setFirmwareState(BleStates.SEND_FIRMWARE_PACKET);
+      // Replace the existing print
+      int seqFromField = 0;
+
+      for (FirmwarePacket packet in packets) {
+        final int currentSeqFromField = packet.sequence;
+        print("currentSeqFromField: $currentSeqFromField");
+        await manager.sendFirmwarePacket(
+          Uint8List.fromList(packet.bytes),
+          isFirstPacketAfterSkip: currentSeqFromField != (seqFromField + 1),
+        );
+        await Future.delayed(const Duration(milliseconds: 35));
+        seqFromField = currentSeqFromField;
         logicalIndex++;
         _controller.progressbarIndex.value = logicalIndex;
         _controller.progressbarCount.value =
             logicalTotal == 0 ? 0 : logicalIndex / logicalTotal;
-        await Future.delayed(const Duration(milliseconds: 20));
       }
+    } else {
+      // Fallback: just simulate progress if manager unavailable
+      // for (final _ in packets) {
+      //   logicalIndex++;
+      //   _controller.progressbarIndex.value = logicalIndex;
+      //   _controller.progressbarCount.value =
+      //       logicalTotal == 0 ? 0 : logicalIndex / logicalTotal;
+      //   await Future.delayed(const Duration(milliseconds: 20));
+      // }
+      throw Exception('BLE manager not found');
     }
 
     _controller.downloadingStatus.value = fw.DownloadStatus.completed;
@@ -1074,18 +1087,18 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
       await _bluetoothService.startScanning();
 
       // Auto-stop after 15 seconds
-      Future.delayed(const Duration(seconds: 15), () {
-        if (mounted && _isScanning) {
-          _bluetoothService.stopScanning();
-          setState(() {
-            _isScanning = false;
-            if (_discoveredDevices.isEmpty) {
-              _errorMessage =
-                  'No devices found. Please ensure the device is powered on and in range.';
-            }
-          });
-        }
-      });
+      // Future.delayed(const Duration(seconds: 15), () {
+      //   if (mounted && _isScanning) {
+      //     _bluetoothService.stopScanning();
+      //     setState(() {
+      //       _isScanning = false;
+      //       if (_discoveredDevices.isEmpty) {
+      //         _errorMessage =
+      //             'No devices found. Please ensure the device is powered on and in range.';
+      //       }
+      //     });
+      //   }
+      // });
     } catch (e) {
       logger.Logger('Error scanning for devices: $e');
       setState(() {
@@ -1650,79 +1663,217 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
     return (slotIndex * (2 * pi / maxSlots));
   }
 
-  Future<void> _connectToDevice(DiscoveredDevice device) async {
-    // Stop scanning if still active
-    if (_isScanning) {
-      _bluetoothService.stopScanning();
-      setState(() {
-        _isScanning = false;
-      });
-    }
+  void _showConnectingDialog({
+    required DiscoveredDevice device,
+    required BuildContext context,
+  }) {
+    final bleController = Get.find<BleLogController>();
+    final connectionNotifier = bleController.bleManager.isConnectedNotifier;
+    final maxBleConnectionRetriesReached =
+        bleController.bleManager.maxBleConnectionRetriesReached;
+    bool hasNavigated = false;
 
-    setState(() {
-      _isConnecting = true;
-      _selectedDevice = device;
-      _connectionStatus = 'Connecting to ${device.name}...';
-      _errorMessage = null;
-      _passkeyError = null;
-    });
+    final mergedListenable = Listenable.merge([
+      connectionNotifier,
+      maxBleConnectionRetriesReached,
+    ]);
 
-    // Listen to handshake events
-    _handshakeSubscription?.cancel();
-    _handshakeSubscription = AppServices.bleService.handshakeEvents.listen(
-      _handleHandshakeEvent,
-    );
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return ListenableBuilder(
+          listenable: mergedListenable,
+          builder: (context, _) {
+            final isConnected = connectionNotifier.value;
+            final maxRetries = maxBleConnectionRetriesReached.value;
 
-    try {
-      setState(() {
-        _isConnecting = true;
-        _errorMessage = null;
-      });
-
-      _connectionSub = AppServices.bleService
-          .connectToDevice(device)
-          .listen(
-            (state) {
-              switch (state) {
-                case DeviceConnectionState.connecting:
+            if (isConnected && !hasNavigated) {
+              hasNavigated = true;
+              Future.delayed(const Duration(seconds: 2), () {
+                if (context.mounted && hasNavigated) {
+                  Navigator.of(context).pop();
                   setState(() {
-                    _connectionStatus = 'Connecting...';
+                    _currentStep = FirmwareUpgradeStep.chooseType;
                   });
-                  break;
-
-                case DeviceConnectionState.connected:
-                  setState(() {
-                    _connectionStatus = 'Connected. Waiting for handshake...';
-                    _isConnecting = false;
-                  });
-                  break;
-
-                case DeviceConnectionState.disconnected:
-                  setState(() {
-                    _isConnecting = false;
-                    _errorMessage = 'Device disconnected';
-                  });
-                  _connectionSub?.cancel();
-                  break;
-                default:
-                  break;
-              }
-            },
-            onError: (e) {
-              logger.Logger('Error connecting to device: $e');
-              setState(() {
-                _isConnecting = false;
-                _errorMessage = 'Connection error: $e';
+                }
               });
-            },
-          );
-    } catch (e) {
-      logger.Logger('Error connecting to device: $e');
-      setState(() {
-        _isConnecting = false;
-        _errorMessage = 'Connection error: $e';
-      });
-    }
+            }
+
+            return Dialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 64,
+                      height: 64,
+                      decoration: BoxDecoration(
+                        color:
+                            isConnected
+                                ? Colors.green.withValues(alpha: 0.1)
+                                : const Color(0xFFFBDEE1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Center(
+                        child:
+                            isConnected
+                                ? const Icon(
+                                  Icons.check_circle,
+                                  size: 32,
+                                  color: Colors.green,
+                                )
+                                : Lottie.asset(
+                                  'assets/jsons/ble_connecting.json',
+                                  animate: !maxRetries,
+                                ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      isConnected
+                          ? 'Device Connected!'
+                          : maxRetries
+                          ? 'Max Connection Retries Reached!'
+                          : 'Connecting...',
+                      style: GoogleFonts.inter(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF3D3D3D),
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      isConnected
+                          ? 'Preparing to navigate...'
+                          : maxRetries
+                          ? 'Please scan again and connect to the device'
+                          : 'Please wait while we connect to ${device.name}',
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w400,
+                        color: const Color(0xFF918F8F),
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 16),
+                    if (maxRetries)
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFEC1D24),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(24.5),
+                            ),
+                          ),
+                          onPressed: () {
+                            Navigator.of(dialogContext).pop();
+                          },
+                          child: Text(
+                            'OK',
+                            style: GoogleFonts.inter(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _connectToDevice(DiscoveredDevice device) async {
+    _showConnectingDialog(device: device, context: context);
+    await Get.find<BleLogController>().connectToDevice(device: device);
+    // Stop scanning if still active
+    // if (_isScanning) {
+    //   _bluetoothService.stopScanning();
+    //   setState(() {
+    //     _isScanning = false;
+    //   });
+    // }
+
+    // setState(() {
+    //   _isConnecting = true;
+    //   _selectedDevice = device;
+    //   _connectionStatus = 'Connecting to ${device.name}...';
+    //   _errorMessage = null;
+    //   _passkeyError = null;
+    // });
+
+    // // Listen to handshake events
+    // _handshakeSubscription?.cancel();
+    // _handshakeSubscription = AppServices.bleService.handshakeEvents.listen(
+    //   _handleHandshakeEvent,
+    // );
+
+    // try {
+    //   setState(() {
+    //     _isConnecting = true;
+    //     _errorMessage = null;
+    //   });
+
+    //   _connectionSub = AppServices.bleService
+    //       .connectToDevice(device)
+    //       .listen(
+    //         (state) {
+    //           switch (state) {
+    //             case DeviceConnectionState.connecting:
+    //               setState(() {
+    //                 _connectionStatus = 'Connecting...';
+    //               });
+    //               break;
+
+    //             case DeviceConnectionState.connected:
+    //               setState(() {
+    //                 _connectionStatus = 'Connected. Waiting for handshake...';
+    //                 _isConnecting = false;
+    //               });
+    //               break;
+
+    //             case DeviceConnectionState.disconnected:
+    //               setState(() {
+    //                 _isConnecting = false;
+    //                 _errorMessage = 'Device disconnected';
+    //               });
+    //               _connectionSub?.cancel();
+    //               break;
+    //             default:
+    //               break;
+    //           }
+    //         },
+    //         onError: (e) {
+    //           logger.Logger('Error connecting to device: $e');
+    //           setState(() {
+    //             _isConnecting = false;
+    //             _errorMessage = 'Connection error: $e';
+    //           });
+    //         },
+    //       );
+    // } catch (e) {
+    //   logger.Logger('Error connecting to device: $e');
+    //   setState(() {
+    //     _isConnecting = false;
+    //     _errorMessage = 'Connection error: $e';
+    //   });
+    // }
   }
 
   void _handleHandshakeEvent(BleHandshakeEvent event) {
