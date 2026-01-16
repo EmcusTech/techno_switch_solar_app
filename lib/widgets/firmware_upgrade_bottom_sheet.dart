@@ -183,7 +183,7 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
     _checkInitialConnection();
   }
 
-  Future<void> _sendPacketsOverBle() async {
+  Future<void> _sendPacketsOverBle({bool? isChipInBootLoader = false}) async {
     if (_controller.packetResult == null ||
         _controller.packetResult!.packets.isEmpty) {
       throw Exception('No packets prepared');
@@ -207,6 +207,17 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
 
     if (manager != null) {
       manager.resetFirmwareState();
+      if (isChipInBootLoader != true) {
+        manager.registerNotifyHandlerForFirmwareUpgrade(
+          isChipInBootLoader: false,
+        );
+        await Future.delayed(const Duration(seconds: 4));
+        await manager.sendJumpFirmwarePacket();
+        await Future.delayed(const Duration(milliseconds: 300));
+        manager.setFirmwareState(BleStates.SEND_JUMP_FIRMWARE_PACKET);
+      }
+      await Future.delayed(const Duration(milliseconds: 300));
+      manager.registerNotifyHandlerForFirmwareUpgrade(isChipInBootLoader: true);
       await manager.sendStartFirmwarePacket();
       await Future.delayed(const Duration(milliseconds: 300));
       manager.setFirmwareState(BleStates.SEND_FIRMWARE_PACKET);
@@ -227,6 +238,10 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
         _controller.progressbarCount.value =
             logicalTotal == 0 ? 0 : logicalIndex / logicalTotal;
       }
+
+      await Future.delayed(const Duration(milliseconds: 300));
+      manager.setFirmwareState(BleStates.SEND_END_FIRMWARE_PACKET);
+      await manager.sendEndFirmwarePacket();
     } else {
       // Fallback: just simulate progress if manager unavailable
       // for (final _ in packets) {
@@ -253,19 +268,19 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
   }
 
   Future<void> _checkInitialConnection() async {
-    final btUtils = BtUtils();
-    final connectedDevice = await btUtils.getConnectedDevice();
+    // final btUtils = BtUtils();
+    // final connectedDevice = await btUtils.getConnectedDevice();
 
-    if (connectedDevice != null && Get.isRegistered<BleNotifyDataHandler>()) {
-      final handler = Get.find<BleNotifyDataHandler>();
-      if (handler.currentBleState.value == BleStateMachine.connected) {
-        setState(() {
-          _selectedDevice = connectedDevice;
-          _handshakeComplete = true;
-          _connectionStatus = 'Device already connected';
-        });
-      }
-    }
+    // if (connectedDevice != null && Get.isRegistered<BleNotifyDataHandler>()) {
+    //   final handler = Get.find<BleNotifyDataHandler>();
+    //   if (handler.currentBleState.value == BleStateMachine.connected) {
+    //     setState(() {
+    //       _selectedDevice = connectedDevice;
+    //       _handshakeComplete = true;
+    //       _connectionStatus = 'Device already connected';
+    //     });
+    //   }
+    // }
   }
 
   @override
@@ -1800,6 +1815,9 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
   }
 
   Future<void> _connectToDevice(DiscoveredDevice device) async {
+    setState(() {
+      _selectedDevice = device;
+    });
     _showConnectingDialog(device: device, context: context);
     await Get.find<BleLogController>().connectToDevice(device: device);
     // Stop scanning if still active
@@ -2342,7 +2360,10 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
                     (_isValidating || !isCrcMatched)
                         ? null
                         : () {
-                          _startUpgrade();
+                          _startUpgrade(
+                            isChipInBootLoader:
+                                _selectedDevice?.manufacturerData.last == 1,
+                          );
                         },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Color(0xFFEC1D24),
@@ -2609,7 +2630,8 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
     });
   }
 
-  Future<void> _startUpgrade() async {
+  Future<void> _startUpgrade({bool? isChipInBootLoader = false}) async {
+    print("isChipInBootLoader: $isChipInBootLoader");
     _controller.downloadingStatus.value = fw.DownloadStatus.upgrading;
 
     setState(() {
@@ -2651,7 +2673,7 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
 
     // Real BLE path: send packets
     try {
-      await _sendPacketsOverBle();
+      await _sendPacketsOverBle(isChipInBootLoader: isChipInBootLoader);
       final bool isSuccess =
           _controller.downloadingStatus.value == fw.DownloadStatus.completed;
       setState(() {

@@ -61,7 +61,11 @@ class FirmwarePacketService {
       if (!isAllFF) {
         final packetBytes = Uint8List(2 + payload.length);
 
-        final seqBytes = _sequenceTo2BytesBE(sequence);
+        final seqBytes = _sequenceTo2BytesLE(sequence);
+
+        print(
+          "seqBytes: ${seqBytes.map((e) => e.toRadixString(16).padLeft(2, '0')).join(' ')}",
+        );
         packetBytes.setRange(0, 2, seqBytes);
         packetBytes.setRange(2, 2 + payload.length, payload);
 
@@ -124,5 +128,12 @@ class FirmwarePacketService {
 
   Uint8List _sequenceTo2BytesBE(int seq) {
     return Uint8List.fromList([(seq >> 8) & 0xFF, seq & 0xFF]);
+  }
+
+  Uint8List _sequenceTo2BytesLE(int seq) {
+    return Uint8List.fromList([
+      seq & 0xFF, // LSB first
+      (seq >> 8) & 0xFF, // MSB second
+    ]);
   }
 }

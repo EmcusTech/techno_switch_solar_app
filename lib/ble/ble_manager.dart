@@ -38,6 +38,7 @@ enum BleStates {
   SEND_START_FIRMWARE_PACKET,
   SEND_END_FIRMWARE_PACKET,
   SEND_FIRMWARE_PACKET,
+  SEND_JUMP_FIRMWARE_PACKET,
   // add other states
 }
 
@@ -373,7 +374,7 @@ class BleManager {
   }
 
   /// REGISTER NOTIFICATIONS
-  Future<void> registerNotifyHandler({bool? isStartFirmware = false}) async {
+  Future<void> registerNotifyHandler({bool? isChipInBootLoader = false}) async {
     print("Register notify handler");
 
     if (_notifySub != null) return;
@@ -396,7 +397,7 @@ class BleManager {
     print("Listening for notifications...");
     await Future.delayed(const Duration(milliseconds: 300));
     print("---Notification handler registered----");
-    if (isStartFirmware != true) {
+    if (isChipInBootLoader != true) {
       bleProcess.requestENCKey();
     }
   }
@@ -481,13 +482,24 @@ class BleManager {
     bleProcess.cancelRxTimeout();
     // Any notify received implies previous write completed → allow next poll
     _pollInFlight = false;
-    if (bleCurrentState == BleStates.SEND_START_FIRMWARE_PACKET) {
+    if (bleCurrentState == BleStates.SEND_JUMP_FIRMWARE_PACKET) {
+      print("Jump firmware packet response");
+      print(
+        "data: ${data.map((e) => e.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+      );
+    } else if (bleCurrentState == BleStates.SEND_START_FIRMWARE_PACKET) {
       print("Start firmware packet response");
+      print("Ack/Nack: ${data[7]}");
       print(
         "data: ${data.map((e) => e.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
       );
     } else if (bleCurrentState == BleStates.SEND_FIRMWARE_PACKET) {
       print("Firmware packet response");
+      print(
+        "data: ${data.map((e) => e.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+      );
+    } else if (bleCurrentState == BleStates.SEND_END_FIRMWARE_PACKET) {
+      print("End firmware packet response");
       print(
         "data: ${data.map((e) => e.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
       );
@@ -978,21 +990,25 @@ class BleManager {
       throw Exception("BLE not connected or write characteristic missing");
     }
 
-    List<int> jumpFrame = bleFrameFormat(
-      0x1002,
-      0x02,
-      242,
-      List<int>.filled(242, 0x00),
-    );
+    List<int> jumpFrame = bleFrameFormat(0x1002, 0x02, 1, [0x00]);
     try {
       await flutterReactiveBle.writeCharacteristicWithResponse(
         writeChar!,
         value: jumpFrame,
       );
+      print(
+        "TX/RX: TRANSMIT: Jump Firmware Packet time: ${DateTime.now().toIso8601String()}, packet: ${jumpFrame.map((e) => e.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+      );
     } catch (e) {
-      print("Send firmware packet failed: $e");
+      print("Send Jump firmware packet failed: $e");
       rethrow;
     }
+  }
+
+  void registerNotifyHandlerForFirmwareUpgrade({
+    bool isChipInBootLoader = false,
+  }) async {
+    await registerNotifyHandler(isChipInBootLoader: isChipInBootLoader);
   }
 
   // packages/modules/Bluetooth/system/stack/include/gatt_api.h
@@ -1001,7 +1017,7 @@ class BleManager {
     if (!isConnected || writeChar == null) {
       throw Exception("BLE not connected or write characteristic missing");
     }
-    await registerNotifyHandler(isStartFirmware: true);
+    // await registerNotifyHandler(isStartFirmware: true);
 
     List<int> startFrame = bleFrameFormat(0x1001, 0x02, 1, [0x00]);
     print(
@@ -1026,12 +1042,15 @@ class BleManager {
 
     List<int> endFrame = bleFrameFormat(0x1004, 0x02, 1, [0x00]);
     try {
+      print(
+        "TX/RX: TRANSMIT: End Firmware Packet time: ${DateTime.now().toIso8601String()}, packet: ${endFrame.map((e) => e.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+      );
       await flutterReactiveBle.writeCharacteristicWithResponse(
         writeChar!,
         value: endFrame,
       );
     } catch (e) {
-      print("Send firmware packet failed: $e");
+      print("Send End firmware packet failed: $e");
       rethrow;
     }
   }
@@ -1047,20 +1066,22 @@ class BleManager {
     }
     print("isFirstPacketAfterSkip: $isFirstPacketAfterSkip");
 
+    print("packet length: ${packet.toList().length}");
+
     List<int> firmwareFrame = bleFrameFormat(
       isFirstPacketAfterSkip == true ? 0x1003 : 0x1002,
       0x02,
-      packet.length,
+      packet.toList().length,
       packet.toList(),
     );
 
     try {
+      print(
+        "TX/RX: TRANSMIT: Firmware Packet time: ${DateTime.now().toIso8601String()}, packet: ${firmwareFrame.map((e) => e.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+      );
       await flutterReactiveBle.writeCharacteristicWithResponse(
         writeChar!,
         value: firmwareFrame,
-      );
-      print(
-        "TX/RX: TRANSMIT: Firmware Packet time: ${DateTime.now().toIso8601String()}, packet: ${firmwareFrame.map((e) => e.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
       );
     } catch (e) {
       print("Send firmware packet failed: Firmware Packet $e");
