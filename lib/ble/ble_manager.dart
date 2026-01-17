@@ -538,7 +538,12 @@ class BleManager {
         bleProcess.startOtherPacketsRxTimeout(
           timeout: const Duration(seconds: 5),
         );
-        Get.find<BleLogController>().sendNetworkPacket();
+
+        //TODO: need to parallel processing one for firmware upgrade and one for log retrieval, need to decouple the two ble manager from the app logic
+
+        // if (isChipInBootLoader != true) {
+        //   Get.find<BleLogController>().sendNetworkPacket();
+        // }
       } else {
         print("Validation failed");
       }

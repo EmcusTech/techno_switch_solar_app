@@ -208,6 +208,7 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
     if (manager != null) {
       manager.resetFirmwareState();
       if (isChipInBootLoader != true) {
+        manager.setFirmwareState(BleStates.REQ_ENCY_KEY);
         manager.registerNotifyHandlerForFirmwareUpgrade(
           isChipInBootLoader: false,
         );
@@ -231,7 +232,7 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
           Uint8List.fromList(packet.bytes),
           isFirstPacketAfterSkip: currentSeqFromField != (seqFromField + 1),
         );
-        await Future.delayed(const Duration(milliseconds: 35));
+        await Future.delayed(const Duration(milliseconds: 8));
         seqFromField = currentSeqFromField;
         logicalIndex++;
         _controller.progressbarIndex.value = logicalIndex;
