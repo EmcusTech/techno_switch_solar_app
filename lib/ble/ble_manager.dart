@@ -399,6 +399,10 @@ class BleManager {
     print("---Notification handler registered----");
     if (isChipInBootLoader != true) {
       bleProcess.requestENCKey();
+    } else {
+      bleStateMachineState = BleStates.SEND_AUTHN_MSG;
+      bleCurrentState = BleStates.SEND_AUTHN_MSG;
+      bleProcess.sendAuthPacket();
     }
   }
 
@@ -526,13 +530,13 @@ class BleManager {
     } else if (bleCurrentState == BleStates.SEND_AUTHN_MSG) {
       print("Authn msg response");
       // Uint8List decryptedData = aes.aesDecrypt(bleAESKey["AES_KEY"], data);
-      bleParseAndUpdateRxFrame(data, data.length);
+      bleRxFrame = bleParseAndUpdateRxFrame(data, data.length);
 
       if (bleValidateRxFrame(bleRxFrame)) {
         print("AUTH KEY Validation success");
         await Future.delayed(Duration(seconds: 1));
-        bleCurrentState = BleStates.PROCESS_PANEL_EVT_LOG_READ;
-        bleStateMachineState = BleStates.PROCESS_PANEL_EVT_LOG_READ;
+        bleCurrentState = BleStates.SEND_START_FIRMWARE_PACKET;
+        bleStateMachineState = BleStates.SEND_START_FIRMWARE_PACKET;
         print("Current state: $bleStateMachineState");
         // Send Network Packet
         bleProcess.startOtherPacketsRxTimeout(
@@ -775,11 +779,13 @@ class BleManager {
       msgBytes,
     );
 
+    print("Framed Authn Msg: $authnMsgFrame");
+
     // Convert to Uint8List for BLE
     Uint8List frameBytes = Uint8List.fromList(authnMsgFrame);
-
-    print("Framed Authn Msg: $authnMsgFrame");
-    print("TX/RX: TRANSMIT: Auth Frame bytes: $frameBytes");
+    print(
+      "TX/RX: TRANSMIT: Auth Frame bytes: ${frameBytes.map((e) => e.toRadixString(16).padLeft(2, '0')).join(' ')}",
+    );
 
     // Send using your sendData function which handles encryption
     await sendData(frameBytes);
@@ -1010,7 +1016,7 @@ class BleManager {
     }
   }
 
-  void registerNotifyHandlerForFirmwareUpgrade({
+  Future<void> registerNotifyHandlerForFirmwareUpgrade({
     bool isChipInBootLoader = false,
   }) async {
     await registerNotifyHandler(isChipInBootLoader: isChipInBootLoader);

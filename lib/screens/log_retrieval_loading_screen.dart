@@ -766,6 +766,7 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
     if (rxData.isEmpty || !_isReceivingLogs) return;
 
     try {
+      /// CLEANUP need to move this to head ble file, need to check if we get thus situtaion ever
       // Decrypt the frame if encryption is enabled
       final bool shouldDecrypt =
           _bleHandler != null &&
@@ -775,6 +776,7 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
       FrameData? frame;
       if (shouldDecrypt) {
         try {
+          /// CLEANUP need to move this to head ble file
           frame = await DataHandler().decryptTheDataPacketWithoutConversion(
             rxData,
           );
@@ -783,6 +785,7 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
           return;
         }
       } else {
+        /// CLEANUP need to move this to head ble file
         // Parse non-encrypted frame
         frame = DataTransferManager().parseRxFrame(rxData);
       }

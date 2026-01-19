@@ -207,6 +207,7 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
 
     if (manager != null) {
       manager.resetFirmwareState();
+      print("isChipInBootLoader: $isChipInBootLoader");
       if (isChipInBootLoader != true) {
         manager.setFirmwareState(BleStates.REQ_ENCY_KEY);
         manager.registerNotifyHandlerForFirmwareUpgrade(
@@ -218,7 +219,11 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
         manager.setFirmwareState(BleStates.SEND_JUMP_FIRMWARE_PACKET);
       }
       await Future.delayed(const Duration(milliseconds: 300));
-      manager.registerNotifyHandlerForFirmwareUpgrade(isChipInBootLoader: true);
+      await manager.registerNotifyHandlerForFirmwareUpgrade(
+        isChipInBootLoader: true,
+      );
+      await Future.delayed(const Duration(seconds: 4));
+      manager.setFirmwareState(BleStates.SEND_START_FIRMWARE_PACKET);
       await manager.sendStartFirmwarePacket();
       await Future.delayed(const Duration(milliseconds: 300));
       manager.setFirmwareState(BleStates.SEND_FIRMWARE_PACKET);
@@ -575,17 +580,8 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
 
   Future<bool> _checkBleConnection() async {
     try {
-      final btUtils = BtUtils();
-      final connectedDevice = await btUtils.getConnectedDevice();
-      if (connectedDevice == null) return false;
-
-      // Check if BLE handler is registered and state is connected
-      if (Get.isRegistered<BleNotifyDataHandler>()) {
-        final handler = Get.find<BleNotifyDataHandler>();
-        return handler.currentBleState.value == BleStateMachine.connected;
-      }
-
-      return false;
+      final bleManager = Get.find<BleManager>();
+      return bleManager.isConnected;
     } catch (e) {
       logger.Logger('Error checking BLE connection: $e');
       return false;
@@ -2632,7 +2628,7 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
   }
 
   Future<void> _startUpgrade({bool? isChipInBootLoader = false}) async {
-    print("isChipInBootLoader: $isChipInBootLoader");
+    // print("isChipInBootLoader: $isChipInBootLoader");
     _controller.downloadingStatus.value = fw.DownloadStatus.upgrading;
 
     setState(() {

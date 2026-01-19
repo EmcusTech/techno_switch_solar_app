@@ -31,6 +31,7 @@ BleRxFrame bleParseAndUpdateRxFrame(Uint8List frame, int frameLen) {
 
   // SOF
   int sof = (frame[count] << 8) | frame[count + 1];
+  print("SOF: $sof");
   count += 2;
 
   // CMD
@@ -79,12 +80,36 @@ BleRxFrame bleParseAndUpdateRxFrame(Uint8List frame, int frameLen) {
 }
 
 bool bleValidateRxFrame(BleRxFrame rx) {
-  if (rx.sof != 0xAA55) return false;
-  if (rx.cmd <= 0) return false;
-  if (rx.tof <= 0) return false;
-  if (rx.payloadLen <= 0) return false;
-  if (rx.crc != rx.calculatedCrc) return false;
-  if (rx.eof != 0xEEBB) return false;
+  print("the input dats is : $rx");
+  if (rx.sof != 0xAA55) {
+    print("SOF validation failed");
+    return false;
+  }
+
+  if (rx.cmd <= 0) {
+    print("CMD validation failed");
+    return false;
+  }
+
+  if (rx.tof <= 0) {
+    print("TOF validation failed");
+    return false;
+  }
+
+  if (rx.payloadLen <= 0) {
+    print("Payload length validation failed");
+    return false;
+  }
+
+  if (rx.crc != rx.calculatedCrc) {
+    print("CRC validation failed");
+    return false;
+  }
+
+  if (rx.eof != 0xEEBB) {
+    print("EOF validation failed");
+    return false;
+  }
 
   return true;
 }
