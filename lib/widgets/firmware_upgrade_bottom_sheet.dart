@@ -74,7 +74,7 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
   // Internal reconnect state for firmware upgrade
   bool _isWaitingForJumpReconnect = false;
   bool _isWaitingForEndReconnect = false;
-  String? _originalDeviceId; // Store device ID for reconnection
+  String? _originalDeviceName; // Store device name for reconnection
   StreamSubscription<ConnectionStateUpdate>? _internalReconnectSub;
 
   // Radar scanning state (from scanning_screen.dart)
@@ -219,9 +219,9 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
       manager.resetFirmwareState();
       print("isChipInBootLoader: $isChipInBootLoader");
 
-      // Store original device ID before jump command
+      // Store original device name before jump command
       if (isChipInBootLoader != true && _selectedDevice != null) {
-        _originalDeviceId = _selectedDevice!.id;
+        _originalDeviceName = _selectedDevice!.name;
       }
 
       if (isChipInBootLoader != true) {
@@ -245,7 +245,7 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
         // Start internal reconnect after jump command
         setState(() {
           _isWaitingForJumpReconnect = true;
-          _currentBleStateMessage = 'Reconnecting to device...';
+          _currentBleStateMessage = 'Checking device status...';
         });
         await _reconnectAndCheckStatus(isJumpCommand: true);
 
@@ -271,10 +271,10 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
         // Wait for device to reconnect
         await Future.delayed(const Duration(seconds: 2));
         // Try to reconnect if needed
-        if (!manager.isConnected && _originalDeviceId != null) {
+        if (!manager.isConnected && _originalDeviceName != null) {
           setState(() {
             _isWaitingForJumpReconnect = true;
-            _currentBleStateMessage = 'Reconnecting to device...';
+            _currentBleStateMessage = 'Checking device status...';
           });
           await _reconnectAndCheckStatus(isJumpCommand: true);
           await Future.delayed(const Duration(seconds: 2));
@@ -315,9 +315,9 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
       await Future.delayed(const Duration(milliseconds: 300));
       manager.setFirmwareState(BleStates.SEND_END_FIRMWARE_PACKET);
 
-      // Store device ID before sending end packet (device will disconnect)
+      // Store device name before sending end packet (device will disconnect)
       if (_selectedDevice != null) {
-        _originalDeviceId = _selectedDevice!.id;
+        _originalDeviceName = _selectedDevice!.name;
       }
 
       // Send end packet - expect it to fail when device disconnects
@@ -351,12 +351,12 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
 
   /// Internal method to reconnect and check firmware upgrade status
   Future<void> _reconnectAndCheckStatus({required bool isJumpCommand}) async {
-    if (_originalDeviceId == null) {
-      logger.Logger('No device ID stored for reconnection');
+    if (_originalDeviceName == null || _originalDeviceName!.isEmpty) {
+      logger.Logger('No device name stored for reconnection');
       setState(() {
         _isWaitingForJumpReconnect = false;
         _isWaitingForEndReconnect = false;
-        _errorMessage = 'Unable to reconnect: Device ID not found';
+        _errorMessage = 'Unable to reconnect: Device name not found';
       });
       return;
     }
@@ -378,15 +378,28 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
         return;
       }
 
-      // Set up scan listener for internal reconnect - match by device ID only
+      // Set up scan listener for internal reconnect - match by device name
       final Completer<DiscoveredDevice?> deviceFoundCompleter =
           Completer<DiscoveredDevice?>();
       StreamSubscription? internalScanSub;
+      DiscoveredDevice? foundDevice;
+      int? manufacturerDataFromScan;
 
       internalScanSub = _bluetoothService.scanResultsStream.listen((results) {
         for (var result in results) {
-          // Match by device ID only
-          if (result.id == _originalDeviceId) {
+          // Match by device name
+          if (result.name == _originalDeviceName) {
+            foundDevice = result;
+
+            // Check manufacturer data from scan results
+            final manufacturerData = result.manufacturerData;
+            if (manufacturerData.isNotEmpty) {
+              manufacturerDataFromScan = manufacturerData.last;
+              logger.Logger(
+                'Found device ${result.name} with manufacturer data: $manufacturerData (last byte: $manufacturerDataFromScan)',
+              );
+            }
+
             if (!deviceFoundCompleter.isCompleted) {
               deviceFoundCompleter.complete(result);
             }
@@ -403,7 +416,7 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
         const Duration(seconds: 30),
         onTimeout: () {
           logger.Logger('Device not found during reconnect');
-          return null;
+          return foundDevice; // Return device if found but completer wasn't triggered
         },
       );
 
@@ -419,6 +432,68 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
         });
         return;
       }
+
+      // Check manufacturer data from scan first
+      final scanManufacturerData = device.manufacturerData;
+      final scanLastByte =
+          scanManufacturerData.isNotEmpty ? scanManufacturerData.last : null;
+
+      logger.Logger(
+        'Device found: ${device.name}, Manufacturer data from scan: $scanManufacturerData (last byte: $scanLastByte)',
+      );
+
+      // If we have manufacturer data from scan, check it first
+      // For jump command: expect [0,1]
+      // For end command: expect [0,2] for success
+      if (scanLastByte != null) {
+        if (isJumpCommand) {
+          // Jump command: expect [0,1]
+          if (scanLastByte == 1) {
+            // Success - device is in bootloader mode
+            setState(() {
+              _isWaitingForJumpReconnect = false;
+              _selectedDevice = device;
+              _currentBleStateMessage = 'Device ready. Continuing upgrade...';
+            });
+            // Still need to connect for continuing the upgrade
+            // Fall through to connection logic
+          } else {
+            logger.Logger(
+              'Unexpected manufacturer data for jump command: $scanLastByte (expected 1)',
+            );
+            // Still try to connect
+          }
+        } else {
+          // End command: expect [0,2] for success
+          if (scanLastByte == 2) {
+            // Success - upgrade completed
+            setState(() {
+              _isWaitingForEndReconnect = false;
+              _selectedDevice = device;
+              _currentBleStateMessage =
+                  'Firmware upgrade completed successfully!';
+            });
+            _controller.downloadingStatus.value = fw.DownloadStatus.completed;
+            return; // No need to connect, we have the status
+          } else if (scanLastByte == 1) {
+            // Failed
+            setState(() {
+              _isWaitingForEndReconnect = false;
+              _errorMessage = 'Firmware upgrade failed';
+            });
+            _controller.downloadingStatus.value = fw.DownloadStatus.failed;
+            return; // No need to connect, we have the status
+          } else {
+            logger.Logger(
+              'Unknown manufacturer data for end command: $scanLastByte (expected 1 or 2)',
+            );
+            // Need to connect to get more info
+          }
+        }
+      }
+
+      // If manufacturer data is not available from scan, or we need to connect for jump command
+      // Connect to get manufacturer data
 
       // Connect to the device using BleLogController
       final bleController = Get.find<BleLogController>();
@@ -477,8 +552,6 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
       await Future.delayed(const Duration(milliseconds: 1000));
 
       // Check manufacturer data from the reconnected device
-      // Note: manufacturerData is a list, we need to check the last byte
-      // [0,2] = success, [0,1] = failed
       // Get the latest manufacturer data from BleManager after connection
       final manufacturerDataValue = bleManager.bleManufacturerData.value;
 
@@ -488,14 +561,26 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
       });
 
       if (isJumpCommand) {
-        // For jump command, just reconnect successfully
-        setState(() {
-          _selectedDevice = device;
-          _currentBleStateMessage = 'Device reconnected. Continuing upgrade...';
-        });
+        // For jump command: expect [0,1] - device should be in bootloader mode
+        if (manufacturerDataValue == 1) {
+          setState(() {
+            _selectedDevice = device;
+            _currentBleStateMessage = 'Device ready. Continuing upgrade...';
+          });
+        } else {
+          logger.Logger(
+            'Unexpected manufacturer data for jump command: $manufacturerDataValue (expected 1)',
+          );
+          setState(() {
+            _selectedDevice = device;
+            _currentBleStateMessage =
+                'Device reconnected. Continuing upgrade...';
+          });
+        }
       } else {
         // For end command, check upgrade status
         // manufacturerDataValue is the last byte from manufacturerData list
+        // [0,2] = success, [0,1] = failed
         if (manufacturerDataValue == 2) {
           // Success
           setState(() {
@@ -511,14 +596,8 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
           });
           _controller.downloadingStatus.value = fw.DownloadStatus.failed;
         } else {
-          // Unknown status - also check device's manufacturer data from scan
-          final deviceManufacturerData = device.manufacturerData;
-          final deviceLastByte =
-              deviceManufacturerData.isNotEmpty
-                  ? deviceManufacturerData.last
-                  : null;
-
-          if (deviceLastByte == 2) {
+          // Unknown status - fallback to scan data if available
+          if (scanLastByte == 2) {
             // Success (from scan data)
             setState(() {
               _selectedDevice = device;
@@ -526,7 +605,7 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
                   'Firmware upgrade completed successfully!';
             });
             _controller.downloadingStatus.value = fw.DownloadStatus.completed;
-          } else if (deviceLastByte == 1) {
+          } else if (scanLastByte == 1) {
             // Failed (from scan data)
             setState(() {
               _errorMessage = 'Firmware upgrade failed';
@@ -535,7 +614,7 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
           } else {
             // Unknown status
             logger.Logger(
-              'Unknown manufacturer data value: $manufacturerDataValue, device: $deviceLastByte',
+              'Unknown manufacturer data value: $manufacturerDataValue, scan: $scanLastByte',
             );
             setState(() {
               _errorMessage = 'Unable to determine upgrade status';
