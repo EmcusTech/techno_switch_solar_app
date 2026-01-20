@@ -19,7 +19,6 @@ import '../services/app_services.dart';
 import 'package:techno_switch_solar_app/services/firmware_upgrade_service.dart'
     as fw;
 import '../utils/bluetooth/ble_notify_data_handler.dart';
-import '../utils/bluetooth/bt_utils.dart';
 import 'package:techno_switch_solar_app/utils/bluetooth_service.dart'
     as app_bluetooth;
 import 'package:techno_switch_solar_app/utils/logger.dart' as logger;
@@ -71,6 +70,12 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
   String _connectionStatus = '';
   String? _passkeyError;
   final TextEditingController _passkeyController = TextEditingController();
+
+  // Internal reconnect state for firmware upgrade
+  bool _isWaitingForJumpReconnect = false;
+  bool _isWaitingForEndReconnect = false;
+  String? _originalDeviceId; // Store device ID for reconnection
+  StreamSubscription<ConnectionStateUpdate>? _internalReconnectSub;
 
   // Radar scanning state (from scanning_screen.dart)
   final app_bluetooth.BluetoothService _bluetoothService =
@@ -141,6 +146,11 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
     // Listen to BLE state changes for better feedback
     _bleHandler.currentBleState.listen((state) {
       if (mounted) {
+        // Ignore disconnection events during internal reconnect phases
+        if (_isWaitingForJumpReconnect || _isWaitingForEndReconnect) {
+          return;
+        }
+
         if (_isUpgrading) {
           setState(() {
             switch (state) {
@@ -208,23 +218,80 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
     if (manager != null) {
       manager.resetFirmwareState();
       print("isChipInBootLoader: $isChipInBootLoader");
+
+      // Store original device ID before jump command
+      if (isChipInBootLoader != true && _selectedDevice != null) {
+        _originalDeviceId = _selectedDevice!.id;
+      }
+
       if (isChipInBootLoader != true) {
         manager.setFirmwareState(BleStates.REQ_ENCY_KEY);
         manager.registerNotifyHandlerForFirmwareUpgrade(
           isChipInBootLoader: false,
         );
         await Future.delayed(const Duration(seconds: 4));
-        await manager.sendJumpFirmwarePacket();
+
+        // Send jump command - expect it to fail when device disconnects
+        try {
+          await manager.sendJumpFirmwarePacket();
+        } catch (e) {
+          // Expected: device disconnects after jump packet, causing write to fail
+          logger.Logger('Jump packet sent, device disconnected (expected): $e');
+        }
+
         await Future.delayed(const Duration(milliseconds: 300));
         manager.setFirmwareState(BleStates.SEND_JUMP_FIRMWARE_PACKET);
+
+        // Start internal reconnect after jump command
+        setState(() {
+          _isWaitingForJumpReconnect = true;
+          _currentBleStateMessage = 'Reconnecting to device...';
+        });
+        await _reconnectAndCheckStatus(isJumpCommand: true);
+
+        // After reconnect, wait a bit before continuing
+        await Future.delayed(const Duration(seconds: 2));
       }
+
       await Future.delayed(const Duration(milliseconds: 300));
       await manager.registerNotifyHandlerForFirmwareUpgrade(
         isChipInBootLoader: true,
       );
       await Future.delayed(const Duration(seconds: 4));
       manager.setFirmwareState(BleStates.SEND_START_FIRMWARE_PACKET);
-      await manager.sendStartFirmwarePacket();
+
+      // Send start firmware packet - might fail if device disconnects
+      try {
+        await manager.sendStartFirmwarePacket();
+      } catch (e) {
+        // If device disconnects, wait and reconnect again
+        logger.Logger(
+          'Start firmware packet failed, device may have disconnected: $e',
+        );
+        // Wait for device to reconnect
+        await Future.delayed(const Duration(seconds: 2));
+        // Try to reconnect if needed
+        if (!manager.isConnected && _originalDeviceId != null) {
+          setState(() {
+            _isWaitingForJumpReconnect = true;
+            _currentBleStateMessage = 'Reconnecting to device...';
+          });
+          await _reconnectAndCheckStatus(isJumpCommand: true);
+          await Future.delayed(const Duration(seconds: 2));
+          // Retry start packet after reconnect
+          try {
+            await manager.sendStartFirmwarePacket();
+          } catch (e2) {
+            logger.Logger('Start firmware packet retry failed: $e2');
+            throw Exception(
+              'Failed to send start firmware packet after reconnect: $e2',
+            );
+          }
+        } else {
+          throw Exception('Failed to send start firmware packet: $e');
+        }
+      }
+
       await Future.delayed(const Duration(milliseconds: 300));
       manager.setFirmwareState(BleStates.SEND_FIRMWARE_PACKET);
       // Replace the existing print
@@ -247,7 +314,26 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
 
       await Future.delayed(const Duration(milliseconds: 300));
       manager.setFirmwareState(BleStates.SEND_END_FIRMWARE_PACKET);
-      await manager.sendEndFirmwarePacket();
+
+      // Store device ID before sending end packet (device will disconnect)
+      if (_selectedDevice != null) {
+        _originalDeviceId = _selectedDevice!.id;
+      }
+
+      // Send end packet - expect it to fail when device disconnects
+      try {
+        await manager.sendEndFirmwarePacket();
+      } catch (e) {
+        // Expected: device disconnects after end packet, causing write to fail
+        logger.Logger('End packet sent, device disconnected (expected): $e');
+      }
+
+      // Start internal reconnect after end command
+      setState(() {
+        _isWaitingForEndReconnect = true;
+        _currentBleStateMessage = 'Fetching Firmware Upgrade status...';
+      });
+      await _reconnectAndCheckStatus(isJumpCommand: false);
     } else {
       // Fallback: just simulate progress if manager unavailable
       // for (final _ in packets) {
@@ -263,10 +349,217 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
     _controller.downloadingStatus.value = fw.DownloadStatus.completed;
   }
 
+  /// Internal method to reconnect and check firmware upgrade status
+  Future<void> _reconnectAndCheckStatus({required bool isJumpCommand}) async {
+    if (_originalDeviceId == null) {
+      logger.Logger('No device ID stored for reconnection');
+      setState(() {
+        _isWaitingForJumpReconnect = false;
+        _isWaitingForEndReconnect = false;
+        _errorMessage = 'Unable to reconnect: Device ID not found';
+      });
+      return;
+    }
+
+    try {
+      // Wait a bit for device to disconnect and restart
+      await Future.delayed(const Duration(seconds: 3));
+
+      // Start scanning internally
+      await _bluetoothService.requestPermissions();
+      final poweredOn = await _bluetoothService.ensurePoweredOn();
+
+      if (!poweredOn) {
+        setState(() {
+          _isWaitingForJumpReconnect = false;
+          _isWaitingForEndReconnect = false;
+          _errorMessage = 'Bluetooth is not enabled';
+        });
+        return;
+      }
+
+      // Set up scan listener for internal reconnect - match by device ID only
+      final Completer<DiscoveredDevice?> deviceFoundCompleter =
+          Completer<DiscoveredDevice?>();
+      StreamSubscription? internalScanSub;
+
+      internalScanSub = _bluetoothService.scanResultsStream.listen((results) {
+        for (var result in results) {
+          // Match by device ID only
+          if (result.id == _originalDeviceId) {
+            if (!deviceFoundCompleter.isCompleted) {
+              deviceFoundCompleter.complete(result);
+            }
+            break;
+          }
+        }
+      });
+
+      // Start scanning
+      await _bluetoothService.startScanning();
+
+      // Wait for device to be found (timeout after 30 seconds)
+      final device = await deviceFoundCompleter.future.timeout(
+        const Duration(seconds: 30),
+        onTimeout: () {
+          logger.Logger('Device not found during reconnect');
+          return null;
+        },
+      );
+
+      await internalScanSub.cancel();
+      await _bluetoothService.stopScanning();
+
+      if (device == null) {
+        setState(() {
+          _isWaitingForJumpReconnect = false;
+          _isWaitingForEndReconnect = false;
+          _errorMessage =
+              'Device not found. Please ensure device is powered on.';
+        });
+        return;
+      }
+
+      // Connect to the device using BleLogController
+      final bleController = Get.find<BleLogController>();
+      final bleManager = bleController.bleManager;
+
+      // Check if already connected to avoid duplicate connections
+      if (bleManager.isConnected &&
+          bleManager.connectedDeviceId.value == device.id) {
+        logger.Logger('Device already connected, skipping reconnect');
+      } else {
+        // Disconnect first if connected to a different device
+        if (bleManager.isConnected) {
+          logger.Logger('Disconnecting from current device before reconnect');
+          await bleManager.shutdown();
+          await Future.delayed(const Duration(seconds: 1));
+        }
+
+        // Use BleLogController's connectToDevice which handles initialization properly
+        try {
+          await bleController.connectToDevice(device: device);
+
+          // Wait for connection to be fully established
+          int waitCount = 0;
+          while (!bleManager.isConnected && waitCount < 20) {
+            await Future.delayed(const Duration(milliseconds: 200));
+            waitCount++;
+          }
+
+          if (!bleManager.isConnected) {
+            throw Exception('Connection not established after reconnect');
+          }
+        } catch (e) {
+          logger.Logger('Error connecting during reconnect: $e');
+          setState(() {
+            _isWaitingForJumpReconnect = false;
+            _isWaitingForEndReconnect = false;
+            _errorMessage = 'Failed to reconnect to device: $e';
+          });
+          return;
+        }
+      }
+
+      // Wait for connection to be fully established
+      await Future.delayed(const Duration(milliseconds: 500));
+
+      // For jump command, we need to re-register notify handler in bootloader mode
+      if (isJumpCommand) {
+        // Re-register notify handler in bootloader mode after reconnect
+        await bleManager.registerNotifyHandlerForFirmwareUpgrade(
+          isChipInBootLoader: true,
+        );
+        await Future.delayed(const Duration(milliseconds: 500));
+      }
+
+      // Wait a bit for manufacturer data to be available
+      await Future.delayed(const Duration(milliseconds: 1000));
+
+      // Check manufacturer data from the reconnected device
+      // Note: manufacturerData is a list, we need to check the last byte
+      // [0,2] = success, [0,1] = failed
+      // Get the latest manufacturer data from BleManager after connection
+      final manufacturerDataValue = bleManager.bleManufacturerData.value;
+
+      setState(() {
+        _isWaitingForJumpReconnect = false;
+        _isWaitingForEndReconnect = false;
+      });
+
+      if (isJumpCommand) {
+        // For jump command, just reconnect successfully
+        setState(() {
+          _selectedDevice = device;
+          _currentBleStateMessage = 'Device reconnected. Continuing upgrade...';
+        });
+      } else {
+        // For end command, check upgrade status
+        // manufacturerDataValue is the last byte from manufacturerData list
+        if (manufacturerDataValue == 2) {
+          // Success
+          setState(() {
+            _selectedDevice = device;
+            _currentBleStateMessage =
+                'Firmware upgrade completed successfully!';
+          });
+          _controller.downloadingStatus.value = fw.DownloadStatus.completed;
+        } else if (manufacturerDataValue == 1) {
+          // Failed
+          setState(() {
+            _errorMessage = 'Firmware upgrade failed';
+          });
+          _controller.downloadingStatus.value = fw.DownloadStatus.failed;
+        } else {
+          // Unknown status - also check device's manufacturer data from scan
+          final deviceManufacturerData = device.manufacturerData;
+          final deviceLastByte =
+              deviceManufacturerData.isNotEmpty
+                  ? deviceManufacturerData.last
+                  : null;
+
+          if (deviceLastByte == 2) {
+            // Success (from scan data)
+            setState(() {
+              _selectedDevice = device;
+              _currentBleStateMessage =
+                  'Firmware upgrade completed successfully!';
+            });
+            _controller.downloadingStatus.value = fw.DownloadStatus.completed;
+          } else if (deviceLastByte == 1) {
+            // Failed (from scan data)
+            setState(() {
+              _errorMessage = 'Firmware upgrade failed';
+            });
+            _controller.downloadingStatus.value = fw.DownloadStatus.failed;
+          } else {
+            // Unknown status
+            logger.Logger(
+              'Unknown manufacturer data value: $manufacturerDataValue, device: $deviceLastByte',
+            );
+            setState(() {
+              _errorMessage = 'Unable to determine upgrade status';
+            });
+            _controller.downloadingStatus.value = fw.DownloadStatus.failed;
+          }
+        }
+      }
+    } catch (e) {
+      logger.Logger('Error during reconnect: $e');
+      setState(() {
+        _isWaitingForJumpReconnect = false;
+        _isWaitingForEndReconnect = false;
+        _errorMessage = 'Reconnection error: $e';
+      });
+      _controller.downloadingStatus.value = fw.DownloadStatus.failed;
+    }
+  }
+
   @override
   void dispose() {
     _handshakeSubscription?.cancel();
     _bleResultsSub?.cancel();
+    _internalReconnectSub?.cancel();
     _bluetoothService.dispose();
     _sweepController.dispose();
     _passkeyController.dispose();
@@ -2416,6 +2709,69 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
       final currentIndex = _controller.progressbarIndex.value;
       final totalPackets = _controller.totalPacketLength.value;
       final status = _controller.downloadingStatus.value;
+
+      // Show different UI based on reconnect phase
+      if (_isWaitingForJumpReconnect) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              'Reconnecting to Device',
+              style: GoogleFonts.inter(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            SizedBox(height: 32),
+            Center(
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFEC1D24)),
+              ),
+            ),
+            SizedBox(height: 24),
+            Text(
+              'Reconnecting to device...',
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                fontWeight: FontWeight.w400,
+                color: Color(0xFF979797),
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        );
+      }
+
+      if (_isWaitingForEndReconnect) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              'Fetching Firmware Upgrade Status',
+              style: GoogleFonts.inter(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            SizedBox(height: 32),
+            Center(
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFEC1D24)),
+              ),
+            ),
+            SizedBox(height: 24),
+            Text(
+              'Fetching Firmware Upgrade status...',
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                fontWeight: FontWeight.w400,
+                color: Color(0xFF979797),
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        );
+      }
 
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
