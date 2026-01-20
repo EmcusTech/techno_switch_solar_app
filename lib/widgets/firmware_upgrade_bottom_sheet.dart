@@ -250,7 +250,8 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
         await _reconnectAndCheckStatus(isJumpCommand: true);
 
         // After reconnect, wait a bit before continuing
-        await Future.delayed(const Duration(seconds: 2));
+        // Device needs time to stabilize in bootloader mode
+        await Future.delayed(const Duration(seconds: 3));
       }
 
       await Future.delayed(const Duration(milliseconds: 300));
@@ -362,8 +363,9 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
     }
 
     try {
-      // Wait a bit for device to disconnect and restart
-      await Future.delayed(const Duration(seconds: 3));
+      // Wait longer for device to disconnect and restart (especially for jump command)
+      // Jump command causes device reboot, so it needs more time
+      await Future.delayed(Duration(seconds: isJumpCommand ? 6 : 3));
 
       // Start scanning internally
       await _bluetoothService.requestPermissions();
@@ -517,7 +519,7 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
 
           // Wait for connection to be fully established
           int waitCount = 0;
-          while (!bleManager.isConnected && waitCount < 20) {
+          while (!bleManager.isConnected && waitCount < 30) {
             await Future.delayed(const Duration(milliseconds: 200));
             waitCount++;
           }
@@ -537,15 +539,19 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
       }
 
       // Wait for connection to be fully established
-      await Future.delayed(const Duration(milliseconds: 500));
+      await Future.delayed(const Duration(milliseconds: 1000));
 
-      // For jump command, we need to re-register notify handler in bootloader mode
+      // For jump command, we need to register notify handler in bootloader mode
+      // BUT we should NOT trigger auth flow - device is already in bootloader mode
       if (isJumpCommand) {
-        // Re-register notify handler in bootloader mode after reconnect
+        // The device is already in bootloader mode after jump command
+        // We just need to ensure notifications are registered, but skip auth
+        // The registerNotifyHandler will check if already registered
         await bleManager.registerNotifyHandlerForFirmwareUpgrade(
           isChipInBootLoader: true,
         );
-        await Future.delayed(const Duration(milliseconds: 500));
+        // Give device more time to stabilize after reboot
+        await Future.delayed(const Duration(milliseconds: 1000));
       }
 
       // Wait a bit for manufacturer data to be available

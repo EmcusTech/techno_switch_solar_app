@@ -63,9 +63,9 @@ class FirmwarePacketService {
 
         final seqBytes = _sequenceTo2BytesLE(sequence);
 
-        print(
-          "seqBytes: ${seqBytes.map((e) => e.toRadixString(16).padLeft(2, '0')).join(' ')}",
-        );
+        // print(
+        //   "seqBytes: ${seqBytes.map((e) => e.toRadixString(16).padLeft(2, '0')).join(' ')}",
+        // );
         packetBytes.setRange(0, 2, seqBytes);
         packetBytes.setRange(2, 2 + payload.length, payload);
 
