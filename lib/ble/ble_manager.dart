@@ -55,6 +55,12 @@ enum OtaProcessState {
   notInUse,
 }
 
+enum BleOperationMode {
+  none, // No active operation
+  firmwareUpgrade, // Firmware upgrade in progress
+  logRetrieval, // Event log retrieval in progress
+}
+
 const String BLE_AUTHN_MSG = "TECHNOSWITCH-AUTH-APP";
 
 class BleManager {
@@ -63,6 +69,9 @@ class BleManager {
   // BLE state variables
   BleStates bleCurrentState = BleStates.REQ_ENCY_KEY;
   BleStates bleStateMachineState = BleStates.REQ_ENCY_KEY;
+
+  // Operation mode tracking
+  BleOperationMode currentOperationMode = BleOperationMode.none;
 
   Map<String, dynamic> bleAESKey = {};
   BleRxFrame bleRxFrame = BleRxFrame();
@@ -137,11 +146,13 @@ class BleManager {
   void resetFirmwareState() {
     bleCurrentState = BleStates.SEND_START_FIRMWARE_PACKET;
     bleStateMachineState = BleStates.SEND_START_FIRMWARE_PACKET;
+    currentOperationMode = BleOperationMode.firmwareUpgrade;
   }
 
   void setFirmwareState(BleStates state) {
     bleCurrentState = state;
     bleStateMachineState = state;
+    currentOperationMode = BleOperationMode.firmwareUpgrade;
   }
 
   /// Reset log retrieval protocol state
@@ -152,6 +163,7 @@ class BleManager {
     bleAESKey.clear();
     _pollInFlight = false;
     receivedPollCount = 0;
+    currentOperationMode = BleOperationMode.logRetrieval;
   }
 
   /// Initialize and start log retrieval process
@@ -167,6 +179,9 @@ class BleManager {
         "BLE characteristics not initialized. Cannot start log retrieval.",
       );
     }
+
+    // Set operation mode to log retrieval
+    currentOperationMode = BleOperationMode.logRetrieval;
 
     // Reset protocol state to initial values
     resetLogRetrievalState();
@@ -398,8 +413,10 @@ class BleManager {
     await Future.delayed(const Duration(milliseconds: 300));
     print("---Notification handler registered----");
     if (isChipInBootLoader != true) {
+      // Request encryption key for both firmware upgrade (first connection) and log retrieval
       bleProcess.requestENCKey();
     } else {
+      // Bootloader mode - skip encryption key request and go directly to auth
       bleStateMachineState = BleStates.SEND_AUTHN_MSG;
       bleCurrentState = BleStates.SEND_AUTHN_MSG;
       bleProcess.sendAuthPacket();
@@ -453,6 +470,9 @@ class BleManager {
     // Clear encryption key
     bleAESKey.clear();
 
+    // Reset operation mode
+    currentOperationMode = BleOperationMode.none;
+
     // Reset connection state
     _scanSub = null;
     _notifySub = null;
@@ -473,6 +493,7 @@ class BleManager {
   Future<void> notificationHandler(Uint8List data) async {
     print("bleprocess: ${bleProcess.isOtaCompleted}");
     print("otaProcessState: $otaProcessState");
+    print("currentOperationMode: $currentOperationMode");
     if ((bleProcess.isOtaCompleted ||
             otaProcessState == OtaProcessState.notInUse) &&
         isBleDisconnected) {
@@ -535,19 +556,35 @@ class BleManager {
       if (bleValidateRxFrame(bleRxFrame)) {
         print("AUTH KEY Validation success");
         await Future.delayed(Duration(seconds: 1));
-        bleCurrentState = BleStates.SEND_START_FIRMWARE_PACKET;
-        bleStateMachineState = BleStates.SEND_START_FIRMWARE_PACKET;
-        print("Current state: $bleStateMachineState");
-        // Send Network Packet
-        bleProcess.startOtherPacketsRxTimeout(
-          timeout: const Duration(seconds: 5),
-        );
 
-        //TODO: need to parallel processing one for firmware upgrade and one for log retrieval, need to decouple the two ble manager from the app logic
+        // Route to appropriate state based on operation mode
+        if (currentOperationMode == BleOperationMode.firmwareUpgrade) {
+          // Firmware upgrade path
+          bleCurrentState = BleStates.SEND_START_FIRMWARE_PACKET;
+          bleStateMachineState = BleStates.SEND_START_FIRMWARE_PACKET;
+          print("Current state: $bleStateMachineState (Firmware Upgrade)");
+        } else if (currentOperationMode == BleOperationMode.logRetrieval) {
+          // Log retrieval path
+          bleCurrentState = BleStates.PROCESS_PANEL_EVT_LOG_READ;
+          bleStateMachineState = BleStates.PROCESS_PANEL_EVT_LOG_READ;
+          print("Current state: $bleStateMachineState (Log Retrieval)");
 
-        // if (isChipInBootLoader != true) {
-        //   Get.find<BleLogController>().sendNetworkPacket();
-        // }
+          // Send Network Packet for log retrieval
+          bleProcess.startOtherPacketsRxTimeout(
+            timeout: const Duration(seconds: 5),
+          );
+          Get.find<BleLogController>().sendNetworkPacket();
+        } else {
+          // Default to log retrieval if mode not set
+          print("Warning: Operation mode not set, defaulting to log retrieval");
+          currentOperationMode = BleOperationMode.logRetrieval;
+          bleCurrentState = BleStates.PROCESS_PANEL_EVT_LOG_READ;
+          bleStateMachineState = BleStates.PROCESS_PANEL_EVT_LOG_READ;
+          bleProcess.startOtherPacketsRxTimeout(
+            timeout: const Duration(seconds: 5),
+          );
+          Get.find<BleLogController>().sendNetworkPacket();
+        }
       } else {
         print("Validation failed");
       }
@@ -1019,6 +1056,8 @@ class BleManager {
   Future<void> registerNotifyHandlerForFirmwareUpgrade({
     bool isChipInBootLoader = false,
   }) async {
+    // Set operation mode before registering
+    currentOperationMode = BleOperationMode.firmwareUpgrade;
     await registerNotifyHandler(isChipInBootLoader: isChipInBootLoader);
   }
 
