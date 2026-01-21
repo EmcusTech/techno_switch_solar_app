@@ -961,6 +961,93 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
     }
   }
 
+  void _showBluetoothOffDialog({
+    // kept for signature compatibility
+    required BuildContext context,
+  }) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 64,
+                  height: 64,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFFBDEE1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Center(
+                    child: Icon(
+                      Icons.bluetooth_disabled,
+                      size: 32,
+                      color: Color(0xFFEC1D24),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Turn on Bluetooth',
+                  style: GoogleFonts.inter(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF3D3D3D),
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Bluetooth is off. Please enable Bluetooth to continue scanning.',
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w400,
+                    color: Color(0xFF918F8F),
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFEC1D24),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(24.5),
+                      ),
+                    ),
+                    onPressed: () {
+                      Navigator.of(dialogContext).pop();
+                    },
+                    child: Text(
+                      'OK',
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildConnectDevice() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1395,6 +1482,23 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
   }
 
   Future<void> _startScan() async {
+    try {
+      await _bluetoothService.requestPermissions();
+      final poweredOn = await _bluetoothService.ensurePoweredOn();
+
+      if (!poweredOn) {
+        setState(() {
+          _errorMessage =
+              'Bluetooth is not enabled. Please enable Bluetooth and try again.';
+        });
+        if (mounted) {
+          _showBluetoothOffDialog(context: context);
+        }
+        return;
+      }
+    } catch (e) {
+      return;
+    }
     setState(() {
       _isScanning = true;
       _discoveredDevices = [];
@@ -1406,18 +1510,6 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
     });
 
     try {
-      await _bluetoothService.requestPermissions();
-      final poweredOn = await _bluetoothService.ensurePoweredOn();
-
-      if (!poweredOn) {
-        setState(() {
-          _isScanning = false;
-          _errorMessage =
-              'Bluetooth is not enabled. Please enable Bluetooth and try again.';
-        });
-        return;
-      }
-
       // Set up scan listener
       await _bleResultsSub?.cancel();
       _bleResultsSub = _bluetoothService.scanResultsStream.listen((results) {
@@ -2876,69 +2968,8 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
       final totalPackets = _controller.totalPacketLength.value;
       final status = _controller.downloadingStatus.value;
 
-      // Show different UI based on reconnect phase
-      if (_isWaitingForJumpReconnect) {
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              'Reconnecting to Device',
-              style: GoogleFonts.inter(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            SizedBox(height: 32),
-            Center(
-              child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFEC1D24)),
-              ),
-            ),
-            SizedBox(height: 24),
-            Text(
-              'Reconnecting to device...',
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                fontWeight: FontWeight.w400,
-                color: Color(0xFF979797),
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        );
-      }
-
-      if (_isWaitingForEndReconnect) {
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              'Fetching Firmware Upgrade Status',
-              style: GoogleFonts.inter(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            SizedBox(height: 32),
-            Center(
-              child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFEC1D24)),
-              ),
-            ),
-            SizedBox(height: 24),
-            Text(
-              'Fetching Firmware Upgrade status...',
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                fontWeight: FontWeight.w400,
-                color: Color(0xFF979797),
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        );
-      }
-
+      // Always show the normal progress UI, even during reconnection phases
+      // This hides the reconnection/status fetching messages and shows only the upload progress
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -2948,24 +2979,36 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
           ),
           SizedBox(height: 32),
           Center(
-            child: CircularPercentIndicator(
-              radius: 80,
-              lineWidth: 12,
-              percent: progress.clamp(0.0, 1.0),
-              center: Text(
+            child:
+                (progress * 100).toStringAsFixed(1) == '0.0'
+                    ? Lottie.asset('assets/jsons/ble_connecting.json')
+                    : CircularPercentIndicator(
+                      radius: 80,
+                      lineWidth: 8,
+                      percent: progress.clamp(0.0, 1.0),
+                      center: Lottie.asset(
+                        'assets/jsons/firmware_upgrade.json',
+                      ),
+                      progressColor: Color(0xFFEC1D24),
+                      backgroundColor: Color(0xFFD9D9D9),
+                      circularStrokeCap: CircularStrokeCap.round,
+                    ),
+          ),
+          SizedBox(height: 12),
+          Visibility(
+            visible: !((progress * 100).toStringAsFixed(1) == '0.0'),
+            child: Center(
+              child: Text(
                 '${(progress * 100).toStringAsFixed(1)}%',
                 style: GoogleFonts.inter(
                   fontSize: 24,
                   fontWeight: FontWeight.w700,
                   color: Color(0xFFEC1D24),
+                  fontFeatures: [FontFeature.tabularFigures()],
                 ),
               ),
-              progressColor: Color(0xFFEC1D24),
-              backgroundColor: Color(0xFFD9D9D9),
-              circularStrokeCap: CircularStrokeCap.round,
             ),
           ),
-          SizedBox(height: 24),
           // if (totalPackets > 0)
           //   Text(
           //     'Packet $currentIndex of $totalPackets',
@@ -2984,7 +3027,7 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
           //   progressColor: Color(0xFFEC1D24),
           //   barRadius: Radius.circular(4),
           // ),
-          SizedBox(height: 24),
+          SizedBox(height: 12),
           Text(
             _currentBleStateMessage ??
                 (status == fw.DownloadStatus.upgrading
@@ -3014,23 +3057,13 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Center(
-          child: Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color:
-                  isSuccess
-                      ? Color(0xFF00A706).withOpacity(0.1)
-                      : Color(0xFFEC1D24).withOpacity(0.1),
-            ),
-            child: Icon(
-              isSuccess ? Icons.check_circle : Icons.error,
-              size: 48,
-              color: isSuccess ? Color(0xFF00A706) : Color(0xFFEC1D24),
-            ),
-          ),
+        Lottie.asset(
+          height: 250,
+          width: 250,
+          isSuccess
+              ? 'assets/jsons/firmware_upgrade_success.json'
+              : 'assets/jsons/firmware_upgrade_failed.json',
+          repeat: false,
         ),
         SizedBox(height: 24),
         Text(
@@ -3176,7 +3209,7 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
     setState(() {
       _isUpgrading = true;
       _currentStep = FirmwareUpgradeStep.progress;
-      _currentBleStateMessage = 'Preparing packets...';
+      _currentBleStateMessage = 'Preparing Firmware Upgrade...';
       _errorMessage = null;
     });
 

@@ -190,13 +190,21 @@ class _SettingsContentState extends State<_SettingsContent> {
           SizedBox(height: 10),
           Divider(color: Colors.black.withValues(alpha: 0.18), thickness: 1),
           _settingTile(title: 'Panel Settings', onTap: () {}),
+          Divider(color: Colors.black.withValues(alpha: 0.18), thickness: 1),
           _settingTile(title: 'Zone Settings', onTap: () {}),
+          Divider(color: Colors.black.withValues(alpha: 0.18), thickness: 1),
           _settingTile(title: 'Input Settings', onTap: () {}),
+          Divider(color: Colors.black.withValues(alpha: 0.18), thickness: 1),
           _settingTile(title: 'Relay Settings', onTap: () {}),
+          Divider(color: Colors.black.withValues(alpha: 0.18), thickness: 1),
           _settingTile(title: 'Sounder Settings', onTap: () {}),
+          Divider(color: Colors.black.withValues(alpha: 0.18), thickness: 1),
           _settingTile(title: 'Extinguishing out Settings', onTap: () {}),
+          Divider(color: Colors.black.withValues(alpha: 0.18), thickness: 1),
           _settingTile(title: 'L-Bus Settings', onTap: () {}),
+          Divider(color: Colors.black.withValues(alpha: 0.18), thickness: 1),
           _settingTile(title: 'Panel Information', onTap: () {}),
+          Divider(color: Colors.black.withValues(alpha: 0.18), thickness: 1),
           _settingTile(
             title: 'Firmware Upgrade',
             onTap: () {
@@ -214,6 +222,7 @@ class _SettingsContentState extends State<_SettingsContent> {
               );
             },
           ),
+          Divider(color: Colors.black.withValues(alpha: 0.18), thickness: 1),
           SizedBox(height: 80),
         ],
       ),
@@ -221,40 +230,35 @@ class _SettingsContentState extends State<_SettingsContent> {
   }
 
   Widget _settingTile({required String title, required VoidCallback onTap}) {
-    return GestureDetector(
+    return InkWell(
       onTap: onTap,
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 15),
-            child: Row(
-              children: [
-                SvgPicture.asset(
-                  'assets/svgs/settings_icon.svg',
-                  colorFilter: ColorFilter.mode(
-                    Color(0xFF1B1F26).withValues(alpha: 0.72),
-                    BlendMode.srcIn,
-                  ),
-                ),
-                SizedBox(width: 12),
-                Text(
-                  title,
-                  style: GoogleFonts.inter(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w400,
-                  ),
-                ),
-                Spacer(),
-                Icon(
-                  Icons.arrow_forward_ios,
-                  size: 18,
-                  color: Color(0xFF696969).withValues(alpha: 0.47),
-                ),
-              ],
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: Row(
+          children: [
+            SvgPicture.asset(
+              'assets/svgs/settings_icon.svg',
+              colorFilter: ColorFilter.mode(
+                Color(0xFF1B1F26).withValues(alpha: 0.72),
+                BlendMode.srcIn,
+              ),
             ),
-          ),
-          Divider(color: Colors.black.withValues(alpha: 0.18), thickness: 1),
-        ],
+            SizedBox(width: 12),
+            Text(
+              title,
+              style: GoogleFonts.inter(
+                fontSize: 16,
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+            Spacer(),
+            Icon(
+              Icons.arrow_forward_ios,
+              size: 18,
+              color: Color(0xFF696969).withValues(alpha: 0.47),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -1435,27 +1435,31 @@ class _ScanningScreenState extends State<ScanningScreen>
                             if (val.length == 4) {
                               bleProcess.isAccessKeyValid.value = null;
                               cancelAccessKeyTimer();
-                              accessKeyValidationTimer =
-                                  Timer(const Duration(seconds: 10), () {
-                                if (!mounted) return;
-                                if (isAccessKeyValid.value == null) {
-                                  final navigator = Navigator.maybeOf(
-                                    dialogContext,
-                                    rootNavigator: true,
-                                  );
-                                  navigator?.maybePop();
-                                  WidgetsBinding.instance
-                                      .addPostFrameCallback((_) {
-                                    if (!mounted) return;
-                                    Navigator.of(dialogContext).push(
-                                      MaterialPageRoute(
-                                        builder: (_) =>
-                                            const LogRetrievalFailedScreen(),
-                                      ),
+                              accessKeyValidationTimer = Timer(
+                                const Duration(seconds: 10),
+                                () {
+                                  if (!mounted) return;
+                                  if (isAccessKeyValid.value == null) {
+                                    final navigator = Navigator.maybeOf(
+                                      dialogContext,
+                                      rootNavigator: true,
                                     );
-                                  });
-                                }
-                              });
+                                    navigator?.maybePop();
+                                    WidgetsBinding.instance.addPostFrameCallback((
+                                      _,
+                                    ) {
+                                      if (!mounted) return;
+                                      Navigator.of(dialogContext).push(
+                                        MaterialPageRoute(
+                                          builder:
+                                              (_) =>
+                                                  const LogRetrievalFailedScreen(),
+                                        ),
+                                      );
+                                    });
+                                  }
+                                },
+                              );
                               FocusScope.of(dialogContext).unfocus();
                               bleProcess.processDesc.value =
                                   "Validating access key...";
