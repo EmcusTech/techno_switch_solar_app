@@ -208,18 +208,18 @@ class _SettingsContentState extends State<_SettingsContent> {
           _settingTile(
             title: 'Firmware Upgrade',
             onTap: () {
-              // Ensure UpdatesController is registered
-              if (!Get.isRegistered<UpdatesController>()) {
-                Get.put(UpdatesController());
-              }
-              showModalBottomSheet(
-                context: context,
-                isScrollControlled: true,
-                backgroundColor: Colors.transparent,
-                isDismissible: false,
-                enableDrag: true,
-                builder: (context) => FirmwareUpgradeBottomSheet(),
-              );
+              // // Ensure UpdatesController is registered
+              // if (!Get.isRegistered<UpdatesController>()) {
+              //   Get.put(UpdatesController());
+              // }
+              // showModalBottomSheet(
+              //   context: context,
+              //   isScrollControlled: true,
+              //   backgroundColor: Colors.transparent,
+              //   isDismissible: false,
+              //   enableDrag: true,
+              //   builder: (context) => FirmwareUpgradeBottomSheet(),
+              // );
             },
           ),
           Divider(color: Colors.black.withValues(alpha: 0.18), thickness: 1),

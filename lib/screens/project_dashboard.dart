@@ -998,7 +998,10 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                     backgroundColor: Colors.transparent,
                     isDismissible: false,
                     enableDrag: true,
-                    builder: (context) => FirmwareUpgradeBottomSheet(),
+                    builder:
+                        (context) => FirmwareUpgradeBottomSheet(
+                          connectedDevice: widget.selectedDevice,
+                        ),
                   );
                 },
               ),
