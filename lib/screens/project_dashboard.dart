@@ -6,6 +6,8 @@ import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
+import 'package:techno_switch_solar_app/controllers/updates_controller.dart'
+    show UpdatesController;
 import 'package:techno_switch_solar_app/screens/device_connecting_screen.dart';
 import 'package:techno_switch_solar_app/screens/log_history_screen.dart';
 import 'package:techno_switch_solar_app/screens/log_retrieval_loading_screen.dart'
@@ -14,6 +16,7 @@ import 'package:techno_switch_solar_app/screens/log_retreival_failed_screen.dart
 import 'package:techno_switch_solar_app/screens/scanning_screen.dart';
 import 'package:techno_switch_solar_app/screens/settings_screen.dart';
 import 'package:techno_switch_solar_app/screens/test_mode_screen.dart';
+import 'package:techno_switch_solar_app/widgets/firmware_upgrade_bottom_sheet.dart';
 
 class ProjectDashboardScreen extends StatefulWidget {
   final String panelVersionNo;
@@ -56,7 +59,7 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
   ];
 
   void _onItemTapped(int index) {
-    if (index == 1 || index == 2) {
+    if (index == 2) {
       return;
     }
     setState(() {
@@ -66,7 +69,7 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const disabledIndexes = [1, 2];
+    const disabledIndexes = [2];
 
     Color itemColor(int index) {
       if (disabledIndexes.contains(index)) {
@@ -749,42 +752,46 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
   Widget _peripheralTile({
     required String peripheralName,
     required String iconPath,
+    VoidCallback? onTap,
     bool? isDisabled = false,
   }) {
-    return Column(
-      children: [
-        Expanded(
-          child: Container(
-            decoration: BoxDecoration(
-              color: Color(0xFFF4F4F4),
-              border: Border.all(color: Color(0xFFD7D7D7)),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Center(
-              child: SvgPicture.asset(
-                iconPath,
-                colorFilter: ColorFilter.mode(
-                  isDisabled == true
-                      ? Color(0xFF666666).withValues(alpha: 0.2)
-                      : Color(0xFFEC1D24),
-                  BlendMode.srcIn,
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(
+                color: Color(0xFFF4F4F4),
+                border: Border.all(color: Color(0xFFD7D7D7)),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Center(
+                child: SvgPicture.asset(
+                  iconPath,
+                  colorFilter: ColorFilter.mode(
+                    isDisabled == true
+                        ? Color(0xFF666666).withValues(alpha: 0.2)
+                        : Color(0xFFEC1D24),
+                    BlendMode.srcIn,
+                  ),
+                  // height: 24,
+                  // width: 24,
                 ),
-                // height: 24,
-                // width: 24,
               ),
             ),
           ),
-        ),
-        SizedBox(height: 8),
-        Text(
-          peripheralName,
-          style: GoogleFonts.inter(
-            fontSize: 10,
-            fontWeight: FontWeight.w500,
-            color: Color(0xFF696969),
+          SizedBox(height: 8),
+          Text(
+            peripheralName,
+            style: GoogleFonts.inter(
+              fontSize: 10,
+              fontWeight: FontWeight.w500,
+              color: Color(0xFF696969),
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -802,16 +809,18 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
         ),
         SizedBox(height: 18),
         SizedBox(
-          height: 223,
           width: double.infinity,
           child: GridView.count(
+            shrinkWrap: true,
             crossAxisCount: 4,
             crossAxisSpacing: 12,
             mainAxisSpacing: 12,
             childAspectRatio: 0.75,
             physics: NeverScrollableScrollPhysics(),
             children: [
-              GestureDetector(
+              _peripheralTile(
+                peripheralName: 'Event Log',
+                iconPath: 'assets/svgs/panel_action_event_log_icon.svg',
                 onTap: () {
                   final bleController = Get.find<BleLogController>();
                   // If not connected, show an alert and return
@@ -974,10 +983,24 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                   //   ),
                   // );
                 },
-                child: _peripheralTile(
-                  peripheralName: 'Event Log',
-                  iconPath: 'assets/svgs/panel_action_event_log_icon.svg',
-                ),
+              ),
+              _peripheralTile(
+                peripheralName: 'FW Upgrade',
+                iconPath: 'assets/svgs/firmware_icon.svg',
+                onTap: () {
+                  // Ensure UpdatesController is registered
+                  if (!Get.isRegistered<UpdatesController>()) {
+                    Get.put(UpdatesController());
+                  }
+                  showModalBottomSheet(
+                    context: context,
+                    isScrollControlled: true,
+                    backgroundColor: Colors.transparent,
+                    isDismissible: false,
+                    enableDrag: true,
+                    builder: (context) => FirmwareUpgradeBottomSheet(),
+                  );
+                },
               ),
               _peripheralTile(
                 peripheralName: 'Service Due',

@@ -46,7 +46,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _onItemTapped(int index) {
-    if (index == 2) {
+    if (index == 1 || index == 2) {
       return;
     }
     setState(() {

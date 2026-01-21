@@ -130,14 +130,14 @@ class _SettingsContentState extends State<_SettingsContent> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    widget.panelName,
+                    widget.panelName.split('_').first,
                     style: GoogleFonts.inter(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
                   Text(
-                    widget.panelVersionNo,
+                    widget.panelName.split('_').last,
                     style: GoogleFonts.inter(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
