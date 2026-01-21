@@ -16,6 +16,7 @@ import 'package:techno_switch_solar_app/screens/log_retreival_failed_screen.dart
 import 'package:techno_switch_solar_app/screens/scanning_screen.dart';
 import 'package:techno_switch_solar_app/screens/settings_screen.dart';
 import 'package:techno_switch_solar_app/screens/test_mode_screen.dart';
+import 'package:techno_switch_solar_app/utils/bluetooth_service.dart';
 import 'package:techno_switch_solar_app/widgets/firmware_upgrade_bottom_sheet.dart';
 
 class ProjectDashboardScreen extends StatefulWidget {
@@ -198,6 +199,108 @@ class _ProjectDashboardContent extends StatefulWidget {
 class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
   // Prevent multiple navigations while dialog rebuilds
   bool _navigatingToDeviceConnecting = false;
+
+  // Connection state
+  bool _isConnecting = false;
+  StreamSubscription? _scanSubscription;
+  final BluetoothService _bluetoothService = BluetoothService();
+
+  @override
+  void dispose() {
+    _scanSubscription?.cancel();
+    _bluetoothService.stopScanning();
+    super.dispose();
+  }
+
+  Future<void> _connectToDeviceByName() async {
+    if (_isConnecting) return;
+
+    setState(() {
+      _isConnecting = true;
+    });
+
+    try {
+      final deviceName = widget.selectedDevice.name;
+      if (deviceName.isEmpty) {
+        throw Exception('Device name is empty');
+      }
+
+      // Request permissions and ensure Bluetooth is on
+      await _bluetoothService.requestPermissions();
+      final poweredOn = await _bluetoothService.ensurePoweredOn();
+      if (!poweredOn) {
+        throw Exception('Bluetooth is not enabled');
+      }
+
+      // Start scanning
+      await _bluetoothService.startScanning();
+
+      // Set up scan listener to find device by name
+      final Completer<DiscoveredDevice?> deviceFoundCompleter =
+          Completer<DiscoveredDevice?>();
+
+      _scanSubscription = _bluetoothService.scanResultsStream.listen((results) {
+        for (var result in results) {
+          // Match by device name
+          if (result.name == deviceName) {
+            if (!deviceFoundCompleter.isCompleted) {
+              deviceFoundCompleter.complete(result);
+            }
+            break;
+          }
+        }
+      });
+
+      // Wait for device to be found (timeout after 15 seconds)
+      final foundDeviceFuture = deviceFoundCompleter.future.timeout(
+        const Duration(seconds: 15),
+        onTimeout: () => null,
+      );
+
+      final device = await foundDeviceFuture;
+      await _scanSubscription?.cancel();
+      await _bluetoothService.stopScanning();
+
+      if (device == null) {
+        throw Exception('Device "$deviceName" not found');
+      }
+
+      // Connect to the found device
+      final bleController = Get.find<BleLogController>();
+      await bleController.connectToDevice(device: device);
+
+      // Wait for connection to be established
+      int waitCount = 0;
+      while (!bleController.isConnected && waitCount < 30) {
+        await Future.delayed(const Duration(milliseconds: 200));
+        waitCount++;
+      }
+
+      if (!bleController.isConnected) {
+        throw Exception('Connection not established');
+      }
+
+      if (mounted) {
+        setState(() {
+          _isConnecting = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isConnecting = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to connect: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      await _scanSubscription?.cancel();
+      await _bluetoothService.stopScanning();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -627,32 +730,92 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                     ValueListenableBuilder(
                       valueListenable: ble.isConnectedNotifier,
                       builder: (context, isConnected, child) {
-                        return RichText(
-                          text: TextSpan(
+                        if (isConnected) {
+                          return RichText(
+                            text: TextSpan(
+                              children: [
+                                TextSpan(
+                                  text: 'status : ',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                    color: Color(0xFF979797),
+                                  ),
+                                ),
+                                TextSpan(
+                                  text: 'Connected',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                    color: Color(0xFF00A706),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        } else {
+                          return Row(
                             children: [
-                              TextSpan(
-                                text: 'status : ',
-                                style: GoogleFonts.inter(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                  color: Color(0xFF979797),
+                              Expanded(
+                                child: RichText(
+                                  text: TextSpan(
+                                    children: [
+                                      TextSpan(
+                                        text: 'status : ',
+                                        style: GoogleFonts.inter(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w500,
+                                          color: Color(0xFF979797),
+                                        ),
+                                      ),
+                                      TextSpan(
+                                        text: 'Disconnected',
+                                        style: GoogleFonts.inter(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w500,
+                                          color: Color(0xFFEC1D24),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
-                              TextSpan(
-                                text:
-                                    isConnected ? 'Connected' : 'Disconnected',
-                                style: GoogleFonts.inter(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                  color:
-                                      isConnected
-                                          ? Color(0xFF00A706)
-                                          : Color(0xFFEC1D24),
-                                ),
-                              ),
+                              SizedBox(width: 8),
+                              _isConnecting
+                                  ? SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        Color(0xFFEC1D24),
+                                      ),
+                                    ),
+                                  )
+                                  : GestureDetector(
+                                    onTap: _connectToDeviceByName,
+                                    child: Container(
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 6,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Color(0xFFEC1D24),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Text(
+                                        'Connect',
+                                        style: GoogleFonts.inter(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
                             ],
-                          ),
-                        );
+                          );
+                        }
                       },
                     ),
                   ],
