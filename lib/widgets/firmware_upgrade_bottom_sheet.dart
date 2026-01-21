@@ -3058,8 +3058,8 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Lottie.asset(
-          height: 250,
-          width: 250,
+          height: 180,
+          width: 180,
           isSuccess
               ? 'assets/jsons/firmware_upgrade_success.json'
               : 'assets/jsons/firmware_upgrade_failed.json',
