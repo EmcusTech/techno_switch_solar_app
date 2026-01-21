@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
+import 'package:dotted_border/dotted_border.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
@@ -12,6 +13,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 import 'package:techno_switch_solar_app/models/ble/firmware/firmware_packet_model.dart';
+import 'package:techno_switch_solar_app/widgets/common/common_cta_button.dart';
 import '../ble/ble_manager.dart';
 import '../ble/controller/ble_log_controller.dart';
 import '../controllers/updates_controller.dart';
@@ -683,8 +685,8 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
             mainAxisSize: MainAxisSize.min,
             children: [
               _buildHeader(),
-              SizedBox(height: 24),
-              _buildStepIndicator(),
+              // SizedBox(height: 24),
+              // _buildStepIndicator(),
               SizedBox(height: 24),
               _buildStepContent(),
             ],
@@ -714,47 +716,47 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
           ],
         ),
         // Test Mode Toggle
-        Container(
-          margin: EdgeInsets.only(top: 8),
-          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: BoxDecoration(
-            color:
-                _testMode
-                    ? Color(0xFFEC1D24).withOpacity(0.1)
-                    : Color(0xFFD9D9D9).withOpacity(0.3),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.bug_report,
-                size: 16,
-                color: _testMode ? Color(0xFFEC1D24) : Color(0xFF979797),
-              ),
-              SizedBox(width: 8),
-              Text(
-                'Test Mode',
-                style: GoogleFonts.inter(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color: _testMode ? Color(0xFFEC1D24) : Color(0xFF979797),
-                ),
-              ),
-              SizedBox(width: 8),
-              Switch(
-                value: _testMode,
-                onChanged: (value) {
-                  setState(() {
-                    _testMode = value;
-                  });
-                },
-                activeColor: Color(0xFFEC1D24),
-                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              ),
-            ],
-          ),
-        ),
+        // Container(
+        //   margin: EdgeInsets.only(top: 8),
+        //   padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        //   decoration: BoxDecoration(
+        //     color:
+        //         _testMode
+        //             ? Color(0xFFEC1D24).withOpacity(0.1)
+        //             : Color(0xFFD9D9D9).withOpacity(0.3),
+        //     borderRadius: BorderRadius.circular(8),
+        //   ),
+        //   child: Row(
+        //     mainAxisSize: MainAxisSize.min,
+        //     children: [
+        //       Icon(
+        //         Icons.bug_report,
+        //         size: 16,
+        //         color: _testMode ? Color(0xFFEC1D24) : Color(0xFF979797),
+        //       ),
+        //       SizedBox(width: 8),
+        //       Text(
+        //         'Test Mode',
+        //         style: GoogleFonts.inter(
+        //           fontSize: 12,
+        //           fontWeight: FontWeight.w500,
+        //           color: _testMode ? Color(0xFFEC1D24) : Color(0xFF979797),
+        //         ),
+        //       ),
+        //       SizedBox(width: 8),
+        //       Switch(
+        //         value: _testMode,
+        //         onChanged: (value) {
+        //           setState(() {
+        //             _testMode = value;
+        //           });
+        //         },
+        //         activeColor: Color(0xFFEC1D24),
+        //         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        //       ),
+        //     ],
+        //   ),
+        // ),
       ],
     );
   }
@@ -862,32 +864,7 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
               ),
             ),
             SizedBox(height: 24),
-            if (!isConnected)
-              Container(
-                padding: EdgeInsets.all(12),
-                margin: EdgeInsets.only(bottom: 16),
-                decoration: BoxDecoration(
-                  color: Color(0xFFFFF3CD),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Color(0xFFFFC107)),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.warning, color: Color(0xFFFF9800)),
-                    SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        'Device not connected. Please connect via Bluetooth before proceeding.',
-                        style: GoogleFonts.inter(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: Color(0xFF856404),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+
             ...steps.map(
               (step) => Padding(
                 padding: EdgeInsets.only(bottom: 16),
@@ -925,8 +902,8 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
               ),
             ),
             SizedBox(height: 32),
-            ElevatedButton(
-              onPressed: () {
+            CommonCtaButton(
+              onTap: () {
                 setState(() {
                   _currentStep =
                       _testMode
@@ -934,13 +911,6 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
                           : FirmwareUpgradeStep.connectDevice;
                 });
               },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFFEC1D24),
-                padding: EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
               child: Text(
                 'Continue',
                 style: GoogleFonts.inter(
@@ -950,6 +920,31 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
                 ),
               ),
             ),
+            // ElevatedButton(
+            //   onPressed: () {
+            // setState(() {
+            //   _currentStep =
+            //       _testMode
+            //           ? FirmwareUpgradeStep.chooseType
+            //           : FirmwareUpgradeStep.connectDevice;
+            // });
+            //   },
+            //   style: ElevatedButton.styleFrom(
+            //     backgroundColor: Color(0xFFEC1D24),
+            //     padding: EdgeInsets.symmetric(vertical: 16),
+            //     shape: RoundedRectangleBorder(
+            //       borderRadius: BorderRadius.circular(8),
+            //     ),
+            //   ),
+            //   child: Text(
+            //     'Continue',
+            //     style: GoogleFonts.inter(
+            //       fontSize: 16,
+            //       fontWeight: FontWeight.w600,
+            //       color: Colors.white,
+            //     ),
+            //   ),
+            // ),
           ],
         );
       },
@@ -1187,40 +1182,6 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
             textAlign: TextAlign.center,
           ),
         ],
-        if (_isScanning) ...[
-          SizedBox(height: 24),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 0),
-            child: GestureDetector(
-              onTap: () {
-                _bluetoothService.stopScanning();
-                setState(() {
-                  _isScanning = false;
-                });
-              },
-              child: Container(
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFEC1D24),
-                  borderRadius: BorderRadius.circular(28.5),
-                ),
-                child: const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 20),
-                  child: Center(
-                    child: Text(
-                      'Stop Scanning',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
       ],
     );
   }
@@ -1270,16 +1231,8 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
           ),
         ),
         SizedBox(height: 24),
-        ElevatedButton(
-          onPressed: _isScanning ? null : _startScan,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Color(0xFFEC1D24),
-            padding: EdgeInsets.symmetric(vertical: 16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-            disabledBackgroundColor: Color(0xFFD9D9D9),
-          ),
+        CommonCtaButton(
+          onTap: _isScanning ? null : _startScan,
           child: Text(
             'Scan for Devices',
             style: GoogleFonts.inter(
@@ -2360,34 +2313,51 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
         Row(
           children: [
             Expanded(
-              child: OutlinedButton(
-                onPressed: () {
+              child: CommonCtaButton(
+                onTap: () {
                   setState(() {
                     _currentStep = FirmwareUpgradeStep.connectDevice;
                   });
                 },
-                style: OutlinedButton.styleFrom(
-                  padding: EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  side: BorderSide(color: Color(0xFFEC1D24)),
-                ),
+                color: Color(0xFFEFEEEE),
                 child: Text(
                   'Back',
                   style: GoogleFonts.inter(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFFEC1D24),
+                    color: Color(0xFF49454F),
                   ),
                 ),
               ),
             ),
+            // Expanded(
+            //   child: OutlinedButton(
+            //     onPressed: () {
+            //       setState(() {
+            //         _currentStep = FirmwareUpgradeStep.connectDevice;
+            //       });
+            //     },
+            //     style: OutlinedButton.styleFrom(
+            //       padding: EdgeInsets.symmetric(vertical: 16),
+            //       shape: RoundedRectangleBorder(
+            //         borderRadius: BorderRadius.circular(8),
+            //       ),
+            //       side: BorderSide(color: Color(0xFFEC1D24)),
+            //     ),
+            //     child: Text(
+            //       'Back',
+            //       style: GoogleFonts.inter(
+            //         fontSize: 16,
+            //         fontWeight: FontWeight.w600,
+            //         color: Color(0xFFEC1D24),
+            //       ),
+            //     ),
+            //   ),
+            // ),
             SizedBox(width: 16),
             Expanded(
-              flex: 2,
-              child: ElevatedButton(
-                onPressed:
+              child: CommonCtaButton(
+                onTap:
                     _selectedFirmwareType == null
                         ? null
                         : () {
@@ -2395,14 +2365,7 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
                             _currentStep = FirmwareUpgradeStep.fileUpload;
                           });
                         },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Color(0xFFEC1D24),
-                  padding: EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  disabledBackgroundColor: Color(0xFFD9D9D9),
-                ),
+                isDisabled: _selectedFirmwareType == null,
                 child: Text(
                   'Continue',
                   style: GoogleFonts.inter(
@@ -2413,6 +2376,34 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
                 ),
               ),
             ),
+            // Expanded(
+            //   child: ElevatedButton(
+            //     onPressed:
+            // _selectedFirmwareType == null
+            //     ? null
+            //     : () {
+            //       setState(() {
+            //         _currentStep = FirmwareUpgradeStep.fileUpload;
+            //       });
+            //     },
+            //     style: ElevatedButton.styleFrom(
+            //       backgroundColor: Color(0xFFEC1D24),
+            //       padding: EdgeInsets.symmetric(vertical: 16),
+            //       shape: RoundedRectangleBorder(
+            //         borderRadius: BorderRadius.circular(8),
+            //       ),
+            //       disabledBackgroundColor: Color(0xFFD9D9D9),
+            //     ),
+            //     child: Text(
+            //       'Continue',
+            //       style: GoogleFonts.inter(
+            //         fontSize: 16,
+            //         fontWeight: FontWeight.w600,
+            //         color: Colors.white,
+            //       ),
+            //     ),
+            //   ),
+            // ),
           ],
         ),
       ],
@@ -2509,48 +2500,59 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
         SizedBox(height: 24),
         GestureDetector(
           onTap: _isUploading ? null : _pickFile,
-          child: Container(
-            padding: EdgeInsets.all(32),
-            decoration: BoxDecoration(
-              color: Color(0xFFF6EBEB),
-              border: Border.all(
-                color: Color(0xFFEC1D24).withOpacity(0.3),
-                width: 2,
-                style: BorderStyle.solid,
-              ),
-              borderRadius: BorderRadius.circular(12),
+          child: DottedBorder(
+            // childOnTop: false,
+            options: RoundedRectDottedBorderOptions(
+              color: Color(0xFFEC1D24).withOpacity(0.3),
+              radius: Radius.circular(12),
+              dashPattern: [5, 5],
+              strokeWidth: 2,
+              padding: EdgeInsets.all(0),
+              stackFit: StackFit.passthrough,
             ),
-            child: Column(
-              children: [
-                Icon(
-                  Icons.cloud_upload_outlined,
-                  size: 64,
-                  color: Color(0xFFEC1D24),
-                ),
-                SizedBox(height: 16),
-                Text(
-                  _selectedFile == null
-                      ? 'Tap to select firmware file'
-                      : _selectedFile!.name,
-                  style: GoogleFonts.inter(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF1B1F26),
+            child: Container(
+              padding: EdgeInsets.all(32),
+              decoration: BoxDecoration(
+                color: Color(0xFFF6EBEB),
+                // border: Border.all(
+                //   color: Color(0xFFEC1D24).withOpacity(0.3),
+                //   width: 2,
+                //   style: BorderStyle.solid,
+                // ),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                children: [
+                  SvgPicture.asset(
+                    'assets/svgs/upload_icon.svg',
+                    width: 32,
+                    height: 32,
                   ),
-                  textAlign: TextAlign.center,
-                ),
-                if (_selectedFile != null) ...[
-                  SizedBox(height: 8),
+                  SizedBox(height: 16),
                   Text(
-                    '${(_selectedFile!.size / (1024 * 1024)).toStringAsFixed(2)} MB',
+                    _selectedFile == null
+                        ? 'Tap to select firmware file'
+                        : _selectedFile!.name,
                     style: GoogleFonts.inter(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w400,
-                      color: Color(0xFF979797),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF1B1F26),
                     ),
+                    textAlign: TextAlign.center,
                   ),
+                  if (_selectedFile != null) ...[
+                    SizedBox(height: 8),
+                    Text(
+                      '${(_selectedFile!.size / (1024 * 1024)).toStringAsFixed(2)} MB',
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w400,
+                        color: Color(0xFF979797),
+                      ),
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
           ),
         ),
@@ -2565,44 +2567,55 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
         Row(
           children: [
             Expanded(
-              child: OutlinedButton(
-                onPressed: () {
+              child: CommonCtaButton(
+                onTap: () {
                   setState(() {
                     _currentStep = FirmwareUpgradeStep.chooseType;
                   });
                 },
-                style: OutlinedButton.styleFrom(
-                  padding: EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  side: BorderSide(color: Color(0xFFEC1D24)),
-                ),
+                color: Color(0xFFEFEEEE),
                 child: Text(
                   'Back',
                   style: GoogleFonts.inter(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFFEC1D24),
+                    color: Color(0xFF49454F),
                   ),
                 ),
               ),
             ),
+            // Expanded(
+            //   child: OutlinedButton(
+            //     onPressed: () {
+            //       setState(() {
+            //         _currentStep = FirmwareUpgradeStep.chooseType;
+            //       });
+            //     },
+            //     style: OutlinedButton.styleFrom(
+            //       padding: EdgeInsets.symmetric(vertical: 16),
+            //       shape: RoundedRectangleBorder(
+            //         borderRadius: BorderRadius.circular(8),
+            //       ),
+            //       side: BorderSide(color: Color(0xFFEC1D24)),
+            //     ),
+            //     child: Text(
+            //       'Back',
+            //       style: GoogleFonts.inter(
+            //         fontSize: 16,
+            //         fontWeight: FontWeight.w600,
+            //         color: Color(0xFFEC1D24),
+            //       ),
+            //     ),
+            //   ),
+            // ),
             SizedBox(width: 16),
             Expanded(
-              child: ElevatedButton(
-                onPressed:
+              child: CommonCtaButton(
+                onTap:
                     _selectedFile == null || _isUploading
                         ? null
                         : _goToFileDetails,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Color(0xFFEC1D24),
-                  padding: EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  disabledBackgroundColor: Color(0xFFD9D9D9),
-                ),
+                isDisabled: _selectedFile == null || _isUploading,
                 child: Text(
                   'Continue',
                   style: GoogleFonts.inter(
@@ -2613,6 +2626,30 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
                 ),
               ),
             ),
+            // Expanded(
+            //   child: ElevatedButton(
+            //     onPressed:
+            //         _selectedFile == null || _isUploading
+            //             ? null
+            //             : _goToFileDetails,
+            //     style: ElevatedButton.styleFrom(
+            //       backgroundColor: Color(0xFFEC1D24),
+            //       padding: EdgeInsets.symmetric(vertical: 16),
+            //       shape: RoundedRectangleBorder(
+            //         borderRadius: BorderRadius.circular(8),
+            //       ),
+            //       disabledBackgroundColor: Color(0xFFD9D9D9),
+            //     ),
+            //     child: Text(
+            //       'Continue',
+            //       style: GoogleFonts.inter(
+            //         fontSize: 16,
+            //         fontWeight: FontWeight.w600,
+            //         color: Colors.white,
+            //       ),
+            //     ),
+            //   ),
+            // ),
           ],
         ),
       ],
@@ -2701,8 +2738,9 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
         Row(
           children: [
             Expanded(
-              child: OutlinedButton(
-                onPressed:
+              child: CommonCtaButton(
+                color: Color(0xFFEFEEEE),
+                onTap:
                     _isValidating
                         ? null
                         : () {
@@ -2710,28 +2748,48 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
                             _currentStep = FirmwareUpgradeStep.fileUpload;
                           });
                         },
-                style: OutlinedButton.styleFrom(
-                  padding: EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  side: BorderSide(color: Color(0xFFEC1D24)),
-                ),
+                isDisabled: _isValidating,
                 child: Text(
                   'Back',
                   style: GoogleFonts.inter(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFFEC1D24),
+                    color: Color(0xFF49454F),
                   ),
                 ),
               ),
             ),
+            // Expanded(
+            //   child: OutlinedButton(
+            //     onPressed:
+            //         _isValidating
+            //             ? null
+            //             : () {
+            //               setState(() {
+            //                 _currentStep = FirmwareUpgradeStep.fileUpload;
+            //               });
+            //             },
+            //     style: OutlinedButton.styleFrom(
+            //       padding: EdgeInsets.symmetric(vertical: 16),
+            //       shape: RoundedRectangleBorder(
+            //         borderRadius: BorderRadius.circular(8),
+            //       ),
+            //       side: BorderSide(color: Color(0xFFEC1D24)),
+            //     ),
+            //     child: Text(
+            //       'Back',
+            //       style: GoogleFonts.inter(
+            //         fontSize: 16,
+            //         fontWeight: FontWeight.w600,
+            //         color: Color(0xFFEC1D24),
+            //       ),
+            //     ),
+            //   ),
+            // ),
             SizedBox(width: 16),
             Expanded(
-              flex: 2,
-              child: ElevatedButton(
-                onPressed:
+              child: CommonCtaButton(
+                onTap:
                     (_isValidating || !isCrcMatched)
                         ? null
                         : () {
@@ -2740,14 +2798,7 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
                                 _selectedDevice?.manufacturerData.last == 1,
                           );
                         },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Color(0xFFEC1D24),
-                  padding: EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  disabledBackgroundColor: Color(0xFFD9D9D9),
-                ),
+                isDisabled: _isValidating || !isCrcMatched,
                 child: Text(
                   'Continue',
                   style: GoogleFonts.inter(
@@ -2758,6 +2809,36 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
                 ),
               ),
             ),
+            // Expanded(
+            //   flex: 2,
+            //   child: ElevatedButton(
+            //     onPressed:
+            //         (_isValidating || !isCrcMatched)
+            //             ? null
+            //             : () {
+            //               _startUpgrade(
+            //                 isChipInBootLoader:
+            //                     _selectedDevice?.manufacturerData.last == 1,
+            //               );
+            //             },
+            //     style: ElevatedButton.styleFrom(
+            //       backgroundColor: Color(0xFFEC1D24),
+            //       padding: EdgeInsets.symmetric(vertical: 16),
+            //       shape: RoundedRectangleBorder(
+            //         borderRadius: BorderRadius.circular(8),
+            //       ),
+            //       disabledBackgroundColor: Color(0xFFD9D9D9),
+            //     ),
+            //     child: Text(
+            //       'Continue',
+            //       style: GoogleFonts.inter(
+            //         fontSize: 16,
+            //         fontWeight: FontWeight.w600,
+            //         color: Colors.white,
+            //       ),
+            //     ),
+            //   ),
+            // ),
           ],
         ),
       ],
@@ -2885,16 +2966,16 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
             ),
           ),
           SizedBox(height: 24),
-          if (totalPackets > 0)
-            Text(
-              'Packet $currentIndex of $totalPackets',
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                fontWeight: FontWeight.w400,
-                color: Color(0xFF979797),
-              ),
-              textAlign: TextAlign.center,
-            ),
+          // if (totalPackets > 0)
+          //   Text(
+          //     'Packet $currentIndex of $totalPackets',
+          //     style: GoogleFonts.inter(
+          //       fontSize: 14,
+          //       fontWeight: FontWeight.w400,
+          //       color: Color(0xFF979797),
+          //     ),
+          //     textAlign: TextAlign.center,
+          //   ),
           // SizedBox(height: 8),
           // LinearPercentIndicator(
           //   lineHeight: 8,
@@ -2972,8 +3053,8 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
           textAlign: TextAlign.center,
         ),
         SizedBox(height: 32),
-        ElevatedButton(
-          onPressed: () {
+        CommonCtaButton(
+          onTap: () {
             Navigator.of(context).pop();
             // Reset state
             _controller.downloadingStatus.value = fw.DownloadStatus.downloading;
@@ -2983,13 +3064,6 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
             _controller.progressbarCount.value = 0.0;
             _controller.totalPacketLength.value = 0;
           },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Color(0xFFEC1D24),
-            padding: EdgeInsets.symmetric(vertical: 16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-          ),
           child: Text(
             'Done',
             style: GoogleFonts.inter(
@@ -2999,6 +3073,33 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
             ),
           ),
         ),
+        // ElevatedButton(
+        //   onPressed: () {
+        //     Navigator.of(context).pop();
+        //     // Reset state
+        //     _controller.downloadingStatus.value = fw.DownloadStatus.downloading;
+        //     _controller.isFileCrcMatched.value = false;
+        //     _controller.selectedFirmwareFile = null;
+        //     _controller.progressbarIndex.value = 0;
+        //     _controller.progressbarCount.value = 0.0;
+        //     _controller.totalPacketLength.value = 0;
+        //   },
+        //   style: ElevatedButton.styleFrom(
+        //     backgroundColor: Color(0xFFEC1D24),
+        //     padding: EdgeInsets.symmetric(vertical: 16),
+        //     shape: RoundedRectangleBorder(
+        //       borderRadius: BorderRadius.circular(8),
+        //     ),
+        //   ),
+        //   child: Text(
+        //     'Done',
+        //     style: GoogleFonts.inter(
+        //       fontSize: 16,
+        //       fontWeight: FontWeight.w600,
+        //       color: Colors.white,
+        //     ),
+        //   ),
+        // ),
       ],
     );
   }

@@ -116,8 +116,9 @@ class _SplashScreenState extends State<SplashScreen> {
                     ),
                   ),
                   SizedBox(height: 10),
+                  //last production version : v0.0.8
                   Text(
-                    'v0.0.8',
+                    'v0.0.9 -- testing version',
                     style: GoogleFonts.inter(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
