@@ -56,6 +56,7 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
   bool _isUploading = false;
   bool _isUpgrading = false;
   bool _isValidating = false;
+  bool _isValidatingSuccess = false;
   bool _testMode = false;
   String? _errorMessage;
   String? _currentBleStateMessage;
@@ -457,6 +458,12 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
           }
         } else {
           // End command: expect [0,2] for success
+          // Update message to show we're validating
+          setState(() {
+            _isValidatingSuccess = true;
+            _currentBleStateMessage = 'Validating firmware upgrade success...';
+          });
+
           if (scanLastByte == 2) {
             // Success - upgrade completed
             setState(() {
@@ -577,6 +584,13 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
         // For end command, check upgrade status
         // manufacturerDataValue is the last byte from manufacturerData list
         // [0,2] = success, [0,1] = failed
+
+        // Update message to show we're validating
+        setState(() {
+          _isValidatingSuccess = true;
+          _currentBleStateMessage = 'Validating firmware upgrade success...';
+        });
+
         if (manufacturerDataValue == 2) {
           // Success
           setState(() {
@@ -1557,8 +1571,6 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
   Widget _buildProgress() {
     return Obx(() {
       final progress = _controller.progressbarCount.value;
-      final currentIndex = _controller.progressbarIndex.value;
-      final totalPackets = _controller.totalPacketLength.value;
       final status = _controller.downloadingStatus.value;
 
       // Always show the normal progress UI, even during reconnection phases
@@ -1566,14 +1578,16 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            'Firmware Upgrade in Progress',
-            style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w700),
-          ),
-          SizedBox(height: 32),
+          // Text(
+          //   'Firmware Upgrade in Progress',
+          //   style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w700),
+          // ),
+          // SizedBox(height: 32),
           Center(
             child:
-                (progress * 100).toStringAsFixed(1) == '0.0'
+                _isWaitingForEndReconnect
+                    ? Lottie.asset('assets/jsons/ble_connecting.json')
+                    : (progress * 100).toStringAsFixed(1) == '0.0'
                     ? Lottie.asset('assets/jsons/ble_connecting.json')
                     : CircularPercentIndicator(
                       radius: 80,
@@ -1589,7 +1603,9 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
           ),
           SizedBox(height: 12),
           Visibility(
-            visible: !((progress * 100).toStringAsFixed(1) == '0.0'),
+            visible:
+                !((progress * 100).toStringAsFixed(1) == '0.0') &&
+                !_isWaitingForEndReconnect,
             child: Center(
               child: Text(
                 '${(progress * 100).toStringAsFixed(1)}%',
@@ -1668,16 +1684,16 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
           ),
           textAlign: TextAlign.center,
         ),
-        SizedBox(height: 16),
-        Text(
-          message,
-          style: GoogleFonts.inter(
-            fontSize: 16,
-            fontWeight: FontWeight.w400,
-            color: Color(0xFF1B1F26),
-          ),
-          textAlign: TextAlign.center,
-        ),
+        // SizedBox(height: 16),
+        // Text(
+        //   message,
+        //   style: GoogleFonts.inter(
+        //     fontSize: 16,
+        //     fontWeight: FontWeight.w400,
+        //     color: Color(0xFF1B1F26),
+        //   ),
+        //   textAlign: TextAlign.center,
+        // ),
         SizedBox(height: 32),
         CommonCtaButton(
           onTap: () {
