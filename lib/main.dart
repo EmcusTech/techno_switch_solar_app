@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_logs/flutter_logs.dart';
 import 'package:get/get.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
@@ -55,6 +56,8 @@ void main() async {
   //   ),
   // );
   Get.put(BleLogController());
+
+  await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   runApp(const MyApp());
 }
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lottie/lottie.dart';
 import 'package:techno_switch_solar_app/models/log_model.dart';
 import 'package:techno_switch_solar_app/screens/event_log_screen.dart';
 // import 'package:flutter_blue_plus/flutter_blue_plus.dart';
@@ -59,7 +60,7 @@ class _LogRetrievalCompletedScreenState
                         ),
                         SizedBox(width: 8),
                         Text(
-                          'Log Retrieval Completed',
+                          'Event Log',
                           style: GoogleFonts.inter(
                             fontSize: 20,
                             fontWeight: FontWeight.w700,
@@ -98,7 +99,7 @@ class _LogRetrievalCompletedScreenState
               child: Padding(
                 padding: const EdgeInsets.only(top: 45),
                 child: Text(
-                  'Event Log Retrieval\nCompleted!',
+                  'Retrieval\nCompleted!',
                   style: GoogleFonts.inter(
                     fontSize: 24,
                     fontWeight: FontWeight.w600,
@@ -108,17 +109,11 @@ class _LogRetrievalCompletedScreenState
                 ),
               ),
             ),
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                SvgPicture.asset('assets/svgs/check_circle_icon.svg'),
-                SizedBox(height: 20),
-                Text(
-                  "Event Log Retrieved\nSuccessfully!",
-                  style: GoogleFonts.inter(fontSize: 20),
-                  textAlign: TextAlign.center,
-                ),
-              ],
+            Lottie.asset(
+              'assets/jsons/firmware_upgrade_success.json',
+              height: 180,
+              width: 180,
+              repeat: false,
             ),
             Align(
               alignment: Alignment.bottomCenter,

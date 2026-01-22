@@ -216,7 +216,7 @@ class BleProcess {
           (rx.payload[17] << 16) |
           (rx.payload[16] << 24);
 
-      processDesc.value = "Fetching Valid Logs";
+      processDesc.value = " ";
 
       if (rxLastEvtLogNum != 0) {
         validEventLogNum++;

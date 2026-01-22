@@ -1177,7 +1177,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                                 ),
                                 const SizedBox(height: 8),
                                 Text(
-                                  'BLE device is not connected. Please scan and connect again.',
+                                  'BLE device is not connected. Tap on Connect to connect again.',
                                   style: GoogleFonts.inter(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w400,
@@ -1226,13 +1226,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                                             context,
                                           );
                                           navigator.pop(); // close dialog
-                                          navigator.pushAndRemoveUntil(
-                                            MaterialPageRoute(
-                                              builder:
-                                                  (_) => const ScanningScreen(),
-                                            ),
-                                            (route) => route.isFirst,
-                                          );
+                                          _connectToDeviceByName();
                                         },
                                         child: Container(
                                           height: 48,
@@ -1253,7 +1247,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                                           ),
                                           child: Center(
                                             child: Text(
-                                              'Scan Again',
+                                              'Connect',
                                               style: GoogleFonts.inter(
                                                 fontSize: 16,
                                                 fontWeight: FontWeight.w600,

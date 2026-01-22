@@ -663,7 +663,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          'Event Log Retrieval',
+                          'Event Log',
                           style: GoogleFonts.inter(
                             fontSize: 20,
                             fontWeight: FontWeight.w700,
@@ -1123,58 +1123,58 @@ class _EventLogContentState extends State<_EventLogContent> {
                                 );
                               }).toList(),
                         ),
-                        SizedBox(height: 21),
+                        // SizedBox(height: 21),
 
-                        // Alarm Count Section
-                        Text(
-                          'Alarm Count:',
-                          style: GoogleFonts.inter(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF3A3A3A),
-                          ),
-                        ),
-                        SizedBox(height: 8),
-                        TextField(
-                          key: ValueKey('alarm_count_$_textFieldResetKey'),
-                          onChanged: (value) {
-                            setState(() {
-                              _alarmCount = value.isEmpty ? null : value;
-                            });
-                          },
-                          keyboardType: TextInputType.number,
-                          decoration: InputDecoration(
-                            hintText: 'Enter Alarm Count',
-                            hintStyle: GoogleFonts.inter(
-                              fontSize: 13,
-                              color: Color(0xFFBDBDBD),
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(4),
-                              borderSide: BorderSide(color: Color(0xFFD7D7D7)),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(4),
-                              borderSide: BorderSide(color: Color(0xFFD7D7D7)),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(4),
-                              borderSide: BorderSide(
-                                color: Color(0xFFEC1D24),
-                                width: 2,
-                              ),
-                            ),
-                            contentPadding: EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 14,
-                            ),
-                          ),
-                          style: GoogleFonts.inter(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color: Color(0xFF3A3A3A),
-                          ),
-                        ),
+                        // // Alarm Count Section
+                        // Text(
+                        //   'Alarm Count:',
+                        //   style: GoogleFonts.inter(
+                        //     fontSize: 14,
+                        //     fontWeight: FontWeight.bold,
+                        //     color: Color(0xFF3A3A3A),
+                        //   ),
+                        // ),
+                        // SizedBox(height: 8),
+                        // TextField(
+                        //   key: ValueKey('alarm_count_$_textFieldResetKey'),
+                        //   onChanged: (value) {
+                        //     setState(() {
+                        //       _alarmCount = value.isEmpty ? null : value;
+                        //     });
+                        //   },
+                        //   keyboardType: TextInputType.number,
+                        //   decoration: InputDecoration(
+                        //     hintText: 'Enter Alarm Count',
+                        //     hintStyle: GoogleFonts.inter(
+                        //       fontSize: 13,
+                        //       color: Color(0xFFBDBDBD),
+                        //     ),
+                        //     border: OutlineInputBorder(
+                        //       borderRadius: BorderRadius.circular(4),
+                        //       borderSide: BorderSide(color: Color(0xFFD7D7D7)),
+                        //     ),
+                        //     enabledBorder: OutlineInputBorder(
+                        //       borderRadius: BorderRadius.circular(4),
+                        //       borderSide: BorderSide(color: Color(0xFFD7D7D7)),
+                        //     ),
+                        //     focusedBorder: OutlineInputBorder(
+                        //       borderRadius: BorderRadius.circular(4),
+                        //       borderSide: BorderSide(
+                        //         color: Color(0xFFEC1D24),
+                        //         width: 2,
+                        //       ),
+                        //     ),
+                        //     contentPadding: EdgeInsets.symmetric(
+                        //       horizontal: 12,
+                        //       vertical: 14,
+                        //     ),
+                        //   ),
+                        //   style: GoogleFonts.inter(
+                        //     fontSize: 14,
+                        //     fontWeight: FontWeight.w500,
+                        //     color: Color(0xFF3A3A3A),
+                        //   ),
+                        // ),
                         SizedBox(height: 32),
 
                         // Action Buttons
@@ -1326,7 +1326,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                               text: TextSpan(
                                 children: [
                                   TextSpan(
-                                    text: 'status : ',
+                                    text: 'Status : ',
                                     style: GoogleFonts.inter(
                                       fontSize: 14,
                                       fontWeight: FontWeight.w500,
@@ -1366,7 +1366,7 @@ class _EventLogContentState extends State<_EventLogContent> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                "Logs View",
+                "Log View",
                 style: GoogleFonts.inter(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
@@ -2008,30 +2008,17 @@ class _LogTableViewState extends State<_LogTableView>
               children: [
                 Row(
                   children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          log.panelText ?? 'No Text',
-                          style: GoogleFonts.inter(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color: Color(0xFF3A3A3A),
-                          ),
-                        ),
-                        Text(
-                          log.eventDateTime != null
-                              ? DateFormat(
-                                'dd/MM/yyyy - hh:mm a',
-                              ).format(log.eventDateTime!.toLocal())
-                              : 'N/A',
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w400,
-                            color: Color(0xFF696969),
-                          ),
-                        ),
-                      ],
+                    Text(
+                      log.eventDateTime != null
+                          ? DateFormat(
+                            'dd/MM/yyyy - hh:mm a',
+                          ).format(log.eventDateTime!.toLocal())
+                          : 'N/A',
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w400,
+                        color: Color(0xFF696969),
+                      ),
                     ),
                     Spacer(),
                     Container(
@@ -2045,7 +2032,7 @@ class _LogTableViewState extends State<_LogTableView>
                           vertical: 0.5,
                         ),
                         child: Text(
-                          log.eventId ?? '0149',
+                          log.eventId ?? '-',
                           style: GoogleFonts.inter(
                             fontSize: 13,
                             fontWeight: FontWeight.w700,
@@ -2083,9 +2070,9 @@ class _LogTableViewState extends State<_LogTableView>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    _buildInfoColumn('Event Status', log.eventStatus ?? ''),
+                    _buildInfoColumn('Status', log.eventStatus ?? ''),
                     _buildInfoColumn('Event Class', log.eventClass ?? ''),
-                    _buildInfoColumn('Event Source', log.eventSource ?? ''),
+                    _buildInfoColumn('Source', log.eventSource ?? ''),
                   ],
                 ),
                 Padding(
@@ -2100,7 +2087,7 @@ class _LogTableViewState extends State<_LogTableView>
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     _buildInfoColumn('Event Type', log.eventType ?? ''),
-                    _buildInfoColumn('Event Sub Type', log.eventSubType ?? ''),
+                    _buildInfoColumn('Event', log.eventSubType ?? ''),
                   ],
                 ),
                 Padding(

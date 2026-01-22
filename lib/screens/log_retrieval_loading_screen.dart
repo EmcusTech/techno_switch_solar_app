@@ -4,6 +4,7 @@ import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lottie/lottie.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/models/log_model.dart';
@@ -134,7 +135,7 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
     final _ = _handleBleNotification;
 
     // Start BLE connection flow with existing device selection
-    _connectToDevice();
+    // _connectToDevice();
 
     // Start log retrieval instead of animation
     // _startLogRetrieval();
@@ -1035,7 +1036,7 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
                           ),
                           SizedBox(width: 8),
                           Text(
-                            'Event Log Retrieval ',
+                            'Event Log',
                             style: GoogleFonts.inter(
                               fontSize: 20,
                               fontWeight: FontWeight.w700,
@@ -1070,39 +1071,33 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
               alignment: Alignment.topRight,
               child: SvgPicture.asset('assets/svgs/background_2.svg'),
             ),
-            Padding(
-              padding: const EdgeInsets.only(top: 45),
-              child: Center(
-                child: Column(
-                  children: [
-                    Text(
-                      'Retrieving',
-                      style: GoogleFonts.inter(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF918F8F),
-                      ),
-                    ),
-                    Text(
-                      'Event Log',
-                      style: GoogleFonts.inter(
-                        fontSize: 32,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF3A3A3A),
-                      ),
-                    ),
-                  ],
+            Align(
+              alignment: Alignment.topCenter,
+              child: Padding(
+                padding: const EdgeInsets.only(top: 45),
+                child: Text(
+                  'Retrieving Logs...',
+                  style: GoogleFonts.inter(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF918F8F),
+                  ),
                 ),
               ),
             ),
-            CupertinoActivityIndicator(
-              radius: 20,
-              color: Color(0xFFEC1D24),
-              // animating:
-              //     !_connectionFailed &&
-              //     !_maxBleConnectionRetriesReached &&
-              //     !_maxOtherPacketsRetriesReached,
+            Lottie.asset(
+              'assets/jsons/fetching_log.json',
+              height: 320,
+              width: 320,
             ),
+            // CupertinoActivityIndicator(
+            //   radius: 20,
+            //   color: Color(0xFFEC1D24),
+            //   // animating:
+            //   //     !_connectionFailed &&
+            //   //     !_maxBleConnectionRetriesReached &&
+            //   //     !_maxOtherPacketsRetriesReached,
+            // ),
             // Padding(
             //   padding: const EdgeInsets.only(top: 100),
             //   child: Text(
@@ -1152,10 +1147,11 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
                         return Column(
                           children: [
                             Text(
-                              '${(displayProgress * 100).toInt()}%',
+                              '${(percent * 100).toStringAsFixed(1)}%',
                               style: GoogleFonts.inter(
-                                fontSize: 38,
+                                fontSize: 32,
                                 fontWeight: FontWeight.w700,
+                                fontFeatures: [FontFeature.tabularFigures()],
                               ),
                               maxLines: 1,
                             ),
@@ -1168,22 +1164,22 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
                               barRadius: Radius.circular(20),
                             ),
                             SizedBox(height: 10),
-                            Align(
-                              alignment: Alignment.centerLeft,
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                ),
-                                child: Text(
-                                  'Fetching Logs...',
-                                  style: GoogleFonts.inter(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w400,
-                                  ),
-                                  maxLines: 1,
-                                ),
-                              ),
-                            ),
+                            // Align(
+                            //   alignment: Alignment.centerLeft,
+                            //   child: Padding(
+                            //     padding: const EdgeInsets.symmetric(
+                            //       horizontal: 10,
+                            //     ),
+                            //     child: Text(
+                            //       'Fetching Logs...',
+                            //       style: GoogleFonts.inter(
+                            //         fontSize: 14,
+                            //         fontWeight: FontWeight.w400,
+                            //       ),
+                            //       maxLines: 1,
+                            //     ),
+                            //   ),
+                            // ),
                           ],
                         );
                       },
@@ -1225,7 +1221,7 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
         ),
         child: Center(
           child: Text(
-            'Cancel Log Retrieval',
+            'Cancel',
             style: GoogleFonts.inter(
               fontSize: 16,
               fontWeight: FontWeight.w600,

@@ -189,7 +189,8 @@ class BleManager {
 
     // Start the encryption key request process
     // This will trigger the authentication flow which eventually leads to log retrieval
-    if (!isLogRetrievalDoneOnce) {
+    // Always register notify handler if it's not already registered (e.g., after reconnection)
+    if (!isLogRetrievalDoneOnce || _notifySub == null) {
       await registerNotifyHandler();
       isLogRetrievalDoneOnce = true;
     } else {
@@ -369,6 +370,9 @@ class BleManager {
 
               await _notifySub?.cancel();
               _notifySub = null;
+              
+              // Reset log retrieval flag so notify handler is re-registered on reconnect
+              isLogRetrievalDoneOnce = false;
 
               if (!connectedCompleter.isCompleted) {
                 connectedCompleter.completeError(
