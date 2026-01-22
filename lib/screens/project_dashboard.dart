@@ -5,6 +5,7 @@ import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lottie/lottie.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/controllers/updates_controller.dart'
     show UpdatesController;
@@ -212,6 +213,144 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     super.dispose();
   }
 
+  void _showConnectingDialog({
+    required DiscoveredDevice device,
+    required BuildContext context,
+  }) {
+    final bleController = Get.find<BleLogController>();
+    final connectionNotifier = bleController.bleManager.isConnectedNotifier;
+    final maxBleConnectionRetriesReachedNotifier =
+        bleController.bleManager.maxBleConnectionRetriesReached;
+    bool hasNavigated = false;
+
+    final mergedListenable = Listenable.merge([
+      connectionNotifier,
+      maxBleConnectionRetriesReachedNotifier,
+    ]);
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return ListenableBuilder(
+          listenable: mergedListenable,
+          builder: (context, _) {
+            final isConnected = connectionNotifier.value;
+            final maxBleConnectionRetriesReached =
+                maxBleConnectionRetriesReachedNotifier.value;
+
+            // When connected, wait 2 seconds then close dialog
+            if (isConnected && !hasNavigated) {
+              hasNavigated = true;
+              Future.delayed(const Duration(seconds: 2), () {
+                if (context.mounted && hasNavigated) {
+                  Navigator.of(dialogContext).pop();
+                }
+              });
+            }
+
+            return Dialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Icon
+                    Container(
+                      width: 64,
+                      height: 64,
+                      decoration: BoxDecoration(
+                        color:
+                            isConnected
+                                ? Colors.green.withValues(alpha: 0.1)
+                                : Color(0xFFFBDEE1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Center(
+                        child:
+                            isConnected
+                                ? Icon(
+                                  Icons.check_circle,
+                                  size: 32,
+                                  color: Colors.green,
+                                )
+                                : Lottie.asset(
+                                  'assets/jsons/ble_connecting.json',
+                                  animate: !maxBleConnectionRetriesReached,
+                                ),
+                      ),
+                    ),
+                    SizedBox(height: 16),
+                    // Title
+                    Text(
+                      isConnected
+                          ? 'Device Connected!'
+                          : maxBleConnectionRetriesReached
+                          ? 'Max Connection Retries Reached!'
+                          : 'Connecting...',
+                      style: GoogleFonts.inter(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF3D3D3D),
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    SizedBox(height: 8),
+                    // Subtitle
+                    Text(
+                      isConnected
+                          ? 'Preparing...'
+                          : maxBleConnectionRetriesReached
+                          ? 'Please try connecting again'
+                          : 'Please wait while we connect to ${device.name}',
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w400,
+                        color: Color(0xFF918F8F),
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    SizedBox(height: 16),
+                    if (maxBleConnectionRetriesReached)
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFEC1D24),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(24.5),
+                            ),
+                          ),
+                          onPressed: () {
+                            Navigator.of(dialogContext).pop();
+                          },
+                          child: Text(
+                            'OK',
+                            style: GoogleFonts.inter(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   Future<void> _connectToDeviceByName() async {
     if (_isConnecting) return;
 
@@ -219,11 +358,17 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
       _isConnecting = true;
     });
 
+    bool dialogShown = false;
+
     try {
       final deviceName = widget.selectedDevice.name;
       if (deviceName.isEmpty) {
         throw Exception('Device name is empty');
       }
+
+      // Show connecting dialog
+      _showConnectingDialog(device: widget.selectedDevice, context: context);
+      dialogShown = true;
 
       // Request permissions and ensure Bluetooth is on
       await _bluetoothService.requestPermissions();
@@ -269,16 +414,8 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
       final bleController = Get.find<BleLogController>();
       await bleController.connectToDevice(device: device);
 
-      // Wait for connection to be established
-      int waitCount = 0;
-      while (!bleController.isConnected && waitCount < 30) {
-        await Future.delayed(const Duration(milliseconds: 200));
-        waitCount++;
-      }
-
-      if (!bleController.isConnected) {
-        throw Exception('Connection not established');
-      }
+      // The dialog will automatically close when connection is established
+      // via the ListenableBuilder listening to connectionNotifier
 
       if (mounted) {
         setState(() {
@@ -290,6 +427,14 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
         setState(() {
           _isConnecting = false;
         });
+        // Close dialog if it was shown
+        if (dialogShown) {
+          try {
+            Navigator.of(context).pop();
+          } catch (_) {
+            // Dialog might have already been closed
+          }
+        }
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Failed to connect: $e'),
@@ -735,7 +880,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                             text: TextSpan(
                               children: [
                                 TextSpan(
-                                  text: 'status : ',
+                                  text: 'Status : ',
                                   style: GoogleFonts.inter(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w500,
@@ -761,7 +906,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                                   text: TextSpan(
                                     children: [
                                       TextSpan(
-                                        text: 'status : ',
+                                        text: 'Status : ',
                                         style: GoogleFonts.inter(
                                           fontSize: 14,
                                           fontWeight: FontWeight.w500,
