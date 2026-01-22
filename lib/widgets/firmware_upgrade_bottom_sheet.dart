@@ -1363,10 +1363,17 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
               ? 'Main Panel Firmware'
               : 'BLE Chip Firmware',
         ),
-        SizedBox(height: 12),
-        _buildDetailRow('Expected CRC', expectedCrc),
-        SizedBox(height: 12),
-        _buildDetailRow('Calculated CRC', calculatedCrc),
+        Visibility(
+          visible: !isCrcMatched,
+          child: Column(
+            children: [
+              SizedBox(height: 12),
+              _buildDetailRow('Expected CRC', expectedCrc),
+              SizedBox(height: 12),
+              _buildDetailRow('Calculated CRC', calculatedCrc),
+            ],
+          ),
+        ),
         SizedBox(height: 12),
         _buildDetailRow(
           'CRC Status',
