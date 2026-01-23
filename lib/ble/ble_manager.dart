@@ -187,14 +187,20 @@ class BleManager {
     resetLogRetrievalState();
     resetProtocolState();
 
-    // Start the encryption key request process
-    // This will trigger the authentication flow which eventually leads to log retrieval
-    // Always register notify handler if it's not already registered (e.g., after reconnection)
-    if (!isLogRetrievalDoneOnce || _notifySub == null) {
+    // IMPORTANT: Reset process state to clear isOtaCompleted flag
+    // This ensures polls aren't blocked after firmware upgrade
+    bleProcess.resetProcessState();
+
+    // Always ensure notify handler is registered (especially after reconnection)
+    // Check if subscription is null or if log retrieval hasn't been done once
+    if (_notifySub == null || !isLogRetrievalDoneOnce) {
+      print("Registering notify handler for log retrieval");
       await registerNotifyHandler();
       isLogRetrievalDoneOnce = true;
+      // Give a small delay after registration to ensure subscription is active
+      await Future.delayed(const Duration(milliseconds: 200));
     } else {
-      bleProcess.resetProcessState();
+      print("Notify handler already registered, proceeding with log retrieval");
       bleCurrentState = BleStates.PROCESS_PANEL_EVT_LOG_READ;
       bleStateMachineState = BleStates.PROCESS_PANEL_EVT_LOG_READ;
       print("Current state: $bleStateMachineState");
@@ -370,7 +376,7 @@ class BleManager {
 
               await _notifySub?.cancel();
               _notifySub = null;
-              
+
               // Reset log retrieval flag so notify handler is re-registered on reconnect
               isLogRetrievalDoneOnce = false;
 
@@ -396,34 +402,56 @@ class BleManager {
   Future<void> registerNotifyHandler({bool? isChipInBootLoader = false}) async {
     print("Register notify handler");
 
-    if (_notifySub != null) return;
+    // Cancel existing subscription if any (e.g., from previous connection)
+    if (_notifySub != null) {
+      print("Cancelling existing notify subscription before re-registering");
+      try {
+        await _notifySub?.cancel();
+      } catch (e) {
+        print("Error cancelling existing subscription: $e");
+      }
+      _notifySub = null;
+    }
 
     if (!isConnected) {
       print("Device disconnected before notification start");
       return;
     }
 
-    // Subscribe to notifications
-    _notifySub = flutterReactiveBle
-        .subscribeToCharacteristic(notifyChar!)
-        .listen(
-          (data) => notificationHandler(Uint8List.fromList(data)),
-          onError: (e) {
-            print("Notification subscription error: $e");
-          },
-        );
+    if (notifyChar == null) {
+      print("Notify characteristic not initialized");
+      return;
+    }
 
-    print("Listening for notifications...");
-    await Future.delayed(const Duration(milliseconds: 300));
-    print("---Notification handler registered----");
-    if (isChipInBootLoader != true) {
-      // Request encryption key for both firmware upgrade (first connection) and log retrieval
-      bleProcess.requestENCKey();
-    } else {
-      // Bootloader mode - skip encryption key request and go directly to auth
-      bleStateMachineState = BleStates.SEND_AUTHN_MSG;
-      bleCurrentState = BleStates.SEND_AUTHN_MSG;
-      bleProcess.sendAuthPacket();
+    try {
+      // Subscribe to notifications
+      _notifySub = flutterReactiveBle
+          .subscribeToCharacteristic(notifyChar!)
+          .listen(
+            (data) => notificationHandler(Uint8List.fromList(data)),
+            onError: (e) {
+              print("Notification subscription error: $e");
+              // Reset subscription on error so it can be re-registered
+              _notifySub = null;
+            },
+          );
+
+      print("Listening for notifications...");
+      await Future.delayed(const Duration(milliseconds: 300));
+      print("---Notification handler registered----");
+      if (isChipInBootLoader != true) {
+        // Request encryption key for both firmware upgrade (first connection) and log retrieval
+        bleProcess.requestENCKey();
+      } else {
+        // Bootloader mode - skip encryption key request and go directly to auth
+        bleStateMachineState = BleStates.SEND_AUTHN_MSG;
+        bleCurrentState = BleStates.SEND_AUTHN_MSG;
+        bleProcess.sendAuthPacket();
+      }
+    } catch (e) {
+      print("Failed to register notify handler: $e");
+      _notifySub = null;
+      rethrow;
     }
   }
 
