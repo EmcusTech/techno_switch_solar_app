@@ -362,6 +362,8 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
 
     try {
       final deviceName = widget.selectedDevice.name;
+      print('deviceName: $deviceName');
+      print('hey hey TECHNOSWITCH_${widget.panelName.split('_').last}');
       if (deviceName.isEmpty) {
         throw Exception('Device name is empty');
       }
@@ -387,7 +389,8 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
       _scanSubscription = _bluetoothService.scanResultsStream.listen((results) {
         for (var result in results) {
           // Match by device name
-          if (result.name == deviceName) {
+          if (result.name ==
+              'TECHNOSWITCH_${widget.panelName.split('_').last}') {
             if (!deviceFoundCompleter.isCompleted) {
               deviceFoundCompleter.complete(result);
             }

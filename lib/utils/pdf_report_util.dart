@@ -39,20 +39,16 @@ class LogReportPdfUtil {
 
         build:
             (_) => [
-              pw.Stack(
-                children: [
-                  _reportInfo(
-                    siteName: siteName,
-                    panelName: panelName,
-                    panelSerialNumber: panelSerialNumber,
-                    installerName: installerName,
-                    saqccNo: saqccNo,
-                  ),
-                  pw.SizedBox(height: 16),
-                  _sectionHeader('LOG ENTRIES'),
-                  _logTable(logs),
-                ],
+              _reportInfo(
+                siteName: siteName,
+                panelName: panelName,
+                panelSerialNumber: panelSerialNumber,
+                installerName: installerName,
+                saqccNo: saqccNo,
               ),
+              pw.SizedBox(height: 16),
+              _sectionHeader('LOG ENTRIES'),
+              _logTable(logs),
             ],
       ),
     );
@@ -215,6 +211,7 @@ class LogReportPdfUtil {
         decoration: pw.BoxDecoration(
           color: bg,
           borderRadius: pw.BorderRadius.circular(10),
+          border: pw.Border.all(color: PdfColors.amber),
         ),
         child: pw.Text(
           status,
