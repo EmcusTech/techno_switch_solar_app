@@ -12,6 +12,7 @@ import 'package:techno_switch_solar_app/services/panel_service.dart';
 import 'package:techno_switch_solar_app/services/site_service.dart';
 import 'package:techno_switch_solar_app/utils/export_tile.dart';
 import 'package:techno_switch_solar_app/utils/event_constants.dart';
+import 'package:techno_switch_solar_app/utils/pdf_report_util.dart';
 import 'package:techno_switch_solar_app/widgets/site_creation_dialog.dart';
 import 'package:techno_switch_solar_app/screens/simple_site_creation_screen.dart';
 import 'package:techno_switch_solar_app/screens/device_connecting_screen.dart';
@@ -489,10 +490,13 @@ class _EventLogContentState extends State<_EventLogContent> {
                   final logs = _filtersApplied ? _filteredLogs : _getBaseLogs();
                   if (logs.isEmpty) return;
 
-                  await EventLogPdfExporter.export(
+                  await LogReportPdfUtil.generate(
                     logs: logs,
-                    panelName: _resolvedPanelName(),
-                    panelVersion: widget.panelVersionNo,
+                    siteName: 'Site Name',
+                    panelName: 'Panel Name',
+                    panelSerialNumber: 'Panel Serial Number',
+                    installerName: 'Installer Name',
+                    saqccNo: 'SAQCC No',
                   );
                 },
               ),

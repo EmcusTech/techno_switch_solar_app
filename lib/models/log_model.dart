@@ -1,7 +1,8 @@
 class LogModel {
   final int? id; // Database ID for stored logs
   final int? siteId; // Foreign key to associate log with a site
-  final int? retrievalId; // Foreign key to associate log with a retrieval session
+  final int?
+  retrievalId; // Foreign key to associate log with a retrieval session
   final String? panelText;
   final String? eventId;
   final DateTime? eventDateTime;
