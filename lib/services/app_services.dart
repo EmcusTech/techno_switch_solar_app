@@ -1,5 +1,5 @@
 // import 'package:flutter_blue_plus/flutter_blue_plus.dart';
-import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
+import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
 import 'package:techno_switch_solar_app/utils/serial_communication_service.dart';
 import 'package:techno_switch_solar_app/services/app_state.dart';
 import 'package:techno_switch_solar_app/services/bluetooth_connection_manager.dart';

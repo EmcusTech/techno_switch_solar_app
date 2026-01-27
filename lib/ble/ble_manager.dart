@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
+import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
@@ -317,8 +317,10 @@ class BleManager {
             print("Connection state: ${update.connectionState}");
 
             if (update.connectionState == DeviceConnectionState.connected) {
-              print("Manufacturer data: ${device.manufacturerData.last}");
-              bleManufacturerData.value = device.manufacturerData.last;
+              final md = device.manufacturerData;
+              final lastByte = md.isNotEmpty ? md.last : 0;
+              print("Manufacturer data: $lastByte");
+              bleManufacturerData.value = lastByte;
               _isConnectedNotifier.value = true;
               isBleDisconnected = false;
               connectedDeviceId.value = device.id;

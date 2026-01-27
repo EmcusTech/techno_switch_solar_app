@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 // import 'package:flutter_blue_plus/flutter_blue_plus.dart';
-import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
+import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
 import 'package:techno_switch_solar_app/models/log_model.dart';
 import 'package:techno_switch_solar_app/services/panel_service.dart';
 import 'package:techno_switch_solar_app/utils/bluetooth_constants.dart';

@@ -5,7 +5,7 @@ import 'dart:typed_data';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
+import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
 import 'package:flutter_svg/svg.dart';
 // import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:get/get.dart';
@@ -1492,10 +1492,10 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
                     (_isValidating || !isCrcMatched)
                         ? null
                         : () {
-                          _startUpgrade(
-                            isChipInBootLoader:
-                                _selectedDevice?.manufacturerData.last == 1,
-                          );
+                          final md = _selectedDevice?.manufacturerData;
+                          final lastByte =
+                              (md != null && md.isNotEmpty) ? md.last : null;
+                          _startUpgrade(isChipInBootLoader: lastByte == 1);
                         },
                 isDisabled: _isValidating || !isCrcMatched,
                 child: Text(
