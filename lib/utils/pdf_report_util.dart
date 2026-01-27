@@ -24,19 +24,45 @@ class LogReportPdfUtil {
   }) async {
     final pdf = pw.Document();
     final logo = await _loadImage('assets/images/full_logo.png');
+    final watermarkSvg = await _loadSvg('assets/svgs/log_report_watermark.svg');
 
     pdf.addPage(
       pw.MultiPage(
-        pageFormat: PdfPageFormat(
-          PdfPageFormat.a4.height,
-          PdfPageFormat.a4.width,
-        ),
-
-        margin: const pw.EdgeInsets.all(24),
-
+        // ❌ DO NOT set pageFormat or margin here
         header: (context) => _header(context, logo),
         footer: _footer,
 
+        // ✅ ALL page-level config goes here
+        pageTheme: pw.PageTheme(
+          pageFormat: PdfPageFormat(
+            PdfPageFormat.a4.height,
+            PdfPageFormat.a4.width,
+          ),
+          margin: const pw.EdgeInsets.fromLTRB(24, 24, 24, 48),
+
+          // ✅ SVG watermark (repeats every page)
+          // buildBackground:
+          //     (context) => pw.Center(
+          //       child: pw.Opacity(
+          //         opacity: 0.06,
+          //         child: pw.SizedBox(child: watermarkSvg),
+          //       ),
+          //     ),
+          buildForeground: (context) {
+            return pw.Align(
+              alignment: pw.Alignment.bottomCenter,
+              child: pw.Opacity(
+                opacity: 0.008, // keep low – this is ABOVE text
+                child: pw.Container(
+                  margin: const pw.EdgeInsets.only(bottom: 24),
+                  child: watermarkSvg,
+                ),
+              ),
+            );
+          },
+        ),
+
+        // ✅ FLOWING CONTENT (pagination-safe)
         build:
             (_) => [
               _reportInfo(
@@ -308,5 +334,10 @@ class LogReportPdfUtil {
   static Future<pw.MemoryImage> _loadImage(String path) async {
     final data = await rootBundle.load(path);
     return pw.MemoryImage(data.buffer.asUint8List());
+  }
+
+  static Future<pw.SvgImage> _loadSvg(String path) async {
+    final svg = await rootBundle.loadString(path);
+    return pw.SvgImage(svg: svg);
   }
 }
