@@ -82,8 +82,7 @@ class _SimpleSiteCreationScreenState extends State<SimpleSiteCreationScreen> {
 
     try {
       // First, check if panel is already associated with a site
-      final panelIdToCheck =
-          widget.panelId ?? AppServices.serialService.currentPanelId;
+      final panelIdToCheck = widget.panelId;
       print('DEBUG: SimpleSiteCreation - Checking panel ID: $panelIdToCheck');
 
       if (panelIdToCheck != null) {
@@ -201,10 +200,9 @@ class _SimpleSiteCreationScreenState extends State<SimpleSiteCreationScreen> {
       await _siteService.storeLogs(widget.retrievedLogs, siteId: site.id!);
 
       // Associate the panel with the site (use stored panelId if available)
-      final panelIdToAssociate =
-          widget.panelId ?? AppServices.serialService.currentPanelId;
+      final panelIdToAssociate = widget.panelId;
       print(
-        'DEBUG: Panel ID to associate: $panelIdToAssociate (from widget: ${widget.panelId}, from service: ${AppServices.serialService.currentPanelId})',
+        'DEBUG: Panel ID to associate: $panelIdToAssociate (from widget: ${widget.panelId})',
       );
       print('DEBUG: Site ID: ${site.id}');
 

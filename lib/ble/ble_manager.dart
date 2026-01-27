@@ -1,10 +1,12 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
+import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
+import 'package:techno_switch_solar_app/utils/bluetooth_service.dart'
+    hide BluetoothService;
 import 'ble_frame.dart';
 import 'aes_key.dart' as aes;
 import 'ble_process.dart';
@@ -28,6 +30,12 @@ const int enBLE_DATA_LEN_LSB_POS = 6;
 const int enBLE_DATA_POS = 7;
 
 const int BLE_FRAME_FILED_SIZE = 11; // total overhead for frame
+
+enum BleDeviceState {
+  normal, // manufacturerData last byte = 0
+  bootloader, // manufacturerData last byte = 1
+  upgradeSuccess, // manufacturerData last byte = 2
+}
 
 enum BleStates {
   REQ_ENCY_KEY,
@@ -77,32 +85,32 @@ class BleManager {
   BleRxFrame bleRxFrame = BleRxFrame();
   int txData = 0;
 
-  final FlutterReactiveBle flutterReactiveBle = FlutterReactiveBle();
+  final FlutterBluePlus flutterBluePlus = FlutterBluePlus();
 
-  final Uuid serviceUuid = Uuid.parse("D973F2F0-B19E-11E2-9E96-0800200C9A66");
-  final Uuid notifyUuid = Uuid.parse("D973F2F1-B19E-11E2-9E96-0800200C9A66");
-  final Uuid writeUuid = Uuid.parse("D973F2F2-B19E-11E2-9E96-0800200C9A66");
+  final String serviceUuid = "D973F2F0-B19E-11E2-9E96-0800200C9A66";
+  final String notifyUuid = "D973F2F1-B19E-11E2-9E96-0800200C9A66";
+  final String writeUuid = "D973F2F2-B19E-11E2-9E96-0800200C9A66";
 
-  DiscoveredDevice? selectedDevice;
-  QualifiedCharacteristic? notifyChar;
-  QualifiedCharacteristic? writeChar;
-  StreamSubscription<DiscoveredDevice>? _scanSub;
+  BluetoothDevice? selectedDevice;
+  BluetoothCharacteristic? notifyChar;
+  BluetoothCharacteristic? writeChar;
+  StreamSubscription<List<ScanResult>>? _scanSub;
   // Prevent duplicate poll writes while waiting for notify
   bool _pollInFlight = false;
   int receivedPollCount = 0;
-  StreamSubscription<ConnectionStateUpdate>? _connectionSub;
+  StreamSubscription<BluetoothConnectionState>? _connectionSub;
   bool _connectedOnce = false;
   // ignore: unused_field
   bool _isGattConnected = false;
   StreamSubscription<List<int>>? _notifySub;
   bool isBleDisconnected = true;
   bool isLogRetrievalDoneOnce = false;
+  int lastRssi = 0;
 
   // BLE state machine
   late BleProcess bleProcess;
 
   BleManager() {
-    flutterReactiveBle.logLevel = LogLevel.verbose;
     bleProcess = BleProcess(this);
   }
 
@@ -141,6 +149,64 @@ class BleManager {
 
     // OTA state
     otaProcessState = OtaProcessState.sendNetworkPacket;
+  }
+
+  Future<void> waitForDeviceState({
+    required BleDeviceState expectedState,
+    Duration timeout = const Duration(seconds: 20),
+  }) async {
+    int expectedValue;
+
+    switch (expectedState) {
+      case BleDeviceState.normal:
+        expectedValue = 0;
+        break;
+      case BleDeviceState.bootloader:
+        expectedValue = 1;
+        break;
+      case BleDeviceState.upgradeSuccess:
+        expectedValue = 2;
+        break;
+    }
+
+    // Fast-path: already in desired state
+    if (bleManufacturerData.value == expectedValue) {
+      return;
+    }
+
+    final completer = Completer<void>();
+
+    void listener() {
+      final value = bleManufacturerData.value;
+      debugPrint(
+        'waitForDeviceState → expected=$expectedValue, current=$value',
+      );
+
+      if (value == expectedValue) {
+        bleManufacturerData.removeListener(listener);
+        if (!completer.isCompleted) {
+          completer.complete();
+        }
+      }
+    }
+
+    bleManufacturerData.addListener(listener);
+
+    // Timeout safety
+    Future.delayed(timeout, () {
+      bleManufacturerData.removeListener(listener);
+      if (!completer.isCompleted) {
+        completer.completeError(
+          TimeoutException(
+            'Timeout waiting for device state $expectedState '
+            '(expected manufacturerData=$expectedValue, '
+            'last=${bleManufacturerData.value})',
+          ),
+        );
+      }
+    });
+
+    return completer.future;
   }
 
   void resetFirmwareState() {
@@ -226,14 +292,37 @@ class BleManager {
     }
   }
 
+  void cacheAdvertisementData({
+    required AdvertisementData advData,
+    required int rssi,
+  }) {
+    final mfg = advData.manufacturerData;
+
+    if (mfg.isNotEmpty) {
+      final entry = mfg.entries.first;
+      final data = entry.value;
+
+      if (data.isNotEmpty) {
+        // Example: last byte decides mode
+        bleManufacturerData.value = data.last;
+        print("📡 Cached MFG data → ${data.map((e) => e.toRadixString(16))}");
+      }
+    }
+
+    lastRssi = rssi;
+  }
+
   /// SCAN & CONNECT
   Future<void> connectToKnownDevice({
     int maxRetries = 3,
-    required DiscoveredDevice device,
+    required BluetoothDevice device,
+    required AdvertisementData advData,
+    required int rssi,
   }) async {
+    cacheAdvertisementData(advData: advData, rssi: rssi);
     int attempt = 0;
 
-    print("Attempting to connect to device: ${device.id}");
+    print("Attempting to connect to device: ${device.remoteId}");
 
     if (isConnected) {
       print("Return from here");
@@ -280,20 +369,41 @@ class BleManager {
     }
   }
 
-  Future<void> _refreshGattIfNeeded(String deviceId) async {
-    //Only works in Android
-    if (!Platform.isAndroid) return;
+  // Future<void> _refreshGattIfNeeded(String deviceId) async {
+  //   //Only works in Android
+  //   if (!Platform.isAndroid) return;
 
-    try {
-      print("Clearing GATT cache...");
-      await flutterReactiveBle.clearGattCache(deviceId);
-      print("GATT cache cleared");
-    } catch (e) {
-      print("GATT cache clear failed: $e");
+  //   try {
+  //     print("Clearing GATT cache...");
+  //     await flutterBluePlus.clearGattCache(deviceId);
+  //     print("GATT cache cleared");
+  //   } catch (e) {
+  //     print("GATT cache clear failed: $e");
+  //   }
+  // }
+
+  Future<void> resolveCharacteristics(BluetoothDevice device) async {
+    final List<BluetoothService> services = await device.discoverServices();
+
+    for (final service in services) {
+      if (service.uuid == Guid(serviceUuid)) {
+        for (final c in service.characteristics) {
+          if (c.uuid == Guid(notifyUuid)) {
+            notifyChar = c;
+          }
+          if (c.uuid == Guid(writeUuid)) {
+            writeChar = c;
+          }
+        }
+      }
+    }
+
+    if (notifyChar == null || writeChar == null) {
+      throw Exception("Required BLE characteristics not found");
     }
   }
 
-  Future<void> _connectOnce(DiscoveredDevice device) async {
+  Future<void> _connectOnce(BluetoothDevice device) async {
     await [
       Permission.bluetoothConnect,
       Permission.bluetoothScan, // still required on Android 12+
@@ -307,93 +417,134 @@ class BleManager {
 
     final Completer<void> connectedCompleter = Completer();
 
-    _connectionSub = flutterReactiveBle
-        .connectToDevice(
-          id: device.id,
-          connectionTimeout: const Duration(seconds: 10),
-        )
-        .listen(
-          (update) async {
-            print("Connection state: ${update.connectionState}");
+    await device.connect(
+      timeout: const Duration(seconds: 10),
+      autoConnect: false,
+    );
 
-            if (update.connectionState == DeviceConnectionState.connected) {
-              print("Manufacturer data: ${device.manufacturerData.last}");
-              bleManufacturerData.value = device.manufacturerData.last;
-              _isConnectedNotifier.value = true;
-              isBleDisconnected = false;
-              connectedDeviceId.value = device.id;
-              _isGattConnected = true;
+    _connectionSub = device.connectionState.listen((state) async {
+      if (state == BluetoothConnectionState.connected) {
+        _isConnectedNotifier.value = true;
+        isBleDisconnected = false;
+        connectedDeviceId.value = device.remoteId.str;
+        _isGattConnected = true;
 
-              if (_connectedOnce) return;
-              _connectedOnce = true;
+        if (_connectedOnce) return;
+        _connectedOnce = true;
 
-              //Let Android finish bonding internally
-              await Future.delayed(const Duration(milliseconds: 300));
+        //Let Android finish bonding internally
+        await Future.delayed(const Duration(milliseconds: 300));
 
-              // //GATT CACHE REFRESH (Android only)
-              // await _refreshGattIfNeeded(device.id);
+        // //GATT CACHE REFRESH (Android only)
+        // await _refreshGattIfNeeded(device.id);
 
-              //Small safety delay
-              // await Future.delayed(const Duration(milliseconds: 200));
+        //Small safety delay
+        // await Future.delayed(const Duration(milliseconds: 200));
 
-              notifyChar = QualifiedCharacteristic(
-                characteristicId: notifyUuid,
-                serviceId: serviceUuid,
-                deviceId: device.id,
-              );
+        resolveCharacteristics(device);
 
-              writeChar = QualifiedCharacteristic(
-                characteristicId: writeUuid,
-                serviceId: serviceUuid,
-                deviceId: device.id,
-              );
+        await device.requestMtu(247);
 
-              await flutterReactiveBle.requestMtu(
-                deviceId: device.id,
-                mtu: 247,
-              );
+        bleProcess.deviceConnectState =
+            DeviceConnectState.registerNotifyHandler;
 
-              bleProcess.deviceConnectState =
-                  DeviceConnectState.registerNotifyHandler;
+        // Log retrieval will now be started manually via startLogRetrieval()
+        // Removed automatic call: Get.find<BleLogController>().enableNotify();
 
-              // Log retrieval will now be started manually via startLogRetrieval()
-              // Removed automatic call: Get.find<BleLogController>().enableNotify();
+        if (!connectedCompleter.isCompleted) {
+          connectedCompleter.complete();
+        }
 
-              if (!connectedCompleter.isCompleted) {
-                connectedCompleter.complete();
-              }
+        // await Future.delayed(const Duration(seconds: 10), () {
+        //   shutdown(device.id);
+        // });
+      }
+    });
 
-              // await Future.delayed(const Duration(seconds: 10), () {
-              //   shutdown(device.id);
-              // });
-            }
+    // _connectionSub = flutterBluePlus
+    //     .connectToDevice(
+    //       id: device.id,
+    //       connectionTimeout: const Duration(seconds: 10),
+    //     )
+    //     .listen(
+    //       (update) async {
+    //         print("Connection state: ${update.connectionState}");
 
-            if (update.connectionState == DeviceConnectionState.disconnected) {
-              _isConnectedNotifier.value = false;
-              isBleDisconnected = true;
-              _isGattConnected = false;
-              _connectedOnce = false;
+    //         if (update.connectionState == DeviceConnectionState.connected) {
+    //           print("Manufacturer data: ${device.manufacturerData.last}");
+    //           bleManufacturerData.value = device.manufacturerData.last;
+    //           _isConnectedNotifier.value = true;
+    //           isBleDisconnected = false;
+    //           connectedDeviceId.value = device.remoteId.str;
+    //           _isGattConnected = true;
 
-              await _notifySub?.cancel();
-              _notifySub = null;
+    //           if (_connectedOnce) return;
+    //           _connectedOnce = true;
 
-              // Reset log retrieval flag so notify handler is re-registered on reconnect
-              isLogRetrievalDoneOnce = false;
+    //           //Let Android finish bonding internally
+    //           await Future.delayed(const Duration(milliseconds: 300));
 
-              if (!connectedCompleter.isCompleted) {
-                connectedCompleter.completeError(
-                  Exception("Disconnected during connection"),
-                );
-                processDesc.value = "Disconnected during connection";
-              }
-            }
-          },
-          onError: (e) {
-            if (!connectedCompleter.isCompleted) {
-              connectedCompleter.completeError(e);
-            }
-          },
-        );
+    //           // //GATT CACHE REFRESH (Android only)
+    //           // await _refreshGattIfNeeded(device.id);
+
+    //           //Small safety delay
+    //           // await Future.delayed(const Duration(milliseconds: 200));
+
+    //           notifyChar = QualifiedCharacteristic(
+    //             characteristicId: notifyUuid,
+    //             serviceId: serviceUuid,
+    //             deviceId: device.id,
+    //           );
+
+    //           writeChar = QualifiedCharacteristic(
+    //             characteristicId: writeUuid,
+    //             serviceId: serviceUuid,
+    //             deviceId: device.id,
+    //           );
+
+    //           await device.requestMtu(247);
+
+    //           bleProcess.deviceConnectState =
+    //               DeviceConnectState.registerNotifyHandler;
+
+    //           // Log retrieval will now be started manually via startLogRetrieval()
+    //           // Removed automatic call: Get.find<BleLogController>().enableNotify();
+
+    //           if (!connectedCompleter.isCompleted) {
+    //             connectedCompleter.complete();
+    //           }
+
+    //           // await Future.delayed(const Duration(seconds: 10), () {
+    //           //   shutdown(device.id);
+    //           // });
+    //         }
+
+    //         if (update.connectionState == DeviceConnectionState.disconnected) {
+    //           _isConnectedNotifier.value = false;
+    //           isBleDisconnected = true;
+    //           _isGattConnected = false;
+    //           _connectedOnce = false;
+
+    //           await _notifySub?.cancel();
+    //           _notifySub = null;
+
+    //           // Reset log retrieval flag so notify handler is re-registered on reconnect
+    //           isLogRetrievalDoneOnce = false;
+
+    //           if (!connectedCompleter.isCompleted) {
+    //             connectedCompleter.completeError(
+    //               Exception("Disconnected during connection"),
+    //             );
+    //             processDesc.value = "Disconnected during connection";
+    //           }
+    //         }
+    //       },
+    //       onError: (e) {
+    //         if (!connectedCompleter.isCompleted) {
+    //           connectedCompleter.completeError(e);
+    //         }
+    //       },
+    //     );
 
     await connectedCompleter.future;
   }
@@ -402,48 +553,42 @@ class BleManager {
   Future<void> registerNotifyHandler({bool? isChipInBootLoader = false}) async {
     print("Register notify handler");
 
-    // Cancel existing subscription if any (e.g., from previous connection)
-    if (_notifySub != null) {
-      print("Cancelling existing notify subscription before re-registering");
-      try {
-        await _notifySub?.cancel();
-      } catch (e) {
-        print("Error cancelling existing subscription: $e");
-      }
-      _notifySub = null;
-    }
-
     if (!isConnected) {
       print("Device disconnected before notification start");
       return;
     }
 
     if (notifyChar == null) {
-      print("Notify characteristic not initialized");
-      return;
+      throw Exception("Notify characteristic not initialized");
     }
 
     try {
-      // Subscribe to notifications
-      _notifySub = flutterReactiveBle
-          .subscribeToCharacteristic(notifyChar!)
-          .listen(
-            (data) => notificationHandler(Uint8List.fromList(data)),
-            onError: (e) {
-              print("Notification subscription error: $e");
-              // Reset subscription on error so it can be re-registered
-              _notifySub = null;
-            },
-          );
+      // 1️⃣ Cancel previous subscription
+      await _notifySub?.cancel();
+      _notifySub = null;
+
+      // 2️⃣ Enable notifications (writes CCCD)
+      await notifyChar!.setNotifyValue(true);
+
+      // 3️⃣ Listen to notify stream
+      _notifySub = notifyChar!.value.listen(
+        (data) async {
+          await notificationHandler(Uint8List.fromList(data));
+        },
+        onError: (e) {
+          print("Notification stream error: $e");
+          _notifySub = null;
+        },
+      );
 
       print("Listening for notifications...");
       await Future.delayed(const Duration(milliseconds: 300));
       print("---Notification handler registered----");
+
+      // 4️⃣ Start protocol AFTER notify is live
       if (isChipInBootLoader != true) {
-        // Request encryption key for both firmware upgrade (first connection) and log retrieval
         bleProcess.requestENCKey();
       } else {
-        // Bootloader mode - skip encryption key request and go directly to auth
         bleStateMachineState = BleStates.SEND_AUTHN_MSG;
         bleCurrentState = BleStates.SEND_AUTHN_MSG;
         bleProcess.sendAuthPacket();
@@ -458,10 +603,10 @@ class BleManager {
   /// DISCONNECT
   Future<void> disconnectHandler({String? deviceId}) async {
     print("Disconnecting device...");
-    if (deviceId != null && deviceId.isNotEmpty) {
-      //GATT CACHE REFRESH (Android only)
-      await _refreshGattIfNeeded(deviceId);
-    }
+    // if (deviceId != null && deviceId.isNotEmpty) {
+    //   //GATT CACHE REFRESH (Android only)
+    //   await _refreshGattIfNeeded(deviceId);
+    // }
 
     await _notifySub?.cancel();
     await _connectionSub?.cancel();
@@ -475,13 +620,87 @@ class BleManager {
     _isConnectedNotifier.value = false;
   }
 
+  Future<BluetoothDevice> scanAndFindDevice(
+    String deviceId, {
+    Duration scanDuration = const Duration(seconds: 8),
+  }) async {
+    final completer = Completer<BluetoothDevice>();
+
+    // Start scanning
+    await FlutterBluePlus.startScan();
+
+    _scanSub = FlutterBluePlus.scanResults.listen((results) {
+      for (final result in results) {
+        final device = result.device;
+
+        if (device.remoteId.str == deviceId) {
+          // ✅ Capture manufacturer data from ADV
+          final mfgData = result.advertisementData.manufacturerData;
+          if (mfgData.isNotEmpty) {
+            bleManufacturerData.value = mfgData.values.first.last;
+            print("Manufacturer data (scan): ${mfgData.values.first}");
+          }
+
+          if (!completer.isCompleted) {
+            completer.complete(device);
+          }
+        }
+      }
+    });
+
+    // Stop scan after timeout
+    Future.delayed(scanDuration, () async {
+      await FlutterBluePlus.stopScan();
+      await _scanSub?.cancel();
+      _scanSub = null;
+
+      if (!completer.isCompleted) {
+        completer.completeError(Exception("Device not found during scan"));
+      }
+    });
+
+    return completer.future;
+  }
+
+  Future<void> reconnect(String deviceId) async {
+    final completer = Completer<ScannedBleDevice>();
+
+    await FlutterBluePlus.startScan();
+
+    late StreamSubscription sub;
+    sub = FlutterBluePlus.scanResults.listen((results) {
+      for (final r in results) {
+        if (r.device.remoteId.str == deviceId) {
+          sub.cancel();
+          FlutterBluePlus.stopScan();
+
+          completer.complete(
+            ScannedBleDevice(
+              device: r.device,
+              advData: r.advertisementData,
+              rssi: r.rssi,
+            ),
+          );
+        }
+      }
+    });
+
+    final scanned = await completer.future;
+
+    await connectToKnownDevice(
+      device: scanned.device,
+      advData: scanned.advData,
+      rssi: scanned.rssi,
+    );
+  }
+
   /// SHUTDOWN
   Future<void> shutdown({String? deviceId}) async {
     print("Shutdown BLE");
-    if (deviceId != null && deviceId.isNotEmpty) {
-      //GATT CACHE REFRESH (Android only)
-      await _refreshGattIfNeeded(deviceId);
-    }
+    // if (deviceId != null && deviceId.isNotEmpty) {
+    //   //GATT CACHE REFRESH (Android only)
+    //   await _refreshGattIfNeeded(deviceId);
+    // }
 
     // Cancel all subscriptions
     await _scanSub?.cancel();
@@ -761,10 +980,7 @@ class BleManager {
       print(
         "::::::Data Written:::$dataToSend::TX Time${DateTime.now().toIso8601String()}}",
       );
-      await flutterReactiveBle.writeCharacteristicWithResponse(
-        writeChar!,
-        value: dataToSend,
-      );
+      await writeChar!.write(dataToSend, withoutResponse: false);
     } catch (e) {
       print("Send data failed: $e");
     }
@@ -810,10 +1026,7 @@ class BleManager {
       // }
 
       print("::::::Data Written:::::");
-      await flutterReactiveBle.writeCharacteristicWithResponse(
-        writeChar!,
-        value: frameBytes,
-      );
+      await writeChar!.write(frameBytes, withoutResponse: false);
     } catch (e) {
       print("Send frame failed: $e");
     }
@@ -1072,10 +1285,8 @@ class BleManager {
 
     List<int> jumpFrame = bleFrameFormat(0x1002, 0x02, 1, [0x00]);
     try {
-      await flutterReactiveBle.writeCharacteristicWithResponse(
-        writeChar!,
-        value: jumpFrame,
-      );
+      await writeChar!.write(jumpFrame, withoutResponse: false);
+
       print(
         "TX/RX: TRANSMIT: Jump Firmware Packet time: ${DateTime.now().toIso8601String()}, packet: ${jumpFrame.map((e) => e.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
       );
@@ -1106,10 +1317,7 @@ class BleManager {
       "TX/RX: TRANSMIT: Start Firmware Packet time: ${DateTime.now().toIso8601String()}, packet: ${startFrame.map((e) => e.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
     );
     try {
-      await flutterReactiveBle.writeCharacteristicWithResponse(
-        writeChar!,
-        value: startFrame,
-      );
+      await writeChar!.write(startFrame, withoutResponse: false);
     } catch (e) {
       print("Send firmware packet failed: Start Firmware Packet $e");
       rethrow;
@@ -1127,10 +1335,7 @@ class BleManager {
       print(
         "TX/RX: TRANSMIT: End Firmware Packet time: ${DateTime.now().toIso8601String()}, packet: ${endFrame.map((e) => e.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
       );
-      await flutterReactiveBle.writeCharacteristicWithResponse(
-        writeChar!,
-        value: endFrame,
-      );
+      await writeChar!.write(endFrame, withoutResponse: false);
     } catch (e) {
       print("Send End firmware packet failed: $e");
       rethrow;
@@ -1161,10 +1366,7 @@ class BleManager {
       print(
         "TX/RX: TRANSMIT: Firmware Packet time: ${DateTime.now().toIso8601String()}, packet: ${firmwareFrame.map((e) => e.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
       );
-      await flutterReactiveBle.writeCharacteristicWithResponse(
-        writeChar!,
-        value: firmwareFrame,
-      );
+      await writeChar!.write(firmwareFrame, withoutResponse: false);
     } catch (e) {
       print("Send firmware packet failed: Firmware Packet $e");
       rethrow;

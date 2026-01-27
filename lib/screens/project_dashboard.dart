@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
+import 'package:flutter_blue_plus/flutter_blue_plus.dart' hide BluetoothService;
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -25,7 +25,7 @@ class ProjectDashboardScreen extends StatefulWidget {
   final String panelName;
   final int? siteId;
   final String? siteName;
-  final DiscoveredDevice selectedDevice;
+  final BluetoothDevice selectedDevice;
   const ProjectDashboardScreen({
     super.key,
     required this.panelVersionNo,
@@ -185,7 +185,7 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
 class _ProjectDashboardContent extends StatefulWidget {
   final String panelName;
   final String panelVersionNo;
-  final DiscoveredDevice selectedDevice;
+  final BluetoothDevice selectedDevice;
   const _ProjectDashboardContent({
     required this.panelName,
     required this.panelVersionNo,
@@ -214,7 +214,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
   }
 
   void _showConnectingDialog({
-    required DiscoveredDevice device,
+    required BluetoothDevice device,
     required BuildContext context,
   }) {
     final bleController = Get.find<BleLogController>();
@@ -383,16 +383,21 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
       await _bluetoothService.startScanning();
 
       // Set up scan listener to find device by name
-      final Completer<DiscoveredDevice?> deviceFoundCompleter =
-          Completer<DiscoveredDevice?>();
+      final Completer<ScannedBleDevice?> deviceFoundCompleter =
+          Completer<ScannedBleDevice?>();
 
       _scanSubscription = _bluetoothService.scanResultsStream.listen((results) {
-        for (var result in results) {
-          // Match by device name
-          if (result.name ==
+        for (final result in results) {
+          if (result.device.platformName ==
               'TECHNOSWITCH_${widget.panelName.split('_').last}') {
             if (!deviceFoundCompleter.isCompleted) {
-              deviceFoundCompleter.complete(result);
+              deviceFoundCompleter.complete(
+                ScannedBleDevice(
+                  device: result.device,
+                  advData: result.advData,
+                  rssi: result.rssi,
+                ),
+              );
             }
             break;
           }
@@ -400,22 +405,26 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
       });
 
       // Wait for device to be found (timeout after 15 seconds)
-      final foundDeviceFuture = deviceFoundCompleter.future.timeout(
+      // final foundDeviceFuture = deviceFoundCompleter.future.timeout(
+      //   const Duration(seconds: 15),
+      //   onTimeout: () => null,
+      // );
+
+      final scanned = await deviceFoundCompleter.future.timeout(
         const Duration(seconds: 15),
         onTimeout: () => null,
       );
 
-      final device = await foundDeviceFuture;
       await _scanSubscription?.cancel();
       await _bluetoothService.stopScanning();
 
-      if (device == null) {
-        throw Exception('Device "$deviceName" not found');
+      if (scanned == null) {
+        throw Exception('Device not found');
       }
 
       // Connect to the found device
       final bleController = Get.find<BleLogController>();
-      await bleController.connectToDevice(device: device);
+      await bleController.connectToDevice(scanned: scanned);
 
       // The dialog will automatically close when connection is established
       // via the ListenableBuilder listening to connectionNotifier
@@ -1305,7 +1314,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                     enableDrag: true,
                     builder:
                         (context) => FirmwareUpgradeBottomSheet(
-                          connectedDevice: widget.selectedDevice,
+                          deviceId: widget.selectedDevice.remoteId.str,
                         ),
                   );
                 },

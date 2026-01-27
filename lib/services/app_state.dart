@@ -11,8 +11,8 @@ class AppState {
   static AppState get instance => _instance;
 
   // Connection state notifier
-  static final ValueNotifier<PanelConnectionState> connectionState =
-      ValueNotifier(PanelConnectionState.notConnected);
+  // static final ValueNotifier<PanelConnectionState> connectionState =
+  //     ValueNotifier(PanelConnectionState.notConnected);
 
   // Logs count notifier
   static final ValueNotifier<int> logsCount = ValueNotifier(0);
@@ -37,9 +37,9 @@ class AppState {
   static final ValueNotifier<bool> isRetrievingLogs = ValueNotifier(false);
 
   /// Update connection state
-  static void updateConnectionState(PanelConnectionState state) {
-    connectionState.value = state;
-  }
+  // static void updateConnectionState(PanelConnectionState state) {
+  //   connectionState.value = state;
+  // }
 
   /// Update logs count
   static void updateLogsCount(int count) {
@@ -91,7 +91,7 @@ class AppState {
 
   /// Reset all state to initial values
   static void reset() {
-    connectionState.value = PanelConnectionState.notConnected;
+    // connectionState.value = PanelConnectionState.notConnected;
     logsCount.value = 0;
     currentLogs.value = [];
     connectionStatus.value = 'Disconnected';
@@ -102,7 +102,7 @@ class AppState {
 
   /// Dispose all notifiers (call when app is closing)
   static void dispose() {
-    connectionState.dispose();
+    // connectionState.dispose();
     logsCount.dispose();
     currentLogs.dispose();
     connectionStatus.dispose();

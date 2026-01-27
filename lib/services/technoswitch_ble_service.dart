@@ -1,7 +1,7 @@
 import 'dart:async';
 
 // import 'package:flutter_blue_plus/flutter_blue_plus.dart';
-import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
+import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:get/get.dart';
 import 'package:techno_switch_solar_app/utils/bluetooth/ble_notify_data_handler.dart';
 import 'package:techno_switch_solar_app/utils/bluetooth/bt_utils.dart';
@@ -30,10 +30,10 @@ class TechnoswitchBleService {
   bool get isConnected => _isConnected;
 
   /// Scans for nearby BLE devices and returns the first batch of results.
-  Future<List<DiscoveredDevice>> scanForDevices({
+  Future<List<BluetoothDevice>> scanForDevices({
     Duration duration = const Duration(seconds: 15),
   }) async {
-    final List<DiscoveredDevice> devices = [];
+    final List<BluetoothDevice> devices = [];
 
     //this starts the scan process, the moment we kisten to the stream, we are actively starting
     //scan process
@@ -70,19 +70,19 @@ class TechnoswitchBleService {
   }
 
   /// Connects to the provided [device] and kicks off the handshake flow.
-  Stream<DeviceConnectionState> connectToDevice(
-    DiscoveredDevice device,
-  ) async* {
-    final stream = _btUtils.connectToDevice(device);
+  // Stream<BluetoothConnectionState> connectToDevice(
+  //   BluetoothDevice device,
+  // ) async* {
+  //   final stream = _btUtils.connectToDevice(device);
 
-    await for (final state in stream) {
-      if (state == DeviceConnectionState.connected) {
-        await _bleHandler.enableNotifyForCallBack(device: device);
-        _isConnected = true;
-      }
-      yield state;
-    }
-  }
+  //   await for (final state in stream) {
+  //     if (state == BluetoothConnectionState.connected) {
+  //       await _bleHandler.enableNotifyForCallBack(device: device);
+  //       _isConnected = true;
+  //     }
+  //     yield state;
+  //   }
+  // }
 
   Future<void> disconnect() async {
     await _btUtils.disconnect();

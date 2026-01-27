@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
+import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/models/panel_model.dart';
@@ -771,13 +771,8 @@ class _SiteScreenState extends State<SiteScreen> {
                   MaterialPageRoute(
                     builder:
                         (context) => ProjectDashboardScreen(
-                          selectedDevice: DiscoveredDevice(
-                            name: panel.panelName,
-                            id: panel.panelId,
-                            rssi: 0,
-                            serviceData: {},
-                            manufacturerData: Uint8List(0),
-                            serviceUuids: [],
+                          selectedDevice: BluetoothDevice(
+                            remoteId: DeviceIdentifier(panel.panelId),
                           ),
                           panelName: panelName,
                           panelVersionNo: panel.deviceDisplayInfo,

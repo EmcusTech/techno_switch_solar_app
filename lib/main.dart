@@ -14,7 +14,7 @@ void main() async {
   Get.put<BleManager>(BleManager(), permanent: true);
 
   // Initialize app services
-  await AppServices.initialize();
+  // await AppServices.initialize();
 
   await FlutterLogs.initLogs(
     logLevelsEnabled: <LogLevel>[

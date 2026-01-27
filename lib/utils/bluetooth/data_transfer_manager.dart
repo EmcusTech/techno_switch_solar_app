@@ -15,7 +15,7 @@ import 'dart:async';
 import 'dart:typed_data';
 
 // import 'package:flutter_blue_plus/flutter_blue_plus.dart';
-import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
+import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:get/get.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:techno_switch_solar_app/models/frame_data.dart';
@@ -992,7 +992,7 @@ class DataTransferManager {
   /// This will write the [data] to the connected BLE Device.
   /// [data]: The BLE data packet to send.
   void sendDataToBle(List<int> data, {Function(bool)? dataWritten}) async {
-    DiscoveredDevice? connectedDevice = await BtUtils().getConnectedDevice();
+    BluetoothDevice? connectedDevice = await BtUtils().getConnectedDevice();
     if (connectedDevice != null) {
       BtUtils().writeData(connectedDevice, data, dataWritten: dataWritten);
     } else {
@@ -1011,7 +1011,7 @@ class DataTransferManager {
     List<int> data, {
     Function(bool)? dataWritten,
   }) async {
-    DiscoveredDevice? connectedDevice = await BtUtils().getConnectedDevice();
+    BluetoothDevice? connectedDevice = await BtUtils().getConnectedDevice();
     if (connectedDevice != null) {
       await BtUtils().writeData(
         connectedDevice,

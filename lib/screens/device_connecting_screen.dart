@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
+import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -20,7 +20,7 @@ import 'package:techno_switch_solar_app/models/log_model.dart';
 final BleManager ble = Get.find<BleManager>();
 
 class DeviceConnectingScreen extends StatefulWidget {
-  final DiscoveredDevice selectedDevice;
+  final BluetoothDevice selectedDevice;
   final ScanType scanType;
   final bool? isLiveEvent;
 
@@ -43,12 +43,6 @@ class _DeviceConnectingScreenState extends State<DeviceConnectingScreen>
   String? _errorMessage;
   StreamSubscription<BleHandshakeEvent>? _handshakeSubscription;
   bool _passkeyScreenOpened = false;
-  StreamSubscription<DeviceConnectionState>? _connectionSub;
-  Uuid primaryServiceGuid = BleUuids.primaryService;
-  Uuid primaryReadCharGuid = BleUuids.primaryReadChar;
-  Uuid primaryWriteCharGuid = BleUuids.primaryWriteChar;
-  QualifiedCharacteristic? readCharacteristic;
-  QualifiedCharacteristic? writeCharacteristic;
   bool _maxBleConnectionRetriesReached = false;
   bool _maxOtherPacketsRetriesReached = false;
   bool _firstLogReceived = false;
@@ -281,192 +275,14 @@ class _DeviceConnectingScreenState extends State<DeviceConnectingScreen>
     );
   }
 
-  Future<void> _connectToDevice() async {
-    if (widget.selectedDevice == null) {
-      _handleConnectionFailure("No Device selected");
-      return;
-    }
-
-    if (widget.scanType == ScanType.bluetooth &&
-        widget.selectedDevice is! DiscoveredDevice) {
-      _handleConnectionFailure("Invalid BLE Device selected");
-      return;
-    }
-
-    setState(() {
-      _connectionStatus = "Connecting to ${_getDeviceName()}";
-    });
-
-    try {
-      if (widget.scanType == ScanType.bluetooth) {
-        final DiscoveredDevice device =
-            widget.selectedDevice as DiscoveredDevice;
-
-        /// listen to handshake events only once
-        _handshakeSubscription ??= AppServices.bleService.handshakeEvents
-            .listen(_handleHandshakeEvent);
-
-        setState(() {
-          _connectionStatus = "Establishing Bluetooth connection...";
-        });
-
-        /// 🔥 LISTEN to the BLE connection stream
-        _connectionSub = AppServices.bleService
-            .connectToDevice(device)
-            .listen(
-              (DeviceConnectionState state) async {
-                switch (state) {
-                  case DeviceConnectionState.connecting:
-                    setState(() {
-                      _connectionStatus = "Connecting...";
-                    });
-                    break;
-
-                  case DeviceConnectionState.connected:
-                    setState(() {
-                      _connectionStatus =
-                          "Connected. Waiting for BLE handshake...";
-                    });
-                    // await prepareCharacteristics(device);
-                    readCharacteristic = QualifiedCharacteristic(
-                      characteristicId: primaryReadCharGuid,
-                      serviceId: primaryServiceGuid,
-                      deviceId: device.id,
-                    );
-
-                    writeCharacteristic = QualifiedCharacteristic(
-                      characteristicId: primaryWriteCharGuid,
-                      serviceId: primaryServiceGuid,
-                      deviceId: device.id,
-                    );
-                    // Handshake + notify flow continues via streams
-                    break;
-
-                  case DeviceConnectionState.disconnected:
-                    _handleConnectionFailure("Device disconnected");
-                    await _connectionSub?.cancel();
-                    break;
-                  default:
-                    print("reached defualt when connecting");
-                    break;
-                }
-              },
-              onError: (e) {
-                _handleConnectionFailure("Connection error: $e");
-              },
-            );
-      } else {
-        // USB path (unchanged logic)
-        setState(() {
-          _connectionStatus = "Establishing USB connection...";
-        });
-
-        // await AppServices.serialService.connectToDevice();
-      }
-    } catch (e) {
-      _handleConnectionFailure("Connection error: $e");
-    }
-  }
-
-  void _handleHandshakeEvent(BleHandshakeEvent event) async {
-    if (!mounted) return;
-
-    switch (event.type) {
-      case BleHandshakeEventType.stateChanged:
-        if (event.message != null) {
-          setState(() {
-            _connectionStatus = event.message!;
-          });
-        }
-        break;
-
-      case BleHandshakeEventType.encryptionKeyReceived:
-        setState(() {
-          _connectionStatus = "Encryption key received";
-        });
-        break;
-
-      case BleHandshakeEventType.authenticated:
-        setState(() {
-          _connectionStatus = "Device authenticated successfully";
-        });
-
-        await Future.delayed(const Duration(milliseconds: 300));
-
-        if (!mounted) return;
-
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder:
-                (context) => AccessCodeScreen(
-                  scanType: widget.scanType,
-                  selectedDevice: widget.selectedDevice,
-                  isLiveEvent: widget.isLiveEvent,
-                ),
-          ),
-        );
-        break;
-
-      case BleHandshakeEventType.passkeyRequested:
-        setState(() {
-          _connectionStatus = "Submitting passkey automatically...";
-        });
-
-        if (!_passkeyScreenOpened) {
-          _passkeyScreenOpened = true;
-
-          Future.microtask(() async {
-            if (!mounted) return;
-            try {
-              await AppServices.bleService.submitPasskey("1974");
-              setState(() {
-                _connectionStatus = "Passkey submitted: 1974";
-              });
-            } catch (e) {
-              setState(() {
-                _connectionStatus = "Error submitting passkey: $e";
-              });
-            }
-          });
-        }
-        break;
-
-      case BleHandshakeEventType.passkeyAccepted:
-        setState(() {
-          _connectionStatus = "Passkey accepted";
-        });
-        break;
-
-      case BleHandshakeEventType.error:
-        _handleConnectionFailure(event.message ?? "Handshake error");
-        break;
-    }
-  }
-
-  void _handleConnectionFailure(String error) {
-    setState(() {
-      _connectionFailed = true;
-      _errorMessage = error;
-      _connectionStatus = "Connection Failed";
-    });
-    _animationController.stop();
-  }
-
   String _getDeviceName() {
     final device = widget.selectedDevice;
 
-    if (device == null) {
-      return "Unknown Device";
-    }
-
     if (widget.scanType == ScanType.bluetooth) {
-      if (device is DiscoveredDevice) {
-        if (device.name.isNotEmpty) {
-          return device.name;
-        }
-        return "BLE-${device.id.substring(0, 5)}";
+      if (device.platformName.isNotEmpty) {
+        return device.platformName;
       }
-      return "BLE Device";
+      return "BLE-${device.remoteId.str.substring(0, 5)}";
     }
 
     // if (widget.scanType == ScanType.usb) {
@@ -833,91 +649,6 @@ class _DeviceConnectingScreenState extends State<DeviceConnectingScreen>
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildRetryButton() {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 20),
-      child: Row(
-        children: [
-          Expanded(
-            child: GestureDetector(
-              onTap: () {
-                Navigator.of(context).pop();
-              },
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Color(0xFFEFEEEE),
-                  borderRadius: BorderRadius.circular(28.5),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 18,
-                    horizontal: 20,
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.arrow_back, color: Color(0xFF49454F)),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Go Back',
-                        style: GoogleFonts.inter(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF49454F),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: GestureDetector(
-              onTap: () {
-                setState(() {
-                  _connectionFailed = false;
-                  _errorMessage = null;
-                  _connectionStatus = "Retrying...";
-                });
-                _animationController.repeat();
-                _connectToDevice();
-              },
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Color(0xFFEC1D24),
-                  borderRadius: BorderRadius.circular(28.5),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 18,
-                    horizontal: 20,
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'Retry',
-                        style: GoogleFonts.inter(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Icon(Icons.refresh, color: Colors.white),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }

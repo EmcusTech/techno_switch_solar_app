@@ -4,7 +4,7 @@ import 'dart:math';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
+import 'package:flutter_blue_plus/flutter_blue_plus.dart' hide BluetoothService;
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -34,7 +34,7 @@ class _ScanningScreenState extends State<ScanningScreen>
   Timer? _scanTimer;
   Timer? _autoStopTimer;
   Timer? _countdownTimer;
-  List<dynamic> _discoveredDevices = [];
+  List<ScannedBleDevice> _discoveredDevices = [];
   bool _isScanning = false;
   bool _showSelection = true;
   ScanType? _selectedScanType;
@@ -98,7 +98,11 @@ class _ScanningScreenState extends State<ScanningScreen>
       final poweredOn = await _bluetooth_service_ensureSafe();
       if (poweredOn) {
         await _bleResultsSub?.cancel();
-        _bleResultsSub = _bluetooth_service_scanListener();
+        _bleResultsSub = _bluetoothService.scanResultsStream.listen((results) {
+          if (!mounted) return;
+          _handleNewBleScanResults(results);
+        });
+
         try {
           await _bluetoothService.startScanning();
         } catch (_) {}
@@ -141,6 +145,11 @@ class _ScanningScreenState extends State<ScanningScreen>
     } catch (_) {
       return false;
     }
+  }
+
+  void _handleNewBleScanResults(List<ScannedBleDevice> results) {
+    // Convert to the generic pipeline you already built
+    _handleNewScanResults(results);
   }
 
   void _showBluetoothOffDialog({
@@ -387,6 +396,7 @@ class _ScanningScreenState extends State<ScanningScreen>
     final Map<String, dynamic> keyToDevice = {};
 
     for (var d in results) {
+      if (d is! ScannedBleDevice) continue;
       final key = _computeStableKey(d);
       if (key == null) continue;
       keyToDevice[key] = d;
@@ -441,12 +451,13 @@ class _ScanningScreenState extends State<ScanningScreen>
     }
 
     // Build ordered list of devices present (by slot order)
-    final Map<int, dynamic> devicesBySlot = {};
+    final Map<int, ScannedBleDevice> devicesBySlot = {};
+
     for (var entry in keyToDevice.entries) {
-      final k = entry.key;
-      final dev = entry.value;
-      final slot = _assignedSlot[k];
-      if (slot != null) devicesBySlot[slot] = dev;
+      final slot = _assignedSlot[entry.key];
+      if (slot != null) {
+        devicesBySlot[slot] = entry.value;
+      }
     }
 
     if (mounted) {
@@ -500,10 +511,11 @@ class _ScanningScreenState extends State<ScanningScreen>
     }
   }
 
-  Future<void> _onDeviceSelected(DiscoveredDevice device) async {
+  Future<void> _onDeviceSelected(ScannedBleDevice scanned) async {
     _stopScanningForConnection();
-    _showConnectingDialog(device: device, context: context);
-    await Get.find<BleLogController>().connectToDevice(device: device);
+    _showConnectingDialog(device: scanned.device, context: context);
+
+    await Get.find<BleLogController>().connectToDevice(scanned: scanned);
   }
 
   void _stopScanning() {
@@ -892,10 +904,15 @@ class _ScanningScreenState extends State<ScanningScreen>
       final deviceKey = _slotToDevice[slot];
       if (deviceKey == null) continue;
 
-      final device = _discoveredDevices.firstWhere(
-        (d) => _deviceKeyByObject(d) == deviceKey,
-        orElse: () => null,
-      );
+      ScannedBleDevice? device;
+
+      for (final d in _discoveredDevices) {
+        if (_deviceKeyByObject(d) == deviceKey) {
+          device = d;
+          break;
+        }
+      }
+
       if (device == null) continue;
 
       final row = i ~/ columns;
@@ -926,11 +943,12 @@ class _ScanningScreenState extends State<ScanningScreen>
     return widgets;
   }
 
-  Widget _buildDeviceCard(DiscoveredDevice device) {
-    final label = device.name;
+  Widget _buildDeviceCard(ScannedBleDevice scanned) {
+    final device = scanned.device;
+    final label = device.platformName;
 
     return GestureDetector(
-      onTap: () => _onDeviceSelected(device),
+      onTap: () => _onDeviceSelected(scanned),
       child: Container(
         decoration: BoxDecoration(
           color: Color(0xFFEC1D24).withValues(alpha: 0.1),
@@ -985,121 +1003,121 @@ class _ScanningScreenState extends State<ScanningScreen>
   // Small proxy function so analyzer doesn't complain about using controller directly in AnimatedBuilder
   Animation<double> _sweep_controller_proxy() => _sweepController;
 
-  // ignore: unused_element
-  List<Widget> _buildSlotWidgets(
-    double radarSize,
-    double center,
-    double fixedRadius,
-    double cardWidth,
-    double cardHeight,
-  ) {
-    final widgets = <Widget>[];
+  // // ignore: unused_element
+  // List<Widget> _buildSlotWidgets(
+  //   double radarSize,
+  //   double center,
+  //   double fixedRadius,
+  //   double cardWidth,
+  //   double cardHeight,
+  // ) {
+  //   final widgets = <Widget>[];
 
-    for (int slot = 0; slot < maxSlots; slot++) {
-      final angle = _angleForSlot(slot);
-      final dx = center + fixedRadius * cos(angle);
-      final dy = center + fixedRadius * sin(angle);
+  //   for (int slot = 0; slot < maxSlots; slot++) {
+  //     final angle = _angleForSlot(slot);
+  //     final dx = center + fixedRadius * cos(angle);
+  //     final dy = center + fixedRadius * sin(angle);
 
-      final deviceKey = _slotToDevice[slot];
-      if (deviceKey != null && _lastSeen.containsKey(deviceKey)) {
-        final DiscoveredDevice device = _discoveredDevices.firstWhere(
-          (d) => _deviceKeyByObject(d) == deviceKey,
-          orElse: () => null,
-        );
-        final label = device.name;
-        final justAssigned = _justAssigned.containsKey(deviceKey);
+  //     final deviceKey = _slotToDevice[slot];
+  //     if (deviceKey != null && _lastSeen.containsKey(deviceKey)) {
+  //       final BluetoothDevice device = _discoveredDevices.firstWhere(
+  //         (d) => _deviceKeyByObject(d) == deviceKey,
+  //         orElse: () => null,
+  //       );
+  //       final label = device.platformName;
+  //       final justAssigned = _justAssigned.containsKey(deviceKey);
 
-        // Card position: center the card at dx,dy (clamped)
-        final left = (dx - cardWidth / 2).clamp(4.0, radarSize - cardWidth);
-        final top = (dy - cardHeight / 2).clamp(4.0, radarSize - cardHeight);
+  //       // Card position: center the card at dx,dy (clamped)
+  //       final left = (dx - cardWidth / 2).clamp(4.0, radarSize - cardWidth);
+  //       final top = (dy - cardHeight / 2).clamp(4.0, radarSize - cardHeight);
 
-        widgets.add(
-          Positioned(
-            key: ValueKey('card-$deviceKey'),
-            left: left,
-            top: top,
-            width: cardWidth,
-            height: cardHeight,
-            child: AnimatedOpacity(
-              duration: const Duration(milliseconds: 260),
-              opacity: 1.0,
-              child: AnimatedScale(
-                scale: justAssigned ? 1.06 : 1.0,
-                duration: const Duration(milliseconds: 420),
-                curve: Curves.easeOutBack,
-                child: GestureDetector(
-                  onTap: () => _onDeviceSelected(device),
-                  child: Material(
-                    color: Colors.white.withOpacity(0.95),
-                    elevation: 6,
-                    borderRadius: BorderRadius.circular(12),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.12),
-                            blurRadius: 8,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        children: [
-                          // image area (top)
-                          Container(
-                            height: cardHeight * 0.6,
-                            width: double.infinity,
-                            decoration: BoxDecoration(
-                              color: Colors.grey.shade50,
-                              borderRadius: const BorderRadius.only(
-                                topLeft: Radius.circular(12),
-                                topRight: Radius.circular(12),
-                              ),
-                            ),
-                            child: Center(
-                              child: Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: SvgPicture.asset(
-                                  'assets/svgs/panel_icon.svg',
-                                  width: cardWidth * 0.5,
-                                  height: cardWidth * 0.5,
-                                ),
-                              ),
-                            ),
-                          ),
+  //       widgets.add(
+  //         Positioned(
+  //           key: ValueKey('card-$deviceKey'),
+  //           left: left,
+  //           top: top,
+  //           width: cardWidth,
+  //           height: cardHeight,
+  //           child: AnimatedOpacity(
+  //             duration: const Duration(milliseconds: 260),
+  //             opacity: 1.0,
+  //             child: AnimatedScale(
+  //               scale: justAssigned ? 1.06 : 1.0,
+  //               duration: const Duration(milliseconds: 420),
+  //               curve: Curves.easeOutBack,
+  //               child: GestureDetector(
+  //                 onTap: () => _onDeviceSelected(device),
+  //                 child: Material(
+  //                   color: Colors.white.withOpacity(0.95),
+  //                   elevation: 6,
+  //                   borderRadius: BorderRadius.circular(12),
+  //                   child: Container(
+  //                     decoration: BoxDecoration(
+  //                       borderRadius: BorderRadius.circular(12),
+  //                       boxShadow: [
+  //                         BoxShadow(
+  //                           color: Colors.black.withOpacity(0.12),
+  //                           blurRadius: 8,
+  //                           offset: const Offset(0, 4),
+  //                         ),
+  //                       ],
+  //                     ),
+  //                     child: Column(
+  //                       children: [
+  //                         // image area (top)
+  //                         Container(
+  //                           height: cardHeight * 0.6,
+  //                           width: double.infinity,
+  //                           decoration: BoxDecoration(
+  //                             color: Colors.grey.shade50,
+  //                             borderRadius: const BorderRadius.only(
+  //                               topLeft: Radius.circular(12),
+  //                               topRight: Radius.circular(12),
+  //                             ),
+  //                           ),
+  //                           child: Center(
+  //                             child: Padding(
+  //                               padding: const EdgeInsets.all(8.0),
+  //                               child: SvgPicture.asset(
+  //                                 'assets/svgs/panel_icon.svg',
+  //                                 width: cardWidth * 0.5,
+  //                                 height: cardWidth * 0.5,
+  //                               ),
+  //                             ),
+  //                           ),
+  //                         ),
 
-                          // details area (bottom)
-                          Expanded(
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 8,
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  _deviceDetailsWidget(
-                                    label,
-                                    _shortMeta(device),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        );
-      }
-    }
-    return widgets;
-  }
+  //                         // details area (bottom)
+  //                         Expanded(
+  //                           child: Padding(
+  //                             padding: const EdgeInsets.symmetric(
+  //                               horizontal: 10,
+  //                               vertical: 8,
+  //                             ),
+  //                             child: Column(
+  //                               crossAxisAlignment: CrossAxisAlignment.start,
+  //                               children: [
+  //                                 _deviceDetailsWidget(
+  //                                   label,
+  //                                   _shortMeta(device),
+  //                                 ),
+  //                               ],
+  //                             ),
+  //                           ),
+  //                         ),
+  //                       ],
+  //                     ),
+  //                   ),
+  //                 ),
+  //               ),
+  //             ),
+  //           ),
+  //         ),
+  //       );
+  //     }
+  //   }
+  //   return widgets;
+  // }
 
   // Create a short meta string (e.g., id or address) for the card
   String _shortMeta(dynamic device) {
@@ -1154,7 +1172,7 @@ class _ScanningScreenState extends State<ScanningScreen>
   }
 
   void _showConnectingDialog({
-    required DiscoveredDevice device,
+    required BluetoothDevice device,
     required BuildContext context,
   }) {
     final bleController = Get.find<BleLogController>();
@@ -1196,8 +1214,8 @@ class _ScanningScreenState extends State<ScanningScreen>
                         builder:
                             (context) => ProjectDashboardScreen(
                               selectedDevice: device,
-                              panelVersionNo: device.id,
-                              panelName: device.name,
+                              panelVersionNo: device.remoteId.str,
+                              panelName: device.platformName,
                             ),
                       ),
                     );
@@ -1307,7 +1325,7 @@ class _ScanningScreenState extends State<ScanningScreen>
 
   void showPasswordPopup({
     required Function() onCall,
-    required DiscoveredDevice device,
+    required BluetoothDevice device,
   }) {
     _navigatingToDeviceConnecting = false;
 

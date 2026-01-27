@@ -11,7 +11,7 @@ import 'dart:async';
 import 'dart:typed_data';
 
 // import 'package:flutter_blue_plus/flutter_blue_plus.dart';
-import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
+import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:get/get.dart';
 import 'package:techno_switch_solar_app/models/frame_data.dart';
 import 'package:techno_switch_solar_app/utils/bluetooth/bt_utils.dart';
@@ -97,48 +97,48 @@ class BleNotifyDataHandler extends GetxController {
 
   /// Enable notifications on the currently connected BLE device.
   ///
-  Future<void> enableNotifyForCallBack({
-    required DiscoveredDevice device,
-  }) async {
-    final DiscoveredDevice? connectedDevice = device;
+  // Future<void> enableNotifyForCallBack({
+  //   required BluetoothDevice device,
+  // }) async {
+  //   final BluetoothDevice? connectedDevice = device;
 
-    if (connectedDevice == null) {
-      logger.Logger("BLE NOTIFY HANDLER: no connected device found.");
-      _emitEvent(
-        BleHandshakeEvent.error("Device disconnected before handshake"),
-      );
-      return;
-    } else {
-      logger.Logger(
-        "BLE NOTIFY HANDLER: connected device found $connectedDevice.",
-      );
-    }
+  //   if (connectedDevice == null) {
+  //     logger.Logger("BLE NOTIFY HANDLER: no connected device found.");
+  //     _emitEvent(
+  //       BleHandshakeEvent.error("Device disconnected before handshake"),
+  //     );
+  //     return;
+  //   } else {
+  //     logger.Logger(
+  //       "BLE NOTIFY HANDLER: connected device found $connectedDevice.",
+  //     );
+  //   }
 
-    try {
-      _notifySub ??= BtUtils().subscribeToNotifications(
-        connectedDevice,
-        onData: (List<int> data) {
-          _handleNotifyData(data, connectedDevice);
-        },
-        onError: (Object error) {
-          _emitEvent(BleHandshakeEvent.error("Notification error: $error"));
-        },
-      );
+  //   try {
+  //     _notifySub ??= BtUtils().subscribeToNotifications(
+  //       connectedDevice,
+  //       onData: (List<int> data) {
+  //         _handleNotifyData(data, connectedDevice);
+  //       },
+  //       onError: (Object error) {
+  //         _emitEvent(BleHandshakeEvent.error("Notification error: $error"));
+  //       },
+  //     );
 
-      _dataTransferManager.requestEncryptionKey(
-        dataWritten: (bool isWritten) {
-          if (isWritten) {
-            currentBleState(BleStateMachine.reqEncryptionKey);
-            _emitStateChange('Requesting encryption key');
-          }
-        },
-      );
-    } catch (e) {
-      _emitEvent(
-        BleHandshakeEvent.error('Unable to subscribe to notification: $e'),
-      );
-    }
-  }
+  //     _dataTransferManager.requestEncryptionKey(
+  //       dataWritten: (bool isWritten) {
+  //         if (isWritten) {
+  //           currentBleState(BleStateMachine.reqEncryptionKey);
+  //           _emitStateChange('Requesting encryption key');
+  //         }
+  //       },
+  //     );
+  //   } catch (e) {
+  //     _emitEvent(
+  //       BleHandshakeEvent.error('Unable to subscribe to notification: $e'),
+  //     );
+  //   }
+  // }
   // Future<void> enableNotifyForCallBack() async {
   //   final DiscoveredDevice? connectedDevice =
   //       await BtUtils().getConnectedDevice();
@@ -245,69 +245,69 @@ class BleNotifyDataHandler extends GetxController {
 
   bool checkIfRetryReached() => retryCount >= maxRetryCount;
 
-  void _handleNotifyData(List<int> rxData, DiscoveredDevice device) async {
-    if (rxData.isEmpty) {
-      return;
-    }
+  // void _handleNotifyData(List<int> rxData, BluetoothDevice device) async {
+  //   if (rxData.isEmpty) {
+  //     return;
+  //   }
 
-    // Stop any outstanding timers – we received a response.
-    _dataTransferManager.stopResponseTimer();
+  //   // Stop any outstanding timers – we received a response.
+  //   _dataTransferManager.stopResponseTimer();
 
-    FrameData? frame;
-    final bool shouldDecrypt =
-        encryptionDecryptionState.value == EncryptionDecryptionState.enabled &&
-        currentBleState.value != BleStateMachine.reqEncryptionKey;
+  //   FrameData? frame;
+  //   final bool shouldDecrypt =
+  //       encryptionDecryptionState.value == EncryptionDecryptionState.enabled &&
+  //       currentBleState.value != BleStateMachine.reqEncryptionKey;
 
-    if (shouldDecrypt) {
-      try {
-        frame = await DataHandler().decryptTheDataPacketWithoutConversion(
-          rxData,
-        );
-      } catch (e) {
-        logger.Logger('BLE notify: failed to decrypt frame $e');
-      }
-    } else {
-      // Non-encrypted RX (encryption key response)
-      logger.Logger('========================================');
-      logger.Logger('TX/RX Logs - STEP 2: RECEIVE ENCRYPTION KEY (RX)');
-      logger.Logger('========================================');
-      String rxHex = rxData
-          .map((b) => b.toRadixString(16).toUpperCase().padLeft(2, '0'))
-          .join(' ');
-      logger.Logger(
-        'TX/RX COMPLETE TECHNOSWITCH LOGS [RX] - RX BLE Frame (raw/non-encrypted): $rxHex',
-      );
-      logger.Logger(
-        'TX/RX Logs - Current State: ${currentBleState.value.name}',
-      );
+  //   if (shouldDecrypt) {
+  //     try {
+  //       frame = await DataHandler().decryptTheDataPacketWithoutConversion(
+  //         rxData,
+  //       );
+  //     } catch (e) {
+  //       logger.Logger('BLE notify: failed to decrypt frame $e');
+  //     }
+  //   } else {
+  //     // Non-encrypted RX (encryption key response)
+  //     logger.Logger('========================================');
+  //     logger.Logger('TX/RX Logs - STEP 2: RECEIVE ENCRYPTION KEY (RX)');
+  //     logger.Logger('========================================');
+  //     String rxHex = rxData
+  //         .map((b) => b.toRadixString(16).toUpperCase().padLeft(2, '0'))
+  //         .join(' ');
+  //     logger.Logger(
+  //       'TX/RX COMPLETE TECHNOSWITCH LOGS [RX] - RX BLE Frame (raw/non-encrypted): $rxHex',
+  //     );
+  //     logger.Logger(
+  //       'TX/RX Logs - Current State: ${currentBleState.value.name}',
+  //     );
 
-      frame = _dataTransferManager.parseRxFrame(rxData);
+  //     frame = _dataTransferManager.parseRxFrame(rxData);
 
-      if (frame.commandByte.isNotEmpty && frame.commandByte.length >= 2) {
-        int cmdValue =
-            (int.parse(frame.commandByte[0], radix: 16) << 8) |
-            int.parse(frame.commandByte[1], radix: 16);
-        logger.Logger(
-          'TX/RX Logs - Command: 0x${cmdValue.toRadixString(16).padLeft(4, '0')}',
-        );
-      }
-      logger.Logger('TX/RX Logs - Frame Type: ${frame.frameTypeByte}');
-      logger.Logger(
-        'TX/RX Logs - Payload Length: ${frame.payloadData.length} bytes',
-      );
-      logger.Logger('TX/RX Logs - ========================================\n');
-    }
+  //     if (frame.commandByte.isNotEmpty && frame.commandByte.length >= 2) {
+  //       int cmdValue =
+  //           (int.parse(frame.commandByte[0], radix: 16) << 8) |
+  //           int.parse(frame.commandByte[1], radix: 16);
+  //       logger.Logger(
+  //         'TX/RX Logs - Command: 0x${cmdValue.toRadixString(16).padLeft(4, '0')}',
+  //       );
+  //     }
+  //     logger.Logger('TX/RX Logs - Frame Type: ${frame.frameTypeByte}');
+  //     logger.Logger(
+  //       'TX/RX Logs - Payload Length: ${frame.payloadData.length} bytes',
+  //     );
+  //     logger.Logger('TX/RX Logs - ========================================\n');
+  //   }
 
-    // Log RX frames (BLE + inner Technoswitch if present)
-    _logRxTechnoswitchFrames(frame, rxData);
+  //   // Log RX frames (BLE + inner Technoswitch if present)
+  //   _logRxTechnoswitchFrames(frame, rxData);
 
-    if (frame == null) {
-      _emitEvent(BleHandshakeEvent.error('Unable to parse BLE frame'));
-      return;
-    }
+  //   if (frame == null) {
+  //     _emitEvent(BleHandshakeEvent.error('Unable to parse BLE frame'));
+  //     return;
+  //   }
 
-    _processFrame(frame, device);
-  }
+  //   _processFrame(frame, device);
+  // }
 
   /// Logs RX BLE frame (raw) and inner Technoswitch frame (if length 216).
   void _logRxTechnoswitchFrames(FrameData? frame, List<int> rawRxData) {
@@ -335,232 +335,232 @@ class BleNotifyDataHandler extends GetxController {
     }
   }
 
-  Future<void> _processFrame(
-    FrameData frame,
-    DiscoveredDevice connectedDevice,
-  ) async {
-    final bool isValid = DataHandler().frameValidation(
-      frame,
-      errorCode: (String error) {
-        logger.Logger('BLE frame validation error: $error');
-      },
-    );
-    if (!isValid) {
-      _emitEvent(BleHandshakeEvent.error('Invalid frame received'));
-      return;
-    }
+  // Future<void> _processFrame(
+  //   FrameData frame,
+  //   BluetoothDevice connectedDevice,
+  // ) async {
+  //   final bool isValid = DataHandler().frameValidation(
+  //     frame,
+  //     errorCode: (String error) {
+  //       logger.Logger('BLE frame validation error: $error');
+  //     },
+  //   );
+  //   if (!isValid) {
+  //     _emitEvent(BleHandshakeEvent.error('Invalid frame received'));
+  //     return;
+  //   }
 
-    switch (currentBleState.value) {
-      case BleStateMachine.reqEncryptionKey:
-        _handleEncryptionReqResponse(frame);
-        break;
-      case BleStateMachine.sendingAuthMessage:
-        _handleAuthMsgResponse(frame);
-        break;
-      case BleStateMachine.requestingNetworkPacket:
-        _handleNetworkPacketResponse(frame);
-        break;
-      case BleStateMachine.sendingPollPacket:
-        _handlePollPacketResponse(frame, connectedDevice);
-        break;
-      case BleStateMachine.requestedPasskey:
-        _handlePassKeyRequestResponse(frame, connectedDevice);
-        break;
-      case BleStateMachine.sendingPasskeyPacket:
-        // Handle immediate acknowledgment response for passkey
-        // Extract Technoswitch frame from payload and log it
-        if (frame.payloadData.isNotEmpty) {
-          List<int> technoswitchFrameBytes = convertStringListToHex(
-            frame.payloadData,
-          );
-          if (technoswitchFrameBytes.length == 216) {
-            String passkeyAckHex = technoswitchFrameBytes
-                .map((b) => b.toRadixString(16).toUpperCase().padLeft(2, '0'))
-                .join(' ');
-            logger.Logger(
-              'TX/RX ORIGINAL TECHNOSWITCH LOGS [PASSKEY] - RX Frame: $passkeyAckHex',
-            );
+  //   switch (currentBleState.value) {
+  //     case BleStateMachine.reqEncryptionKey:
+  //       _handleEncryptionReqResponse(frame);
+  //       break;
+  //     case BleStateMachine.sendingAuthMessage:
+  //       _handleAuthMsgResponse(frame);
+  //       break;
+  //     case BleStateMachine.requestingNetworkPacket:
+  //       _handleNetworkPacketResponse(frame);
+  //       break;
+  //     case BleStateMachine.sendingPollPacket:
+  //       _handlePollPacketResponse(frame, connectedDevice);
+  //       break;
+  //     case BleStateMachine.requestedPasskey:
+  //       _handlePassKeyRequestResponse(frame, connectedDevice);
+  //       break;
+  //     case BleStateMachine.sendingPasskeyPacket:
+  //       // Handle immediate acknowledgment response for passkey
+  //       // Extract Technoswitch frame from payload and log it
+  //       if (frame.payloadData.isNotEmpty) {
+  //         List<int> technoswitchFrameBytes = convertStringListToHex(
+  //           frame.payloadData,
+  //         );
+  //         if (technoswitchFrameBytes.length == 216) {
+  //           String passkeyAckHex = technoswitchFrameBytes
+  //               .map((b) => b.toRadixString(16).toUpperCase().padLeft(2, '0'))
+  //               .join(' ');
+  //           logger.Logger(
+  //             'TX/RX ORIGINAL TECHNOSWITCH LOGS [PASSKEY] - RX Frame: $passkeyAckHex',
+  //           );
 
-            // Extract packet type for ACK/NACK validation
-            int pktTyp = technoswitchFrameBytes[3];
-            logger.Logger(
-              'Passkey acknowledgment - Packet Type: 0x${pktTyp.toRadixString(16).padLeft(2, '0')}',
-            );
+  //           // Extract packet type for ACK/NACK validation
+  //           int pktTyp = technoswitchFrameBytes[3];
+  //           logger.Logger(
+  //             'Passkey acknowledgment - Packet Type: 0x${pktTyp.toRadixString(16).padLeft(2, '0')}',
+  //           );
 
-            // Check for NACK (0x03) - restart from network packet
-            if (pktTyp == 0x03) {
-              logger.Logger(
-                'Passkey acknowledgment - NACK (0x03) received - Restarting from Network packet',
-              );
-              _restartFromNetworkPacket('Passkey acknowledgment');
-              break;
-            }
+  //           // Check for NACK (0x03) - restart from network packet
+  //           if (pktTyp == 0x03) {
+  //             logger.Logger(
+  //               'Passkey acknowledgment - NACK (0x03) received - Restarting from Network packet',
+  //             );
+  //             _restartFromNetworkPacket('Passkey acknowledgment');
+  //             break;
+  //           }
 
-            // Validate ACK/NACK - should be ACK (0x02) or NRM (0x01)
-            if (pktTyp != 0x01 && pktTyp != 0x02) {
-              logger.Logger(
-                'Passkey acknowledgment - ERROR: Unexpected packet type: 0x${pktTyp.toRadixString(16).padLeft(2, '0')} (expected ACK=0x02 or NRM=0x01) - Restarting from Network packet',
-              );
-              // await Future.delayed(Duration(seconds: 1));
-              // // _sendPollPacket();
-              _restartFromNetworkPacket('Passkey acknowledgment');
-              break;
-            }
+  //           // Validate ACK/NACK - should be ACK (0x02) or NRM (0x01)
+  //           if (pktTyp != 0x01 && pktTyp != 0x02) {
+  //             logger.Logger(
+  //               'Passkey acknowledgment - ERROR: Unexpected packet type: 0x${pktTyp.toRadixString(16).padLeft(2, '0')} (expected ACK=0x02 or NRM=0x01) - Restarting from Network packet',
+  //             );
+  //             // await Future.delayed(Duration(seconds: 1));
+  //             // // _sendPollPacket();
+  //             _restartFromNetworkPacket('Passkey acknowledgment');
+  //             break;
+  //           }
 
-            logger.Logger(
-              'Passkey acknowledgment - Valid response received (Packet Type: ${pktTyp == 0x01 ? "NRM" : "ACK"})',
-            );
+  //           logger.Logger(
+  //             'Passkey acknowledgment - Valid response received (Packet Type: ${pktTyp == 0x01 ? "NRM" : "ACK"})',
+  //           );
 
-            // Update RX counter from acknowledgment
-            _pktRxCnt = technoswitchFrameBytes[4]; // Panel's tx = our rx
+  //           // Update RX counter from acknowledgment
+  //           _pktRxCnt = technoswitchFrameBytes[4]; // Panel's tx = our rx
 
-            // Now send first poll packet after acknowledgment
-            _pollPacketCount = 0;
-            _sendPollPacket();
-          }
-        }
-        break;
-      // case BleStateMachine.requestedPasskey:
-      //   _handlePassKeyRequestResponse(frame, connectedDevice);
-      //   break;
-      case BleStateMachine.sendingControlResEventReport:
-        // After sending CONTROL_RES_EVENT_REPORT, we may receive a normal acknowledgment response
-        // This is NOT the CONTROL_RES_EVENT_REPORT response - that comes in a poll packet
-        // We don't wait for this acknowledgment - polling already started
-        // But if acknowledgment comes, we can still update counters
-        List<int> technoswitchFrameBytes = convertStringListToHex(
-          frame.payloadData,
-        );
-        String controlResEventReportAckHex = technoswitchFrameBytes
-            .map((b) => b.toRadixString(16).toUpperCase().padLeft(2, '0'))
-            .join(' ');
-        logger.Logger(
-          'TX/RX ORIGINAL TECHNOSWITCH LOGS [CONTROL_RES_EVENT_REPORT] - RX Frame: $controlResEventReportAckHex',
-        );
-        int pktTyp = technoswitchFrameBytes[3];
-        logger.Logger(
-          'Passkey acknowledgment - Packet Type: 0x${pktTyp.toRadixString(16).padLeft(2, '0')}',
-        );
+  //           // Now send first poll packet after acknowledgment
+  //           _pollPacketCount = 0;
+  //           _sendPollPacket();
+  //         }
+  //       }
+  //       break;
+  //     // case BleStateMachine.requestedPasskey:
+  //     //   _handlePassKeyRequestResponse(frame, connectedDevice);
+  //     //   break;
+  //     case BleStateMachine.sendingControlResEventReport:
+  //       // After sending CONTROL_RES_EVENT_REPORT, we may receive a normal acknowledgment response
+  //       // This is NOT the CONTROL_RES_EVENT_REPORT response - that comes in a poll packet
+  //       // We don't wait for this acknowledgment - polling already started
+  //       // But if acknowledgment comes, we can still update counters
+  //       List<int> technoswitchFrameBytes = convertStringListToHex(
+  //         frame.payloadData,
+  //       );
+  //       String controlResEventReportAckHex = technoswitchFrameBytes
+  //           .map((b) => b.toRadixString(16).toUpperCase().padLeft(2, '0'))
+  //           .join(' ');
+  //       logger.Logger(
+  //         'TX/RX ORIGINAL TECHNOSWITCH LOGS [CONTROL_RES_EVENT_REPORT] - RX Frame: $controlResEventReportAckHex',
+  //       );
+  //       int pktTyp = technoswitchFrameBytes[3];
+  //       logger.Logger(
+  //         'Passkey acknowledgment - Packet Type: 0x${pktTyp.toRadixString(16).padLeft(2, '0')}',
+  //       );
 
-        // Check for NACK (0x03) - restart from network packet
-        if (pktTyp == 0x03) {
-          logger.Logger(
-            'Passkey acknowledgment - NACK (0x03) received - Restarting from Network packet',
-          );
-          _restartFromNetworkPacket('Passkey acknowledgment');
-          break;
-        }
+  //       // Check for NACK (0x03) - restart from network packet
+  //       if (pktTyp == 0x03) {
+  //         logger.Logger(
+  //           'Passkey acknowledgment - NACK (0x03) received - Restarting from Network packet',
+  //         );
+  //         _restartFromNetworkPacket('Passkey acknowledgment');
+  //         break;
+  //       }
 
-        // Validate ACK/NACK - should be ACK (0x02) or NRM (0x01)
-        if (pktTyp != 0x01 && pktTyp != 0x02) {
-          logger.Logger(
-            'Passkey acknowledgment - ERROR: Unexpected packet type: 0x${pktTyp.toRadixString(16).padLeft(2, '0')} (expected ACK=0x02 or NRM=0x01) - Restarting from Network packet',
-          );
-          _restartFromNetworkPacket('Passkey acknowledgment');
-          break;
-        }
-        logger.Logger(
-          'CONTROL_RES_EVENT_REPORT - Normal acknowledgment received',
-        );
+  //       // Validate ACK/NACK - should be ACK (0x02) or NRM (0x01)
+  //       if (pktTyp != 0x01 && pktTyp != 0x02) {
+  //         logger.Logger(
+  //           'Passkey acknowledgment - ERROR: Unexpected packet type: 0x${pktTyp.toRadixString(16).padLeft(2, '0')} (expected ACK=0x02 or NRM=0x01) - Restarting from Network packet',
+  //         );
+  //         _restartFromNetworkPacket('Passkey acknowledgment');
+  //         break;
+  //       }
+  //       logger.Logger(
+  //         'CONTROL_RES_EVENT_REPORT - Normal acknowledgment received',
+  //       );
 
-        // Parse the response to update counters and log it
-        if (frame.payloadData.isNotEmpty) {
-          List<int> technoswitchFrameBytes = convertStringListToHex(
-            frame.payloadData,
-          );
-          logger.Logger(
-            'CONTROL_RES_EVENT_REPORT - technoswitchFrameBytes length: ${technoswitchFrameBytes.length}  ',
-          );
-          if (technoswitchFrameBytes.length == 216) {
-            String controlAckHex = technoswitchFrameBytes
-                .map((b) => b.toRadixString(16).toUpperCase().padLeft(2, '0'))
-                .join(' ');
-            logger.Logger(
-              'TX/RX ORIGINAL TECHNOSWITCH LOGS [CONTROL_RES_EVENT_REPORT] - RX Frame: $controlAckHex',
-            );
+  //       // Parse the response to update counters and log it
+  //       if (frame.payloadData.isNotEmpty) {
+  //         List<int> technoswitchFrameBytes = convertStringListToHex(
+  //           frame.payloadData,
+  //         );
+  //         logger.Logger(
+  //           'CONTROL_RES_EVENT_REPORT - technoswitchFrameBytes length: ${technoswitchFrameBytes.length}  ',
+  //         );
+  //         if (technoswitchFrameBytes.length == 216) {
+  //           String controlAckHex = technoswitchFrameBytes
+  //               .map((b) => b.toRadixString(16).toUpperCase().padLeft(2, '0'))
+  //               .join(' ');
+  //           logger.Logger(
+  //             'TX/RX ORIGINAL TECHNOSWITCH LOGS [CONTROL_RES_EVENT_REPORT] - RX Frame: $controlAckHex',
+  //           );
 
-            // Extract packet type for ACK/NACK validation
-            int pktTyp = technoswitchFrameBytes[3];
-            logger.Logger(
-              'CONTROL_RES_EVENT_REPORT acknowledgment - Packet Type: 0x${pktTyp.toRadixString(16).padLeft(2, '0')}',
-            );
+  //           // Extract packet type for ACK/NACK validation
+  //           int pktTyp = technoswitchFrameBytes[3];
+  //           logger.Logger(
+  //             'CONTROL_RES_EVENT_REPORT acknowledgment - Packet Type: 0x${pktTyp.toRadixString(16).padLeft(2, '0')}',
+  //           );
 
-            // Check for NACK (0x03) - restart from network packet
-            if (pktTyp == 0x03) {
-              logger.Logger(
-                'CONTROL_RES_EVENT_REPORT acknowledgment - NACK (0x03) received - Restarting from Network packet',
-              );
-              _restartFromNetworkPacket(
-                'CONTROL_RES_EVENT_REPORT acknowledgment',
-              );
-              break;
-            }
+  //           // Check for NACK (0x03) - restart from network packet
+  //           if (pktTyp == 0x03) {
+  //             logger.Logger(
+  //               'CONTROL_RES_EVENT_REPORT acknowledgment - NACK (0x03) received - Restarting from Network packet',
+  //             );
+  //             _restartFromNetworkPacket(
+  //               'CONTROL_RES_EVENT_REPORT acknowledgment',
+  //             );
+  //             break;
+  //           }
 
-            // Validate ACK/NACK - should be ACK (0x02) or NRM (0x01)
-            if (pktTyp != 0x01 && pktTyp != 0x02) {
-              logger.Logger(
-                'CONTROL_RES_EVENT_REPORT acknowledgment - ERROR: Unexpected packet type: 0x${pktTyp.toRadixString(16).padLeft(2, '0')} (expected ACK=0x02 or NRM=0x01) - Restarting from Network packet',
-              );
-              _restartFromNetworkPacket(
-                'CONTROL_RES_EVENT_REPORT acknowledgment',
-              );
-              break;
-            }
+  //           // Validate ACK/NACK - should be ACK (0x02) or NRM (0x01)
+  //           if (pktTyp != 0x01 && pktTyp != 0x02) {
+  //             logger.Logger(
+  //               'CONTROL_RES_EVENT_REPORT acknowledgment - ERROR: Unexpected packet type: 0x${pktTyp.toRadixString(16).padLeft(2, '0')} (expected ACK=0x02 or NRM=0x01) - Restarting from Network packet',
+  //             );
+  //             _restartFromNetworkPacket(
+  //               'CONTROL_RES_EVENT_REPORT acknowledgment',
+  //             );
+  //             break;
+  //           }
 
-            logger.Logger(
-              'CONTROL_RES_EVENT_REPORT acknowledgment - Valid response received (Packet Type: ${pktTyp == 0x01 ? "NRM" : "ACK"})',
-            );
+  //           logger.Logger(
+  //             'CONTROL_RES_EVENT_REPORT acknowledgment - Valid response received (Packet Type: ${pktTyp == 0x01 ? "NRM" : "ACK"})',
+  //           );
 
-            // Update counters from response (optional - polling already started)
-            _pktRxCnt = technoswitchFrameBytes[4]; // Panel's tx = our rx
-            _pktTxCnt = technoswitchFrameBytes[5]; // Panel's rx = our tx
+  //           // Update counters from response (optional - polling already started)
+  //           _pktRxCnt = technoswitchFrameBytes[4]; // Panel's tx = our rx
+  //           _pktTxCnt = technoswitchFrameBytes[5]; // Panel's rx = our tx
 
-            // Update last known RX counter if polling is active
-            if (currentBleState.value == BleStateMachine.sendingPollPacket) {
-              _lastKnownRxCounter = _pktRxCnt;
-            }
-            _sendPollPacket();
-            currentBleState(BleStateMachine.sendingPollPacket);
-          } else {
-            logger.Logger(
-              'CONTROL_RES_EVENT_REPORT - technoswitchFrameBytes length: ${technoswitchFrameBytes.length}  ',
-            );
-          }
-        }
-        // Don't call _startContinuousPollPackets() here - already started
-        break;
-      case BleStateMachine.receivingEventLogs:
-        _handleEventLogPacketResponse(frame);
-        break;
-      // case BleStateMachine.sendingDummyPacket:
-      //   _handleDummyPacketResponse(frame);
-      //   break;
-      // case BleStateMachine.mcuSelection:
-      //   _handleMcuSelectionProcess(frame, connectedDevice);
-      //   break;
-      // case BleStateMachine.eofImageData:
-      //   _handleEofImageDataProcess(frame, connectedDevice);
-      //   break;
-      // case BleStateMachine.dataSyncRequest:
-      //   _handleDataSyncRequestProcess(frame, connectedDevice);
-      //   break;
-      // case BleStateMachine.dataStartRequest:
-      //   _handleDataStartRequestProcess(frame, connectedDevice);
-      //   break;
-      // case BleStateMachine.sendingLargePacketOnGoing:
-      //   _handleLargePacketProcess(frame, connectedDevice);
-      //   break;
-      // case BleStateMachine.dataEndRequest:
-      //   _handleDataEndRequestProcess(frame, connectedDevice);
-      //   break;
-      default:
-        // For now we only care about the connect/auth flow.
-        logger.Logger(
-          'BLE notify: frame received for state ${currentBleState.value.name}',
-        );
-        break;
-    }
-  }
+  //           // Update last known RX counter if polling is active
+  //           if (currentBleState.value == BleStateMachine.sendingPollPacket) {
+  //             _lastKnownRxCounter = _pktRxCnt;
+  //           }
+  //           _sendPollPacket();
+  //           currentBleState(BleStateMachine.sendingPollPacket);
+  //         } else {
+  //           logger.Logger(
+  //             'CONTROL_RES_EVENT_REPORT - technoswitchFrameBytes length: ${technoswitchFrameBytes.length}  ',
+  //           );
+  //         }
+  //       }
+  //       // Don't call _startContinuousPollPackets() here - already started
+  //       break;
+  //     case BleStateMachine.receivingEventLogs:
+  //       _handleEventLogPacketResponse(frame);
+  //       break;
+  //     // case BleStateMachine.sendingDummyPacket:
+  //     //   _handleDummyPacketResponse(frame);
+  //     //   break;
+  //     // case BleStateMachine.mcuSelection:
+  //     //   _handleMcuSelectionProcess(frame, connectedDevice);
+  //     //   break;
+  //     // case BleStateMachine.eofImageData:
+  //     //   _handleEofImageDataProcess(frame, connectedDevice);
+  //     //   break;
+  //     // case BleStateMachine.dataSyncRequest:
+  //     //   _handleDataSyncRequestProcess(frame, connectedDevice);
+  //     //   break;
+  //     // case BleStateMachine.dataStartRequest:
+  //     //   _handleDataStartRequestProcess(frame, connectedDevice);
+  //     //   break;
+  //     // case BleStateMachine.sendingLargePacketOnGoing:
+  //     //   _handleLargePacketProcess(frame, connectedDevice);
+  //     //   break;
+  //     // case BleStateMachine.dataEndRequest:
+  //     //   _handleDataEndRequestProcess(frame, connectedDevice);
+  //     //   break;
+  //     default:
+  //       // For now we only care about the connect/auth flow.
+  //       logger.Logger(
+  //         'BLE notify: frame received for state ${currentBleState.value.name}',
+  //       );
+  //       break;
+  //   }
+  // }
 
   Future<void> _handleEncryptionReqResponse(FrameData frame) async {
     if (frame.payloadData.isEmpty) {
@@ -882,7 +882,7 @@ class BleNotifyDataHandler extends GetxController {
   /// Detects passkey response (contains stored passkey) and CONTROL_RES_EVENT_REPORT response (mode=0x83, socket=0x04, command=0x02).
   Future<void> _handlePollPacketResponse(
     FrameData frame,
-    DiscoveredDevice device,
+    BluetoothDevice device,
   ) async {
     logger.Logger('========================================');
     logger.Logger('TX/RX Logs - POLL PACKET RESPONSE RECEIVED');
@@ -1391,25 +1391,25 @@ class BleNotifyDataHandler extends GetxController {
   }
   */
 
-  void _handlePassKeyRequestResponse(FrameData frame, DiscoveredDevice device) {
-    if (frame.payloadData.isEmpty) {
-      _emitEvent(BleHandshakeEvent.error('Empty passkey request response'));
-      return;
-    }
+  // void _handlePassKeyRequestResponse(FrameData frame, BluetoothDevice device) {
+  //   if (frame.payloadData.isEmpty) {
+  //     _emitEvent(BleHandshakeEvent.error('Empty passkey request response'));
+  //     return;
+  //   }
 
-    final String status = frame.payloadData.first;
-    if (status == _ack) {
-      final String deviceName = BtUtils().getBTDeviceName(device);
-      _emitEvent(BleHandshakeEvent.passkeyPrompt(deviceName: deviceName));
-    } else if (status == _timeout) {
-      currentBleState(BleStateMachine.timeOut);
-      _emitEvent(BleHandshakeEvent.error('Passkey request timed out'));
-    } else {
-      _emitEvent(
-        BleHandshakeEvent.error('Passkey request failed with status $status'),
-      );
-    }
-  }
+  //   final String status = frame.payloadData.first;
+  //   if (status == _ack) {
+  //     final String deviceName = BtUtils().getBTDeviceName(device);
+  //     _emitEvent(BleHandshakeEvent.passkeyPrompt(deviceName: deviceName));
+  //   } else if (status == _timeout) {
+  //     currentBleState(BleStateMachine.timeOut);
+  //     _emitEvent(BleHandshakeEvent.error('Passkey request timed out'));
+  //   } else {
+  //     _emitEvent(
+  //       BleHandshakeEvent.error('Passkey request failed with status $status'),
+  //     );
+  //   }
+  // }
 
   // void _handlePasskeyResponse(FrameData frame) {
   //   logger.Logger('TX/RX Logs - ========================================');

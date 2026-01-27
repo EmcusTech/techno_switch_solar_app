@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
+import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -12,12 +12,13 @@ import 'package:techno_switch_solar_app/screens/log_retreival_failed_screen.dart
 import 'package:techno_switch_solar_app/screens/project_dashboard.dart';
 import 'package:techno_switch_solar_app/screens/scanning_screen.dart';
 import 'package:techno_switch_solar_app/services/navigation_service.dart';
+import 'package:techno_switch_solar_app/utils/bluetooth_service.dart';
 import 'package:usb_serial/usb_serial.dart';
 // import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
 class ScannedScreen extends StatefulWidget {
-  final List<dynamic>
-  discoveredDevices; // Can hold both UsbDevice and ScanResult
+  final List<ScannedBleDevice> discoveredDevices;
+  // Can hold both UsbDevice and ScanResult
   final ScanType scanType;
   final bool? isLiveEvent;
 
@@ -208,7 +209,7 @@ class _ScannedScreenState extends State<ScannedScreen> {
   }
 
   void _showConnectingDialog({
-    required DiscoveredDevice device,
+    required BluetoothDevice device,
     required BuildContext context,
   }) {
     final bleController = Get.find<BleLogController>();
@@ -253,8 +254,8 @@ class _ScannedScreenState extends State<ScannedScreen> {
                         builder:
                             (context) => ProjectDashboardScreen(
                               selectedDevice: device,
-                              panelVersionNo: device.id,
-                              panelName: device.name,
+                              panelVersionNo: device.remoteId.str,
+                              panelName: device.platformName,
                             ),
                       ),
                     );
@@ -368,7 +369,7 @@ class _ScannedScreenState extends State<ScannedScreen> {
 
   void showPasswordPopup({
     required Function() onCall,
-    required DiscoveredDevice device,
+    required BluetoothDevice device,
   }) {
     // Reset navigation guard each time the dialog opens
     _navigatingToDeviceConnecting = false;
@@ -709,13 +710,17 @@ class _ScannedScreenState extends State<ScannedScreen> {
         return SizedBox(height: 10);
       },
       itemBuilder: (context, index) {
-        final DiscoveredDevice device = widget.discoveredDevices[index];
+        final ScannedBleDevice scanned = widget.discoveredDevices[index];
+        final BluetoothDevice device = scanned.device;
+
         return GestureDetector(
           onTap: () async {
             _showConnectingDialog(device: device, context: context);
 
             // Start connection
-            await Get.find<BleLogController>().connectToDevice(device: device);
+            await Get.find<BleLogController>().connectToDevice(
+              scanned: scanned,
+            );
           },
           child: Container(
             decoration: BoxDecoration(
@@ -763,14 +768,14 @@ class _ScannedScreenState extends State<ScannedScreen> {
                             color: Color(0xFF918F8F),
                           ),
                         ),
-                        Text(
-                          _getDeviceInfo(device),
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w400,
-                            color: Color(0xFF918F8F),
-                          ),
-                        ),
+                        // Text(
+                        //   _getDeviceInfo(device),
+                        //   style: GoogleFonts.inter(
+                        //     fontSize: 12,
+                        //     fontWeight: FontWeight.w400,
+                        //     color: Color(0xFF918F8F),
+                        //   ),
+                        // ),
                       ],
                     ),
                   ),
@@ -788,19 +793,18 @@ class _ScannedScreenState extends State<ScannedScreen> {
     if (widget.scanType == ScanType.usb && device is UsbDevice) {
       return device.productName ?? 'USB Solar Device';
     } else if (widget.scanType == ScanType.bluetooth &&
-        device is DiscoveredDevice) {
-      return device.name.isNotEmpty ? device.name : 'BLE Solar Device';
+        device is BluetoothDevice) {
+      return device.platformName.isNotEmpty
+          ? device.platformName
+          : 'BLE Solar Device';
     }
     return 'Unknown Device';
   }
 
-  String _getDeviceInfo(dynamic device) {
-    if (widget.scanType == ScanType.usb && device is UsbDevice) {
-      return 'VID: ${device.vid?.toRadixString(16) ?? 'Unknown'} | PID: ${device.pid?.toRadixString(16) ?? 'Unknown'}';
-    } else if (widget.scanType == ScanType.bluetooth &&
-        device is DiscoveredDevice) {
-      return 'RSSI: ${device.rssi} dBm';
-    }
-    return 'No information available';
-  }
+  // String _getDeviceInfo(BluetoothDevice device) {
+  //   if (widget.scanType == ScanType.bluetooth) {
+  //     return 'RSSI: ${device.rssi} dBm';
+  //   }
+  //   return 'No information available';
+  // }
 }
