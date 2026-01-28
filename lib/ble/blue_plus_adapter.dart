@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:typed_data';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart' as fbp;
 
 /// Minimal compatibility layer that mimics the flutter_reactive_ble API surface
@@ -91,6 +92,10 @@ class DiscoveredDevice {
 
   factory DiscoveredDevice.fromScanResult(fbp.ScanResult result) {
     final serviceData = <Uuid, List<int>>{};
+
+    print(
+      "DEBUG ADAPTER: Service data: ${result.advertisementData.serviceData}",
+    );
     try {
       result.advertisementData.serviceData.forEach((key, value) {
         serviceData[Uuid.fromGuid(key)] = List<int>.from(value);
@@ -99,10 +104,70 @@ class DiscoveredDevice {
 
     final manufacturerData = <int>[];
     try {
-      for (final entry in result.advertisementData.manufacturerData.entries) {
-        manufacturerData.addAll(entry.value);
+      // flutter_blue_plus manufacturerData is a Map<int, Uint8List>
+      // where key is manufacturer ID and value is the data bytes
+      final ad = result.advertisementData;
+      final manuDataMap = ad.manufacturerData;
+
+      // Log all advertisement data properties for debugging
+      print(
+        "DEBUG ADAPTER: Full advertisement data for ${result.device.platformName}:",
+      );
+      print("  - manufacturerData map: $manuDataMap");
+      print("  - manufacturerData map size: ${manuDataMap.length}");
+      print("  - serviceData: ${ad.serviceData}");
+      print("  - serviceUuids: ${ad.serviceUuids}");
+      print("  - localName: ${ad.localName}");
+      print("  - txPowerLevel: ${ad.txPowerLevel}");
+      print("  - connectable: ${ad.connectable}");
+
+      // Try to access raw bytes if available
+      try {
+        final adDynamic = ad as dynamic;
+        if (adDynamic.advData != null) {
+          print("  - advData (raw): ${adDynamic.advData}");
+        }
+        if (adDynamic.manufacturerDataBytes != null) {
+          print(
+            "  - manufacturerDataBytes: ${adDynamic.manufacturerDataBytes}",
+          );
+        }
+      } catch (_) {}
+
+      if (manuDataMap.isNotEmpty) {
+        for (final entry in manuDataMap.entries) {
+          print(
+            "DEBUG ADAPTER: Processing manufacturer entry - Key: ${entry.key} (0x${entry.key.toRadixString(16)}), Value: ${entry.value}, Value type: ${entry.value.runtimeType}, Value length: ${entry.value.length}",
+          );
+
+          // Check if value is actually empty or if there's an issue with conversion
+          if (entry.value is Uint8List) {
+            final uint8List = entry.value as Uint8List;
+            print(
+              "DEBUG ADAPTER: Uint8List details - length: ${uint8List.length}, buffer: ${uint8List.buffer}, offset: ${uint8List.offsetInBytes}",
+            );
+            if (uint8List.length > 0) {
+              print("DEBUG ADAPTER: Uint8List bytes: ${uint8List.toList()}");
+            }
+          }
+
+          manufacturerData.addAll(entry.value);
+        }
+        print(
+          "DEBUG ADAPTER: Extracted manufacturer data array: $manufacturerData, Length: ${manufacturerData.length}",
+        );
+      } else {
+        print(
+          "DEBUG ADAPTER: Manufacturer data map is EMPTY for ${result.device.platformName}",
+        );
       }
-    } catch (_) {}
+    } catch (e, stackTrace) {
+      // Log for debugging but don't fail - manufacturer data may not always be available
+      // This is especially common after firmware upgrade when device is in bootloader mode
+      print("Warning: Could not extract manufacturer data: $e");
+      print("DEBUG ADAPTER: Exception details: $e");
+      print("DEBUG ADAPTER: Stack trace: $stackTrace");
+    }
 
     final serviceUuids = <Uuid>[];
     try {
@@ -170,6 +235,7 @@ class FlutterReactiveBle {
 
     final sub = fbp.FlutterBluePlus.scanResults.listen((results) {
       for (final result in results) {
+        print("DEBUG ADAPTER: Scan result: ${result.advertisementData}");
         controller.add(DiscoveredDevice.fromScanResult(result));
       }
     }, onError: controller.addError);
@@ -315,7 +381,6 @@ class FlutterReactiveBle {
       case fbp.BluetoothConnectionState.disconnecting:
         return DeviceConnectionState.disconnecting;
       case fbp.BluetoothConnectionState.disconnected:
-      default:
         return DeviceConnectionState.disconnected;
     }
   }

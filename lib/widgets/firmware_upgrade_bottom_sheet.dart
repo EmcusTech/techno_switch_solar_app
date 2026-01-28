@@ -69,6 +69,7 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
   bool _isWaitingForJumpReconnect = false;
   bool _isWaitingForEndReconnect = false;
   String? _originalDeviceName; // Store device name for reconnection
+  int? _originalManufacturerData; // Store manufacturer data before jump command
   StreamSubscription<ConnectionStateUpdate>? _internalReconnectSub;
 
   // Bluetooth service for internal reconnect (only used for reconnecting after jump/end commands)
@@ -95,6 +96,9 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
     // Get connected device from widget parameter or from BleManager
     if (widget.connectedDevice != null) {
       _selectedDevice = widget.connectedDevice;
+      print(
+        'DEBUG INIT: Device from widget - Name: ${_selectedDevice!.name}, Manufacturer data: ${_selectedDevice!.manufacturerData}, Length: ${_selectedDevice!.manufacturerData.length}',
+      );
     } else {
       // Try to get connected device from BleManager
       try {
@@ -102,6 +106,9 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
         final bleManager = bleController.bleManager;
         if (bleManager.isConnected && bleManager.selectedDevice != null) {
           _selectedDevice = bleManager.selectedDevice;
+          print(
+            'DEBUG INIT: Device from BleManager - Name: ${_selectedDevice!.name}, Manufacturer data: ${_selectedDevice!.manufacturerData}, Length: ${_selectedDevice!.manufacturerData.length}',
+          );
         }
       } catch (e) {
         logger.Logger('Error getting connected device: $e');
@@ -210,9 +217,18 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
       manager.resetFirmwareState();
       print("isChipInBootLoader: $isChipInBootLoader");
 
-      // Store original device name before jump command
+      // Store original device name and manufacturer data before jump command
       if (isChipInBootLoader != true && _selectedDevice != null) {
         _originalDeviceName = _selectedDevice!.name;
+        // Store manufacturer data before jump command
+        final md = _selectedDevice!.manufacturerData;
+        _originalManufacturerData = md.isNotEmpty ? md.last : null;
+        logger.Logger(
+          'Stored device info before jump - name: $_originalDeviceName, manufacturer data array: $md, last byte: $_originalManufacturerData',
+        );
+        print(
+          'DEBUG: Before jump - Full manufacturer data: $md, Length: ${md.length}, Last byte: ${md.isNotEmpty ? md.last : "N/A"}',
+        );
       }
 
       if (isChipInBootLoader != true) {
@@ -380,17 +396,30 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
 
       internalScanSub = _bluetoothService.scanResultsStream.listen((results) {
         for (var result in results) {
+          // Log all scanned devices for debugging
+          print(
+            'DEBUG SCAN: Device found - Name: ${result.name}, ID: ${result.id}, Manufacturer data: ${result.manufacturerData}, Length: ${result.manufacturerData.length}',
+          );
+
           // Match by device name
           if (result.name == _originalDeviceName) {
             foundDevice = result;
 
             // Check manufacturer data from scan results
             final manufacturerData = result.manufacturerData;
+            print(
+              'DEBUG: Matched device ${result.name} - Full manufacturer data array: $manufacturerData, Length: ${manufacturerData.length}',
+            );
             if (manufacturerData.isNotEmpty) {
               manufacturerDataFromScan = manufacturerData.last;
               logger.Logger(
-                'Found device ${result.name} with manufacturer data: $manufacturerData (last byte: $manufacturerDataFromScan)',
+                'Found device ${result.name} with manufacturer data array: $manufacturerData (last byte: $manufacturerDataFromScan)',
               );
+            } else {
+              logger.Logger(
+                'Found device ${result.name} but manufacturer data is EMPTY: $manufacturerData',
+              );
+              print('DEBUG: Manufacturer data is empty for matched device');
             }
 
             if (!deviceFoundCompleter.isCompleted) {
@@ -431,8 +460,11 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
       final scanLastByte =
           scanManufacturerData.isNotEmpty ? scanManufacturerData.last : null;
 
+      print(
+        'DEBUG: After scan complete - Device: ${device.name}, Full manufacturer data array: $scanManufacturerData, Length: ${scanManufacturerData.length}, Last byte: $scanLastByte',
+      );
       logger.Logger(
-        'Device found: ${device.name}, Manufacturer data from scan: $scanManufacturerData (last byte: $scanLastByte)',
+        'Device found: ${device.name}, Manufacturer data from scan (full array): $scanManufacturerData (last byte: $scanLastByte)',
       );
 
       // If we have manufacturer data from scan, check it first
@@ -511,8 +543,13 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
         }
 
         // Use BleLogController's connectToDevice which handles initialization properly
+        // If manufacturer data from scan is empty but we have stored value, use it
+        final manufacturerDataToUse = scanLastByte ?? _originalManufacturerData;
         try {
-          await bleController.connectToDevice(device: device);
+          await bleController.connectToDevice(
+            device: device,
+            manufacturerDataOverride: manufacturerDataToUse,
+          );
 
           // Wait for connection to be fully established
           int waitCount = 0;
@@ -523,6 +560,15 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
 
           if (!bleManager.isConnected) {
             throw Exception('Connection not established after reconnect');
+          }
+
+          // If manufacturer data from scan was empty but we have stored value,
+          // manually update bleManufacturerData after connection
+          if (scanLastByte == null && _originalManufacturerData != null) {
+            bleManager.bleManufacturerData.value = _originalManufacturerData!;
+            logger.Logger(
+              'Using stored manufacturer data after reconnect: $_originalManufacturerData',
+            );
           }
         } catch (e) {
           logger.Logger('Error connecting during reconnect: $e');

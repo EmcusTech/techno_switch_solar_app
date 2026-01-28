@@ -9,8 +9,14 @@ class BleLogController extends GetxController {
   // listen to the same ValueNotifiers.
   late final BleProcess bleProcess = bleManager.bleProcess;
 
-  connectToDevice({required DiscoveredDevice device}) async {
-    await bleManager.connectToKnownDevice(device: device);
+  connectToDevice({
+    required DiscoveredDevice device,
+    int? manufacturerDataOverride,
+  }) async {
+    await bleManager.connectToKnownDevice(
+      device: device,
+      manufacturerDataOverride: manufacturerDataOverride,
+    );
   }
 
   enableNotify() async {

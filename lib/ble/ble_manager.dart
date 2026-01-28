@@ -230,6 +230,7 @@ class BleManager {
   Future<void> connectToKnownDevice({
     int maxRetries = 3,
     required DiscoveredDevice device,
+    int? manufacturerDataOverride,
   }) async {
     int attempt = 0;
 
@@ -248,7 +249,10 @@ class BleManager {
 
       try {
         selectedDevice = device;
-        await _connectOnce(device);
+        await _connectOnce(
+          device,
+          manufacturerDataOverride: manufacturerDataOverride,
+        );
         print("BLE connected successfully");
         return; // ✅ SUCCESS
       } catch (e) {
@@ -293,7 +297,10 @@ class BleManager {
     }
   }
 
-  Future<void> _connectOnce(DiscoveredDevice device) async {
+  Future<void> _connectOnce(
+    DiscoveredDevice device, {
+    int? manufacturerDataOverride,
+  }) async {
     await [
       Permission.bluetoothConnect,
       Permission.bluetoothScan, // still required on Android 12+
@@ -307,6 +314,37 @@ class BleManager {
 
     final Completer<void> connectedCompleter = Completer();
 
+    // IMPORTANT: Store manufacturer data from scan result BEFORE connecting
+    // Manufacturer data is only available from scan results in flutter_blue_plus,
+    // not from connected devices. If device.manufacturerData is empty, try to
+    // get it from selectedDevice if available, or use override if provided
+    List<int> md = device.manufacturerData;
+    print(
+      "DEBUG CONNECTION: Device manufacturer data - Full array: $md, Length: ${md.length}",
+    );
+
+    if (manufacturerDataOverride != null) {
+      md = [manufacturerDataOverride];
+      print(
+        "DEBUG CONNECTION: Using manufacturer data override: $manufacturerDataOverride (as array: $md)",
+      );
+    } else if (md.isEmpty &&
+        selectedDevice != null &&
+        selectedDevice!.id == device.id) {
+      md = selectedDevice!.manufacturerData;
+      print(
+        "DEBUG CONNECTION: Using manufacturer data from selectedDevice - Full array: $md, Length: ${md.length}, Last byte: ${md.isNotEmpty ? md.last : 0}",
+      );
+    } else if (md.isEmpty) {
+      print(
+        "DEBUG CONNECTION: WARNING - Manufacturer data is empty for device ${device.id}, will use default 0",
+      );
+    }
+    final lastByte = md.isNotEmpty ? md.last : 0;
+    print(
+      "DEBUG CONNECTION: Final manufacturer data array: $md, Last byte: $lastByte",
+    );
+
     _connectionSub = flutterReactiveBle
         .connectToDevice(
           id: device.id,
@@ -317,10 +355,14 @@ class BleManager {
             print("Connection state: ${update.connectionState}");
 
             if (update.connectionState == DeviceConnectionState.connected) {
-              final md = device.manufacturerData;
-              final lastByte = md.isNotEmpty ? md.last : 0;
-              print("Manufacturer data: $lastByte");
+              // Use the manufacturer data we preserved from scan result
+              print(
+                "DEBUG CONNECTION: Setting bleManufacturerData - Full array: $md, Last byte: $lastByte",
+              );
               bleManufacturerData.value = lastByte;
+              print(
+                "DEBUG CONNECTION: bleManufacturerData.value is now: ${bleManufacturerData.value}",
+              );
               _isConnectedNotifier.value = true;
               isBleDisconnected = false;
               connectedDeviceId.value = device.id;
