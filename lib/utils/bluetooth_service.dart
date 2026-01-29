@@ -61,7 +61,12 @@ class BluetoothService {
   Future<void> startScanning() async {
     print("The scanning initial status is: ${ble.isConnected}");
     if (ble.isConnected) {
-      ble.shutdown();
+      final deviceId = ble.connectedDeviceId.value;
+      // Proactively disconnect any current device before scanning
+      await ble.disconnectHandler(
+        deviceId: deviceId.isNotEmpty ? deviceId : null,
+      );
+      await ble.shutdown(deviceId: deviceId.isNotEmpty ? deviceId : null);
       await Future.delayed(const Duration(seconds: 2));
     }
 
