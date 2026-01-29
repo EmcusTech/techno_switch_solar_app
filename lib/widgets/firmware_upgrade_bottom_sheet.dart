@@ -336,6 +336,10 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
         logger.Logger('End packet sent, device disconnected (expected): $e');
       }
 
+      // Wait for device to process end command and update MSD status
+      // Device needs time to reboot and update advertisement data
+      await Future.delayed(const Duration(seconds: 3));
+
       // Start internal reconnect after end command
       setState(() {
         _isWaitingForEndReconnect = true;
@@ -372,7 +376,7 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
     try {
       // Wait longer for device to disconnect and restart (especially for jump command)
       // Jump command causes device reboot, so it needs more time
-      await Future.delayed(Duration(seconds: isJumpCommand ? 6 : 3));
+      await Future.delayed(Duration(seconds: isJumpCommand ? 8 : 3));
 
       // Start scanning internally
       await _bluetoothService.requestPermissions();
@@ -387,63 +391,124 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
         return;
       }
 
-      // Set up scan listener for internal reconnect - match by device name
-      final Completer<DiscoveredDevice?> deviceFoundCompleter =
-          Completer<DiscoveredDevice?>();
-      StreamSubscription? internalScanSub;
-      DiscoveredDevice? foundDevice;
-      int? manufacturerDataFromScan;
+      // For jump command, we may need to scan multiple times if device hasn't fully rebooted
+      // For end command, we may need to scan multiple times if device hasn't updated MSD status yet
+      DiscoveredDevice? device;
+      int? scanLastByte;
+      int scanAttempts = 0;
+      final int maxScanAttempts = isJumpCommand ? 5 : 3; // More attempts for jump, fewer for end
+      
+      while (scanAttempts < maxScanAttempts) {
+        scanAttempts++;
+        logger.Logger(
+          'Scan attempt $scanAttempts/$maxScanAttempts for reconnect (${isJumpCommand ? "jump" : "end"} command)',
+        );
 
-      internalScanSub = _bluetoothService.scanResultsStream.listen((results) {
-        for (var result in results) {
-          // Log all scanned devices for debugging
-          print(
-            'DEBUG SCAN: Device found - Name: ${result.name}, ID: ${result.id}, Manufacturer data: ${result.manufacturerData}, Length: ${result.manufacturerData.length}',
-          );
+        // Set up scan listener for internal reconnect - match by device name
+        final Completer<DiscoveredDevice?> deviceFoundCompleter =
+            Completer<DiscoveredDevice?>();
+        StreamSubscription? internalScanSub;
+        DiscoveredDevice? foundDevice;
+        int? manufacturerDataFromScan;
 
-          // Match by device name
-          if (result.name == _originalDeviceName) {
-            foundDevice = result;
-
-            // Check manufacturer data from scan results
-            final manufacturerData = result.manufacturerData;
+        internalScanSub = _bluetoothService.scanResultsStream.listen((results) {
+          for (var result in results) {
+            // Log all scanned devices for debugging
             print(
-              'DEBUG: Matched device ${result.name} - Full manufacturer data array: $manufacturerData, Length: ${manufacturerData.length}',
+              'DEBUG SCAN: Device found - Name: ${result.name}, ID: ${result.id}, Manufacturer data: ${result.manufacturerData}, Length: ${result.manufacturerData.length}',
             );
-            if (manufacturerData.isNotEmpty) {
-              manufacturerDataFromScan = manufacturerData.last;
-              logger.Logger(
-                'Found device ${result.name} with manufacturer data array: $manufacturerData (last byte: $manufacturerDataFromScan)',
-              );
-            } else {
-              logger.Logger(
-                'Found device ${result.name} but manufacturer data is EMPTY: $manufacturerData',
-              );
-              print('DEBUG: Manufacturer data is empty for matched device');
-            }
 
-            if (!deviceFoundCompleter.isCompleted) {
-              deviceFoundCompleter.complete(result);
+            // Match by device name
+            if (result.name == _originalDeviceName) {
+              foundDevice = result;
+
+              // Check manufacturer data from scan results
+              final manufacturerData = result.manufacturerData;
+              print(
+                'DEBUG: Matched device ${result.name} - Full manufacturer data array: $manufacturerData, Length: ${manufacturerData.length}',
+              );
+              if (manufacturerData.isNotEmpty) {
+                manufacturerDataFromScan = manufacturerData.last;
+                logger.Logger(
+                  'Found device ${result.name} with manufacturer data array: $manufacturerData (last byte: $manufacturerDataFromScan)',
+                );
+              } else {
+                logger.Logger(
+                  'Found device ${result.name} but manufacturer data is EMPTY: $manufacturerData',
+                );
+                print('DEBUG: Manufacturer data is empty for matched device');
+              }
+
+              if (!deviceFoundCompleter.isCompleted) {
+                deviceFoundCompleter.complete(result);
+              }
+              break;
             }
-            break;
+          }
+        });
+
+        // Start scanning
+        await _bluetoothService.startScanning();
+
+        // Wait for device to be found (timeout after 10 seconds per attempt)
+        try {
+          device = await deviceFoundCompleter.future.timeout(
+            const Duration(seconds: 10),
+            onTimeout: () {
+              logger.Logger('Device not found during scan attempt $scanAttempts');
+              return foundDevice; // Return device if found but completer wasn't triggered
+            },
+          );
+        } catch (e) {
+          logger.Logger('Error during scan attempt $scanAttempts: $e');
+        }
+
+        await internalScanSub.cancel();
+        await _bluetoothService.stopScanning();
+
+        if (device != null) {
+          final scanManufacturerData = device.manufacturerData;
+          scanLastByte =
+              scanManufacturerData.isNotEmpty ? scanManufacturerData.last : null;
+
+          // For jump command, check if we got the expected MSD [0,1]
+          if (isJumpCommand && scanLastByte == 1) {
+            logger.Logger(
+              'Device found in bootloader mode (MSD [0,1]) on attempt $scanAttempts',
+            );
+            break; // Found correct state, exit retry loop
+          } else if (isJumpCommand && scanLastByte == 2) {
+            // Device hasn't fully rebooted yet, wait and retry
+            logger.Logger(
+              'Device still showing old MSD [0,2] on attempt $scanAttempts, waiting and retrying...',
+            );
+            await Future.delayed(const Duration(seconds: 2));
+            device = null; // Reset to try again
+            continue;
+          } else if (!isJumpCommand && (scanLastByte == 1 || scanLastByte == 2)) {
+            // For end command, we got a definitive status [0,1] or [0,2]
+            logger.Logger(
+              'Device found with definitive status (MSD [0,$scanLastByte]) on attempt $scanAttempts',
+            );
+            break; // Found definitive status, exit retry loop
+          } else {
+            // Unknown status or null, wait and retry
+            logger.Logger(
+              'Device found but MSD status unclear ($scanLastByte) on attempt $scanAttempts, waiting and retrying...',
+            );
+            await Future.delayed(const Duration(seconds: 2));
+            device = null; // Reset to try again
+            if (scanAttempts < maxScanAttempts) {
+              continue;
+            }
+          }
+        } else {
+          // Device not found, wait before retry
+          if (scanAttempts < maxScanAttempts) {
+            await Future.delayed(const Duration(seconds: 2));
           }
         }
-      });
-
-      // Start scanning
-      await _bluetoothService.startScanning();
-
-      // Wait for device to be found (timeout after 30 seconds)
-      final device = await deviceFoundCompleter.future.timeout(
-        const Duration(seconds: 30),
-        onTimeout: () {
-          logger.Logger('Device not found during reconnect');
-          return foundDevice; // Return device if found but completer wasn't triggered
-        },
-      );
-
-      await internalScanSub.cancel();
-      await _bluetoothService.stopScanning();
+      }
 
       if (device == null) {
         setState(() {
@@ -456,9 +521,11 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
       }
 
       // Check manufacturer data from scan first
+      // scanLastByte was already set in the retry loop above, but ensure it's set
       final scanManufacturerData = device.manufacturerData;
-      final scanLastByte =
-          scanManufacturerData.isNotEmpty ? scanManufacturerData.last : null;
+      if (scanLastByte == null && scanManufacturerData.isNotEmpty) {
+        scanLastByte = scanManufacturerData.last;
+      }
 
       print(
         'DEBUG: After scan complete - Device: ${device.name}, Full manufacturer data array: $scanManufacturerData, Length: ${scanManufacturerData.length}, Last byte: $scanLastByte',
@@ -489,7 +556,7 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
             // Still try to connect
           }
         } else {
-          // End command: expect [0,2] for success
+          // End command: expect [0,2] for success, [0,1] for failed
           // Update message to show we're validating
           setState(() {
             _isValidatingSuccess = true;
@@ -505,20 +572,26 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
                   'Firmware upgrade completed successfully!';
             });
             _controller.downloadingStatus.value = fw.DownloadStatus.completed;
+            logger.Logger(
+              'Firmware upgrade SUCCESS confirmed from MSD [0,2]',
+            );
             return; // No need to connect, we have the status
           } else if (scanLastByte == 1) {
-            // Failed
+            // Failed - device still in bootloader mode
             setState(() {
               _isWaitingForEndReconnect = false;
               _errorMessage = 'Firmware upgrade failed';
             });
             _controller.downloadingStatus.value = fw.DownloadStatus.failed;
+            logger.Logger(
+              'Firmware upgrade FAILED confirmed from MSD [0,1]',
+            );
             return; // No need to connect, we have the status
           } else {
             logger.Logger(
-              'Unknown manufacturer data for end command: $scanLastByte (expected 1 or 2)',
+              'Unknown manufacturer data for end command: $scanLastByte (expected 1 or 2). Device may still be processing, will check after connection.',
             );
-            // Need to connect to get more info
+            // Device might still be processing, continue to connect and check
           }
         }
       }
@@ -543,8 +616,15 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
         }
 
         // Use BleLogController's connectToDevice which handles initialization properly
-        // If manufacturer data from scan is empty but we have stored value, use it
+        // IMPORTANT: Use scan value (current device state) instead of old stored value
+        // For jump command: device is now in bootloader mode with MSD [0,1]
+        // For end command: device shows upgrade status with MSD [0,2] or [0,1]
         final manufacturerDataToUse = scanLastByte ?? _originalManufacturerData;
+        
+        // Update selectedDevice in bleManager with the new device that has correct MSD
+        // This ensures subsequent connection attempts use the correct manufacturer data
+        bleManager.selectedDevice = device;
+        
         try {
           await bleController.connectToDevice(
             device: device,
@@ -562,12 +642,22 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
             throw Exception('Connection not established after reconnect');
           }
 
-          // If manufacturer data from scan was empty but we have stored value,
-          // manually update bleManufacturerData after connection
-          if (scanLastByte == null && _originalManufacturerData != null) {
+          // After connection, ensure bleManufacturerData reflects the current scan value
+          // This is critical - use the scan value (current device state) not old stored value
+          if (scanLastByte != null) {
+            // Use the scan value (current device state) instead of old stored value
+            bleManager.bleManufacturerData.value = scanLastByte;
+            logger.Logger(
+              'Using scan manufacturer data after reconnect: $scanLastByte (from MSD: $scanManufacturerData)',
+            );
+            print(
+              'DEBUG RECONNECT: Set bleManufacturerData.value = $scanLastByte (from scan MSD: $scanManufacturerData)',
+            );
+          } else if (_originalManufacturerData != null) {
+            // Fallback to stored value only if scan data is not available
             bleManager.bleManufacturerData.value = _originalManufacturerData!;
             logger.Logger(
-              'Using stored manufacturer data after reconnect: $_originalManufacturerData',
+              'Using stored manufacturer data after reconnect (fallback): $_originalManufacturerData',
             );
           }
         } catch (e) {
