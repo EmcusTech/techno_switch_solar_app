@@ -394,7 +394,7 @@ class BleManager {
 
               await flutterReactiveBle.requestMtu(
                 deviceId: device.id,
-                mtu: 247,
+                mtu: 256,
               );
 
               bleProcess.deviceConnectState =

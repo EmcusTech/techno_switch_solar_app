@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:typed_data';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart' as fbp;
 
 /// Minimal compatibility layer that mimics the flutter_reactive_ble API surface
@@ -104,67 +103,47 @@ class DiscoveredDevice {
 
     final manufacturerData = <int>[];
     try {
-      // flutter_blue_plus manufacturerData is a Map<int, Uint8List>
-      // where key is manufacturer ID and value is the data bytes
+      // Use MSD (Manufacturer Specific Data) instead of manufacturerData
+      // In flutter_blue_plus, the manufacturer data from reactive_ble is now in msd.first
       final ad = result.advertisementData;
-      final manuDataMap = ad.manufacturerData;
-
-      // Log all advertisement data properties for debugging
+      
       print(
         "DEBUG ADAPTER: Full advertisement data for ${result.device.platformName}:",
       );
-      print("  - manufacturerData map: $manuDataMap");
-      print("  - manufacturerData map size: ${manuDataMap.length}");
-      print("  - msd: ${ad.msd.first}");
-      print("  - serviceUuids: ${ad.serviceUuids}");
-      print("  - localName: ${ad.localName}");
-      print("  - txPowerLevel: ${ad.txPowerLevel}");
-      print("  - connectable: ${ad.connectable}");
-
-      // Try to access raw bytes if available
-      try {
-        final adDynamic = ad as dynamic;
-        if (adDynamic.advData != null) {
-          print("  - advData (raw): ${adDynamic.advData}");
-        }
-        if (adDynamic.manufacturerDataBytes != null) {
-          print(
-            "  - manufacturerDataBytes: ${adDynamic.manufacturerDataBytes}",
-          );
-        }
-      } catch (_) {}
-
-      if (manuDataMap.isNotEmpty) {
-        for (final entry in manuDataMap.entries) {
-          print(
-            "DEBUG ADAPTER: Processing manufacturer entry - Key: ${entry.key} (0x${entry.key.toRadixString(16)}), Value: ${entry.value}, Value type: ${entry.value.runtimeType}, Value length: ${entry.value.length}",
-          );
-
-          // Check if value is actually empty or if there's an issue with conversion
-          if (entry.value is Uint8List) {
-            final uint8List = entry.value as Uint8List;
-            print(
-              "DEBUG ADAPTER: Uint8List details - length: ${uint8List.length}, buffer: ${uint8List.buffer}, offset: ${uint8List.offsetInBytes}",
-            );
-            if (uint8List.length > 0) {
-              print("DEBUG ADAPTER: Uint8List bytes: ${uint8List.toList()}");
-            }
-          }
-
-          manufacturerData.addAll(entry.value);
-        }
+      print("  - msd list length: ${ad.msd.length}");
+      
+      // Extract MSD data - msd.first contains the manufacturer data bytes
+      if (ad.msd.isNotEmpty) {
+        final msdData = ad.msd.first;
         print(
-          "DEBUG ADAPTER: Extracted manufacturer data array: $manufacturerData, Length: ${manufacturerData.length}",
+          "DEBUG ADAPTER: MSD entry type: ${msdData.runtimeType}, data: $msdData, data length: ${msdData.length}",
+        );
+        
+        // MSD.first is already a List<int> containing the manufacturer data bytes
+        manufacturerData.addAll(msdData);
+        print(
+          "DEBUG ADAPTER: Extracted MSD data array: $manufacturerData, Length: ${manufacturerData.length}",
         );
       } else {
         print(
-          "DEBUG ADAPTER: Manufacturer data map is EMPTY for ${result.device.platformName}",
+          "DEBUG ADAPTER: MSD is EMPTY for ${result.device.platformName}, trying fallback to manufacturerData",
         );
+        
+        // Fallback to manufacturerData if MSD is empty
+        final manuDataMap = ad.manufacturerData;
+        if (manuDataMap.isNotEmpty) {
+          for (final entry in manuDataMap.entries) {
+            manufacturerData.addAll(entry.value);
+          }
+          print(
+            "DEBUG ADAPTER: Fallback - Extracted manufacturer data array: $manufacturerData, Length: ${manufacturerData.length}",
+          );
+        }
       }
     } catch (e, stackTrace) {
-      // Log for debugging but don't fail - manufacturer data may not always be available
+      // Log for debugging but don't fail - MSD/manufacturer data may not always be available
       // This is especially common after firmware upgrade when device is in bootloader mode
-      print("Warning: Could not extract manufacturer data: $e");
+      print("Warning: Could not extract MSD/manufacturer data: $e");
       print("DEBUG ADAPTER: Exception details: $e");
       print("DEBUG ADAPTER: Stack trace: $stackTrace");
     }
