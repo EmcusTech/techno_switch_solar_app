@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:typed_data';
-import 'package:flutter_blue_plus/flutter_blue_plus.dart' as fbp;
+import 'package:flutter_blue_plus_windows/flutter_blue_plus_windows.dart'
+    as fbp;
 
 /// Minimal compatibility layer that mimics the flutter_reactive_ble API surface
 /// the app uses, but delegates work to flutter_blue_plus underneath.
@@ -381,6 +382,8 @@ class FlutterReactiveBle {
       case fbp.BluetoothConnectionState.disconnecting:
         return DeviceConnectionState.disconnecting;
       case fbp.BluetoothConnectionState.disconnected:
+        return DeviceConnectionState.disconnected;
+      default:
         return DeviceConnectionState.disconnected;
     }
   }

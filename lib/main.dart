@@ -16,33 +16,33 @@ void main() async {
   // Initialize app services
   await AppServices.initialize();
 
-  await FlutterLogs.initLogs(
-    logLevelsEnabled: <LogLevel>[
-      LogLevel.INFO,
-      LogLevel.WARNING,
-      LogLevel.ERROR,
-      LogLevel.SEVERE,
-    ],
-    timeStampFormat: TimeStampFormat.TIME_FORMAT_READABLE,
-    directoryStructure: DirectoryStructure.SINGLE_FILE_FOR_DAY,
-    logTypesEnabled: <String>["techno_switch", "BLELogs"],
-    logFileExtension: LogFileExtension.LOG,
-    logsWriteDirectoryName: "TechnoSwitchLogs",
-    logsExportDirectoryName: "TechnoSwitchLogs/Exported",
-    debugFileOperations: true,
-    isDebuggable: true,
-    logsRetentionPeriodInDays: 7,
-    zipsRetentionPeriodInDays: 3,
-    autoDeleteZipOnExport: true,
-    autoClearLogs: true,
-    enabled: true,
-  );
+  // await FlutterLogs.initLogs(
+  //   logLevelsEnabled: <LogLevel>[
+  //     LogLevel.INFO,
+  //     LogLevel.WARNING,
+  //     LogLevel.ERROR,
+  //     LogLevel.SEVERE,
+  //   ],
+  //   timeStampFormat: TimeStampFormat.TIME_FORMAT_READABLE,
+  //   directoryStructure: DirectoryStructure.SINGLE_FILE_FOR_DAY,
+  //   logTypesEnabled: <String>["techno_switch", "BLELogs"],
+  //   logFileExtension: LogFileExtension.LOG,
+  //   logsWriteDirectoryName: "TechnoSwitchLogs",
+  //   logsExportDirectoryName: "TechnoSwitchLogs/Exported",
+  //   debugFileOperations: true,
+  //   isDebuggable: true,
+  //   logsRetentionPeriodInDays: 7,
+  //   zipsRetentionPeriodInDays: 3,
+  //   autoDeleteZipOnExport: true,
+  //   autoClearLogs: true,
+  //   enabled: true,
+  // );
 
-  FlutterLogs.logInfo(
-    "TechnoSwitchLogs",
-    "<${DateTime.now()}>",
-    "----------------------setUpLogs: Setting up logs..-----------------",
-  );
+  // FlutterLogs.logInfo(
+  //   "TechnoSwitchLogs",
+  //   "<${DateTime.now()}>",
+  //   "----------------------setUpLogs: Setting up logs..-----------------",
+  // );
 
   // SystemChrome.setSystemUIOverlayStyle(
   //   SystemUiOverlayStyle(

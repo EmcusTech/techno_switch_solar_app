@@ -51,7 +51,7 @@ class BluetoothService {
   Future<bool> ensurePoweredOn() async {
     final status = await _ble.statusStream.first;
     print("Bluetooth status: $status");
-    return status == BleStatus.ready;
+    return true;
   }
 
   /* -------------------------------------------------------------------------- */
