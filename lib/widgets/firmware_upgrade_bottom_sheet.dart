@@ -336,9 +336,10 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
         logger.Logger('End packet sent, device disconnected (expected): $e');
       }
 
-      // Wait for device to process end command and update MSD status
-      // Device needs time to reboot and update advertisement data
-      await Future.delayed(const Duration(seconds: 3));
+      // Wait longer for device to process end command and update MSD status
+      // Device needs time to reboot, verify firmware, and update advertisement data
+      // Initial wait before first scan attempt
+      await Future.delayed(const Duration(seconds: 5));
 
       // Start internal reconnect after end command
       setState(() {
@@ -393,10 +394,11 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
 
       // For jump command, we may need to scan multiple times if device hasn't fully rebooted
       // For end command, we may need to scan multiple times if device hasn't updated MSD status yet
+      // End command needs more attempts because device needs time to verify firmware and update MSD
       DiscoveredDevice? device;
       int? scanLastByte;
       int scanAttempts = 0;
-      final int maxScanAttempts = isJumpCommand ? 5 : 3; // More attempts for jump, fewer for end
+      final int maxScanAttempts = isJumpCommand ? 5 : 5; // More attempts for both to handle timing
       
       while (scanAttempts < maxScanAttempts) {
         scanAttempts++;
@@ -485,21 +487,42 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
             await Future.delayed(const Duration(seconds: 2));
             device = null; // Reset to try again
             continue;
-          } else if (!isJumpCommand && (scanLastByte == 1 || scanLastByte == 2)) {
-            // For end command, we got a definitive status [0,1] or [0,2]
-            logger.Logger(
-              'Device found with definitive status (MSD [0,$scanLastByte]) on attempt $scanAttempts',
-            );
-            break; // Found definitive status, exit retry loop
-          } else {
-            // Unknown status or null, wait and retry
-            logger.Logger(
-              'Device found but MSD status unclear ($scanLastByte) on attempt $scanAttempts, waiting and retrying...',
-            );
-            await Future.delayed(const Duration(seconds: 2));
-            device = null; // Reset to try again
-            if (scanAttempts < maxScanAttempts) {
-              continue;
+          } else if (!isJumpCommand) {
+            // For end command, check status
+            if (scanLastByte == 2) {
+              // Success - device has completed firmware upgrade
+              logger.Logger(
+                'Device found with SUCCESS status (MSD [0,2]) on attempt $scanAttempts',
+              );
+              break; // Found success status, exit retry loop
+            } else if (scanLastByte == 1) {
+              // Device still showing [0,1] - might still be processing
+              // Wait longer and retry, as device needs time to verify and update status
+              if (scanAttempts < maxScanAttempts) {
+                logger.Logger(
+                  'Device still showing [0,1] on attempt $scanAttempts - device may still be processing firmware verification. Waiting longer and retrying...',
+                );
+                // Wait progressively longer: 3s, 5s, 7s
+                await Future.delayed(Duration(seconds: 2 + (scanAttempts * 2)));
+                device = null; // Reset to try again
+                continue;
+              } else {
+                // After all retries, still showing [0,1] - treat as failure
+                logger.Logger(
+                  'Device still showing [0,1] after $maxScanAttempts attempts - firmware upgrade likely failed',
+                );
+                break; // Exit loop, will be treated as failure below
+              }
+            } else {
+              // Unknown status or null, wait and retry
+              logger.Logger(
+                'Device found but MSD status unclear ($scanLastByte) on attempt $scanAttempts, waiting and retrying...',
+              );
+              await Future.delayed(const Duration(seconds: 2));
+              device = null; // Reset to try again
+              if (scanAttempts < maxScanAttempts) {
+                continue;
+              }
             }
           }
         } else {
