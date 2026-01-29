@@ -115,7 +115,7 @@ class DiscoveredDevice {
       );
       print("  - manufacturerData map: $manuDataMap");
       print("  - manufacturerData map size: ${manuDataMap.length}");
-      print("  - serviceData: ${ad.serviceData}");
+      print("  - msd: ${ad.msd.first}");
       print("  - serviceUuids: ${ad.serviceUuids}");
       print("  - localName: ${ad.localName}");
       print("  - txPowerLevel: ${ad.txPowerLevel}");
