@@ -61,7 +61,7 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
   ];
 
   void _onItemTapped(int index) {
-    if (index == 2) {
+    if (index == 1 || index == 2) {
       return;
     }
     setState(() {
@@ -71,7 +71,7 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const disabledIndexes = [2];
+    const disabledIndexes = [1, 2];
 
     Color itemColor(int index) {
       if (disabledIndexes.contains(index)) {
