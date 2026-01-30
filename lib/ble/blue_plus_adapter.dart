@@ -80,6 +80,7 @@ class DiscoveredDevice {
     required this.manufacturerData,
     required this.rssi,
     required this.serviceUuids,
+    this.device,
   });
 
   final String id;
@@ -88,6 +89,7 @@ class DiscoveredDevice {
   final List<int> manufacturerData;
   final int rssi;
   final List<Uuid> serviceUuids;
+  final fbp.BluetoothDevice? device;
 
   factory DiscoveredDevice.fromScanResult(fbp.ScanResult result) {
     final serviceData = <Uuid, List<int>>{};
@@ -106,19 +108,19 @@ class DiscoveredDevice {
       // Use MSD (Manufacturer Specific Data) instead of manufacturerData
       // In flutter_blue_plus, the manufacturer data from reactive_ble is now in msd.first
       final ad = result.advertisementData;
-      
+
       print(
         "DEBUG ADAPTER: Full advertisement data for ${result.device.platformName}:",
       );
       print("  - msd list length: ${ad.msd.length}");
-      
+
       // Extract MSD data - msd.first contains the manufacturer data bytes
       if (ad.msd.isNotEmpty) {
         final msdData = ad.msd.first;
         print(
           "DEBUG ADAPTER: MSD entry type: ${msdData.runtimeType}, data: $msdData, data length: ${msdData.length}",
         );
-        
+
         // MSD.first is already a List<int> containing the manufacturer data bytes
         manufacturerData.addAll(msdData);
         print(
@@ -128,7 +130,7 @@ class DiscoveredDevice {
         print(
           "DEBUG ADAPTER: MSD is EMPTY for ${result.device.platformName}, trying fallback to manufacturerData",
         );
-        
+
         // Fallback to manufacturerData if MSD is empty
         final manuDataMap = ad.manufacturerData;
         if (manuDataMap.isNotEmpty) {
@@ -167,6 +169,7 @@ class DiscoveredDevice {
       manufacturerData: manufacturerData,
       rssi: result.rssi,
       serviceUuids: serviceUuids,
+      device: result.device,
     );
   }
 }

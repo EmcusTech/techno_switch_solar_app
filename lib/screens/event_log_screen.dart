@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
 import 'package:techno_switch_solar_app/models/log_model.dart';
 import 'package:techno_switch_solar_app/screens/home_screen.dart';
 import 'package:techno_switch_solar_app/services/navigation_service.dart';
@@ -23,6 +24,8 @@ class EventLogScreen extends StatefulWidget {
   final bool isStandalone; // True if accessed without site context
   final String? panelId; // Panel ID to preserve across disconnects
   final bool isHistoryView; // True when viewing saved logs from history
+  final DiscoveredDevice?
+  connectedDevice; // True when accessed from project dashboard
   const EventLogScreen({
     super.key,
     required this.logDataList,
@@ -31,6 +34,7 @@ class EventLogScreen extends StatefulWidget {
     this.isStandalone = false,
     this.panelId,
     this.isHistoryView = false,
+    this.connectedDevice,
   });
 
   @override
@@ -49,6 +53,7 @@ class _EventLogScreenState extends State<EventLogScreen> {
         isStandalone: widget.isStandalone,
         panelId: widget.panelId,
         isHistoryView: widget.isHistoryView,
+        connectedDevice: widget.connectedDevice,
       ),
     );
   }
@@ -61,6 +66,7 @@ class _EventLogContent extends StatefulWidget {
   final bool isStandalone;
   final String? panelId;
   final bool isHistoryView;
+  final DiscoveredDevice? connectedDevice;
   const _EventLogContent({
     required this.logDataList,
     required this.panelName,
@@ -68,6 +74,7 @@ class _EventLogContent extends StatefulWidget {
     required this.isStandalone,
     this.panelId,
     this.isHistoryView = false,
+    this.connectedDevice,
   });
 
   @override
@@ -236,6 +243,9 @@ class _EventLogContentState extends State<_EventLogContent> {
 
       //No logs? Just go back to scanning
       if (logs.isEmpty) {
+        // if (widget.connectedDevice != null) {
+        //   await widget.connectedDevice!.device!.disconnect();
+        // }
         await NavigationService.navigateBackToScanning(context);
         return;
       }
@@ -262,12 +272,12 @@ class _EventLogContentState extends State<_EventLogContent> {
                     lastLogRetrieved: DateTime.now(),
                   ),
             );
+            // if (widget.connectedDevice != null) {
+            //   await widget.connectedDevice!.device!.disconnect();
+            // }
 
             if (mounted) {
-              Navigator.of(context).pushAndRemoveUntil(
-                MaterialPageRoute(builder: (context) => HomeScreen()),
-                (route) => false,
-              );
+              await NavigationService.navigateBackToScanning(context);
             }
 
             return;
@@ -284,22 +294,32 @@ class _EventLogContentState extends State<_EventLogContent> {
         print('displayName: $displayName, panelId: $resolvedPanelId');
 
         if (shouldCreateSite == true) {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(
-              builder:
-                  (context) => SimpleSiteCreationScreen(
-                    retrievedLogs: logs,
-                    panelName: displayName,
-                    panelVersionNo: widget.panelVersionNo,
-                    panelId: resolvedPanelId,
-                  ),
-            ),
-          );
+          if (widget.connectedDevice != null) {
+            await widget.connectedDevice!.device!.disconnect();
+          }
+          if (mounted) {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(
+                builder:
+                    (context) => SimpleSiteCreationScreen(
+                      retrievedLogs: logs,
+                      panelName: displayName,
+                      panelVersionNo: widget.panelVersionNo,
+                      panelId: resolvedPanelId,
+                    ),
+              ),
+            );
+          }
           return;
         }
       }
 
-      await NavigationService.navigateBackToScanning(context);
+      // if (widget.connectedDevice != null) {
+      //   await widget.connectedDevice!.device!.disconnect();
+      // }
+      if (mounted) {
+        await NavigationService.navigateBackToScanning(context);
+      }
     } finally {
       _isHandlingBack = false;
     }

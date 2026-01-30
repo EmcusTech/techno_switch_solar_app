@@ -32,12 +32,13 @@ class LogRetrievalLoadingScreen extends StatefulWidget {
   final dynamic selectedDevice;
   final ScanType scanType;
   final bool? isLiveEvent;
-
+  final DiscoveredDevice? connectedDevice;
   const LogRetrievalLoadingScreen({
     super.key,
     this.selectedDevice,
     required this.scanType,
     this.isLiveEvent = false,
+    this.connectedDevice,
   });
 
   @override
@@ -456,6 +457,7 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
               logs: _retrievedLogs,
               panelId: _capturedPanelId ?? '',
               panelName: _getDeviceName(),
+              connectedDevice: widget.connectedDevice,
             ),
       ),
     );

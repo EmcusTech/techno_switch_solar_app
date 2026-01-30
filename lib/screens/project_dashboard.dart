@@ -474,8 +474,13 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                   child: Row(
                     children: [
                       GestureDetector(
-                        onTap: () {
-                          Navigator.of(context).pop();
+                        onTap: () async {
+                          if (widget.selectedDevice.device != null) {
+                            await widget.selectedDevice.device!.disconnect();
+                          }
+                          if (mounted) {
+                            Navigator.of(context).pop();
+                          }
                         },
                         child: SvgPicture.asset(
                           'assets/svgs/arrow_back_icon.svg',
@@ -613,6 +618,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                                 (context) => LogRetrievalLoadingScreen(
                                   scanType: ScanType.bluetooth,
                                   selectedDevice: widget.selectedDevice,
+                                  connectedDevice: widget.selectedDevice,
                                 ),
                           ),
                         );

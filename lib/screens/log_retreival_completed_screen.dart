@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
+import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
 import 'package:techno_switch_solar_app/models/log_model.dart';
 import 'package:techno_switch_solar_app/screens/event_log_screen.dart';
 // import 'package:flutter_blue_plus/flutter_blue_plus.dart';
@@ -10,12 +11,13 @@ class LogRetrievalCompletedScreen extends StatefulWidget {
   final List<LogModel> logs;
   final String panelId;
   final String panelName;
-
+  final DiscoveredDevice? connectedDevice;
   const LogRetrievalCompletedScreen({
     super.key,
     required this.logs,
     required this.panelId,
     required this.panelName,
+    this.connectedDevice,
   });
 
   @override
@@ -166,6 +168,7 @@ class _LogRetrievalCompletedScreenState
                                   panelVersionNo: '0.98',
                                   isStandalone: true,
                                   panelId: widget.panelId,
+                                  connectedDevice: widget.connectedDevice,
                                 ),
                           ),
                         );
