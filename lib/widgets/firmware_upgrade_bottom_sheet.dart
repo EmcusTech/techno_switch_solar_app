@@ -300,6 +300,8 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
         }
       }
 
+      print("Sending firmware packets...");
+
       await Future.delayed(const Duration(milliseconds: 300));
       manager.setFirmwareState(BleStates.SEND_FIRMWARE_PACKET);
       // Replace the existing print
@@ -398,8 +400,9 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
       DiscoveredDevice? device;
       int? scanLastByte;
       int scanAttempts = 0;
-      final int maxScanAttempts = isJumpCommand ? 5 : 5; // More attempts for both to handle timing
-      
+      final int maxScanAttempts =
+          isJumpCommand ? 5 : 5; // More attempts for both to handle timing
+
       while (scanAttempts < maxScanAttempts) {
         scanAttempts++;
         logger.Logger(
@@ -457,7 +460,9 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
           device = await deviceFoundCompleter.future.timeout(
             const Duration(seconds: 10),
             onTimeout: () {
-              logger.Logger('Device not found during scan attempt $scanAttempts');
+              logger.Logger(
+                'Device not found during scan attempt $scanAttempts',
+              );
               return foundDevice; // Return device if found but completer wasn't triggered
             },
           );
@@ -471,7 +476,9 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
         if (device != null) {
           final scanManufacturerData = device.manufacturerData;
           scanLastByte =
-              scanManufacturerData.isNotEmpty ? scanManufacturerData.last : null;
+              scanManufacturerData.isNotEmpty
+                  ? scanManufacturerData.last
+                  : null;
 
           // For jump command, check if we got the expected MSD [0,1]
           if (isJumpCommand && scanLastByte == 1) {
@@ -595,9 +602,7 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
                   'Firmware upgrade completed successfully!';
             });
             _controller.downloadingStatus.value = fw.DownloadStatus.completed;
-            logger.Logger(
-              'Firmware upgrade SUCCESS confirmed from MSD [0,2]',
-            );
+            logger.Logger('Firmware upgrade SUCCESS confirmed from MSD [0,2]');
             return; // No need to connect, we have the status
           } else if (scanLastByte == 1) {
             // Failed - device still in bootloader mode
@@ -606,9 +611,7 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
               _errorMessage = 'Firmware upgrade failed';
             });
             _controller.downloadingStatus.value = fw.DownloadStatus.failed;
-            logger.Logger(
-              'Firmware upgrade FAILED confirmed from MSD [0,1]',
-            );
+            logger.Logger('Firmware upgrade FAILED confirmed from MSD [0,1]');
             return; // No need to connect, we have the status
           } else {
             logger.Logger(
@@ -643,11 +646,11 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
         // For jump command: device is now in bootloader mode with MSD [0,1]
         // For end command: device shows upgrade status with MSD [0,2] or [0,1]
         final manufacturerDataToUse = scanLastByte ?? _originalManufacturerData;
-        
+
         // Update selectedDevice in bleManager with the new device that has correct MSD
         // This ensures subsequent connection attempts use the correct manufacturer data
         bleManager.selectedDevice = device;
-        
+
         try {
           await bleController.connectToDevice(
             device: device,

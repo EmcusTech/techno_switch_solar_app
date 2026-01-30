@@ -249,6 +249,8 @@ class BleManager {
 
       try {
         selectedDevice = device;
+        // Reset connection flag before each attempt to ensure completer gets completed
+        _connectedOnce = false;
         await _connectOnce(
           device,
           manufacturerDataOverride: manufacturerDataOverride,
