@@ -1308,7 +1308,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                     isScrollControlled: true,
                     backgroundColor: Colors.transparent,
                     isDismissible: false,
-                    enableDrag: true,
+                    enableDrag: false,
                     builder:
                         (context) => FirmwareUpgradeBottomSheet(
                           connectedDevice: widget.selectedDevice,

@@ -816,25 +816,39 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
-      ),
-      child: SingleChildScrollView(
-        // controller: scrollController,
-        child: Padding(
-          padding: EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _buildHeader(),
-              // SizedBox(height: 24),
-              // _buildStepIndicator(),
-              SizedBox(height: 24),
-              _buildStepContent(),
-            ],
+    return WillPopScope(
+      onWillPop: () async {
+        // Block back navigation while firmware upgrade is in progress
+        if (_currentStep == FirmwareUpgradeStep.progress ||
+            _isUpgrading ||
+            _isWaitingForEndReconnect ||
+            _isWaitingForJumpReconnect) {
+          return false;
+        }
+
+        // Allow back in all other cases
+        return true;
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+        ),
+        child: SingleChildScrollView(
+          // controller: scrollController,
+          child: Padding(
+            padding: EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildHeader(),
+                // SizedBox(height: 24),
+                // _buildStepIndicator(),
+                SizedBox(height: 24),
+                _buildStepContent(),
+              ],
+            ),
           ),
         ),
       ),
@@ -854,9 +868,12 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
               ),
             ),
             Spacer(),
-            IconButton(
-              icon: Icon(Icons.close),
-              onPressed: () => Navigator.of(context).pop(),
+            Visibility(
+              visible: _currentStep != FirmwareUpgradeStep.progress,
+              child: IconButton(
+                icon: Icon(Icons.close),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
             ),
           ],
         ),
