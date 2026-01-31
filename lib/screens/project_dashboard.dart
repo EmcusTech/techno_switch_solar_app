@@ -205,6 +205,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
   bool _isConnecting = false;
   StreamSubscription? _scanSubscription;
   final BluetoothService _bluetoothService = BluetoothService();
+  final bleController = Get.find<BleLogController>();
 
   @override
   void dispose() {
@@ -1139,7 +1140,6 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 peripheralName: 'Event Log',
                 iconPath: 'assets/svgs/panel_action_event_log_icon.svg',
                 onTap: () {
-                  final bleController = Get.find<BleLogController>();
                   // If not connected, show an alert and return
                   if (!bleController.isConnected) {
                     showDialog(
@@ -1302,6 +1302,142 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                   // Ensure UpdatesController is registered
                   if (!Get.isRegistered<UpdatesController>()) {
                     Get.put(UpdatesController());
+                  }
+                  if (!bleController.isConnected) {
+                    showDialog(
+                      context: context,
+                      barrierDismissible: false,
+                      builder: (context) {
+                        return Dialog(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Container(
+                            padding: const EdgeInsets.all(24),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Container(
+                                  width: 64,
+                                  height: 64,
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFFBDEE1),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Center(
+                                    child: Icon(
+                                      Icons.bluetooth_disabled,
+                                      color: Color(0xFFEC1D24),
+                                      size: 32,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  'Device not connected',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w700,
+                                    color: const Color(0xFF3D3D3D),
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'BLE device is not connected. Tap on Connect to connect again.',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w400,
+                                    color: const Color(0xFF666666),
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                                const SizedBox(height: 20),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: GestureDetector(
+                                        onTap: () {
+                                          Navigator.of(context).pop();
+                                        },
+                                        child: Container(
+                                          height: 48,
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFFEFEEEE),
+                                            borderRadius: BorderRadius.circular(
+                                              24,
+                                            ),
+                                            border: Border.all(
+                                              color: const Color(0xFFD0D0D0),
+                                              width: 1,
+                                            ),
+                                          ),
+                                          child: Center(
+                                            child: Text(
+                                              'Close',
+                                              style: GoogleFonts.inter(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.w600,
+                                                color: const Color(0xFF666666),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: GestureDetector(
+                                        onTap: () {
+                                          final navigator = Navigator.of(
+                                            context,
+                                          );
+                                          navigator.pop(); // close dialog
+                                          _connectToDeviceByName();
+                                        },
+                                        child: Container(
+                                          height: 48,
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFFEC1D24),
+                                            borderRadius: BorderRadius.circular(
+                                              24,
+                                            ),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: const Color(
+                                                  0xFFEC1D24,
+                                                ).withOpacity(0.3),
+                                                blurRadius: 8,
+                                                offset: const Offset(0, 4),
+                                              ),
+                                            ],
+                                          ),
+                                          child: Center(
+                                            child: Text(
+                                              'Connect',
+                                              style: GoogleFonts.inter(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.w600,
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    );
+                    return;
                   }
                   showModalBottomSheet(
                     context: context,
