@@ -1326,7 +1326,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                       ),
                     ),
                     Text(
-                      widget.panelName,
+                      widget.panelName.split('_').last,
                       style: GoogleFonts.inter(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
@@ -1350,9 +1350,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                               ),
                               TextSpan(
                                 text:
-                                    isConnected
-                                        ? 'Connected'
-                                        : 'Disconnected',
+                                    isConnected ? 'Connected' : 'Disconnected',
                                 style: GoogleFonts.inter(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w500,

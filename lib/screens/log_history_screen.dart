@@ -120,7 +120,7 @@ class LogHistoryScreenState extends State<LogHistoryScreen> {
   Widget _buildLogRetrievalItem(LogRetrievalModel logRetrieval) {
     final DateTime dateRetrieved = logRetrieval.retrievalDate;
     final String formattedDate =
-        "${dateRetrieved.day.toString().padLeft(2, '0')}/${dateRetrieved.month.toString().padLeft(2, '0')}/${dateRetrieved.year} - ${dateRetrieved.hour.toString().padLeft(2, '0')}:${dateRetrieved.minute.toString().padLeft(2, '0')}}";
+        "${dateRetrieved.day.toString().padLeft(2, '0')}/${dateRetrieved.month.toString().padLeft(2, '0')}/${dateRetrieved.year} - ${dateRetrieved.hour.toString().padLeft(2, '0')}:${dateRetrieved.minute.toString().padLeft(2, '0')}";
 
     return GestureDetector(
       onTap: () => _openLogSession(logRetrieval),

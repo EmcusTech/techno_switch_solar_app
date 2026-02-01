@@ -116,12 +116,12 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
     }
 
     // If device is available and connected, skip to chooseType step
-    if (_selectedDevice != null) {
-      final bleController = Get.find<BleLogController>();
-      if (bleController.isConnected) {
-        _currentStep = FirmwareUpgradeStep.chooseType;
-      }
-    }
+    // if (_selectedDevice != null) {
+    //   final bleController = Get.find<BleLogController>();
+    //   if (bleController.isConnected) {
+    //     _currentStep = FirmwareUpgradeStep.chooseType;
+    //   }
+    // }
 
     // Listen to download status changes
     _controller.downloadingStatus.listen((status) {

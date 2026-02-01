@@ -209,6 +209,65 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
   final bleController = Get.find<BleLogController>();
   final BleManager _bleManager = Get.find<BleManager>();
 
+  Future<bool> _confirmAndDisconnect() async {
+    final shouldDisconnect = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Text(
+            'Disconnect device?',
+            style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w700),
+          ),
+          content: Text(
+            'Going back will disconnect the device. Are you sure?',
+            style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w400),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: Text(
+                'Cancel',
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF666666),
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFEC1D24),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(28.5),
+                ),
+                elevation: 0,
+              ),
+              child: Text(
+                'Disconnect',
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldDisconnect == true) {
+      if (_bleManager.isConnected) {
+        await _bleManager.disconnectConnectedDevice();
+      }
+      return true;
+    }
+    return false;
+  }
+
   @override
   void dispose() {
     _scanSubscription?.cancel();
@@ -455,57 +514,61 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0xFFF6EBEB), Colors.white],
-        ),
-      ),
-      child: Stack(
-        children: [
-          SvgPicture.asset('assets/svgs/background_1.svg'),
-          Padding(
-            padding: EdgeInsets.only(top: 24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              mainAxisSize: MainAxisSize.max,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Row(
-                    children: [
-                      GestureDetector(
-                        onTap: () async {
-                          if (_bleManager.isConnected) {
-                            await _bleManager.disconnectConnectedDevice();
-                          }
-                          if (mounted) {
-                            Navigator.of(context).pop();
-                          }
-                        },
-                        child: SvgPicture.asset(
-                          'assets/svgs/arrow_back_icon.svg',
-                        ),
-                      ),
-                      SizedBox(width: 8),
-                      Text(
-                        'Project Dashboard',
-                        style: GoogleFonts.inter(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(height: 19),
-                _buildDashboardContainer(),
-              ],
-            ),
+    return WillPopScope(
+      onWillPop: () async {
+        final shouldPop = await _confirmAndDisconnect();
+        return shouldPop;
+      },
+      child: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFFF6EBEB), Colors.white],
           ),
-        ],
+        ),
+        child: Stack(
+          children: [
+            SvgPicture.asset('assets/svgs/background_1.svg'),
+            Padding(
+              padding: EdgeInsets.only(top: 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisSize: MainAxisSize.max,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: Row(
+                      children: [
+                        GestureDetector(
+                          onTap: () async {
+                            final shouldPop = await _confirmAndDisconnect();
+                            if (shouldPop && mounted) {
+                              Navigator.of(context).pop();
+                            }
+                          },
+                          child: SvgPicture.asset(
+                            'assets/svgs/arrow_back_icon.svg',
+                          ),
+                        ),
+                        SizedBox(width: 8),
+                        Text(
+                          'Project Dashboard',
+                          style: GoogleFonts.inter(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: 19),
+                  _buildDashboardContainer(),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
