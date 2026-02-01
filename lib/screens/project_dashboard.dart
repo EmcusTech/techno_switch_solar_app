@@ -57,7 +57,7 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
     LogHistoryScreen(
       panelName: widget.panelName,
       panelVersionNo: widget.panelVersionNo,
-      siteId: widget.siteId ?? 0,
+      siteId: widget.siteId,
     ),
   ];
 

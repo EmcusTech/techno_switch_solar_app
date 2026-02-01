@@ -18,6 +18,7 @@ import 'package:techno_switch_solar_app/widgets/scanning_widget.dart';
 import 'package:usb_serial/usb_serial.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:techno_switch_solar_app/utils/bluetooth_service.dart';
+import 'package:techno_switch_solar_app/services/panel_service.dart';
 
 enum ScanType { usb, bluetooth }
 
@@ -42,6 +43,7 @@ class _ScanningScreenState extends State<ScanningScreen>
   int _remainingSeconds = _scanDurationSeconds;
 
   final BluetoothService _bluetoothService = BluetoothService();
+  final PanelService _panelService = PanelService();
   StreamSubscription? _bleResultsSub;
 
   late final AnimationController _sweepController;
@@ -1153,6 +1155,15 @@ class _ScanningScreenState extends State<ScanningScreen>
     }
   }
 
+  String? _extractPanelId(String name) {
+    final trimmed = name.trim();
+    if (trimmed.isEmpty) return null;
+    final parts = trimmed.split('_');
+    if (parts.length < 2) return null;
+    final id = parts.last;
+    return id.isNotEmpty ? id : null;
+  }
+
   void _showConnectingDialog({
     required DiscoveredDevice device,
     required BuildContext context,
@@ -1180,7 +1191,7 @@ class _ScanningScreenState extends State<ScanningScreen>
 
             if (isConnected && !hasNavigated) {
               hasNavigated = true;
-              Future.delayed(const Duration(seconds: 2), () {
+              Future.delayed(const Duration(seconds: 2), () async {
                 if (context.mounted && hasNavigated) {
                   Navigator.of(context).pop();
                   if (widget.isLiveEvent == true) {
@@ -1191,6 +1202,19 @@ class _ScanningScreenState extends State<ScanningScreen>
                       },
                     );
                   } else {
+                    // Resolve site association by panel ID (TECHNOSWITCH_<panelId>)
+                    int? siteId;
+                    final panelId = _extractPanelId(device.name);
+                    if (panelId != null) {
+                      try {
+                        final panel =
+                            await _panelService.getPanelByPanelId(panelId);
+                        siteId = panel?.siteId;
+                      } catch (_) {
+                        siteId = null;
+                      }
+                    }
+
                     Navigator.of(context).pushReplacement(
                       MaterialPageRoute(
                         builder:
@@ -1198,6 +1222,7 @@ class _ScanningScreenState extends State<ScanningScreen>
                               selectedDevice: device,
                               panelVersionNo: device.id,
                               panelName: device.name,
+                              siteId: siteId,
                             ),
                       ),
                     );

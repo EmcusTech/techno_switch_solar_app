@@ -13,7 +13,7 @@ import 'package:techno_switch_solar_app/services/log_retrieval_service.dart';
 class LogHistoryScreen extends StatefulWidget {
   final String panelName;
   final String panelVersionNo;
-  final int siteId;
+  final int? siteId;
   const LogHistoryScreen({
     super.key,
     required this.panelName,
@@ -100,10 +100,19 @@ class LogHistoryScreenState extends State<LogHistoryScreen> {
   }
 
   Future<void> _loadLogHistory() async {
+    // If there is no site associated, show empty logs
+    if (widget.siteId == null || widget.siteId == 0) {
+      setState(() {
+        _logRetrievals = [];
+        _isLoading = false;
+      });
+      return;
+    }
+
     try {
       print('DEBUG: Loading log history for siteId: ${widget.siteId}');
       final retrievals = await _logRetrievalService.getLogRetrievalsForSite(
-        widget.siteId,
+        widget.siteId!,
       );
       print('DEBUG: Found ${retrievals.length} log retrieval sessions');
       setState(() {
