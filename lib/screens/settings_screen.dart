@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:techno_switch_solar_app/ble/ble_manager.dart';
+import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/controllers/updates_controller.dart';
 import 'package:techno_switch_solar_app/screens/device_connecting_screen.dart';
 import 'package:techno_switch_solar_app/widgets/firmware_upgrade_bottom_sheet.dart';
@@ -47,54 +49,134 @@ class _SettingsContent extends StatefulWidget {
 }
 
 class _SettingsContentState extends State<_SettingsContent> {
+  final bleController = Get.find<BleLogController>();
+  final BleManager _bleManager = Get.find<BleManager>();
+  Future<bool> _confirmAndDisconnect() async {
+    final shouldDisconnect = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Text(
+            'Disconnect device?',
+            style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w700),
+          ),
+          content: Text(
+            'Going back will disconnect the device. Are you sure?',
+            style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w400),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: Text(
+                'Cancel',
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF666666),
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFEC1D24),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(28.5),
+                ),
+                elevation: 0,
+              ),
+              child: Text(
+                'Disconnect',
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldDisconnect == true) {
+      if (_bleManager.isConnected) {
+        await _bleManager.disconnectConnectedDevice();
+      }
+      return true;
+    }
+    return false;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0xFFF6EBEB), Colors.white],
-        ),
-      ),
-      child: Stack(
-        children: [
-          SvgPicture.asset('assets/svgs/background_1.svg'),
-          Padding(
-            padding: EdgeInsets.only(top: 24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              mainAxisSize: MainAxisSize.max,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Row(
-                    children: [
-                      GestureDetector(
-                        onTap: () {
-                          Navigator.of(context).pop();
-                        },
-                        child: SvgPicture.asset(
-                          'assets/svgs/arrow_back_icon.svg',
-                        ),
-                      ),
-                      SizedBox(width: 8),
-                      Text(
-                        'Project Settings',
-                        style: GoogleFonts.inter(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(height: 19),
-                _buildSettingsContainer(),
-              ],
-            ),
+    return WillPopScope(
+      onWillPop: () async {
+        if (bleController.isConnected) {
+          final shouldPop = await _confirmAndDisconnect();
+          return shouldPop;
+        } else {
+          return true;
+        }
+      },
+      child: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFFF6EBEB), Colors.white],
           ),
-        ],
+        ),
+        child: Stack(
+          children: [
+            SvgPicture.asset('assets/svgs/background_1.svg'),
+            Padding(
+              padding: EdgeInsets.only(top: 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisSize: MainAxisSize.max,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: Row(
+                      children: [
+                        GestureDetector(
+                          onTap: () async {
+                            if (bleController.isConnected) {
+                              final shouldPop = await _confirmAndDisconnect();
+                              if (shouldPop && mounted) {
+                                Navigator.of(context).pop();
+                              }
+                            } else {
+                              Navigator.of(context).pop();
+                            }
+                          },
+                          child: SvgPicture.asset(
+                            'assets/svgs/arrow_back_icon.svg',
+                          ),
+                        ),
+                        SizedBox(width: 8),
+                        Text(
+                          'Project Settings',
+                          style: GoogleFonts.inter(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: 19),
+                  _buildSettingsContainer(),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

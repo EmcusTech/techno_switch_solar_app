@@ -215,7 +215,9 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
       barrierDismissible: false,
       builder: (dialogContext) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           title: Text(
             'Disconnect device?',
             style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w700),
@@ -516,8 +518,12 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () async {
-        final shouldPop = await _confirmAndDisconnect();
-        return shouldPop;
+        if (bleController.isConnected) {
+          final shouldPop = await _confirmAndDisconnect();
+          return shouldPop;
+        } else {
+          return true;
+        }
       },
       child: Container(
         decoration: const BoxDecoration(
@@ -542,8 +548,12 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                       children: [
                         GestureDetector(
                           onTap: () async {
-                            final shouldPop = await _confirmAndDisconnect();
-                            if (shouldPop && mounted) {
+                            if (bleController.isConnected) {
+                              final shouldPop = await _confirmAndDisconnect();
+                              if (shouldPop && mounted) {
+                                Navigator.of(context).pop();
+                              }
+                            } else {
                               Navigator.of(context).pop();
                             }
                           },
