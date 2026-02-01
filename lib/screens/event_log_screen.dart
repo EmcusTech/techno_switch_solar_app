@@ -1334,7 +1334,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                           ),
                         ),
                         Text(
-                          displayId,
+                          panelNameValue,
                           style: GoogleFonts.inter(
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
