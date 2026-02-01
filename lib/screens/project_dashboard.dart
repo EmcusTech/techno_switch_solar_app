@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
+import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -206,6 +207,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
   StreamSubscription? _scanSubscription;
   final BluetoothService _bluetoothService = BluetoothService();
   final bleController = Get.find<BleLogController>();
+  final BleManager _bleManager = Get.find<BleManager>();
 
   @override
   void dispose() {
@@ -476,8 +478,8 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                     children: [
                       GestureDetector(
                         onTap: () async {
-                          if (widget.selectedDevice.device != null) {
-                            await widget.selectedDevice.device!.disconnect();
+                          if (_bleManager.isConnected) {
+                            await _bleManager.disconnectConnectedDevice();
                           }
                           if (mounted) {
                             Navigator.of(context).pop();

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_blue_plus/flutter_blue_plus.dart' as fbp;
 import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -123,6 +124,10 @@ class BleManager {
   ValueNotifier<bool> get isConnectedNotifier => _isConnectedNotifier;
 
   bool get isConnected => _isConnectedNotifier.value;
+
+  // Hold onto the connected BluetoothDevice so any screen can disconnect cleanly
+  final ValueNotifier<fbp.BluetoothDevice?> connectedBtDevice =
+      ValueNotifier<fbp.BluetoothDevice?>(null);
 
   ValueNotifier<String> get accessKey => bleProcess.accessKey;
 
@@ -249,6 +254,9 @@ class BleManager {
 
       try {
         selectedDevice = device;
+        // Keep a handle to the actual BluetoothDevice (fallback to fromId when not present)
+        connectedBtDevice.value =
+            device.device ?? fbp.BluetoothDevice.fromId(device.id);
         // Reset connection flag before each attempt to ensure completer gets completed
         _connectedOnce = false;
         await _connectOnce(
@@ -502,6 +510,32 @@ class BleManager {
   }
 
   /// DISCONNECT
+  Future<void> disconnectConnectedDevice() async {
+    if (!isConnected) {
+      return;
+    }
+
+    // Resolve device to disconnect (prefer the stored handle, fallback to ID)
+    fbp.BluetoothDevice? device = connectedBtDevice.value;
+    if (device == null && selectedDevice != null) {
+      device = fbp.BluetoothDevice.fromId(selectedDevice!.id);
+    }
+
+    try {
+      if (device != null) {
+        print("Disconnecting device using fbp: $device");
+        await device.disconnect();
+      }
+    } catch (e) {
+      print("Error disconnecting device: $e");
+    } finally {
+      print("Disconnecting device finally: $device");
+      final deviceId = device?.remoteId.str ?? connectedDeviceId.value;
+      connectedBtDevice.value = null;
+      await disconnectHandler(deviceId: deviceId);
+    }
+  }
+
   Future<void> disconnectHandler({String? deviceId}) async {
     print("Disconnecting device...");
     if (deviceId != null && deviceId.isNotEmpty) {
@@ -518,6 +552,7 @@ class BleManager {
     _isGattConnected = false;
     _connectedOnce = false;
     selectedDevice = null;
+    connectedBtDevice.value = null;
     _isConnectedNotifier.value = false;
   }
 
