@@ -763,7 +763,8 @@ class _SiteScreenState extends State<SiteScreen> {
           },
           itemBuilder: (context, index) {
             final panel = _panels[index];
-            final panelName = '${panel.panelName}_${panel.panelId}';
+            // Standardize navigation name to advertised format for consistency
+            final panelName = 'TECHNOSWITCH_${panel.panelId}';
 
             return GestureDetector(
               onTap: () {
@@ -772,7 +773,7 @@ class _SiteScreenState extends State<SiteScreen> {
                     builder:
                         (context) => ProjectDashboardScreen(
                           selectedDevice: DiscoveredDevice(
-                            name: panel.panelName,
+                            name: panelName,
                             id: panel.panelId,
                             rssi: 0,
                             serviceData: {},

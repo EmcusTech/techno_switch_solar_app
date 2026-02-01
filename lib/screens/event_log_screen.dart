@@ -100,10 +100,9 @@ class _EventLogContentState extends State<_EventLogContent> {
   final PanelService _panelService = PanelService();
   final SiteService _siteService = SiteService();
 
-  // Resolve panel name using live BLE value when available
-  String _resolvedPanelName([String? panelNameValue]) {
-    final live = (panelNameValue ?? ble.bleProcess.panelName.value).trim();
-    return live.isNotEmpty ? live : widget.panelName;
+  // Resolve panel name using the provided value to ensure consistency
+  String _resolvedPanelName() {
+    return widget.panelName.trim();
   }
 
   // Prefer provided panelId, otherwise derive from scanned device name (technoswitch_xxxx)
@@ -288,7 +287,7 @@ class _EventLogContentState extends State<_EventLogContent> {
           context,
           logCount: logs.length,
         );
-        final resolvedName = _resolvedPanelName(ble.bleProcess.panelName.value);
+        final resolvedName = _resolvedPanelName();
         final displayName = _panelDisplayName(resolvedName);
         final resolvedPanelId = _resolvedPanelId();
         print('displayName: $displayName, panelId: $resolvedPanelId');
@@ -1312,72 +1311,63 @@ class _EventLogContentState extends State<_EventLogContent> {
               ),
               SizedBox(width: 14),
               Expanded(
-                child: ValueListenableBuilder(
-                  valueListenable: ble.bleProcess.panelName,
-                  builder: (context, panelNameValue, _) {
-                    final resolvedName = _resolvedPanelName(panelNameValue);
-                    final displayName = _panelDisplayName(resolvedName);
-                    final displayId = _panelDisplayId();
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _panelDisplayName(_resolvedPanelName()),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.inter(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xff3D3D3D),
+                      ),
+                    ),
+                    Text(
+                      widget.panelName,
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF979797),
+                      ),
+                    ),
 
-                    return Column(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          displayName,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: GoogleFonts.inter(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xff3D3D3D),
-                          ),
-                        ),
-                        Text(
-                          panelNameValue,
-                          style: GoogleFonts.inter(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color: Color(0xFF979797),
-                          ),
-                        ),
-
-                        ValueListenableBuilder(
-                          valueListenable: ble.isConnectedNotifier,
-                          builder: (context, isConnected, child) {
-                            return RichText(
-                              text: TextSpan(
-                                children: [
-                                  TextSpan(
-                                    text: 'Status : ',
-                                    style: GoogleFonts.inter(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w500,
-                                      color: Color(0xFF979797),
-                                    ),
-                                  ),
-                                  TextSpan(
-                                    text:
-                                        isConnected
-                                            ? 'Connected'
-                                            : 'Disconnected',
-                                    style: GoogleFonts.inter(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w500,
-                                      color:
-                                          isConnected
-                                              ? Color(0xFF00A706)
-                                              : Color(0xFFEC1D24),
-                                    ),
-                                  ),
-                                ],
+                    ValueListenableBuilder(
+                      valueListenable: ble.isConnectedNotifier,
+                      builder: (context, isConnected, child) {
+                        return RichText(
+                          text: TextSpan(
+                            children: [
+                              TextSpan(
+                                text: 'Status : ',
+                                style: GoogleFonts.inter(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color: Color(0xFF979797),
+                                ),
                               ),
-                            );
-                          },
-                        ),
-                      ],
-                    );
-                  },
+                              TextSpan(
+                                text:
+                                    isConnected
+                                        ? 'Connected'
+                                        : 'Disconnected',
+                                style: GoogleFonts.inter(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color:
+                                      isConnected
+                                          ? Color(0xFF00A706)
+                                          : Color(0xFFEC1D24),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ],
                 ),
               ),
             ],

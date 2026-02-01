@@ -46,7 +46,7 @@ class BleProcess {
 
   final ValueNotifier<String> processDesc = ValueNotifier<String>("");
 
-  // ValueNotifier to expose panel name (bytes 15..27 in network pkt response)
+  // ValueNotifier to expose panel name (kept for API compatibility; set externally)
   final ValueNotifier<String> panelName = ValueNotifier<String>("");
 
   final ValueNotifier<String> connectedDeviceId = ValueNotifier<String>("");
@@ -93,8 +93,6 @@ class BleProcess {
     // ----- OTA STATE MACHINE -----
     switch (bleManager.otaProcessState) {
       case OtaProcessState.sendNetworkPacket:
-        // Capture panel name from the first response to network packet
-        _updatePanelNameFromPayload(rx.payload);
         print("NEXT: POLL PACKET");
         // await Future.delayed(Duration(seconds: 1));
         bleManager.otaProcessState = OtaProcessState.sendPollPacket;
@@ -646,18 +644,4 @@ class BleProcess {
     print("BLE State Machine exited cleanly");
   }
 
-  void _updatePanelNameFromPayload(List<int> payload) {
-    // Panel name is present in bytes 15..27 (inclusive) of the network pkt response
-    if (payload.length <= 27) return;
-
-    final rawBytes = payload.sublist(16, 28);
-    // Remove any null padding and trim whitespace
-    final extracted =
-        String.fromCharCodes(rawBytes).replaceAll('\x00', '').trim();
-
-    if (extracted.isNotEmpty && panelName.value != extracted) {
-      panelName.value = extracted;
-      debugPrint("Panel name updated: $extracted");
-    }
-  }
 }

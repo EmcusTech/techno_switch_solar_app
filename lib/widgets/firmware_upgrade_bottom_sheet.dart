@@ -426,7 +426,9 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
             // Match by device name
             if (result.name == _originalDeviceName) {
               foundDevice = result;
-
+              print(
+                "DEBUG SCAN: Device found - Name: ${result.name}, ID: ${result.id}, Manufacturer data: ${result.manufacturerData}, Length: ${result.manufacturerData.length}",
+              );
               // Check manufacturer data from scan results
               final manufacturerData = result.manufacturerData;
               print(
