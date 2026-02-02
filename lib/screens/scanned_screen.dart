@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
@@ -12,6 +13,7 @@ import 'package:techno_switch_solar_app/screens/log_retreival_failed_screen.dart
 import 'package:techno_switch_solar_app/screens/project_dashboard.dart';
 import 'package:techno_switch_solar_app/screens/scanning_screen.dart';
 import 'package:techno_switch_solar_app/services/navigation_service.dart';
+import 'package:techno_switch_solar_app/services/panel_service.dart';
 import 'package:usb_serial/usb_serial.dart';
 // import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
@@ -34,6 +36,8 @@ class ScannedScreen extends StatefulWidget {
 
 class _ScannedScreenState extends State<ScannedScreen> {
   bool _navigatingToDeviceConnecting = false;
+  final PanelService _panelService = PanelService();
+  final BleManager _bleManager = Get.find<BleManager>();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -207,6 +211,15 @@ class _ScannedScreenState extends State<ScannedScreen> {
     );
   }
 
+  String? _extractPanelId(String name) {
+    final trimmed = name.trim();
+    if (trimmed.isEmpty) return null;
+    final parts = trimmed.split('_');
+    if (parts.length < 2) return null;
+    final id = parts.last;
+    return id.isNotEmpty ? id : null;
+  }
+
   void _showConnectingDialog({
     required DiscoveredDevice device,
     required BuildContext context,
@@ -236,7 +249,7 @@ class _ScannedScreenState extends State<ScannedScreen> {
 
             if (isConnected && !hasNavigated) {
               hasNavigated = true;
-              Future.delayed(const Duration(seconds: 2), () {
+              Future.delayed(const Duration(seconds: 2), () async {
                 if (context.mounted && hasNavigated) {
                   Navigator.of(context).pop();
                   if (widget.isLiveEvent == true) {
@@ -248,6 +261,18 @@ class _ScannedScreenState extends State<ScannedScreen> {
                       },
                     );
                   } else {
+                    int? siteId;
+                    final panelId = _extractPanelId(device.name);
+                    if (panelId != null) {
+                      try {
+                        final panel = await _panelService.getPanelByPanelId(
+                          panelId,
+                        );
+                        siteId = panel?.siteId;
+                      } catch (_) {
+                        siteId = null;
+                      }
+                    }
                     Navigator.of(context).pushReplacement(
                       MaterialPageRoute(
                         builder:
@@ -255,6 +280,7 @@ class _ScannedScreenState extends State<ScannedScreen> {
                               selectedDevice: device,
                               panelVersionNo: device.id,
                               panelName: device.name,
+                              siteId: siteId,
                             ),
                       ),
                     );
@@ -511,34 +537,34 @@ class _ScannedScreenState extends State<ScannedScreen> {
                             accessKey.value = val;
                             if (val.length == 4) {
                               errorText.value = null;
-                              // reset validation state for new attempt
-                              cancelAccessKeyTimer();
-                              accessKeyValidationTimer = Timer(
-                                const Duration(seconds: 10),
-                                () {
-                                  if (!mounted) return;
-                                  if (isAccessKeyValid.value == null) {
-                                    final navigator = Navigator.maybeOf(
-                                      dialogContext,
-                                      rootNavigator: true,
-                                    );
-                                    navigator?.maybePop();
+                              // // reset validation state for new attempt
+                              // cancelAccessKeyTimer();
+                              // accessKeyValidationTimer = Timer(
+                              //   const Duration(seconds: 10),
+                              //   () {
+                              //     if (!mounted) return;
+                              //     if (isAccessKeyValid.value == null) {
+                              //       final navigator = Navigator.maybeOf(
+                              //         dialogContext,
+                              //         rootNavigator: true,
+                              //       );
+                              //       navigator?.maybePop();
 
-                                    WidgetsBinding.instance.addPostFrameCallback((
-                                      _,
-                                    ) {
-                                      if (!mounted) return;
-                                      Navigator.of(dialogContext).push(
-                                        MaterialPageRoute(
-                                          builder:
-                                              (_) =>
-                                                  const LogRetrievalFailedScreen(),
-                                        ),
-                                      );
-                                    });
-                                  }
-                                },
-                              );
+                              //       WidgetsBinding.instance.addPostFrameCallback((
+                              //         _,
+                              //       ) {
+                              //         if (!mounted) return;
+                              //         Navigator.of(dialogContext).push(
+                              //           MaterialPageRoute(
+                              //             builder:
+                              //                 (_) =>
+                              //                     const LogRetrievalFailedScreen(),
+                              //           ),
+                              //         );
+                              //       });
+                              //     }
+                              //   },
+                              // );
                               bleProcess.isAccessKeyValid.value = null;
                               // Dismiss keyboard and start validation
                               FocusScope.of(dialogContext).unfocus();
@@ -661,19 +687,18 @@ class _ScannedScreenState extends State<ScannedScreen> {
                           SizedBox(
                             width: double.infinity,
                             child: GestureDetector(
-                              onTap: () {
+                              onTap: () async {
                                 cancelAccessKeyTimer();
+                                if (widget.isLiveEvent == true) {
+                                  await _bleManager.disconnectConnectedDevice();
+                                }
                                 Navigator.of(dialogContext).pop();
                               },
                               child: Container(
                                 height: 48,
                                 decoration: BoxDecoration(
-                                  color: Color(0xFFEFEEEE),
+                                  color: Color(0xFFEC1D24),
                                   borderRadius: BorderRadius.circular(24),
-                                  border: Border.all(
-                                    color: Color(0xFFD0D0D0),
-                                    width: 1,
-                                  ),
                                 ),
                                 child: Center(
                                   child: Text(
@@ -681,7 +706,7 @@ class _ScannedScreenState extends State<ScannedScreen> {
                                     style: GoogleFonts.inter(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w600,
-                                      color: Color(0xFF666666),
+                                      color: Colors.white,
                                     ),
                                   ),
                                 ),

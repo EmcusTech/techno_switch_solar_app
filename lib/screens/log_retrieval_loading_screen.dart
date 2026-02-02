@@ -89,6 +89,7 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
   bool _isReceivingLogs = false;
   int _logEvtSearchNumber = 999; // Start from 999 and decrement
   Timer? _logRetrievalTimeout;
+  final BleManager _bleManager = Get.find<BleManager>();
 
   @override
   void initState() {
@@ -567,6 +568,10 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
 
     if (confirmed == true && mounted) {
       await _sendStopControlCommand();
+
+      if (widget.isLiveEvent == true) {
+        await _bleManager.disconnectConnectedDevice();
+      }
     }
   }
 

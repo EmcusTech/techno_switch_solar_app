@@ -4,6 +4,7 @@ import 'dart:math';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
@@ -60,6 +61,7 @@ class _ScanningScreenState extends State<ScanningScreen>
   final Map<String, bool> _justAssigned = {};
 
   bool _navigatingToDeviceConnecting = false;
+  final BleManager _bleManager = Get.find<BleManager>();
 
   @override
   void initState() {
@@ -1207,8 +1209,9 @@ class _ScanningScreenState extends State<ScanningScreen>
                     final panelId = _extractPanelId(device.name);
                     if (panelId != null) {
                       try {
-                        final panel =
-                            await _panelService.getPanelByPanelId(panelId);
+                        final panel = await _panelService.getPanelByPanelId(
+                          panelId,
+                        );
                         siteId = panel?.siteId;
                       } catch (_) {
                         siteId = null;
@@ -1459,32 +1462,32 @@ class _ScanningScreenState extends State<ScanningScreen>
                             accessKey.value = val;
                             if (val.length == 4) {
                               bleProcess.isAccessKeyValid.value = null;
-                              cancelAccessKeyTimer();
-                              accessKeyValidationTimer = Timer(
-                                const Duration(seconds: 10),
-                                () {
-                                  if (!mounted) return;
-                                  if (isAccessKeyValid.value == null) {
-                                    final navigator = Navigator.maybeOf(
-                                      dialogContext,
-                                      rootNavigator: true,
-                                    );
-                                    navigator?.maybePop();
-                                    WidgetsBinding.instance.addPostFrameCallback((
-                                      _,
-                                    ) {
-                                      if (!mounted) return;
-                                      Navigator.of(dialogContext).push(
-                                        MaterialPageRoute(
-                                          builder:
-                                              (_) =>
-                                                  const LogRetrievalFailedScreen(),
-                                        ),
-                                      );
-                                    });
-                                  }
-                                },
-                              );
+                              // cancelAccessKeyTimer();
+                              // accessKeyValidationTimer = Timer(
+                              //   const Duration(seconds: 10),
+                              //   () {
+                              //     if (!mounted) return;
+                              //     if (isAccessKeyValid.value == null) {
+                              //       final navigator = Navigator.maybeOf(
+                              //         dialogContext,
+                              //         rootNavigator: true,
+                              //       );
+                              //       navigator?.maybePop();
+                              //       WidgetsBinding.instance.addPostFrameCallback((
+                              //         _,
+                              //       ) {
+                              //         if (!mounted) return;
+                              //         Navigator.of(dialogContext).push(
+                              //           MaterialPageRoute(
+                              //             builder:
+                              //                 (_) =>
+                              //                     const LogRetrievalFailedScreen(),
+                              //           ),
+                              //         );
+                              //       });
+                              //     }
+                              //   },
+                              // );
                               FocusScope.of(dialogContext).unfocus();
                               bleProcess.processDesc.value =
                                   "Validating access key...";
@@ -1591,25 +1594,25 @@ class _ScanningScreenState extends State<ScanningScreen>
                           },
                         ),
                         const SizedBox(height: 16),
+                        // Cancel Button only when not validating or already successful
                         if (!(_controller.text.length == 4 &&
                                 isAccessKeyValidValue == null) &&
                             isAccessKeyValidValue != true)
                           SizedBox(
                             width: double.infinity,
                             child: GestureDetector(
-                              onTap: () {
+                              onTap: () async {
                                 cancelAccessKeyTimer();
+                                if (widget.isLiveEvent == true) {
+                                  await _bleManager.disconnectConnectedDevice();
+                                }
                                 Navigator.of(dialogContext).pop();
                               },
                               child: Container(
                                 height: 48,
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFFEFEEEE),
+                                  color: Color(0xFFEC1D24),
                                   borderRadius: BorderRadius.circular(24),
-                                  border: Border.all(
-                                    color: const Color(0xFFD0D0D0),
-                                    width: 1,
-                                  ),
                                 ),
                                 child: Center(
                                   child: Text(
@@ -1617,7 +1620,7 @@ class _ScanningScreenState extends State<ScanningScreen>
                                     style: GoogleFonts.inter(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w600,
-                                      color: const Color(0xFF666666),
+                                      color: Colors.white,
                                     ),
                                   ),
                                 ),

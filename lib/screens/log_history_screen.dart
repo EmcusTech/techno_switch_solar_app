@@ -322,12 +322,13 @@ class LogHistoryScreenState extends State<LogHistoryScreen> {
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () async {
-        if (bleController.isConnected) {
-          final shouldPop = await _confirmAndDisconnect();
-          return shouldPop;
-        } else {
-          return true;
-        }
+        return false;
+        // if (bleController.isConnected) {
+        //   final shouldPop = await _confirmAndDisconnect();
+        //   return shouldPop;
+        // } else {
+        //   return true;
+        // }
       },
       child: Container(
         decoration: const BoxDecoration(
@@ -350,22 +351,22 @@ class LogHistoryScreenState extends State<LogHistoryScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 24),
                     child: Row(
                       children: [
-                        GestureDetector(
-                          onTap: () async {
-                            if (bleController.isConnected) {
-                              final shouldPop = await _confirmAndDisconnect();
-                              if (shouldPop && mounted) {
-                                Navigator.of(context).pop();
-                              }
-                            } else {
-                              Navigator.of(context).pop();
-                            }
-                          },
-                          child: SvgPicture.asset(
-                            'assets/svgs/arrow_back_icon.svg',
-                          ),
-                        ),
-                        SizedBox(width: 8),
+                        // GestureDetector(
+                        //   onTap: () async {
+                        //     if (bleController.isConnected) {
+                        //       final shouldPop = await _confirmAndDisconnect();
+                        //       if (shouldPop && mounted) {
+                        //         Navigator.of(context).pop();
+                        //       }
+                        //     } else {
+                        //       Navigator.of(context).pop();
+                        //     }
+                        //   },
+                        //   child: SvgPicture.asset(
+                        //     'assets/svgs/arrow_back_icon.svg',
+                        //   ),
+                        // ),
+                        // SizedBox(width: 8),
                         Text(
                           'Log History',
                           style: GoogleFonts.inter(
