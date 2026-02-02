@@ -853,33 +853,33 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                             if (val.length == 4) {
                               errorText.value = null;
                               // reset validation state for new attempt
-                              cancelAccessKeyTimer();
-                              accessKeyValidationTimer = Timer(
-                                const Duration(seconds: 10),
-                                () {
-                                  if (!mounted) return;
-                                  if (isAccessKeyValid.value == null) {
-                                    final navigator = Navigator.maybeOf(
-                                      dialogContext,
-                                      rootNavigator: true,
-                                    );
-                                    navigator?.maybePop();
+                              // cancelAccessKeyTimer();
+                              // accessKeyValidationTimer = Timer(
+                              //   const Duration(seconds: 10),
+                              //   () {
+                              //     if (!mounted) return;
+                              //     if (isAccessKeyValid.value == null) {
+                              //       final navigator = Navigator.maybeOf(
+                              //         dialogContext,
+                              //         rootNavigator: true,
+                              //       );
+                              //       navigator?.maybePop();
 
-                                    WidgetsBinding.instance.addPostFrameCallback((
-                                      _,
-                                    ) {
-                                      if (!mounted) return;
-                                      Navigator.of(dialogContext).push(
-                                        MaterialPageRoute(
-                                          builder:
-                                              (_) =>
-                                                  const LogRetrievalFailedScreen(),
-                                        ),
-                                      );
-                                    });
-                                  }
-                                },
-                              );
+                              //       WidgetsBinding.instance.addPostFrameCallback((
+                              //         _,
+                              //       ) {
+                              //         if (!mounted) return;
+                              //         Navigator.of(dialogContext).push(
+                              //           MaterialPageRoute(
+                              //             builder:
+                              //                 (_) =>
+                              //                     const LogRetrievalFailedScreen(),
+                              //           ),
+                              //         );
+                              //       });
+                              //     }
+                              //   },
+                              // );
                               bleProcess.isAccessKeyValid.value = null;
                               // Dismiss keyboard and start validation
                               FocusScope.of(dialogContext).unfocus();

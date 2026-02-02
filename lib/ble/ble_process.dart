@@ -544,8 +544,7 @@ class BleProcess {
 
         // Full BLE shutdown
         // await bleManager.shutdown(deviceId: connectedDeviceId.value);
-        startOtherPacketsRxTimeout(timeout: const Duration(seconds: 12));
-        Get.find<BleLogController>().restartNetworkFlow();
+        restartInitialNetworkFlow();
 
         // Optional: tell controller/UI explicitly
         // Get.find<BleLogController>().onBleFatalError(
@@ -563,6 +562,11 @@ class BleProcess {
     });
   }
 
+  void restartInitialNetworkFlow() {
+    startOtherPacketsRxTimeout(timeout: const Duration(seconds: 12));
+    Get.find<BleLogController>().restartNetworkFlow();
+  }
+
   void startOtherPacketsRxTimeout({Duration? timeout}) {
     cancelRxTimeout();
 
@@ -577,6 +581,7 @@ class BleProcess {
         );
         processDesc.value =
             "No response from device, please scan and connect again";
+        restartInitialNetworkFlow();
         // bleManager.shutdown();
       },
     );

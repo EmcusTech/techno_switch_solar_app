@@ -438,7 +438,7 @@ class LogHistoryScreenState extends State<LogHistoryScreen> {
                         text: TextSpan(
                           children: [
                             TextSpan(
-                              text: 'status : ',
+                              text: 'Status : ',
                               style: GoogleFonts.inter(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w500,
