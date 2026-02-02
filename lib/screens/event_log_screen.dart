@@ -26,6 +26,7 @@ class EventLogScreen extends StatefulWidget {
   final bool isHistoryView; // True when viewing saved logs from history
   final DiscoveredDevice?
   connectedDevice; // True when accessed from project dashboard
+  final int? siteId;
   const EventLogScreen({
     super.key,
     required this.logDataList,
@@ -35,6 +36,7 @@ class EventLogScreen extends StatefulWidget {
     this.panelId,
     this.isHistoryView = false,
     this.connectedDevice,
+    this.siteId,
   });
 
   @override
@@ -54,6 +56,7 @@ class _EventLogScreenState extends State<EventLogScreen> {
         panelId: widget.panelId,
         isHistoryView: widget.isHistoryView,
         connectedDevice: widget.connectedDevice,
+        siteId: widget.siteId,
       ),
     );
   }
@@ -67,6 +70,7 @@ class _EventLogContent extends StatefulWidget {
   final String? panelId;
   final bool isHistoryView;
   final DiscoveredDevice? connectedDevice;
+  final int? siteId;
   const _EventLogContent({
     required this.logDataList,
     required this.panelName,
@@ -75,6 +79,7 @@ class _EventLogContent extends StatefulWidget {
     this.panelId,
     this.isHistoryView = false,
     this.connectedDevice,
+    this.siteId,
   });
 
   @override
@@ -508,13 +513,43 @@ class _EventLogContentState extends State<_EventLogContent> {
                   final logs = _filtersApplied ? _filteredLogs : _getBaseLogs();
                   if (logs.isEmpty) return;
 
+                  //Resolve site data
+                  String siteName = '-';
+                  String installerName = '-';
+                  String saqccNo = '-';
+
+                  if (widget.siteId != null) {
+                    final site = await _siteService.getSiteById(widget.siteId!);
+                    if (site != null) {
+                      siteName = site.siteName;
+                      installerName = site.installerName;
+                      saqccNo = site.saqccRegNumber;
+                    }
+                  } else {
+                    final panelId = _resolvedPanelId();
+                    if (panelId.isNotEmpty) {
+                      final panel = await _panelService.getPanelByPanelId(
+                        panelId,
+                      );
+                      if (panel?.siteId != null) {
+                        final site = await _siteService.getSiteById(
+                          panel!.siteId!,
+                        );
+                        if (site != null) {
+                          siteName = site.siteName;
+                          installerName = site.installerName;
+                          saqccNo = site.saqccRegNumber;
+                        }
+                      }
+                    }
+                  }
                   await LogReportPdfUtil.generate(
                     logs: logs,
-                    siteName: 'Site Name',
-                    panelName: 'Panel Name',
-                    panelSerialNumber: 'Panel Serial Number',
-                    installerName: 'Installer Name',
-                    saqccNo: 'SAQCC No',
+                    siteName: siteName,
+                    panelName: widget.panelName.split('_').first,
+                    panelSerialNumber: _resolvedPanelId(),
+                    installerName: installerName,
+                    saqccNo: saqccNo,
                   );
                 },
               ),

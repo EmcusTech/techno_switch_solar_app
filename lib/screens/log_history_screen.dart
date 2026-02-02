@@ -303,6 +303,7 @@ class LogHistoryScreenState extends State<LogHistoryScreen> {
                   panelVersionNo: widget.panelVersionNo,
                   isStandalone: false,
                   isHistoryView: true,
+                  siteId: widget.siteId,
                 ),
           ),
         );
