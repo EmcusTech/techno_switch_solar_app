@@ -37,6 +37,7 @@ class _SiteScreenState extends State<SiteScreen> {
   bool _isDeletingSite = false;
   int? _lastRetrievalLogCount;
   DateTime? _lastRetrievalDate;
+  bool _isPanelLongPressed = false;
 
   @override
   void initState() {
@@ -767,6 +768,21 @@ class _SiteScreenState extends State<SiteScreen> {
             final panelName = 'TECHNOSWITCH_${panel.panelId}';
 
             return GestureDetector(
+              onLongPress: () {
+                if (!_isPanelLongPressed) {
+                  setState(() {
+                    _isPanelLongPressed = true;
+                  });
+
+                  Future.delayed(const Duration(seconds: 4), () {
+                    if (mounted && _isPanelLongPressed) {
+                      setState(() {
+                        _isPanelLongPressed = false;
+                      });
+                    }
+                  });
+                }
+              },
               onTap: () {
                 Navigator.of(context).push(
                   MaterialPageRoute(
@@ -862,15 +878,44 @@ class _SiteScreenState extends State<SiteScreen> {
                       SizedBox(width: 8),
                       GestureDetector(
                         onTap: () {
-                          _confirmDeletePanel(panel);
+                          if (_isPanelLongPressed) {
+                            _confirmDeletePanel(panel);
+                          } else {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder:
+                                    (context) => ProjectDashboardScreen(
+                                      selectedDevice: DiscoveredDevice(
+                                        name: panelName,
+                                        id: panel.panelId,
+                                        rssi: 0,
+                                        serviceData: {},
+                                        manufacturerData: Uint8List(0),
+                                        serviceUuids: [],
+                                      ),
+                                      panelName: panelName,
+                                      panelVersionNo: panel.deviceDisplayInfo,
+                                      siteId: widget.site.id!,
+                                      siteName: widget.site.siteName,
+                                    ),
+                              ),
+                            );
+                          }
                         },
-                        child: SvgPicture.asset(
-                          "assets/svgs/delete_icon.svg",
-                          colorFilter: ColorFilter.mode(
-                            Color(0xFFFF6467),
-                            BlendMode.srcIn,
-                          ),
-                        ),
+                        child:
+                            _isPanelLongPressed
+                                ? SvgPicture.asset(
+                                  "assets/svgs/delete_icon.svg",
+                                  colorFilter: ColorFilter.mode(
+                                    Color(0xFFFF6467),
+                                    BlendMode.srcIn,
+                                  ),
+                                )
+                                : Icon(
+                                  Icons.arrow_forward_ios,
+                                  size: 16,
+                                  color: Color(0xFFEC1D24),
+                                ),
                       ),
                       // IconButton(
                       //   icon: const Icon(

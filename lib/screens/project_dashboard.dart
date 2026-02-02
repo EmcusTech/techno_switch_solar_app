@@ -1056,16 +1056,18 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
         children: [
           // Panel Information Row
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               SvgPicture.asset(
                 'assets/svgs/panel_icon.svg',
                 height: 62,
                 width: 62,
               ),
-              SizedBox(width: 14),
+              const SizedBox(width: 14),
+
+              // LEFT TEXT COLUMN
               Expanded(
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
@@ -1081,115 +1083,95 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                       style: GoogleFonts.inter(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
-                        color: Color(0xFF979797),
+                        color: const Color(0xFF979797),
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),
                     ValueListenableBuilder(
                       valueListenable: ble.isConnectedNotifier,
                       builder: (context, isConnected, child) {
-                        if (isConnected) {
-                          return RichText(
-                            text: TextSpan(
-                              children: [
-                                TextSpan(
-                                  text: 'Status : ',
-                                  style: GoogleFonts.inter(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w500,
-                                    color: Color(0xFF979797),
-                                  ),
-                                ),
-                                TextSpan(
-                                  text: 'Connected',
-                                  style: GoogleFonts.inter(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w500,
-                                    color: Color(0xFF00A706),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        } else {
-                          return Row(
+                        return RichText(
+                          text: TextSpan(
                             children: [
-                              Expanded(
-                                child: RichText(
-                                  text: TextSpan(
-                                    children: [
-                                      TextSpan(
-                                        text: 'Status : ',
-                                        style: GoogleFonts.inter(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w500,
-                                          color: Color(0xFF979797),
-                                        ),
-                                      ),
-                                      TextSpan(
-                                        text: 'Disconnected',
-                                        style: GoogleFonts.inter(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w500,
-                                          color: Color(0xFFEC1D24),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
+                              TextSpan(
+                                text: 'Status : ',
+                                style: GoogleFonts.inter(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color: const Color(0xFF979797),
                                 ),
                               ),
-                              SizedBox(width: 8),
-                              _isConnecting
-                                  ? SizedBox(
-                                    width: 16,
-                                    height: 16,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      valueColor: AlwaysStoppedAnimation<Color>(
-                                        Color(0xFFEC1D24),
-                                      ),
-                                    ),
-                                  )
-                                  : GestureDetector(
-                                    onTap: _connectToDeviceByName,
-                                    child: Container(
-                                      padding: EdgeInsets.symmetric(
-                                        horizontal: 12,
-                                        vertical: 6,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: Color(0xFFEC1D24),
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: Text(
-                                        'Connect',
-                                        style: GoogleFonts.inter(
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w600,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
+                              TextSpan(
+                                text:
+                                    isConnected ? 'Connected' : 'Disconnected',
+                                style: GoogleFonts.inter(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color:
+                                      isConnected
+                                          ? const Color(0xFF00A706)
+                                          : const Color(0xFFEC1D24),
+                                ),
+                              ),
                             ],
-                          );
-                        }
+                          ),
+                        );
                       },
                     ),
                   ],
                 ),
               ),
-              // Spacer(),
-              // Transform.rotate(
-              //   angle: 180 * 3.14159 / 360,
-              //   child: Icon(
-              //     Icons.arrow_forward_ios,
-              //     size: 18,
-              //     color: Color(0xFF696969),
-              //   ),
-              // ),
+
+              // RIGHT BUTTON COLUMN
+              ValueListenableBuilder(
+                valueListenable: ble.isConnectedNotifier,
+                builder: (context, isConnected, child) {
+                  return Visibility(
+                    visible: !isConnected,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        // const SizedBox(height: 1), // keeps top alignment clean
+                        _isConnecting
+                            ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Color(0xFFEC1D24),
+                                ),
+                              ),
+                            )
+                            : GestureDetector(
+                              onTap: _connectToDeviceByName,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFEC1D24),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  'Connect',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ),
+                      ],
+                    ),
+                  );
+                },
+              ),
             ],
           ),
+
           SizedBox(height: 10),
           _buildPeripheralOverview(),
           SizedBox(height: 42),

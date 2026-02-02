@@ -200,7 +200,7 @@ class _HomeContentState extends State<_HomeContent> {
             child: _buildQuickLinks(context),
           ),
           Padding(
-            padding: const EdgeInsets.only(top: 400),
+            padding: const EdgeInsets.only(top: 404),
             child: _buildRecentSites(),
           ),
         ],
@@ -301,7 +301,7 @@ class _HomeContentState extends State<_HomeContent> {
               ),
             ),
           ),
-          SizedBox(height: 20),
+          SizedBox(height: 12),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -426,7 +426,7 @@ class _HomeContentState extends State<_HomeContent> {
                 ),
             ],
           ),
-          SizedBox(height: 20),
+          SizedBox(height: 12),
           _buildRecentSitesItem(),
         ],
       ),
@@ -481,7 +481,7 @@ class _HomeContentState extends State<_HomeContent> {
         children: [
           if (lastLogDate != null) ...[
             Text(
-              'Created on ${DateFormat('MMM d').format(lastLogDate)}, ${DateFormat('yyyy').format(lastLogDate)} • ${DateFormat('hh:mm a').format(lastLogDate)}',
+              '${DateFormat('MMM d').format(lastLogDate)}, ${DateFormat('yyyy').format(lastLogDate)} • ${DateFormat('hh:mm a').format(lastLogDate)}',
               style: GoogleFonts.inter(
                 fontSize: 11,
                 fontWeight: FontWeight.w400,
