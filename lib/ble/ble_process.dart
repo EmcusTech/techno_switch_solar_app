@@ -304,6 +304,9 @@ class BleProcess {
     _rxTimeoutTimer?.cancel();
     _rxTimeoutTimer = null;
 
+    _otherPacketsRxTimeoutTimer?.cancel();
+    _otherPacketsRxTimeoutTimer = null;
+
     // UI notifiers
     validEventLogCount.value = 0;
     read1000LogsCount.value = 0;
@@ -563,14 +566,18 @@ class BleProcess {
   void startOtherPacketsRxTimeout({Duration? timeout}) {
     cancelRxTimeout();
 
+    print("Other Packets: Starting other packets RX timeout");
+
     _otherPacketsRxTimeoutTimer = Timer(
       timeout ?? const Duration(seconds: 12),
       () async {
         maxOtherPacketsRetriesReached.value = true;
-        print("No response from device, please scan and connect again");
+        print(
+          "Other Packets: No response from device, please scan and connect again",
+        );
         processDesc.value =
             "No response from device, please scan and connect again";
-        bleManager.shutdown();
+        // bleManager.shutdown();
       },
     );
   }
@@ -643,5 +650,4 @@ class BleProcess {
 
     print("BLE State Machine exited cleanly");
   }
-
 }
