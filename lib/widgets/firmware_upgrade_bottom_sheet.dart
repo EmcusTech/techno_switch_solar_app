@@ -1009,7 +1009,6 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
       'Ensure the device is connected via Bluetooth',
       'Keep the device powered on throughout the upgrade',
       'Do not disconnect or turn off the device during upgrade',
-      'Ensure sufficient battery level (recommended: >50%)',
       'Close other apps that might interfere with Bluetooth',
     ];
 
