@@ -295,7 +295,7 @@ class _SimpleSiteCreationScreenState extends State<SimpleSiteCreationScreen> {
             SvgPicture.asset('assets/svgs/background_1.svg'),
             SafeArea(
               child: Padding(
-                padding: const EdgeInsets.only(left: 20, right: 20, top: 15),
+                padding: const EdgeInsets.only(left: 20, right: 20, top: 20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -313,7 +313,7 @@ class _SimpleSiteCreationScreenState extends State<SimpleSiteCreationScreen> {
                         SizedBox(width: 17),
                         Expanded(
                           child: Text(
-                            'Create Site for Retrieved Logs',
+                            'Create Site',
                             style: GoogleFonts.inter(
                               fontSize: 20,
                               fontWeight: FontWeight.w700,
@@ -327,35 +327,35 @@ class _SimpleSiteCreationScreenState extends State<SimpleSiteCreationScreen> {
                     SizedBox(height: 18),
 
                     // Info card
-                    Container(
-                      margin: EdgeInsets.only(bottom: 18),
-                      padding: EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Color(0xFFFFF3CD),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Color(0xFFFFE69C)),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.info_outline,
-                            color: Color(0xFF856404),
-                            size: 24,
-                          ),
-                          SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              'You retrieved ${widget.retrievedLogs.length} log${widget.retrievedLogs.length == 1 ? '' : 's'}. Fill in the site details to save them.',
-                              style: GoogleFonts.inter(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                                color: Color(0xFF856404),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                    // Container(
+                    //   margin: EdgeInsets.only(bottom: 18),
+                    //   padding: EdgeInsets.all(16),
+                    //   decoration: BoxDecoration(
+                    //     color: Color(0xFFFFF3CD),
+                    //     borderRadius: BorderRadius.circular(12),
+                    //     border: Border.all(color: Color(0xFFFFE69C)),
+                    //   ),
+                    //   child: Row(
+                    //     children: [
+                    //       Icon(
+                    //         Icons.info_outline,
+                    //         color: Color(0xFF856404),
+                    //         size: 24,
+                    //       ),
+                    //       SizedBox(width: 12),
+                    //       Expanded(
+                    //         child: Text(
+                    //           'You retrieved ${widget.retrievedLogs.length} log${widget.retrievedLogs.length == 1 ? '' : 's'}. Fill in the site details to save them.',
+                    //           style: GoogleFonts.inter(
+                    //             fontSize: 14,
+                    //             fontWeight: FontWeight.w500,
+                    //             color: Color(0xFF856404),
+                    //           ),
+                    //         ),
+                    //       ),
+                    //     ],
+                    //   ),
+                    // ),
 
                     // Form container
                     Expanded(
@@ -365,19 +365,18 @@ class _SimpleSiteCreationScreenState extends State<SimpleSiteCreationScreen> {
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: Padding(
-                          padding: const EdgeInsets.all(22),
+                          padding: const EdgeInsets.only(bottom: 24),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                'Site Details',
-                                style: GoogleFonts.inter(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w700,
-                                  color: Color(0xFF3A3A3A),
-                                ),
-                              ),
-
+                              // Text(
+                              //   'Site Details',
+                              //   style: GoogleFonts.inter(
+                              //     fontSize: 18,
+                              //     fontWeight: FontWeight.w700,
+                              //     color: Color(0xFF3A3A3A),
+                              //   ),
+                              // ),
                               SizedBox(height: 20),
 
                               // Site creation form
@@ -439,7 +438,7 @@ class _SimpleSiteCreationScreenState extends State<SimpleSiteCreationScreen> {
                                         ),
                                         child: Center(
                                           child: Text(
-                                            'Skip & Lose Logs',
+                                            'Cancel',
                                             style: GoogleFonts.inter(
                                               fontSize: 14,
                                               fontWeight: FontWeight.w700,

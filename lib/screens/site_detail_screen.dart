@@ -10,199 +10,225 @@ class SiteDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Stack(
-        children: [
-          SvgPicture.asset('assets/svgs/background_1.svg'),
-          Padding(
-            padding: const EdgeInsets.only(left: 20, right: 20, top: 54),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.of(context).pop();
-                      },
-                      child: SvgPicture.asset(
-                        'assets/svgs/arrow_back_icon.svg',
-                      ),
-                    ),
-                    SizedBox(width: 17),
-                    Text(
-                      "Site Details",
-                      style: GoogleFonts.inter(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 23),
-                Container(
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 19,
-                      vertical: 35,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          "Site Name",
-                          style: GoogleFonts.inter(
-                            color: Color(0xFF767676),
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        SizedBox(height: 4),
-                        Text(
-                          siteWithLogCount.site.siteName,
-                          style: GoogleFonts.inter(
-                            color: Color(0xFF3A3A3A),
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        SizedBox(height: 24),
-                        Text(
-                          "Installer Name",
-                          style: GoogleFonts.inter(
-                            color: Color(0xFF767676),
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        SizedBox(height: 4),
-                        Text(
-                          siteWithLogCount.site.installerName,
-                          style: GoogleFonts.inter(
-                            color: Color(0xFF3A3A3A),
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        SizedBox(height: 24),
-                        Text(
-                          "Company Name",
-                          style: GoogleFonts.inter(
-                            color: Color(0xFF767676),
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        SizedBox(height: 4),
-                        Text(
-                          siteWithLogCount.site.companyName,
-                          style: GoogleFonts.inter(
-                            color: Color(0xFF3A3A3A),
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        SizedBox(height: 24),
-                        Text(
-                          "SAQCC Registration Number",
-                          style: GoogleFonts.inter(
-                            color: Color(0xFF767676),
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        SizedBox(height: 4),
-                        Text(
-                          siteWithLogCount.site.saqccRegNumber,
-                          style: GoogleFonts.inter(
-                            color: Color(0xFF3A3A3A),
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        SizedBox(height: 24),
-                        Text(
-                          "Building Name",
-                          style: GoogleFonts.inter(
-                            color: Color(0xFF767676),
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        SizedBox(height: 4),
-                        Text(
-                          siteWithLogCount.site.buildingName,
-                          style: GoogleFonts.inter(
-                            color: Color(0xFF3A3A3A),
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        SizedBox(height: 24),
-                        Text(
-                          "Installer Contact Number",
-                          style: GoogleFonts.inter(
-                            color: Color(0xFF767676),
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        SizedBox(height: 4),
-                        Text(
-                          siteWithLogCount.site.installerContactNumber,
-                          style: GoogleFonts.inter(
-                            color: Color(0xFF3A3A3A),
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        SizedBox(height: 24),
-                        Text(
-                          "Installer Email",
-                          style: GoogleFonts.inter(
-                            color: Color(0xFF767676),
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        SizedBox(height: 4),
-                        Text(
-                          siteWithLogCount.site.installerEmail,
-                          style: GoogleFonts.inter(
-                            color: Color(0xFF3A3A3A),
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        SizedBox(height: 24),
-                        Text(
-                          "Site Description",
-                          style: GoogleFonts.inter(
-                            color: Color(0xFF767676),
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        SizedBox(height: 4),
-                        Text(
-                          siteWithLogCount.site.siteDescription,
-                          style: GoogleFonts.inter(
-                            color: Color(0xFF3A3A3A),
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFFF6EBEB), Colors.white],
           ),
-        ],
+        ),
+        child: Stack(
+          children: [
+            SvgPicture.asset('assets/svgs/background_1.svg'),
+            Padding(
+              padding: const EdgeInsets.only(left: 20, right: 20, top: 54),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.of(context).pop();
+                        },
+                        child: SvgPicture.asset(
+                          'assets/svgs/arrow_back_icon.svg',
+                        ),
+                      ),
+                      SizedBox(width: 17),
+                      Text(
+                        "Site Details",
+                        style: GoogleFonts.inter(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 23),
+                  Container(
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 19,
+                        vertical: 35,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Site Name",
+                            style: GoogleFonts.inter(
+                              color: Color(0xFF767676),
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            siteWithLogCount.site.siteName,
+                            style: GoogleFonts.inter(
+                              color: Color(0xFF3A3A3A),
+                              fontSize: 20,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          SizedBox(height: 24),
+                          Text(
+                            "Installer Name",
+                            style: GoogleFonts.inter(
+                              color: Color(0xFF767676),
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            siteWithLogCount.site.installerName.isNotEmpty
+                                ? siteWithLogCount.site.installerName
+                                : '-',
+                            style: GoogleFonts.inter(
+                              color: Color(0xFF3A3A3A),
+                              fontSize: 20,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          SizedBox(height: 24),
+                          Text(
+                            "Company Name",
+                            style: GoogleFonts.inter(
+                              color: Color(0xFF767676),
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            siteWithLogCount.site.companyName.isNotEmpty
+                                ? siteWithLogCount.site.companyName
+                                : '-',
+                            style: GoogleFonts.inter(
+                              color: Color(0xFF3A3A3A),
+                              fontSize: 20,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          SizedBox(height: 24),
+                          Text(
+                            "SAQCC Registration Number",
+                            style: GoogleFonts.inter(
+                              color: Color(0xFF767676),
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            siteWithLogCount.site.saqccRegNumber.isNotEmpty
+                                ? siteWithLogCount.site.saqccRegNumber
+                                : '-',
+                            style: GoogleFonts.inter(
+                              color: Color(0xFF3A3A3A),
+                              fontSize: 20,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          SizedBox(height: 24),
+                          Text(
+                            "Building Name",
+                            style: GoogleFonts.inter(
+                              color: Color(0xFF767676),
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            siteWithLogCount.site.buildingName.isNotEmpty
+                                ? siteWithLogCount.site.buildingName
+                                : '-',
+                            style: GoogleFonts.inter(
+                              color: Color(0xFF3A3A3A),
+                              fontSize: 20,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          SizedBox(height: 24),
+                          Text(
+                            "Installer Contact Number",
+                            style: GoogleFonts.inter(
+                              color: Color(0xFF767676),
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            siteWithLogCount
+                                    .site
+                                    .installerContactNumber
+                                    .isNotEmpty
+                                ? siteWithLogCount.site.installerContactNumber
+                                : '-',
+                            style: GoogleFonts.inter(
+                              color: Color(0xFF3A3A3A),
+                              fontSize: 20,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          SizedBox(height: 24),
+                          Text(
+                            "Installer Email",
+                            style: GoogleFonts.inter(
+                              color: Color(0xFF767676),
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            siteWithLogCount.site.installerEmail.isNotEmpty
+                                ? siteWithLogCount.site.installerEmail
+                                : '-',
+                            style: GoogleFonts.inter(
+                              color: Color(0xFF3A3A3A),
+                              fontSize: 20,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          SizedBox(height: 24),
+                          Text(
+                            "Site Description",
+                            style: GoogleFonts.inter(
+                              color: Color(0xFF767676),
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            siteWithLogCount.site.siteDescription.isNotEmpty
+                                ? siteWithLogCount.site.siteDescription
+                                : '-',
+                            style: GoogleFonts.inter(
+                              color: Color(0xFF3A3A3A),
+                              fontSize: 20,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

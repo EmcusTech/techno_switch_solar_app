@@ -528,145 +528,151 @@ class _SiteScreenState extends State<SiteScreen> {
   Widget _buildSiteDetails() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Container(
-        // height: 100,
-        width: double.infinity,
-        decoration: BoxDecoration(borderRadius: BorderRadius.circular(8)),
-        child: Column(
-          children: [
-            Container(
-              decoration: BoxDecoration(
-                color: Color(0xFFFFE2E2),
-                borderRadius: BorderRadius.vertical(top: Radius.circular(8)),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.only(
-                  left: 20,
-                  right: 20,
-                  top: 15,
-                  bottom: 15,
+      child: Column(
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              color: Color(0xFFFFE2E2),
+              borderRadius: BorderRadius.vertical(top: Radius.circular(8)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
                 ),
-                child: Row(
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            SvgPicture.asset('assets/svgs/location_icon.svg'),
-                            SizedBox(width: 8),
-                            Text(
-                              widget.site.siteName,
-                              style: GoogleFonts.inter(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF3A3A3A),
-                              ),
-                            ),
-                          ],
-                        ),
-                        Text(
-                          'Site Information',
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            color: Color(0xFF737373),
-                          ),
-                        ),
-                      ],
-                    ),
-                    Spacer(),
-                    GestureDetector(
-                      onTap: () {
-                        _confirmDeleteSite();
-                      },
-                      child: SvgPicture.asset(
-                        'assets/svgs/delete_icon.svg',
-                        colorFilter: ColorFilter.mode(
-                          Color(0xFFFF6467),
-                          BlendMode.srcIn,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              ],
             ),
-            Container(
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.vertical(bottom: Radius.circular(8)),
+            child: Padding(
+              padding: const EdgeInsets.only(
+                left: 20,
+                right: 20,
+                top: 15,
+                bottom: 15,
               ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 15,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        SvgPicture.asset('assets/svgs/site_calender_icon.svg'),
-                        SizedBox(width: 12),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Created',
-                              style: GoogleFonts.inter(
-                                fontSize: 12,
-                                color: Color(0xFF737373),
-                              ),
-                            ),
-                            Text(
-                              DateFormat(
-                                'MMM d, y',
-                              ).format(widget.siteWithLogCount.site.createdAt),
-                              style: GoogleFonts.inter(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w400,
-                                color: Color(0xFF737373),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 16),
-                    CommonCtaButton(
-                      onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder:
-                                (context) => SiteDetailScreen(
-                                  siteWithLogCount: widget.siteWithLogCount,
-                                ),
-                          ),
-                        );
-                      },
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
+              child: Row(
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
                         children: [
-                          SvgPicture.asset('assets/svgs/details_icon.svg'),
+                          SvgPicture.asset('assets/svgs/location_icon.svg'),
                           SizedBox(width: 8),
                           Text(
-                            'View Site Details',
+                            widget.site.siteName,
                             style: GoogleFonts.inter(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                              color: Colors.white,
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF3A3A3A),
                             ),
                           ),
                         ],
                       ),
+                      Text(
+                        'Site Information',
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          color: Color(0xFF737373),
+                        ),
+                      ),
+                    ],
+                  ),
+                  Spacer(),
+                  GestureDetector(
+                    onTap: () {
+                      _confirmDeleteSite();
+                    },
+                    child: SvgPicture.asset(
+                      'assets/svgs/delete_icon.svg',
+                      colorFilter: ColorFilter.mode(
+                        Color(0xFFFF6467),
+                        BlendMode.srcIn,
+                      ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
+          ),
+          Container(
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(bottom: Radius.circular(8)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      SvgPicture.asset('assets/svgs/site_calender_icon.svg'),
+                      SizedBox(width: 12),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Created',
+                            style: GoogleFonts.inter(
+                              fontSize: 12,
+                              color: Color(0xFF737373),
+                            ),
+                          ),
+                          Text(
+                            DateFormat(
+                              'MMM d, y',
+                            ).format(widget.siteWithLogCount.site.createdAt),
+                            style: GoogleFonts.inter(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w400,
+                              color: Color(0xFF737373),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 16),
+                  CommonCtaButton(
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder:
+                              (context) => SiteDetailScreen(
+                                siteWithLogCount: widget.siteWithLogCount,
+                              ),
+                        ),
+                      );
+                    },
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SvgPicture.asset('assets/svgs/details_icon.svg'),
+                        SizedBox(width: 8),
+                        Text(
+                          'View Site Details',
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
