@@ -12,10 +12,23 @@ class BleLogController extends GetxController {
   connectToDevice({
     required DiscoveredDevice device,
     int? manufacturerDataOverride,
+    bool fastReconnect = false,
+    int? maxRetries,
+    Duration? retryDelay,
+    Duration? connectionTimeout,
   }) async {
+    final int resolvedMaxRetries = maxRetries ?? (fastReconnect ? 3 : 3);
+    final Duration resolvedRetryDelay =
+        retryDelay ?? (fastReconnect ? const Duration(milliseconds: 300) : const Duration(seconds: 1));
+    final Duration resolvedConnectionTimeout =
+        connectionTimeout ?? (fastReconnect ? const Duration(seconds: 4) : const Duration(seconds: 10));
+
     await bleManager.connectToKnownDevice(
       device: device,
       manufacturerDataOverride: manufacturerDataOverride,
+      maxRetries: resolvedMaxRetries,
+      retryDelay: resolvedRetryDelay,
+      connectionTimeout: resolvedConnectionTimeout,
     );
   }
 

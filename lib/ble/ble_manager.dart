@@ -234,6 +234,8 @@ class BleManager {
   /// SCAN & CONNECT
   Future<void> connectToKnownDevice({
     int maxRetries = 3,
+    Duration retryDelay = const Duration(seconds: 1),
+    Duration connectionTimeout = const Duration(seconds: 10),
     required DiscoveredDevice device,
     int? manufacturerDataOverride,
   }) async {
@@ -262,6 +264,7 @@ class BleManager {
         await _connectOnce(
           device,
           manufacturerDataOverride: manufacturerDataOverride,
+          connectionTimeout: connectionTimeout,
         );
         print("BLE connected successfully");
         return; // ✅ SUCCESS
@@ -289,7 +292,9 @@ class BleManager {
         }
 
         // BLE stack cooldown (important)
-        await Future.delayed(const Duration(seconds: 1));
+        if (retryDelay > Duration.zero) {
+          await Future.delayed(retryDelay);
+        }
       }
     }
   }
@@ -310,6 +315,7 @@ class BleManager {
   Future<void> _connectOnce(
     DiscoveredDevice device, {
     int? manufacturerDataOverride,
+    Duration connectionTimeout = const Duration(seconds: 10),
   }) async {
     await [
       Permission.bluetoothConnect,
@@ -358,7 +364,7 @@ class BleManager {
     _connectionSub = flutterReactiveBle
         .connectToDevice(
           id: device.id,
-          connectionTimeout: const Duration(seconds: 10),
+          connectionTimeout: connectionTimeout,
         )
         .listen(
           (update) async {
@@ -1146,17 +1152,25 @@ class BleManager {
   }
 
   /// Sends a jump firmware packet with Technoswitch framing.
-  Future<void> sendJumpFirmwarePacket() async {
+  /// Uses write without response by default to avoid waiting on a rebooting device.
+  Future<void> sendJumpFirmwarePacket({bool withoutResponse = true}) async {
     if (!isConnected || writeChar == null) {
       throw Exception("BLE not connected or write characteristic missing");
     }
 
     List<int> jumpFrame = bleFrameFormat(0x1002, 0x02, 1, [0x00]);
     try {
-      await flutterReactiveBle.writeCharacteristicWithResponse(
-        writeChar!,
-        value: jumpFrame,
-      );
+      if (withoutResponse) {
+        await flutterReactiveBle.writeCharacteristicWithoutResponse(
+          writeChar!,
+          value: jumpFrame,
+        );
+      } else {
+        await flutterReactiveBle.writeCharacteristicWithResponse(
+          writeChar!,
+          value: jumpFrame,
+        );
+      }
       print(
         "TX/RX: TRANSMIT: Jump Firmware Packet time: ${DateTime.now().toIso8601String()}, packet: ${jumpFrame.map((e) => e.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
       );

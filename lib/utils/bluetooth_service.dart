@@ -58,16 +58,21 @@ class BluetoothService {
   /*                                   SCAN                                     */
   /* -------------------------------------------------------------------------- */
 
-  Future<void> startScanning() async {
+  Future<void> startScanning({
+    bool disconnectIfConnected = true,
+    Duration postDisconnectDelay = const Duration(seconds: 2),
+  }) async {
     print("The scanning initial status is: ${ble.isConnected}");
-    if (ble.isConnected) {
+    if (disconnectIfConnected && ble.isConnected) {
       final deviceId = ble.connectedDeviceId.value;
       // Proactively disconnect any current device before scanning
       await ble.disconnectHandler(
         deviceId: deviceId.isNotEmpty ? deviceId : null,
       );
       await ble.shutdown(deviceId: deviceId.isNotEmpty ? deviceId : null);
-      await Future.delayed(const Duration(seconds: 2));
+      if (postDisconnectDelay > Duration.zero) {
+        await Future.delayed(postDisconnectDelay);
+      }
     }
 
     // Clear stale devices
@@ -82,10 +87,22 @@ class BluetoothService {
         )
         .listen(
           (device) {
-            final exists = _scanResults.any((d) => d.id == device.id);
+            final index = _scanResults.indexWhere((d) => d.id == device.id);
 
-            if (!exists) {
+            if (index == -1) {
               _scanResults.add(device);
+              _resultsController.add(List.unmodifiable(_scanResults));
+              return;
+            }
+
+            final existing = _scanResults[index];
+            final manufacturerChanged =
+                !_listEquals(existing.manufacturerData, device.manufacturerData);
+            final nameChanged = existing.name != device.name;
+            final rssiChanged = existing.rssi != device.rssi;
+
+            if (manufacturerChanged || nameChanged || rssiChanged) {
+              _scanResults[index] = device;
               _resultsController.add(List.unmodifiable(_scanResults));
             }
           },
@@ -94,6 +111,14 @@ class BluetoothService {
             print('Scan error: $e');
           },
         );
+  }
+
+  bool _listEquals(List<int> a, List<int> b) {
+    if (a.length != b.length) return false;
+    for (int i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
   }
 
   Future<void> stopScanning() async {

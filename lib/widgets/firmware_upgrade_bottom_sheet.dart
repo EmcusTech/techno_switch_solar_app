@@ -71,11 +71,21 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
   String? _originalDeviceName; // Store device name for reconnection
   int? _originalManufacturerData; // Store manufacturer data before jump command
   StreamSubscription<ConnectionStateUpdate>? _internalReconnectSub;
+  bool _bootloaderNotifyReady = false;
 
   // Bluetooth service for internal reconnect (only used for reconnecting after jump/end commands)
   final app_bluetooth.BluetoothService _bluetoothService =
       app_bluetooth.BluetoothService();
   StreamSubscription? _bleResultsSub;
+
+  // Tuning knobs to reduce reconnect latency while keeping BLE stable.
+  static const Duration _bleShortDelay = Duration(milliseconds: 800);
+  static const Duration _bleConnectSettleDelay = Duration(milliseconds: 600);
+  static const Duration _jumpReconnectInitialDelay = Duration(seconds: 2);
+  static const Duration _endReconnectInitialDelay = Duration(seconds: 1);
+  static const Duration _jumpScanGlobalTimeout = Duration(seconds: 6);
+  static const Duration _endScanGlobalTimeout = Duration(seconds: 10);
+  static const Duration _scanRetryDelay = Duration(milliseconds: 800);
 
   @override
   void initState() {
@@ -215,6 +225,7 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
 
     if (manager != null) {
       manager.resetFirmwareState();
+      _bootloaderNotifyReady = false;
       print("isChipInBootLoader: $isChipInBootLoader");
 
       // Store original device name and manufacturer data before jump command
@@ -236,11 +247,11 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
         manager.registerNotifyHandlerForFirmwareUpgrade(
           isChipInBootLoader: false,
         );
-        await Future.delayed(const Duration(seconds: 4));
+        await Future.delayed(_bleShortDelay);
 
         // Send jump command - expect it to fail when device disconnects
         try {
-          await manager.sendJumpFirmwarePacket();
+          await manager.sendJumpFirmwarePacket(withoutResponse: true);
         } catch (e) {
           // Expected: device disconnects after jump packet, causing write to fail
           logger.Logger('Jump packet sent, device disconnected (expected): $e');
@@ -258,14 +269,16 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
 
         // After reconnect, wait a bit before continuing
         // Device needs time to stabilize in bootloader mode
-        await Future.delayed(const Duration(seconds: 3));
+        await Future.delayed(_bleShortDelay);
       }
 
       await Future.delayed(const Duration(milliseconds: 300));
-      await manager.registerNotifyHandlerForFirmwareUpgrade(
-        isChipInBootLoader: true,
-      );
-      await Future.delayed(const Duration(seconds: 4));
+      if (!_bootloaderNotifyReady) {
+        await manager.registerNotifyHandlerForFirmwareUpgrade(
+          isChipInBootLoader: true,
+        );
+        await Future.delayed(_bleShortDelay);
+      }
       manager.setFirmwareState(BleStates.SEND_START_FIRMWARE_PACKET);
 
       // Send start firmware packet - might fail if device disconnects
@@ -330,6 +343,11 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
         _originalDeviceName = _selectedDevice!.name;
       }
 
+      setState(() {
+        _isWaitingForEndReconnect = true;
+        _currentBleStateMessage = 'Fetching Firmware Upgrade status...';
+      });
+
       // Send end packet - expect it to fail when device disconnects
       try {
         await manager.sendEndFirmwarePacket();
@@ -338,16 +356,10 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
         logger.Logger('End packet sent, device disconnected (expected): $e');
       }
 
-      // Wait longer for device to process end command and update MSD status
-      // Device needs time to reboot, verify firmware, and update advertisement data
-      // Initial wait before first scan attempt
-      await Future.delayed(const Duration(seconds: 5));
-
       // Start internal reconnect after end command
-      setState(() {
-        _isWaitingForEndReconnect = true;
-        _currentBleStateMessage = 'Fetching Firmware Upgrade status...';
-      });
+
+      // Short grace period to allow disconnect/reboot to begin before scanning
+      await Future.delayed(_bleShortDelay);
       await _reconnectAndCheckStatus(isJumpCommand: false);
     } else {
       // Fallback: just simulate progress if manager unavailable
@@ -379,7 +391,9 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
     try {
       // Wait longer for device to disconnect and restart (especially for jump command)
       // Jump command causes device reboot, so it needs more time
-      await Future.delayed(Duration(seconds: isJumpCommand ? 8 : 3));
+      await Future.delayed(
+        isJumpCommand ? _jumpReconnectInitialDelay : _endReconnectInitialDelay,
+      );
 
       // Start scanning internally
       await _bluetoothService.requestPermissions();
@@ -394,153 +408,89 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
         return;
       }
 
-      // For jump command, we may need to scan multiple times if device hasn't fully rebooted
-      // For end command, we may need to scan multiple times if device hasn't updated MSD status yet
-      // End command needs more attempts because device needs time to verify firmware and update MSD
+      // Single continuous scan with a global timeout (faster than attempt loops)
       DiscoveredDevice? device;
       int? scanLastByte;
-      int scanAttempts = 0;
-      final int maxScanAttempts =
-          isJumpCommand ? 5 : 5; // More attempts for both to handle timing
+      int? manufacturerDataFromScan;
+      final Completer<void> scanDoneCompleter = Completer<void>();
+      StreamSubscription? internalScanSub;
+      Timer? scanTimeoutTimer;
 
-      while (scanAttempts < maxScanAttempts) {
-        scanAttempts++;
-        logger.Logger(
-          'Scan attempt $scanAttempts/$maxScanAttempts for reconnect (${isJumpCommand ? "jump" : "end"} command)',
-        );
+      logger.Logger(
+        'Starting reconnect scan (${isJumpCommand ? "jump" : "end"} command) with global timeout',
+      );
 
-        // Set up scan listener for internal reconnect - match by device name
-        final Completer<DiscoveredDevice?> deviceFoundCompleter =
-            Completer<DiscoveredDevice?>();
-        StreamSubscription? internalScanSub;
-        DiscoveredDevice? foundDevice;
-        int? manufacturerDataFromScan;
-
-        internalScanSub = _bluetoothService.scanResultsStream.listen((results) {
-          for (var result in results) {
-            // Log all scanned devices for debugging
-            print(
-              'DEBUG SCAN: Device found - Name: ${result.name}, ID: ${result.id}, Manufacturer data: ${result.manufacturerData}, Length: ${result.manufacturerData.length}',
-            );
-
-            // Match by device name
-            if (result.name == _originalDeviceName) {
-              foundDevice = result;
-              print(
-                "DEBUG SCAN: Device found - Name: ${result.name}, ID: ${result.id}, Manufacturer data: ${result.manufacturerData}, Length: ${result.manufacturerData.length}",
-              );
-              // Check manufacturer data from scan results
-              final manufacturerData = result.manufacturerData;
-              print(
-                'DEBUG: Matched device ${result.name} - Full manufacturer data array: $manufacturerData, Length: ${manufacturerData.length}',
-              );
-              if (manufacturerData.isNotEmpty) {
-                manufacturerDataFromScan = manufacturerData.last;
-                logger.Logger(
-                  'Found device ${result.name} with manufacturer data array: $manufacturerData (last byte: $manufacturerDataFromScan)',
-                );
-              } else {
-                logger.Logger(
-                  'Found device ${result.name} but manufacturer data is EMPTY: $manufacturerData',
-                );
-                print('DEBUG: Manufacturer data is empty for matched device');
-              }
-
-              if (!deviceFoundCompleter.isCompleted) {
-                deviceFoundCompleter.complete(result);
-              }
-              break;
-            }
-          }
-        });
-
-        // Start scanning
-        await _bluetoothService.startScanning();
-
-        // Wait for device to be found (timeout after 10 seconds per attempt)
-        try {
-          device = await deviceFoundCompleter.future.timeout(
-            const Duration(seconds: 10),
-            onTimeout: () {
-              logger.Logger(
-                'Device not found during scan attempt $scanAttempts',
-              );
-              return foundDevice; // Return device if found but completer wasn't triggered
-            },
+      internalScanSub = _bluetoothService.scanResultsStream.listen((results) {
+        for (var result in results) {
+          // Log all scanned devices for debugging
+          print(
+            'DEBUG SCAN: Device found - Name: ${result.name}, ID: ${result.id}, Manufacturer data: ${result.manufacturerData}, Length: ${result.manufacturerData.length}',
           );
-        } catch (e) {
-          logger.Logger('Error during scan attempt $scanAttempts: $e');
-        }
 
-        await internalScanSub.cancel();
-        await _bluetoothService.stopScanning();
-
-        if (device != null) {
-          final scanManufacturerData = device.manufacturerData;
-          scanLastByte =
-              scanManufacturerData.isNotEmpty
-                  ? scanManufacturerData.last
-                  : null;
-
-          // For jump command, check if we got the expected MSD [0,1]
-          if (isJumpCommand && scanLastByte == 1) {
-            logger.Logger(
-              'Device found in bootloader mode (MSD [0,1]) on attempt $scanAttempts',
+          // Match by device name
+          if (result.name == _originalDeviceName) {
+            device = result;
+            print(
+              "DEBUG SCAN: Device found - Name: ${result.name}, ID: ${result.id}, Manufacturer data: ${result.manufacturerData}, Length: ${result.manufacturerData.length}",
             );
-            break; // Found correct state, exit retry loop
-          } else if (isJumpCommand && scanLastByte == 2) {
-            // Device hasn't fully rebooted yet, wait and retry
-            logger.Logger(
-              'Device still showing old MSD [0,2] on attempt $scanAttempts, waiting and retrying...',
+            // Check manufacturer data from scan results
+            final manufacturerData = result.manufacturerData;
+            print(
+              'DEBUG: Matched device ${result.name} - Full manufacturer data array: $manufacturerData, Length: ${manufacturerData.length}',
             );
-            await Future.delayed(const Duration(seconds: 2));
-            device = null; // Reset to try again
-            continue;
-          } else if (!isJumpCommand) {
-            // For end command, check status
-            if (scanLastByte == 2) {
-              // Success - device has completed firmware upgrade
+            if (manufacturerData.isNotEmpty) {
+              manufacturerDataFromScan = manufacturerData.last;
+              scanLastByte = manufacturerDataFromScan;
               logger.Logger(
-                'Device found with SUCCESS status (MSD [0,2]) on attempt $scanAttempts',
+                'Found device ${result.name} with manufacturer data array: $manufacturerData (last byte: $manufacturerDataFromScan)',
               );
-              break; // Found success status, exit retry loop
-            } else if (scanLastByte == 1) {
-              // Device still showing [0,1] - might still be processing
-              // Wait longer and retry, as device needs time to verify and update status
-              if (scanAttempts < maxScanAttempts) {
-                logger.Logger(
-                  'Device still showing [0,1] on attempt $scanAttempts - device may still be processing firmware verification. Waiting longer and retrying...',
-                );
-                // Wait progressively longer: 3s, 5s, 7s
-                await Future.delayed(Duration(seconds: 2 + (scanAttempts * 2)));
-                device = null; // Reset to try again
-                continue;
-              } else {
-                // After all retries, still showing [0,1] - treat as failure
-                logger.Logger(
-                  'Device still showing [0,1] after $maxScanAttempts attempts - firmware upgrade likely failed',
-                );
-                break; // Exit loop, will be treated as failure below
+            } else {
+              logger.Logger(
+                'Found device ${result.name} but manufacturer data is EMPTY: $manufacturerData',
+              );
+              print('DEBUG: Manufacturer data is empty for matched device');
+            }
+
+            if (isJumpCommand) {
+              if (scanLastByte == 1) {
+                // Bootloader detected - we're done
+                if (!scanDoneCompleter.isCompleted) {
+                  scanDoneCompleter.complete();
+                }
               }
             } else {
-              // Unknown status or null, wait and retry
-              logger.Logger(
-                'Device found but MSD status unclear ($scanLastByte) on attempt $scanAttempts, waiting and retrying...',
-              );
-              await Future.delayed(const Duration(seconds: 2));
-              device = null; // Reset to try again
-              if (scanAttempts < maxScanAttempts) {
-                continue;
+              if (scanLastByte == 2) {
+                // Success detected - we're done
+                if (!scanDoneCompleter.isCompleted) {
+                  scanDoneCompleter.complete();
+                }
               }
             }
           }
-        } else {
-          // Device not found, wait before retry
-          if (scanAttempts < maxScanAttempts) {
-            await Future.delayed(const Duration(seconds: 2));
-          }
         }
-      }
+      });
+
+      // Start scanning
+      await _bluetoothService.startScanning(
+        disconnectIfConnected: true,
+        postDisconnectDelay: _scanRetryDelay,
+      );
+
+      // Global timeout for scan
+      scanTimeoutTimer = Timer(
+        isJumpCommand ? _jumpScanGlobalTimeout : _endScanGlobalTimeout,
+        () {
+          if (!scanDoneCompleter.isCompleted) {
+            scanDoneCompleter.complete();
+          }
+        },
+      );
+
+      await scanDoneCompleter.future;
+
+      await internalScanSub.cancel();
+      await _bluetoothService.stopScanning();
+      scanTimeoutTimer.cancel();
 
       if (device == null) {
         setState(() {
@@ -553,17 +503,17 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
       }
 
       // Check manufacturer data from scan first
-      // scanLastByte was already set in the retry loop above, but ensure it's set
-      final scanManufacturerData = device.manufacturerData;
+      // scanLastByte may already be set from scan results, but ensure it's set
+      final scanManufacturerData = device!.manufacturerData;
       if (scanLastByte == null && scanManufacturerData.isNotEmpty) {
         scanLastByte = scanManufacturerData.last;
       }
 
       print(
-        'DEBUG: After scan complete - Device: ${device.name}, Full manufacturer data array: $scanManufacturerData, Length: ${scanManufacturerData.length}, Last byte: $scanLastByte',
+        'DEBUG: After scan complete - Device: ${device!.name}, Full manufacturer data array: $scanManufacturerData, Length: ${scanManufacturerData.length}, Last byte: $scanLastByte',
       );
       logger.Logger(
-        'Device found: ${device.name}, Manufacturer data from scan (full array): $scanManufacturerData (last byte: $scanLastByte)',
+        'Device found: ${device!.name}, Manufacturer data from scan (full array): $scanManufacturerData (last byte: $scanLastByte)',
       );
 
       // If we have manufacturer data from scan, check it first
@@ -630,10 +580,11 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
       // Connect to the device using BleLogController
       final bleController = Get.find<BleLogController>();
       final bleManager = bleController.bleManager;
+      final bool fastReconnect = true; // Opt-in for firmware upgrade flow
 
       // Check if already connected to avoid duplicate connections
       if (bleManager.isConnected &&
-          bleManager.connectedDeviceId.value == device.id) {
+          bleManager.connectedDeviceId.value == device!.id) {
         logger.Logger('Device already connected, skipping reconnect');
       } else {
         // Disconnect first if connected to a different device
@@ -655,14 +606,20 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
 
         try {
           await bleController.connectToDevice(
-            device: device,
+            device: device!,
             manufacturerDataOverride: manufacturerDataToUse,
+            fastReconnect: fastReconnect,
           );
 
           // Wait for connection to be fully established
           int waitCount = 0;
-          while (!bleManager.isConnected && waitCount < 30) {
-            await Future.delayed(const Duration(milliseconds: 200));
+          final int maxWaitCycles = fastReconnect ? 15 : 30;
+          final Duration waitStep =
+              fastReconnect
+                  ? const Duration(milliseconds: 150)
+                  : const Duration(milliseconds: 200);
+          while (!bleManager.isConnected && waitCount < maxWaitCycles) {
+            await Future.delayed(waitStep);
             waitCount++;
           }
 
@@ -674,7 +631,7 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
           // This is critical - use the scan value (current device state) not old stored value
           if (scanLastByte != null) {
             // Use the scan value (current device state) instead of old stored value
-            bleManager.bleManufacturerData.value = scanLastByte;
+            bleManager.bleManufacturerData.value = scanLastByte!;
             logger.Logger(
               'Using scan manufacturer data after reconnect: $scanLastByte (from MSD: $scanManufacturerData)',
             );
@@ -700,7 +657,7 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
       }
 
       // Wait for connection to be fully established
-      await Future.delayed(const Duration(milliseconds: 1000));
+      await Future.delayed(_bleConnectSettleDelay);
 
       // For jump command, we need to register notify handler in bootloader mode
       // BUT we should NOT trigger auth flow - device is already in bootloader mode
@@ -711,12 +668,13 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
         await bleManager.registerNotifyHandlerForFirmwareUpgrade(
           isChipInBootLoader: true,
         );
+        _bootloaderNotifyReady = true;
         // Give device more time to stabilize after reboot
-        await Future.delayed(const Duration(milliseconds: 1000));
+        await Future.delayed(_bleConnectSettleDelay);
       }
 
       // Wait a bit for manufacturer data to be available
-      await Future.delayed(const Duration(milliseconds: 1000));
+      await Future.delayed(_bleConnectSettleDelay);
 
       // Check manufacturer data from the reconnected device
       // Get the latest manufacturer data from BleManager after connection
@@ -1792,7 +1750,7 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
                 style: GoogleFonts.inter(
                   fontSize: 24,
                   fontWeight: FontWeight.w700,
-                  color: Color(0xFFEC1D24),
+                  // color: Color(0xFFEC1D24),
                   fontFeatures: [FontFeature.tabularFigures()],
                 ),
               ),
