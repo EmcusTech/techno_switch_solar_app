@@ -125,10 +125,6 @@ class _EventLogContentState extends State<_EventLogContent> {
     return parts.isNotEmpty ? parts.first : name;
   }
 
-  String _panelDisplayId() {
-    return _resolvedPanelId();
-  }
-
   // Keep logs sorted by eventId (numeric if possible)
   List<LogModel> _sortLogsByEventId(List<LogModel> logs) {
     final sorted = List<LogModel>.from(logs);
