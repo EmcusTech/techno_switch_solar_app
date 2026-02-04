@@ -114,71 +114,120 @@ class _SiteScreenState extends State<SiteScreen> {
     final shouldDelete = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
-      builder:
-          (context) => AlertDialog(
-            shape: RoundedRectangleBorder(
+      builder: (dialogContext) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.white,
               borderRadius: BorderRadius.circular(16),
             ),
-            title: Row(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
-                  Icons.warning_amber_rounded,
-                  color: const Color(0xFFEC1D24),
-                  size: 28,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'Delete Site',
-                    style: GoogleFonts.inter(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFF3A3A3A),
+                // ───────── Icon ─────────
+                Container(
+                  width: 64,
+                  height: 64,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFFBDEE1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Center(
+                    child: Icon(
+                      Icons.warning_amber_rounded,
+                      size: 32,
+                      color: Color(0xFFEC1D24),
                     ),
                   ),
                 ),
+
+                const SizedBox(height: 16),
+
+                // ───────── Title ─────────
+                Text(
+                  'Delete site?',
+                  style: GoogleFonts.inter(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF3D3D3D),
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+
+                const SizedBox(height: 8),
+
+                // ───────── Description ─────────
+                Text(
+                  'This will remove "${widget.site.siteName}".\n'
+                  'All logs will be deleted and panels will be unassigned.',
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w400,
+                    color: const Color(0xFF918F8F),
+                    height: 1.4,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+
+                const SizedBox(height: 20),
+
+                // ───────── Actions ─────────
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(24),
+                          ),
+                          side: const BorderSide(
+                            color: Color(0xFFD0D0D0), // subtle neutral border
+                            width: 1,
+                          ),
+                        ),
+                        onPressed: () => Navigator.of(dialogContext).pop(false),
+                        child: Text(
+                          'Cancel',
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: const Color(0xFF666666),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFEC1D24),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(24),
+                          ),
+                          elevation: 0,
+                        ),
+                        onPressed: () => Navigator.of(dialogContext).pop(true),
+                        child: Text(
+                          'Delete',
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ],
             ),
-            content: Text(
-              'This will remove "${widget.site.siteName}". Logs will be deleted and panels will be unassigned.',
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                fontWeight: FontWeight.w400,
-                color: const Color(0xFF666666),
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                child: Text(
-                  'Cancel',
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: const Color(0xFF666666),
-                  ),
-                ),
-              ),
-              ElevatedButton(
-                onPressed: () => Navigator.of(context).pop(true),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFEC1D24),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(28.5),
-                  ),
-                  elevation: 0,
-                ),
-                child: Text(
-                  'Delete Site',
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ],
           ),
+        );
+      },
     );
 
     if (shouldDelete == true) {
@@ -232,71 +281,120 @@ class _SiteScreenState extends State<SiteScreen> {
     final shouldDelete = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
-      builder:
-          (context) => AlertDialog(
-            shape: RoundedRectangleBorder(
+      builder: (dialogContext) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.white,
               borderRadius: BorderRadius.circular(16),
             ),
-            title: Row(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
-                  Icons.warning_amber_rounded,
-                  color: const Color(0xFFEC1D24),
-                  size: 28,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'Delete Panel',
-                    style: GoogleFonts.inter(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFF3A3A3A),
+                // ───────── Icon ─────────
+                Container(
+                  width: 64,
+                  height: 64,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFFBDEE1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Center(
+                    child: Icon(
+                      Icons.warning_amber_rounded,
+                      size: 32,
+                      color: Color(0xFFEC1D24),
                     ),
                   ),
                 ),
+
+                const SizedBox(height: 16),
+
+                // ───────── Title ─────────
+                Text(
+                  'Remove panel?',
+                  style: GoogleFonts.inter(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF3D3D3D),
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+
+                const SizedBox(height: 8),
+
+                // ───────── Description ─────────
+                Text(
+                  'Remove panel "${panel.panelName}" (${panel.panelId}) '
+                  'from this site?',
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w400,
+                    color: const Color(0xFF918F8F),
+                    height: 1.4,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+
+                const SizedBox(height: 20),
+
+                // ───────── Actions ─────────
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(24),
+                          ),
+                          side: const BorderSide(
+                            color: Color(0xFFD0D0D0), // subtle neutral border
+                            width: 1,
+                          ),
+                        ),
+                        onPressed: () => Navigator.of(dialogContext).pop(false),
+                        child: Text(
+                          'Cancel',
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: const Color(0xFF666666),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFEC1D24),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(24),
+                          ),
+                          elevation: 0,
+                        ),
+                        onPressed: () => Navigator.of(dialogContext).pop(true),
+                        child: Text(
+                          'Remove',
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ],
             ),
-            content: Text(
-              'Remove panel "${panel.panelName}" (${panel.panelId}) from this site?',
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                fontWeight: FontWeight.w400,
-                color: const Color(0xFF666666),
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                child: Text(
-                  'Cancel',
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: const Color(0xFF666666),
-                  ),
-                ),
-              ),
-              ElevatedButton(
-                onPressed: () => Navigator.of(context).pop(true),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFEC1D24),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(28.5),
-                  ),
-                  elevation: 0,
-                ),
-                child: Text(
-                  'Delete Panel',
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ],
           ),
+        );
+      },
     );
 
     if (shouldDelete == true) {
