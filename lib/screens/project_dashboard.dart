@@ -71,6 +71,14 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    print(
+      'DEBUG: ProjectDashboardScreen initState: ${widget.selectedDevice.manufacturerData}',
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
     const disabledIndexes = [1, 2];
 
@@ -208,6 +216,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
   final BluetoothService _bluetoothService = BluetoothService();
   final bleController = Get.find<BleLogController>();
   final BleManager _bleManager = Get.find<BleManager>();
+  late DiscoveredDevice _selectedDevice;
 
   Future<bool> _confirmAndDisconnect() async {
     final shouldDisconnect = await showDialog<bool>(
@@ -481,6 +490,10 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
       final bleController = Get.find<BleLogController>();
       await bleController.connectToDevice(device: device);
 
+      setState(() {
+        _selectedDevice = device;
+      });
+
       // The dialog will automatically close when connection is established
       // via the ListenableBuilder listening to connectionNotifier
 
@@ -512,6 +525,12 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
       await _scanSubscription?.cancel();
       await _bluetoothService.stopScanning();
     }
+  }
+
+  @override
+  initState() {
+    super.initState();
+    _selectedDevice = widget.selectedDevice;
   }
 
   @override
@@ -580,6 +599,147 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
           ],
         ),
       ),
+    );
+  }
+
+  Future<void> showBootloaderModeDialog({required BuildContext context}) async {
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 64,
+                  height: 64,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFBDEE1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Center(
+                    child: Icon(
+                      Icons.warning,
+                      color: Color(0xFFEC1D24),
+                      size: 32,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Device is in bootloader mode',
+                  style: GoogleFonts.inter(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF3D3D3D),
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Tap on Update to update the firmware.',
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w400,
+                    color: const Color(0xFF666666),
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  children: [
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.of(context).pop();
+                        },
+                        child: Container(
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFEFEEEE),
+                            borderRadius: BorderRadius.circular(24),
+                            border: Border.all(
+                              color: const Color(0xFFD0D0D0),
+                              width: 1,
+                            ),
+                          ),
+                          child: Center(
+                            child: Text(
+                              'Close',
+                              style: GoogleFonts.inter(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: const Color(0xFF666666),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () async {
+                          final navigator = Navigator.of(context);
+                          navigator.pop(); // close dialog
+                          if (!Get.isRegistered<UpdatesController>()) {
+                            Get.put(UpdatesController());
+                          }
+                          showModalBottomSheet(
+                            context: context,
+                            isScrollControlled: true,
+                            backgroundColor: Colors.transparent,
+                            isDismissible: false,
+                            enableDrag: false,
+                            builder:
+                                (context) => FirmwareUpgradeBottomSheet(
+                                  connectedDevice: widget.selectedDevice,
+                                ),
+                          );
+                        },
+                        child: Container(
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFEC1D24),
+                            borderRadius: BorderRadius.circular(24),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFFEC1D24).withOpacity(0.3),
+                                blurRadius: 8,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Center(
+                            child: Text(
+                              'Update',
+                              style: GoogleFonts.inter(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -1224,42 +1384,42 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
             physics: NeverScrollableScrollPhysics(),
             children: [
               _peripheralTile(
-                peripheralName: 'Relay(1/2)',
+                peripheralName: 'Relays',
                 iconPath: 'assets/svgs/peripheral_relay_icon.svg',
                 isDisabled: true,
               ),
               _peripheralTile(
-                peripheralName: 'Input(2/2)',
+                peripheralName: 'Inputs',
                 iconPath: 'assets/svgs/peripheral_input_icon.svg',
                 isDisabled: true,
               ),
               _peripheralTile(
-                peripheralName: 'Zones(3/3)',
+                peripheralName: 'Zones',
                 iconPath: 'assets/svgs/peripheral_zones_icon.svg',
                 isDisabled: true,
               ),
               _peripheralTile(
-                peripheralName: 'Sounder(3/3)',
+                peripheralName: 'Sounders',
                 iconPath: 'assets/svgs/peripheral_sounder_icon.svg',
                 isDisabled: true,
               ),
               _peripheralTile(
-                peripheralName: 'Prog/Hold(2/2)',
+                peripheralName: 'Prog/Hold',
                 iconPath: 'assets/svgs/peripheral_prog_hold_icon.svg',
                 isDisabled: true,
               ),
               _peripheralTile(
-                peripheralName: 'Aux(2/2)',
+                peripheralName: 'Aux',
                 iconPath: 'assets/svgs/peripheral_aux_icon.svg',
                 isDisabled: true,
               ),
               _peripheralTile(
-                peripheralName: 'L-Bus(2/2)',
+                peripheralName: 'L-Bus',
                 iconPath: 'assets/svgs/peripheral_l_bus_icon.svg',
                 isDisabled: true,
               ),
               _peripheralTile(
-                peripheralName: 'Ext Out(1/1)',
+                peripheralName: 'Ext Out',
                 iconPath: 'assets/svgs/peripheral_ext_out_icon.svg',
                 isDisabled: true,
               ),
@@ -1351,6 +1511,10 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 peripheralName: 'Event Log',
                 iconPath: 'assets/svgs/panel_action_event_log_icon.svg',
                 onTap: () {
+                  if (_selectedDevice.manufacturerData.last == 1) {
+                    showBootloaderModeDialog(context: context);
+                    return;
+                  }
                   showPasswordPopup(
                     onCall: () {
                       bleController.startLogRetrieval();
@@ -1407,21 +1571,6 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
               _peripheralTile(
                 peripheralName: 'Test Mode',
                 iconPath: 'assets/svgs/peripheral_prog_hold_icon.svg',
-                isDisabled: true,
-              ),
-              _peripheralTile(
-                peripheralName: 'Aux(2/2)',
-                iconPath: 'assets/svgs/peripheral_aux_icon.svg',
-                isDisabled: true,
-              ),
-              _peripheralTile(
-                peripheralName: 'L-Bus(2/2)',
-                iconPath: 'assets/svgs/peripheral_l_bus_icon.svg',
-                isDisabled: true,
-              ),
-              _peripheralTile(
-                peripheralName: 'Ext Out(1/1)',
-                iconPath: 'assets/svgs/peripheral_ext_out_icon.svg',
                 isDisabled: true,
               ),
             ],
