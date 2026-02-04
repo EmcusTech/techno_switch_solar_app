@@ -630,7 +630,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 mainAxisSize: MainAxisSize.max,
                 children: [
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
                     child: Row(
                       children: [
                         GestureDetector(
@@ -644,11 +644,28 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                               Navigator.of(context).pop();
                             }
                           },
-                          child: SvgPicture.asset(
-                            'assets/svgs/arrow_back_icon.svg',
+                          child: Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.1),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: const Icon(
+                              Icons.arrow_back_ios_new,
+                              color: Color(0xFF3D3D3D),
+                              size: 18,
+                            ),
                           ),
                         ),
-                        SizedBox(width: 8),
+                        SizedBox(width: 12),
                         Text(
                           'Project Dashboard',
                           style: GoogleFonts.inter(
@@ -659,7 +676,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                       ],
                     ),
                   ),
-                  SizedBox(height: 19),
+                  SizedBox(height: 12),
                   _buildDashboardContainer(),
                 ],
               ),
