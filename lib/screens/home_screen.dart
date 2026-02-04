@@ -464,34 +464,25 @@ class _HomeContentState extends State<_HomeContent> {
   }
 
   Widget _buildLastLogSummary(SiteWithLogCount siteWithLogCount) {
-    final siteId = siteWithLogCount.site.id;
-    final int lastLogCount =
-        siteId != null
-            ? (_lastRetrievalCounts[siteId] ?? siteWithLogCount.logCount)
-            : siteWithLogCount.logCount;
-    final DateTime? lastLogDate =
-        siteId != null
-            ? (_lastRetrievalDates[siteId] ?? siteWithLogCount.lastLogRetrieved)
-            : siteWithLogCount.lastLogRetrieved;
+    final site = siteWithLogCount.site;
 
-    if (lastLogCount <= 0) {
-      return const SizedBox(height: 4);
-    }
+    // Use site creation time instead of last log time
+    final DateTime createdAt = site.createdAt;
 
     return Padding(
       padding: const EdgeInsets.only(top: 4),
       child: Row(
         children: [
-          if (lastLogDate != null) ...[
-            Text(
-              '${DateFormat('MMM d').format(lastLogDate)}, ${DateFormat('yyyy').format(lastLogDate)} • ${DateFormat('hh:mm a').format(lastLogDate)}',
-              style: GoogleFonts.inter(
-                fontSize: 11,
-                fontWeight: FontWeight.w400,
-                color: const Color(0xFF918F8F),
-              ),
+          Text(
+            '${DateFormat('MMM d').format(createdAt)}, '
+            '${DateFormat('yyyy').format(createdAt)} • '
+            '${DateFormat('hh:mm a').format(createdAt)}',
+            style: GoogleFonts.inter(
+              fontSize: 11,
+              fontWeight: FontWeight.w400,
+              color: const Color(0xFF918F8F),
             ),
-          ],
+          ),
         ],
       ),
     );

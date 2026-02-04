@@ -207,8 +207,6 @@ class _ScanningScreenState extends State<ScanningScreen>
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) {
-        SiteModel? selected;
-
         const double siteRowHeight = 64;
         const int maxVisibleSites = 3;
 
