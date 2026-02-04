@@ -240,11 +240,14 @@ class _HomeContentState extends State<_HomeContent> {
                   child: InkWell(
                     onTap: () async {
                       // await testPasskeyFrameGeneration('1974');
-                      Navigator.of(context).push(
+                      await Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (context) => ScanningScreen(),
                         ),
                       );
+                      if (mounted) {
+                        await _refreshSites();
+                      }
                     },
                     child: Container(
                       width: 106,
