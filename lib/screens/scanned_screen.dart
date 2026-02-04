@@ -9,11 +9,13 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/screens/log_retrieval_loading_screen.dart';
-import 'package:techno_switch_solar_app/screens/log_retreival_failed_screen.dart';
 import 'package:techno_switch_solar_app/screens/project_dashboard.dart';
 import 'package:techno_switch_solar_app/screens/scanning_screen.dart';
 import 'package:techno_switch_solar_app/services/navigation_service.dart';
 import 'package:techno_switch_solar_app/services/panel_service.dart';
+import 'package:techno_switch_solar_app/services/site_service.dart';
+import 'package:techno_switch_solar_app/models/site_model.dart';
+import 'package:techno_switch_solar_app/screens/simple_site_creation_screen.dart';
 import 'package:usb_serial/usb_serial.dart';
 // import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
@@ -37,7 +39,164 @@ class ScannedScreen extends StatefulWidget {
 class _ScannedScreenState extends State<ScannedScreen> {
   bool _navigatingToDeviceConnecting = false;
   final PanelService _panelService = PanelService();
+  final SiteService _siteService = SiteService();
   final BleManager _bleManager = Get.find<BleManager>();
+
+  Future<int?> _promptUserToPickOrCreateSite({
+    required List<SiteModel> sites,
+    required String panelId,
+    required String panelName,
+  }) async {
+    if (!mounted) return null;
+
+    if (sites.isEmpty) {
+      final shouldCreate = await showDialog<bool>(
+        context: context,
+        barrierDismissible: false,
+        builder: (dialogContext) {
+          return AlertDialog(
+            title: const Text('Create a site?'),
+            content: Text(
+              'This panel is not associated with any site yet. Create a site to continue.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(false),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.of(dialogContext).pop(true),
+                child: const Text('Create site'),
+              ),
+            ],
+          );
+        },
+      );
+      if (shouldCreate != true) return null;
+
+      final createdSiteId = await Navigator.of(context).push<int?>(
+        MaterialPageRoute(
+          builder:
+              (_) => SimpleSiteCreationScreen(
+                retrievedLogs: const [],
+                panelName: panelName,
+                panelVersionNo: '',
+                panelId: panelId,
+                returnCreatedSiteId: true,
+              ),
+        ),
+      );
+      return createdSiteId;
+    }
+
+    SiteModel? selected;
+    final action = await showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('Select a site'),
+              content: SizedBox(
+                width: double.maxFinite,
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: sites.length,
+                  itemBuilder: (context, index) {
+                    final site = sites[index];
+                    return RadioListTile<int>(
+                      value: site.id ?? -1,
+                      groupValue: selected?.id,
+                      title: Text(site.siteName),
+                      subtitle:
+                          (site.companyName.trim().isNotEmpty ||
+                                  site.buildingName.trim().isNotEmpty)
+                              ? Text(
+                                [
+                                  site.companyName.trim(),
+                                  site.buildingName.trim(),
+                                ].where((s) => s.isNotEmpty).join(' • '),
+                              )
+                              : null,
+                      onChanged: (value) {
+                        setState(() => selected = site);
+                      },
+                    );
+                  },
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop('cancel'),
+                  child: const Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop('create'),
+                  child: const Text('Create new'),
+                ),
+                ElevatedButton(
+                  onPressed:
+                      selected == null
+                          ? null
+                          : () => Navigator.of(dialogContext).pop('select'),
+                  child: const Text('Continue'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+
+    if (action == 'select') return selected?.id;
+    if (action == 'create') {
+      final createdSiteId = await Navigator.of(context).push<int?>(
+        MaterialPageRoute(
+          builder:
+              (_) => SimpleSiteCreationScreen(
+                retrievedLogs: const [],
+                panelName: panelName,
+                panelVersionNo: '',
+                panelId: panelId,
+                returnCreatedSiteId: true,
+              ),
+        ),
+      );
+      return createdSiteId;
+    }
+
+    return null;
+  }
+
+  Future<int?> _ensureConnectedPanelHasSite({
+    required DiscoveredDevice device,
+  }) async {
+    final panelId = _extractPanelId(device.name);
+    if (panelId == null || panelId.trim().isEmpty) return null;
+
+    try {
+      final existingPanel = await _panelService.getPanelByPanelId(panelId);
+      final existingSiteId = existingPanel?.siteId;
+      if (existingSiteId != null) return existingSiteId;
+    } catch (_) {}
+
+    final sites = await _siteService.getAllSites();
+    final pickedSiteId = await _promptUserToPickOrCreateSite(
+      sites: sites,
+      panelId: panelId,
+      panelName: device.name,
+    );
+    if (pickedSiteId == null) return null;
+
+    await _siteService.assignPanelToSite(
+      panelId,
+      pickedSiteId,
+      panelName: device.name,
+    );
+    return pickedSiteId;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -290,17 +449,21 @@ class _ScannedScreenState extends State<ScannedScreen> {
                       },
                     );
                   } else {
-                    int? siteId;
-                    final panelId = _extractPanelId(device.name);
-                    if (panelId != null) {
-                      try {
-                        final panel = await _panelService.getPanelByPanelId(
-                          panelId,
+                    final siteId = await _ensureConnectedPanelHasSite(
+                      device: device,
+                    );
+
+                    if (siteId == null) {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              'No site selected. Please select/create a site to continue.',
+                            ),
+                          ),
                         );
-                        siteId = panel?.siteId;
-                      } catch (_) {
-                        siteId = null;
                       }
+                      return;
                     }
                     Navigator.of(context).pushReplacement(
                       MaterialPageRoute(

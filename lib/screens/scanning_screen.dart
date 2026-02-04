@@ -12,7 +12,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/screens/log_retrieval_loading_screen.dart';
-import 'package:techno_switch_solar_app/screens/log_retreival_failed_screen.dart';
 import 'package:techno_switch_solar_app/screens/project_dashboard.dart';
 import 'package:techno_switch_solar_app/screens/scanned_screen.dart';
 import 'package:techno_switch_solar_app/widgets/scanning_widget.dart';
@@ -20,6 +19,9 @@ import 'package:usb_serial/usb_serial.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:techno_switch_solar_app/utils/bluetooth_service.dart';
 import 'package:techno_switch_solar_app/services/panel_service.dart';
+import 'package:techno_switch_solar_app/services/site_service.dart';
+import 'package:techno_switch_solar_app/models/site_model.dart';
+import 'package:techno_switch_solar_app/screens/simple_site_creation_screen.dart';
 
 enum ScanType { usb, bluetooth }
 
@@ -45,6 +47,7 @@ class _ScanningScreenState extends State<ScanningScreen>
 
   final BluetoothService _bluetoothService = BluetoothService();
   final PanelService _panelService = PanelService();
+  final SiteService _siteService = SiteService();
   StreamSubscription? _bleResultsSub;
 
   late final AnimationController _sweepController;
@@ -62,6 +65,459 @@ class _ScanningScreenState extends State<ScanningScreen>
 
   bool _navigatingToDeviceConnecting = false;
   final BleManager _bleManager = Get.find<BleManager>();
+
+  Future<int?> _promptUserToPickOrCreateSite({
+    required List<SiteModel> sites,
+    required String panelId,
+    required String panelName,
+  }) async {
+    if (!mounted) return null;
+
+    // If there are no sites at all, force create flow.
+    if (sites.isEmpty) {
+      final shouldCreate = await showDialog<bool>(
+        context: context,
+        barrierDismissible: false,
+        builder: (dialogContext) {
+          return Dialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 64,
+                    height: 64,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFFBDEE1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Center(
+                      child: Icon(
+                        Icons.domain_add,
+                        size: 32,
+                        color: Color(0xFFEC1D24),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Create a site?',
+                    style: GoogleFonts.inter(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF3D3D3D),
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'This panel is not associated with any site yet. Create a site to continue.',
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
+                      color: const Color(0xFF918F8F),
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Actions
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          style: OutlinedButton.styleFrom(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(24),
+                            ),
+                            side: const BorderSide(color: Color(0xFFEC1D24)),
+                          ),
+                          onPressed: () {
+                            Navigator.of(dialogContext).pop(false);
+                            ble.disconnectConnectedDevice();
+                          },
+                          child: Text(
+                            'Cancel',
+                            style: GoogleFonts.inter(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFFEC1D24),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFEC1D24),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(24),
+                            ),
+                          ),
+                          onPressed: () {
+                            Navigator.of(dialogContext).pop(true);
+                          },
+                          child: Text(
+                            'Create site',
+                            style: GoogleFonts.inter(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      );
+
+      if (shouldCreate != true) return null;
+
+      final createdSiteId = await Navigator.of(context).push<int?>(
+        MaterialPageRoute(
+          builder:
+              (_) => SimpleSiteCreationScreen(
+                retrievedLogs: const [],
+                panelName: panelName,
+                panelVersionNo: '',
+                panelId: panelId,
+                returnCreatedSiteId: true,
+              ),
+        ),
+      );
+      return createdSiteId;
+    }
+
+    SiteModel? selected;
+    final action = await showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        SiteModel? selected;
+
+        const double siteRowHeight = 64;
+        const int maxVisibleSites = 3;
+
+        final visibleCount =
+            sites.length < maxVisibleSites ? sites.length : maxVisibleSites;
+
+        final listHeight =
+            visibleCount * siteRowHeight + ((visibleCount - 1) * 8); // spacing
+
+        return StatefulBuilder(
+          builder: (_, setState) {
+            return Dialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // ───────── Icon ─────────
+                    Container(
+                      width: 64,
+                      height: 64,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFFBDEE1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Center(
+                        child: Icon(
+                          Icons.location_city,
+                          size: 32,
+                          color: Color(0xFFEC1D24),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // ───────── Title ─────────
+                    Text(
+                      'Select a site',
+                      style: GoogleFonts.inter(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF3D3D3D),
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+
+                    const SizedBox(height: 8),
+
+                    Text(
+                      'Choose the site where this panel should be assigned.',
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w400,
+                        color: const Color(0xFF918F8F),
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    // ───────── Site List (dynamic height) ─────────
+                    SizedBox(
+                      height: listHeight.toDouble(),
+                      child: ListView.separated(
+                        physics:
+                            sites.length > maxVisibleSites
+                                ? const BouncingScrollPhysics()
+                                : const NeverScrollableScrollPhysics(),
+                        itemCount: sites.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 8),
+                        itemBuilder: (_, index) {
+                          final site = sites[index];
+                          final isSelected = selected?.id == site.id;
+
+                          return GestureDetector(
+                            onTap: () => setState(() => selected = site),
+                            child: Container(
+                              height: siteRowHeight,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 12,
+                              ),
+                              decoration: BoxDecoration(
+                                color:
+                                    isSelected
+                                        ? const Color(
+                                          0xFFEC1D24,
+                                        ).withOpacity(0.08)
+                                        : const Color(0xFFF8F8F8),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color:
+                                      isSelected
+                                          ? const Color(0xFFEC1D24)
+                                          : const Color(0xFFD0D0D0),
+                                  width: isSelected ? 2 : 1,
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Text(
+                                          site.siteName,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: GoogleFonts.inter(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w600,
+                                            color: const Color(0xFF3D3D3D),
+                                          ),
+                                        ),
+                                        if (site.companyName
+                                                .trim()
+                                                .isNotEmpty ||
+                                            site.buildingName.trim().isNotEmpty)
+                                          Padding(
+                                            padding: const EdgeInsets.only(
+                                              top: 4,
+                                            ),
+                                            child: Text(
+                                              [
+                                                    site.companyName.trim(),
+                                                    site.buildingName.trim(),
+                                                  ]
+                                                  .where((s) => s.isNotEmpty)
+                                                  .join(' • '),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: GoogleFonts.inter(
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.w400,
+                                                color: const Color(0xFF918F8F),
+                                              ),
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                                  ),
+                                  if (isSelected)
+                                    const Icon(
+                                      Icons.check_circle,
+                                      color: Color(0xFFEC1D24),
+                                    ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    // ───────── Actions ─────────
+                    Column(
+                      children: [
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFFEC1D24),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(24),
+                              ),
+                            ),
+                            onPressed:
+                                selected == null
+                                    ? null
+                                    : () => Navigator.of(
+                                      dialogContext,
+                                    ).pop('select'),
+                            child: Text(
+                              'Continue',
+                              style: GoogleFonts.inter(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 12),
+
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextButton(
+                                onPressed: () {
+                                  Navigator.of(dialogContext).pop('cancel');
+                                  ble.disconnectConnectedDevice();
+                                },
+                                child: Text(
+                                  'Cancel',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                    color: const Color(0xFF918F8F),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: OutlinedButton(
+                                style: OutlinedButton.styleFrom(
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(24),
+                                  ),
+                                  side: const BorderSide(
+                                    color: Color(0xFFEC1D24),
+                                    width: 1.5,
+                                  ),
+                                  backgroundColor: const Color(
+                                    0xFFEC1D24,
+                                  ).withOpacity(0.04),
+                                ),
+                                onPressed:
+                                    () => Navigator.of(
+                                      dialogContext,
+                                    ).pop('create'),
+                                child: Text(
+                                  'Create',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: const Color(0xFFEC1D24),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+
+    if (action == 'select') return selected?.id;
+    if (action == 'create') {
+      final createdSiteId = await Navigator.of(context).push<int?>(
+        MaterialPageRoute(
+          builder:
+              (_) => SimpleSiteCreationScreen(
+                retrievedLogs: const [],
+                panelName: panelName,
+                panelVersionNo: '',
+                panelId: panelId,
+                returnCreatedSiteId: true,
+              ),
+        ),
+      );
+      return createdSiteId;
+    }
+
+    return null;
+  }
+
+  Future<int?> _ensureConnectedPanelHasSite({
+    required DiscoveredDevice device,
+  }) async {
+    final panelId = _extractPanelId(device.name);
+    if (panelId == null || panelId.trim().isEmpty) return null;
+
+    try {
+      final existingPanel = await _panelService.getPanelByPanelId(panelId);
+      final existingSiteId = existingPanel?.siteId;
+      if (existingSiteId != null) return existingSiteId;
+    } catch (_) {
+      // Ignore and fall back to prompting user.
+    }
+
+    final sites = await _siteService.getAllSites();
+    final pickedSiteId = await _promptUserToPickOrCreateSite(
+      sites: sites,
+      panelId: panelId,
+      panelName: device.name,
+    );
+
+    if (pickedSiteId == null) return null;
+
+    // Persist association (idempotent if already assigned to same site).
+    await _siteService.assignPanelToSite(
+      panelId,
+      pickedSiteId,
+      panelName: device.name,
+    );
+    return pickedSiteId;
+  }
 
   @override
   void initState() {
@@ -1172,68 +1628,86 @@ class _ScanningScreenState extends State<ScanningScreen>
   }) {
     final bleController = Get.find<BleLogController>();
     final connectionNotifier = bleController.bleManager.isConnectedNotifier;
-    final maxBleConnectionRetriesReached =
+    final maxRetriesNotifier =
         bleController.bleManager.maxBleConnectionRetriesReached;
+
     bool hasNavigated = false;
 
     final mergedListenable = Listenable.merge([
       connectionNotifier,
-      maxBleConnectionRetriesReached,
+      maxRetriesNotifier,
     ]);
 
-    showDialog(
+    showDialog<bool>(
       context: context,
       barrierDismissible: false,
+      useRootNavigator: true,
       builder: (dialogContext) {
         return ListenableBuilder(
           listenable: mergedListenable,
-          builder: (context, _) {
+          builder: (_, __) {
             final isConnected = connectionNotifier.value;
-            final maxRetries = maxBleConnectionRetriesReached.value;
+            final maxRetries = maxRetriesNotifier.value;
 
+            // 🔥 SUCCESS PATH
             if (isConnected && !hasNavigated) {
               hasNavigated = true;
-              Future.delayed(const Duration(seconds: 2), () async {
-                if (context.mounted && hasNavigated) {
-                  Navigator.of(context).pop();
-                  if (widget.isLiveEvent == true) {
-                    showPasswordPopup(
-                      device: device,
-                      onCall: () {
-                        bleController.startLogRetrieval();
-                      },
-                    );
-                  } else {
-                    // Resolve site association by panel ID (TECHNOSWITCH_<panelId>)
-                    int? siteId;
-                    final panelId = _extractPanelId(device.name);
-                    if (panelId != null) {
-                      try {
-                        final panel = await _panelService.getPanelByPanelId(
-                          panelId,
-                        );
-                        siteId = panel?.siteId;
-                      } catch (_) {
-                        siteId = null;
-                      }
-                    }
 
-                    Navigator.of(context).pushReplacement(
-                      MaterialPageRoute(
-                        builder:
-                            (context) => ProjectDashboardScreen(
-                              selectedDevice: device,
-                              panelVersionNo: device.id,
-                              panelName: device.name,
-                              siteId: siteId,
-                            ),
+              // Close dialog first
+              WidgetsBinding.instance.addPostFrameCallback((_) async {
+                if (!dialogContext.mounted) return;
+
+                Navigator.of(dialogContext, rootNavigator: true).pop(true);
+
+                await Future.delayed(const Duration(milliseconds: 150));
+
+                if (!context.mounted) return;
+
+                if (widget.isLiveEvent == true) {
+                  showPasswordPopup(
+                    device: device,
+                    onCall: () {
+                      bleController.startLogRetrieval();
+                    },
+                  );
+                  return;
+                }
+
+                // Resolve site
+                final siteId = await _ensureConnectedPanelHasSite(
+                  device: device,
+                );
+
+                if (siteId == null) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'No site selected. Please select or create a site.',
+                        ),
                       ),
                     );
                   }
+                  return;
                 }
+
+                if (!context.mounted) return;
+
+                Navigator.of(context, rootNavigator: true).pushReplacement(
+                  MaterialPageRoute(
+                    builder:
+                        (_) => ProjectDashboardScreen(
+                          selectedDevice: device,
+                          panelVersionNo: device.id,
+                          panelName: device.name,
+                          siteId: siteId,
+                        ),
+                  ),
+                );
               });
             }
 
+            // 🔥 UI ONLY BELOW — NO NAVIGATION HERE
             return Dialog(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
@@ -1288,9 +1762,9 @@ class _ScanningScreenState extends State<ScanningScreen>
                     const SizedBox(height: 8),
                     Text(
                       isConnected
-                          ? 'Preparing to navigate...'
+                          ? 'Preparing dashboard...'
                           : maxRetries
-                          ? 'Please scan again and connect to the device'
+                          ? 'Please scan again and reconnect.'
                           : 'Please wait while we connect to ${device.name}',
                       style: GoogleFonts.inter(
                         fontSize: 14,
@@ -1311,7 +1785,10 @@ class _ScanningScreenState extends State<ScanningScreen>
                             ),
                           ),
                           onPressed: () {
-                            Navigator.of(dialogContext).pop();
+                            Navigator.of(
+                              dialogContext,
+                              rootNavigator: true,
+                            ).pop();
                           },
                           child: Text(
                             'OK',

@@ -504,17 +504,6 @@ class _HomeContentState extends State<_HomeContent> {
       );
     }
 
-    if (_sites.isEmpty) {
-      return Text(
-        'No Sites Yet',
-        style: GoogleFonts.inter(
-          fontSize: 14,
-          fontWeight: FontWeight.w400,
-          color: Color(0xFF3D3D3D),
-        ),
-      );
-    }
-
     return SizedBox(
       height: MediaQuery.sizeOf(context).height - 550,
       child: RefreshIndicator(
@@ -523,11 +512,23 @@ class _HomeContentState extends State<_HomeContent> {
         child: ListView.separated(
           physics: AlwaysScrollableScrollPhysics(),
           shrinkWrap: true,
-          itemCount: _sites.length,
+          itemCount: _sites.isEmpty ? 1 : _sites.length,
           separatorBuilder: (context, index) {
             return SizedBox(height: 10);
           },
           itemBuilder: (context, index) {
+            if (_sites.isEmpty) {
+              return Center(
+                child: Text(
+                  'No Sites Yet',
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w400,
+                    color: Color(0xFF3D3D3D),
+                  ),
+                ),
+              );
+            }
             final siteWithLogCount = _sites[index];
             final site = siteWithLogCount.site;
 

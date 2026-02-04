@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:techno_switch_solar_app/screens/device_connecting_screen.dart';
 import '../models/log_model.dart';
 import '../services/app_services.dart';
 import '../services/site_service.dart';
@@ -14,6 +15,9 @@ class SimpleSiteCreationScreen extends StatefulWidget {
   final String? panelName;
   final String? panelVersionNo;
   final String? panelId; // Store panel ID to associate with site
+  /// If true, this screen will `pop(siteId)` on success (and `pop(null)` on cancel)
+  /// instead of navigating to `HomeScreen()`.
+  final bool returnCreatedSiteId;
 
   const SimpleSiteCreationScreen({
     super.key,
@@ -21,6 +25,7 @@ class SimpleSiteCreationScreen extends StatefulWidget {
     this.panelName,
     this.panelVersionNo,
     this.panelId,
+    this.returnCreatedSiteId = false,
   });
 
   @override
@@ -260,11 +265,16 @@ class _SimpleSiteCreationScreenState extends State<SimpleSiteCreationScreen> {
         ),
       );
 
-      // Navigate back to home screen
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (context) => HomeScreen()),
-        (route) => false,
-      );
+      if (widget.returnCreatedSiteId) {
+        // Return created site id to caller (e.g. connect flow)
+        Navigator.of(context).pop(site.id);
+      } else {
+        // Navigate back to home screen
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => HomeScreen()),
+          (route) => false,
+        );
+      }
     } catch (error) {
       setState(() {
         _isLoading = false;
@@ -412,16 +422,24 @@ class _SimpleSiteCreationScreenState extends State<SimpleSiteCreationScreen> {
                                           _isLoading
                                               ? null
                                               : () {
-                                                Navigator.of(
-                                                  context,
-                                                ).pushAndRemoveUntil(
-                                                  MaterialPageRoute(
-                                                    builder:
-                                                        (context) =>
-                                                            HomeScreen(),
-                                                  ),
-                                                  (route) => false,
-                                                );
+                                                if (widget
+                                                    .returnCreatedSiteId) {
+                                                  Navigator.of(
+                                                    context,
+                                                  ).pop(null);
+                                                  ble.disconnectConnectedDevice();
+                                                } else {
+                                                  Navigator.of(
+                                                    context,
+                                                  ).pushAndRemoveUntil(
+                                                    MaterialPageRoute(
+                                                      builder:
+                                                          (context) =>
+                                                              HomeScreen(),
+                                                    ),
+                                                    (route) => false,
+                                                  );
+                                                }
                                               },
                                       child: Container(
                                         height: 56,
