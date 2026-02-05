@@ -18,6 +18,43 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
   String holdCount = 'Disabled';
   String action = 'Pulse 100ms On';
 
+  List<String> enabledOptions = ['Yes', 'No'];
+  List<String> actuatorTypeOptions = [
+    'Not Defined',
+    'Metron',
+    'Solenoid',
+    'Aerosol',
+  ];
+  List<String> functionOptions = [
+    'Z1 and Z2',
+    'Z2 and Z3',
+    'Z1 and Z3',
+    'Z1 and Z2 and Z3',
+    'Z1',
+    'Z2',
+    'Z3',
+    'Any 2 zones',
+    'Any 1 zone',
+  ];
+  List<String> resetInCountOptions = ['Yes', 'No'];
+  List<String> holdCountOptions = [
+    'Disabled',
+    'Restart',
+    'Suspend',
+    'Continue',
+  ];
+  List<String> actionOptions = [
+    'Pulse 100ms On',
+    'Pulse 300ms On',
+    'Pulse 600ms On',
+    'Pulse 1s On',
+    'Pulse 5s On',
+    'Pulsing 100ms On, 500ms Off',
+    'Pulsing 300ms On, 1.5s Off',
+    'Pulsing 600ms On, 3s Off',
+    'Pulsing 1s On, 3s Off',
+  ];
+
   // Controllers
   final autoCtrl = TextEditingController();
   final manCtrl = TextEditingController();
@@ -64,10 +101,12 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
                   padding: const EdgeInsets.only(top: 16),
                   child: Column(
                     children: [
-                      _dropdown('Enabled', enabled, [
-                        'Yes',
-                        'No',
-                      ], (v) => setState(() => enabled = v)),
+                      _dropdown(
+                        'Enabled',
+                        enabled,
+                        enabledOptions,
+                        (v) => setState(() => enabled = v),
+                      ),
 
                       // _selectorField(
                       //   label: 'Enabled',
@@ -78,21 +117,16 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
                       _dropdown(
                         'Actuator Type',
                         actuatorType,
-                        ['Not Defined', 'Metron', 'Solenoid', 'Aerosol'],
+                        actuatorTypeOptions,
                         (v) => setState(() => actuatorType = v),
                       ),
 
-                      _dropdown('Function', function, [
-                        'Z1 and Z2',
-                        'Z2 and Z3',
-                        'Z1 and Z3',
-                        'Z1 and Z2 and Z3',
-                        'Z1',
-                        'Z2',
-                        'Z3',
-                        'Any 2 zones',
-                        'Any 1 zone',
-                      ], (v) => setState(() => function = v)),
+                      _dropdown(
+                        'Function',
+                        function,
+                        functionOptions,
+                        (v) => setState(() => function = v),
+                      ),
 
                       _numberField('Countdown Auto (s)', autoCtrl),
                       _numberField('Countdown Man (s)', manCtrl),
@@ -102,28 +136,23 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
                       _dropdown(
                         'Reset in Count',
                         resetInCount,
-                        ['Yes', 'No'],
+                        resetInCountOptions,
                         (v) => setState(() => resetInCount = v),
                       ),
 
                       _dropdown(
                         'Hold / Count',
                         holdCount,
-                        ['Disabled', 'Restart', 'Suspend', 'Continue'],
+                        holdCountOptions,
                         (v) => setState(() => holdCount = v),
                       ),
 
-                      _dropdown('Action', action, [
-                        'Pulse 100ms On',
-                        'Pulse 300ms On',
-                        'Pulse 600ms On',
-                        'Pulse 1s On',
-                        'Pulse 5s On',
-                        'Pulsing 100ms On, 500ms Off',
-                        'Pulsing 300ms On, 1.5s Off',
-                        'Pulsing 600ms On, 3s Off',
-                        'Pulsing 1s On, 3s Off',
-                      ], (v) => setState(() => action = v)),
+                      _dropdown(
+                        'Action',
+                        action,
+                        actionOptions,
+                        (v) => setState(() => action = v),
+                      ),
                     ],
                   ),
                 ),
