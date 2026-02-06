@@ -19,9 +19,15 @@ class BleLogController extends GetxController {
   }) async {
     final int resolvedMaxRetries = maxRetries ?? (fastReconnect ? 3 : 3);
     final Duration resolvedRetryDelay =
-        retryDelay ?? (fastReconnect ? const Duration(milliseconds: 300) : const Duration(seconds: 1));
+        retryDelay ??
+        (fastReconnect
+            ? const Duration(milliseconds: 300)
+            : const Duration(seconds: 1));
     final Duration resolvedConnectionTimeout =
-        connectionTimeout ?? (fastReconnect ? const Duration(seconds: 4) : const Duration(seconds: 10));
+        connectionTimeout ??
+        (fastReconnect
+            ? const Duration(seconds: 4)
+            : const Duration(seconds: 10));
 
     await bleManager.connectToKnownDevice(
       device: device,
@@ -45,6 +51,18 @@ class BleLogController extends GetxController {
 
   sendNetworkPacket() async {
     await bleManager.sendNetworkPacket();
+  }
+
+  sendAccessKeyPacket() async {
+    await bleManager.sendAccessKeyPkt();
+  }
+
+  startExtOut() async {
+    await bleManager.startExtOut();
+  }
+
+  sendExtOutCommand() async {
+    await bleManager.sendExtOutSetupCmdPkt();
   }
 
   startContinouspolling() {

@@ -1508,7 +1508,20 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 peripheralName: 'Ext Out',
                 iconPath: 'assets/svgs/peripheral_ext_out_icon.svg',
                 onTap: () {
-                  showExtOutBottomSheet(context);
+                  if (_selectedDevice.manufacturerData.last == 1) {
+                    showBootloaderModeDialog(context: context);
+                    return;
+                  }
+                  showExtOutBottomSheet(
+                    context: context,
+                    onCall: () {
+                      showPasswordPopup(
+                        onCall: () {
+                          bleController.startExtOut();
+                        },
+                      );
+                    },
+                  );
                 },
               ),
             ],
@@ -1518,13 +1531,16 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     );
   }
 
-  void showExtOutBottomSheet(BuildContext context) {
+  void showExtOutBottomSheet({
+    required BuildContext context,
+    required Function() onCall,
+  }) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       barrierColor: Colors.black.withOpacity(0.4),
-      builder: (_) => const ExtOutBottomSheet(),
+      builder: (_) => ExtOutBottomSheet(onCall: onCall),
     );
   }
 

@@ -65,6 +65,26 @@ class BleProcess {
 
   final ValueNotifier<int> bleManufacturerData = ValueNotifier<int>(0);
 
+  final ValueNotifier<String> extZoneMode = ValueNotifier<String>("18");
+
+  final ValueNotifier<int> extZoneActuatorType = ValueNotifier<int>(0);
+
+  final ValueNotifier<int> extZoneFunction = ValueNotifier<int>(0);
+
+  final ValueNotifier<int> extZoneCountdownAuto = ValueNotifier<int>(10);
+
+  final ValueNotifier<int> extZoneCountdownMan = ValueNotifier<int>(15);
+
+  final ValueNotifier<int> extZoneReleaseTime = ValueNotifier<int>(10);
+
+  final ValueNotifier<int> extZoneResetDelay = ValueNotifier<int>(5);
+
+  final ValueNotifier<int> extZoneAction = ValueNotifier<int>(0);
+
+  final ValueNotifier<String> extZoneText = ValueNotifier<String>(
+    "EXT-Out-Text------001",
+  );
+
   // BleStates bleStateMachineState = BleStates.IDLE;
   BleStates bleCurrentState = BleStates.IDLE;
   DeviceConnectState deviceConnectState = DeviceConnectState.notConnected;
@@ -315,6 +335,41 @@ class BleProcess {
     panelName.value = "";
   }
 
+  void resetProcessExtOutState() {
+    // Terminal guards
+    isOtaCompleted = false;
+    // processNextOtaFrame = true;
+    // logRetreivalEnded = false;
+
+    // Counters
+    // checkForCtrlCmdRsp = 0;
+    checkForAccessKeyCmdRsp = 0;
+    // validEventLogNum = 0;
+    // read1000Logs = 0;
+    receivedPollCount = 0;
+
+    // Time tracking
+    // logStartingTime = null;
+    // logEndTime = null;
+
+    // OTA state
+    // bleManager.otaProcessState = OtaProcessState.sendNetworkPacket;
+
+    // RX timeout
+    _rxTimeoutTimer?.cancel();
+    _rxTimeoutTimer = null;
+
+    _otherPacketsRxTimeoutTimer?.cancel();
+    _otherPacketsRxTimeoutTimer = null;
+
+    // UI notifiers
+    // validEventLogCount.value = 0;
+    // read1000LogsCount.value = 0;
+    // validEventLogs.value = [];
+    // isValidLogRecieved.value = false;
+    // panelName.value = "";
+  }
+
   String formatDuration(Duration d) {
     final m = d.inMinutes;
     final s = d.inSeconds.remainder(60);
@@ -361,6 +416,13 @@ class BleProcess {
     await bleManager.sendAuthnMsg();
     bleManager.bleStateMachineState = BleStates.PROCESS_WAIT_RSP;
     bleCurrentState = BleStates.SEND_AUTHN_MSG;
+  }
+
+  sendExtOutPacket() async {
+    processDesc.value = "Sending Ext Out Packet";
+    await bleManager.sendExtOutSetupCmdPkt();
+    bleManager.bleStateMachineState = BleStates.SEND_EXT_OUT_SETUP_CMD_PACKET;
+    bleCurrentState = BleStates.SEND_EXT_OUT_SETUP_CMD_PACKET;
   }
 
   // Public method to cancel timer

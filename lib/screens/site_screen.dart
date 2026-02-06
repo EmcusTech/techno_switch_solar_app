@@ -502,16 +502,16 @@ class _SiteScreenState extends State<SiteScreen> {
         child: Stack(
           children: [
             _buildHeader(context),
-            Padding(
-              padding: const EdgeInsets.only(top: 330),
-              child: Column(
-                children: [
-                  _buildSiteDetails(),
-                  SizedBox(height: 20),
-                  _buildPanels(),
-                ],
-              ),
-            ),
+            // Padding(
+            //   padding: const EdgeInsets.only(top: 330),
+            //   child: Column(
+            //     children: [
+            //       _buildSiteDetails(),
+            //       SizedBox(height: 20),
+            //       _buildPanels(),
+            //     ],
+            //   ),
+            // ),
           ],
         ),
       ),
@@ -521,102 +521,124 @@ class _SiteScreenState extends State<SiteScreen> {
   Widget _buildHeader(BuildContext context) {
     return Stack(
       children: [
-        Padding(
-          padding: const EdgeInsets.only(top: 100),
-          child: Align(
-            alignment: Alignment.topCenter,
-            child: Opacity(
-              opacity: 0.3,
-              child: Container(
-                width: 166,
-                height: 166,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Color(0xffEC1D24).withValues(alpha: 0.5),
-                ),
-              ),
-            ),
-          ),
-        ),
+        // Padding(
+        //   padding: const EdgeInsets.only(top: 100),
+        //   child: Align(
+        //     alignment: Alignment.topCenter,
+        //     child: Opacity(
+        //       opacity: 0.3,
+        //       child: Container(
+        //         width: 166,
+        //         height: 166,
+        //         decoration: BoxDecoration(
+        //           shape: BoxShape.circle,
+        //           color: Color(0xffEC1D24).withValues(alpha: 0.5),
+        //         ),
+        //       ),
+        //     ),
+        //   ),
+        // ),
         SvgPicture.asset('assets/svgs/background_1.svg'),
+        // Padding(
+        //   padding: const EdgeInsets.only(top: 100),
+        //   child: Column(
+        //     children: [
+        //       Align(
+        //         alignment: Alignment.topCenter,
+        //         child: Padding(
+        //           padding: const EdgeInsets.all(30.0),
+        //           child: InkWell(
+        //             onTap: () {
+        //               Navigator.of(context).push(
+        //                 MaterialPageRoute(
+        //                   builder: (context) => ScanningScreen(),
+        //                 ),
+        //               );
+        //             },
+        //             child: Container(
+        //               width: 106,
+        //               height: 106,
+        //               decoration: BoxDecoration(
+        //                 shape: BoxShape.circle,
+        //                 color: Color(0xFFFBDEE1),
+        //               ),
+        //               child: Padding(
+        //                 padding: const EdgeInsets.all(25.0),
+        //                 child: SvgPicture.asset(
+        //                   'assets/svgs/logo.svg',
+        //                   height: 59.29,
+        //                   width: 51,
+        //                   colorFilter: ColorFilter.mode(
+        //                     Color(0xFFEC1D24),
+        //                     BlendMode.srcIn,
+        //                   ),
+        //                 ),
+        //               ),
+        //             ),
+        //           ),
+        //         ),
+        //       ),
+        //       SizedBox(height: 15),
+        //       Text(
+        //         'Tap to connect',
+        //         style: GoogleFonts.inter(
+        //           fontSize: 14,
+        //           fontWeight: FontWeight.w400,
+        //           color: Color(0xFF3D3D3D),
+        //         ),
+        //       ),
+        //     ],
+        //   ),
+        // ),
         Padding(
-          padding: const EdgeInsets.only(top: 100),
+          padding: const EdgeInsets.only(top: 120),
           child: Column(
             children: [
-              Align(
-                alignment: Alignment.topCenter,
-                child: Padding(
-                  padding: const EdgeInsets.all(30.0),
-                  child: InkWell(
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) => ScanningScreen(),
-                        ),
-                      );
-                    },
-                    child: Container(
-                      width: 106,
-                      height: 106,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Color(0xFFFBDEE1),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(25.0),
-                        child: SvgPicture.asset(
-                          'assets/svgs/logo.svg',
-                          height: 59.29,
-                          width: 51,
-                          colorFilter: ColorFilter.mode(
-                            Color(0xFFEC1D24),
-                            BlendMode.srcIn,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              SizedBox(height: 15),
-              Text(
-                'Tap to connect',
-                style: GoogleFonts.inter(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w400,
-                  color: Color(0xFF3D3D3D),
-                ),
-              ),
+              _buildSiteDetails(),
+              SizedBox(height: 20),
+              _buildPanels(),
             ],
           ),
         ),
         Positioned(
           top: 50,
           left: 20,
-          child: GestureDetector(
-            onTap: () {
-              Navigator.of(context).pop();
-            },
-            child: Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
+          child: Row(
+            children: [
+              GestureDetector(
+                onTap: () {
+                  Navigator.of(context).pop();
+                },
+                child: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
-                ],
+                  child: const Icon(
+                    Icons.arrow_back_ios_new,
+                    color: Color(0xFF3D3D3D),
+                    size: 18,
+                  ),
+                ),
               ),
-              child: const Icon(
-                Icons.arrow_back_ios_new,
-                color: Color(0xFF3D3D3D),
-                size: 18,
+              SizedBox(width: 12),
+              Text(
+                'Site Information',
+                style: GoogleFonts.inter(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
-            ),
+            ],
           ),
         ),
       ],

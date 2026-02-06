@@ -40,6 +40,7 @@ enum BleStates {
   SEND_END_FIRMWARE_PACKET,
   SEND_FIRMWARE_PACKET,
   SEND_JUMP_FIRMWARE_PACKET,
+  SEND_EXT_OUT_SETUP_CMD_PACKET,
   // add other states
 }
 
@@ -60,6 +61,7 @@ enum BleOperationMode {
   none, // No active operation
   firmwareUpgrade, // Firmware upgrade in progress
   logRetrieval, // Event log retrieval in progress
+  extOut,
 }
 
 const String BLE_AUTHN_MSG = "TECHNOSWITCH-AUTH-APP";
@@ -135,6 +137,25 @@ class BleManager {
 
   ValueNotifier<int> get bleManufacturerData => bleProcess.bleManufacturerData;
 
+  ValueNotifier<String> get extZoneMode => bleProcess.extZoneMode;
+
+  ValueNotifier<int> get extZoneActuatorType => bleProcess.extZoneActuatorType;
+
+  ValueNotifier<int> get extZoneFunction => bleProcess.extZoneFunction;
+
+  ValueNotifier<int> get extZoneCountdownAuto =>
+      bleProcess.extZoneCountdownAuto;
+
+  ValueNotifier<int> get extZoneCountdownMan => bleProcess.extZoneCountdownMan;
+
+  ValueNotifier<int> get extZoneReleaseTime => bleProcess.extZoneReleaseTime;
+
+  ValueNotifier<int> get extZoneResetDelay => bleProcess.extZoneResetDelay;
+
+  ValueNotifier<int> get extZoneAction => bleProcess.extZoneAction;
+
+  ValueNotifier<String> get extZoneText => bleProcess.extZoneText;
+
   void resetProtocolState() {
     // Packet counters
     u8TxPktCnt = 0;
@@ -146,6 +167,19 @@ class BleManager {
 
     // OTA state
     otaProcessState = OtaProcessState.sendNetworkPacket;
+  }
+
+  void resetProtocolExtOutState() {
+    // Packet counters
+    u8TxPktCnt = 0;
+    u8RxPktCnt = 0;
+    receivedPollCount = 0;
+
+    // Poll guards
+    _pollInFlight = false;
+
+    // OTA state
+    // otaProcessState = OtaProcessState.sendNetworkPacket;
   }
 
   void resetFirmwareState() {
@@ -169,6 +203,15 @@ class BleManager {
     _pollInFlight = false;
     receivedPollCount = 0;
     currentOperationMode = BleOperationMode.logRetrieval;
+  }
+
+  void resetExtOutState() {
+    bleCurrentState = BleStates.SEND_EXT_OUT_SETUP_CMD_PACKET;
+    bleStateMachineState = BleStates.SEND_EXT_OUT_SETUP_CMD_PACKET;
+    bleAESKey.clear();
+    _pollInFlight = false;
+    receivedPollCount = 0;
+    currentOperationMode = BleOperationMode.extOut;
   }
 
   /// Initialize and start log retrieval process
@@ -214,6 +257,48 @@ class BleManager {
         timeout: const Duration(seconds: 5),
       );
       Get.find<BleLogController>().sendNetworkPacket();
+    }
+  }
+
+  Future<void> startExtOut() async {
+    if (!isConnected) {
+      throw Exception("Device not connected. Cannot start log retrieval.");
+    }
+
+    if (notifyChar == null || writeChar == null) {
+      throw Exception(
+        "BLE characteristics not initialized. Cannot start log retrieval.",
+      );
+    }
+
+    // Set operation mode to log retrieval
+    currentOperationMode = BleOperationMode.extOut;
+
+    // Reset protocol state to initial values
+    resetExtOutState();
+    resetProtocolExtOutState();
+
+    // IMPORTANT: Reset process state to clear isOtaCompleted flag
+    // This ensures polls aren't blocked after firmware upgrade
+    bleProcess.resetProcessExtOutState();
+
+    // Always ensure notify handler is registered (especially after reconnection)
+    // Check if subscription is null or if log retrieval hasn't been done once
+    if (_notifySub == null) {
+      print("Registering notify handler for ext out");
+      await registerNotifyHandler(isExtOut: true);
+      // Give a small delay after registration to ensure subscription is active
+      await Future.delayed(const Duration(milliseconds: 200));
+    } else {
+      print("Notify handler already registered, proceeding with log retrieval");
+      bleCurrentState = BleStates.SEND_EXT_OUT_SETUP_CMD_PACKET;
+      bleStateMachineState = BleStates.SEND_EXT_OUT_SETUP_CMD_PACKET;
+      print("Current state: $bleStateMachineState");
+      // Send Network Packet
+      bleProcess.startOtherPacketsRxTimeout(
+        timeout: const Duration(seconds: 5),
+      );
+      Get.find<BleLogController>().sendExtOutCommand();
     }
   }
 
@@ -362,10 +447,7 @@ class BleManager {
     );
 
     _connectionSub = flutterReactiveBle
-        .connectToDevice(
-          id: device.id,
-          connectionTimeout: connectionTimeout,
-        )
+        .connectToDevice(id: device.id, connectionTimeout: connectionTimeout)
         .listen(
           (update) async {
             print("Connection state: ${update.connectionState}");
@@ -459,7 +541,10 @@ class BleManager {
   }
 
   /// REGISTER NOTIFICATIONS
-  Future<void> registerNotifyHandler({bool? isChipInBootLoader = false}) async {
+  Future<void> registerNotifyHandler({
+    bool? isChipInBootLoader = false,
+    bool? isExtOut = false,
+  }) async {
     print("Register notify handler");
 
     // Cancel existing subscription if any (e.g., from previous connection)
@@ -499,7 +584,11 @@ class BleManager {
       print("Listening for notifications...");
       await Future.delayed(const Duration(milliseconds: 300));
       print("---Notification handler registered----");
-      if (isChipInBootLoader != true) {
+      if (isExtOut == true) {
+        bleStateMachineState = BleStates.SEND_EXT_OUT_SETUP_CMD_PACKET;
+        bleCurrentState = BleStates.SEND_EXT_OUT_SETUP_CMD_PACKET;
+        bleProcess.sendExtOutPacket();
+      } else if (isChipInBootLoader != true) {
         // Request encryption key for both firmware upgrade (first connection) and log retrieval
         bleProcess.requestENCKey();
       } else {
@@ -609,22 +698,21 @@ class BleManager {
   // ----------------------
   // Notification Handler
   // ----------------------
+
   Future<void> notificationHandler(Uint8List data) async {
-    print("bleprocess: ${bleProcess.isOtaCompleted}");
-    print("otaProcessState: $otaProcessState");
-    print("currentOperationMode: $currentOperationMode");
     if ((bleProcess.isOtaCompleted ||
             otaProcessState == OtaProcessState.notInUse) &&
         isBleDisconnected) {
       print("RX ignored after OTA completion");
       return;
     }
+
     print(
       "TX/RX: --------notify received----- RX TIME:${DateTime.now().toIso8601String()}",
     );
+
     txData = 1;
     bleProcess.cancelRxTimeout();
-    // Any notify received implies previous write completed → allow next poll
     _pollInFlight = false;
     if (bleCurrentState == BleStates.SEND_JUMP_FIRMWARE_PACKET) {
       print("Jump firmware packet response");
@@ -1283,5 +1371,132 @@ class BleManager {
         await Future.delayed(interPacketDelay);
       }
     }
+  }
+
+  Future<void> sendExtOutSetupCmdPkt() async {
+    // Create 216-byte buffer
+    Uint8List u8_pkt = Uint8List(216);
+
+    final int autoDelay = extZoneCountdownAuto.value;
+    final int manDelay = extZoneCountdownMan.value;
+    final int releasePeriod = extZoneReleaseTime.value;
+    final int resetDelay = extZoneResetDelay.value;
+    final String extZoneString = extZoneText.value;
+    final List<int> extZoneTextBytes = extZoneString.codeUnits;
+    final extZoneTextLength = extZoneTextBytes.length;
+    // List<int> accessKeyBytes = accessKey.value.codeUnits;
+    // pkt[14] = accessKeyBytes[0];
+    // pkt[15] = accessKeyBytes[1];
+    // pkt[16] = accessKeyBytes[2];
+    // pkt[17] = accessKeyBytes[3];
+
+    final initialindex = 41;
+
+    for (int i = 0; i < extZoneTextLength; i++) {
+      u8_pkt[initialindex + i] = extZoneTextBytes[i];
+    }
+
+    // Update global counters
+    u8TxPktCnt += 1;
+
+    u8_pkt[0] = 0xFE;
+    u8_pkt[1] = 0x01;
+    u8_pkt[2] = 0x00;
+
+    u8_pkt[3] = 0x01; // pkt type
+    u8_pkt[4] = u8TxPktCnt & 0xFF; // tx pkt num
+    u8_pkt[5] = u8RxPktCnt & 0xFF; // rx pkt num
+    u8_pkt[6] = 0x00; // network number
+    u8_pkt[10] = 0x81; // mode
+    u8_pkt[11] = 0x00; // socket number
+    u8_pkt[12] = 0x16; // command byte 1
+    u8_pkt[13] = 0x01; // ext max zone
+    u8_pkt[14] = int.parse(extZoneMode.value, radix: 16); // ext zone mode
+    u8_pkt[15] = 0x01; // ext zone trigger area
+    u8_pkt[16] = extZoneActuatorType.value; // ext zone actuator type
+    u8_pkt[17] =
+        (autoDelay >> 8) & 0xFF; // ext zone automatic release delay first byte
+    u8_pkt[18] =
+        autoDelay & 0xFF; // ext zone automatic release delay second byte
+    u8_pkt[19] =
+        (manDelay >> 8) & 0xFF; // ext zone manual release delay first byte
+    u8_pkt[20] = manDelay & 0xFF; // ext zone manual release delay second byte
+    u8_pkt[21] =
+        (releasePeriod >> 8) & 0xFF; // ext zone release period first byte
+    u8_pkt[22] = releasePeriod & 0xFF; // ext zone release period second byte
+    u8_pkt[23] = (resetDelay >> 8) & 0xFF; // ext zone reset delay first byte
+    u8_pkt[24] = resetDelay & 0xFF; // ext zone reset delay second byte
+    u8_pkt[25] = extZoneAction.value; // ext zone output mode
+    u8_pkt[26] = extZoneFunction.value; // ext zone function
+    u8_pkt[27] = 0x1E; // ext zone valve delay
+    u8_pkt[28] = 0x00; // ext zone extraction time first byte
+    u8_pkt[29] = 0x3C; // ext zone extraction time second byte
+    u8_pkt[30] = 0x03; // ext zone extraction delay first byte
+    u8_pkt[31] = 0x84; // ext zone extraction delay second byte
+    u8_pkt[32] = 0x00; // ext zone line resistenace value first byte
+    u8_pkt[33] = 0x00; // ext zone line resistenace value seond byte
+    u8_pkt[34] = 0x00; // ext zone line resistenace value third byte
+    u8_pkt[35] = 0x00; // ext zone line resistenace value fourth byte
+    u8_pkt[36] = 0x00; // ext zone line resistenace fraction
+    u8_pkt[37] = 0x00; // ext zone line resistenace unit
+    u8_pkt[38] = 0x00; // ext zone line resistenace count first byte
+    u8_pkt[39] = 0x00; // ext zone line resistenace count second byte
+    u8_pkt[40] = extZoneTextLength & 0xFF; // ext zone text length
+
+    // Compute checksum on first 213 bytes
+    int checksum = toolsFletcherChecksum(u8_pkt.sublist(0, 213));
+
+    u8_pkt[213] = (checksum >> 8) & 0xFF;
+    u8_pkt[214] = checksum & 0xFF;
+    u8_pkt[215] = 0xFD;
+
+    print(
+      "TX/RX: TRANSMIT: Ext Out command time: ${DateTime.now().toIso8601String()}, packet: ${u8_pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+    );
+    // print(
+    //   u8_pkt
+    //       .map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase())
+    //       .join(' '),
+    // );
+
+    await sendSmallDataFrame(0x1000, 216, u8_pkt);
+  }
+
+  Future<void> sendFetchDipSettingPkt() async {
+    // Create 216-byte buffer
+    Uint8List u8_pkt = Uint8List(216);
+
+    // Update global counters
+    u8TxPktCnt += 1;
+
+    u8_pkt[0] = 0xFE;
+    u8_pkt[1] = 0x01;
+    u8_pkt[2] = 0x00;
+
+    u8_pkt[3] = 0x01; // pkt type
+    u8_pkt[4] = u8TxPktCnt & 0xFF; // tx pkt num
+    u8_pkt[5] = u8RxPktCnt & 0xFF; // rx pkt num
+    u8_pkt[6] = 0x00; // network number
+    u8_pkt[10] = 0x01; // mode
+    u8_pkt[11] = 0x00; // socket number
+    u8_pkt[12] = 0x1C; // command byte 1
+
+    // Compute checksum on first 213 bytes
+    int checksum = toolsFletcherChecksum(u8_pkt.sublist(0, 213));
+
+    u8_pkt[213] = (checksum >> 8) & 0xFF;
+    u8_pkt[214] = checksum & 0xFF;
+    u8_pkt[215] = 0xFD;
+
+    print(
+      "TX/RX: TRANSMIT: Fetch Dip setting command time: ${DateTime.now().toIso8601String()}, packet: ${u8_pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+    );
+    // print(
+    //   u8_pkt
+    //       .map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase())
+    //       .join(' '),
+    // );
+
+    await sendSmallDataFrame(0x1000, 216, u8_pkt);
   }
 }

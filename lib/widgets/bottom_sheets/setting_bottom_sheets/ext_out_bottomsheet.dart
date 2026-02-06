@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:techno_switch_solar_app/ble/ble_manager.dart';
+import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
+import 'package:techno_switch_solar_app/utils/zone_mode_util.dart';
 
 class ExtOutBottomSheet extends StatefulWidget {
-  const ExtOutBottomSheet({super.key});
+  final Function() onCall;
+  const ExtOutBottomSheet({super.key, required this.onCall});
 
   @override
   State<ExtOutBottomSheet> createState() => ExtOutBottomSheetState();
@@ -16,9 +21,9 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
   String function = 'Z1 and Z2';
   String resetInCount = 'Yes';
   String holdCount = 'Disabled';
-  String action = 'Pulse 100ms On';
+  String action = 'Continously On';
 
-  List<String> enabledOptions = ['Yes', 'No'];
+  List<String> enabledOptions = ['No', 'Yes'];
   List<String> actuatorTypeOptions = [
     'Not Defined',
     'Metron',
@@ -44,6 +49,7 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
     'Continue',
   ];
   List<String> actionOptions = [
+    'Continously On',
     'Pulse 100ms On',
     'Pulse 300ms On',
     'Pulse 600ms On',
@@ -56,10 +62,17 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
   ];
 
   // Controllers
-  final autoCtrl = TextEditingController();
-  final manCtrl = TextEditingController();
-  final releaseCtrl = TextEditingController();
-  final resetDelayCtrl = TextEditingController();
+  final autoCtrl = TextEditingController(text: "10");
+  final manCtrl = TextEditingController(text: "15");
+  final releaseCtrl = TextEditingController(text: "10");
+  final resetDelayCtrl = TextEditingController(text: "5");
+  bool isAutoCtrlValidated = true;
+  bool isManCtrlValidated = true;
+  bool isReleaseCtrlValidated = true;
+  bool isResetDelayCtrlValidated = true;
+  BleManager? manager;
+
+  final bleController = Get.find<BleLogController>();
 
   @override
   void dispose() {
@@ -68,6 +81,24 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
     releaseCtrl.dispose();
     resetDelayCtrl.dispose();
     super.dispose();
+  }
+
+  @override
+  void initState() {
+    if (Get.isRegistered<BleLogController>()) {
+      manager = Get.find<BleLogController>().bleManager;
+    }
+    super.initState();
+  }
+
+  int returnIndex(String value, List<String> list) {
+    for (int i = 0; i < list.length; i++) {
+      if (list[i] == value) {
+        return i;
+      }
+    }
+
+    return -1;
   }
 
   @override
@@ -128,10 +159,26 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
                         (v) => setState(() => function = v),
                       ),
 
-                      _numberField('Countdown Auto (s)', autoCtrl),
-                      _numberField('Countdown Man (s)', manCtrl),
-                      _numberField('Release Time (s)', releaseCtrl),
-                      _numberField('Reset Delay (s)', resetDelayCtrl),
+                      _numberField(
+                        'Countdown Auto (s)',
+                        autoCtrl,
+                        isAutoCtrlValidated,
+                      ),
+                      _numberField(
+                        'Countdown Man (s)',
+                        manCtrl,
+                        isManCtrlValidated,
+                      ),
+                      _numberField(
+                        'Release Time (s)',
+                        releaseCtrl,
+                        isReleaseCtrlValidated,
+                      ),
+                      _numberField(
+                        'Reset Delay (s)',
+                        resetDelayCtrl,
+                        isResetDelayCtrlValidated,
+                      ),
 
                       _dropdown(
                         'Reset in Count',
@@ -271,63 +318,63 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
     );
   }
 
-  Widget _selectorField({
-    required String label,
-    required String value,
-    required List<String> options,
-    required ValueChanged<String> onSelected,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _label(label),
-          const SizedBox(height: 6),
-          GestureDetector(
-            onTap: () async {
-              final selected = await _showOptionSelector(
-                title: label,
-                options: options,
-                selected: value,
-              );
-              if (selected != null) {
-                onSelected(selected);
-              }
-            },
-            child: Container(
-              height: 48,
-              padding: const EdgeInsets.symmetric(horizontal: 14),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF8F8F8),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFFD0D0D0)),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      value,
-                      style: GoogleFonts.inter(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: const Color(0xFF3D3D3D),
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  const Icon(
-                    Icons.chevron_right_rounded,
-                    color: Color(0xFF3D3D3D),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  // Widget _selectorField({
+  //   required String label,
+  //   required String value,
+  //   required List<String> options,
+  //   required ValueChanged<String> onSelected,
+  // }) {
+  //   return Padding(
+  //     padding: const EdgeInsets.only(bottom: 14),
+  //     child: Column(
+  //       crossAxisAlignment: CrossAxisAlignment.start,
+  //       children: [
+  //         _label(label),
+  //         const SizedBox(height: 6),
+  //         GestureDetector(
+  //           onTap: () async {
+  //             final selected = await _showOptionSelector(
+  //               title: label,
+  //               options: options,
+  //               selected: value,
+  //             );
+  //             if (selected != null) {
+  //               onSelected(selected);
+  //             }
+  //           },
+  //           child: Container(
+  //             height: 48,
+  //             padding: const EdgeInsets.symmetric(horizontal: 14),
+  //             decoration: BoxDecoration(
+  //               color: const Color(0xFFF8F8F8),
+  //               borderRadius: BorderRadius.circular(12),
+  //               border: Border.all(color: const Color(0xFFD0D0D0)),
+  //             ),
+  //             child: Row(
+  //               children: [
+  //                 Expanded(
+  //                   child: Text(
+  //                     value,
+  //                     style: GoogleFonts.inter(
+  //                       fontSize: 14,
+  //                       fontWeight: FontWeight.w500,
+  //                       color: const Color(0xFF3D3D3D),
+  //                     ),
+  //                     overflow: TextOverflow.ellipsis,
+  //                   ),
+  //                 ),
+  //                 const Icon(
+  //                   Icons.chevron_right_rounded,
+  //                   color: Color(0xFF3D3D3D),
+  //                 ),
+  //               ],
+  //             ),
+  //           ),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
   Future<String?> _showOptionSelector({
     required String title,
@@ -403,7 +450,11 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
     );
   }
 
-  Widget _numberField(String label, TextEditingController controller) {
+  Widget _numberField(
+    String label,
+    TextEditingController controller,
+    bool isValidated,
+  ) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
       child: Column(
@@ -416,6 +467,22 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
             keyboardType: TextInputType.number,
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
             decoration: _inputDecoration(),
+          ),
+          Visibility(
+            visible: !isValidated,
+            child: Column(
+              children: [
+                SizedBox(height: 4),
+                Text(
+                  "$label is required",
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w400,
+                    color: Color(0xFFEC1D24),
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -465,8 +532,73 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
           ),
         ),
         onPressed: () {
-          Navigator.of(context).pop();
+          int zoneEnable = returnIndex(enabled, enabledOptions);
+          int holdRestart = returnIndex(holdCount, holdCountOptions);
+          int resetAllowedInt = returnIndex(resetInCount, resetInCountOptions);
+          bool resetAllowed = false;
+          if (resetAllowedInt == 0) {
+            resetAllowed = true;
+          }
+          if (autoCtrl.text.isEmpty) {
+            setState(() {
+              isAutoCtrlValidated = false;
+            });
+          }
+          if (manCtrl.text.isEmpty) {
+            setState(() {
+              isManCtrlValidated = false;
+            });
+          }
+          if (releaseCtrl.text.isEmpty) {
+            setState(() {
+              isReleaseCtrlValidated = false;
+            });
+          }
+          if (resetDelayCtrl.text.isEmpty) {
+            setState(() {
+              isResetDelayCtrlValidated = false;
+            });
+          }
+
+          if (isAutoCtrlValidated &&
+              isManCtrlValidated &&
+              isReleaseCtrlValidated &&
+              isResetDelayCtrlValidated) {
+            final config = ZoneModeConfig(
+              zoneEnable: ZoneEnable.values[zoneEnable],
+              zoneMode: ZoneMode.normal,
+              holdMode: HoldMode.values[holdRestart],
+              resetAllowed: resetAllowed,
+              flowDetectionUsed: false,
+            );
+
+            final String hexValue = ZoneModeCodec.encodeHex(config);
+
+            manager!.extZoneMode.value = hexValue;
+
+            manager!.extZoneCountdownAuto.value = int.parse(
+              autoCtrl.text.isEmpty ? '0' : autoCtrl.text,
+            );
+
+            manager!.extZoneCountdownMan.value = int.parse(manCtrl.text);
+
+            manager!.extZoneReleaseTime.value = int.parse(releaseCtrl.text);
+
+            manager!.extZoneResetDelay.value = int.parse(resetDelayCtrl.text);
+
+            manager!.extZoneAction.value = returnIndex(action, actionOptions);
+
+            widget.onCall();
+          } else {
+            Get.snackbar(
+              'Error',
+              'Please fill all the fields',
+              backgroundColor: Colors.red,
+              colorText: Colors.white,
+            );
+          }
         },
+
         child: Text(
           'Apply Configuration',
           style: GoogleFonts.inter(
