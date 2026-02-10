@@ -14,10 +14,13 @@ class BleProcess {
   Timer? _otherPacketsRxTimeoutTimer;
 
   int checkForCtrlCmdRsp = 0;
+  int checkForExtCmdRes = 0;
+  int checkDipSetCmdRsp = 0;
   int checkForAccessKeyCmdRsp = 0;
   int validEventLogNum = 0;
   int read1000Logs = 0;
   bool logRetreivalEnded = false;
+  // bool isExtOutCommandActive = false;
 
   DateTime? logStartingTime;
   DateTime? logEndTime;
@@ -84,6 +87,10 @@ class BleProcess {
   final ValueNotifier<String> extZoneText = ValueNotifier<String>(
     "EXT-Out-Text------001",
   );
+
+  final ValueNotifier<bool> isExtOutCommandActive = ValueNotifier<bool>(false);
+
+  final ValueNotifier<bool> isExtOutApplyActive = ValueNotifier<bool>(false);
 
   // BleStates bleStateMachineState = BleStates.IDLE;
   BleStates bleCurrentState = BleStates.IDLE;
@@ -166,6 +173,16 @@ class BleProcess {
       case OtaProcessState.notInUse:
         break;
 
+      case OtaProcessState.sendExtOutSetupFetchCmdPkt:
+        print("Sending Ext Out Setup Fetch Command");
+        // isExtOutCommandActive.value = true;
+        checkForExtCmdRes = 1;
+        break;
+
+      case OtaProcessState.sendDipSettingFetchCmd:
+        print("Sending Dip setting fetch cmd");
+        checkDipSetCmdRsp = 1;
+
       default:
         break;
     }
@@ -178,10 +195,18 @@ class BleProcess {
           String.fromCharCodes(rx.payload.sublist(14, 18)) == accessKey.value) {
         isAccessKeyValid.value = true;
         print("ACCESS KEY RECEIVED → NEXT CONTROL CMD");
-        bleManager.otaProcessState = OtaProcessState.sendStopCntrlCmdPkt;
-        checkForAccessKeyCmdRsp = 0;
-        startRxTimeout();
-        await bleManager.sendStopCntrlCmdPkt();
+        if (isExtOutCommandActive.value) {
+          bleManager.otaProcessState =
+              OtaProcessState.sendExtOutSetupFetchCmdPkt;
+          checkForAccessKeyCmdRsp = 0;
+          startRxTimeout();
+          await bleManager.sendExtOutSetupFetchCmdPkt();
+        } else {
+          bleManager.otaProcessState = OtaProcessState.sendStopCntrlCmdPkt;
+          checkForAccessKeyCmdRsp = 0;
+          startRxTimeout();
+          await bleManager.sendStopCntrlCmdPkt();
+        }
       } else if (rx.payload[13] == 0x0a &&
           String.fromCharCodes(rx.payload.sublist(14, 18)) == accessKey.value) {
         isAccessKeyValid.value = false;
@@ -190,6 +215,44 @@ class BleProcess {
         return;
       } else {
         print("ACCESS KEY not found, polling again");
+        startRxTimeout();
+        await bleManager.sendPollPacket();
+      }
+    }
+
+    if (checkDipSetCmdRsp == 1) {
+      print("Checking Dip Setting cmd resp");
+      if (rx.payload[12] == 0x1C) {
+        print("We got dip fetch response");
+        bleManager.otaProcessState = OtaProcessState.notInUse;
+        checkDipSetCmdRsp == 0;
+        print(rx.payload[14]);
+        if (rx.payload[14] == 0x00) {
+          print("The setup source is solar");
+          isExtOutApplyActive.value = true;
+        }
+      } else {
+        print("Dip setting Cmd Response not found, polling again");
+        startRxTimeout();
+        await bleManager.sendPollPacket();
+      }
+      // checkDipSetCmdRsp = 0;
+    }
+
+    // __ext out response
+
+    if (checkForExtCmdRes == 1) {
+      print(
+        "Checking EXT Fetch CMD RSP Value ${rx.payload[12]}:::::${rx.payload[12] == 0x16} ",
+      );
+      if (rx.payload[12] == 0x16) {
+        bleManager.otaProcessState = OtaProcessState.sendDipSettingFetchCmd;
+        checkForExtCmdRes = 0;
+        print("We got the response for ext fetch");
+        startRxTimeout();
+        await bleManager.sendFetchDipSettingPkt();
+      } else {
+        print("EXT Cmd Response not found, polling again");
         startRxTimeout();
         await bleManager.sendPollPacket();
       }
@@ -298,6 +361,10 @@ class BleProcess {
       await bleManager.sendStopCntrlCmdPkt();
       return;
     }
+
+    print(
+      "__________--------------------_________________------------------_________________-----------------_________________--------------_____________----------",
+    );
   }
 
   void resetProcessState() {
@@ -338,22 +405,25 @@ class BleProcess {
   void resetProcessExtOutState() {
     // Terminal guards
     isOtaCompleted = false;
-    // processNextOtaFrame = true;
-    // logRetreivalEnded = false;
+    processNextOtaFrame = true;
+    logRetreivalEnded = false;
 
     // Counters
-    // checkForCtrlCmdRsp = 0;
+    checkForCtrlCmdRsp = 0;
     checkForAccessKeyCmdRsp = 0;
-    // validEventLogNum = 0;
-    // read1000Logs = 0;
+    checkDipSetCmdRsp = 0;
+    checkForExtCmdRes = 0;
+    validEventLogNum = 0;
+    read1000Logs = 0;
     receivedPollCount = 0;
+    isExtOutApplyActive.value = false;
 
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
 
     // OTA state
-    // bleManager.otaProcessState = OtaProcessState.sendNetworkPacket;
+    bleManager.otaProcessState = OtaProcessState.sendNetworkPacket;
 
     // RX timeout
     _rxTimeoutTimer?.cancel();
@@ -687,6 +757,10 @@ class BleProcess {
           break;
         case OtaProcessState.otaWaitRsp:
           // await Future.delayed(const Duration(milliseconds: 100));
+          break;
+        case OtaProcessState.sendExtOutSetupFetchCmdPkt:
+          break;
+        case OtaProcessState.sendDipSettingFetchCmd:
           break;
       }
       startRxTimeout();

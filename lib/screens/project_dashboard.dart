@@ -957,7 +957,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     );
   }
 
-  void showPasswordPopup({required Function() onCall}) {
+  void showPasswordPopup({required Function() onCall, bool? isExtOut = false}) {
     // Reset navigation guard each time the dialog opens
     _navigatingToDeviceConnecting = false;
 
@@ -1062,16 +1062,23 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                         await Future.delayed(const Duration(seconds: 1));
                         if (!mounted) return;
                         Navigator.of(dialogContext, rootNavigator: true).pop();
-                        Navigator.of(dialogContext).push(
-                          MaterialPageRoute(
-                            builder:
-                                (context) => LogRetrievalLoadingScreen(
-                                  scanType: ScanType.bluetooth,
-                                  selectedDevice: widget.selectedDevice,
-                                  connectedDevice: widget.selectedDevice,
-                                ),
-                          ),
-                        );
+                        if (isExtOut == true) {
+                          showExtOutBottomSheet(
+                            context: context,
+                            onCall: () {},
+                          );
+                        } else {
+                          Navigator.of(dialogContext).push(
+                            MaterialPageRoute(
+                              builder:
+                                  (context) => LogRetrievalLoadingScreen(
+                                    scanType: ScanType.bluetooth,
+                                    selectedDevice: widget.selectedDevice,
+                                    connectedDevice: widget.selectedDevice,
+                                  ),
+                            ),
+                          );
+                        }
                       });
                     }
 
@@ -1512,16 +1519,23 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                     showBootloaderModeDialog(context: context);
                     return;
                   }
-                  showExtOutBottomSheet(
-                    context: context,
+                  showPasswordPopup(
                     onCall: () {
-                      showPasswordPopup(
-                        onCall: () {
-                          bleController.startExtOut();
-                        },
-                      );
+                      ble.bleProcess.isExtOutCommandActive.value = true;
+                      bleController.startExtOutFetch();
                     },
+                    isExtOut: true,
                   );
+                  // showExtOutBottomSheet(
+                  //   context: context,
+                  //   onCall: () {
+                  //     showPasswordPopup(
+                  //       onCall: () {
+                  //         bleController.startLogRetrieval();
+                  //       },
+                  //     );
+                  //   },
+                  // );
                 },
               ),
             ],
@@ -1633,6 +1647,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                     onCall: () {
                       bleController.startLogRetrieval();
                     },
+                    isExtOut: false,
                   );
                   // Get.find<BleLogController>().startLogRetrieval();
                   // Navigator.of(context).push(

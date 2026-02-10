@@ -531,73 +531,88 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
             borderRadius: BorderRadius.circular(24),
           ),
         ),
-        onPressed: () {
-          int zoneEnable = returnIndex(enabled, enabledOptions);
-          int holdRestart = returnIndex(holdCount, holdCountOptions);
-          int resetAllowedInt = returnIndex(resetInCount, resetInCountOptions);
-          bool resetAllowed = false;
-          if (resetAllowedInt == 0) {
-            resetAllowed = true;
-          }
-          if (autoCtrl.text.isEmpty) {
-            setState(() {
-              isAutoCtrlValidated = false;
-            });
-          }
-          if (manCtrl.text.isEmpty) {
-            setState(() {
-              isManCtrlValidated = false;
-            });
-          }
-          if (releaseCtrl.text.isEmpty) {
-            setState(() {
-              isReleaseCtrlValidated = false;
-            });
-          }
-          if (resetDelayCtrl.text.isEmpty) {
-            setState(() {
-              isResetDelayCtrlValidated = false;
-            });
-          }
+        onPressed:
+            manager!.bleProcess.isExtOutApplyActive.value
+                ? () {
+                  int zoneEnable = returnIndex(enabled, enabledOptions);
+                  int holdRestart = returnIndex(holdCount, holdCountOptions);
+                  int resetAllowedInt = returnIndex(
+                    resetInCount,
+                    resetInCountOptions,
+                  );
+                  bool resetAllowed = false;
+                  if (resetAllowedInt == 0) {
+                    resetAllowed = true;
+                  }
+                  if (autoCtrl.text.isEmpty) {
+                    setState(() {
+                      isAutoCtrlValidated = false;
+                    });
+                  }
+                  if (manCtrl.text.isEmpty) {
+                    setState(() {
+                      isManCtrlValidated = false;
+                    });
+                  }
+                  if (releaseCtrl.text.isEmpty) {
+                    setState(() {
+                      isReleaseCtrlValidated = false;
+                    });
+                  }
+                  if (resetDelayCtrl.text.isEmpty) {
+                    setState(() {
+                      isResetDelayCtrlValidated = false;
+                    });
+                  }
 
-          if (isAutoCtrlValidated &&
-              isManCtrlValidated &&
-              isReleaseCtrlValidated &&
-              isResetDelayCtrlValidated) {
-            final config = ZoneModeConfig(
-              zoneEnable: ZoneEnable.values[zoneEnable],
-              zoneMode: ZoneMode.normal,
-              holdMode: HoldMode.values[holdRestart],
-              resetAllowed: resetAllowed,
-              flowDetectionUsed: false,
-            );
+                  if (isAutoCtrlValidated &&
+                      isManCtrlValidated &&
+                      isReleaseCtrlValidated &&
+                      isResetDelayCtrlValidated) {
+                    final config = ZoneModeConfig(
+                      zoneEnable: ZoneEnable.values[zoneEnable],
+                      zoneMode: ZoneMode.normal,
+                      holdMode: HoldMode.values[holdRestart],
+                      resetAllowed: resetAllowed,
+                      flowDetectionUsed: false,
+                    );
 
-            final String hexValue = ZoneModeCodec.encodeHex(config);
+                    final String hexValue = ZoneModeCodec.encodeHex(config);
 
-            manager!.extZoneMode.value = hexValue;
+                    manager!.extZoneMode.value = hexValue;
 
-            manager!.extZoneCountdownAuto.value = int.parse(
-              autoCtrl.text.isEmpty ? '0' : autoCtrl.text,
-            );
+                    manager!.extZoneCountdownAuto.value = int.parse(
+                      autoCtrl.text.isEmpty ? '0' : autoCtrl.text,
+                    );
 
-            manager!.extZoneCountdownMan.value = int.parse(manCtrl.text);
+                    manager!.extZoneCountdownMan.value = int.parse(
+                      manCtrl.text,
+                    );
 
-            manager!.extZoneReleaseTime.value = int.parse(releaseCtrl.text);
+                    manager!.extZoneReleaseTime.value = int.parse(
+                      releaseCtrl.text,
+                    );
 
-            manager!.extZoneResetDelay.value = int.parse(resetDelayCtrl.text);
+                    manager!.extZoneResetDelay.value = int.parse(
+                      resetDelayCtrl.text,
+                    );
 
-            manager!.extZoneAction.value = returnIndex(action, actionOptions);
+                    manager!.extZoneAction.value = returnIndex(
+                      action,
+                      actionOptions,
+                    );
 
-            widget.onCall();
-          } else {
-            Get.snackbar(
-              'Error',
-              'Please fill all the fields',
-              backgroundColor: Colors.red,
-              colorText: Colors.white,
-            );
-          }
-        },
+                    widget.onCall();
+                  } else {
+                    Get.snackbar(
+                      'Error',
+                      'Please fill all the fields',
+                      backgroundColor: Colors.red,
+                      colorText: Colors.white,
+                    );
+                  }
+                }
+                : null,
 
         child: Text(
           'Apply Configuration',

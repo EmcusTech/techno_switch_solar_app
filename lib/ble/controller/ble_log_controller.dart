@@ -49,6 +49,10 @@ class BleLogController extends GetxController {
     await bleManager.startLogRetrieval();
   }
 
+  Future<void> startExtOutFetch() async {
+    await bleManager.startExtOutFetch();
+  }
+
   sendNetworkPacket() async {
     await bleManager.sendNetworkPacket();
   }
@@ -63,6 +67,10 @@ class BleLogController extends GetxController {
 
   sendExtOutCommand() async {
     await bleManager.sendExtOutSetupCmdPkt();
+  }
+
+  sendExtOutFetchCommand() async {
+    await bleManager.sendExtOutSetupFetchCmdPkt();
   }
 
   startContinouspolling() {

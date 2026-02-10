@@ -55,6 +55,8 @@ enum OtaProcessState {
   sendContinuousPollPacket,
   otaWaitRsp,
   notInUse,
+  sendExtOutSetupFetchCmdPkt,
+  sendDipSettingFetchCmd,
 }
 
 enum BleOperationMode {
@@ -179,7 +181,7 @@ class BleManager {
     _pollInFlight = false;
 
     // OTA state
-    // otaProcessState = OtaProcessState.sendNetworkPacket;
+    otaProcessState = OtaProcessState.sendNetworkPacket;
   }
 
   void resetFirmwareState() {
@@ -206,8 +208,8 @@ class BleManager {
   }
 
   void resetExtOutState() {
-    bleCurrentState = BleStates.SEND_EXT_OUT_SETUP_CMD_PACKET;
-    bleStateMachineState = BleStates.SEND_EXT_OUT_SETUP_CMD_PACKET;
+    bleCurrentState = BleStates.REQ_ENCY_KEY;
+    bleStateMachineState = BleStates.REQ_ENCY_KEY;
     bleAESKey.clear();
     _pollInFlight = false;
     receivedPollCount = 0;
@@ -260,6 +262,48 @@ class BleManager {
     }
   }
 
+  Future<void> startExtOutFetch() async {
+    if (!isConnected) {
+      throw Exception("Device not connected. Cannot start log retrieval.");
+    }
+
+    if (notifyChar == null || writeChar == null) {
+      throw Exception(
+        "BLE characteristics not initialized. Cannot start log retrieval.",
+      );
+    }
+
+    // Set operation mode to log retrieval
+    currentOperationMode = BleOperationMode.extOut;
+
+    // Reset protocol state to initial values
+    resetExtOutState();
+    resetProtocolExtOutState();
+
+    // IMPORTANT: Reset process state to clear isOtaCompleted flag
+    // This ensures polls aren't blocked after firmware upgrade
+    bleProcess.resetProcessExtOutState();
+
+    // Always ensure notify handler is registered (especially after reconnection)
+    // Check if subscription is null or if log retrieval hasn't been done once
+    if (_notifySub == null) {
+      print("Registering notify handler for ext out");
+      await registerNotifyHandler();
+      // Give a small delay after registration to ensure subscription is active
+      await Future.delayed(const Duration(milliseconds: 200));
+    } else {
+      print("Notify handler already registered, proceeding with ext out fetch");
+      bleCurrentState = BleStates.SEND_EXT_OUT_SETUP_CMD_PACKET;
+      bleStateMachineState = BleStates.SEND_EXT_OUT_SETUP_CMD_PACKET;
+      print("Current state: $bleStateMachineState");
+      // Send Network Packet
+      bleProcess.startOtherPacketsRxTimeout(
+        timeout: const Duration(seconds: 5),
+      );
+      Get.find<BleLogController>().sendNetworkPacket();
+    }
+  }
+
   Future<void> startExtOut() async {
     if (!isConnected) {
       throw Exception("Device not connected. Cannot start log retrieval.");
@@ -290,7 +334,7 @@ class BleManager {
       // Give a small delay after registration to ensure subscription is active
       await Future.delayed(const Duration(milliseconds: 200));
     } else {
-      print("Notify handler already registered, proceeding with log retrieval");
+      print("Notify handler already registered, proceeding with ext out");
       bleCurrentState = BleStates.SEND_EXT_OUT_SETUP_CMD_PACKET;
       bleStateMachineState = BleStates.SEND_EXT_OUT_SETUP_CMD_PACKET;
       print("Current state: $bleStateMachineState");
@@ -584,11 +628,13 @@ class BleManager {
       print("Listening for notifications...");
       await Future.delayed(const Duration(milliseconds: 300));
       print("---Notification handler registered----");
-      if (isExtOut == true) {
-        bleStateMachineState = BleStates.SEND_EXT_OUT_SETUP_CMD_PACKET;
-        bleCurrentState = BleStates.SEND_EXT_OUT_SETUP_CMD_PACKET;
-        bleProcess.sendExtOutPacket();
-      } else if (isChipInBootLoader != true) {
+      // if (isExtOut == true) {
+      //   bleStateMachineState = BleStates.SEND_EXT_OUT_SETUP_CMD_PACKET;
+      //   bleCurrentState = BleStates.SEND_EXT_OUT_SETUP_CMD_PACKET;
+      //   bleProcess.sendExtOutPacket();
+      // } else
+
+      if (isChipInBootLoader != true) {
         // Request encryption key for both firmware upgrade (first connection) and log retrieval
         bleProcess.requestENCKey();
       } else {
@@ -714,6 +760,14 @@ class BleManager {
     txData = 1;
     bleProcess.cancelRxTimeout();
     _pollInFlight = false;
+
+    print("bleCurrentState: $bleCurrentState");
+    // if (bleCurrentState == BleStates.SEND_EXT_OUT_SETUP_CMD_PACKET) {
+    //   print("Ext out fetch response");
+    //   print(
+    //     "data: ${data.map((e) => e.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+    //   );
+    // } else
     if (bleCurrentState == BleStates.SEND_JUMP_FIRMWARE_PACKET) {
       print("Jump firmware packet response");
       print(
@@ -781,12 +835,11 @@ class BleManager {
             timeout: const Duration(seconds: 5),
           );
           Get.find<BleLogController>().sendNetworkPacket();
-        } else {
-          // Default to log retrieval if mode not set
-          print("Warning: Operation mode not set, defaulting to log retrieval");
-          currentOperationMode = BleOperationMode.logRetrieval;
-          bleCurrentState = BleStates.PROCESS_PANEL_EVT_LOG_READ;
-          bleStateMachineState = BleStates.PROCESS_PANEL_EVT_LOG_READ;
+        } else if (currentOperationMode == BleOperationMode.extOut) {
+          bleCurrentState = BleStates.SEND_EXT_OUT_SETUP_CMD_PACKET;
+          bleStateMachineState = BleStates.SEND_EXT_OUT_SETUP_CMD_PACKET;
+          print("Current state: $bleStateMachineState (Ext Out)");
+          // Send Network Packet for log retrieval
           bleProcess.startOtherPacketsRxTimeout(
             timeout: const Duration(seconds: 5),
           );
@@ -1064,8 +1117,10 @@ class BleManager {
   }
 
   Future<void> sendPollPacket() async {
-    if (bleProcess.isOtaCompleted ||
+    if (bleProcess.isOtaCompleted &&
         otaProcessState == OtaProcessState.notInUse) {
+      print("bleprocess.isOtaCompleted : ${bleProcess.isOtaCompleted}");
+      print("otaProcessState : ${otaProcessState == OtaProcessState.notInUse}");
       print("Poll blocked (OTA completed / notInUse)");
       return;
     }
@@ -1371,6 +1426,45 @@ class BleManager {
         await Future.delayed(interPacketDelay);
       }
     }
+  }
+
+  Future<void> sendExtOutSetupFetchCmdPkt() async {
+    // Create 216-byte buffer
+    Uint8List u8_pkt = Uint8List(216);
+
+    // Update global counters
+    u8TxPktCnt += 1;
+
+    u8_pkt[0] = 0xFE;
+    u8_pkt[1] = 0x01;
+    u8_pkt[2] = 0x00;
+
+    u8_pkt[3] = 0x01; // pkt type
+    u8_pkt[4] = u8TxPktCnt & 0xFF; // tx pkt num
+    u8_pkt[5] = u8RxPktCnt & 0xFF; // rx pkt num
+    u8_pkt[6] = 0x00; // network number
+    u8_pkt[10] = 0x01; // mode
+    u8_pkt[11] = 0x00; // socket number
+    u8_pkt[12] = 0x16; // command byte 1
+    u8_pkt[13] = 0x01; // ext max zone
+
+    // Compute checksum on first 213 bytes
+    int checksum = toolsFletcherChecksum(u8_pkt.sublist(0, 213));
+
+    u8_pkt[213] = (checksum >> 8) & 0xFF;
+    u8_pkt[214] = checksum & 0xFF;
+    u8_pkt[215] = 0xFD;
+
+    print(
+      "TX/RX: TRANSMIT: Ext Out Fetch command time: ${DateTime.now().toIso8601String()}, packet: ${u8_pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+    );
+    // print(
+    //   u8_pkt
+    //       .map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase())
+    //       .join(' '),
+    // );
+
+    await sendSmallDataFrame(0x1000, 216, u8_pkt);
   }
 
   Future<void> sendExtOutSetupCmdPkt() async {
