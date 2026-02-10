@@ -243,7 +243,7 @@ class BleManager {
 
     // Always ensure notify handler is registered (especially after reconnection)
     // Check if subscription is null or if log retrieval hasn't been done once
-    if (_notifySub == null || !isLogRetrievalDoneOnce) {
+    if (_notifySub == null && !isLogRetrievalDoneOnce) {
       print("Registering notify handler for log retrieval");
       await registerNotifyHandler();
       isLogRetrievalDoneOnce = true;

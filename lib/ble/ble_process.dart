@@ -372,6 +372,10 @@ class BleProcess {
     isOtaCompleted = false;
     processNextOtaFrame = true;
     logRetreivalEnded = false;
+    checkForExtCmdRes = 0;
+    checkDipSetCmdRsp = 0;
+    isExtOutApplyActive.value = false;
+    isExtOutCommandActive.value = false;
 
     // Counters
     checkForCtrlCmdRsp = 0;
