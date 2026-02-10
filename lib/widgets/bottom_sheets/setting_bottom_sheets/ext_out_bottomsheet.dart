@@ -532,13 +532,18 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
           ),
         ),
         onPressed:
-            manager!.bleProcess.isExtOutApplyActive.value
+            manager!.bleProcess.isExtOutApplyButtonActive.value
                 ? () {
                   int zoneEnable = returnIndex(enabled, enabledOptions);
                   int holdRestart = returnIndex(holdCount, holdCountOptions);
                   int resetAllowedInt = returnIndex(
                     resetInCount,
                     resetInCountOptions,
+                  );
+                  int functionInt = returnIndex(function, functionOptions);
+                  int actuaturTypeInt = returnIndex(
+                    actuatorType,
+                    actuatorTypeOptions,
                   );
                   bool resetAllowed = false;
                   if (resetAllowedInt == 0) {
@@ -601,6 +606,11 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
                       action,
                       actionOptions,
                     );
+
+                    manager!.extZoneFunction.value = functionInt;
+
+                    manager!.extZoneActuatorType.value = actuaturTypeInt;
+                    Navigator.pop(context);
 
                     widget.onCall();
                   } else {

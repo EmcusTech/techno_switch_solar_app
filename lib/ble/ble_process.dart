@@ -14,7 +14,8 @@ class BleProcess {
   Timer? _otherPacketsRxTimeoutTimer;
 
   int checkForCtrlCmdRsp = 0;
-  int checkForExtCmdRes = 0;
+  int checkForExtCmdFetchRes = 0;
+  int checkForExtCmdApplyRes = 0;
   int checkDipSetCmdRsp = 0;
   int checkForAccessKeyCmdRsp = 0;
   int validEventLogNum = 0;
@@ -88,9 +89,19 @@ class BleProcess {
     "EXT-Out-Text------001",
   );
 
-  final ValueNotifier<bool> isExtOutCommandActive = ValueNotifier<bool>(false);
+  final ValueNotifier<bool> isExtOutCommandFetchActive = ValueNotifier<bool>(
+    false,
+  );
 
-  final ValueNotifier<bool> isExtOutApplyActive = ValueNotifier<bool>(false);
+  final ValueNotifier<bool> isExtOutCommandApplyActive = ValueNotifier<bool>(
+    false,
+  );
+
+  final ValueNotifier<bool> isExtOutApplyButtonActive = ValueNotifier<bool>(
+    false,
+  );
+
+  final ValueNotifier<bool> isExtOutApplyDone = ValueNotifier<bool>(false);
 
   // BleStates bleStateMachineState = BleStates.IDLE;
   BleStates bleCurrentState = BleStates.IDLE;
@@ -175,9 +186,12 @@ class BleProcess {
 
       case OtaProcessState.sendExtOutSetupFetchCmdPkt:
         print("Sending Ext Out Setup Fetch Command");
-        // isExtOutCommandActive.value = true;
-        checkForExtCmdRes = 1;
+        checkForExtCmdFetchRes = 1;
         break;
+
+      case OtaProcessState.sendExtOutSetupApplyCmdPkt:
+        print("Sending Ext Out Setup Apply Command");
+        checkForExtCmdApplyRes = 1;
 
       case OtaProcessState.sendDipSettingFetchCmd:
         print("Sending Dip setting fetch cmd");
@@ -195,12 +209,18 @@ class BleProcess {
           String.fromCharCodes(rx.payload.sublist(14, 18)) == accessKey.value) {
         isAccessKeyValid.value = true;
         print("ACCESS KEY RECEIVED → NEXT CONTROL CMD");
-        if (isExtOutCommandActive.value) {
+        if (isExtOutCommandFetchActive.value) {
           bleManager.otaProcessState =
               OtaProcessState.sendExtOutSetupFetchCmdPkt;
           checkForAccessKeyCmdRsp = 0;
           startRxTimeout();
           await bleManager.sendExtOutSetupFetchCmdPkt();
+        } else if (isExtOutCommandApplyActive.value) {
+          bleManager.otaProcessState =
+              OtaProcessState.sendExtOutSetupApplyCmdPkt;
+          checkForAccessKeyCmdRsp = 0;
+          startRxTimeout();
+          await bleManager.sendExtOutSetupApplyCmdPkt();
         } else {
           bleManager.otaProcessState = OtaProcessState.sendStopCntrlCmdPkt;
           checkForAccessKeyCmdRsp = 0;
@@ -229,7 +249,7 @@ class BleProcess {
         print(rx.payload[14]);
         if (rx.payload[14] == 0x00) {
           print("The setup source is solar");
-          isExtOutApplyActive.value = true;
+          isExtOutApplyButtonActive.value = true;
         }
       } else {
         print("Dip setting Cmd Response not found, polling again");
@@ -241,18 +261,37 @@ class BleProcess {
 
     // __ext out response
 
-    if (checkForExtCmdRes == 1) {
+    if (checkForExtCmdApplyRes == 1) {
+      print(
+        "Checking EXT Apply CMD RSP Value ${rx.payload[12]}:::::${rx.payload[12] == 0x16} ",
+      );
+      if (rx.payload[10] == 0x83) {
+        bleManager.otaProcessState = OtaProcessState.notInUse;
+        print("Found a control message");
+        checkForExtCmdApplyRes = 0;
+        isExtOutCommandApplyActive.value = false;
+        isExtOutApplyDone.value = true;
+        print("We got the response for ext apply");
+      } else {
+        print("EXT Apply Cmd Response not found, polling again");
+        startRxTimeout();
+        await bleManager.sendPollPacket();
+      }
+    }
+
+    if (checkForExtCmdFetchRes == 1) {
       print(
         "Checking EXT Fetch CMD RSP Value ${rx.payload[12]}:::::${rx.payload[12] == 0x16} ",
       );
       if (rx.payload[12] == 0x16) {
         bleManager.otaProcessState = OtaProcessState.sendDipSettingFetchCmd;
-        checkForExtCmdRes = 0;
+        checkForExtCmdFetchRes = 0;
+        isExtOutCommandFetchActive.value = false;
         print("We got the response for ext fetch");
         startRxTimeout();
         await bleManager.sendFetchDipSettingPkt();
       } else {
-        print("EXT Cmd Response not found, polling again");
+        print("EXT Fetch Cmd Response not found, polling again");
         startRxTimeout();
         await bleManager.sendPollPacket();
       }
@@ -372,10 +411,10 @@ class BleProcess {
     isOtaCompleted = false;
     processNextOtaFrame = true;
     logRetreivalEnded = false;
-    checkForExtCmdRes = 0;
+    checkForExtCmdFetchRes = 0;
     checkDipSetCmdRsp = 0;
-    isExtOutApplyActive.value = false;
-    isExtOutCommandActive.value = false;
+    isExtOutApplyButtonActive.value = false;
+    isExtOutCommandFetchActive.value = false;
 
     // Counters
     checkForCtrlCmdRsp = 0;
@@ -416,11 +455,11 @@ class BleProcess {
     checkForCtrlCmdRsp = 0;
     checkForAccessKeyCmdRsp = 0;
     checkDipSetCmdRsp = 0;
-    checkForExtCmdRes = 0;
+    checkForExtCmdFetchRes = 0;
     validEventLogNum = 0;
     read1000Logs = 0;
     receivedPollCount = 0;
-    isExtOutApplyActive.value = false;
+    isExtOutApplyButtonActive.value = false;
 
     // Time tracking
     // logStartingTime = null;
@@ -492,11 +531,12 @@ class BleProcess {
     bleCurrentState = BleStates.SEND_AUTHN_MSG;
   }
 
-  sendExtOutPacket() async {
+  sendExtOutApplyPacket() async {
     processDesc.value = "Sending Ext Out Packet";
-    await bleManager.sendExtOutSetupCmdPkt();
-    bleManager.bleStateMachineState = BleStates.SEND_EXT_OUT_SETUP_CMD_PACKET;
-    bleCurrentState = BleStates.SEND_EXT_OUT_SETUP_CMD_PACKET;
+    await bleManager.sendExtOutSetupApplyCmdPkt();
+    bleManager.bleStateMachineState =
+        BleStates.SEND_EXT_OUT_SETUP_CMD_FETCH_PACKET;
+    bleCurrentState = BleStates.SEND_EXT_OUT_SETUP_CMD_FETCH_PACKET;
   }
 
   // Public method to cancel timer
@@ -765,6 +805,8 @@ class BleProcess {
         case OtaProcessState.sendExtOutSetupFetchCmdPkt:
           break;
         case OtaProcessState.sendDipSettingFetchCmd:
+          break;
+        case OtaProcessState.sendExtOutSetupApplyCmdPkt:
           break;
       }
       startRxTimeout();

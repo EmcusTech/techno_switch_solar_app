@@ -957,6 +957,105 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     );
   }
 
+  void showExtOutSuccessDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Success Icon
+                Container(
+                  width: 64,
+                  height: 64,
+                  decoration: BoxDecoration(
+                    color: Color(0xFFE8F5E9), // Light green background
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: SvgPicture.asset(
+                      'assets/svgs/check_circle_icon.svg',
+                      height: 40,
+                      width: 40,
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                ),
+
+                SizedBox(height: 16),
+
+                // Title
+                Text(
+                  'Extinguishing Output Applied',
+                  style: GoogleFonts.inter(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF3D3D3D),
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+
+                SizedBox(height: 8),
+
+                // Subtitle
+                Text(
+                  'The extinguishing output has been successfully applied to the device.',
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w400,
+                    color: Color(0xFF918F8F),
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+
+                SizedBox(height: 24),
+
+                // Dismiss Button
+                SizedBox(
+                  width: double.infinity,
+                  child: GestureDetector(
+                    onTap: () {
+                      Navigator.of(dialogContext, rootNavigator: true).pop();
+                      ble.bleProcess.isExtOutApplyDone.value = false;
+                    },
+                    child: Container(
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: Color(0xFFEC1D24),
+                        borderRadius: BorderRadius.circular(24),
+                      ),
+                      child: Center(
+                        child: Text(
+                          'OK',
+                          style: GoogleFonts.inter(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   void showPasswordPopup({required Function() onCall, bool? isExtOut = false}) {
     // Reset navigation guard each time the dialog opens
     _navigatingToDeviceConnecting = false;
@@ -1062,10 +1161,22 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                         await Future.delayed(const Duration(seconds: 1));
                         if (!mounted) return;
                         Navigator.of(dialogContext, rootNavigator: true).pop();
-                        if (isExtOut == true) {
+                        if (ble.bleProcess.isExtOutApplyDone.value) {
+                          showExtOutSuccessDialog(context);
+                        } else if (isExtOut == true) {
                           showExtOutBottomSheet(
                             context: context,
-                            onCall: () {},
+                            onCall: () {
+                              showPasswordPopup(
+                                onCall: () {
+                                  ble
+                                      .bleProcess
+                                      .isExtOutCommandApplyActive
+                                      .value = true;
+                                  bleController.startExtOutApply();
+                                },
+                              );
+                            },
                           );
                         } else {
                           Navigator.of(dialogContext).push(
@@ -1521,7 +1632,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                   }
                   showPasswordPopup(
                     onCall: () {
-                      ble.bleProcess.isExtOutCommandActive.value = true;
+                      ble.bleProcess.isExtOutCommandFetchActive.value = true;
                       bleController.startExtOutFetch();
                     },
                     isExtOut: true,

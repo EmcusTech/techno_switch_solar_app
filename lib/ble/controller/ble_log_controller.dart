@@ -53,6 +53,10 @@ class BleLogController extends GetxController {
     await bleManager.startExtOutFetch();
   }
 
+  Future<void> startExtOutApply() async {
+    await bleManager.startExtOutApply();
+  }
+
   sendNetworkPacket() async {
     await bleManager.sendNetworkPacket();
   }
@@ -61,12 +65,12 @@ class BleLogController extends GetxController {
     await bleManager.sendAccessKeyPkt();
   }
 
-  startExtOut() async {
-    await bleManager.startExtOut();
-  }
+  // startExtOut() async {
+  //   await bleManager.startExtOut();
+  // }
 
-  sendExtOutCommand() async {
-    await bleManager.sendExtOutSetupCmdPkt();
+  sendExtOutApplyCommand() async {
+    await bleManager.sendExtOutSetupApplyCmdPkt();
   }
 
   sendExtOutFetchCommand() async {
