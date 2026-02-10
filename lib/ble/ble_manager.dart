@@ -161,6 +161,12 @@ class BleManager {
 
   ValueNotifier<String> get extZoneText => bleProcess.extZoneText;
 
+  ValueNotifier<int> get isExtZoneEnabled => bleProcess.isExtZoneEnabled;
+
+  ValueNotifier<int> get extZoneHoldMode => bleProcess.extZoneHoldMode;
+
+  ValueNotifier<int> get isResetAllowed => bleProcess.isResetAllowed;
+
   void resetProtocolState() {
     // Packet counters
     u8TxPktCnt = 0;

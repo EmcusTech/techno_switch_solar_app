@@ -16,12 +16,6 @@ class ExtOutBottomSheet extends StatefulWidget {
 
 class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
   // Dropdown values
-  String enabled = 'Yes';
-  String actuatorType = 'Not Defined';
-  String function = 'Z1 and Z2';
-  String resetInCount = 'Yes';
-  String holdCount = 'Disabled';
-  String action = 'Continously On';
 
   List<String> enabledOptions = ['No', 'Yes'];
   List<String> actuatorTypeOptions = [
@@ -61,11 +55,18 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
     'Pulsing 1s On, 3s Off',
   ];
 
+  late String enabled;
+  late String actuatorType;
+  late String function;
+  late String resetInCount;
+  late String holdCount;
+  late String action;
+
   // Controllers
-  final autoCtrl = TextEditingController(text: "10");
-  final manCtrl = TextEditingController(text: "15");
-  final releaseCtrl = TextEditingController(text: "10");
-  final resetDelayCtrl = TextEditingController(text: "5");
+  late TextEditingController autoCtrl;
+  late TextEditingController manCtrl;
+  late TextEditingController releaseCtrl;
+  late TextEditingController resetDelayCtrl;
   bool isAutoCtrlValidated = true;
   bool isManCtrlValidated = true;
   bool isReleaseCtrlValidated = true;
@@ -85,8 +86,28 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
 
   @override
   void initState() {
+    autoCtrl = TextEditingController(text: "10");
+    manCtrl = TextEditingController(text: "15");
+    releaseCtrl = TextEditingController(text: "10");
+    resetDelayCtrl = TextEditingController(text: "5");
+    enabled = enabledOptions[0];
+    actuatorType = actuatorTypeOptions[0];
+    function = functionOptions[0];
+    resetInCount = resetInCountOptions[0];
+    holdCount = holdCountOptions[0];
+    action = actionOptions[0];
     if (Get.isRegistered<BleLogController>()) {
       manager = Get.find<BleLogController>().bleManager;
+      autoCtrl.text = manager!.extZoneCountdownAuto.value.toString();
+      manCtrl.text = manager!.extZoneCountdownMan.value.toString();
+      releaseCtrl.text = manager!.extZoneReleaseTime.value.toString();
+      resetDelayCtrl.text = manager!.extZoneResetDelay.value.toString();
+      enabled = enabledOptions[manager!.isExtZoneEnabled.value];
+      actuatorType = actuatorTypeOptions[manager!.extZoneActuatorType.value];
+      function = functionOptions[manager!.extZoneFunction.value];
+      resetInCount = resetInCountOptions[manager!.isResetAllowed.value];
+      holdCount = holdCountOptions[manager!.extZoneHoldMode.value];
+      action = actionOptions[manager!.extZoneAction.value];
     }
     super.initState();
   }
@@ -123,7 +144,27 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
             children: [
               // ───────────── Fixed Header ─────────────
               _dragHandle(),
-              _title('Ext Out Configuration'),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _title('Ext Out Configuration'),
+                  Visibility(
+                    visible:
+                        !manager!.bleProcess.isExtOutApplyButtonActive.value,
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 12.0),
+                      child: Text(
+                        "Source: DIP Mode",
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: const Color(0xFFEC1D24),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
 
               // ───────────── Scrollable Content ─────────────
               Expanded(

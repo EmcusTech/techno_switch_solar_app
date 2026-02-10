@@ -52,30 +52,25 @@ class ZoneModeCodec {
   static int encode(ZoneModeConfig config) {
     int value = 0;
 
-    // Bit 0 → Zone Enable
     if (config.zoneEnable == ZoneEnable.enabled) {
       value |= 0x01;
     }
 
-    // Bit 1 → Test Mode
     if (config.zoneMode == ZoneMode.test) {
       value |= 0x02;
     }
 
-    // Bit 2 & 3 → Hold Mode
     value |= (config.holdMode.index & 0x03) << 2;
 
-    // Bit 4 → Reset Allowed (REVERSED LOGIC)
     if (config.resetAllowed) {
       value |= 0x10;
     }
 
-    // Bit 5 → Flow Detection
     if (config.flowDetectionUsed) {
       value |= 0x20;
     }
 
-    return value;
+    return value & 0xFF;
   }
 
   static String encodeHex(ZoneModeConfig config) {
@@ -92,10 +87,16 @@ class ZoneModeCodec {
 
       holdMode: HoldMode.values[(value >> 2) & 0x03],
 
-      // reversed firmware logic
       resetAllowed: (value & 0x10) != 0,
 
       flowDetectionUsed: (value & 0x20) != 0,
     );
+  }
+
+  // ================= NEW HELPER =================
+  /// Create ZoneModeConfig directly from HEX string (e.g. "12")
+  static ZoneModeConfig fromHex(String hex) {
+    final int value = int.parse(hex, radix: 16);
+    return decode(value);
   }
 }

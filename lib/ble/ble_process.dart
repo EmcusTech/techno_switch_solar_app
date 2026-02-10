@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
+import 'package:techno_switch_solar_app/utils/zone_mode_util.dart';
 import 'ble_manager.dart';
 import 'ble_frame.dart';
 import '../models/log_model.dart';
@@ -70,6 +71,12 @@ class BleProcess {
   final ValueNotifier<int> bleManufacturerData = ValueNotifier<int>(0);
 
   final ValueNotifier<String> extZoneMode = ValueNotifier<String>("18");
+
+  final ValueNotifier<int> isExtZoneEnabled = ValueNotifier<int>(0);
+
+  final ValueNotifier<int> extZoneHoldMode = ValueNotifier<int>(0);
+
+  final ValueNotifier<int> isResetAllowed = ValueNotifier<int>(0);
 
   final ValueNotifier<int> extZoneActuatorType = ValueNotifier<int>(0);
 
@@ -288,6 +295,22 @@ class BleProcess {
         checkForExtCmdFetchRes = 0;
         isExtOutCommandFetchActive.value = false;
         print("We got the response for ext fetch");
+        final ZoneModeConfig config = ZoneModeCodec.fromHex(
+          rx.payload[14].toRadixString(16),
+        );
+        final bool zoneEnabled = config.zoneEnable == ZoneEnable.enabled;
+        final HoldMode holdMode = config.holdMode;
+        final bool resetAllowed = config.resetAllowed;
+        isExtZoneEnabled.value = zoneEnabled ? 1 : 0;
+        extZoneHoldMode.value = holdMode.index;
+        isResetAllowed.value = resetAllowed ? 0 : 1;
+        extZoneCountdownAuto.value = (rx.payload[17] << 8) | rx.payload[18];
+        extZoneCountdownMan.value = (rx.payload[19] << 8) | rx.payload[20];
+        extZoneReleaseTime.value = (rx.payload[21] << 8) | rx.payload[22];
+        extZoneResetDelay.value = (rx.payload[23] << 8) | rx.payload[24];
+        extZoneActuatorType.value = rx.payload[16];
+        extZoneAction.value = rx.payload[25];
+        extZoneFunction.value = rx.payload[26];
         startRxTimeout();
         await bleManager.sendFetchDipSettingPkt();
       } else {
