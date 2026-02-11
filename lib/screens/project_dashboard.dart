@@ -958,7 +958,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     );
   }
 
-  void showExtOutSuccessDialog(BuildContext context) {
+  void showApplySuccessDialog(BuildContext context, String message) {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -998,7 +998,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
 
                 // Title
                 Text(
-                  'Extinguishing Output Applied',
+                  "$message Applied",
                   style: GoogleFonts.inter(
                     fontSize: 20,
                     fontWeight: FontWeight.w700,
@@ -1011,7 +1011,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
 
                 // Subtitle
                 Text(
-                  'The extinguishing output has been successfully applied to the device.',
+                  'The $message has been successfully applied to the device.',
                   style: GoogleFonts.inter(
                     fontSize: 14,
                     fontWeight: FontWeight.w400,
@@ -1029,6 +1029,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                     onTap: () {
                       Navigator.of(dialogContext, rootNavigator: true).pop();
                       ble.bleProcess.isExtOutApplyDone.value = false;
+                      ble.bleProcess.isInputSetupApplyDone.value = false;
                     },
                     child: Container(
                       height: 48,
@@ -1167,11 +1168,24 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                         if (!mounted) return;
                         Navigator.of(dialogContext, rootNavigator: true).pop();
                         if (ble.bleProcess.isExtOutApplyDone.value) {
-                          showExtOutSuccessDialog(context);
+                          showApplySuccessDialog(
+                            context,
+                            'Extinguishing Output',
+                          );
+                        } else if (ble.bleProcess.isInputSetupApplyDone.value) {
+                          showApplySuccessDialog(context, 'Inputs');
                         } else if (isInputSetup == true) {
                           showInputSetupBottomSheet(
                             context: context,
-                            onCall: () {},
+                            onCall: () {
+                              showPasswordPopup(
+                                onCall: () {
+                                  ble.bleProcess.isInputSetupApplyActive.value =
+                                      true;
+                                  bleController.startInputSetupApply();
+                                },
+                              );
+                            },
                           );
                         } else if (isExtOut == true) {
                           showExtOutBottomSheet(

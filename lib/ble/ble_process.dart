@@ -22,6 +22,7 @@ class BleProcess {
   int checkDipSetCmdRsp = 0;
   int checkForAccessKeyCmdRsp = 0;
   int checkForInputSetupFetchRes = 0;
+  int checkForInputSetupApplyRes = 0;
   int validEventLogNum = 0;
   int read1000Logs = 0;
   bool logRetreivalEnded = false;
@@ -132,6 +133,14 @@ class BleProcess {
 
   final ValueNotifier<bool> isInputSetupInverted = ValueNotifier<bool>(false);
 
+  final ValueNotifier<bool> isInputSetupApplyActive = ValueNotifier<bool>(
+    false,
+  );
+
+  final ValueNotifier<bool> isInputSetupApplyDone = ValueNotifier<bool>(false);
+
+  final ValueNotifier<String> inputMode = ValueNotifier<String>("");
+
   // BleStates bleStateMachineState = BleStates.IDLE;
   BleStates bleCurrentState = BleStates.IDLE;
   DeviceConnectState deviceConnectState = DeviceConnectState.notConnected;
@@ -231,6 +240,11 @@ class BleProcess {
         checkForInputSetupFetchRes = 1;
         break;
 
+      case OtaProcessState.sendInputSetupApplyCmdPkt:
+        print("Sending Input Setup Apply Command");
+        checkForInputSetupApplyRes = 1;
+        break;
+
       default:
         break;
     }
@@ -261,6 +275,12 @@ class BleProcess {
           checkForAccessKeyCmdRsp = 0;
           startRxTimeout();
           await bleManager.sendExtOutSetupApplyCmdPkt();
+        } else if (isInputSetupApplyActive.value) {
+          bleManager.otaProcessState =
+              OtaProcessState.sendInputSetupApplyCmdPkt;
+          checkForAccessKeyCmdRsp = 0;
+          startRxTimeout();
+          await bleManager.sendInputSetupApplyCmdPkt();
         } else {
           bleManager.otaProcessState = OtaProcessState.sendStopCntrlCmdPkt;
           checkForAccessKeyCmdRsp = 0;
@@ -341,6 +361,24 @@ class BleProcess {
         inputSetupText.value = extractStringFromPayload(rx.payload);
       } else {
         print("Input Setup Fetch Cmd Response not found, polling again");
+        startRxTimeout();
+        await bleManager.sendPollPacket();
+      }
+    }
+
+    if (checkForInputSetupApplyRes == 1) {
+      print(
+        "Checking Input Setup Apply CMD RSP Value ${rx.payload[12]}:::::${rx.payload[12] == 0x16} ",
+      );
+      if (rx.payload[10] == 0x83) {
+        bleManager.otaProcessState = OtaProcessState.notInUse;
+        print("Found a control message");
+        checkForInputSetupApplyRes = 0;
+        isInputSetupApplyActive.value = false;
+        isInputSetupApplyDone.value = true;
+        print("We got the response for ext apply");
+      } else {
+        print("EXT Apply Cmd Response not found, polling again");
         startRxTimeout();
         await bleManager.sendPollPacket();
       }
@@ -555,6 +593,7 @@ class BleProcess {
     checkForAccessKeyCmdRsp = 0;
     checkDipSetCmdRsp = 0;
     checkForExtCmdFetchRes = 0;
+    checkForInputSetupApplyRes = 0;
     checkForInputSetupFetchRes = 0;
     validEventLogNum = 0;
     read1000Logs = 0;
@@ -948,6 +987,8 @@ class BleProcess {
         case OtaProcessState.sendExtOutSetupApplyCmdPkt:
           break;
         case OtaProcessState.sendInputSetupFetchCmdPkt:
+          break;
+        case OtaProcessState.sendInputSetupApplyCmdPkt:
           break;
       }
       startRxTimeout();

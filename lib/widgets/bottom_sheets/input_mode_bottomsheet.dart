@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
+import 'package:techno_switch_solar_app/utils/input_mode_util.dart';
 
 class InputModeBottomSheet extends StatefulWidget {
   final Function() onCall;
@@ -352,6 +353,29 @@ class _InputModeBottomSheetState extends State<InputModeBottomSheet> {
           print("Enabled: $isEnabled");
           print("Test: $isTest");
           print("Inverted: $isInverted");
+
+          // required this.inputEnable,
+          // required this.inputMode,
+          // required this.latchMode,
+          // required this.invertMode,
+
+          final config = InputModeConfig(
+            inputEnable: InputEnable.values[isEnabled ? 1 : 0],
+            inputMode: InputMode.values[isTest ? 1 : 0],
+            latchMode: LatchMode.nonLatched,
+            invertMode: InvertMode.values[isInverted ? 1 : 0],
+          );
+
+          final String hexValue = InputModeCodec.encodeHex(config);
+
+          manager!.inputMode.value = hexValue;
+
+          manager!.inputSetupGroup.value = groupIndex;
+          manager!.inputSetupFunction.value = functionIndex;
+          manager!.isInputSetupEnabled.value = isEnabled;
+          manager!.isInputSetupTest.value = isTest;
+          manager!.isInputSetupInverted.value = isInverted;
+          manager!.inputSetupText.value = inputTextCtrl.text;
 
           Navigator.pop(context);
           widget.onCall();

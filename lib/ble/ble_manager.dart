@@ -43,6 +43,7 @@ enum BleStates {
   SEND_EXT_OUT_SETUP_CMD_FETCH_PACKET,
   SEND_EXT_OUT_SETUP_CMD_APPLY_PACKET,
   SEND_INPUT_SETUP_CMD_FETCH_PACKET,
+  SEND_INPUT_SETUP_CMD_APPLY_PACKET,
   // add other states
 }
 
@@ -61,6 +62,7 @@ enum OtaProcessState {
   sendExtOutSetupApplyCmdPkt,
   sendDipSettingFetchCmd,
   sendInputSetupFetchCmdPkt,
+  sendInputSetupApplyCmdPkt,
 }
 
 enum BleOperationMode {
@@ -70,6 +72,7 @@ enum BleOperationMode {
   extOutFetch,
   extOutApply,
   inputSetupFetch,
+  inputSetupApply,
 }
 
 const String BLE_AUTHN_MSG = "TECHNOSWITCH-AUTH-APP";
@@ -182,6 +185,8 @@ class BleManager {
       bleProcess.isInputSetupInverted;
 
   ValueNotifier<String> get inputSetupText => bleProcess.inputSetupText;
+
+  ValueNotifier<String> get inputMode => bleProcess.inputMode;
 
   void resetProtocolState() {
     // Packet counters
@@ -426,6 +431,48 @@ class BleManager {
       print("Notify handler already registered, proceeding with ext out fetch");
       bleCurrentState = BleStates.SEND_INPUT_SETUP_CMD_FETCH_PACKET;
       bleStateMachineState = BleStates.SEND_INPUT_SETUP_CMD_FETCH_PACKET;
+      print("Current state: $bleStateMachineState");
+      // Send Network Packet
+      bleProcess.startOtherPacketsRxTimeout(
+        timeout: const Duration(seconds: 5),
+      );
+      Get.find<BleLogController>().sendNetworkPacket();
+    }
+  }
+
+  Future<void> startInputSetupApply() async {
+    if (!isConnected) {
+      throw Exception("Device not connected. Cannot start log retrieval.");
+    }
+
+    if (notifyChar == null || writeChar == null) {
+      throw Exception(
+        "BLE characteristics not initialized. Cannot start log retrieval.",
+      );
+    }
+
+    // Set operation mode to log retrieval
+    currentOperationMode = BleOperationMode.inputSetupApply;
+
+    // Reset protocol state to initial values
+    resetInputSetupState();
+    resetProtocolInputSetupState();
+
+    // IMPORTANT: Reset process state to clear isOtaCompleted flag
+    // This ensures polls aren't blocked after firmware upgrade
+    bleProcess.resetProcessInputSetupState();
+
+    // Always ensure notify handler is registered (especially after reconnection)
+    // Check if subscription is null or if log retrieval hasn't been done once
+    if (_notifySub == null) {
+      print("Registering notify handler for ext out");
+      await registerNotifyHandler();
+      // Give a small delay after registration to ensure subscription is active
+      await Future.delayed(const Duration(milliseconds: 200));
+    } else {
+      print("Notify handler already registered, proceeding with ext out fetch");
+      bleCurrentState = BleStates.SEND_INPUT_SETUP_CMD_APPLY_PACKET;
+      bleStateMachineState = BleStates.SEND_INPUT_SETUP_CMD_APPLY_PACKET;
       print("Current state: $bleStateMachineState");
       // Send Network Packet
       bleProcess.startOtherPacketsRxTimeout(
@@ -988,6 +1035,15 @@ class BleManager {
           bleCurrentState = BleStates.SEND_INPUT_SETUP_CMD_FETCH_PACKET;
           bleStateMachineState = BleStates.SEND_INPUT_SETUP_CMD_FETCH_PACKET;
           print("Current state: $bleStateMachineState (Input Setup Fetch)");
+          // Send Network Packet for Input Setup Fetch
+          bleProcess.startOtherPacketsRxTimeout(
+            timeout: const Duration(seconds: 5),
+          );
+          Get.find<BleLogController>().sendNetworkPacket();
+        } else if (currentOperationMode == BleOperationMode.inputSetupApply) {
+          bleCurrentState = BleStates.SEND_INPUT_SETUP_CMD_APPLY_PACKET;
+          bleStateMachineState = BleStates.SEND_INPUT_SETUP_CMD_APPLY_PACKET;
+          print("Current state: $bleStateMachineState (Input Setup Apply)");
           // Send Network Packet for Input Setup Fetch
           bleProcess.startOtherPacketsRxTimeout(
             timeout: const Duration(seconds: 5),
@@ -1773,6 +1829,106 @@ class BleManager {
 
     print(
       "TX/RX: TRANSMIT: Ext Out Fetch command time: ${DateTime.now().toIso8601String()}, packet: ${u8_pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+    );
+    // print(
+    //   u8_pkt
+    //       .map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase())
+    //       .join(' '),
+    // );
+
+    await sendSmallDataFrame(0x1000, 216, u8_pkt);
+  }
+
+  Future<void> sendInputSetupApplyCmdPkt() async {
+    // Create 216-byte buffer
+    Uint8List u8_pkt = Uint8List(216);
+
+    final int group = inputSetupGroup.value;
+    final int function = inputSetupFunction.value;
+    final String inputText = inputSetupText.value;
+    final List<int> inputTextBytes = inputText.codeUnits;
+    final inputTextLength = inputTextBytes.length;
+    // List<int> accessKeyBytes = accessKey.value.codeUnits;
+    // pkt[14] = accessKeyBytes[0];
+    // pkt[15] = accessKeyBytes[1];
+    // pkt[16] = accessKeyBytes[2];
+    // pkt[17] = accessKeyBytes[3];
+
+    final initialindex = 26;
+
+    for (int i = 0; i < inputTextLength; i++) {
+      u8_pkt[initialindex + i] = inputTextBytes[i];
+    }
+
+    // Update global counters
+    u8TxPktCnt += 1;
+
+    u8_pkt[0] = 0xFE;
+    u8_pkt[1] = 0x01;
+    u8_pkt[2] = 0x00;
+
+    u8_pkt[3] = 0x01; // pkt type
+    u8_pkt[4] = u8TxPktCnt & 0xFF; // tx pkt num
+    u8_pkt[5] = u8RxPktCnt & 0xFF; // rx pkt num
+    u8_pkt[6] = 0x00; // network number
+    u8_pkt[10] = 0x81; // mode
+    u8_pkt[11] = 0x00; // socket number
+    u8_pkt[12] = 0x06; // command byte 1
+    u8_pkt[13] = 0x00; // max inputs byte 1
+    u8_pkt[14] = 0x01; // max inputs byte 1
+    u8_pkt[15] = int.parse(inputMode.value, radix: 16); // input mode
+    u8_pkt[16] = 0x02;
+    u8_pkt[17] = 0x00;
+    u8_pkt[18] = 0x00;
+    u8_pkt[19] = 0x00;
+    u8_pkt[20] = 0x01;
+    u8_pkt[21] = 0x01;
+    u8_pkt[22] = 0x01;
+    u8_pkt[23] = inputSetupGroup.value;
+    u8_pkt[24] = inputSetupFunction.value;
+    u8_pkt[25] = inputTextLength & 0xFF;
+
+    // u8_pkt[14] = int.parse(extZoneMode.value, radix: 16); // ext zone mode
+    // u8_pkt[15] = 0x01; // ext zone trigger area
+    // u8_pkt[16] = extZoneActuatorType.value; // ext zone actuator type
+    // u8_pkt[17] =
+    //     (autoDelay >> 8) & 0xFF; // ext zone automatic release delay first byte
+    // u8_pkt[18] =
+    //     autoDelay & 0xFF; // ext zone automatic release delay second byte
+    // u8_pkt[19] =
+    //     (manDelay >> 8) & 0xFF; // ext zone manual release delay first byte
+    // u8_pkt[20] = manDelay & 0xFF; // ext zone manual release delay second byte
+    // u8_pkt[21] =
+    //     (releasePeriod >> 8) & 0xFF; // ext zone release period first byte
+    // u8_pkt[22] = releasePeriod & 0xFF; // ext zone release period second byte
+    // u8_pkt[23] = (resetDelay >> 8) & 0xFF; // ext zone reset delay first byte
+    // u8_pkt[24] = resetDelay & 0xFF; // ext zone reset delay second byte
+    // u8_pkt[25] = extZoneAction.value; // ext zone output mode
+    // u8_pkt[26] = extZoneFunction.value; // ext zone function
+    // u8_pkt[27] = 0x1E; // ext zone valve delay
+    // u8_pkt[28] = 0x00; // ext zone extraction time first byte
+    // u8_pkt[29] = 0x3C; // ext zone extraction time second byte
+    // u8_pkt[30] = 0x03; // ext zone extraction delay first byte
+    // u8_pkt[31] = 0x84; // ext zone extraction delay second byte
+    // u8_pkt[32] = 0x00; // ext zone line resistenace value first byte
+    // u8_pkt[33] = 0x00; // ext zone line resistenace value seond byte
+    // u8_pkt[34] = 0x00; // ext zone line resistenace value third byte
+    // u8_pkt[35] = 0x00; // ext zone line resistenace value fourth byte
+    // u8_pkt[36] = 0x00; // ext zone line resistenace fraction
+    // u8_pkt[37] = 0x00; // ext zone line resistenace unit
+    // u8_pkt[38] = 0x00; // ext zone line resistenace count first byte
+    // u8_pkt[39] = 0x00; // ext zone line resistenace count second byte
+    // u8_pkt[40] = extZoneTextLength & 0xFF; // ext zone text length
+
+    // Compute checksum on first 213 bytes
+    int checksum = toolsFletcherChecksum(u8_pkt.sublist(0, 213));
+
+    u8_pkt[213] = (checksum >> 8) & 0xFF;
+    u8_pkt[214] = checksum & 0xFF;
+    u8_pkt[215] = 0xFD;
+
+    print(
+      "TX/RX: TRANSMIT: Input Setup Apply command time: ${DateTime.now().toIso8601String()}, packet: ${u8_pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
     );
     // print(
     //   u8_pkt
