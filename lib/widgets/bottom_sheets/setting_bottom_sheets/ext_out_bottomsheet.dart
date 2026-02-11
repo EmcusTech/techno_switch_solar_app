@@ -52,7 +52,7 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
     'Pulsing 100ms On, 500ms Off',
     'Pulsing 300ms On, 1.5s Off',
     'Pulsing 600ms On, 3s Off',
-    'Pulsing 1s On, 3s Off',
+    'Pulsing 1s On, 5s Off',
   ];
 
   late String enabled;

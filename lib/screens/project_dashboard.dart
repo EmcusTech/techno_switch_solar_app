@@ -18,6 +18,7 @@ import 'package:techno_switch_solar_app/screens/scanning_screen.dart';
 import 'package:techno_switch_solar_app/screens/settings_screen.dart';
 import 'package:techno_switch_solar_app/screens/test_mode_screen.dart';
 import 'package:techno_switch_solar_app/utils/bluetooth_service.dart';
+import 'package:techno_switch_solar_app/widgets/bottom_sheets/input_mode_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/setting_bottom_sheets/ext_out_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/firmware_upgrade_bottom_sheet.dart';
 
@@ -1056,7 +1057,11 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     );
   }
 
-  void showPasswordPopup({required Function() onCall, bool? isExtOut = false}) {
+  void showPasswordPopup({
+    required Function() onCall,
+    bool? isExtOut = false,
+    bool? isInputSetup = false,
+  }) {
     // Reset navigation guard each time the dialog opens
     _navigatingToDeviceConnecting = false;
 
@@ -1163,6 +1168,11 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                         Navigator.of(dialogContext, rootNavigator: true).pop();
                         if (ble.bleProcess.isExtOutApplyDone.value) {
                           showExtOutSuccessDialog(context);
+                        } else if (isInputSetup == true) {
+                          showInputSetupBottomSheet(
+                            context: context,
+                            onCall: () {},
+                          );
                         } else if (isExtOut == true) {
                           showExtOutBottomSheet(
                             context: context,
@@ -1595,7 +1605,16 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
               _peripheralTile(
                 peripheralName: 'Inputs',
                 iconPath: 'assets/svgs/peripheral_input_icon.svg',
-                isDisabled: true,
+                onTap: () {
+                  showPasswordPopup(
+                    onCall: () {
+                      ble.bleProcess.isInputSetupFetchCommandActive.value =
+                          true;
+                      bleController.startInputSetupFetch();
+                    },
+                    isInputSetup: true,
+                  );
+                },
               ),
               _peripheralTile(
                 peripheralName: 'Zones',
@@ -1666,6 +1685,19 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
       backgroundColor: Colors.transparent,
       barrierColor: Colors.black.withOpacity(0.4),
       builder: (_) => ExtOutBottomSheet(onCall: onCall),
+    );
+  }
+
+  void showInputSetupBottomSheet({
+    required BuildContext context,
+    required Function() onCall,
+  }) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withOpacity(0.4),
+      builder: (_) => InputModeBottomSheet(onCall: onCall),
     );
   }
 

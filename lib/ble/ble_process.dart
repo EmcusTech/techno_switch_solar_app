@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
+import 'package:techno_switch_solar_app/utils/input_mode_util.dart';
 import 'package:techno_switch_solar_app/utils/zone_mode_util.dart';
 import 'ble_manager.dart';
 import 'ble_frame.dart';
@@ -19,6 +21,7 @@ class BleProcess {
   int checkForExtCmdApplyRes = 0;
   int checkDipSetCmdRsp = 0;
   int checkForAccessKeyCmdRsp = 0;
+  int checkForInputSetupFetchRes = 0;
   int validEventLogNum = 0;
   int read1000Logs = 0;
   bool logRetreivalEnded = false;
@@ -70,6 +73,8 @@ class BleProcess {
 
   final ValueNotifier<int> bleManufacturerData = ValueNotifier<int>(0);
 
+  // Ext Out Variables
+
   final ValueNotifier<String> extZoneMode = ValueNotifier<String>("18");
 
   final ValueNotifier<int> isExtZoneEnabled = ValueNotifier<int>(0);
@@ -109,6 +114,23 @@ class BleProcess {
   );
 
   final ValueNotifier<bool> isExtOutApplyDone = ValueNotifier<bool>(false);
+
+  // Input Setup Variables
+
+  final ValueNotifier<bool> isInputSetupFetchCommandActive =
+      ValueNotifier<bool>(false);
+
+  final ValueNotifier<String> inputSetupText = ValueNotifier<String>("");
+
+  final ValueNotifier<int> inputSetupGroup = ValueNotifier<int>(0);
+
+  final ValueNotifier<int> inputSetupFunction = ValueNotifier<int>(0);
+
+  final ValueNotifier<bool> isInputSetupEnabled = ValueNotifier<bool>(false);
+
+  final ValueNotifier<bool> isInputSetupTest = ValueNotifier<bool>(false);
+
+  final ValueNotifier<bool> isInputSetupInverted = ValueNotifier<bool>(false);
 
   // BleStates bleStateMachineState = BleStates.IDLE;
   BleStates bleCurrentState = BleStates.IDLE;
@@ -204,6 +226,11 @@ class BleProcess {
         print("Sending Dip setting fetch cmd");
         checkDipSetCmdRsp = 1;
 
+      case OtaProcessState.sendInputSetupFetchCmdPkt:
+        print("Sending Input Setup Fetch Command");
+        checkForInputSetupFetchRes = 1;
+        break;
+
       default:
         break;
     }
@@ -216,7 +243,13 @@ class BleProcess {
           String.fromCharCodes(rx.payload.sublist(14, 18)) == accessKey.value) {
         isAccessKeyValid.value = true;
         print("ACCESS KEY RECEIVED → NEXT CONTROL CMD");
-        if (isExtOutCommandFetchActive.value) {
+        if (isInputSetupFetchCommandActive.value) {
+          bleManager.otaProcessState =
+              OtaProcessState.sendInputSetupFetchCmdPkt;
+          checkForAccessKeyCmdRsp = 0;
+          startRxTimeout();
+          await bleManager.sendInputSetupFetchCmdPkt();
+        } else if (isExtOutCommandFetchActive.value) {
           bleManager.otaProcessState =
               OtaProcessState.sendExtOutSetupFetchCmdPkt;
           checkForAccessKeyCmdRsp = 0;
@@ -285,6 +318,35 @@ class BleProcess {
         await bleManager.sendPollPacket();
       }
     }
+
+    if (checkForInputSetupFetchRes == 1) {
+      print(
+        "Checking Input Setup Fetch CMD RSP Value ${rx.payload[12]}:::::${rx.payload[12] == 0x06} ",
+      );
+      if (rx.payload[12] == 0x06) {
+        bleManager.otaProcessState = OtaProcessState.notInUse;
+        checkForInputSetupFetchRes = 0;
+        isInputSetupFetchCommandActive.value = false;
+        print(
+          "We got the response for input setup fetch, ${rx.payload[23]}, ${rx.payload[24]}",
+        );
+        final InputModeConfig config = InputModeCodec.fromHex(
+          rx.payload[15].toRadixString(16),
+        );
+        inputSetupGroup.value = rx.payload[23];
+        inputSetupFunction.value = rx.payload[24];
+        isInputSetupEnabled.value = config.inputEnable == InputEnable.enabled;
+        isInputSetupTest.value = config.inputMode == InputMode.test;
+        isInputSetupInverted.value = config.invertMode == InvertMode.inverted;
+        inputSetupText.value = extractStringFromPayload(rx.payload);
+      } else {
+        print("Input Setup Fetch Cmd Response not found, polling again");
+        startRxTimeout();
+        await bleManager.sendPollPacket();
+      }
+    }
+
+    //need to add this catch in show password dialog for access code
 
     if (checkForExtCmdFetchRes == 1) {
       print(
@@ -429,12 +491,26 @@ class BleProcess {
     );
   }
 
+  String extractStringFromPayload(List<int> payload) {
+    // Length is at index 25
+    final int length = payload[25];
+
+    // String starts at index 26
+    final int startIndex = 26;
+    final int endIndex = startIndex + length;
+
+    final List<int> stringBytes = payload.sublist(startIndex, endIndex);
+
+    return utf8.decode(stringBytes);
+  }
+
   void resetProcessState() {
     // Terminal guards
     isOtaCompleted = false;
     processNextOtaFrame = true;
     logRetreivalEnded = false;
     checkForExtCmdFetchRes = 0;
+    checkForInputSetupFetchRes = 0;
     checkDipSetCmdRsp = 0;
     isExtOutApplyButtonActive.value = false;
     isExtOutCommandFetchActive.value = false;
@@ -479,6 +555,46 @@ class BleProcess {
     checkForAccessKeyCmdRsp = 0;
     checkDipSetCmdRsp = 0;
     checkForExtCmdFetchRes = 0;
+    checkForInputSetupFetchRes = 0;
+    validEventLogNum = 0;
+    read1000Logs = 0;
+    receivedPollCount = 0;
+    isExtOutApplyButtonActive.value = false;
+
+    // Time tracking
+    // logStartingTime = null;
+    // logEndTime = null;
+
+    // OTA state
+    bleManager.otaProcessState = OtaProcessState.sendNetworkPacket;
+
+    // RX timeout
+    _rxTimeoutTimer?.cancel();
+    _rxTimeoutTimer = null;
+
+    _otherPacketsRxTimeoutTimer?.cancel();
+    _otherPacketsRxTimeoutTimer = null;
+
+    // UI notifiers
+    // validEventLogCount.value = 0;
+    // read1000LogsCount.value = 0;
+    // validEventLogs.value = [];
+    // isValidLogRecieved.value = false;
+    // panelName.value = "";
+  }
+
+  void resetProcessInputSetupState() {
+    // Terminal guards
+    isOtaCompleted = false;
+    processNextOtaFrame = true;
+    logRetreivalEnded = false;
+
+    // Counters
+    checkForCtrlCmdRsp = 0;
+    checkForAccessKeyCmdRsp = 0;
+    checkDipSetCmdRsp = 0;
+    checkForExtCmdFetchRes = 0;
+    checkForInputSetupFetchRes = 0;
     validEventLogNum = 0;
     read1000Logs = 0;
     receivedPollCount = 0;
@@ -830,6 +946,8 @@ class BleProcess {
         case OtaProcessState.sendDipSettingFetchCmd:
           break;
         case OtaProcessState.sendExtOutSetupApplyCmdPkt:
+          break;
+        case OtaProcessState.sendInputSetupFetchCmdPkt:
           break;
       }
       startRxTimeout();
