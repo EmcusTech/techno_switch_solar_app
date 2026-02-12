@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/utils/input_mode_util.dart';
+import 'package:techno_switch_solar_app/utils/relay_mode_util.dart';
 import 'package:techno_switch_solar_app/utils/zone_mode_util.dart';
 import 'ble_manager.dart';
 import 'ble_frame.dart';
@@ -495,6 +496,14 @@ class BleProcess {
         if (relaySetupFetchCommandStep == 1) {
           print("CMD 1 Validated -> send CMD2, keep polling");
 
+          final OutputModeConfig config = OutputModeCodec.fromHex(
+            rx.payload[15].toRadixString(16),
+          );
+          final bool outputEnabled =
+              config.outputEnable == OutputEnable.enabled;
+          final bool outputMode = config.outputMode == OutputMode.test;
+          isRelayOneSetupEnabled.value = outputEnabled;
+          isRelayOneSetupTest.value = outputMode;
           relayOneSetupOutputText.value = extractStringFromPayload(rx.payload);
           relayOneSetupDynamicText.value = rx.payload[22].toRadixString(16);
           relayOneSetupGroup.value = rx.payload[23];
@@ -506,6 +515,14 @@ class BleProcess {
         } else if (relaySetupFetchCommandStep == 2) {
           print("CMD 2 Validated -> send CMD3, keep polling");
 
+          final OutputModeConfig config = OutputModeCodec.fromHex(
+            rx.payload[15].toRadixString(16),
+          );
+          final bool outputEnabled =
+              config.outputEnable == OutputEnable.enabled;
+          final bool outputMode = config.outputMode == OutputMode.test;
+          isRelayTwoSetupEnabled.value = outputEnabled;
+          isRelayTwoSetupTest.value = outputMode;
           relayTwoSetupOutputText.value = extractStringFromPayload(rx.payload);
           relayTwoSetupDynamicText.value = rx.payload[22].toRadixString(16);
           relayTwoSetupGroup.value = rx.payload[23];
@@ -517,6 +534,14 @@ class BleProcess {
         } else if (relaySetupFetchCommandStep == 3) {
           print("CMD3 Validated -> done");
 
+          final OutputModeConfig config = OutputModeCodec.fromHex(
+            rx.payload[15].toRadixString(16),
+          );
+          final bool outputEnabled =
+              config.outputEnable == OutputEnable.enabled;
+          final bool outputMode = config.outputMode == OutputMode.test;
+          isRelayThreeSetupEnabled.value = outputEnabled;
+          isRelayThreeSetupTest.value = outputMode;
           relayThreeSetupOutputText.value = extractStringFromPayload(
             rx.payload,
           );
@@ -648,6 +673,8 @@ class BleProcess {
   String extractStringFromPayload(List<int> payload) {
     // Length is at index 25
     final int length = payload[25];
+
+    print("Length: $length");
 
     // String starts at index 26
     final int startIndex = 26;

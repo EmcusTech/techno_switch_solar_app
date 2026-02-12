@@ -191,6 +191,39 @@ class BleManager {
 
   ValueNotifier<String> get inputMode => bleProcess.inputMode;
 
+  ValueNotifier<bool> get isRelayOneSetupEnabled =>
+      bleProcess.isRelayOneSetupEnabled;
+  ValueNotifier<bool> get isRelayOneSetupTest => bleProcess.isRelayOneSetupTest;
+  ValueNotifier<String> get relayOneSetupOutputText =>
+      bleProcess.relayOneSetupOutputText;
+  ValueNotifier<String> get relayOneSetupDynamicText =>
+      bleProcess.relayOneSetupDynamicText;
+  ValueNotifier<int> get relayOneSetupGroup => bleProcess.relayOneSetupGroup;
+  ValueNotifier<int> get relayOneSetupFunction =>
+      bleProcess.relayOneSetupFunction;
+  ValueNotifier<bool> get isRelayTwoSetupEnabled =>
+      bleProcess.isRelayTwoSetupEnabled;
+  ValueNotifier<bool> get isRelayTwoSetupTest => bleProcess.isRelayTwoSetupTest;
+  ValueNotifier<String> get relayTwoSetupOutputText =>
+      bleProcess.relayTwoSetupOutputText;
+  ValueNotifier<String> get relayTwoSetupDynamicText =>
+      bleProcess.relayTwoSetupDynamicText;
+  ValueNotifier<int> get relayTwoSetupGroup => bleProcess.relayTwoSetupGroup;
+  ValueNotifier<int> get relayTwoSetupFunction =>
+      bleProcess.relayTwoSetupFunction;
+  ValueNotifier<bool> get isRelayThreeSetupEnabled =>
+      bleProcess.isRelayThreeSetupEnabled;
+  ValueNotifier<bool> get isRelayThreeSetupTest =>
+      bleProcess.isRelayThreeSetupTest;
+  ValueNotifier<String> get relayThreeSetupOutputText =>
+      bleProcess.relayThreeSetupOutputText;
+  ValueNotifier<String> get relayThreeSetupDynamicText =>
+      bleProcess.relayThreeSetupDynamicText;
+  ValueNotifier<int> get relayThreeSetupGroup =>
+      bleProcess.relayThreeSetupGroup;
+  ValueNotifier<int> get relayThreeSetupFunction =>
+      bleProcess.relayThreeSetupFunction;
+
   void resetProtocolState() {
     // Packet counters
     u8TxPktCnt = 0;

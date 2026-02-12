@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:techno_switch_solar_app/ble/ble_manager.dart';
+import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
+import 'package:techno_switch_solar_app/utils/relay_mode_util.dart';
 
 class RelayModeBottomSheet extends StatefulWidget {
   final Function() onCall;
@@ -12,6 +16,8 @@ class RelayModeBottomSheet extends StatefulWidget {
 }
 
 class _RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
+  BleManager? manager;
+
   final List<String> groupOptions = ['None', 'General', 'Zone', 'Ext. Out'];
 
   final Map<String, List<String>> functionOptionsMap = {
@@ -54,7 +60,52 @@ class _RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
   @override
   void initState() {
     super.initState();
+
     relays = List.generate(3, (_) => RelayConfig());
+
+    if (Get.isRegistered<BleLogController>()) {
+      manager = Get.find<BleLogController>().bleManager;
+
+      // Relay 1
+      relays[0].enabled = manager!.isRelayOneSetupEnabled.value ? 'Yes' : 'No';
+      relays[0].test = manager!.isRelayOneSetupTest.value ? 'Yes' : 'No';
+      relays[0].group = groupOptions[manager!.relayOneSetupGroup.value];
+      relays[0].function =
+          functionOptionsMap[relays[0].group]![manager!
+              .relayOneSetupFunction
+              .value];
+      relays[0].outputTextController.text =
+          manager!.relayOneSetupOutputText.value;
+      relays[0].dynamicController.text =
+          manager!.relayOneSetupDynamicText.value;
+
+      // Relay 2
+      relays[1].enabled = manager!.isRelayTwoSetupEnabled.value ? 'Yes' : 'No';
+      relays[1].test = manager!.isRelayTwoSetupTest.value ? 'Yes' : 'No';
+      relays[1].group = groupOptions[manager!.relayTwoSetupGroup.value];
+      relays[1].function =
+          functionOptionsMap[relays[1].group]![manager!
+              .relayTwoSetupFunction
+              .value];
+      relays[1].outputTextController.text =
+          manager!.relayTwoSetupOutputText.value;
+      relays[1].dynamicController.text =
+          manager!.relayTwoSetupDynamicText.value;
+
+      // Relay 3
+      relays[2].enabled =
+          manager!.isRelayThreeSetupEnabled.value ? 'Yes' : 'No';
+      relays[2].test = manager!.isRelayThreeSetupTest.value ? 'Yes' : 'No';
+      relays[2].group = groupOptions[manager!.relayThreeSetupGroup.value];
+      relays[2].function =
+          functionOptionsMap[relays[2].group]![manager!
+              .relayThreeSetupFunction
+              .value];
+      relays[2].outputTextController.text =
+          manager!.relayThreeSetupOutputText.value;
+      relays[2].dynamicController.text =
+          manager!.relayThreeSetupDynamicText.value;
+    }
   }
 
   @override
