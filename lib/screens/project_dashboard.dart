@@ -1207,7 +1207,17 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                         } else if (isRelaySetup == true) {
                           showRelaySetupBottomSheet(
                             context: context,
-                            onCall: () {},
+                            onCall: () {
+                              showPasswordPopup(
+                                onCall: () {
+                                  ble
+                                      .bleProcess
+                                      .isRelaySetupCommandApplyActive
+                                      .value = true;
+                                  bleController.startRelaySetupApplyFirst();
+                                },
+                              );
+                            },
                           );
                         } else {
                           Navigator.of(dialogContext).push(

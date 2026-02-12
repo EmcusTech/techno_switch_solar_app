@@ -69,6 +69,10 @@ class BleLogController extends GetxController {
     await bleManager.startRelaySetupFetch();
   }
 
+  Future<void> startRelaySetupApplyFirst() async {
+    await bleManager.sendRelaySetupApplyFirstCmdPkt();
+  }
+
   sendNetworkPacket() async {
     await bleManager.sendNetworkPacket();
   }

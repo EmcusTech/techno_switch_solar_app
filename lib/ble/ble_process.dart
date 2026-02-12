@@ -148,6 +148,9 @@ class BleProcess {
   final ValueNotifier<bool> isRelaySetupFetchCommandActive =
       ValueNotifier<bool>(false);
 
+  final ValueNotifier<bool> isRelaySetupCommandApplyActive =
+      ValueNotifier<bool>(false);
+
   final ValueNotifier<String> relayOneSetupOutputText = ValueNotifier<String>(
     "",
   );
@@ -196,6 +199,12 @@ class BleProcess {
   );
 
   final ValueNotifier<bool> isRelayThreeSetupTest = ValueNotifier<bool>(false);
+
+  final ValueNotifier<String> relayOneMode = ValueNotifier<String>("");
+
+  final ValueNotifier<String> relayTwoMode = ValueNotifier<String>("");
+
+  final ValueNotifier<String> relayThreeMode = ValueNotifier<String>("");
 
   // BleStates bleStateMachineState = BleStates.IDLE;
   BleStates bleCurrentState = BleStates.IDLE;
@@ -349,6 +358,12 @@ class BleProcess {
           relaySetupFetchCommandStep = 1;
           startRxTimeout();
           await bleManager.sendRelaySetupFetchFirstCmdPkt();
+        } else if (isRelaySetupCommandApplyActive.value) {
+          bleManager.otaProcessState =
+              OtaProcessState.sendRelaySetupApplyCmdPkt;
+          checkForAccessKeyCmdRsp = 0;
+          startRxTimeout();
+          await bleManager.sendRelaySetupApplyFirstCmdPkt();
         } else {
           bleManager.otaProcessState = OtaProcessState.sendStopCntrlCmdPkt;
           checkForAccessKeyCmdRsp = 0;
@@ -1175,6 +1190,8 @@ class BleProcess {
         case OtaProcessState.sendInputSetupApplyCmdPkt:
           break;
         case OtaProcessState.sendRelaySetupFetchCmdPkt:
+          break;
+        case OtaProcessState.sendRelaySetupApplyCmdPkt:
           break;
       }
       startRxTimeout();

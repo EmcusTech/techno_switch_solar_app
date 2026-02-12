@@ -367,6 +367,10 @@ class _RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
     );
   }
 
+  int returnIndex(String value, List<String> list) {
+    return list.indexOf(value);
+  }
+
   Widget _primaryButton() {
     return SizedBox(
       width: double.infinity,
@@ -379,6 +383,69 @@ class _RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
           ),
         ),
         onPressed: () {
+          for (int i = 0; i < 3; i++) {
+            final relay = relays[i];
+
+            bool isEnabled = relay.enabled == 'Yes';
+            bool isTest = relay.test == 'Yes';
+
+            final config = OutputModeConfig(
+              outputEnable:
+                  isEnabled ? OutputEnable.enabled : OutputEnable.disabled,
+              outputMode: isTest ? OutputMode.test : OutputMode.normal,
+            );
+
+            final String hexValue = OutputModeCodec.encodeHex(config);
+
+            int groupIndex = returnIndex(relay.group, groupOptions);
+            int functionIndex = returnIndex(
+              relay.function,
+              functionOptionsMap[relay.group]!,
+            );
+
+            print("Relay ${i + 1} HEX → $hexValue");
+            print("Group Index → $groupIndex");
+            print("Function Index → $functionIndex");
+
+            switch (i) {
+              case 0:
+                manager!.relayOneMode.value = hexValue;
+                manager!.relayOneSetupGroup.value = groupIndex;
+                manager!.relayOneSetupFunction.value = functionIndex;
+                manager!.isRelayOneSetupEnabled.value = isEnabled;
+                manager!.isRelayOneSetupTest.value = isTest;
+                manager!.relayOneSetupOutputText.value =
+                    relay.outputTextController.text;
+                manager!.relayOneSetupDynamicText.value =
+                    relay.dynamicController.text;
+                break;
+
+              case 1:
+                manager!.relayTwoMode.value = hexValue;
+                manager!.relayTwoSetupGroup.value = groupIndex;
+                manager!.relayTwoSetupFunction.value = functionIndex;
+                manager!.isRelayTwoSetupEnabled.value = isEnabled;
+                manager!.isRelayTwoSetupTest.value = isTest;
+                manager!.relayTwoSetupOutputText.value =
+                    relay.outputTextController.text;
+                manager!.relayTwoSetupDynamicText.value =
+                    relay.dynamicController.text;
+                break;
+
+              case 2:
+                manager!.relayThreeMode.value = hexValue;
+                manager!.relayThreeSetupGroup.value = groupIndex;
+                manager!.relayThreeSetupFunction.value = functionIndex;
+                manager!.isRelayThreeSetupEnabled.value = isEnabled;
+                manager!.isRelayThreeSetupTest.value = isTest;
+                manager!.relayThreeSetupOutputText.value =
+                    relay.outputTextController.text;
+                manager!.relayThreeSetupDynamicText.value =
+                    relay.dynamicController.text;
+                break;
+            }
+          }
+
           Navigator.pop(context);
           widget.onCall();
         },

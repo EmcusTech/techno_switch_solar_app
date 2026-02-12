@@ -65,6 +65,7 @@ enum OtaProcessState {
   sendInputSetupFetchCmdPkt,
   sendInputSetupApplyCmdPkt,
   sendRelaySetupFetchCmdPkt,
+  sendRelaySetupApplyCmdPkt,
 }
 
 enum BleOperationMode {
@@ -223,6 +224,12 @@ class BleManager {
       bleProcess.relayThreeSetupGroup;
   ValueNotifier<int> get relayThreeSetupFunction =>
       bleProcess.relayThreeSetupFunction;
+
+  ValueNotifier<String> get relayOneMode => bleProcess.relayOneMode;
+
+  ValueNotifier<String> get relayTwoMode => bleProcess.relayTwoMode;
+
+  ValueNotifier<String> get relayThreeMode => bleProcess.relayThreeMode;
 
   void resetProtocolState() {
     // Packet counters
@@ -2158,6 +2165,186 @@ class BleManager {
 
     print(
       "TX/RX: TRANSMIT: Relay Setup Fetch Third Command time: ${DateTime.now().toIso8601String()}, packet: ${u8_pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+    );
+    // print(
+    //   u8_pkt
+    //       .map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase())
+    //       .join(' '),
+    // );
+
+    await sendSmallDataFrame(0x1000, 216, u8_pkt);
+  }
+
+  Future<void> sendRelaySetupApplyFirstCmdPkt() async {
+    // Create 216-byte buffer
+    Uint8List u8_pkt = Uint8List(216);
+
+    final String outputText = relayOneSetupOutputText.value;
+    final List<int> outputTextBytes = outputText.codeUnits;
+    final outputTextLength = outputTextBytes.length;
+
+    final initialindex = 26;
+    for (int i = 0; i < outputTextLength; i++) {
+      u8_pkt[initialindex + i] = outputTextBytes[i];
+    }
+
+    // Update global counters
+    u8TxPktCnt += 1;
+
+    u8_pkt[0] = 0xFE;
+    u8_pkt[1] = 0x01;
+    u8_pkt[2] = 0x00;
+
+    u8_pkt[3] = 0x01; // pkt type
+    u8_pkt[4] = u8TxPktCnt & 0xFF; // tx pkt num
+    u8_pkt[5] = u8RxPktCnt & 0xFF; // rx pkt num
+    u8_pkt[6] = 0x00; // network number
+    u8_pkt[10] = 0x81; // mode
+    u8_pkt[11] = 0x00; // socket number
+    u8_pkt[12] = 0x07; // command byte 1
+    u8_pkt[13] = 0x00; // output max zone byte 1
+    u8_pkt[14] = 0x04; // output max zone byte 2
+    u8_pkt[15] = int.parse(relayOneMode.value, radix: 16);
+    u8_pkt[16] = 0x01;
+    u8_pkt[17] = 0x00;
+    u8_pkt[18] = 0x00;
+    u8_pkt[19] = 0x00;
+    u8_pkt[20] = 0x03;
+    u8_pkt[21] = 0x00;
+    u8_pkt[22] = int.parse(relayOneSetupDynamicText.value, radix: 16);
+    u8_pkt[23] = relayOneSetupGroup.value;
+    u8_pkt[24] = relayOneSetupFunction.value;
+    u8_pkt[25] = outputTextLength & 0xFF;
+
+    // Compute checksum on first 213 bytes
+    int checksum = toolsFletcherChecksum(u8_pkt.sublist(0, 213));
+
+    u8_pkt[213] = (checksum >> 8) & 0xFF;
+    u8_pkt[214] = checksum & 0xFF;
+    u8_pkt[215] = 0xFD;
+
+    print(
+      "TX/RX: TRANSMIT: Relay Setup Apply First Command time: ${DateTime.now().toIso8601String()}, packet: ${u8_pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+    );
+    // print(
+    //   u8_pkt
+    //       .map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase())
+    //       .join(' '),
+    // );
+
+    await sendSmallDataFrame(0x1000, 216, u8_pkt);
+  }
+
+  Future<void> sendRelaySetupApplySecondCmdPkt() async {
+    // Create 216-byte buffer
+    Uint8List u8_pkt = Uint8List(216);
+
+    final String outputText = relayTwoSetupOutputText.value;
+    final List<int> outputTextBytes = outputText.codeUnits;
+    final outputTextLength = outputTextBytes.length;
+
+    final initialindex = 26;
+    for (int i = 0; i < outputTextLength; i++) {
+      u8_pkt[initialindex + i] = outputTextBytes[i];
+    }
+
+    // Update global counters
+    u8TxPktCnt += 1;
+
+    u8_pkt[0] = 0xFE;
+    u8_pkt[1] = 0x01;
+    u8_pkt[2] = 0x00;
+
+    u8_pkt[3] = 0x01; // pkt type
+    u8_pkt[4] = u8TxPktCnt & 0xFF; // tx pkt num
+    u8_pkt[5] = u8RxPktCnt & 0xFF; // rx pkt num
+    u8_pkt[6] = 0x00; // network number
+    u8_pkt[10] = 0x81; // mode
+    u8_pkt[11] = 0x00; // socket number
+    u8_pkt[12] = 0x07; // command byte 1
+    u8_pkt[13] = 0x00; // output max zone byte 1
+    u8_pkt[14] = 0x05; // output max zone byte 2
+    u8_pkt[15] = int.parse(relayTwoMode.value, radix: 16);
+    u8_pkt[16] = 0x01;
+    u8_pkt[17] = 0x00;
+    u8_pkt[18] = 0x00;
+    u8_pkt[19] = 0x00;
+    u8_pkt[20] = 0x03;
+    u8_pkt[21] = 0x00;
+    u8_pkt[22] = int.parse(relayTwoSetupDynamicText.value, radix: 16);
+    u8_pkt[23] = relayTwoSetupGroup.value;
+    u8_pkt[24] = relayTwoSetupFunction.value;
+    u8_pkt[25] = outputTextLength & 0xFF;
+
+    // Compute checksum on first 213 bytes
+    int checksum = toolsFletcherChecksum(u8_pkt.sublist(0, 213));
+
+    u8_pkt[213] = (checksum >> 8) & 0xFF;
+    u8_pkt[214] = checksum & 0xFF;
+    u8_pkt[215] = 0xFD;
+
+    print(
+      "TX/RX: TRANSMIT: Relay Setup Apply Second Command time: ${DateTime.now().toIso8601String()}, packet: ${u8_pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+    );
+    // print(
+    //   u8_pkt
+    //       .map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase())
+    //       .join(' '),
+    // );
+
+    await sendSmallDataFrame(0x1000, 216, u8_pkt);
+  }
+
+  Future<void> sendRelaySetupApplyThirdCmdPkt() async {
+    // Create 216-byte buffer
+    Uint8List u8_pkt = Uint8List(216);
+
+    final String outputText = relayThreeSetupOutputText.value;
+    final List<int> outputTextBytes = outputText.codeUnits;
+    final outputTextLength = outputTextBytes.length;
+
+    final initialindex = 26;
+    for (int i = 0; i < outputTextLength; i++) {
+      u8_pkt[initialindex + i] = outputTextBytes[i];
+    }
+
+    // Update global counters
+    u8TxPktCnt += 1;
+
+    u8_pkt[0] = 0xFE;
+    u8_pkt[1] = 0x01;
+    u8_pkt[2] = 0x00;
+
+    u8_pkt[3] = 0x01; // pkt type
+    u8_pkt[4] = u8TxPktCnt & 0xFF; // tx pkt num
+    u8_pkt[5] = u8RxPktCnt & 0xFF; // rx pkt num
+    u8_pkt[6] = 0x00; // network number
+    u8_pkt[10] = 0x81; // mode
+    u8_pkt[11] = 0x00; // socket number
+    u8_pkt[12] = 0x07; // command byte 1
+    u8_pkt[13] = 0x00; // output max zone byte 1
+    u8_pkt[14] = 0x06; // output max zone byte 2
+    u8_pkt[15] = int.parse(relayThreeMode.value, radix: 16);
+    u8_pkt[16] = 0x01;
+    u8_pkt[17] = 0x00;
+    u8_pkt[18] = 0x00;
+    u8_pkt[19] = 0x00;
+    u8_pkt[20] = 0x03;
+    u8_pkt[21] = 0x00;
+    u8_pkt[22] = int.parse(relayThreeSetupDynamicText.value, radix: 16);
+    u8_pkt[23] = relayThreeSetupGroup.value;
+    u8_pkt[24] = relayThreeSetupFunction.value;
+    u8_pkt[25] = outputTextLength & 0xFF;
+
+    // Compute checksum on first 213 bytes
+    int checksum = toolsFletcherChecksum(u8_pkt.sublist(0, 213));
+
+    u8_pkt[213] = (checksum >> 8) & 0xFF;
+    u8_pkt[214] = checksum & 0xFF;
+    u8_pkt[215] = 0xFD;
+
+    print(
+      "TX/RX: TRANSMIT: Relay Setup Apply Third Command time: ${DateTime.now().toIso8601String()}, packet: ${u8_pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
     );
     // print(
     //   u8_pkt
