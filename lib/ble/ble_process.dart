@@ -23,6 +23,8 @@ class BleProcess {
   int checkForAccessKeyCmdRsp = 0;
   int checkForInputSetupFetchRes = 0;
   int checkForInputSetupApplyRes = 0;
+  int checkForRelaySetupFetchRes = 0;
+  int relaySetupFetchCommandStep = 0; // 1, 2, 3
   int validEventLogNum = 0;
   int read1000Logs = 0;
   bool logRetreivalEnded = false;
@@ -141,6 +143,59 @@ class BleProcess {
 
   final ValueNotifier<String> inputMode = ValueNotifier<String>("");
 
+  // Relay Setup Variables
+  final ValueNotifier<bool> isRelaySetupFetchCommandActive =
+      ValueNotifier<bool>(false);
+
+  final ValueNotifier<String> relayOneSetupOutputText = ValueNotifier<String>(
+    "",
+  );
+
+  final ValueNotifier<int> relayOneSetupGroup = ValueNotifier<int>(0);
+
+  final ValueNotifier<int> relayOneSetupFunction = ValueNotifier<int>(0);
+
+  final ValueNotifier<String> relayOneSetupDynamicText = ValueNotifier<String>(
+    "",
+  );
+
+  final ValueNotifier<bool> isRelayOneSetupEnabled = ValueNotifier<bool>(false);
+
+  final ValueNotifier<bool> isRelayOneSetupTest = ValueNotifier<bool>(false);
+
+  final ValueNotifier<String> relayTwoSetupOutputText = ValueNotifier<String>(
+    "",
+  );
+
+  final ValueNotifier<int> relayTwoSetupGroup = ValueNotifier<int>(0);
+
+  final ValueNotifier<int> relayTwoSetupFunction = ValueNotifier<int>(0);
+
+  final ValueNotifier<String> relayTwoSetupDynamicText = ValueNotifier<String>(
+    "",
+  );
+
+  final ValueNotifier<bool> isRelayTwoSetupEnabled = ValueNotifier<bool>(false);
+
+  final ValueNotifier<bool> isRelayTwoSetupTest = ValueNotifier<bool>(false);
+
+  final ValueNotifier<String> relayThreeSetupOutputText = ValueNotifier<String>(
+    "",
+  );
+
+  final ValueNotifier<int> relayThreeSetupGroup = ValueNotifier<int>(0);
+
+  final ValueNotifier<int> relayThreeSetupFunction = ValueNotifier<int>(0);
+
+  final ValueNotifier<String> relayThreeSetupDynamicText =
+      ValueNotifier<String>("");
+
+  final ValueNotifier<bool> isRelayThreeSetupEnabled = ValueNotifier<bool>(
+    false,
+  );
+
+  final ValueNotifier<bool> isRelayThreeSetupTest = ValueNotifier<bool>(false);
+
   // BleStates bleStateMachineState = BleStates.IDLE;
   BleStates bleCurrentState = BleStates.IDLE;
   DeviceConnectState deviceConnectState = DeviceConnectState.notConnected;
@@ -245,6 +300,11 @@ class BleProcess {
         checkForInputSetupApplyRes = 1;
         break;
 
+      case OtaProcessState.sendRelaySetupFetchCmdPkt:
+        print("Sending Relay Setup Fetch Command");
+        checkForRelaySetupFetchRes = 1;
+        break;
+
       default:
         break;
     }
@@ -281,6 +341,13 @@ class BleProcess {
           checkForAccessKeyCmdRsp = 0;
           startRxTimeout();
           await bleManager.sendInputSetupApplyCmdPkt();
+        } else if (isRelaySetupFetchCommandActive.value) {
+          bleManager.otaProcessState =
+              OtaProcessState.sendRelaySetupFetchCmdPkt;
+          checkForAccessKeyCmdRsp = 0;
+          relaySetupFetchCommandStep = 1;
+          startRxTimeout();
+          await bleManager.sendRelaySetupFetchFirstCmdPkt();
         } else {
           bleManager.otaProcessState = OtaProcessState.sendStopCntrlCmdPkt;
           checkForAccessKeyCmdRsp = 0;
@@ -415,6 +482,55 @@ class BleProcess {
         await bleManager.sendFetchDipSettingPkt();
       } else {
         print("EXT Fetch Cmd Response not found, polling again");
+        startRxTimeout();
+        await bleManager.sendPollPacket();
+      }
+    }
+
+    if (checkForRelaySetupFetchRes == 1) {
+      print(
+        "Checking Relay Setup Fetch CMD RSP Value ${rx.payload[12]}:::::${rx.payload[12] == 0x07} ",
+      );
+      if (rx.payload[12] == 0x07) {
+        if (relaySetupFetchCommandStep == 1) {
+          print("CMD 1 Validated -> send CMD2, keep polling");
+
+          relayOneSetupOutputText.value = extractStringFromPayload(rx.payload);
+          relayOneSetupDynamicText.value = rx.payload[22].toRadixString(16);
+          relayOneSetupGroup.value = rx.payload[23];
+          relayOneSetupFunction.value = rx.payload[24];
+
+          relaySetupFetchCommandStep = 2;
+          startRxTimeout();
+          await bleManager.sendRelaySetupFetchSecondCmdPkt();
+        } else if (relaySetupFetchCommandStep == 2) {
+          print("CMD 2 Validated -> send CMD3, keep polling");
+
+          relayTwoSetupOutputText.value = extractStringFromPayload(rx.payload);
+          relayTwoSetupDynamicText.value = rx.payload[22].toRadixString(16);
+          relayTwoSetupGroup.value = rx.payload[23];
+          relayTwoSetupFunction.value = rx.payload[24];
+
+          relaySetupFetchCommandStep = 3;
+          startRxTimeout();
+          await bleManager.sendRelaySetupFetchThirdCmdPkt();
+        } else if (relaySetupFetchCommandStep == 3) {
+          print("CMD3 Validated -> done");
+
+          relayThreeSetupOutputText.value = extractStringFromPayload(
+            rx.payload,
+          );
+          relayThreeSetupDynamicText.value = rx.payload[22].toRadixString(16);
+          relayThreeSetupGroup.value = rx.payload[23];
+          relayThreeSetupFunction.value = rx.payload[24];
+
+          bleManager.otaProcessState = OtaProcessState.notInUse;
+          checkForRelaySetupFetchRes = 0;
+          isRelaySetupFetchCommandActive.value = false;
+          print("We got the response for relay setup fetch");
+        }
+      } else {
+        print("Relay Setup Fetch Cmd Response not found, polling again");
         startRxTimeout();
         await bleManager.sendPollPacket();
       }
@@ -638,6 +754,47 @@ class BleProcess {
     read1000Logs = 0;
     receivedPollCount = 0;
     isExtOutApplyButtonActive.value = false;
+
+    // Time tracking
+    // logStartingTime = null;
+    // logEndTime = null;
+
+    // OTA state
+    bleManager.otaProcessState = OtaProcessState.sendNetworkPacket;
+
+    // RX timeout
+    _rxTimeoutTimer?.cancel();
+    _rxTimeoutTimer = null;
+
+    _otherPacketsRxTimeoutTimer?.cancel();
+    _otherPacketsRxTimeoutTimer = null;
+
+    // UI notifiers
+    // validEventLogCount.value = 0;
+    // read1000LogsCount.value = 0;
+    // validEventLogs.value = [];
+    // isValidLogRecieved.value = false;
+    // panelName.value = "";
+  }
+
+  void resetProcessRelaySetupState() {
+    // Terminal guards
+    isOtaCompleted = false;
+    processNextOtaFrame = true;
+    logRetreivalEnded = false;
+
+    // Counters
+    checkForCtrlCmdRsp = 0;
+    checkForAccessKeyCmdRsp = 0;
+    checkDipSetCmdRsp = 0;
+    checkForExtCmdFetchRes = 0;
+    checkForInputSetupFetchRes = 0;
+    validEventLogNum = 0;
+    read1000Logs = 0;
+    receivedPollCount = 0;
+    isExtOutApplyButtonActive.value = false;
+    relaySetupFetchCommandStep = 0;
+    checkForRelaySetupFetchRes = 0;
 
     // Time tracking
     // logStartingTime = null;
@@ -989,6 +1146,8 @@ class BleProcess {
         case OtaProcessState.sendInputSetupFetchCmdPkt:
           break;
         case OtaProcessState.sendInputSetupApplyCmdPkt:
+          break;
+        case OtaProcessState.sendRelaySetupFetchCmdPkt:
           break;
       }
       startRxTimeout();
