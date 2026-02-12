@@ -25,7 +25,9 @@ class BleProcess {
   int checkForInputSetupFetchRes = 0;
   int checkForInputSetupApplyRes = 0;
   int checkForRelaySetupFetchRes = 0;
+  int checkForRelaySetupApplyRes = 0;
   int relaySetupFetchCommandStep = 0; // 1, 2, 3
+  int relaySetupApplyCommandStep = 0; // 1, 2, 3
   int validEventLogNum = 0;
   int read1000Logs = 0;
   bool logRetreivalEnded = false;
@@ -206,6 +208,8 @@ class BleProcess {
 
   final ValueNotifier<String> relayThreeMode = ValueNotifier<String>("");
 
+  final ValueNotifier<bool> isRelaySetupApplyDone = ValueNotifier<bool>(false);
+
   // BleStates bleStateMachineState = BleStates.IDLE;
   BleStates bleCurrentState = BleStates.IDLE;
   DeviceConnectState deviceConnectState = DeviceConnectState.notConnected;
@@ -315,6 +319,11 @@ class BleProcess {
         checkForRelaySetupFetchRes = 1;
         break;
 
+      case OtaProcessState.sendRelaySetupApplyCmdPkt:
+        print("Sending Relay Setup Apply Command");
+        checkForRelaySetupApplyRes = 1;
+        break;
+
       default:
         break;
     }
@@ -362,6 +371,7 @@ class BleProcess {
           bleManager.otaProcessState =
               OtaProcessState.sendRelaySetupApplyCmdPkt;
           checkForAccessKeyCmdRsp = 0;
+          relaySetupApplyCommandStep = 1;
           startRxTimeout();
           await bleManager.sendRelaySetupApplyFirstCmdPkt();
         } else {
@@ -462,6 +472,36 @@ class BleProcess {
         print("We got the response for ext apply");
       } else {
         print("EXT Apply Cmd Response not found, polling again");
+        startRxTimeout();
+        await bleManager.sendPollPacket();
+      }
+    }
+
+    if (checkForRelaySetupApplyRes == 1) {
+      print(
+        "Checking Relay Setup Apply CMD RSP Value ${rx.payload[12]}:::::${rx.payload[12] == 0x16} ",
+      );
+      if (rx.payload[10] == 0x83) {
+        if (relaySetupApplyCommandStep == 1) {
+          print("CMD 1 Validated -> send CMD2, keep polling");
+          relaySetupApplyCommandStep = 2;
+          startRxTimeout();
+          await bleManager.sendRelaySetupApplySecondCmdPkt();
+        } else if (relaySetupApplyCommandStep == 2) {
+          print("CMD 2 Validated -> send CMD3, keep polling");
+          relaySetupApplyCommandStep = 3;
+          startRxTimeout();
+          await bleManager.sendRelaySetupApplyThirdCmdPkt();
+        } else if (relaySetupApplyCommandStep == 3) {
+          print("CMD3 Validated -> done");
+          bleManager.otaProcessState = OtaProcessState.notInUse;
+          checkForRelaySetupApplyRes = 0;
+          isRelaySetupCommandApplyActive.value = false;
+          isRelaySetupApplyDone.value = true;
+          print("We got the response for relay setup apply");
+        }
+      } else {
+        print("Relay Setup Apply Cmd Response not found, polling again");
         startRxTimeout();
         await bleManager.sendPollPacket();
       }
@@ -831,6 +871,7 @@ class BleProcess {
     checkDipSetCmdRsp = 0;
     checkForExtCmdFetchRes = 0;
     checkForInputSetupFetchRes = 0;
+    checkForRelaySetupApplyRes = 0;
     validEventLogNum = 0;
     read1000Logs = 0;
     receivedPollCount = 0;

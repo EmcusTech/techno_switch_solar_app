@@ -1031,6 +1031,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                       Navigator.of(dialogContext, rootNavigator: true).pop();
                       ble.bleProcess.isExtOutApplyDone.value = false;
                       ble.bleProcess.isInputSetupApplyDone.value = false;
+                      ble.bleProcess.isRelaySetupApplyDone.value = false;
                     },
                     child: Container(
                       height: 48,
@@ -1176,6 +1177,9 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                           );
                         } else if (ble.bleProcess.isInputSetupApplyDone.value) {
                           showApplySuccessDialog(context, 'Inputs');
+                        } else if (ble.bleProcess.isRelaySetupApplyDone.value &&
+                            mounted) {
+                          showApplySuccessDialog(context, 'Relays');
                         } else if (isInputSetup == true) {
                           showInputSetupBottomSheet(
                             context: context,
@@ -1214,7 +1218,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                                       .bleProcess
                                       .isRelaySetupCommandApplyActive
                                       .value = true;
-                                  bleController.startRelaySetupApplyFirst();
+                                  bleController.startRelaySetupApply();
                                 },
                               );
                             },

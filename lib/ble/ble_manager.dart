@@ -45,6 +45,7 @@ enum BleStates {
   SEND_INPUT_SETUP_CMD_FETCH_PACKET,
   SEND_INPUT_SETUP_CMD_APPLY_PACKET,
   SEND_RELAY_SETUP_CMD_FETCH_PACKET,
+  SEND_RELAY_SETUP_CMD_APPLY_PACKET,
   // add other states
 }
 
@@ -77,6 +78,7 @@ enum BleOperationMode {
   inputSetupFetch,
   inputSetupApply,
   relaySetupFetch,
+  relaySetupApply,
 }
 
 const String BLE_AUTHN_MSG = "TECHNOSWITCH-AUTH-APP";
@@ -230,6 +232,9 @@ class BleManager {
   ValueNotifier<String> get relayTwoMode => bleProcess.relayTwoMode;
 
   ValueNotifier<String> get relayThreeMode => bleProcess.relayThreeMode;
+
+  ValueNotifier<bool> get isRelaySetupApplyDone =>
+      bleProcess.isRelaySetupApplyDone;
 
   void resetProtocolState() {
     // Packet counters
@@ -580,6 +585,48 @@ class BleManager {
       print("Notify handler already registered, proceeding with ext out fetch");
       bleCurrentState = BleStates.SEND_RELAY_SETUP_CMD_FETCH_PACKET;
       bleStateMachineState = BleStates.SEND_RELAY_SETUP_CMD_FETCH_PACKET;
+      print("Current state: $bleStateMachineState");
+      // Send Network Packet
+      bleProcess.startOtherPacketsRxTimeout(
+        timeout: const Duration(seconds: 5),
+      );
+      Get.find<BleLogController>().sendNetworkPacket();
+    }
+  }
+
+  Future<void> startRelaySetupApply() async {
+    if (!isConnected) {
+      throw Exception("Device not connected. Cannot start log retrieval.");
+    }
+
+    if (notifyChar == null || writeChar == null) {
+      throw Exception(
+        "BLE characteristics not initialized. Cannot start log retrieval.",
+      );
+    }
+
+    // Set operation mode to log retrieval
+    currentOperationMode = BleOperationMode.relaySetupApply;
+
+    // Reset protocol state to initial values
+    resetRelaySetupState();
+    resetProtocolRelaySetupState();
+
+    // IMPORTANT: Reset process state to clear isOtaCompleted flag
+    // This ensures polls aren't blocked after firmware upgrade
+    bleProcess.resetProcessRelaySetupState();
+
+    // Always ensure notify handler is registered (especially after reconnection)
+    // Check if subscription is null or if log retrieval hasn't been done once
+    if (_notifySub == null) {
+      print("Registering notify handler for ext out");
+      await registerNotifyHandler();
+      // Give a small delay after registration to ensure subscription is active
+      await Future.delayed(const Duration(milliseconds: 200));
+    } else {
+      print("Notify handler already registered, proceeding with ext out fetch");
+      bleCurrentState = BleStates.SEND_RELAY_SETUP_CMD_APPLY_PACKET;
+      bleStateMachineState = BleStates.SEND_RELAY_SETUP_CMD_APPLY_PACKET;
       print("Current state: $bleStateMachineState");
       // Send Network Packet
       bleProcess.startOtherPacketsRxTimeout(
@@ -1161,6 +1208,15 @@ class BleManager {
           bleStateMachineState = BleStates.SEND_RELAY_SETUP_CMD_FETCH_PACKET;
           print("Current state: $bleStateMachineState (Relay Setup Fetch)");
           // Send Network Packet for Input Setup Fetch
+          bleProcess.startOtherPacketsRxTimeout(
+            timeout: const Duration(seconds: 5),
+          );
+          Get.find<BleLogController>().sendNetworkPacket();
+        } else if (currentOperationMode == BleOperationMode.relaySetupApply) {
+          bleCurrentState = BleStates.SEND_EXT_OUT_SETUP_CMD_APPLY_PACKET;
+          bleStateMachineState = BleStates.SEND_EXT_OUT_SETUP_CMD_APPLY_PACKET;
+          print("Current state: $bleStateMachineState (Relay Setup Apply)");
+          // Send Network Packet for Relay Setup Apply
           bleProcess.startOtherPacketsRxTimeout(
             timeout: const Duration(seconds: 5),
           );
@@ -2211,7 +2267,10 @@ class BleManager {
     u8_pkt[19] = 0x00;
     u8_pkt[20] = 0x03;
     u8_pkt[21] = 0x00;
-    u8_pkt[22] = int.parse(relayOneSetupDynamicText.value, radix: 16);
+    u8_pkt[22] =
+        relayOneSetupDynamicText.value.isNotEmpty
+            ? int.parse(relayOneSetupDynamicText.value, radix: 16)
+            : 0x00;
     u8_pkt[23] = relayOneSetupGroup.value;
     u8_pkt[24] = relayOneSetupFunction.value;
     u8_pkt[25] = outputTextLength & 0xFF;
@@ -2269,9 +2328,12 @@ class BleManager {
     u8_pkt[17] = 0x00;
     u8_pkt[18] = 0x00;
     u8_pkt[19] = 0x00;
-    u8_pkt[20] = 0x03;
+    u8_pkt[20] = 0x04;
     u8_pkt[21] = 0x00;
-    u8_pkt[22] = int.parse(relayTwoSetupDynamicText.value, radix: 16);
+    u8_pkt[22] =
+        relayTwoSetupDynamicText.value.isNotEmpty
+            ? int.parse(relayTwoSetupDynamicText.value, radix: 16)
+            : 0x00;
     u8_pkt[23] = relayTwoSetupGroup.value;
     u8_pkt[24] = relayTwoSetupFunction.value;
     u8_pkt[25] = outputTextLength & 0xFF;
@@ -2329,9 +2391,12 @@ class BleManager {
     u8_pkt[17] = 0x00;
     u8_pkt[18] = 0x00;
     u8_pkt[19] = 0x00;
-    u8_pkt[20] = 0x03;
+    u8_pkt[20] = 0x05;
     u8_pkt[21] = 0x00;
-    u8_pkt[22] = int.parse(relayThreeSetupDynamicText.value, radix: 16);
+    u8_pkt[22] =
+        relayThreeSetupDynamicText.value.isNotEmpty
+            ? int.parse(relayThreeSetupDynamicText.value, radix: 16)
+            : 0x00;
     u8_pkt[23] = relayThreeSetupGroup.value;
     u8_pkt[24] = relayThreeSetupFunction.value;
     u8_pkt[25] = outputTextLength & 0xFF;
