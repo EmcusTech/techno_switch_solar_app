@@ -93,18 +93,22 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
     final release = int.tryParse(releaseCtrl.text);
     final resetDelay = int.tryParse(resetDelayCtrl.text);
 
-    _autoError = (auto == null || auto < 0 || auto > 60)
-        ? 'Countdown Auto must be between 0 and 60'
-        : null;
-    _manError = (man == null || man < 0 || man > 60)
-        ? 'Countdown Man must be between 0 and 60'
-        : null;
-    _releaseError = (release == null || release < 10 || release > 300)
-        ? 'Release Time must be between 10 and 300'
-        : null;
-    _resetDelayError = (resetDelay == null || resetDelay < 0 || resetDelay > 1800)
-        ? 'Reset Delay must be between 0 and 1800'
-        : null;
+    _autoError =
+        (auto == null || auto < 0 || auto > 60)
+            ? 'Countdown Auto must be between 0 and 60'
+            : null;
+    _manError =
+        (man == null || man < 0 || man > 60)
+            ? 'Countdown Man must be between 0 and 60'
+            : null;
+    _releaseError =
+        (release == null || release < 10 || release > 300)
+            ? 'Release Time must be between 10 and 300'
+            : null;
+    _resetDelayError =
+        (resetDelay == null || resetDelay < 0 || resetDelay > 1800)
+            ? 'Reset Delay must be between 0 and 1800'
+            : null;
   }
 
   final bleController = Get.find<BleLogController>();
@@ -158,7 +162,7 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final maxHeight = MediaQuery.of(context).size.height * 0.6;
+    final maxHeight = MediaQuery.of(context).size.height * 0.7;
     _updateValidationErrors();
     final formValid = _computeIsValid();
 
@@ -609,8 +613,9 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
             borderRadius: BorderRadius.circular(24),
           ),
         ),
-        onPressed: (canApply && formValid)
-            ? () {
+        onPressed:
+            (canApply && formValid)
+                ? () {
                   int zoneEnable = returnIndex(enabled, enabledOptions);
                   int holdRestart = returnIndex(holdCount, holdCountOptions);
                   int resetAllowedInt = returnIndex(
@@ -643,9 +648,7 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
                     autoCtrl.text.isEmpty ? '0' : autoCtrl.text,
                   );
 
-                  manager!.extZoneCountdownMan.value = int.parse(
-                    manCtrl.text,
-                  );
+                  manager!.extZoneCountdownMan.value = int.parse(manCtrl.text);
 
                   manager!.extZoneReleaseTime.value = int.parse(
                     releaseCtrl.text,
@@ -667,7 +670,7 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
 
                   widget.onCall();
                 }
-            : null,
+                : null,
 
         child: Text(
           'Apply Configuration',

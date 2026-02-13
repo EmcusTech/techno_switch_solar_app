@@ -46,11 +46,21 @@ class ProjectDashboardScreen extends StatefulWidget {
 class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
   int _selectedIndex = 0;
 
+  /// Holds the device with real manufacturerData after reconnect; survives tab switches.
+  DiscoveredDevice? _currentDevice;
+
+  void _onDeviceReconnected(DiscoveredDevice device) {
+    setState(() {
+      _currentDevice = device;
+    });
+  }
+
   List<Widget> get _screens => [
     _ProjectDashboardContent(
       panelName: widget.panelName,
       panelVersionNo: widget.panelVersionNo,
-      selectedDevice: widget.selectedDevice,
+      selectedDevice: _currentDevice ?? widget.selectedDevice,
+      onDeviceReconnected: _onDeviceReconnected,
     ),
     SettingsScreen(
       panelName: widget.panelName,
@@ -198,10 +208,13 @@ class _ProjectDashboardContent extends StatefulWidget {
   final String panelName;
   final String panelVersionNo;
   final DiscoveredDevice selectedDevice;
+  final void Function(DiscoveredDevice)? onDeviceReconnected;
+
   const _ProjectDashboardContent({
     required this.panelName,
     required this.panelVersionNo,
     required this.selectedDevice,
+    this.onDeviceReconnected,
   });
 
   @override
@@ -565,6 +578,8 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
       setState(() {
         _selectedDevice = device;
       });
+
+      widget.onDeviceReconnected?.call(device);
 
       // The dialog will automatically close when connection is established
       // via the ListenableBuilder listening to connectionNotifier
@@ -1657,7 +1672,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 peripheralName: 'Relays',
                 iconPath: 'assets/svgs/peripheral_relay_icon.svg',
                 onTap: () {
-                  if (_selectedDevice.manufacturerData.last == 1) {
+                  if (_selectedDevice.manufacturerData.isNotEmpty && _selectedDevice.manufacturerData.last == 1) {
                     showBootloaderModeDialog(context: context);
                     return;
                   }
@@ -1675,7 +1690,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 peripheralName: 'Inputs',
                 iconPath: 'assets/svgs/peripheral_input_icon.svg',
                 onTap: () {
-                  if (_selectedDevice.manufacturerData.last == 1) {
+                  if (_selectedDevice.manufacturerData.isNotEmpty && _selectedDevice.manufacturerData.last == 1) {
                     showBootloaderModeDialog(context: context);
                     return;
                   }
@@ -1693,7 +1708,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 peripheralName: 'Zones',
                 iconPath: 'assets/svgs/peripheral_zones_icon.svg',
                 onTap: () {
-                  if (_selectedDevice.manufacturerData.last == 1) {
+                  if (_selectedDevice.manufacturerData.isNotEmpty && _selectedDevice.manufacturerData.last == 1) {
                     showBootloaderModeDialog(context: context);
                     return;
                   }
@@ -1730,7 +1745,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 peripheralName: 'Ext Out',
                 iconPath: 'assets/svgs/peripheral_ext_out_icon.svg',
                 onTap: () {
-                  if (_selectedDevice.manufacturerData.last == 1) {
+                  if (_selectedDevice.manufacturerData.isNotEmpty && _selectedDevice.manufacturerData.last == 1) {
                     showBootloaderModeDialog(context: context);
                     return;
                   }
@@ -1893,7 +1908,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 peripheralName: 'Event Log',
                 iconPath: 'assets/svgs/panel_action_event_log_icon.svg',
                 onTap: () {
-                  if (_selectedDevice.manufacturerData.last == 1) {
+                  if (_selectedDevice.manufacturerData.isNotEmpty && _selectedDevice.manufacturerData.last == 1) {
                     showBootloaderModeDialog(context: context);
                     return;
                   }

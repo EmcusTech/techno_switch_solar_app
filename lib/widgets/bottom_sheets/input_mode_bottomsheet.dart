@@ -62,9 +62,10 @@ class _InputModeBottomSheetState extends State<InputModeBottomSheet> {
   }
 
   void _updateValidationErrors() {
-    _inputTextError = inputTextCtrl.text.length > 21
-        ? 'Input text must be at most 21 characters (currently ${inputTextCtrl.text.length})'
-        : null;
+    _inputTextError =
+        inputTextCtrl.text.length > 21
+            ? 'Input text must be at most 21 characters (currently ${inputTextCtrl.text.length})'
+            : null;
   }
 
   @override
@@ -112,7 +113,7 @@ class _InputModeBottomSheetState extends State<InputModeBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final maxHeight = MediaQuery.of(context).size.height * 0.6;
+    final maxHeight = MediaQuery.of(context).size.height * 0.7;
     _updateValidationErrors();
     final isValid = _computeIsValid();
 
@@ -372,48 +373,52 @@ class _InputModeBottomSheetState extends State<InputModeBottomSheet> {
             borderRadius: BorderRadius.circular(24),
           ),
         ),
-        onPressed: isValid
-            ? () {
-          // Example processing logic
-          int groupIndex = returnIndex(group, groupOptions);
-          int functionIndex = returnIndex(function, functionOptionsMap[group]!);
-          bool isEnabled = enabled == 'Yes';
-          bool isTest = test == 'Yes';
-          bool isInverted = inverted == 'Yes';
+        onPressed:
+            isValid
+                ? () {
+                  // Example processing logic
+                  int groupIndex = returnIndex(group, groupOptions);
+                  int functionIndex = returnIndex(
+                    function,
+                    functionOptionsMap[group]!,
+                  );
+                  bool isEnabled = enabled == 'Yes';
+                  bool isTest = test == 'Yes';
+                  bool isInverted = inverted == 'Yes';
 
-          print("Group Index: $groupIndex");
-          print("Function Index: $functionIndex");
-          print("Enabled: $isEnabled");
-          print("Test: $isTest");
-          print("Inverted: $isInverted");
+                  print("Group Index: $groupIndex");
+                  print("Function Index: $functionIndex");
+                  print("Enabled: $isEnabled");
+                  print("Test: $isTest");
+                  print("Inverted: $isInverted");
 
-          // required this.inputEnable,
-          // required this.inputMode,
-          // required this.latchMode,
-          // required this.invertMode,
+                  // required this.inputEnable,
+                  // required this.inputMode,
+                  // required this.latchMode,
+                  // required this.invertMode,
 
-          final config = InputModeConfig(
-            inputEnable: InputEnable.values[isEnabled ? 1 : 0],
-            inputMode: InputMode.values[isTest ? 1 : 0],
-            latchMode: LatchMode.nonLatched,
-            invertMode: InvertMode.values[isInverted ? 1 : 0],
-          );
+                  final config = InputModeConfig(
+                    inputEnable: InputEnable.values[isEnabled ? 1 : 0],
+                    inputMode: InputMode.values[isTest ? 1 : 0],
+                    latchMode: LatchMode.nonLatched,
+                    invertMode: InvertMode.values[isInverted ? 1 : 0],
+                  );
 
-          final String hexValue = InputModeCodec.encodeHex(config);
+                  final String hexValue = InputModeCodec.encodeHex(config);
 
-          manager!.inputMode.value = hexValue;
+                  manager!.inputMode.value = hexValue;
 
-          manager!.inputSetupGroup.value = groupIndex;
-          manager!.inputSetupFunction.value = functionIndex;
-          manager!.isInputSetupEnabled.value = isEnabled;
-          manager!.isInputSetupTest.value = isTest;
-          manager!.isInputSetupInverted.value = isInverted;
-          manager!.inputSetupText.value = inputTextCtrl.text;
+                  manager!.inputSetupGroup.value = groupIndex;
+                  manager!.inputSetupFunction.value = functionIndex;
+                  manager!.isInputSetupEnabled.value = isEnabled;
+                  manager!.isInputSetupTest.value = isTest;
+                  manager!.isInputSetupInverted.value = isInverted;
+                  manager!.inputSetupText.value = inputTextCtrl.text;
 
-          Navigator.pop(context);
-          widget.onCall();
-        }
-            : null,
+                  Navigator.pop(context);
+                  widget.onCall();
+                }
+                : null,
         child: Text(
           'Apply Configuration',
           style: GoogleFonts.inter(
