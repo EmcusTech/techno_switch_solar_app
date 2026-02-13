@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -37,7 +35,7 @@ class _ZoneBottomSheetState extends State<ZoneBottomSheet> {
   bool _computeIsValid() {
     for (int i = 0; i < 3; i++) {
       final zone = zones[i];
-      if (utf8.encode(zone.zoneTextController.text).length > 40) return false;
+      if (zone.zoneTextController.text.length > 21) return false;
       final mode = zone.mode;
       if (mode == 'Immediate' || mode == 'Normal') {
         if (zone.verificationTimeController.text != '0') return false;
@@ -56,10 +54,9 @@ class _ZoneBottomSheetState extends State<ZoneBottomSheet> {
     _verificationErrors.clear();
     for (int i = 0; i < 3; i++) {
       final zone = zones[i];
-      final zoneTextBytes = utf8.encode(zone.zoneTextController.text);
-      if (zoneTextBytes.length > 40) {
+      if (zone.zoneTextController.text.length > 21) {
         _zoneTextErrors[i] =
-            'Zone text must be at most 40 bytes (currently ${zoneTextBytes.length})';
+            'Zone text must be at most 21 characters (currently ${zone.zoneTextController.text.length})';
       }
       final mode = zone.mode;
       if (mode == 'Immediate' || mode == 'Normal') {
@@ -304,7 +301,6 @@ class _ZoneBottomSheetState extends State<ZoneBottomSheet> {
           TextField(
             controller: zone.zoneTextController,
             onChanged: (_) => setState(() {}),
-            inputFormatters: [_Utf8ByteLengthLimitingFormatter(40)],
             decoration: _inputDecoration(hasError: errorMsg != null),
           ),
           if (errorMsg != null) ...[
@@ -567,31 +563,6 @@ class _ZoneBottomSheetState extends State<ZoneBottomSheet> {
         borderRadius: BorderRadius.circular(12),
         borderSide: const BorderSide(color: Color(0xFFEC1D24), width: 2),
       ),
-    );
-  }
-}
-
-// ───────────────── UTF-8 BYTE LENGTH LIMITER ─────────────────
-
-class _Utf8ByteLengthLimitingFormatter extends TextInputFormatter {
-  final int maxBytes;
-
-  _Utf8ByteLengthLimitingFormatter(this.maxBytes);
-
-  @override
-  TextEditingValue formatEditUpdate(
-    TextEditingValue oldValue,
-    TextEditingValue newValue,
-  ) {
-    final newBytes = utf8.encode(newValue.text);
-    if (newBytes.length <= maxBytes) return newValue;
-    String truncated = newValue.text;
-    while (utf8.encode(truncated).length > maxBytes && truncated.isNotEmpty) {
-      truncated = truncated.substring(0, truncated.length - 1);
-    }
-    return TextEditingValue(
-      text: truncated,
-      selection: TextSelection.collapsed(offset: truncated.length),
     );
   }
 }

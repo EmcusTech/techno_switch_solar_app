@@ -55,6 +55,18 @@ class _InputModeBottomSheetState extends State<InputModeBottomSheet> {
 
   BleManager? manager;
 
+  String? _inputTextError;
+
+  bool _computeIsValid() {
+    return inputTextCtrl.text.length <= 21;
+  }
+
+  void _updateValidationErrors() {
+    _inputTextError = inputTextCtrl.text.length > 21
+        ? 'Input text must be at most 21 characters (currently ${inputTextCtrl.text.length})'
+        : null;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -101,6 +113,8 @@ class _InputModeBottomSheetState extends State<InputModeBottomSheet> {
   @override
   Widget build(BuildContext context) {
     final maxHeight = MediaQuery.of(context).size.height * 0.6;
+    _updateValidationErrors();
+    final isValid = _computeIsValid();
 
     return SafeArea(
       child: ConstrainedBox(
@@ -129,7 +143,7 @@ class _InputModeBottomSheetState extends State<InputModeBottomSheet> {
                     children: [
                       _readOnlyField('Input', 'PROG IN 1'),
 
-                      _textField('Input Text', inputTextCtrl),
+                      _inputTextField(),
 
                       _dropdown('Group', group, groupOptions, (v) {
                         setState(() {
@@ -181,7 +195,7 @@ class _InputModeBottomSheetState extends State<InputModeBottomSheet> {
               ),
 
               const SizedBox(height: 12),
-              _primaryButton(),
+              _primaryButton(isValid: isValid),
             ],
           ),
         ),
@@ -259,15 +273,30 @@ class _InputModeBottomSheetState extends State<InputModeBottomSheet> {
     );
   }
 
-  Widget _textField(String label, TextEditingController controller) {
+  Widget _inputTextField() {
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _label(label),
+          _label('Input Text'),
           const SizedBox(height: 6),
-          TextField(controller: controller, decoration: _inputDecoration()),
+          TextField(
+            controller: inputTextCtrl,
+            onChanged: (_) => setState(() {}),
+            decoration: _inputDecoration(hasError: _inputTextError != null),
+          ),
+          if (_inputTextError != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              _inputTextError!,
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: const Color(0xFFEC1D24),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -309,18 +338,20 @@ class _InputModeBottomSheetState extends State<InputModeBottomSheet> {
     );
   }
 
-  InputDecoration _inputDecoration() {
+  InputDecoration _inputDecoration({bool hasError = false}) {
+    final borderColor =
+        hasError ? const Color(0xFFEC1D24) : const Color(0xFFD0D0D0);
     return InputDecoration(
       filled: true,
       fillColor: const Color(0xFFF8F8F8),
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFFD0D0D0)),
+        borderSide: BorderSide(color: borderColor),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFFD0D0D0)),
+        borderSide: BorderSide(color: borderColor),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
@@ -329,18 +360,20 @@ class _InputModeBottomSheetState extends State<InputModeBottomSheet> {
     );
   }
 
-  Widget _primaryButton() {
+  Widget _primaryButton({required bool isValid}) {
     return SizedBox(
       width: double.infinity,
       height: 48,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFFEC1D24),
+          disabledBackgroundColor: Colors.grey.shade400,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24),
           ),
         ),
-        onPressed: () {
+        onPressed: isValid
+            ? () {
           // Example processing logic
           int groupIndex = returnIndex(group, groupOptions);
           int functionIndex = returnIndex(function, functionOptionsMap[group]!);
@@ -379,7 +412,8 @@ class _InputModeBottomSheetState extends State<InputModeBottomSheet> {
 
           Navigator.pop(context);
           widget.onCall();
-        },
+        }
+            : null,
         child: Text(
           'Apply Configuration',
           style: GoogleFonts.inter(

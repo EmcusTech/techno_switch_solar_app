@@ -67,11 +67,45 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
   late TextEditingController manCtrl;
   late TextEditingController releaseCtrl;
   late TextEditingController resetDelayCtrl;
-  bool isAutoCtrlValidated = true;
-  bool isManCtrlValidated = true;
-  bool isReleaseCtrlValidated = true;
-  bool isResetDelayCtrlValidated = true;
   BleManager? manager;
+
+  String? _autoError;
+  String? _manError;
+  String? _releaseError;
+  String? _resetDelayError;
+
+  bool _computeIsValid() {
+    final auto = int.tryParse(autoCtrl.text);
+    final man = int.tryParse(manCtrl.text);
+    final release = int.tryParse(releaseCtrl.text);
+    final resetDelay = int.tryParse(resetDelayCtrl.text);
+
+    if (auto == null || auto < 0 || auto > 60) return false;
+    if (man == null || man < 0 || man > 60) return false;
+    if (release == null || release < 10 || release > 300) return false;
+    if (resetDelay == null || resetDelay < 0 || resetDelay > 1800) return false;
+    return true;
+  }
+
+  void _updateValidationErrors() {
+    final auto = int.tryParse(autoCtrl.text);
+    final man = int.tryParse(manCtrl.text);
+    final release = int.tryParse(releaseCtrl.text);
+    final resetDelay = int.tryParse(resetDelayCtrl.text);
+
+    _autoError = (auto == null || auto < 0 || auto > 60)
+        ? 'Countdown Auto must be between 0 and 60'
+        : null;
+    _manError = (man == null || man < 0 || man > 60)
+        ? 'Countdown Man must be between 0 and 60'
+        : null;
+    _releaseError = (release == null || release < 10 || release > 300)
+        ? 'Release Time must be between 10 and 300'
+        : null;
+    _resetDelayError = (resetDelay == null || resetDelay < 0 || resetDelay > 1800)
+        ? 'Reset Delay must be between 0 and 1800'
+        : null;
+  }
 
   final bleController = Get.find<BleLogController>();
 
@@ -125,6 +159,8 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
   @override
   Widget build(BuildContext context) {
     final maxHeight = MediaQuery.of(context).size.height * 0.6;
+    _updateValidationErrors();
+    final formValid = _computeIsValid();
 
     return SafeArea(
       child: ConstrainedBox(
@@ -200,25 +236,25 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
                         (v) => setState(() => function = v),
                       ),
 
-                      _numberField(
-                        'Countdown Auto (s)',
-                        autoCtrl,
-                        isAutoCtrlValidated,
+                      _numberFieldWithValidation(
+                        label: 'Countdown Auto (s)',
+                        controller: autoCtrl,
+                        errorMsg: _autoError,
                       ),
-                      _numberField(
-                        'Countdown Man (s)',
-                        manCtrl,
-                        isManCtrlValidated,
+                      _numberFieldWithValidation(
+                        label: 'Countdown Man (s)',
+                        controller: manCtrl,
+                        errorMsg: _manError,
                       ),
-                      _numberField(
-                        'Release Time (s)',
-                        releaseCtrl,
-                        isReleaseCtrlValidated,
+                      _numberFieldWithValidation(
+                        label: 'Release Time (s)',
+                        controller: releaseCtrl,
+                        errorMsg: _releaseError,
                       ),
-                      _numberField(
-                        'Reset Delay (s)',
-                        resetDelayCtrl,
-                        isResetDelayCtrlValidated,
+                      _numberFieldWithValidation(
+                        label: 'Reset Delay (s)',
+                        controller: resetDelayCtrl,
+                        errorMsg: _resetDelayError,
                       ),
 
                       _dropdown(
@@ -248,7 +284,7 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
 
               // ───────────── Fixed Footer ─────────────
               const SizedBox(height: 12),
-              _primaryButton(context),
+              _primaryButton(context, formValid: formValid),
             ],
           ),
         ),
@@ -491,11 +527,11 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
     );
   }
 
-  Widget _numberField(
-    String label,
-    TextEditingController controller,
-    bool isValidated,
-  ) {
+  Widget _numberFieldWithValidation({
+    required String label,
+    required TextEditingController controller,
+    required String? errorMsg,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
       child: Column(
@@ -505,26 +541,22 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
           const SizedBox(height: 6),
           TextField(
             controller: controller,
+            onChanged: (_) => setState(() {}),
             keyboardType: TextInputType.number,
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-            decoration: _inputDecoration(),
+            decoration: _inputDecoration(hasError: errorMsg != null),
           ),
-          Visibility(
-            visible: !isValidated,
-            child: Column(
-              children: [
-                SizedBox(height: 4),
-                Text(
-                  "$label is required",
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w400,
-                    color: Color(0xFFEC1D24),
-                  ),
-                ),
-              ],
+          if (errorMsg != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              errorMsg,
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: const Color(0xFFEC1D24),
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );
@@ -541,18 +573,20 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
     );
   }
 
-  InputDecoration _inputDecoration() {
+  InputDecoration _inputDecoration({bool hasError = false}) {
+    final borderColor =
+        hasError ? const Color(0xFFEC1D24) : const Color(0xFFD0D0D0);
     return InputDecoration(
       filled: true,
       fillColor: const Color(0xFFF8F8F8),
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFFD0D0D0)),
+        borderSide: BorderSide(color: borderColor),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFFD0D0D0)),
+        borderSide: BorderSide(color: borderColor),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
@@ -561,20 +595,22 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
     );
   }
 
-  Widget _primaryButton(BuildContext context) {
+  Widget _primaryButton(BuildContext context, {required bool formValid}) {
+    final canApply = manager!.bleProcess.isExtOutApplyButtonActive.value;
+
     return SizedBox(
       width: double.infinity,
       height: 48,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFFEC1D24),
+          disabledBackgroundColor: Colors.grey.shade400,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24),
           ),
         ),
-        onPressed:
-            manager!.bleProcess.isExtOutApplyButtonActive.value
-                ? () {
+        onPressed: (canApply && formValid)
+            ? () {
                   int zoneEnable = returnIndex(enabled, enabledOptions);
                   int holdRestart = returnIndex(holdCount, holdCountOptions);
                   int resetAllowedInt = returnIndex(
@@ -590,80 +626,48 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
                   if (resetAllowedInt == 0) {
                     resetAllowed = true;
                   }
-                  if (autoCtrl.text.isEmpty) {
-                    setState(() {
-                      isAutoCtrlValidated = false;
-                    });
-                  }
-                  if (manCtrl.text.isEmpty) {
-                    setState(() {
-                      isManCtrlValidated = false;
-                    });
-                  }
-                  if (releaseCtrl.text.isEmpty) {
-                    setState(() {
-                      isReleaseCtrlValidated = false;
-                    });
-                  }
-                  if (resetDelayCtrl.text.isEmpty) {
-                    setState(() {
-                      isResetDelayCtrlValidated = false;
-                    });
-                  }
 
-                  if (isAutoCtrlValidated &&
-                      isManCtrlValidated &&
-                      isReleaseCtrlValidated &&
-                      isResetDelayCtrlValidated) {
-                    final config = ExtZoneModeConfig(
-                      extZoneEnable: ExtZoneEnable.values[zoneEnable],
-                      extZoneMode: ExtZoneMode.normal,
-                      holdMode: HoldMode.values[holdRestart],
-                      resetAllowed: resetAllowed,
-                      flowDetectionUsed: false,
-                    );
+                  final config = ExtZoneModeConfig(
+                    extZoneEnable: ExtZoneEnable.values[zoneEnable],
+                    extZoneMode: ExtZoneMode.normal,
+                    holdMode: HoldMode.values[holdRestart],
+                    resetAllowed: resetAllowed,
+                    flowDetectionUsed: false,
+                  );
 
-                    final String hexValue = ExtZoneModeCodec.encodeHex(config);
+                  final String hexValue = ExtZoneModeCodec.encodeHex(config);
 
-                    manager!.extZoneMode.value = hexValue;
+                  manager!.extZoneMode.value = hexValue;
 
-                    manager!.extZoneCountdownAuto.value = int.parse(
-                      autoCtrl.text.isEmpty ? '0' : autoCtrl.text,
-                    );
+                  manager!.extZoneCountdownAuto.value = int.parse(
+                    autoCtrl.text.isEmpty ? '0' : autoCtrl.text,
+                  );
 
-                    manager!.extZoneCountdownMan.value = int.parse(
-                      manCtrl.text,
-                    );
+                  manager!.extZoneCountdownMan.value = int.parse(
+                    manCtrl.text,
+                  );
 
-                    manager!.extZoneReleaseTime.value = int.parse(
-                      releaseCtrl.text,
-                    );
+                  manager!.extZoneReleaseTime.value = int.parse(
+                    releaseCtrl.text,
+                  );
 
-                    manager!.extZoneResetDelay.value = int.parse(
-                      resetDelayCtrl.text,
-                    );
+                  manager!.extZoneResetDelay.value = int.parse(
+                    resetDelayCtrl.text,
+                  );
 
-                    manager!.extZoneAction.value = returnIndex(
-                      action,
-                      actionOptions,
-                    );
+                  manager!.extZoneAction.value = returnIndex(
+                    action,
+                    actionOptions,
+                  );
 
-                    manager!.extZoneFunction.value = functionInt;
+                  manager!.extZoneFunction.value = functionInt;
 
-                    manager!.extZoneActuatorType.value = actuaturTypeInt;
-                    Navigator.pop(context);
+                  manager!.extZoneActuatorType.value = actuaturTypeInt;
+                  Navigator.pop(context);
 
-                    widget.onCall();
-                  } else {
-                    Get.snackbar(
-                      'Error',
-                      'Please fill all the fields',
-                      backgroundColor: Colors.red,
-                      colorText: Colors.white,
-                    );
-                  }
+                  widget.onCall();
                 }
-                : null,
+            : null,
 
         child: Text(
           'Apply Configuration',

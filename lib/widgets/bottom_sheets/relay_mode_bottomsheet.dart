@@ -57,6 +57,39 @@ class _RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
 
   late List<RelayConfig> relays;
 
+  Map<int, String?> _outputTextErrors = {};
+  Map<int, String?> _dynamicFieldErrors = {};
+
+  bool _computeIsValid() {
+    for (int i = 0; i < 3; i++) {
+      final relay = relays[i];
+      if (relay.outputTextController.text.length > 21) return false;
+      if (relay.group == 'Zone') {
+        final val = int.tryParse(relay.dynamicController.text);
+        if (val == null || val < 1 || val > 3) return false;
+      }
+    }
+    return true;
+  }
+
+  void _updateValidationErrors() {
+    _outputTextErrors.clear();
+    _dynamicFieldErrors.clear();
+    for (int i = 0; i < 3; i++) {
+      final relay = relays[i];
+      if (relay.outputTextController.text.length > 21) {
+        _outputTextErrors[i] =
+            'Output text must be at most 21 characters (currently ${relay.outputTextController.text.length})';
+      }
+      if (relay.group == 'Zone') {
+        final val = int.tryParse(relay.dynamicController.text);
+        if (val == null || val < 1 || val > 3) {
+          _dynamicFieldErrors[i] = 'Zone must be between 1 and 3';
+        }
+      }
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -106,11 +139,19 @@ class _RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
       relays[2].dynamicController.text =
           manager!.relayThreeSetupDynamicText.value;
     }
+
+    for (int i = 0; i < 3; i++) {
+      if (relays[i].group == 'Ext. Out') {
+        relays[i].dynamicController.text = '1';
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final maxHeight = MediaQuery.of(context).size.height * 0.75;
+    _updateValidationErrors();
+    final isValid = _computeIsValid();
 
     return SafeArea(
       child: ConstrainedBox(
@@ -142,7 +183,7 @@ class _RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
               ),
 
               const SizedBox(height: 12),
-              _primaryButton(),
+              _primaryButton(isValid: isValid),
             ],
           ),
         ),
@@ -174,13 +215,17 @@ class _RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
             ),
           ),
           children: [
-            _textField('Output Text', relay.outputTextController),
+            _outputTextField(relay: relay, relayIndex: index),
 
             _dropdown('Group', relay.group, groupOptions, (v) {
               setState(() {
                 relay.group = v;
                 relay.function = functionOptionsMap[v]!.first;
-                relay.dynamicController.clear();
+                if (v == 'Ext. Out') {
+                  relay.dynamicController.text = '1';
+                } else {
+                  relay.dynamicController.clear();
+                }
               });
             }),
 
@@ -192,21 +237,10 @@ class _RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
             ),
 
             if (relay.group == 'Zone')
-              _dynamicField(
-                label: 'Zone',
-                controller: relay.dynamicController,
-                inputFormatters: [
-                  FilteringTextInputFormatter.digitsOnly,
-                  LengthLimitingTextInputFormatter(1),
-                ],
-              ),
+              _zoneDynamicField(relay: relay, relayIndex: index),
 
             if (relay.group == 'Ext. Out')
-              _dynamicField(
-                label: 'Ext. Out',
-                controller: relay.dynamicController..text = '1',
-                readOnly: true,
-              ),
+              _extOutDynamicField(relay: relay),
 
             _dropdown('Enabled', relay.enabled, yesNoOptions, (v) {
               setState(() {
@@ -272,38 +306,88 @@ class _RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
     );
   }
 
-  Widget _textField(String label, TextEditingController controller) {
+  Widget _outputTextField({required RelayConfig relay, required int relayIndex}) {
+    final errorMsg = _outputTextErrors[relayIndex];
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _label(label),
+          _label('Output Text'),
           const SizedBox(height: 6),
-          TextField(controller: controller, decoration: _inputDecoration()),
+          TextField(
+            controller: relay.outputTextController,
+            onChanged: (_) => setState(() {}),
+            decoration: _inputDecoration(hasError: errorMsg != null),
+          ),
+          if (errorMsg != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              errorMsg,
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: const Color(0xFFEC1D24),
+              ),
+            ),
+          ],
         ],
       ),
     );
   }
 
-  Widget _dynamicField({
-    required String label,
-    required TextEditingController controller,
-    bool readOnly = false,
-    List<TextInputFormatter>? inputFormatters,
+  Widget _zoneDynamicField({
+    required RelayConfig relay,
+    required int relayIndex,
   }) {
+    final errorMsg = _dynamicFieldErrors[relayIndex];
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _label(label),
+          _label('Zone'),
           const SizedBox(height: 6),
           TextField(
-            controller: controller,
-            readOnly: readOnly,
-            inputFormatters: inputFormatters,
+            controller: relay.dynamicController,
+            onChanged: (_) => setState(() {}),
             keyboardType: TextInputType.number,
+            inputFormatters: [
+              FilteringTextInputFormatter.digitsOnly,
+              LengthLimitingTextInputFormatter(1),
+            ],
+            decoration: _inputDecoration(hasError: errorMsg != null),
+          ),
+          if (errorMsg != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              errorMsg,
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: const Color(0xFFEC1D24),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _extOutDynamicField({required RelayConfig relay}) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _label('Ext. Out'),
+          const SizedBox(height: 6),
+          TextField(
+            controller: relay.dynamicController,
+            readOnly: true,
+            enabled: false,
             decoration: _inputDecoration(),
           ),
         ],
@@ -347,18 +431,20 @@ class _RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
     );
   }
 
-  InputDecoration _inputDecoration() {
+  InputDecoration _inputDecoration({bool hasError = false}) {
+    final borderColor =
+        hasError ? const Color(0xFFEC1D24) : const Color(0xFFD0D0D0);
     return InputDecoration(
       filled: true,
       fillColor: const Color(0xFFF8F8F8),
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFFD0D0D0)),
+        borderSide: BorderSide(color: borderColor),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFFD0D0D0)),
+        borderSide: BorderSide(color: borderColor),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
@@ -371,18 +457,20 @@ class _RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
     return list.indexOf(value);
   }
 
-  Widget _primaryButton() {
+  Widget _primaryButton({required bool isValid}) {
     return SizedBox(
       width: double.infinity,
       height: 48,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFFEC1D24),
+          disabledBackgroundColor: Colors.grey.shade400,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24),
           ),
         ),
-        onPressed: () {
+        onPressed: isValid
+            ? () {
           for (int i = 0; i < 3; i++) {
             final relay = relays[i];
 
@@ -448,7 +536,8 @@ class _RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
 
           Navigator.pop(context);
           widget.onCall();
-        },
+        }
+            : null,
         child: Text(
           'Apply Configuration',
           style: GoogleFonts.inter(
