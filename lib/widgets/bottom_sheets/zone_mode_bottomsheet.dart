@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -28,6 +30,55 @@ class _ZoneBottomSheetState extends State<ZoneBottomSheet> {
   ];
 
   late List<ZoneConfig> zones;
+
+  Map<int, String?> _zoneTextErrors = {};
+  Map<int, String?> _verificationErrors = {};
+
+  bool _computeIsValid() {
+    for (int i = 0; i < 3; i++) {
+      final zone = zones[i];
+      if (utf8.encode(zone.zoneTextController.text).length > 40) return false;
+      final mode = zone.mode;
+      if (mode == 'Immediate' || mode == 'Normal') {
+        if (zone.verificationTimeController.text != '0') return false;
+      } else if (mode == 'Verified') {
+        final val = int.tryParse(zone.verificationTimeController.text);
+        if (val == null || val < 10 || val > 60) return false;
+      } else if (mode == 'Confirmed') {
+        if (zone.verificationTimeController.text != '30') return false;
+      }
+    }
+    return true;
+  }
+
+  void _updateValidationErrors() {
+    _zoneTextErrors.clear();
+    _verificationErrors.clear();
+    for (int i = 0; i < 3; i++) {
+      final zone = zones[i];
+      final zoneTextBytes = utf8.encode(zone.zoneTextController.text);
+      if (zoneTextBytes.length > 40) {
+        _zoneTextErrors[i] =
+            'Zone text must be at most 40 bytes (currently ${zoneTextBytes.length})';
+      }
+      final mode = zone.mode;
+      if (mode == 'Immediate' || mode == 'Normal') {
+        if (zone.verificationTimeController.text != '0') {
+          _verificationErrors[i] = 'Must be 0 for Immediate/Normal mode';
+        }
+      } else if (mode == 'Verified') {
+        final val = int.tryParse(zone.verificationTimeController.text);
+        if (val == null || val < 10 || val > 60) {
+          _verificationErrors[i] =
+              'Must be between 10 and 60 for Verified mode';
+        }
+      } else if (mode == 'Confirmed') {
+        if (zone.verificationTimeController.text != '30') {
+          _verificationErrors[i] = 'Must be 30 for Confirmed mode';
+        }
+      }
+    }
+  }
 
   @override
   void initState() {
@@ -114,11 +165,22 @@ class _ZoneBottomSheetState extends State<ZoneBottomSheet> {
           manager!.zoneThreeSetupVerificationTime.value;
       zones[2].zoneTextController.text = manager!.zoneThreeSetupText.value;
     }
+
+    for (int i = 0; i < 3; i++) {
+      final z = zones[i];
+      if (z.mode == 'Immediate' || z.mode == 'Normal') {
+        z.verificationTimeController.text = '0';
+      } else if (z.mode == 'Confirmed') {
+        z.verificationTimeController.text = '30';
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final maxHeight = MediaQuery.of(context).size.height * 0.75;
+    _updateValidationErrors();
+    final isValid = _computeIsValid();
 
     return SafeArea(
       child: ConstrainedBox(
@@ -150,7 +212,7 @@ class _ZoneBottomSheetState extends State<ZoneBottomSheet> {
               ),
 
               const SizedBox(height: 12),
-              _primaryButton(),
+              _primaryButton(isValid: isValid),
             ],
           ),
         ),
@@ -182,7 +244,7 @@ class _ZoneBottomSheetState extends State<ZoneBottomSheet> {
             ),
           ),
           children: [
-            _textField('Zone Text', zone.zoneTextController),
+            _zoneTextField(zone: zone, zoneIndex: index),
 
             _dropdown(
               'Type',
@@ -205,21 +267,20 @@ class _ZoneBottomSheetState extends State<ZoneBottomSheet> {
               });
             }),
 
-            _dropdown(
-              'Mode',
-              zone.mode,
-              modeOptions,
-              (v) => setState(() => zone.mode = v),
-            ),
+            _dropdown('Mode', zone.mode, modeOptions, (v) {
+              setState(() {
+                zone.mode = v;
+                if (v == 'Immediate' || v == 'Normal') {
+                  zone.verificationTimeController.text = '0';
+                } else if (v == 'Confirmed') {
+                  zone.verificationTimeController.text = '30';
+                }
+                _zoneTextErrors.remove(index);
+                _verificationErrors.remove(index);
+              });
+            }),
 
-            _dynamicField(
-              label: 'Verification Time (s)',
-              controller: zone.verificationTimeController,
-              inputFormatters: [
-                FilteringTextInputFormatter.digitsOnly,
-                LengthLimitingTextInputFormatter(3),
-              ],
-            ),
+            _verificationTimeField(zone: zone, zoneIndex: index),
 
             const SizedBox(height: 14),
           ],
@@ -228,89 +289,178 @@ class _ZoneBottomSheetState extends State<ZoneBottomSheet> {
     );
   }
 
+  // ───────────────── ZONE TEXT & VERIFICATION FIELDS ─────────────────
+
+  Widget _zoneTextField({required ZoneConfig zone, required int zoneIndex}) {
+    final errorMsg = _zoneTextErrors[zoneIndex];
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _label('Zone Text'),
+          const SizedBox(height: 6),
+          TextField(
+            controller: zone.zoneTextController,
+            onChanged: (_) => setState(() {}),
+            inputFormatters: [_Utf8ByteLengthLimitingFormatter(40)],
+            decoration: _inputDecoration(hasError: errorMsg != null),
+          ),
+          if (errorMsg != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              errorMsg,
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: const Color(0xFFEC1D24),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _verificationTimeField({
+    required ZoneConfig zone,
+    required int zoneIndex,
+  }) {
+    final isReadOnly =
+        zone.mode == 'Immediate' ||
+        zone.mode == 'Normal' ||
+        zone.mode == 'Confirmed';
+    final errorMsg = _verificationErrors[zoneIndex];
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _label('Verification Time (s)'),
+          const SizedBox(height: 6),
+          TextField(
+            controller: zone.verificationTimeController,
+            readOnly: isReadOnly,
+            enabled: !isReadOnly,
+            keyboardType: TextInputType.number,
+            inputFormatters: [
+              FilteringTextInputFormatter.digitsOnly,
+              LengthLimitingTextInputFormatter(3),
+            ],
+            onChanged: (_) => setState(() {}),
+            decoration: _inputDecoration(hasError: errorMsg != null),
+          ),
+          if (errorMsg != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              errorMsg,
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: const Color(0xFFEC1D24),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
   // ───────────────── PRIMARY BUTTON ─────────────────
 
-  Widget _primaryButton() {
+  Widget _primaryButton({required bool isValid}) {
     return SizedBox(
       width: double.infinity,
       height: 48,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFFEC1D24),
+          disabledBackgroundColor: Colors.grey.shade400,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24),
           ),
         ),
-        onPressed: () {
-          for (int i = 0; i < 3; i++) {
-            final zone = zones[i];
+        onPressed:
+            isValid
+                ? () {
+                  for (int i = 0; i < 3; i++) {
+                    final zone = zones[i];
 
-            final config = ZoneModeConfig(
-              zoneEnable:
-                  zone.enabled == 'Yes'
-                      ? ZoneEnable.enabled
-                      : ZoneEnable.disabled,
-              zoneTestMode:
-                  zone.test == 'Yes' ? ZoneTestMode.test : ZoneTestMode.normal,
-              zoneType:
-                  typeOptions.indexOf(zone.type) == 0
-                      ? ZoneType.normal
-                      : ZoneType.isMtl5561,
-            );
+                    final config = ZoneModeConfig(
+                      zoneEnable:
+                          zone.enabled == 'Yes'
+                              ? ZoneEnable.enabled
+                              : ZoneEnable.disabled,
+                      zoneTestMode:
+                          zone.test == 'Yes'
+                              ? ZoneTestMode.test
+                              : ZoneTestMode.normal,
+                      zoneType:
+                          typeOptions.indexOf(zone.type) == 0
+                              ? ZoneType.normal
+                              : ZoneType.isMtl5561,
+                    );
 
-            final String hexValue = ZoneModeCodec.encodeHex(config);
+                    final String hexValue = ZoneModeCodec.encodeHex(config);
 
-            switch (i) {
-              case 0:
-                manager!.zoneOneSetupText.value = zone.zoneTextController.text;
-                manager!.zoneOneSetupType.value = typeOptions.indexOf(
-                  zone.type,
-                );
-                manager!.isZoneOneSetupEnabled.value = zone.enabled == 'Yes';
-                manager!.isZoneOneSetupTest.value = zone.test == 'Yes';
-                manager!.zoneOneSetupMode.value = hexValue;
-                manager!.zoneOneSetupVerificationTime.value =
-                    zone.verificationTimeController.text;
-                manager!.zoneOneSetupDetectionMode.value = modeOptions.indexOf(
-                  zone.mode,
-                );
-                break;
+                    switch (i) {
+                      case 0:
+                        manager!.zoneOneSetupText.value =
+                            zone.zoneTextController.text;
+                        manager!.zoneOneSetupType.value = typeOptions.indexOf(
+                          zone.type,
+                        );
+                        manager!.isZoneOneSetupEnabled.value =
+                            zone.enabled == 'Yes';
+                        manager!.isZoneOneSetupTest.value = zone.test == 'Yes';
+                        manager!.zoneOneSetupMode.value = hexValue;
+                        manager!.zoneOneSetupVerificationTime.value =
+                            zone.verificationTimeController.text;
+                        manager!.zoneOneSetupDetectionMode.value = modeOptions
+                            .indexOf(zone.mode);
+                        break;
 
-              case 1:
-                manager!.zoneTwoSetupText.value = zone.zoneTextController.text;
-                manager!.zoneTwoSetupType.value = typeOptions.indexOf(
-                  zone.type,
-                );
-                manager!.isZoneTwoSetupEnabled.value = zone.enabled == 'Yes';
-                manager!.isZoneTwoSetupTest.value = zone.test == 'Yes';
-                manager!.zoneTwoSetupMode.value = hexValue;
-                manager!.zoneTwoSetupVerificationTime.value =
-                    zone.verificationTimeController.text;
-                manager!.zoneTwoSetupDetectionMode.value = modeOptions.indexOf(
-                  zone.mode,
-                );
-                break;
+                      case 1:
+                        manager!.zoneTwoSetupText.value =
+                            zone.zoneTextController.text;
+                        manager!.zoneTwoSetupType.value = typeOptions.indexOf(
+                          zone.type,
+                        );
+                        manager!.isZoneTwoSetupEnabled.value =
+                            zone.enabled == 'Yes';
+                        manager!.isZoneTwoSetupTest.value = zone.test == 'Yes';
+                        manager!.zoneTwoSetupMode.value = hexValue;
+                        manager!.zoneTwoSetupVerificationTime.value =
+                            zone.verificationTimeController.text;
+                        manager!.zoneTwoSetupDetectionMode.value = modeOptions
+                            .indexOf(zone.mode);
+                        break;
 
-              case 2:
-                manager!.zoneThreeSetupText.value =
-                    zone.zoneTextController.text;
-                manager!.zoneThreeSetupType.value = typeOptions.indexOf(
-                  zone.type,
-                );
-                manager!.isZoneThreeSetupEnabled.value = zone.enabled == 'Yes';
-                manager!.isZoneThreeSetupTest.value = zone.test == 'Yes';
-                manager!.zoneThreeSetupMode.value = hexValue;
-                manager!.zoneThreeSetupVerificationTime.value =
-                    zone.verificationTimeController.text;
-                manager!.zoneThreeSetupDetectionMode.value = modeOptions
-                    .indexOf(zone.mode);
-                break;
-            }
-          }
+                      case 2:
+                        manager!.zoneThreeSetupText.value =
+                            zone.zoneTextController.text;
+                        manager!.zoneThreeSetupType.value = typeOptions.indexOf(
+                          zone.type,
+                        );
+                        manager!.isZoneThreeSetupEnabled.value =
+                            zone.enabled == 'Yes';
+                        manager!.isZoneThreeSetupTest.value =
+                            zone.test == 'Yes';
+                        manager!.zoneThreeSetupMode.value = hexValue;
+                        manager!.zoneThreeSetupVerificationTime.value =
+                            zone.verificationTimeController.text;
+                        manager!.zoneThreeSetupDetectionMode.value = modeOptions
+                            .indexOf(zone.mode);
+                        break;
+                    }
+                  }
 
-          Navigator.pop(context);
-          widget.onCall();
-        },
+                  Navigator.pop(context);
+                  widget.onCall();
+                }
+                : null,
         child: Text(
           'Apply Configuration',
           style: GoogleFonts.inter(
@@ -362,43 +512,6 @@ class _ZoneBottomSheetState extends State<ZoneBottomSheet> {
     );
   }
 
-  Widget _textField(String label, TextEditingController controller) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _label(label),
-          const SizedBox(height: 6),
-          TextField(controller: controller, decoration: _inputDecoration()),
-        ],
-      ),
-    );
-  }
-
-  Widget _dynamicField({
-    required String label,
-    required TextEditingController controller,
-    List<TextInputFormatter>? inputFormatters,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _label(label),
-          const SizedBox(height: 6),
-          TextField(
-            controller: controller,
-            inputFormatters: inputFormatters,
-            keyboardType: TextInputType.number,
-            decoration: _inputDecoration(),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _dropdown(
     String label,
     String value,
@@ -435,23 +548,50 @@ class _ZoneBottomSheetState extends State<ZoneBottomSheet> {
     );
   }
 
-  InputDecoration _inputDecoration() {
+  InputDecoration _inputDecoration({bool hasError = false}) {
+    final borderColor =
+        hasError ? const Color(0xFFEC1D24) : const Color(0xFFD0D0D0);
     return InputDecoration(
       filled: true,
       fillColor: const Color(0xFFF8F8F8),
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFFD0D0D0)),
+        borderSide: BorderSide(color: borderColor),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFFD0D0D0)),
+        borderSide: BorderSide(color: borderColor),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: const BorderSide(color: Color(0xFFEC1D24), width: 2),
       ),
+    );
+  }
+}
+
+// ───────────────── UTF-8 BYTE LENGTH LIMITER ─────────────────
+
+class _Utf8ByteLengthLimitingFormatter extends TextInputFormatter {
+  final int maxBytes;
+
+  _Utf8ByteLengthLimitingFormatter(this.maxBytes);
+
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    final newBytes = utf8.encode(newValue.text);
+    if (newBytes.length <= maxBytes) return newValue;
+    String truncated = newValue.text;
+    while (utf8.encode(truncated).length > maxBytes && truncated.isNotEmpty) {
+      truncated = truncated.substring(0, truncated.length - 1);
+    }
+    return TextEditingValue(
+      text: truncated,
+      selection: TextSelection.collapsed(offset: truncated.length),
     );
   }
 }
