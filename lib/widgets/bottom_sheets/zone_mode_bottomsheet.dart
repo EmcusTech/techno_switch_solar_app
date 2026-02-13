@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
+import 'package:techno_switch_solar_app/utils/zone_mode_util.dart';
 
 class ZoneBottomSheet extends StatefulWidget {
   final Function() onCall;
@@ -244,19 +245,67 @@ class _ZoneBottomSheetState extends State<ZoneBottomSheet> {
           for (int i = 0; i < 3; i++) {
             final zone = zones[i];
 
-            print("Zone ${zone.zoneNumber}");
-            print("Text → ${zone.zoneTextController.text}");
-            print("Type → ${zone.type}");
-            print("Enabled → ${zone.enabled}");
-            print("Test → ${zone.test}");
-            print("Mode → ${zone.mode}");
-            print(
-              "Verification Time → ${zone.verificationTimeController.text}",
+            final config = ZoneModeConfig(
+              zoneEnable:
+                  zone.enabled == 'Yes'
+                      ? ZoneEnable.enabled
+                      : ZoneEnable.disabled,
+              zoneTestMode:
+                  zone.test == 'Yes' ? ZoneTestMode.test : ZoneTestMode.normal,
+              zoneType:
+                  typeOptions.indexOf(zone.type) == 0
+                      ? ZoneType.normal
+                      : ZoneType.isMtl5561,
             );
 
-            // 👇 Store into manager same way you did in relay
-            // Example:
-            // manager!.zoneOneText.value = ...
+            final String hexValue = ZoneModeCodec.encodeHex(config);
+
+            switch (i) {
+              case 0:
+                manager!.zoneOneSetupText.value = zone.zoneTextController.text;
+                manager!.zoneOneSetupType.value = typeOptions.indexOf(
+                  zone.type,
+                );
+                manager!.isZoneOneSetupEnabled.value = zone.enabled == 'Yes';
+                manager!.isZoneOneSetupTest.value = zone.test == 'Yes';
+                manager!.zoneOneSetupMode.value = hexValue;
+                manager!.zoneOneSetupVerificationTime.value =
+                    zone.verificationTimeController.text;
+                manager!.zoneOneSetupDetectionMode.value = modeOptions.indexOf(
+                  zone.mode,
+                );
+                break;
+
+              case 1:
+                manager!.zoneTwoSetupText.value = zone.zoneTextController.text;
+                manager!.zoneTwoSetupType.value = typeOptions.indexOf(
+                  zone.type,
+                );
+                manager!.isZoneTwoSetupEnabled.value = zone.enabled == 'Yes';
+                manager!.isZoneTwoSetupTest.value = zone.test == 'Yes';
+                manager!.zoneTwoSetupMode.value = hexValue;
+                manager!.zoneTwoSetupVerificationTime.value =
+                    zone.verificationTimeController.text;
+                manager!.zoneTwoSetupDetectionMode.value = modeOptions.indexOf(
+                  zone.mode,
+                );
+                break;
+
+              case 2:
+                manager!.zoneThreeSetupText.value =
+                    zone.zoneTextController.text;
+                manager!.zoneThreeSetupType.value = typeOptions.indexOf(
+                  zone.type,
+                );
+                manager!.isZoneThreeSetupEnabled.value = zone.enabled == 'Yes';
+                manager!.isZoneThreeSetupTest.value = zone.test == 'Yes';
+                manager!.zoneThreeSetupMode.value = hexValue;
+                manager!.zoneThreeSetupVerificationTime.value =
+                    zone.verificationTimeController.text;
+                manager!.zoneThreeSetupDetectionMode.value = modeOptions
+                    .indexOf(zone.mode);
+                break;
+            }
           }
 
           Navigator.pop(context);

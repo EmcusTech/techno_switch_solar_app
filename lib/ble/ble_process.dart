@@ -30,7 +30,9 @@ class BleProcess {
   int relaySetupFetchCommandStep = 0; // 1, 2, 3
   int relaySetupApplyCommandStep = 0; // 1, 2, 3
   int checkForZoneSetupFetchRes = 0;
+  int checkForZoneSetupApplyRes = 0;
   int zoneSetupFetchCommandStep = 0; // 1, 2, 3
+  int zoneSetupApplyCommandStep = 0; // 1, 2, 3
   int validEventLogNum = 0;
   int read1000Logs = 0;
   bool logRetreivalEnded = false;
@@ -218,6 +220,12 @@ class BleProcess {
     false,
   );
 
+  final ValueNotifier<bool> isZoneSetupCommandApplyActive = ValueNotifier<bool>(
+    false,
+  );
+
+  final ValueNotifier<bool> isZoneSetupApplyDone = ValueNotifier<bool>(false);
+
   final ValueNotifier<bool> isZoneOneSetupEnabled = ValueNotifier<bool>(false);
 
   final ValueNotifier<bool> isZoneOneSetupTest = ValueNotifier<bool>(false);
@@ -384,6 +392,11 @@ class BleProcess {
         checkForZoneSetupFetchRes = 1;
         break;
 
+      case OtaProcessState.sendZoneSetupApplyCmdPkt:
+        print("Sending Zone Setup Apply Command");
+        checkForZoneSetupApplyRes = 1;
+        break;
+
       default:
         break;
     }
@@ -440,6 +453,12 @@ class BleProcess {
           zoneSetupFetchCommandStep = 1;
           startRxTimeout();
           await bleManager.sendZoneSetupFetchFirstCmdPkt();
+        } else if (isZoneSetupCommandApplyActive.value) {
+          bleManager.otaProcessState = OtaProcessState.sendZoneSetupApplyCmdPkt;
+          checkForAccessKeyCmdRsp = 0;
+          zoneSetupApplyCommandStep = 1;
+          startRxTimeout();
+          await bleManager.sendZoneSetupApplyFirstCmdPkt();
         } else {
           bleManager.otaProcessState = OtaProcessState.sendStopCntrlCmdPkt;
           checkForAccessKeyCmdRsp = 0;
@@ -677,6 +696,36 @@ class BleProcess {
         }
       } else {
         print("Relay Setup Fetch Cmd Response not found, polling again");
+        startRxTimeout();
+        await bleManager.sendPollPacket();
+      }
+    }
+
+    if (checkForZoneSetupApplyRes == 1) {
+      print(
+        "Checking Zone Setup Apply CMD RSP Value ${rx.payload[10]}:::::${rx.payload[10] == 0x83} ",
+      );
+      if (rx.payload[10] == 0x83) {
+        if (zoneSetupApplyCommandStep == 1) {
+          print("CMD 1 Validated -> send CMD2, keep polling");
+          zoneSetupApplyCommandStep = 2;
+          startRxTimeout();
+          await bleManager.sendZoneSetupApplySecondCmdPkt();
+        } else if (zoneSetupApplyCommandStep == 2) {
+          print("CMD 2 Validated -> send CMD3, keep polling");
+          zoneSetupApplyCommandStep = 3;
+          startRxTimeout();
+          await bleManager.sendZoneSetupApplyThirdCmdPkt();
+        } else if (zoneSetupApplyCommandStep == 3) {
+          print("CMD3 Validated -> done");
+          bleManager.otaProcessState = OtaProcessState.notInUse;
+          checkForZoneSetupApplyRes = 0;
+          isZoneSetupCommandApplyActive.value = false;
+          isZoneSetupApplyDone.value = true;
+          print("We got the response for zone setup apply");
+        }
+      } else {
+        print("Zone Setup Apply Cmd Response not found, polling again");
         startRxTimeout();
         await bleManager.sendPollPacket();
       }
@@ -1419,6 +1468,8 @@ class BleProcess {
         case OtaProcessState.sendRelaySetupApplyCmdPkt:
           break;
         case OtaProcessState.sendZoneSetupFetchCmdPkt:
+          break;
+        case OtaProcessState.sendZoneSetupApplyCmdPkt:
           break;
       }
       startRxTimeout();

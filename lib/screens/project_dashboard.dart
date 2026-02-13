@@ -1033,6 +1033,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                       ble.bleProcess.isExtOutApplyDone.value = false;
                       ble.bleProcess.isInputSetupApplyDone.value = false;
                       ble.bleProcess.isRelaySetupApplyDone.value = false;
+                      ble.bleProcess.isZoneSetupApplyDone.value = false;
                     },
                     child: Container(
                       height: 48,
@@ -1182,6 +1183,9 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                         } else if (ble.bleProcess.isRelaySetupApplyDone.value &&
                             mounted) {
                           showApplySuccessDialog(context, 'Relays');
+                        } else if (ble.bleProcess.isZoneSetupApplyDone.value &&
+                            mounted) {
+                          showApplySuccessDialog(context, 'Zones');
                         } else if (isInputSetup == true) {
                           showInputSetupBottomSheet(
                             context: context,
@@ -1231,11 +1235,11 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                             onCall: () {
                               showPasswordPopup(
                                 onCall: () {
-                                  // ble
-                                  //     .bleProcess
-                                  //     .isRelaySetupCommandApplyActive
-                                  //     .value = true;
-                                  // bleController.startZoneSetupFetch();
+                                  ble
+                                      .bleProcess
+                                      .isZoneSetupCommandApplyActive
+                                      .value = true;
+                                  bleController.startZoneSetupApply();
                                 },
                               );
                             },

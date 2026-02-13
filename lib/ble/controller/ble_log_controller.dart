@@ -77,6 +77,10 @@ class BleLogController extends GetxController {
     await bleManager.startZoneSetupFetch();
   }
 
+  Future<void> startZoneSetupApply() async {
+    await bleManager.startZoneSetupApply();
+  }
+
   sendNetworkPacket() async {
     await bleManager.sendNetworkPacket();
   }
