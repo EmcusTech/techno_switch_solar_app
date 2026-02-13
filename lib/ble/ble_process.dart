@@ -28,6 +28,8 @@ class BleProcess {
   int checkForRelaySetupApplyRes = 0;
   int relaySetupFetchCommandStep = 0; // 1, 2, 3
   int relaySetupApplyCommandStep = 0; // 1, 2, 3
+  int checkForZoneSetupFetchRes = 0;
+  int zoneSetupFetchCommandStep = 0; // 1, 2, 3
   int validEventLogNum = 0;
   int read1000Logs = 0;
   bool logRetreivalEnded = false;
@@ -210,6 +212,11 @@ class BleProcess {
 
   final ValueNotifier<bool> isRelaySetupApplyDone = ValueNotifier<bool>(false);
 
+  // Zone Setup Variables
+  final ValueNotifier<bool> isZoneSetupFetchCommandActive = ValueNotifier<bool>(
+    false,
+  );
+
   // BleStates bleStateMachineState = BleStates.IDLE;
   BleStates bleCurrentState = BleStates.IDLE;
   DeviceConnectState deviceConnectState = DeviceConnectState.notConnected;
@@ -324,6 +331,11 @@ class BleProcess {
         checkForRelaySetupApplyRes = 1;
         break;
 
+      case OtaProcessState.sendZoneSetupFetchCmdPkt:
+        print("Sending Zone Setup Fetch Command");
+        checkForZoneSetupFetchRes = 1;
+        break;
+
       default:
         break;
     }
@@ -374,6 +386,12 @@ class BleProcess {
           relaySetupApplyCommandStep = 1;
           startRxTimeout();
           await bleManager.sendRelaySetupApplyFirstCmdPkt();
+        } else if (isZoneSetupFetchCommandActive.value) {
+          bleManager.otaProcessState = OtaProcessState.sendZoneSetupFetchCmdPkt;
+          checkForAccessKeyCmdRsp = 0;
+          zoneSetupFetchCommandStep = 1;
+          startRxTimeout();
+          await bleManager.sendZoneSetupFetchFirstCmdPkt();
         } else {
           bleManager.otaProcessState = OtaProcessState.sendStopCntrlCmdPkt;
           checkForAccessKeyCmdRsp = 0;
@@ -611,6 +629,36 @@ class BleProcess {
         }
       } else {
         print("Relay Setup Fetch Cmd Response not found, polling again");
+        startRxTimeout();
+        await bleManager.sendPollPacket();
+      }
+    }
+
+    if (checkForZoneSetupFetchRes == 1) {
+      print(
+        "Checking Zone Setup Fetch CMD RSP Value ${rx.payload[12]}:::::${rx.payload[12] == 0x04} ",
+      );
+      if (rx.payload[12] == 0x04) {
+        print("We got the response for zone setup fetch");
+        if (zoneSetupFetchCommandStep == 1) {
+          print("CMD 1 Validated -> send CMD2, keep polling");
+          zoneSetupFetchCommandStep = 2;
+          startRxTimeout();
+          await bleManager.sendZoneSetupFetchSecondCmdPkt();
+        } else if (zoneSetupFetchCommandStep == 2) {
+          print("CMD 2 Validated -> send CMD3, keep polling");
+          zoneSetupFetchCommandStep = 3;
+          startRxTimeout();
+          await bleManager.sendZoneSetupFetchThirdCmdPkt();
+        } else if (zoneSetupFetchCommandStep == 3) {
+          print("CMD3 Validated -> done");
+          bleManager.otaProcessState = OtaProcessState.notInUse;
+          checkForZoneSetupFetchRes = 0;
+          isZoneSetupFetchCommandActive.value = false;
+          print("We got the response for zone setup fetch");
+        }
+      } else {
+        print("Zone Setup Fetch Cmd Response not found, polling again");
         startRxTimeout();
         await bleManager.sendPollPacket();
       }
@@ -860,6 +908,48 @@ class BleProcess {
   }
 
   void resetProcessRelaySetupState() {
+    // Terminal guards
+    isOtaCompleted = false;
+    processNextOtaFrame = true;
+    logRetreivalEnded = false;
+
+    // Counters
+    checkForCtrlCmdRsp = 0;
+    checkForAccessKeyCmdRsp = 0;
+    checkDipSetCmdRsp = 0;
+    checkForExtCmdFetchRes = 0;
+    checkForInputSetupFetchRes = 0;
+    checkForRelaySetupApplyRes = 0;
+    validEventLogNum = 0;
+    read1000Logs = 0;
+    receivedPollCount = 0;
+    isExtOutApplyButtonActive.value = false;
+    relaySetupFetchCommandStep = 0;
+    checkForRelaySetupFetchRes = 0;
+
+    // Time tracking
+    // logStartingTime = null;
+    // logEndTime = null;
+
+    // OTA state
+    bleManager.otaProcessState = OtaProcessState.sendNetworkPacket;
+
+    // RX timeout
+    _rxTimeoutTimer?.cancel();
+    _rxTimeoutTimer = null;
+
+    _otherPacketsRxTimeoutTimer?.cancel();
+    _otherPacketsRxTimeoutTimer = null;
+
+    // UI notifiers
+    // validEventLogCount.value = 0;
+    // read1000LogsCount.value = 0;
+    // validEventLogs.value = [];
+    // isValidLogRecieved.value = false;
+    // panelName.value = "";
+  }
+
+  void resetProcessZoneSetupState() {
     // Terminal guards
     isOtaCompleted = false;
     processNextOtaFrame = true;
@@ -1233,6 +1323,8 @@ class BleProcess {
         case OtaProcessState.sendRelaySetupFetchCmdPkt:
           break;
         case OtaProcessState.sendRelaySetupApplyCmdPkt:
+          break;
+        case OtaProcessState.sendZoneSetupFetchCmdPkt:
           break;
       }
       startRxTimeout();

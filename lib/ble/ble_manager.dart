@@ -46,6 +46,7 @@ enum BleStates {
   SEND_INPUT_SETUP_CMD_APPLY_PACKET,
   SEND_RELAY_SETUP_CMD_FETCH_PACKET,
   SEND_RELAY_SETUP_CMD_APPLY_PACKET,
+  SEND_ZONE_SETUP_CMD_FETCH_PACKET,
   // add other states
 }
 
@@ -67,6 +68,7 @@ enum OtaProcessState {
   sendInputSetupApplyCmdPkt,
   sendRelaySetupFetchCmdPkt,
   sendRelaySetupApplyCmdPkt,
+  sendZoneSetupFetchCmdPkt,
 }
 
 enum BleOperationMode {
@@ -79,6 +81,7 @@ enum BleOperationMode {
   inputSetupApply,
   relaySetupFetch,
   relaySetupApply,
+  zoneSetupFetch,
 }
 
 const String BLE_AUTHN_MSG = "TECHNOSWITCH-AUTH-APP";
@@ -288,6 +291,19 @@ class BleManager {
     otaProcessState = OtaProcessState.sendNetworkPacket;
   }
 
+  void resetProtocolZoneSetupState() {
+    // Packet counters
+    u8TxPktCnt = 0;
+    u8RxPktCnt = 0;
+    receivedPollCount = 0;
+
+    // Poll guards
+    _pollInFlight = false;
+
+    // OTA state
+    otaProcessState = OtaProcessState.sendNetworkPacket;
+  }
+
   void resetFirmwareState() {
     bleCurrentState = BleStates.SEND_START_FIRMWARE_PACKET;
     bleStateMachineState = BleStates.SEND_START_FIRMWARE_PACKET;
@@ -336,6 +352,15 @@ class BleManager {
     _pollInFlight = false;
     receivedPollCount = 0;
     currentOperationMode = BleOperationMode.relaySetupFetch;
+  }
+
+  void resetZoneSetupState() {
+    bleCurrentState = BleStates.REQ_ENCY_KEY;
+    bleStateMachineState = BleStates.REQ_ENCY_KEY;
+    bleAESKey.clear();
+    _pollInFlight = false;
+    receivedPollCount = 0;
+    currentOperationMode = BleOperationMode.zoneSetupFetch;
   }
 
   /// Initialize and start log retrieval process
@@ -627,6 +652,50 @@ class BleManager {
       print("Notify handler already registered, proceeding with ext out fetch");
       bleCurrentState = BleStates.SEND_RELAY_SETUP_CMD_APPLY_PACKET;
       bleStateMachineState = BleStates.SEND_RELAY_SETUP_CMD_APPLY_PACKET;
+      print("Current state: $bleStateMachineState");
+      // Send Network Packet
+      bleProcess.startOtherPacketsRxTimeout(
+        timeout: const Duration(seconds: 5),
+      );
+      Get.find<BleLogController>().sendNetworkPacket();
+    }
+  }
+
+  Future<void> startZoneSetupFetch() async {
+    if (!isConnected) {
+      throw Exception("Device not connected. Cannot start log retrieval.");
+    }
+
+    if (notifyChar == null || writeChar == null) {
+      throw Exception(
+        "BLE characteristics not initialized. Cannot start log retrieval.",
+      );
+    }
+
+    // Set operation mode to log retrieval
+    currentOperationMode = BleOperationMode.zoneSetupFetch;
+
+    // Reset protocol state to initial values
+    resetZoneSetupState();
+    resetProtocolZoneSetupState();
+
+    // IMPORTANT: Reset process state to clear isOtaCompleted flag
+    // This ensures polls aren't blocked after firmware upgrade
+    bleProcess.resetProcessZoneSetupState();
+
+    // Always ensure notify handler is registered (especially after reconnection)
+    // Check if subscription is null or if log retrieval hasn't been done once
+    if (_notifySub == null) {
+      print("Registering notify handler for ext out");
+      await registerNotifyHandler();
+      // Give a small delay after registration to ensure subscription is active
+      await Future.delayed(const Duration(milliseconds: 200));
+    } else {
+      print(
+        "Notify handler already registered, proceeding with Zone Setup Fetch",
+      );
+      bleCurrentState = BleStates.SEND_ZONE_SETUP_CMD_FETCH_PACKET;
+      bleStateMachineState = BleStates.SEND_ZONE_SETUP_CMD_FETCH_PACKET;
       print("Current state: $bleStateMachineState");
       // Send Network Packet
       bleProcess.startOtherPacketsRxTimeout(
@@ -1213,10 +1282,19 @@ class BleManager {
           );
           Get.find<BleLogController>().sendNetworkPacket();
         } else if (currentOperationMode == BleOperationMode.relaySetupApply) {
-          bleCurrentState = BleStates.SEND_EXT_OUT_SETUP_CMD_APPLY_PACKET;
-          bleStateMachineState = BleStates.SEND_EXT_OUT_SETUP_CMD_APPLY_PACKET;
+          bleCurrentState = BleStates.SEND_RELAY_SETUP_CMD_APPLY_PACKET;
+          bleStateMachineState = BleStates.SEND_RELAY_SETUP_CMD_APPLY_PACKET;
           print("Current state: $bleStateMachineState (Relay Setup Apply)");
           // Send Network Packet for Relay Setup Apply
+          bleProcess.startOtherPacketsRxTimeout(
+            timeout: const Duration(seconds: 5),
+          );
+          Get.find<BleLogController>().sendNetworkPacket();
+        } else if (currentOperationMode == BleOperationMode.zoneSetupFetch) {
+          bleCurrentState = BleStates.SEND_ZONE_SETUP_CMD_FETCH_PACKET;
+          bleStateMachineState = BleStates.SEND_ZONE_SETUP_CMD_FETCH_PACKET;
+          print("Current state: $bleStateMachineState (Zone Setup Fetch)");
+          // Send Network Packet for Zone Setup Fetch
           bleProcess.startOtherPacketsRxTimeout(
             timeout: const Duration(seconds: 5),
           );
@@ -2410,6 +2488,123 @@ class BleManager {
 
     print(
       "TX/RX: TRANSMIT: Relay Setup Apply Third Command time: ${DateTime.now().toIso8601String()}, packet: ${u8_pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+    );
+    // print(
+    //   u8_pkt
+    //       .map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase())
+    //       .join(' '),
+    // );
+
+    await sendSmallDataFrame(0x1000, 216, u8_pkt);
+  }
+
+  Future<void> sendZoneSetupFetchFirstCmdPkt() async {
+    // Create 216-byte buffer
+    Uint8List u8_pkt = Uint8List(216);
+
+    // Update global counters
+    u8TxPktCnt += 1;
+
+    u8_pkt[0] = 0xFE;
+    u8_pkt[1] = 0x01;
+    u8_pkt[2] = 0x00;
+
+    u8_pkt[3] = 0x01; // pkt type
+    u8_pkt[4] = u8TxPktCnt & 0xFF; // tx pkt num
+    u8_pkt[5] = u8RxPktCnt & 0xFF; // rx pkt num
+    u8_pkt[6] = 0x00; // network number
+    u8_pkt[10] = 0x01; // mode
+    u8_pkt[11] = 0x00; // socket number
+    u8_pkt[12] = 0x04; // command byte 1
+    u8_pkt[13] = 0x01; // output max zone
+
+    // Compute checksum on first 213 bytes
+    int checksum = toolsFletcherChecksum(u8_pkt.sublist(0, 213));
+
+    u8_pkt[213] = (checksum >> 8) & 0xFF;
+    u8_pkt[214] = checksum & 0xFF;
+    u8_pkt[215] = 0xFD;
+
+    print(
+      "TX/RX: TRANSMIT: Zone Setup Fetch First Command time: ${DateTime.now().toIso8601String()}, packet: ${u8_pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+    );
+    // print(
+    //   u8_pkt
+    //       .map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase())
+    //       .join(' '),
+    // );
+
+    await sendSmallDataFrame(0x1000, 216, u8_pkt);
+  }
+
+  Future<void> sendZoneSetupFetchSecondCmdPkt() async {
+    // Create 216-byte buffer
+    Uint8List u8_pkt = Uint8List(216);
+
+    // Update global counters
+    u8TxPktCnt += 1;
+
+    u8_pkt[0] = 0xFE;
+    u8_pkt[1] = 0x01;
+    u8_pkt[2] = 0x00;
+
+    u8_pkt[3] = 0x01; // pkt type
+    u8_pkt[4] = u8TxPktCnt & 0xFF; // tx pkt num
+    u8_pkt[5] = u8RxPktCnt & 0xFF; // rx pkt num
+    u8_pkt[6] = 0x00; // network number
+    u8_pkt[10] = 0x01; // mode
+    u8_pkt[11] = 0x00; // socket number
+    u8_pkt[12] = 0x04; // command byte 1
+    u8_pkt[13] = 0x02; // output max zone
+
+    // Compute checksum on first 213 bytes
+    int checksum = toolsFletcherChecksum(u8_pkt.sublist(0, 213));
+
+    u8_pkt[213] = (checksum >> 8) & 0xFF;
+    u8_pkt[214] = checksum & 0xFF;
+    u8_pkt[215] = 0xFD;
+
+    print(
+      "TX/RX: TRANSMIT: Zone Setup Fetch Second Command time: ${DateTime.now().toIso8601String()}, packet: ${u8_pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+    );
+    // print(
+    //   u8_pkt
+    //       .map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase())
+    //       .join(' '),
+    // );
+
+    await sendSmallDataFrame(0x1000, 216, u8_pkt);
+  }
+
+  Future<void> sendZoneSetupFetchThirdCmdPkt() async {
+    // Create 216-byte buffer
+    Uint8List u8_pkt = Uint8List(216);
+
+    // Update global counters
+    u8TxPktCnt += 1;
+
+    u8_pkt[0] = 0xFE;
+    u8_pkt[1] = 0x01;
+    u8_pkt[2] = 0x00;
+
+    u8_pkt[3] = 0x01; // pkt type
+    u8_pkt[4] = u8TxPktCnt & 0xFF; // tx pkt num
+    u8_pkt[5] = u8RxPktCnt & 0xFF; // rx pkt num
+    u8_pkt[6] = 0x00; // network number
+    u8_pkt[10] = 0x01; // mode
+    u8_pkt[11] = 0x00; // socket number
+    u8_pkt[12] = 0x04; // command byte 1
+    u8_pkt[13] = 0x03; // output max zone
+
+    // Compute checksum on first 213 bytes
+    int checksum = toolsFletcherChecksum(u8_pkt.sublist(0, 213));
+
+    u8_pkt[213] = (checksum >> 8) & 0xFF;
+    u8_pkt[214] = checksum & 0xFF;
+    u8_pkt[215] = 0xFD;
+
+    print(
+      "TX/RX: TRANSMIT: Zone Setup Fetch Third Command time: ${DateTime.now().toIso8601String()}, packet: ${u8_pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
     );
     // print(
     //   u8_pkt

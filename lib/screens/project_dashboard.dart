@@ -21,6 +21,7 @@ import 'package:techno_switch_solar_app/utils/bluetooth_service.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/input_mode_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/relay_mode_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/setting_bottom_sheets/ext_out_bottomsheet.dart';
+import 'package:techno_switch_solar_app/widgets/bottom_sheets/zone_mode_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/firmware_upgrade_bottom_sheet.dart';
 
 class ProjectDashboardScreen extends StatefulWidget {
@@ -1065,6 +1066,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     bool? isExtOut = false,
     bool? isInputSetup = false,
     bool? isRelaySetup = false,
+    bool? isZoneSetup = false,
   }) {
     // Reset navigation guard each time the dialog opens
     _navigatingToDeviceConnecting = false;
@@ -1219,6 +1221,21 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                                       .isRelaySetupCommandApplyActive
                                       .value = true;
                                   bleController.startRelaySetupApply();
+                                },
+                              );
+                            },
+                          );
+                        } else if (isZoneSetup == true) {
+                          showZoneSetupBottomSheet(
+                            context: context,
+                            onCall: () {
+                              showPasswordPopup(
+                                onCall: () {
+                                  // ble
+                                  //     .bleProcess
+                                  //     .isRelaySetupCommandApplyActive
+                                  //     .value = true;
+                                  // bleController.startZoneSetupFetch();
                                 },
                               );
                             },
@@ -1671,7 +1688,19 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
               _peripheralTile(
                 peripheralName: 'Zones',
                 iconPath: 'assets/svgs/peripheral_zones_icon.svg',
-                isDisabled: true,
+                onTap: () {
+                  if (_selectedDevice.manufacturerData.last == 1) {
+                    showBootloaderModeDialog(context: context);
+                    return;
+                  }
+                  showPasswordPopup(
+                    onCall: () {
+                      ble.bleProcess.isZoneSetupFetchCommandActive.value = true;
+                      bleController.startZoneSetupFetch();
+                    },
+                    isZoneSetup: true,
+                  );
+                },
               ),
               _peripheralTile(
                 peripheralName: 'Sounders',
@@ -1763,6 +1792,19 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
       backgroundColor: Colors.transparent,
       barrierColor: Colors.black.withOpacity(0.4),
       builder: (_) => RelayModeBottomSheet(onCall: onCall),
+    );
+  }
+
+  void showZoneSetupBottomSheet({
+    required BuildContext context,
+    required Function() onCall,
+  }) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withOpacity(0.4),
+      builder: (_) => ZoneBottomSheet(onCall: onCall),
     );
   }
 
