@@ -1,74 +1,68 @@
 // =============================
-// ZONE MODE BITMASK DEMO
-// Paste directly into DartPad
+// ZONE MODE BITMASK
 // =============================
 
 enum ZoneEnable { disabled, enabled }
 
-enum ZoneMode { normal, test }
+enum ZoneTestMode { normal, test }
 
-enum HoldMode {
-  notUsed, // 0
-  restartCount, // 1
-  suspendCount, // 2
-  continueCount, // 3
+/// Bits 3 & 4 combined (2-bit field)
+enum ZoneType {
+  normal, // 0
+  isMtl5561, // 1
+  notUsed, // 2
 }
 
 class ZoneModeConfig {
   final ZoneEnable zoneEnable;
-  final ZoneMode zoneMode;
-  final HoldMode holdMode;
+  final ZoneTestMode zoneTestMode;
 
-  /// IMPORTANT:
-  /// Firmware behaviour is reversed from documentation
-  /// true  -> reset allowed
-  /// false -> reset NOT allowed
-  final bool resetAllowed;
+  /// Always latched (bit 2 = 1)
+  /// Firmware default behaviour — not user changeable
+  final bool latched;
 
-  final bool flowDetectionUsed;
+  final ZoneType zoneType;
 
   const ZoneModeConfig({
     required this.zoneEnable,
-    required this.zoneMode,
-    required this.holdMode,
-    required this.resetAllowed,
-    required this.flowDetectionUsed,
+    required this.zoneTestMode,
+    required this.zoneType,
+    this.latched = true, // Always true as per requirement
   });
 
   @override
   String toString() {
     return '''
-Zone Enable        : $zoneEnable
-Zone Mode          : $zoneMode
-Hold Mode          : $holdMode
-Reset Allowed      : $resetAllowed
-Flow Detection     : $flowDetectionUsed
+Zone Enable : $zoneEnable
+Zone Mode   : $zoneTestMode
+Latched     : $latched
+Zone Type   : $zoneType
 ''';
   }
 }
 
 class ZoneModeCodec {
-  // ================= ENCODER =================
+  // ================= ENCODE =================
   static int encode(ZoneModeConfig config) {
     int value = 0;
 
+    // Bit 0
     if (config.zoneEnable == ZoneEnable.enabled) {
       value |= 0x01;
     }
 
-    if (config.zoneMode == ZoneMode.test) {
+    // Bit 1
+    if (config.zoneTestMode == ZoneTestMode.test) {
       value |= 0x02;
     }
 
-    value |= (config.holdMode.index & 0x03) << 2;
-
-    if (config.resetAllowed) {
-      value |= 0x10;
+    // Bit 2 (Always latched)
+    if (config.latched) {
+      value |= 0x04;
     }
 
-    if (config.flowDetectionUsed) {
-      value |= 0x20;
-    }
+    // Bits 3 & 4 (2-bit field)
+    value |= (config.zoneType.index & 0x03) << 3;
 
     return value & 0xFF;
   }
@@ -77,24 +71,22 @@ class ZoneModeCodec {
     return encode(config).toRadixString(16).toUpperCase().padLeft(2, '0');
   }
 
-  // ================= DECODER =================
+  // ================= DECODE =================
   static ZoneModeConfig decode(int value) {
     return ZoneModeConfig(
       zoneEnable:
           (value & 0x01) != 0 ? ZoneEnable.enabled : ZoneEnable.disabled,
 
-      zoneMode: (value & 0x02) != 0 ? ZoneMode.test : ZoneMode.normal,
+      zoneTestMode:
+          (value & 0x02) != 0 ? ZoneTestMode.test : ZoneTestMode.normal,
 
-      holdMode: HoldMode.values[(value >> 2) & 0x03],
+      latched: (value & 0x04) != 0,
 
-      resetAllowed: (value & 0x10) != 0,
-
-      flowDetectionUsed: (value & 0x20) != 0,
+      zoneType: ZoneType.values[(value >> 3) & 0x03],
     );
   }
 
-  // ================= NEW HELPER =================
-  /// Create ZoneModeConfig directly from HEX string (e.g. "12")
+  // ================= FROM HEX =================
   static ZoneModeConfig fromHex(String hex) {
     final int value = int.parse(hex, radix: 16);
     return decode(value);

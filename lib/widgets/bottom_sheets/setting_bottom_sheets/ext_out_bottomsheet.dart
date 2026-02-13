@@ -4,7 +4,7 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
-import 'package:techno_switch_solar_app/utils/zone_mode_util.dart';
+import 'package:techno_switch_solar_app/utils/ext_zone_mode_util.dart';
 
 class ExtOutBottomSheet extends StatefulWidget {
   final Function() onCall;
@@ -615,15 +615,15 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
                       isManCtrlValidated &&
                       isReleaseCtrlValidated &&
                       isResetDelayCtrlValidated) {
-                    final config = ZoneModeConfig(
-                      zoneEnable: ZoneEnable.values[zoneEnable],
-                      zoneMode: ZoneMode.normal,
+                    final config = ExtZoneModeConfig(
+                      extZoneEnable: ExtZoneEnable.values[zoneEnable],
+                      extZoneMode: ExtZoneMode.normal,
                       holdMode: HoldMode.values[holdRestart],
                       resetAllowed: resetAllowed,
                       flowDetectionUsed: false,
                     );
 
-                    final String hexValue = ZoneModeCodec.encodeHex(config);
+                    final String hexValue = ExtZoneModeCodec.encodeHex(config);
 
                     manager!.extZoneMode.value = hexValue;
 

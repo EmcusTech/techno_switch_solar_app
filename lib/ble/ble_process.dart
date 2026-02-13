@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/utils/input_mode_util.dart';
 import 'package:techno_switch_solar_app/utils/relay_mode_util.dart';
+import 'package:techno_switch_solar_app/utils/ext_zone_mode_util.dart';
 import 'package:techno_switch_solar_app/utils/zone_mode_util.dart';
 import 'ble_manager.dart';
 import 'ble_frame.dart';
@@ -216,6 +217,53 @@ class BleProcess {
   final ValueNotifier<bool> isZoneSetupFetchCommandActive = ValueNotifier<bool>(
     false,
   );
+
+  final ValueNotifier<bool> isZoneOneSetupEnabled = ValueNotifier<bool>(false);
+
+  final ValueNotifier<bool> isZoneOneSetupTest = ValueNotifier<bool>(false);
+
+  final ValueNotifier<String> zoneOneSetupText = ValueNotifier<String>("");
+
+  final ValueNotifier<int> zoneOneSetupType = ValueNotifier<int>(0);
+
+  final ValueNotifier<int> zoneOneSetupDetectionMode = ValueNotifier<int>(0);
+
+  final ValueNotifier<String> zoneOneSetupMode = ValueNotifier<String>("");
+
+  final ValueNotifier<String> zoneOneSetupVerificationTime =
+      ValueNotifier<String>("");
+
+  final ValueNotifier<bool> isZoneTwoSetupEnabled = ValueNotifier<bool>(false);
+
+  final ValueNotifier<bool> isZoneTwoSetupTest = ValueNotifier<bool>(false);
+
+  final ValueNotifier<String> zoneTwoSetupText = ValueNotifier<String>("");
+
+  final ValueNotifier<int> zoneTwoSetupType = ValueNotifier<int>(0);
+
+  final ValueNotifier<int> zoneTwoSetupDetectionMode = ValueNotifier<int>(0);
+
+  final ValueNotifier<String> zoneTwoSetupMode = ValueNotifier<String>("");
+
+  final ValueNotifier<String> zoneTwoSetupVerificationTime =
+      ValueNotifier<String>("");
+
+  final ValueNotifier<bool> isZoneThreeSetupEnabled = ValueNotifier<bool>(
+    false,
+  );
+
+  final ValueNotifier<bool> isZoneThreeSetupTest = ValueNotifier<bool>(false);
+
+  final ValueNotifier<String> zoneThreeSetupText = ValueNotifier<String>("");
+
+  final ValueNotifier<int> zoneThreeSetupType = ValueNotifier<int>(0);
+
+  final ValueNotifier<int> zoneThreeSetupDetectionMode = ValueNotifier<int>(0);
+
+  final ValueNotifier<String> zoneThreeSetupMode = ValueNotifier<String>("");
+
+  final ValueNotifier<String> zoneThreeSetupVerificationTime =
+      ValueNotifier<String>("");
 
   // BleStates bleStateMachineState = BleStates.IDLE;
   BleStates bleCurrentState = BleStates.IDLE;
@@ -536,10 +584,10 @@ class BleProcess {
         checkForExtCmdFetchRes = 0;
         isExtOutCommandFetchActive.value = false;
         print("We got the response for ext fetch");
-        final ZoneModeConfig config = ZoneModeCodec.fromHex(
+        final ExtZoneModeConfig config = ExtZoneModeCodec.fromHex(
           rx.payload[14].toRadixString(16),
         );
-        final bool zoneEnabled = config.zoneEnable == ZoneEnable.enabled;
+        final bool zoneEnabled = config.extZoneEnable == ExtZoneEnable.enabled;
         final HoldMode holdMode = config.holdMode;
         final bool resetAllowed = config.resetAllowed;
         isExtZoneEnabled.value = zoneEnabled ? 1 : 0;
@@ -642,16 +690,62 @@ class BleProcess {
         print("We got the response for zone setup fetch");
         if (zoneSetupFetchCommandStep == 1) {
           print("CMD 1 Validated -> send CMD2, keep polling");
+          final ZoneModeConfig config = ZoneModeCodec.fromHex(
+            rx.payload[14].toRadixString(16),
+          );
+          final bool zoneEnabled = config.zoneEnable == ZoneEnable.enabled;
+          final bool zoneTestMode = config.zoneTestMode == ZoneTestMode.test;
+          final bool zoneType = config.zoneType == ZoneType.isMtl5561;
+          zoneOneSetupType.value = zoneType ? 1 : 0;
+          zoneOneSetupDetectionMode.value = rx.payload[15];
+          isZoneOneSetupEnabled.value = zoneEnabled;
+          isZoneOneSetupTest.value = zoneTestMode;
+          zoneOneSetupText.value = extractStringFromPayload(
+            rx.payload,
+            startIndex: 18,
+          );
+          zoneOneSetupVerificationTime.value = rx.payload[16].toString();
           zoneSetupFetchCommandStep = 2;
+          // zoneOneSetupDetectionMode.value = config.flowDetectionUsed ? 1 : 0;
           startRxTimeout();
           await bleManager.sendZoneSetupFetchSecondCmdPkt();
         } else if (zoneSetupFetchCommandStep == 2) {
           print("CMD 2 Validated -> send CMD3, keep polling");
+          final ZoneModeConfig config = ZoneModeCodec.fromHex(
+            rx.payload[14].toRadixString(16),
+          );
+          final bool zoneEnabled = config.zoneEnable == ZoneEnable.enabled;
+          final bool zoneTestMode = config.zoneTestMode == ZoneTestMode.test;
+          final bool zoneType = config.zoneType == ZoneType.isMtl5561;
+          zoneTwoSetupType.value = zoneType ? 1 : 0;
+          zoneTwoSetupDetectionMode.value = rx.payload[15];
+          isZoneTwoSetupEnabled.value = zoneEnabled;
+          isZoneTwoSetupTest.value = zoneTestMode;
+          zoneTwoSetupText.value = extractStringFromPayload(
+            rx.payload,
+            startIndex: 18,
+          );
+          zoneTwoSetupVerificationTime.value = rx.payload[16].toString();
           zoneSetupFetchCommandStep = 3;
           startRxTimeout();
           await bleManager.sendZoneSetupFetchThirdCmdPkt();
         } else if (zoneSetupFetchCommandStep == 3) {
           print("CMD3 Validated -> done");
+          final ZoneModeConfig config = ZoneModeCodec.fromHex(
+            rx.payload[14].toRadixString(16),
+          );
+          final bool zoneEnabled = config.zoneEnable == ZoneEnable.enabled;
+          final bool zoneTestMode = config.zoneTestMode == ZoneTestMode.test;
+          final bool zoneType = config.zoneType == ZoneType.isMtl5561;
+          zoneThreeSetupType.value = zoneType ? 1 : 0;
+          zoneThreeSetupDetectionMode.value = rx.payload[15];
+          isZoneThreeSetupEnabled.value = zoneEnabled;
+          isZoneThreeSetupTest.value = zoneTestMode;
+          zoneThreeSetupText.value = extractStringFromPayload(
+            rx.payload,
+            startIndex: 18,
+          );
+          zoneThreeSetupVerificationTime.value = rx.payload[16].toString();
           bleManager.otaProcessState = OtaProcessState.notInUse;
           checkForZoneSetupFetchRes = 0;
           isZoneSetupFetchCommandActive.value = false;
@@ -773,17 +867,17 @@ class BleProcess {
     );
   }
 
-  String extractStringFromPayload(List<int> payload) {
-    // Length is at index 25
-    final int length = payload[25];
+  String extractStringFromPayload(List<int> payload, {int startIndex = 25}) {
+    // Length is at index startIndex
+    final int length = payload[startIndex];
 
     print("Length: $length");
 
     // String starts at index 26
-    final int startIndex = 26;
-    final int endIndex = startIndex + length;
+    // final int startIndex = startIndex + 1;
+    final int endIndex = startIndex + length + 1;
 
-    final List<int> stringBytes = payload.sublist(startIndex, endIndex);
+    final List<int> stringBytes = payload.sublist(startIndex + 1, endIndex);
 
     return utf8.decode(stringBytes);
   }

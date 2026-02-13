@@ -37,8 +37,81 @@ class _ZoneBottomSheetState extends State<ZoneBottomSheet> {
     if (Get.isRegistered<BleLogController>()) {
       manager = Get.find<BleLogController>().bleManager;
 
-      // If needed, preload values from manager here
-      // (Structure kept ready — plug your reactive values same as relay)
+      print("Zone 1 Type: ${manager!.zoneOneSetupType.value}");
+      print("Zone 1 Enabled: ${manager!.isZoneOneSetupEnabled.value}");
+      print("Zone 1 Test: ${manager!.isZoneOneSetupTest.value}");
+      print(
+        "Zone 1 Detection Mode: ${manager!.zoneOneSetupDetectionMode.value}",
+      );
+      print("Zone 1 Mode: ${manager!.zoneOneSetupMode.value}");
+      print(
+        "Zone 1 Verification Time: ${manager!.zoneOneSetupVerificationTime.value}",
+      );
+      print("Zone 1 Text: ${manager!.zoneOneSetupText.value}");
+      print("Zone 2 Type: ${manager!.zoneTwoSetupType.value}");
+      print("Zone 2 Enabled: ${manager!.isZoneTwoSetupEnabled.value}");
+      print("Zone 2 Test: ${manager!.isZoneTwoSetupTest.value}");
+      print(
+        "Zone 2 Detection Mode: ${manager!.zoneTwoSetupDetectionMode.value}",
+      );
+      print("Zone 2 Mode: ${manager!.zoneTwoSetupMode.value}");
+      print(
+        "Zone 2 Verification Time: ${manager!.zoneTwoSetupVerificationTime.value}",
+      );
+      print("Zone 2 Text: ${manager!.zoneTwoSetupText.value}");
+      print("Zone 3 Type: ${manager!.zoneThreeSetupType.value}");
+      print("Zone 3 Enabled: ${manager!.isZoneThreeSetupEnabled.value}");
+      print("Zone 3 Test: ${manager!.isZoneThreeSetupTest.value}");
+      print(
+        "Zone 3 Detection Mode: ${manager!.zoneThreeSetupDetectionMode.value}",
+      );
+      print("Zone 3 Mode: ${manager!.zoneThreeSetupMode.value}");
+      print(
+        "Zone 3 Verification Time: ${manager!.zoneThreeSetupVerificationTime.value}",
+      );
+      print("Zone 3 Text: ${manager!.zoneThreeSetupText.value}");
+
+      // Zone 1
+      zones[0].type =
+          manager!.zoneOneSetupType.value == 0 ? 'Normal' : 'IS (MTL 5561)';
+      zones[0].enabled = manager!.isZoneOneSetupEnabled.value ? 'Yes' : 'No';
+      zones[0].test = manager!.isZoneOneSetupTest.value ? 'Yes' : 'No';
+      final int dm1 = manager!.zoneOneSetupDetectionMode.value;
+      zones[0].mode =
+          (dm1 >= 0 && dm1 < modeOptions.length)
+              ? modeOptions[dm1]
+              : modeOptions.first;
+      zones[0].verificationTimeController.text =
+          manager!.zoneOneSetupVerificationTime.value;
+      zones[0].zoneTextController.text = manager!.zoneOneSetupText.value;
+
+      // Zone 2
+      zones[1].type =
+          manager!.zoneTwoSetupType.value == 0 ? 'Normal' : 'IS (MTL 5561)';
+      zones[1].enabled = manager!.isZoneTwoSetupEnabled.value ? 'Yes' : 'No';
+      zones[1].test = manager!.isZoneTwoSetupTest.value ? 'Yes' : 'No';
+      final int dm2 = manager!.zoneTwoSetupDetectionMode.value;
+      zones[1].mode =
+          (dm2 >= 0 && dm2 < modeOptions.length)
+              ? modeOptions[dm2]
+              : modeOptions.first;
+      zones[1].verificationTimeController.text =
+          manager!.zoneTwoSetupVerificationTime.value;
+      zones[1].zoneTextController.text = manager!.zoneTwoSetupText.value;
+
+      // Zone 3
+      zones[2].type =
+          manager!.zoneThreeSetupType.value == 0 ? 'Normal' : 'IS (MTL 5561)';
+      zones[2].enabled = manager!.isZoneThreeSetupEnabled.value ? 'Yes' : 'No';
+      zones[2].test = manager!.isZoneThreeSetupTest.value ? 'Yes' : 'No';
+      final int dm3 = manager!.zoneThreeSetupDetectionMode.value;
+      zones[2].mode =
+          (dm3 >= 0 && dm3 < modeOptions.length)
+              ? modeOptions[dm3]
+              : modeOptions.first;
+      zones[2].verificationTimeController.text =
+          manager!.zoneThreeSetupVerificationTime.value;
+      zones[2].zoneTextController.text = manager!.zoneThreeSetupText.value;
     }
   }
 

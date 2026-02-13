@@ -239,6 +239,41 @@ class BleManager {
   ValueNotifier<bool> get isRelaySetupApplyDone =>
       bleProcess.isRelaySetupApplyDone;
 
+  ValueNotifier<bool> get isZoneOneSetupEnabled =>
+      bleProcess.isZoneOneSetupEnabled;
+  ValueNotifier<bool> get isZoneOneSetupTest => bleProcess.isZoneOneSetupTest;
+  ValueNotifier<String> get zoneOneSetupText => bleProcess.zoneOneSetupText;
+  ValueNotifier<int> get zoneOneSetupType => bleProcess.zoneOneSetupType;
+  ValueNotifier<int> get zoneOneSetupDetectionMode =>
+      bleProcess.zoneOneSetupDetectionMode;
+  ValueNotifier<String> get zoneOneSetupMode => bleProcess.zoneOneSetupMode;
+  ValueNotifier<String> get zoneOneSetupVerificationTime =>
+      bleProcess.zoneOneSetupVerificationTime;
+
+  ValueNotifier<bool> get isZoneTwoSetupEnabled =>
+      bleProcess.isZoneTwoSetupEnabled;
+  ValueNotifier<bool> get isZoneTwoSetupTest => bleProcess.isZoneTwoSetupTest;
+  ValueNotifier<String> get zoneTwoSetupText => bleProcess.zoneTwoSetupText;
+  ValueNotifier<int> get zoneTwoSetupType => bleProcess.zoneTwoSetupType;
+  ValueNotifier<int> get zoneTwoSetupDetectionMode =>
+      bleProcess.zoneTwoSetupDetectionMode;
+  ValueNotifier<String> get zoneTwoSetupMode => bleProcess.zoneTwoSetupMode;
+  ValueNotifier<String> get zoneTwoSetupVerificationTime =>
+      bleProcess.zoneTwoSetupVerificationTime;
+
+  ValueNotifier<bool> get isZoneThreeSetupEnabled =>
+      bleProcess.isZoneThreeSetupEnabled;
+  ValueNotifier<bool> get isZoneThreeSetupTest =>
+      bleProcess.isZoneThreeSetupTest;
+  ValueNotifier<String> get zoneThreeSetupText => bleProcess.zoneThreeSetupText;
+  ValueNotifier<int> get zoneThreeSetupType => bleProcess.zoneThreeSetupType;
+  ValueNotifier<int> get zoneThreeSetupDetectionMode =>
+      bleProcess.zoneThreeSetupDetectionMode;
+  ValueNotifier<String> get zoneThreeSetupMode => bleProcess.zoneThreeSetupMode;
+  ValueNotifier<String> get zoneThreeSetupVerificationTime =>
+      bleProcess.zoneThreeSetupVerificationTime;
+  ValueNotifier<bool> get isZoneSetupFetchCommandActive =>
+      bleProcess.isZoneSetupFetchCommandActive;
   void resetProtocolState() {
     // Packet counters
     u8TxPktCnt = 0;
