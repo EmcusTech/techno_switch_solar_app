@@ -239,9 +239,6 @@ class BleManager {
 
   ValueNotifier<String> get relayThreeMode => bleProcess.relayThreeMode;
 
-  ValueNotifier<bool> get isRelaySetupApplyDone =>
-      bleProcess.isRelaySetupApplyDone;
-
   ValueNotifier<bool> get isZoneOneSetupEnabled =>
       bleProcess.isZoneOneSetupEnabled;
   ValueNotifier<bool> get isZoneOneSetupTest => bleProcess.isZoneOneSetupTest;

@@ -407,7 +407,7 @@ class BleProcess {
 
       if (rx.payload[13] != 0x0a &&
           String.fromCharCodes(rx.payload.sublist(14, 18)) == accessKey.value) {
-        isAccessKeyValid.value = true;
+        // isAccessKeyValid.value = true;
         print("ACCESS KEY RECEIVED → NEXT CONTROL CMD");
         if (isInputSetupFetchCommandActive.value) {
           bleManager.otaProcessState =
@@ -506,6 +506,7 @@ class BleProcess {
       if (rx.payload[10] == 0x83) {
         bleManager.otaProcessState = OtaProcessState.notInUse;
         print("Found a control message");
+        isAccessKeyValid.value = true;
         checkForExtCmdApplyRes = 0;
         isExtOutCommandApplyActive.value = false;
         isExtOutApplyDone.value = true;
@@ -525,6 +526,7 @@ class BleProcess {
         bleManager.otaProcessState = OtaProcessState.notInUse;
         checkForInputSetupFetchRes = 0;
         isInputSetupFetchCommandActive.value = false;
+        isAccessKeyValid.value = true;
         print(
           "We got the response for input setup fetch, ${rx.payload[23]}, ${rx.payload[24]}",
         );
@@ -549,6 +551,7 @@ class BleProcess {
         "Checking Input Setup Apply CMD RSP Value ${rx.payload[12]}:::::${rx.payload[12] == 0x16} ",
       );
       if (rx.payload[10] == 0x83) {
+        isAccessKeyValid.value = true;
         bleManager.otaProcessState = OtaProcessState.notInUse;
         print("Found a control message");
         checkForInputSetupApplyRes = 0;
@@ -579,6 +582,7 @@ class BleProcess {
           await bleManager.sendRelaySetupApplyThirdCmdPkt();
         } else if (relaySetupApplyCommandStep == 3) {
           print("CMD3 Validated -> done");
+          isAccessKeyValid.value = true;
           bleManager.otaProcessState = OtaProcessState.notInUse;
           checkForRelaySetupApplyRes = 0;
           isRelaySetupCommandApplyActive.value = false;
@@ -602,6 +606,7 @@ class BleProcess {
         bleManager.otaProcessState = OtaProcessState.sendDipSettingFetchCmd;
         checkForExtCmdFetchRes = 0;
         isExtOutCommandFetchActive.value = false;
+        isAccessKeyValid.value = true;
         print("We got the response for ext fetch");
         final ExtZoneModeConfig config = ExtZoneModeCodec.fromHex(
           rx.payload[14].toRadixString(16),
@@ -692,6 +697,7 @@ class BleProcess {
           bleManager.otaProcessState = OtaProcessState.notInUse;
           checkForRelaySetupFetchRes = 0;
           isRelaySetupFetchCommandActive.value = false;
+          isAccessKeyValid.value = true;
           print("We got the response for relay setup fetch");
         }
       } else {
@@ -722,6 +728,7 @@ class BleProcess {
           checkForZoneSetupApplyRes = 0;
           isZoneSetupCommandApplyActive.value = false;
           isZoneSetupApplyDone.value = true;
+          isAccessKeyValid.value = true;
           print("We got the response for zone setup apply");
         }
       } else {
@@ -798,6 +805,7 @@ class BleProcess {
           bleManager.otaProcessState = OtaProcessState.notInUse;
           checkForZoneSetupFetchRes = 0;
           isZoneSetupFetchCommandActive.value = false;
+          isAccessKeyValid.value = true;
           print("We got the response for zone setup fetch");
         }
       } else {
@@ -815,6 +823,7 @@ class BleProcess {
       if (rx.payload[3] == 0x03 && nackRetryCount < 3) {
         Get.find<BleLogController>().restartNetworkFlow();
       } else if (rx.payload[10] == 0x83) {
+        isAccessKeyValid.value = true;
         // nackRetryCount = 0;
         print("CONTROL CMD RESPONSE RECEIVED");
         checkForCtrlCmdRsp = 2;
@@ -937,6 +946,11 @@ class BleProcess {
     processNextOtaFrame = true;
     logRetreivalEnded = false;
     checkForExtCmdFetchRes = 0;
+    checkForAccessKeyCmdRsp = 0;
+    checkDipSetCmdRsp = 0;
+    checkForExtCmdFetchRes = 0;
+    checkForInputSetupFetchRes = 0;
+    checkForRelaySetupApplyRes = 0;
     checkForInputSetupFetchRes = 0;
     checkDipSetCmdRsp = 0;
     isExtOutApplyButtonActive.value = false;
@@ -984,6 +998,11 @@ class BleProcess {
     checkForExtCmdFetchRes = 0;
     checkForInputSetupApplyRes = 0;
     checkForInputSetupFetchRes = 0;
+    checkForAccessKeyCmdRsp = 0;
+    checkDipSetCmdRsp = 0;
+    checkForExtCmdFetchRes = 0;
+    checkForInputSetupFetchRes = 0;
+    checkForRelaySetupApplyRes = 0;
     validEventLogNum = 0;
     read1000Logs = 0;
     receivedPollCount = 0;
@@ -1023,6 +1042,11 @@ class BleProcess {
     checkDipSetCmdRsp = 0;
     checkForExtCmdFetchRes = 0;
     checkForInputSetupFetchRes = 0;
+    checkForAccessKeyCmdRsp = 0;
+    checkDipSetCmdRsp = 0;
+    checkForExtCmdFetchRes = 0;
+    checkForInputSetupFetchRes = 0;
+    checkForRelaySetupApplyRes = 0;
     validEventLogNum = 0;
     read1000Logs = 0;
     receivedPollCount = 0;
