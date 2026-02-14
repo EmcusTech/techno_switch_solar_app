@@ -30,6 +30,8 @@ class RelayModeBottomSheet extends StatefulWidget {
 class _RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
   BleManager? manager;
 
+  int _expandedTileCount = 0;
+
   final List<String> groupOptions = ['None', 'General', 'Zone', 'Ext. Out'];
 
   final Map<String, List<String>> functionOptionsMap = {
@@ -195,13 +197,18 @@ class _RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final maxHeight = MediaQuery.of(context).size.height * 0.75;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final maxHeight =
+        _expandedTileCount > 0 ? screenHeight * 0.75 : screenHeight * 0.45;
     _updateValidationErrors();
     final isValid = _computeIsValid();
 
     return SafeArea(
-      child: ConstrainedBox(
-        constraints: BoxConstraints(maxHeight: maxHeight),
+      child: AnimatedSize(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeInOut,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxHeight: maxHeight),
         child: Container(
           decoration: const BoxDecoration(
             color: Colors.white,
@@ -251,6 +258,7 @@ class _RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
             ],
           ),
         ),
+        ),
       ),
     );
   }
@@ -270,6 +278,11 @@ class _RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
         child: Theme(
           data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
           child: ExpansionTile(
+            onExpansionChanged: (expanded) {
+              setState(() {
+                _expandedTileCount += expanded ? 1 : -1;
+              });
+            },
             tilePadding: const EdgeInsets.symmetric(horizontal: 16),
             childrenPadding: const EdgeInsets.symmetric(horizontal: 16),
             title: Text(

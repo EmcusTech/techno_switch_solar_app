@@ -30,6 +30,8 @@ class ZoneBottomSheet extends StatefulWidget {
 class _ZoneBottomSheetState extends State<ZoneBottomSheet> {
   BleManager? manager;
 
+  int _expandedTileCount = 0;
+
   final List<String> typeOptions = ['Normal', 'IS (MTL 5561)'];
   final List<String> yesNoOptions = ['No', 'Yes'];
   final List<String> modeOptions = [
@@ -158,7 +160,9 @@ class _ZoneBottomSheetState extends State<ZoneBottomSheet> {
     zones[0].test = manager!.isZoneOneSetupTest.value ? 'Yes' : 'No';
     final int dm1 = manager!.zoneOneSetupDetectionMode.value;
     zones[0].mode =
-        (dm1 >= 0 && dm1 < modeOptions.length) ? modeOptions[dm1] : modeOptions.first;
+        (dm1 >= 0 && dm1 < modeOptions.length)
+            ? modeOptions[dm1]
+            : modeOptions.first;
     zones[0].verificationTimeController.text =
         manager!.zoneOneSetupVerificationTime.value;
     zones[0].zoneTextController.text = manager!.zoneOneSetupText.value;
@@ -169,7 +173,9 @@ class _ZoneBottomSheetState extends State<ZoneBottomSheet> {
     zones[1].test = manager!.isZoneTwoSetupTest.value ? 'Yes' : 'No';
     final int dm2 = manager!.zoneTwoSetupDetectionMode.value;
     zones[1].mode =
-        (dm2 >= 0 && dm2 < modeOptions.length) ? modeOptions[dm2] : modeOptions.first;
+        (dm2 >= 0 && dm2 < modeOptions.length)
+            ? modeOptions[dm2]
+            : modeOptions.first;
     zones[1].verificationTimeController.text =
         manager!.zoneTwoSetupVerificationTime.value;
     zones[1].zoneTextController.text = manager!.zoneTwoSetupText.value;
@@ -180,7 +186,9 @@ class _ZoneBottomSheetState extends State<ZoneBottomSheet> {
     zones[2].test = manager!.isZoneThreeSetupTest.value ? 'Yes' : 'No';
     final int dm3 = manager!.zoneThreeSetupDetectionMode.value;
     zones[2].mode =
-        (dm3 >= 0 && dm3 < modeOptions.length) ? modeOptions[dm3] : modeOptions.first;
+        (dm3 >= 0 && dm3 < modeOptions.length)
+            ? modeOptions[dm3]
+            : modeOptions.first;
     zones[2].verificationTimeController.text =
         manager!.zoneThreeSetupVerificationTime.value;
     zones[2].zoneTextController.text = manager!.zoneThreeSetupText.value;
@@ -191,56 +199,62 @@ class _ZoneBottomSheetState extends State<ZoneBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final maxHeight = MediaQuery.of(context).size.height * 0.75;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final maxHeight =
+        _expandedTileCount > 0 ? screenHeight * 0.75 : screenHeight * 0.45;
     _updateValidationErrors();
     final isValid = _computeIsValid();
 
     return SafeArea(
-      child: ConstrainedBox(
-        constraints: BoxConstraints(maxHeight: maxHeight),
-        child: Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-          ),
-          padding: EdgeInsets.only(
-            left: 24,
-            right: 24,
-            top: 16,
-            bottom: MediaQuery.of(context).viewInsets.bottom + 16,
-          ),
-          child: Column(
-            children: [
-              _dragHandle(),
-              _title('Zone Configuration'),
+      child: AnimatedSize(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeInOut,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxHeight: maxHeight),
+          child: Container(
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+            ),
+            padding: EdgeInsets.only(
+              left: 24,
+              right: 24,
+              top: 16,
+              bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+            ),
+            child: Column(
+              children: [
+                _dragHandle(),
+                _title('Zone Configuration'),
 
-              Expanded(
-                child: NotificationListener<UserScrollNotification>(
-                  onNotification: (notification) {
-                    if (notification.direction != ScrollDirection.idle) {
-                      FocusScope.of(context).unfocus();
-                    }
-                    return false;
-                  },
-                  child: SingleChildScrollView(
-                    physics: const BouncingScrollPhysics(),
-                    padding: const EdgeInsets.only(top: 16),
-                    child: Column(
-                      children: List.generate(3, (i) => _zoneTile(i)),
+                Expanded(
+                  child: NotificationListener<UserScrollNotification>(
+                    onNotification: (notification) {
+                      if (notification.direction != ScrollDirection.idle) {
+                        FocusScope.of(context).unfocus();
+                      }
+                      return false;
+                    },
+                    child: SingleChildScrollView(
+                      physics: const BouncingScrollPhysics(),
+                      padding: const EdgeInsets.only(top: 16),
+                      child: Column(
+                        children: List.generate(3, (i) => _zoneTile(i)),
+                      ),
                     ),
                   ),
                 ),
-              ),
 
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(child: _downloadButton()),
-                  const SizedBox(width: 12),
-                  Expanded(child: _applyButton(isValid: isValid)),
-                ],
-              ),
-            ],
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(child: _downloadButton()),
+                    const SizedBox(width: 12),
+                    Expanded(child: _applyButton(isValid: isValid)),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -262,6 +276,11 @@ class _ZoneBottomSheetState extends State<ZoneBottomSheet> {
         child: Theme(
           data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
           child: ExpansionTile(
+            onExpansionChanged: (expanded) {
+              setState(() {
+                _expandedTileCount += expanded ? 1 : -1;
+              });
+            },
             tilePadding: const EdgeInsets.symmetric(horizontal: 16),
             childrenPadding: EdgeInsets.zero,
 
@@ -466,10 +485,7 @@ class _ZoneBottomSheetState extends State<ZoneBottomSheet> {
         onPressed: widget.onDownload,
         child: Text(
           'Download',
-          style: GoogleFonts.inter(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-          ),
+          style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600),
         ),
       ),
     );
@@ -513,38 +529,41 @@ class _ZoneBottomSheetState extends State<ZoneBottomSheet> {
                       case 0:
                         manager!.zoneOneSetupText.value =
                             zone.zoneTextController.text;
-                        manager!.zoneOneSetupType.value =
-                            typeOptions.indexOf(zone.type);
+                        manager!.zoneOneSetupType.value = typeOptions.indexOf(
+                          zone.type,
+                        );
                         manager!.isZoneOneSetupEnabled.value =
                             zone.enabled == 'Yes';
                         manager!.isZoneOneSetupTest.value = zone.test == 'Yes';
                         manager!.zoneOneSetupMode.value = hexValue;
                         manager!.zoneOneSetupVerificationTime.value =
                             zone.verificationTimeController.text;
-                        manager!.zoneOneSetupDetectionMode.value =
-                            modeOptions.indexOf(zone.mode);
+                        manager!.zoneOneSetupDetectionMode.value = modeOptions
+                            .indexOf(zone.mode);
                         break;
 
                       case 1:
                         manager!.zoneTwoSetupText.value =
                             zone.zoneTextController.text;
-                        manager!.zoneTwoSetupType.value =
-                            typeOptions.indexOf(zone.type);
+                        manager!.zoneTwoSetupType.value = typeOptions.indexOf(
+                          zone.type,
+                        );
                         manager!.isZoneTwoSetupEnabled.value =
                             zone.enabled == 'Yes';
                         manager!.isZoneTwoSetupTest.value = zone.test == 'Yes';
                         manager!.zoneTwoSetupMode.value = hexValue;
                         manager!.zoneTwoSetupVerificationTime.value =
                             zone.verificationTimeController.text;
-                        manager!.zoneTwoSetupDetectionMode.value =
-                            modeOptions.indexOf(zone.mode);
+                        manager!.zoneTwoSetupDetectionMode.value = modeOptions
+                            .indexOf(zone.mode);
                         break;
 
                       case 2:
                         manager!.zoneThreeSetupText.value =
                             zone.zoneTextController.text;
-                        manager!.zoneThreeSetupType.value =
-                            typeOptions.indexOf(zone.type);
+                        manager!.zoneThreeSetupType.value = typeOptions.indexOf(
+                          zone.type,
+                        );
                         manager!.isZoneThreeSetupEnabled.value =
                             zone.enabled == 'Yes';
                         manager!.isZoneThreeSetupTest.value =
@@ -552,8 +571,8 @@ class _ZoneBottomSheetState extends State<ZoneBottomSheet> {
                         manager!.zoneThreeSetupMode.value = hexValue;
                         manager!.zoneThreeSetupVerificationTime.value =
                             zone.verificationTimeController.text;
-                        manager!.zoneThreeSetupDetectionMode.value =
-                            modeOptions.indexOf(zone.mode);
+                        manager!.zoneThreeSetupDetectionMode.value = modeOptions
+                            .indexOf(zone.mode);
                         break;
                     }
                   }
