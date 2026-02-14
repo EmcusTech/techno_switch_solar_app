@@ -6,12 +6,22 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/utils/relay_mode_util.dart';
+import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/widgets/dropdown.dart';
 
 class RelayModeBottomSheet extends StatefulWidget {
-  final Function() onCall;
+  final String deviceId;
+  final VoidCallback onDownload;
+  final VoidCallback onApply;
+  final ValueNotifier<int> refreshTrigger;
 
-  const RelayModeBottomSheet({super.key, required this.onCall});
+  const RelayModeBottomSheet({
+    super.key,
+    required this.deviceId,
+    required this.onDownload,
+    required this.onApply,
+    required this.refreshTrigger,
+  });
 
   @override
   State<RelayModeBottomSheet> createState() => _RelayModeBottomSheetState();
@@ -95,58 +105,92 @@ class _RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
   @override
   void initState() {
     super.initState();
-
     relays = List.generate(3, (_) => RelayConfig());
+    _loadData();
+    widget.refreshTrigger.addListener(_onRefreshTriggered);
+  }
 
+  @override
+  void dispose() {
+    widget.refreshTrigger.removeListener(_onRefreshTriggered);
+    super.dispose();
+  }
+
+  void _onRefreshTriggered() {
+    _loadFromManager();
+  }
+
+  Future<void> _loadData() async {
     if (Get.isRegistered<BleLogController>()) {
       manager = Get.find<BleLogController>().bleManager;
-
-      // Relay 1
-      relays[0].enabled = manager!.isRelayOneSetupEnabled.value ? 'Yes' : 'No';
-      relays[0].test = manager!.isRelayOneSetupTest.value ? 'Yes' : 'No';
-      relays[0].group = groupOptions[manager!.relayOneSetupGroup.value];
-      relays[0].function =
-          functionOptionsMap[relays[0].group]![manager!
-              .relayOneSetupFunction
-              .value];
-      relays[0].outputTextController.text =
-          manager!.relayOneSetupOutputText.value;
-      relays[0].dynamicController.text =
-          manager!.relayOneSetupDynamicText.value;
-
-      // Relay 2
-      relays[1].enabled = manager!.isRelayTwoSetupEnabled.value ? 'Yes' : 'No';
-      relays[1].test = manager!.isRelayTwoSetupTest.value ? 'Yes' : 'No';
-      relays[1].group = groupOptions[manager!.relayTwoSetupGroup.value];
-      relays[1].function =
-          functionOptionsMap[relays[1].group]![manager!
-              .relayTwoSetupFunction
-              .value];
-      relays[1].outputTextController.text =
-          manager!.relayTwoSetupOutputText.value;
-      relays[1].dynamicController.text =
-          manager!.relayTwoSetupDynamicText.value;
-
-      // Relay 3
-      relays[2].enabled =
-          manager!.isRelayThreeSetupEnabled.value ? 'Yes' : 'No';
-      relays[2].test = manager!.isRelayThreeSetupTest.value ? 'Yes' : 'No';
-      relays[2].group = groupOptions[manager!.relayThreeSetupGroup.value];
-      relays[2].function =
-          functionOptionsMap[relays[2].group]![manager!
-              .relayThreeSetupFunction
-              .value];
-      relays[2].outputTextController.text =
-          manager!.relayThreeSetupOutputText.value;
-      relays[2].dynamicController.text =
-          manager!.relayThreeSetupDynamicText.value;
     }
+    final cached = await PeripheralSetupCache.loadRelaySetup(widget.deviceId);
+    if (cached != null) {
+      _applyCachedData(cached);
+      if (mounted) setState(() {});
+      return;
+    }
+    _loadFromManager();
+  }
+
+  void _applyCachedData(Map<String, dynamic> data) {
+    for (int i = 0; i < 3; i++) {
+      final key = 'r${i + 1}';
+      final r = data[key] as Map<String, dynamic>?;
+      if (r == null) continue;
+      relays[i].enabled = (r['enabled'] as bool?) == true ? 'Yes' : 'No';
+      relays[i].test = (r['test'] as bool?) == true ? 'Yes' : 'No';
+      final g = (r['group'] as int?) ?? 0;
+      relays[i].group = groupOptions[g.clamp(0, groupOptions.length - 1)];
+      final f = (r['function'] as int?) ?? 0;
+      final opts = functionOptionsMap[relays[i].group]!;
+      relays[i].function = opts[f.clamp(0, opts.length - 1)];
+      relays[i].outputTextController.text = (r['outputText'] as String?) ?? '';
+      relays[i].dynamicController.text = (r['dynamicText'] as String?) ?? '';
+    }
+    for (int i = 0; i < 3; i++) {
+      if (relays[i].group == 'Ext. Out') {
+        relays[i].dynamicController.text = '1';
+      }
+    }
+  }
+
+  void _loadFromManager() {
+    if (!Get.isRegistered<BleLogController>()) return;
+    manager = Get.find<BleLogController>().bleManager;
+
+    relays[0].enabled = manager!.isRelayOneSetupEnabled.value ? 'Yes' : 'No';
+    relays[0].test = manager!.isRelayOneSetupTest.value ? 'Yes' : 'No';
+    relays[0].group = groupOptions[manager!.relayOneSetupGroup.value];
+    relays[0].function =
+        functionOptionsMap[relays[0].group]![manager!.relayOneSetupFunction.value];
+    relays[0].outputTextController.text = manager!.relayOneSetupOutputText.value;
+    relays[0].dynamicController.text = manager!.relayOneSetupDynamicText.value;
+
+    relays[1].enabled = manager!.isRelayTwoSetupEnabled.value ? 'Yes' : 'No';
+    relays[1].test = manager!.isRelayTwoSetupTest.value ? 'Yes' : 'No';
+    relays[1].group = groupOptions[manager!.relayTwoSetupGroup.value];
+    relays[1].function =
+        functionOptionsMap[relays[1].group]![manager!.relayTwoSetupFunction.value];
+    relays[1].outputTextController.text = manager!.relayTwoSetupOutputText.value;
+    relays[1].dynamicController.text = manager!.relayTwoSetupDynamicText.value;
+
+    relays[2].enabled = manager!.isRelayThreeSetupEnabled.value ? 'Yes' : 'No';
+    relays[2].test = manager!.isRelayThreeSetupTest.value ? 'Yes' : 'No';
+    relays[2].group = groupOptions[manager!.relayThreeSetupGroup.value];
+    relays[2].function =
+        functionOptionsMap[relays[2].group]![manager!.relayThreeSetupFunction.value];
+    relays[2].outputTextController.text =
+        manager!.relayThreeSetupOutputText.value;
+    relays[2].dynamicController.text =
+        manager!.relayThreeSetupDynamicText.value;
 
     for (int i = 0; i < 3; i++) {
       if (relays[i].group == 'Ext. Out') {
         relays[i].dynamicController.text = '1';
       }
     }
+    if (mounted) setState(() {});
   }
 
   @override
@@ -193,7 +237,17 @@ class _RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
               ),
 
               const SizedBox(height: 12),
-              _primaryButton(isValid: isValid),
+              Row(
+                children: [
+                  Expanded(
+                    child: _downloadButton(),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _applyButton(isValid: isValid),
+                  ),
+                ],
+              ),
             ],
           ),
         ),
@@ -521,9 +575,31 @@ class _RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
     return list.indexOf(value);
   }
 
-  Widget _primaryButton({required bool isValid}) {
+  Widget _downloadButton() {
     return SizedBox(
-      width: double.infinity,
+      height: 48,
+      child: OutlinedButton(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: const Color(0xFFEC1D24),
+          side: const BorderSide(color: Color(0xFFEC1D24)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
+        ),
+        onPressed: widget.onDownload,
+        child: Text(
+          'Download',
+          style: GoogleFonts.inter(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _applyButton({required bool isValid}) {
+    return SizedBox(
       height: 48,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
@@ -534,7 +610,7 @@ class _RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
           ),
         ),
         onPressed:
-            isValid
+            isValid && manager != null
                 ? () {
                   for (int i = 0; i < 3; i++) {
                     final relay = relays[i];
@@ -557,10 +633,6 @@ class _RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
                       relay.function,
                       functionOptionsMap[relay.group]!,
                     );
-
-                    print("Relay ${i + 1} HEX → $hexValue");
-                    print("Group Index → $groupIndex");
-                    print("Function Index → $functionIndex");
 
                     switch (i) {
                       case 0:
@@ -600,13 +672,11 @@ class _RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
                         break;
                     }
                   }
-
-                  Navigator.pop(context);
-                  widget.onCall();
+                  widget.onApply();
                 }
                 : null,
         child: Text(
-          'Apply Configuration',
+          'Apply',
           style: GoogleFonts.inter(
             fontSize: 16,
             fontWeight: FontWeight.w600,

@@ -7,12 +7,22 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/utils/input_mode_util.dart';
+import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/widgets/dropdown.dart';
 
 class InputModeBottomSheet extends StatefulWidget {
-  final Function() onCall;
+  final String deviceId;
+  final VoidCallback onDownload;
+  final VoidCallback onApply;
+  final ValueNotifier<int> refreshTrigger;
 
-  const InputModeBottomSheet({super.key, required this.onCall});
+  const InputModeBottomSheet({
+    super.key,
+    required this.deviceId,
+    required this.onDownload,
+    required this.onApply,
+    required this.refreshTrigger,
+  });
 
   @override
   State<InputModeBottomSheet> createState() => _InputModeBottomSheetState();
@@ -75,40 +85,62 @@ class _InputModeBottomSheetState extends State<InputModeBottomSheet> {
   @override
   void initState() {
     super.initState();
-
     group = groupOptions[0];
     function = functionOptionsMap[group]!.first;
     enabled = yesNoOptions[0];
     test = yesNoOptions[0];
     inverted = yesNoOptions[0];
-
     inputTextCtrl = TextEditingController();
-
-    if (Get.isRegistered<BleLogController>()) {
-      manager = Get.find<BleLogController>().bleManager;
-
-      print("Input Setup Group: ${manager!.inputSetupGroup.value}");
-      group = groupOptions[manager!.inputSetupGroup.value];
-      function = functionOptionsMap[group]![manager!.inputSetupFunction.value];
-      enabled =
-          manager!.isInputSetupEnabled.value
-              ? yesNoOptions[1]
-              : yesNoOptions[0];
-      test =
-          manager!.isInputSetupTest.value ? yesNoOptions[1] : yesNoOptions[0];
-      inverted =
-          manager!.isInputSetupInverted.value
-              ? yesNoOptions[1]
-              : yesNoOptions[0];
-
-      inputTextCtrl.text = manager!.inputSetupText.value;
-    }
+    _loadData();
+    widget.refreshTrigger.addListener(_onRefreshTriggered);
   }
 
   @override
   void dispose() {
+    widget.refreshTrigger.removeListener(_onRefreshTriggered);
     inputTextCtrl.dispose();
     super.dispose();
+  }
+
+  void _onRefreshTriggered() {
+    _loadFromManager();
+  }
+
+  Future<void> _loadData() async {
+    if (Get.isRegistered<BleLogController>()) {
+      manager = Get.find<BleLogController>().bleManager;
+    }
+    final cached = await PeripheralSetupCache.loadInputSetup(widget.deviceId);
+    if (cached != null) {
+      _applyCachedData(cached);
+      if (mounted) setState(() {});
+      return;
+    }
+    _loadFromManager();
+  }
+
+  void _applyCachedData(Map<String, dynamic> data) {
+    final g = (data['group'] as int?) ?? 0;
+    group = groupOptions[g.clamp(0, groupOptions.length - 1)];
+    final f = (data['function'] as int?) ?? 0;
+    final opts = functionOptionsMap[group]!;
+    function = opts[f.clamp(0, opts.length - 1)];
+    enabled = (data['enabled'] as bool?) == true ? yesNoOptions[1] : yesNoOptions[0];
+    test = (data['test'] as bool?) == true ? yesNoOptions[1] : yesNoOptions[0];
+    inverted = (data['inverted'] as bool?) == true ? yesNoOptions[1] : yesNoOptions[0];
+    inputTextCtrl.text = (data['text'] as String?) ?? '';
+  }
+
+  void _loadFromManager() {
+    if (!Get.isRegistered<BleLogController>()) return;
+    manager = Get.find<BleLogController>().bleManager;
+    group = groupOptions[manager!.inputSetupGroup.value];
+    function = functionOptionsMap[group]![manager!.inputSetupFunction.value];
+    enabled = manager!.isInputSetupEnabled.value ? yesNoOptions[1] : yesNoOptions[0];
+    test = manager!.isInputSetupTest.value ? yesNoOptions[1] : yesNoOptions[0];
+    inverted = manager!.isInputSetupInverted.value ? yesNoOptions[1] : yesNoOptions[0];
+    inputTextCtrl.text = manager!.inputSetupText.value;
+    if (mounted) setState(() {});
   }
 
   int returnIndex(String value, List<String> list) {
@@ -223,7 +255,13 @@ class _InputModeBottomSheetState extends State<InputModeBottomSheet> {
               ),
 
               const SizedBox(height: 12),
-              _primaryButton(isValid: isValid),
+              Row(
+                children: [
+                  Expanded(child: _downloadButton()),
+                  const SizedBox(width: 12),
+                  Expanded(child: _applyButton(isValid: isValid)),
+                ],
+              ),
             ],
           ),
         ),
@@ -493,9 +531,31 @@ class _InputModeBottomSheetState extends State<InputModeBottomSheet> {
     );
   }
 
-  Widget _primaryButton({required bool isValid}) {
+  Widget _downloadButton() {
     return SizedBox(
-      width: double.infinity,
+      height: 48,
+      child: OutlinedButton(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: const Color(0xFFEC1D24),
+          side: const BorderSide(color: Color(0xFFEC1D24)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
+        ),
+        onPressed: widget.onDownload,
+        child: Text(
+          'Download',
+          style: GoogleFonts.inter(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _applyButton({required bool isValid}) {
+    return SizedBox(
       height: 48,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
@@ -506,9 +566,8 @@ class _InputModeBottomSheetState extends State<InputModeBottomSheet> {
           ),
         ),
         onPressed:
-            isValid
+            isValid && manager != null
                 ? () {
-                  // Example processing logic
                   int groupIndex = returnIndex(group, groupOptions);
                   int functionIndex = returnIndex(
                     function,
@@ -517,17 +576,6 @@ class _InputModeBottomSheetState extends State<InputModeBottomSheet> {
                   bool isEnabled = enabled == 'Yes';
                   bool isTest = test == 'Yes';
                   bool isInverted = inverted == 'Yes';
-
-                  print("Group Index: $groupIndex");
-                  print("Function Index: $functionIndex");
-                  print("Enabled: $isEnabled");
-                  print("Test: $isTest");
-                  print("Inverted: $isInverted");
-
-                  // required this.inputEnable,
-                  // required this.inputMode,
-                  // required this.latchMode,
-                  // required this.invertMode,
 
                   final config = InputModeConfig(
                     inputEnable: InputEnable.values[isEnabled ? 1 : 0],
@@ -539,7 +587,6 @@ class _InputModeBottomSheetState extends State<InputModeBottomSheet> {
                   final String hexValue = InputModeCodec.encodeHex(config);
 
                   manager!.inputMode.value = hexValue;
-
                   manager!.inputSetupGroup.value = groupIndex;
                   manager!.inputSetupFunction.value = functionIndex;
                   manager!.isInputSetupEnabled.value = isEnabled;
@@ -547,12 +594,11 @@ class _InputModeBottomSheetState extends State<InputModeBottomSheet> {
                   manager!.isInputSetupInverted.value = isInverted;
                   manager!.inputSetupText.value = inputTextCtrl.text;
 
-                  Navigator.pop(context);
-                  widget.onCall();
+                  widget.onApply();
                 }
                 : null,
         child: Text(
-          'Apply Configuration',
+          'Apply',
           style: GoogleFonts.inter(
             fontSize: 16,
             fontWeight: FontWeight.w600,

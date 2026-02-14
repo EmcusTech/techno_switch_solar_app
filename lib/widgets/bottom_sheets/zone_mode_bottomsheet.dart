@@ -5,13 +5,23 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
+import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
 import 'package:techno_switch_solar_app/utils/zone_mode_util.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/widgets/dropdown.dart';
 
 class ZoneBottomSheet extends StatefulWidget {
-  final Function() onCall;
+  final String deviceId;
+  final VoidCallback onDownload;
+  final VoidCallback onApply;
+  final ValueNotifier<int> refreshTrigger;
 
-  const ZoneBottomSheet({super.key, required this.onCall});
+  const ZoneBottomSheet({
+    super.key,
+    required this.deviceId,
+    required this.onDownload,
+    required this.onApply,
+    required this.refreshTrigger,
+  });
 
   @override
   State<ZoneBottomSheet> createState() => _ZoneBottomSheetState();
@@ -82,89 +92,52 @@ class _ZoneBottomSheetState extends State<ZoneBottomSheet> {
   @override
   void initState() {
     super.initState();
-
     zones = List.generate(3, (i) => ZoneConfig(zoneNumber: i + 1));
+    _loadData();
+    widget.refreshTrigger.addListener(_onRefreshTriggered);
+  }
 
+  @override
+  void dispose() {
+    widget.refreshTrigger.removeListener(_onRefreshTriggered);
+    super.dispose();
+  }
+
+  void _onRefreshTriggered() {
+    _loadFromManager();
+  }
+
+  Future<void> _loadData() async {
     if (Get.isRegistered<BleLogController>()) {
       manager = Get.find<BleLogController>().bleManager;
-
-      print("Zone 1 Type: ${manager!.zoneOneSetupType.value}");
-      print("Zone 1 Enabled: ${manager!.isZoneOneSetupEnabled.value}");
-      print("Zone 1 Test: ${manager!.isZoneOneSetupTest.value}");
-      print(
-        "Zone 1 Detection Mode: ${manager!.zoneOneSetupDetectionMode.value}",
-      );
-      print("Zone 1 Mode: ${manager!.zoneOneSetupMode.value}");
-      print(
-        "Zone 1 Verification Time: ${manager!.zoneOneSetupVerificationTime.value}",
-      );
-      print("Zone 1 Text: ${manager!.zoneOneSetupText.value}");
-      print("Zone 2 Type: ${manager!.zoneTwoSetupType.value}");
-      print("Zone 2 Enabled: ${manager!.isZoneTwoSetupEnabled.value}");
-      print("Zone 2 Test: ${manager!.isZoneTwoSetupTest.value}");
-      print(
-        "Zone 2 Detection Mode: ${manager!.zoneTwoSetupDetectionMode.value}",
-      );
-      print("Zone 2 Mode: ${manager!.zoneTwoSetupMode.value}");
-      print(
-        "Zone 2 Verification Time: ${manager!.zoneTwoSetupVerificationTime.value}",
-      );
-      print("Zone 2 Text: ${manager!.zoneTwoSetupText.value}");
-      print("Zone 3 Type: ${manager!.zoneThreeSetupType.value}");
-      print("Zone 3 Enabled: ${manager!.isZoneThreeSetupEnabled.value}");
-      print("Zone 3 Test: ${manager!.isZoneThreeSetupTest.value}");
-      print(
-        "Zone 3 Detection Mode: ${manager!.zoneThreeSetupDetectionMode.value}",
-      );
-      print("Zone 3 Mode: ${manager!.zoneThreeSetupMode.value}");
-      print(
-        "Zone 3 Verification Time: ${manager!.zoneThreeSetupVerificationTime.value}",
-      );
-      print("Zone 3 Text: ${manager!.zoneThreeSetupText.value}");
-
-      // Zone 1
-      zones[0].type =
-          manager!.zoneOneSetupType.value == 0 ? 'Normal' : 'IS (MTL 5561)';
-      zones[0].enabled = manager!.isZoneOneSetupEnabled.value ? 'Yes' : 'No';
-      zones[0].test = manager!.isZoneOneSetupTest.value ? 'Yes' : 'No';
-      final int dm1 = manager!.zoneOneSetupDetectionMode.value;
-      zones[0].mode =
-          (dm1 >= 0 && dm1 < modeOptions.length)
-              ? modeOptions[dm1]
-              : modeOptions.first;
-      zones[0].verificationTimeController.text =
-          manager!.zoneOneSetupVerificationTime.value;
-      zones[0].zoneTextController.text = manager!.zoneOneSetupText.value;
-
-      // Zone 2
-      zones[1].type =
-          manager!.zoneTwoSetupType.value == 0 ? 'Normal' : 'IS (MTL 5561)';
-      zones[1].enabled = manager!.isZoneTwoSetupEnabled.value ? 'Yes' : 'No';
-      zones[1].test = manager!.isZoneTwoSetupTest.value ? 'Yes' : 'No';
-      final int dm2 = manager!.zoneTwoSetupDetectionMode.value;
-      zones[1].mode =
-          (dm2 >= 0 && dm2 < modeOptions.length)
-              ? modeOptions[dm2]
-              : modeOptions.first;
-      zones[1].verificationTimeController.text =
-          manager!.zoneTwoSetupVerificationTime.value;
-      zones[1].zoneTextController.text = manager!.zoneTwoSetupText.value;
-
-      // Zone 3
-      zones[2].type =
-          manager!.zoneThreeSetupType.value == 0 ? 'Normal' : 'IS (MTL 5561)';
-      zones[2].enabled = manager!.isZoneThreeSetupEnabled.value ? 'Yes' : 'No';
-      zones[2].test = manager!.isZoneThreeSetupTest.value ? 'Yes' : 'No';
-      final int dm3 = manager!.zoneThreeSetupDetectionMode.value;
-      zones[2].mode =
-          (dm3 >= 0 && dm3 < modeOptions.length)
-              ? modeOptions[dm3]
-              : modeOptions.first;
-      zones[2].verificationTimeController.text =
-          manager!.zoneThreeSetupVerificationTime.value;
-      zones[2].zoneTextController.text = manager!.zoneThreeSetupText.value;
     }
+    final cached = await PeripheralSetupCache.loadZoneSetup(widget.deviceId);
+    if (cached != null) {
+      _applyCachedData(cached);
+      _normalizeVerificationTimes();
+      if (mounted) setState(() {});
+      return;
+    }
+    _loadFromManager();
+  }
 
+  void _applyCachedData(Map<String, dynamic> data) {
+    for (int i = 0; i < 3; i++) {
+      final key = 'z${i + 1}';
+      final z = data[key] as Map<String, dynamic>?;
+      if (z == null) continue;
+      zones[i].type = (z['type'] as int?) == 1 ? 'IS (MTL 5561)' : 'Normal';
+      zones[i].enabled = (z['enabled'] as bool?) == true ? 'Yes' : 'No';
+      zones[i].test = (z['test'] as bool?) == true ? 'Yes' : 'No';
+      final dm = (z['detectionMode'] as int?) ?? 0;
+      zones[i].mode = modeOptions[dm.clamp(0, modeOptions.length - 1)];
+      zones[i].verificationTimeController.text =
+          (z['verificationTime'] as String?) ?? '0';
+      zones[i].zoneTextController.text = (z['text'] as String?) ?? '';
+    }
+  }
+
+  void _normalizeVerificationTimes() {
     for (int i = 0; i < 3; i++) {
       final z = zones[i];
       if (z.mode == 'Immediate' || z.mode == 'Normal') {
@@ -173,6 +146,47 @@ class _ZoneBottomSheetState extends State<ZoneBottomSheet> {
         z.verificationTimeController.text = '30';
       }
     }
+  }
+
+  void _loadFromManager() {
+    if (!Get.isRegistered<BleLogController>()) return;
+    manager = Get.find<BleLogController>().bleManager;
+
+    zones[0].type =
+        manager!.zoneOneSetupType.value == 0 ? 'Normal' : 'IS (MTL 5561)';
+    zones[0].enabled = manager!.isZoneOneSetupEnabled.value ? 'Yes' : 'No';
+    zones[0].test = manager!.isZoneOneSetupTest.value ? 'Yes' : 'No';
+    final int dm1 = manager!.zoneOneSetupDetectionMode.value;
+    zones[0].mode =
+        (dm1 >= 0 && dm1 < modeOptions.length) ? modeOptions[dm1] : modeOptions.first;
+    zones[0].verificationTimeController.text =
+        manager!.zoneOneSetupVerificationTime.value;
+    zones[0].zoneTextController.text = manager!.zoneOneSetupText.value;
+
+    zones[1].type =
+        manager!.zoneTwoSetupType.value == 0 ? 'Normal' : 'IS (MTL 5561)';
+    zones[1].enabled = manager!.isZoneTwoSetupEnabled.value ? 'Yes' : 'No';
+    zones[1].test = manager!.isZoneTwoSetupTest.value ? 'Yes' : 'No';
+    final int dm2 = manager!.zoneTwoSetupDetectionMode.value;
+    zones[1].mode =
+        (dm2 >= 0 && dm2 < modeOptions.length) ? modeOptions[dm2] : modeOptions.first;
+    zones[1].verificationTimeController.text =
+        manager!.zoneTwoSetupVerificationTime.value;
+    zones[1].zoneTextController.text = manager!.zoneTwoSetupText.value;
+
+    zones[2].type =
+        manager!.zoneThreeSetupType.value == 0 ? 'Normal' : 'IS (MTL 5561)';
+    zones[2].enabled = manager!.isZoneThreeSetupEnabled.value ? 'Yes' : 'No';
+    zones[2].test = manager!.isZoneThreeSetupTest.value ? 'Yes' : 'No';
+    final int dm3 = manager!.zoneThreeSetupDetectionMode.value;
+    zones[2].mode =
+        (dm3 >= 0 && dm3 < modeOptions.length) ? modeOptions[dm3] : modeOptions.first;
+    zones[2].verificationTimeController.text =
+        manager!.zoneThreeSetupVerificationTime.value;
+    zones[2].zoneTextController.text = manager!.zoneThreeSetupText.value;
+
+    _normalizeVerificationTimes();
+    if (mounted) setState(() {});
   }
 
   @override
@@ -219,7 +233,13 @@ class _ZoneBottomSheetState extends State<ZoneBottomSheet> {
               ),
 
               const SizedBox(height: 12),
-              _primaryButton(isValid: isValid),
+              Row(
+                children: [
+                  Expanded(child: _downloadButton()),
+                  const SizedBox(width: 12),
+                  Expanded(child: _applyButton(isValid: isValid)),
+                ],
+              ),
             ],
           ),
         ),
@@ -432,11 +452,31 @@ class _ZoneBottomSheetState extends State<ZoneBottomSheet> {
     );
   }
 
-  // ───────────────── PRIMARY BUTTON ─────────────────
-
-  Widget _primaryButton({required bool isValid}) {
+  Widget _downloadButton() {
     return SizedBox(
-      width: double.infinity,
+      height: 48,
+      child: OutlinedButton(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: const Color(0xFFEC1D24),
+          side: const BorderSide(color: Color(0xFFEC1D24)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
+        ),
+        onPressed: widget.onDownload,
+        child: Text(
+          'Download',
+          style: GoogleFonts.inter(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _applyButton({required bool isValid}) {
+    return SizedBox(
       height: 48,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
@@ -447,7 +487,7 @@ class _ZoneBottomSheetState extends State<ZoneBottomSheet> {
           ),
         ),
         onPressed:
-            isValid
+            isValid && manager != null
                 ? () {
                   for (int i = 0; i < 3; i++) {
                     final zone = zones[i];
@@ -473,41 +513,38 @@ class _ZoneBottomSheetState extends State<ZoneBottomSheet> {
                       case 0:
                         manager!.zoneOneSetupText.value =
                             zone.zoneTextController.text;
-                        manager!.zoneOneSetupType.value = typeOptions.indexOf(
-                          zone.type,
-                        );
+                        manager!.zoneOneSetupType.value =
+                            typeOptions.indexOf(zone.type);
                         manager!.isZoneOneSetupEnabled.value =
                             zone.enabled == 'Yes';
                         manager!.isZoneOneSetupTest.value = zone.test == 'Yes';
                         manager!.zoneOneSetupMode.value = hexValue;
                         manager!.zoneOneSetupVerificationTime.value =
                             zone.verificationTimeController.text;
-                        manager!.zoneOneSetupDetectionMode.value = modeOptions
-                            .indexOf(zone.mode);
+                        manager!.zoneOneSetupDetectionMode.value =
+                            modeOptions.indexOf(zone.mode);
                         break;
 
                       case 1:
                         manager!.zoneTwoSetupText.value =
                             zone.zoneTextController.text;
-                        manager!.zoneTwoSetupType.value = typeOptions.indexOf(
-                          zone.type,
-                        );
+                        manager!.zoneTwoSetupType.value =
+                            typeOptions.indexOf(zone.type);
                         manager!.isZoneTwoSetupEnabled.value =
                             zone.enabled == 'Yes';
                         manager!.isZoneTwoSetupTest.value = zone.test == 'Yes';
                         manager!.zoneTwoSetupMode.value = hexValue;
                         manager!.zoneTwoSetupVerificationTime.value =
                             zone.verificationTimeController.text;
-                        manager!.zoneTwoSetupDetectionMode.value = modeOptions
-                            .indexOf(zone.mode);
+                        manager!.zoneTwoSetupDetectionMode.value =
+                            modeOptions.indexOf(zone.mode);
                         break;
 
                       case 2:
                         manager!.zoneThreeSetupText.value =
                             zone.zoneTextController.text;
-                        manager!.zoneThreeSetupType.value = typeOptions.indexOf(
-                          zone.type,
-                        );
+                        manager!.zoneThreeSetupType.value =
+                            typeOptions.indexOf(zone.type);
                         manager!.isZoneThreeSetupEnabled.value =
                             zone.enabled == 'Yes';
                         manager!.isZoneThreeSetupTest.value =
@@ -515,18 +552,16 @@ class _ZoneBottomSheetState extends State<ZoneBottomSheet> {
                         manager!.zoneThreeSetupMode.value = hexValue;
                         manager!.zoneThreeSetupVerificationTime.value =
                             zone.verificationTimeController.text;
-                        manager!.zoneThreeSetupDetectionMode.value = modeOptions
-                            .indexOf(zone.mode);
+                        manager!.zoneThreeSetupDetectionMode.value =
+                            modeOptions.indexOf(zone.mode);
                         break;
                     }
                   }
-
-                  Navigator.pop(context);
-                  widget.onCall();
+                  widget.onApply();
                 }
                 : null,
         child: Text(
-          'Apply Configuration',
+          'Apply',
           style: GoogleFonts.inter(
             fontSize: 16,
             fontWeight: FontWeight.w600,

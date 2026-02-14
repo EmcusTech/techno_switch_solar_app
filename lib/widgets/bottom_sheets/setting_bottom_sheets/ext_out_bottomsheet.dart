@@ -7,11 +7,22 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/utils/ext_zone_mode_util.dart';
+import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/widgets/dropdown.dart';
 
 class ExtOutBottomSheet extends StatefulWidget {
-  final Function() onCall;
-  const ExtOutBottomSheet({super.key, required this.onCall});
+  final String deviceId;
+  final VoidCallback onDownload;
+  final VoidCallback onApply;
+  final ValueNotifier<int> refreshTrigger;
+
+  const ExtOutBottomSheet({
+    super.key,
+    required this.deviceId,
+    required this.onDownload,
+    required this.onApply,
+    required this.refreshTrigger,
+  });
 
   @override
   State<ExtOutBottomSheet> createState() => ExtOutBottomSheetState();
@@ -118,6 +129,7 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
 
   @override
   void dispose() {
+    widget.refreshTrigger.removeListener(_onRefreshTriggered);
     autoCtrl.dispose();
     manCtrl.dispose();
     releaseCtrl.dispose();
@@ -127,6 +139,7 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
 
   @override
   void initState() {
+    super.initState();
     autoCtrl = TextEditingController(text: "10");
     manCtrl = TextEditingController(text: "15");
     releaseCtrl = TextEditingController(text: "10");
@@ -137,20 +150,63 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
     resetInCount = resetInCountOptions[0];
     holdCount = holdCountOptions[0];
     action = actionOptions[0];
+    _loadData();
+    widget.refreshTrigger.addListener(_onRefreshTriggered);
+  }
+
+  void _onRefreshTriggered() {
+    _loadFromManager();
+  }
+
+  Future<void> _loadData() async {
     if (Get.isRegistered<BleLogController>()) {
       manager = Get.find<BleLogController>().bleManager;
-      autoCtrl.text = manager!.extZoneCountdownAuto.value.toString();
-      manCtrl.text = manager!.extZoneCountdownMan.value.toString();
-      releaseCtrl.text = manager!.extZoneReleaseTime.value.toString();
-      resetDelayCtrl.text = manager!.extZoneResetDelay.value.toString();
-      enabled = enabledOptions[manager!.isExtZoneEnabled.value];
-      actuatorType = actuatorTypeOptions[manager!.extZoneActuatorType.value];
-      function = functionOptions[manager!.extZoneFunction.value];
-      resetInCount = resetInCountOptions[manager!.isResetAllowed.value];
-      holdCount = holdCountOptions[manager!.extZoneHoldMode.value];
-      action = actionOptions[manager!.extZoneAction.value];
     }
-    super.initState();
+    final cached = await PeripheralSetupCache.loadExtOutSetup(widget.deviceId);
+    if (cached != null) {
+      _applyCachedData(cached);
+      if (mounted) setState(() {});
+      return;
+    }
+    _loadFromManager();
+  }
+
+  void _applyCachedData(Map<String, dynamic> data) {
+    final en = (data['enabled'] as int?) ?? 0;
+    enabled = enabledOptions[en.clamp(0, enabledOptions.length - 1)];
+    final at = (data['actuatorType'] as int?) ?? 0;
+    actuatorType =
+        actuatorTypeOptions[at.clamp(0, actuatorTypeOptions.length - 1)];
+    final fn = (data['function'] as int?) ?? 0;
+    function = functionOptions[fn.clamp(0, functionOptions.length - 1)];
+    final ra = (data['resetAllowed'] as int?) ?? 0;
+    resetInCount =
+        resetInCountOptions[ra.clamp(0, resetInCountOptions.length - 1)];
+    final hc = (data['holdMode'] as int?) ?? 0;
+    holdCount = holdCountOptions[hc.clamp(0, holdCountOptions.length - 1)];
+    final ac = (data['action'] as int?) ?? 0;
+    action = actionOptions[ac.clamp(0, actionOptions.length - 1)];
+    autoCtrl.text = (data['countdownAuto'] as int?)?.toString() ?? '10';
+    manCtrl.text = (data['countdownMan'] as int?)?.toString() ?? '15';
+    releaseCtrl.text = (data['releaseTime'] as int?)?.toString() ?? '10';
+    resetDelayCtrl.text = (data['resetDelay'] as int?)?.toString() ?? '5';
+    // extZoneText if needed - check cache save
+  }
+
+  void _loadFromManager() {
+    if (!Get.isRegistered<BleLogController>()) return;
+    manager = Get.find<BleLogController>().bleManager;
+    autoCtrl.text = manager!.extZoneCountdownAuto.value.toString();
+    manCtrl.text = manager!.extZoneCountdownMan.value.toString();
+    releaseCtrl.text = manager!.extZoneReleaseTime.value.toString();
+    resetDelayCtrl.text = manager!.extZoneResetDelay.value.toString();
+    enabled = enabledOptions[manager!.isExtZoneEnabled.value];
+    actuatorType = actuatorTypeOptions[manager!.extZoneActuatorType.value];
+    function = functionOptions[manager!.extZoneFunction.value];
+    resetInCount = resetInCountOptions[manager!.isResetAllowed.value];
+    holdCount = holdCountOptions[manager!.extZoneHoldMode.value];
+    action = actionOptions[manager!.extZoneAction.value];
+    if (mounted) setState(() {});
   }
 
   int returnIndex(String value, List<String> list) {
@@ -164,6 +220,7 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
   }
 
   Widget _modeBadge() {
+    if (manager == null) return const SizedBox.shrink();
     final isSolar = manager!.bleProcess.isExtOutApplyButtonActive.value;
 
     final bgColor = isSolar ? const Color(0xFFE8F5E9) : const Color(0xFFFFEBEE);
@@ -327,7 +384,13 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
 
               // ───────────── Fixed Footer ─────────────
               const SizedBox(height: 12),
-              _primaryButton(context, formValid: formValid),
+              Row(
+                children: [
+                  Expanded(child: _downloadButton()),
+                  const SizedBox(width: 12),
+                  Expanded(child: _applyButton(formValid: formValid)),
+                ],
+              ),
             ],
           ),
         ),
@@ -741,11 +804,34 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
     );
   }
 
-  Widget _primaryButton(BuildContext context, {required bool formValid}) {
-    final canApply = manager!.bleProcess.isExtOutApplyButtonActive.value;
+  Widget _downloadButton() {
+    return SizedBox(
+      height: 48,
+      child: OutlinedButton(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: const Color(0xFFEC1D24),
+          side: const BorderSide(color: Color(0xFFEC1D24)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
+        ),
+        onPressed: widget.onDownload,
+        child: Text(
+          'Download',
+          style: GoogleFonts.inter(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _applyButton({required bool formValid}) {
+    final canApply = manager != null &&
+        manager!.bleProcess.isExtOutApplyButtonActive.value;
 
     return SizedBox(
-      width: double.infinity,
       height: 48,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
@@ -756,7 +842,7 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
           ),
         ),
         onPressed:
-            (canApply && formValid)
+            (canApply && formValid && manager != null)
                 ? () {
                   int zoneEnable = returnIndex(enabled, enabledOptions);
                   int holdRestart = returnIndex(holdCount, holdCountOptions);
@@ -769,10 +855,7 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
                     actuatorType,
                     actuatorTypeOptions,
                   );
-                  bool resetAllowed = false;
-                  if (resetAllowedInt == 0) {
-                    resetAllowed = true;
-                  }
+                  bool resetAllowed = resetAllowedInt == 0;
 
                   final config = ExtZoneModeConfig(
                     extZoneEnable: ExtZoneEnable.values[zoneEnable],
@@ -785,37 +868,24 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
                   final String hexValue = ExtZoneModeCodec.encodeHex(config);
 
                   manager!.extZoneMode.value = hexValue;
-
                   manager!.extZoneCountdownAuto.value = int.parse(
                     autoCtrl.text.isEmpty ? '0' : autoCtrl.text,
                   );
-
                   manager!.extZoneCountdownMan.value = int.parse(manCtrl.text);
-
-                  manager!.extZoneReleaseTime.value = int.parse(
-                    releaseCtrl.text,
-                  );
-
-                  manager!.extZoneResetDelay.value = int.parse(
-                    resetDelayCtrl.text,
-                  );
-
-                  manager!.extZoneAction.value = returnIndex(
-                    action,
-                    actionOptions,
-                  );
-
+                  manager!.extZoneReleaseTime.value =
+                      int.parse(releaseCtrl.text);
+                  manager!.extZoneResetDelay.value =
+                      int.parse(resetDelayCtrl.text);
+                  manager!.extZoneAction.value =
+                      returnIndex(action, actionOptions);
                   manager!.extZoneFunction.value = functionInt;
-
                   manager!.extZoneActuatorType.value = actuaturTypeInt;
-                  Navigator.pop(context);
 
-                  widget.onCall();
+                  widget.onApply();
                 }
                 : null,
-
         child: Text(
-          'Apply Configuration',
+          'Apply',
           style: GoogleFonts.inter(
             fontSize: 16,
             fontWeight: FontWeight.w600,

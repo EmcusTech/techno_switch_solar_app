@@ -21,6 +21,7 @@ import 'package:techno_switch_solar_app/utils/bluetooth_service.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/input_mode_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/relay_mode_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/setting_bottom_sheets/ext_out_bottomsheet.dart';
+import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/zone_mode_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/firmware_upgrade_bottom_sheet.dart';
 
@@ -225,6 +226,12 @@ class _ProjectDashboardContent extends StatefulWidget {
 class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
   // Prevent multiple navigations while dialog rebuilds
   bool _navigatingToDeviceConnecting = false;
+
+  // Refresh triggers for peripheral bottom sheets (increment when download completes)
+  final ValueNotifier<int> _relayRefreshTrigger = ValueNotifier(0);
+  final ValueNotifier<int> _inputRefreshTrigger = ValueNotifier(0);
+  final ValueNotifier<int> _zoneRefreshTrigger = ValueNotifier(0);
+  final ValueNotifier<int> _extOutRefreshTrigger = ValueNotifier(0);
 
   // Connection state
   bool _isConnecting = false;
@@ -1083,6 +1090,8 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     bool? isInputSetup = false,
     bool? isRelaySetup = false,
     bool? isZoneSetup = false,
+    String? mode,
+    VoidCallback? onDownloadComplete,
   }) {
     // Reset navigation guard each time the dialog opens
     _navigatingToDeviceConnecting = false;
@@ -1188,7 +1197,9 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                         await Future.delayed(const Duration(seconds: 1));
                         if (!mounted) return;
                         Navigator.of(dialogContext, rootNavigator: true).pop();
-                        if (ble.bleProcess.isExtOutApplyDone.value) {
+                        if (mode == 'bottomsheet_download') {
+                          onDownloadComplete?.call();
+                        } else if (ble.bleProcess.isExtOutApplyDone.value) {
                           showApplySuccessDialog(
                             context,
                             'Extinguishing Output',
@@ -1201,64 +1212,6 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                         } else if (ble.bleProcess.isZoneSetupApplyDone.value &&
                             mounted) {
                           showApplySuccessDialog(context, 'Zones');
-                        } else if (isInputSetup == true) {
-                          showInputSetupBottomSheet(
-                            context: context,
-                            onCall: () {
-                              showPasswordPopup(
-                                onCall: () {
-                                  ble.bleProcess.isInputSetupApplyActive.value =
-                                      true;
-                                  bleController.startInputSetupApply();
-                                },
-                              );
-                            },
-                          );
-                        } else if (isExtOut == true) {
-                          showExtOutBottomSheet(
-                            context: context,
-                            onCall: () {
-                              showPasswordPopup(
-                                onCall: () {
-                                  ble
-                                      .bleProcess
-                                      .isExtOutCommandApplyActive
-                                      .value = true;
-                                  bleController.startExtOutApply();
-                                },
-                              );
-                            },
-                          );
-                        } else if (isRelaySetup == true) {
-                          showRelaySetupBottomSheet(
-                            context: context,
-                            onCall: () {
-                              showPasswordPopup(
-                                onCall: () {
-                                  ble
-                                      .bleProcess
-                                      .isRelaySetupCommandApplyActive
-                                      .value = true;
-                                  bleController.startRelaySetupApply();
-                                },
-                              );
-                            },
-                          );
-                        } else if (isZoneSetup == true) {
-                          showZoneSetupBottomSheet(
-                            context: context,
-                            onCall: () {
-                              showPasswordPopup(
-                                onCall: () {
-                                  ble
-                                      .bleProcess
-                                      .isZoneSetupCommandApplyActive
-                                      .value = true;
-                                  bleController.startZoneSetupApply();
-                                },
-                              );
-                            },
-                          );
                         } else {
                           Navigator.of(dialogContext).push(
                             MaterialPageRoute(
@@ -1672,17 +1625,38 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 peripheralName: 'Relays',
                 iconPath: 'assets/svgs/peripheral_relay_icon.svg',
                 onTap: () {
-                  if (_selectedDevice.manufacturerData.isNotEmpty && _selectedDevice.manufacturerData.last == 1) {
+                  if (_selectedDevice.manufacturerData.isNotEmpty &&
+                      _selectedDevice.manufacturerData.last == 1) {
                     showBootloaderModeDialog(context: context);
                     return;
                   }
-                  showPasswordPopup(
-                    onCall: () {
-                      ble.bleProcess.isRelaySetupFetchCommandActive.value =
-                          true;
-                      bleController.startRelaySetupFetch();
+                  showRelaySetupBottomSheet(
+                    context: context,
+                    deviceId: _selectedDevice.id,
+                    onDownload: () {
+                      showPasswordPopup(
+                        onCall: () {
+                          ble.bleProcess.isRelaySetupFetchCommandActive.value =
+                              true;
+                          bleController.startRelaySetupFetch();
+                        },
+                        isRelaySetup: true,
+                        mode: 'bottomsheet_download',
+                        onDownloadComplete: _saveRelayCacheAndNotifyRefresh,
+                      );
                     },
-                    isRelaySetup: true,
+                    onApply: () {
+                      showPasswordPopup(
+                        onCall: () {
+                          ble.bleProcess.isRelaySetupCommandApplyActive.value =
+                              true;
+                          bleController.startRelaySetupApply();
+                        },
+                        isRelaySetup: true,
+                        mode: 'bottomsheet_apply',
+                      );
+                    },
+                    refreshTrigger: _relayRefreshTrigger,
                   );
                 },
               ),
@@ -1690,17 +1664,37 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 peripheralName: 'Inputs',
                 iconPath: 'assets/svgs/peripheral_input_icon.svg',
                 onTap: () {
-                  if (_selectedDevice.manufacturerData.isNotEmpty && _selectedDevice.manufacturerData.last == 1) {
+                  if (_selectedDevice.manufacturerData.isNotEmpty &&
+                      _selectedDevice.manufacturerData.last == 1) {
                     showBootloaderModeDialog(context: context);
                     return;
                   }
-                  showPasswordPopup(
-                    onCall: () {
-                      ble.bleProcess.isInputSetupFetchCommandActive.value =
-                          true;
-                      bleController.startInputSetupFetch();
+                  showInputSetupBottomSheet(
+                    context: context,
+                    deviceId: _selectedDevice.id,
+                    onDownload: () {
+                      showPasswordPopup(
+                        onCall: () {
+                          ble.bleProcess.isInputSetupFetchCommandActive.value =
+                              true;
+                          bleController.startInputSetupFetch();
+                        },
+                        isInputSetup: true,
+                        mode: 'bottomsheet_download',
+                        onDownloadComplete: _saveInputCacheAndNotifyRefresh,
+                      );
                     },
-                    isInputSetup: true,
+                    onApply: () {
+                      showPasswordPopup(
+                        onCall: () {
+                          ble.bleProcess.isInputSetupApplyActive.value = true;
+                          bleController.startInputSetupApply();
+                        },
+                        isInputSetup: true,
+                        mode: 'bottomsheet_apply',
+                      );
+                    },
+                    refreshTrigger: _inputRefreshTrigger,
                   );
                 },
               ),
@@ -1708,16 +1702,38 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 peripheralName: 'Zones',
                 iconPath: 'assets/svgs/peripheral_zones_icon.svg',
                 onTap: () {
-                  if (_selectedDevice.manufacturerData.isNotEmpty && _selectedDevice.manufacturerData.last == 1) {
+                  if (_selectedDevice.manufacturerData.isNotEmpty &&
+                      _selectedDevice.manufacturerData.last == 1) {
                     showBootloaderModeDialog(context: context);
                     return;
                   }
-                  showPasswordPopup(
-                    onCall: () {
-                      ble.bleProcess.isZoneSetupFetchCommandActive.value = true;
-                      bleController.startZoneSetupFetch();
+                  showZoneSetupBottomSheet(
+                    context: context,
+                    deviceId: _selectedDevice.id,
+                    onDownload: () {
+                      showPasswordPopup(
+                        onCall: () {
+                          ble.bleProcess.isZoneSetupFetchCommandActive.value =
+                              true;
+                          bleController.startZoneSetupFetch();
+                        },
+                        isZoneSetup: true,
+                        mode: 'bottomsheet_download',
+                        onDownloadComplete: _saveZoneCacheAndNotifyRefresh,
+                      );
                     },
-                    isZoneSetup: true,
+                    onApply: () {
+                      showPasswordPopup(
+                        onCall: () {
+                          ble.bleProcess.isZoneSetupCommandApplyActive.value =
+                              true;
+                          bleController.startZoneSetupApply();
+                        },
+                        isZoneSetup: true,
+                        mode: 'bottomsheet_apply',
+                      );
+                    },
+                    refreshTrigger: _zoneRefreshTrigger,
                   );
                 },
               ),
@@ -1745,27 +1761,38 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 peripheralName: 'Ext Out',
                 iconPath: 'assets/svgs/peripheral_ext_out_icon.svg',
                 onTap: () {
-                  if (_selectedDevice.manufacturerData.isNotEmpty && _selectedDevice.manufacturerData.last == 1) {
+                  if (_selectedDevice.manufacturerData.isNotEmpty &&
+                      _selectedDevice.manufacturerData.last == 1) {
                     showBootloaderModeDialog(context: context);
                     return;
                   }
-                  showPasswordPopup(
-                    onCall: () {
-                      ble.bleProcess.isExtOutCommandFetchActive.value = true;
-                      bleController.startExtOutFetch();
+                  showExtOutBottomSheet(
+                    context: context,
+                    deviceId: _selectedDevice.id,
+                    onDownload: () {
+                      showPasswordPopup(
+                        onCall: () {
+                          ble.bleProcess.isExtOutCommandFetchActive.value =
+                              true;
+                          bleController.startExtOutFetch();
+                        },
+                        isExtOut: true,
+                        mode: 'bottomsheet_download',
+                        onDownloadComplete: _saveExtOutCacheAndNotifyRefresh,
+                      );
                     },
-                    isExtOut: true,
+                    onApply: () {
+                      showPasswordPopup(
+                        onCall: () {
+                          ble.bleProcess.isExtOutCommandApplyActive.value = true;
+                          bleController.startExtOutApply();
+                        },
+                        isExtOut: true,
+                        mode: 'bottomsheet_apply',
+                      );
+                    },
+                    refreshTrigger: _extOutRefreshTrigger,
                   );
-                  // showExtOutBottomSheet(
-                  //   context: context,
-                  //   onCall: () {
-                  //     showPasswordPopup(
-                  //       onCall: () {
-                  //         bleController.startLogRetrieval();
-                  //       },
-                  //     );
-                  //   },
-                  // );
                 },
               ),
             ],
@@ -1777,54 +1804,179 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
 
   void showExtOutBottomSheet({
     required BuildContext context,
-    required Function() onCall,
+    required String deviceId,
+    required VoidCallback onDownload,
+    required VoidCallback onApply,
+    required ValueNotifier<int> refreshTrigger,
   }) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       barrierColor: Colors.black.withOpacity(0.4),
-      builder: (_) => ExtOutBottomSheet(onCall: onCall),
+      builder: (_) => ExtOutBottomSheet(
+        deviceId: deviceId,
+        onDownload: onDownload,
+        onApply: onApply,
+        refreshTrigger: refreshTrigger,
+      ),
     );
   }
 
   void showInputSetupBottomSheet({
     required BuildContext context,
-    required Function() onCall,
+    required String deviceId,
+    required VoidCallback onDownload,
+    required VoidCallback onApply,
+    required ValueNotifier<int> refreshTrigger,
   }) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       barrierColor: Colors.black.withOpacity(0.4),
-      builder: (_) => InputModeBottomSheet(onCall: onCall),
+      builder: (_) => InputModeBottomSheet(
+        deviceId: deviceId,
+        onDownload: onDownload,
+        onApply: onApply,
+        refreshTrigger: refreshTrigger,
+      ),
     );
   }
 
   void showRelaySetupBottomSheet({
     required BuildContext context,
-    required Function() onCall,
+    required String deviceId,
+    required VoidCallback onDownload,
+    required VoidCallback onApply,
+    required ValueNotifier<int> refreshTrigger,
   }) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       barrierColor: Colors.black.withOpacity(0.4),
-      builder: (_) => RelayModeBottomSheet(onCall: onCall),
+      builder: (_) => RelayModeBottomSheet(
+        deviceId: deviceId,
+        onDownload: onDownload,
+        onApply: onApply,
+        refreshTrigger: refreshTrigger,
+      ),
     );
   }
 
   void showZoneSetupBottomSheet({
     required BuildContext context,
-    required Function() onCall,
+    required String deviceId,
+    required VoidCallback onDownload,
+    required VoidCallback onApply,
+    required ValueNotifier<int> refreshTrigger,
   }) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       barrierColor: Colors.black.withOpacity(0.4),
-      builder: (_) => ZoneBottomSheet(onCall: onCall),
+      builder: (_) => ZoneBottomSheet(
+        deviceId: deviceId,
+        onDownload: onDownload,
+        onApply: onApply,
+        refreshTrigger: refreshTrigger,
+      ),
     );
+  }
+
+  Future<void> _saveRelayCacheAndNotifyRefresh() async {
+    final m = _bleManager;
+    await PeripheralSetupCache.saveRelaySetup(_selectedDevice.id, {
+      'r1': {
+        'enabled': m.isRelayOneSetupEnabled.value,
+        'test': m.isRelayOneSetupTest.value,
+        'group': m.relayOneSetupGroup.value,
+        'function': m.relayOneSetupFunction.value,
+        'outputText': m.relayOneSetupOutputText.value,
+        'dynamicText': m.relayOneSetupDynamicText.value,
+      },
+      'r2': {
+        'enabled': m.isRelayTwoSetupEnabled.value,
+        'test': m.isRelayTwoSetupTest.value,
+        'group': m.relayTwoSetupGroup.value,
+        'function': m.relayTwoSetupFunction.value,
+        'outputText': m.relayTwoSetupOutputText.value,
+        'dynamicText': m.relayTwoSetupDynamicText.value,
+      },
+      'r3': {
+        'enabled': m.isRelayThreeSetupEnabled.value,
+        'test': m.isRelayThreeSetupTest.value,
+        'group': m.relayThreeSetupGroup.value,
+        'function': m.relayThreeSetupFunction.value,
+        'outputText': m.relayThreeSetupOutputText.value,
+        'dynamicText': m.relayThreeSetupDynamicText.value,
+      },
+    });
+    _relayRefreshTrigger.value++;
+  }
+
+  Future<void> _saveInputCacheAndNotifyRefresh() async {
+    final m = _bleManager;
+    await PeripheralSetupCache.saveInputSetup(_selectedDevice.id, {
+      'group': m.inputSetupGroup.value,
+      'function': m.inputSetupFunction.value,
+      'enabled': m.isInputSetupEnabled.value,
+      'test': m.isInputSetupTest.value,
+      'inverted': m.isInputSetupInverted.value,
+      'text': m.inputSetupText.value,
+    });
+    _inputRefreshTrigger.value++;
+  }
+
+  Future<void> _saveZoneCacheAndNotifyRefresh() async {
+    final m = _bleManager;
+    await PeripheralSetupCache.saveZoneSetup(_selectedDevice.id, {
+      'z1': {
+        'enabled': m.isZoneOneSetupEnabled.value,
+        'test': m.isZoneOneSetupTest.value,
+        'type': m.zoneOneSetupType.value,
+        'detectionMode': m.zoneOneSetupDetectionMode.value,
+        'verificationTime': m.zoneOneSetupVerificationTime.value,
+        'text': m.zoneOneSetupText.value,
+      },
+      'z2': {
+        'enabled': m.isZoneTwoSetupEnabled.value,
+        'test': m.isZoneTwoSetupTest.value,
+        'type': m.zoneTwoSetupType.value,
+        'detectionMode': m.zoneTwoSetupDetectionMode.value,
+        'verificationTime': m.zoneTwoSetupVerificationTime.value,
+        'text': m.zoneTwoSetupText.value,
+      },
+      'z3': {
+        'enabled': m.isZoneThreeSetupEnabled.value,
+        'test': m.isZoneThreeSetupTest.value,
+        'type': m.zoneThreeSetupType.value,
+        'detectionMode': m.zoneThreeSetupDetectionMode.value,
+        'verificationTime': m.zoneThreeSetupVerificationTime.value,
+        'text': m.zoneThreeSetupText.value,
+      },
+    });
+    _zoneRefreshTrigger.value++;
+  }
+
+  Future<void> _saveExtOutCacheAndNotifyRefresh() async {
+    final m = _bleManager;
+    await PeripheralSetupCache.saveExtOutSetup(_selectedDevice.id, {
+      'enabled': m.isExtZoneEnabled.value,
+      'actuatorType': m.extZoneActuatorType.value,
+      'function': m.extZoneFunction.value,
+      'resetAllowed': m.isResetAllowed.value,
+      'holdMode': m.extZoneHoldMode.value,
+      'action': m.extZoneAction.value,
+      'countdownAuto': m.extZoneCountdownAuto.value,
+      'countdownMan': m.extZoneCountdownMan.value,
+      'releaseTime': m.extZoneReleaseTime.value,
+      'resetDelay': m.extZoneResetDelay.value,
+      'text': m.extZoneText.value,
+    });
+    _extOutRefreshTrigger.value++;
   }
 
   Widget _peripheralTile({
@@ -1908,7 +2060,8 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 peripheralName: 'Event Log',
                 iconPath: 'assets/svgs/panel_action_event_log_icon.svg',
                 onTap: () {
-                  if (_selectedDevice.manufacturerData.isNotEmpty && _selectedDevice.manufacturerData.last == 1) {
+                  if (_selectedDevice.manufacturerData.isNotEmpty &&
+                      _selectedDevice.manufacturerData.last == 1) {
                     showBootloaderModeDialog(context: context);
                     return;
                   }
