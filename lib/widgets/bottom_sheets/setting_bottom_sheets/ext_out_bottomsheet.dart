@@ -1,10 +1,13 @@
+import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/utils/ext_zone_mode_util.dart';
+import 'package:techno_switch_solar_app/widgets/bottom_sheets/widgets/dropdown.dart';
 
 class ExtOutBottomSheet extends StatefulWidget {
   final Function() onCall;
@@ -160,6 +163,45 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
     return -1;
   }
 
+  Widget _modeBadge() {
+    final isSolar = manager!.bleProcess.isExtOutApplyButtonActive.value;
+
+    final bgColor = isSolar ? const Color(0xFFE8F5E9) : const Color(0xFFFFEBEE);
+
+    final textColor =
+        isSolar ? const Color(0xFF2E7D32) : const Color(0xFFC62828);
+
+    final icon =
+        isSolar
+            ? Icons.wb_sunny_rounded
+            : Icons.settings_input_component_rounded;
+
+    final label = isSolar ? "Solar Mode" : "DIP Mode";
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: textColor),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: textColor,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final maxHeight = MediaQuery.of(context).size.height * 0.7;
@@ -187,101 +229,98 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _title('Ext Out Configuration'),
-                  Visibility(
-                    visible:
-                        !manager!.bleProcess.isExtOutApplyButtonActive.value,
-                    child: Padding(
-                      padding: const EdgeInsets.only(bottom: 12.0),
-                      child: Text(
-                        "Source: DIP Mode",
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: const Color(0xFFEC1D24),
-                        ),
-                      ),
-                    ),
+                  _title('Ext Out Config'),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12.0),
+                    child: _modeBadge(),
                   ),
                 ],
               ),
 
               // ───────────── Scrollable Content ─────────────
               Expanded(
-                child: SingleChildScrollView(
-                  physics: const BouncingScrollPhysics(),
-                  padding: const EdgeInsets.only(top: 16),
-                  child: Column(
-                    children: [
-                      _dropdown(
-                        'Enabled',
-                        enabled,
-                        enabledOptions,
-                        (v) => setState(() => enabled = v),
-                      ),
+                child: NotificationListener<UserScrollNotification>(
+                  onNotification: (notification) {
+                    if (notification.direction != ScrollDirection.idle) {
+                      FocusScope.of(context).unfocus();
+                    }
+                    return false;
+                  },
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    padding: const EdgeInsets.only(top: 16),
+                    child: Column(
+                      children: [
+                        DropdownWidget(
+                          label: 'Enabled',
+                          value: enabled,
+                          items: enabledOptions,
+                          onChanged: (v) => setState(() => enabled = v),
+                        ),
 
-                      // _selectorField(
-                      //   label: 'Enabled',
-                      //   value: enabled,
-                      //   options: ['Yes', 'No'],
-                      //   onSelected: (v) => setState(() => enabled = v),
-                      // ),
-                      _dropdown(
-                        'Actuator Type',
-                        actuatorType,
-                        actuatorTypeOptions,
-                        (v) => setState(() => actuatorType = v),
-                      ),
+                        // _selectorField(
+                        //   label: 'Enabled',
+                        //   value: enabled,
+                        //   options: ['Yes', 'No'],
+                        //   onSelected: (v) => setState(() => enabled = v),
+                        // ),
+                        DropdownWidget(
+                          label: 'Actuator Type',
+                          value: actuatorType,
+                          items: actuatorTypeOptions,
+                          onChanged: (v) => setState(() => actuatorType = v),
+                        ),
 
-                      _dropdown(
-                        'Function',
-                        function,
-                        functionOptions,
-                        (v) => setState(() => function = v),
-                      ),
+                        DropdownWidget(
+                          label: 'Function',
+                          value: function,
+                          items: functionOptions,
+                          onChanged: (v) => setState(() => function = v),
+                        ),
 
-                      _numberFieldWithValidation(
-                        label: 'Countdown Auto (s)',
-                        controller: autoCtrl,
-                        errorMsg: _autoError,
-                      ),
-                      _numberFieldWithValidation(
-                        label: 'Countdown Man (s)',
-                        controller: manCtrl,
-                        errorMsg: _manError,
-                      ),
-                      _numberFieldWithValidation(
-                        label: 'Release Time (s)',
-                        controller: releaseCtrl,
-                        errorMsg: _releaseError,
-                      ),
-                      _numberFieldWithValidation(
-                        label: 'Reset Delay (s)',
-                        controller: resetDelayCtrl,
-                        errorMsg: _resetDelayError,
-                      ),
+                        _numberFieldWithValidation(
+                          label: 'Countdown Auto (s)',
+                          controller: autoCtrl,
+                          errorMsg: _autoError,
+                        ),
+                        _numberFieldWithValidation(
+                          label: 'Countdown Man (s)',
+                          controller: manCtrl,
+                          errorMsg: _manError,
+                        ),
+                        _numberFieldWithValidation(
+                          label: 'Release Time (s)',
+                          controller: releaseCtrl,
+                          errorMsg: _releaseError,
+                        ),
+                        _numberFieldWithValidation(
+                          label: 'Reset Delay (s)',
+                          controller: resetDelayCtrl,
+                          errorMsg: _resetDelayError,
+                        ),
 
-                      _dropdown(
-                        'Reset in Count',
-                        resetInCount,
-                        resetInCountOptions,
-                        (v) => setState(() => resetInCount = v),
-                      ),
+                        DropdownWidget(
+                          label: 'Reset in Count',
+                          value: resetInCount,
+                          items: resetInCountOptions,
+                          onChanged: (v) => setState(() => resetInCount = v),
+                        ),
 
-                      _dropdown(
-                        'Hold / Count',
-                        holdCount,
-                        holdCountOptions,
-                        (v) => setState(() => holdCount = v),
-                      ),
+                        DropdownWidget(
+                          label: 'Hold / Count',
+                          value: holdCount,
+                          items: holdCountOptions,
+                          onChanged: (v) => setState(() => holdCount = v),
+                        ),
 
-                      _dropdown(
-                        'Action',
-                        action,
-                        actionOptions,
-                        (v) => setState(() => action = v),
-                      ),
-                    ],
+                        DropdownWidget(
+                          label: 'Action',
+                          value: action,
+                          items: actionOptions,
+                          onChanged: (v) => setState(() => action = v),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -324,80 +363,183 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
     );
   }
 
-  Widget _dropdown(
-    String label,
-    String value,
-    List<String> items,
-    ValueChanged<String> onChanged,
-  ) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _label(label),
-          const SizedBox(height: 6),
-          SizedBox(
-            height: 48,
-            child: DropdownButtonFormField<String>(
-              value: value,
-              isExpanded: true,
-              icon: const Icon(
-                Icons.keyboard_arrow_down_rounded,
-                color: Color(0xFF3D3D3D),
-              ),
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: const Color(0xFF3D3D3D),
-              ),
-              items:
-                  items
-                      .map(
-                        (e) => DropdownMenuItem<String>(
-                          value: e,
-                          child: Text(e, overflow: TextOverflow.ellipsis),
-                        ),
-                      )
-                      .toList(),
-              onChanged: (v) => onChanged(v!),
-              decoration: InputDecoration(
-                filled: true,
-                fillColor: const Color(0xFFF8F8F8),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 12,
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(
-                    color: Color(0xFFD0D0D0),
-                    width: 1,
-                  ),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(
-                    color: Color(0xFFD0D0D0),
-                    width: 1,
-                  ),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(
-                    color: Color(0xFFEC1D24),
-                    width: 2,
-                  ),
-                ),
-              ),
-              dropdownColor: Colors.white,
-              menuMaxHeight: 280,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  // Widget _dropdown(
+  //   String label,
+  //   String value,
+  //   List<String> items,
+  //   ValueChanged<String> onChanged,
+  // ) {
+  //   return Padding(
+  //     padding: const EdgeInsets.only(bottom: 14),
+  //     child: Column(
+  //       crossAxisAlignment: CrossAxisAlignment.start,
+  //       children: [
+  //         _label(label),
+  //         const SizedBox(height: 6),
+  //         SizedBox(
+  //           height: 48,
+  //           child: DropdownButtonFormField2<String>(
+  //             isExpanded: true,
+  //             value: value,
+
+  //             items:
+  //                 items
+  //                     .map(
+  //                       (e) => DropdownMenuItem<String>(
+  //                         value: e,
+  //                         child: Text(
+  //                           e,
+  //                           overflow: TextOverflow.ellipsis,
+  //                           style: GoogleFonts.inter(
+  //                             fontSize: 14,
+  //                             fontWeight: FontWeight.w500,
+  //                             color: const Color(0xFF3D3D3D),
+  //                           ),
+  //                         ),
+  //                       ),
+  //                     )
+  //                     .toList(),
+
+  //             onChanged: (v) => onChanged(v!),
+
+  //             // 🔥 REMOVE horizontal padding from buttonStyleData
+  //             buttonStyleData: ButtonStyleData(
+  //               height: 48,
+  //               padding: EdgeInsets.zero,
+  //               decoration: BoxDecoration(
+  //                 color: const Color(0xFFF8F8F8),
+  //                 borderRadius: BorderRadius.circular(12),
+  //               ),
+  //             ),
+
+  //             iconStyleData: const IconStyleData(
+  //               icon: Icon(
+  //                 Icons.keyboard_arrow_down_rounded,
+  //                 color: Color(0xFF3D3D3D),
+  //               ),
+  //               iconSize: 22,
+  //             ),
+
+  //             dropdownStyleData: DropdownStyleData(
+  //               maxHeight: 280,
+  //               decoration: BoxDecoration(
+  //                 color: Colors.white,
+  //                 borderRadius: BorderRadius.circular(12),
+  //               ),
+  //               elevation: 4,
+  //             ),
+
+  //             menuItemStyleData: const MenuItemStyleData(
+  //               height: 40,
+  //               padding: EdgeInsets.symmetric(horizontal: 14),
+  //             ),
+
+  //             // 🔥 CONTROL ALL PADDING HERE ONLY
+  //             decoration: InputDecoration(
+  //               filled: true,
+  //               fillColor: const Color(0xFFF8F8F8),
+  //               contentPadding: const EdgeInsets.symmetric(
+  //                 horizontal: 14,
+  //                 vertical: 12,
+  //               ),
+
+  //               enabledBorder: OutlineInputBorder(
+  //                 borderRadius: BorderRadius.circular(12),
+  //                 borderSide: const BorderSide(
+  //                   color: Color(0xFFD0D0D0),
+  //                   width: 1,
+  //                 ),
+  //               ),
+
+  //               focusedBorder: OutlineInputBorder(
+  //                 borderRadius: BorderRadius.circular(12),
+  //                 borderSide: const BorderSide(
+  //                   color: Color(0xFFEC1D24),
+  //                   width: 2,
+  //                 ),
+  //               ),
+  //             ),
+  //           ),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
+
+  // Widget _dropdown(
+  //   String label,
+  //   String value,
+  //   List<String> items,
+  //   ValueChanged<String> onChanged,
+  // ) {
+  //   return Padding(
+  //     padding: const EdgeInsets.only(bottom: 14),
+  //     child: Column(
+  //       crossAxisAlignment: CrossAxisAlignment.start,
+  //       children: [
+  //         _label(label),
+  //         const SizedBox(height: 6),
+  //         SizedBox(
+  //           height: 48,
+  //           child: DropdownButtonFormField<String>(
+  //             value: value,
+  //             isExpanded: true,
+  //             icon: const Icon(
+  //               Icons.keyboard_arrow_down_rounded,
+  //               color: Color(0xFF3D3D3D),
+  //             ),
+  //             style: GoogleFonts.inter(
+  //               fontSize: 14,
+  //               fontWeight: FontWeight.w500,
+  //               color: const Color(0xFF3D3D3D),
+  //             ),
+  //             items:
+  //                 items
+  //                     .map(
+  //                       (e) => DropdownMenuItem<String>(
+  //                         value: e,
+  //                         child: Text(e, overflow: TextOverflow.ellipsis),
+  //                       ),
+  //                     )
+  //                     .toList(),
+  //             onChanged: (v) => onChanged(v!),
+  //             decoration: InputDecoration(
+  //               filled: true,
+  //               fillColor: const Color(0xFFF8F8F8),
+  //               contentPadding: const EdgeInsets.symmetric(
+  //                 horizontal: 14,
+  //                 vertical: 12,
+  //               ),
+  //               border: OutlineInputBorder(
+  //                 borderRadius: BorderRadius.circular(12),
+  //                 borderSide: const BorderSide(
+  //                   color: Color(0xFFD0D0D0),
+  //                   width: 1,
+  //                 ),
+  //               ),
+  //               enabledBorder: OutlineInputBorder(
+  //                 borderRadius: BorderRadius.circular(12),
+  //                 borderSide: const BorderSide(
+  //                   color: Color(0xFFD0D0D0),
+  //                   width: 1,
+  //                 ),
+  //               ),
+  //               focusedBorder: OutlineInputBorder(
+  //                 borderRadius: BorderRadius.circular(12),
+  //                 borderSide: const BorderSide(
+  //                   color: Color(0xFFEC1D24),
+  //                   width: 2,
+  //                 ),
+  //               ),
+  //             ),
+  //             dropdownColor: Colors.white,
+  //             menuMaxHeight: 280,
+  //           ),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
   // Widget _selectorField({
   //   required String label,
@@ -583,7 +725,7 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
     return InputDecoration(
       filled: true,
       fillColor: const Color(0xFFF8F8F8),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide(color: borderColor),

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/utils/relay_mode_util.dart';
+import 'package:techno_switch_solar_app/widgets/bottom_sheets/widgets/dropdown.dart';
 
 class RelayModeBottomSheet extends StatefulWidget {
   final Function() onCall;
@@ -173,11 +175,19 @@ class _RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
               _title('Relay Mode Configuration'),
 
               Expanded(
-                child: SingleChildScrollView(
-                  physics: const BouncingScrollPhysics(),
-                  padding: const EdgeInsets.only(top: 16),
-                  child: Column(
-                    children: List.generate(3, (i) => _relayTile(i)),
+                child: NotificationListener<UserScrollNotification>(
+                  onNotification: (notification) {
+                    if (notification.direction != ScrollDirection.idle) {
+                      FocusScope.of(context).unfocus();
+                    }
+                    return false;
+                  },
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    padding: const EdgeInsets.only(top: 16),
+                    child: Column(
+                      children: List.generate(3, (i) => _relayTile(i)),
+                    ),
                   ),
                 ),
               ),
@@ -203,65 +213,82 @@ class _RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
           borderRadius: BorderRadius.circular(14),
           border: Border.all(color: const Color(0xFFDCDCDC)),
         ),
-        child: ExpansionTile(
-          tilePadding: const EdgeInsets.symmetric(horizontal: 16),
-          childrenPadding: const EdgeInsets.symmetric(horizontal: 16),
-          title: Text(
-            'Relay ${index + 1}',
-            style: GoogleFonts.inter(
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
-              color: const Color(0xFF3D3D3D),
+        child: Theme(
+          data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+          child: ExpansionTile(
+            tilePadding: const EdgeInsets.symmetric(horizontal: 16),
+            childrenPadding: const EdgeInsets.symmetric(horizontal: 16),
+            title: Text(
+              'Relay ${index + 1}',
+              style: GoogleFonts.inter(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF3D3D3D),
+              ),
             ),
+            children: [
+              _outputTextField(relay: relay, relayIndex: index),
+
+              DropdownWidget(
+                label: 'Group',
+                value: relay.group,
+                items: groupOptions,
+                onChanged: (v) {
+                  setState(() {
+                    relay.group = v;
+                    relay.function = functionOptionsMap[v]!.first;
+                    if (v == 'Ext. Out') {
+                      relay.dynamicController.text = '1';
+                    } else {
+                      relay.dynamicController.clear();
+                    }
+                  });
+                },
+              ),
+
+              DropdownWidget(
+                label: 'Function',
+                value: relay.function,
+                items: functionOptionsMap[relay.group]!,
+                onChanged: (v) => setState(() => relay.function = v),
+              ),
+
+              if (relay.group == 'Zone')
+                _zoneDynamicField(relay: relay, relayIndex: index),
+
+              if (relay.group == 'Ext. Out') _extOutDynamicField(relay: relay),
+
+              DropdownWidget(
+                label: 'Enabled',
+                value: relay.enabled,
+                items: yesNoOptions,
+                onChanged: (v) {
+                  setState(() {
+                    relay.enabled = v;
+                    if (v == 'No') {
+                      relay.test = 'No';
+                    }
+                  });
+                },
+              ),
+
+              DropdownWidget(
+                label: 'Test',
+                value: relay.test,
+                items: yesNoOptions,
+                onChanged: (v) {
+                  setState(() {
+                    relay.test = v;
+                    if (v == 'Yes') {
+                      relay.enabled = 'Yes';
+                    }
+                  });
+                },
+              ),
+
+              const SizedBox(height: 14),
+            ],
           ),
-          children: [
-            _outputTextField(relay: relay, relayIndex: index),
-
-            _dropdown('Group', relay.group, groupOptions, (v) {
-              setState(() {
-                relay.group = v;
-                relay.function = functionOptionsMap[v]!.first;
-                if (v == 'Ext. Out') {
-                  relay.dynamicController.text = '1';
-                } else {
-                  relay.dynamicController.clear();
-                }
-              });
-            }),
-
-            _dropdown(
-              'Function',
-              relay.function,
-              functionOptionsMap[relay.group]!,
-              (v) => setState(() => relay.function = v),
-            ),
-
-            if (relay.group == 'Zone')
-              _zoneDynamicField(relay: relay, relayIndex: index),
-
-            if (relay.group == 'Ext. Out')
-              _extOutDynamicField(relay: relay),
-
-            _dropdown('Enabled', relay.enabled, yesNoOptions, (v) {
-              setState(() {
-                relay.enabled = v;
-                if (v == 'No') {
-                  relay.test = 'No';
-                }
-              });
-            }),
-
-            _dropdown('Test', relay.test, yesNoOptions, (v) {
-              setState(() {
-                relay.test = v;
-                if (v == 'Yes') {
-                  relay.enabled = 'Yes';
-                }
-              });
-            }),
-
-            const SizedBox(height: 14),
-          ],
         ),
       ),
     );
@@ -306,7 +333,10 @@ class _RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
     );
   }
 
-  Widget _outputTextField({required RelayConfig relay, required int relayIndex}) {
+  Widget _outputTextField({
+    required RelayConfig relay,
+    required int relayIndex,
+  }) {
     final errorMsg = _outputTextErrors[relayIndex];
 
     return Padding(
@@ -318,8 +348,36 @@ class _RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
           const SizedBox(height: 6),
           TextField(
             controller: relay.outputTextController,
-            onChanged: (_) => setState(() {}),
+            maxLength: 21,
+            buildCounter: (
+              context, {
+              required int currentLength,
+              required bool isFocused,
+              required int? maxLength,
+            }) {
+              if (!isFocused) return null;
+
+              return Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Text(
+                  "$currentLength / 21",
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    color:
+                        currentLength == 21
+                            ? const Color(0xFFEC1D24)
+                            : Colors.grey,
+                  ),
+                ),
+              );
+            },
+            inputFormatters: [LengthLimitingTextInputFormatter(21)],
             decoration: _inputDecoration(hasError: errorMsg != null),
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: const Color(0xFF3D3D3D),
+            ),
           ),
           if (errorMsg != null) ...[
             const SizedBox(height: 4),
@@ -395,57 +453,63 @@ class _RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
     );
   }
 
-  Widget _dropdown(
-    String label,
-    String value,
-    List<String> items,
-    ValueChanged<String> onChanged,
-  ) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _label(label),
-          const SizedBox(height: 6),
-          SizedBox(
-            height: 48,
-            child: DropdownButtonFormField<String>(
-              value: value,
-              isExpanded: true,
-              items:
-                  items
-                      .map(
-                        (e) => DropdownMenuItem(
-                          value: e,
-                          child: Text(e, overflow: TextOverflow.ellipsis),
-                        ),
-                      )
-                      .toList(),
-              onChanged: (v) => onChanged(v!),
-              decoration: _inputDecoration(),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  // Widget _dropdown(
+  //   String label,
+  //   String value,
+  //   List<String> items,
+  //   ValueChanged<String> onChanged,
+  // ) {
+  //   return Padding(
+  //     padding: const EdgeInsets.only(bottom: 14),
+  //     child: Column(
+  //       crossAxisAlignment: CrossAxisAlignment.start,
+  //       children: [
+  //         _label(label),
+  //         const SizedBox(height: 6),
+  //         SizedBox(
+  //           height: 48,
+  //           child: DropdownButtonFormField<String>(
+  //             value: value,
+  //             isExpanded: true,
+  //             items:
+  //                 items
+  //                     .map(
+  //                       (e) => DropdownMenuItem(
+  //                         value: e,
+  //                         child: Text(e, overflow: TextOverflow.ellipsis),
+  //                       ),
+  //                     )
+  //                     .toList(),
+  //             onChanged: (v) => onChanged(v!),
+  //             decoration: _inputDecoration(),
+  //           ),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
   InputDecoration _inputDecoration({bool hasError = false}) {
     final borderColor =
         hasError ? const Color(0xFFEC1D24) : const Color(0xFFD0D0D0);
+
     return InputDecoration(
       filled: true,
       fillColor: const Color(0xFFF8F8F8),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+
+      // 🔥 SAME 24px HORIZONTAL
+      contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide(color: borderColor),
       ),
+
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide(color: borderColor),
       ),
+
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: const BorderSide(color: Color(0xFFEC1D24), width: 2),
@@ -469,75 +533,78 @@ class _RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
             borderRadius: BorderRadius.circular(24),
           ),
         ),
-        onPressed: isValid
-            ? () {
-          for (int i = 0; i < 3; i++) {
-            final relay = relays[i];
+        onPressed:
+            isValid
+                ? () {
+                  for (int i = 0; i < 3; i++) {
+                    final relay = relays[i];
 
-            bool isEnabled = relay.enabled == 'Yes';
-            bool isTest = relay.test == 'Yes';
+                    bool isEnabled = relay.enabled == 'Yes';
+                    bool isTest = relay.test == 'Yes';
 
-            final config = OutputModeConfig(
-              outputEnable:
-                  isEnabled ? OutputEnable.enabled : OutputEnable.disabled,
-              outputMode: isTest ? OutputMode.test : OutputMode.normal,
-            );
+                    final config = OutputModeConfig(
+                      outputEnable:
+                          isEnabled
+                              ? OutputEnable.enabled
+                              : OutputEnable.disabled,
+                      outputMode: isTest ? OutputMode.test : OutputMode.normal,
+                    );
 
-            final String hexValue = OutputModeCodec.encodeHex(config);
+                    final String hexValue = OutputModeCodec.encodeHex(config);
 
-            int groupIndex = returnIndex(relay.group, groupOptions);
-            int functionIndex = returnIndex(
-              relay.function,
-              functionOptionsMap[relay.group]!,
-            );
+                    int groupIndex = returnIndex(relay.group, groupOptions);
+                    int functionIndex = returnIndex(
+                      relay.function,
+                      functionOptionsMap[relay.group]!,
+                    );
 
-            print("Relay ${i + 1} HEX → $hexValue");
-            print("Group Index → $groupIndex");
-            print("Function Index → $functionIndex");
+                    print("Relay ${i + 1} HEX → $hexValue");
+                    print("Group Index → $groupIndex");
+                    print("Function Index → $functionIndex");
 
-            switch (i) {
-              case 0:
-                manager!.relayOneMode.value = hexValue;
-                manager!.relayOneSetupGroup.value = groupIndex;
-                manager!.relayOneSetupFunction.value = functionIndex;
-                manager!.isRelayOneSetupEnabled.value = isEnabled;
-                manager!.isRelayOneSetupTest.value = isTest;
-                manager!.relayOneSetupOutputText.value =
-                    relay.outputTextController.text;
-                manager!.relayOneSetupDynamicText.value =
-                    relay.dynamicController.text;
-                break;
+                    switch (i) {
+                      case 0:
+                        manager!.relayOneMode.value = hexValue;
+                        manager!.relayOneSetupGroup.value = groupIndex;
+                        manager!.relayOneSetupFunction.value = functionIndex;
+                        manager!.isRelayOneSetupEnabled.value = isEnabled;
+                        manager!.isRelayOneSetupTest.value = isTest;
+                        manager!.relayOneSetupOutputText.value =
+                            relay.outputTextController.text;
+                        manager!.relayOneSetupDynamicText.value =
+                            relay.dynamicController.text;
+                        break;
 
-              case 1:
-                manager!.relayTwoMode.value = hexValue;
-                manager!.relayTwoSetupGroup.value = groupIndex;
-                manager!.relayTwoSetupFunction.value = functionIndex;
-                manager!.isRelayTwoSetupEnabled.value = isEnabled;
-                manager!.isRelayTwoSetupTest.value = isTest;
-                manager!.relayTwoSetupOutputText.value =
-                    relay.outputTextController.text;
-                manager!.relayTwoSetupDynamicText.value =
-                    relay.dynamicController.text;
-                break;
+                      case 1:
+                        manager!.relayTwoMode.value = hexValue;
+                        manager!.relayTwoSetupGroup.value = groupIndex;
+                        manager!.relayTwoSetupFunction.value = functionIndex;
+                        manager!.isRelayTwoSetupEnabled.value = isEnabled;
+                        manager!.isRelayTwoSetupTest.value = isTest;
+                        manager!.relayTwoSetupOutputText.value =
+                            relay.outputTextController.text;
+                        manager!.relayTwoSetupDynamicText.value =
+                            relay.dynamicController.text;
+                        break;
 
-              case 2:
-                manager!.relayThreeMode.value = hexValue;
-                manager!.relayThreeSetupGroup.value = groupIndex;
-                manager!.relayThreeSetupFunction.value = functionIndex;
-                manager!.isRelayThreeSetupEnabled.value = isEnabled;
-                manager!.isRelayThreeSetupTest.value = isTest;
-                manager!.relayThreeSetupOutputText.value =
-                    relay.outputTextController.text;
-                manager!.relayThreeSetupDynamicText.value =
-                    relay.dynamicController.text;
-                break;
-            }
-          }
+                      case 2:
+                        manager!.relayThreeMode.value = hexValue;
+                        manager!.relayThreeSetupGroup.value = groupIndex;
+                        manager!.relayThreeSetupFunction.value = functionIndex;
+                        manager!.isRelayThreeSetupEnabled.value = isEnabled;
+                        manager!.isRelayThreeSetupTest.value = isTest;
+                        manager!.relayThreeSetupOutputText.value =
+                            relay.outputTextController.text;
+                        manager!.relayThreeSetupDynamicText.value =
+                            relay.dynamicController.text;
+                        break;
+                    }
+                  }
 
-          Navigator.pop(context);
-          widget.onCall();
-        }
-            : null,
+                  Navigator.pop(context);
+                  widget.onCall();
+                }
+                : null,
         child: Text(
           'Apply Configuration',
           style: GoogleFonts.inter(

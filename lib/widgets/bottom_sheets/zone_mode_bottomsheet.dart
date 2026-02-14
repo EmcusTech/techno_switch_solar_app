@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/utils/zone_mode_util.dart';
+import 'package:techno_switch_solar_app/widgets/bottom_sheets/widgets/dropdown.dart';
 
 class ZoneBottomSheet extends StatefulWidget {
   final Function() onCall;
@@ -199,11 +201,19 @@ class _ZoneBottomSheetState extends State<ZoneBottomSheet> {
               _title('Zone Configuration'),
 
               Expanded(
-                child: SingleChildScrollView(
-                  physics: const BouncingScrollPhysics(),
-                  padding: const EdgeInsets.only(top: 16),
-                  child: Column(
-                    children: List.generate(3, (i) => _zoneTile(i)),
+                child: NotificationListener<UserScrollNotification>(
+                  onNotification: (notification) {
+                    if (notification.direction != ScrollDirection.idle) {
+                      FocusScope.of(context).unfocus();
+                    }
+                    return false;
+                  },
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    padding: const EdgeInsets.only(top: 16),
+                    child: Column(
+                      children: List.generate(3, (i) => _zoneTile(i)),
+                    ),
                   ),
                 ),
               ),
@@ -229,58 +239,88 @@ class _ZoneBottomSheetState extends State<ZoneBottomSheet> {
           borderRadius: BorderRadius.circular(14),
           border: Border.all(color: const Color(0xFFDCDCDC)),
         ),
-        child: ExpansionTile(
-          tilePadding: const EdgeInsets.symmetric(horizontal: 16),
-          childrenPadding: const EdgeInsets.symmetric(horizontal: 16),
-          title: Text(
-            'Zone ${zone.zoneNumber}',
-            style: GoogleFonts.inter(
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
-              color: const Color(0xFF3D3D3D),
+        child: Theme(
+          data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+          child: ExpansionTile(
+            tilePadding: const EdgeInsets.symmetric(horizontal: 16),
+            childrenPadding: EdgeInsets.zero,
+
+            // backgroundColor: const Color(0xFFF8F8F8),
+            // collapsedBackgroundColor: Colors.white,
+            title: Text(
+              'Zone ${zone.zoneNumber}',
+              style: GoogleFonts.inter(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF3D3D3D),
+              ),
             ),
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 14,
+                ),
+                // color: const Color(0xFFF8F8F8),
+                child: Column(
+                  children: [
+                    _zoneTextField(zone: zone, zoneIndex: index),
+
+                    DropdownWidget(
+                      label: 'Type',
+                      value: zone.type,
+                      items: typeOptions,
+                      onChanged: (v) => setState(() => zone.type = v),
+                    ),
+
+                    DropdownWidget(
+                      label: 'Enabled',
+                      value: zone.enabled,
+                      items: yesNoOptions,
+                      onChanged: (v) {
+                        setState(() {
+                          zone.enabled = v;
+                          if (v == 'No') zone.test = 'No';
+                        });
+                      },
+                    ),
+
+                    DropdownWidget(
+                      label: 'Test',
+                      value: zone.test,
+                      items: yesNoOptions,
+                      onChanged: (v) {
+                        setState(() {
+                          zone.test = v;
+                          if (v == 'Yes') zone.enabled = 'Yes';
+                        });
+                      },
+                    ),
+
+                    DropdownWidget(
+                      label: 'Mode',
+                      value: zone.mode,
+                      items: modeOptions,
+                      onChanged: (v) {
+                        setState(() {
+                          zone.mode = v;
+                          if (v == 'Immediate' || v == 'Normal') {
+                            zone.verificationTimeController.text = '0';
+                          } else if (v == 'Confirmed') {
+                            zone.verificationTimeController.text = '30';
+                          }
+                          _zoneTextErrors.remove(index);
+                          _verificationErrors.remove(index);
+                        });
+                      },
+                    ),
+
+                    _verificationTimeField(zone: zone, zoneIndex: index),
+                  ],
+                ),
+              ),
+            ],
           ),
-          children: [
-            _zoneTextField(zone: zone, zoneIndex: index),
-
-            _dropdown(
-              'Type',
-              zone.type,
-              typeOptions,
-              (v) => setState(() => zone.type = v),
-            ),
-
-            _dropdown('Enabled', zone.enabled, yesNoOptions, (v) {
-              setState(() {
-                zone.enabled = v;
-                if (v == 'No') zone.test = 'No';
-              });
-            }),
-
-            _dropdown('Test', zone.test, yesNoOptions, (v) {
-              setState(() {
-                zone.test = v;
-                if (v == 'Yes') zone.enabled = 'Yes';
-              });
-            }),
-
-            _dropdown('Mode', zone.mode, modeOptions, (v) {
-              setState(() {
-                zone.mode = v;
-                if (v == 'Immediate' || v == 'Normal') {
-                  zone.verificationTimeController.text = '0';
-                } else if (v == 'Confirmed') {
-                  zone.verificationTimeController.text = '30';
-                }
-                _zoneTextErrors.remove(index);
-                _verificationErrors.remove(index);
-              });
-            }),
-
-            _verificationTimeField(zone: zone, zoneIndex: index),
-
-            const SizedBox(height: 14),
-          ],
         ),
       ),
     );
@@ -300,8 +340,36 @@ class _ZoneBottomSheetState extends State<ZoneBottomSheet> {
           const SizedBox(height: 6),
           TextField(
             controller: zone.zoneTextController,
-            onChanged: (_) => setState(() {}),
+            maxLength: 21,
+            buildCounter: (
+              context, {
+              required int currentLength,
+              required bool isFocused,
+              required int? maxLength,
+            }) {
+              if (!isFocused) return null;
+
+              return Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Text(
+                  "$currentLength / 21",
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    color:
+                        currentLength == 21
+                            ? const Color(0xFFEC1D24)
+                            : Colors.grey,
+                  ),
+                ),
+              );
+            },
+            inputFormatters: [LengthLimitingTextInputFormatter(21)],
             decoration: _inputDecoration(hasError: errorMsg != null),
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: const Color(0xFF3D3D3D),
+            ),
           ),
           if (errorMsg != null) ...[
             const SizedBox(height: 4),
@@ -508,57 +576,63 @@ class _ZoneBottomSheetState extends State<ZoneBottomSheet> {
     );
   }
 
-  Widget _dropdown(
-    String label,
-    String value,
-    List<String> items,
-    ValueChanged<String> onChanged,
-  ) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _label(label),
-          const SizedBox(height: 6),
-          SizedBox(
-            height: 48,
-            child: DropdownButtonFormField<String>(
-              value: value,
-              isExpanded: true,
-              items:
-                  items
-                      .map(
-                        (e) => DropdownMenuItem(
-                          value: e,
-                          child: Text(e, overflow: TextOverflow.ellipsis),
-                        ),
-                      )
-                      .toList(),
-              onChanged: (v) => onChanged(v!),
-              decoration: _inputDecoration(),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  // Widget _dropdown(
+  //   String label,
+  //   String value,
+  //   List<String> items,
+  //   ValueChanged<String> onChanged,
+  // ) {
+  //   return Padding(
+  //     padding: const EdgeInsets.only(bottom: 14),
+  //     child: Column(
+  //       crossAxisAlignment: CrossAxisAlignment.start,
+  //       children: [
+  //         _label(label),
+  //         const SizedBox(height: 6),
+  //         SizedBox(
+  //           height: 48,
+  //           child: DropdownButtonFormField<String>(
+  //             value: value,
+  //             isExpanded: true,
+  //             items:
+  //                 items
+  //                     .map(
+  //                       (e) => DropdownMenuItem(
+  //                         value: e,
+  //                         child: Text(e, overflow: TextOverflow.ellipsis),
+  //                       ),
+  //                     )
+  //                     .toList(),
+  //             onChanged: (v) => onChanged(v!),
+  //             decoration: _inputDecoration(),
+  //           ),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
   InputDecoration _inputDecoration({bool hasError = false}) {
     final borderColor =
         hasError ? const Color(0xFFEC1D24) : const Color(0xFFD0D0D0);
+
     return InputDecoration(
       filled: true,
       fillColor: const Color(0xFFF8F8F8),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+
+      // 🔥 MATCH OTHER SHEETS
+      contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide(color: borderColor),
       ),
+
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide(color: borderColor),
       ),
+
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: const BorderSide(color: Color(0xFFEC1D24), width: 2),

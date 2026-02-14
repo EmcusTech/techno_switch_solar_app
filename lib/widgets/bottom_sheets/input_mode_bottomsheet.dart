@@ -1,9 +1,13 @@
+import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/utils/input_mode_util.dart';
+import 'package:techno_switch_solar_app/widgets/bottom_sheets/widgets/dropdown.dart';
 
 class InputModeBottomSheet extends StatefulWidget {
   final Function() onCall;
@@ -137,60 +141,83 @@ class _InputModeBottomSheetState extends State<InputModeBottomSheet> {
               _title('Input Mode Configuration'),
 
               Expanded(
-                child: SingleChildScrollView(
-                  physics: const BouncingScrollPhysics(),
-                  padding: const EdgeInsets.only(top: 16),
-                  child: Column(
-                    children: [
-                      _readOnlyField('Input', 'PROG IN 1'),
+                child: NotificationListener<UserScrollNotification>(
+                  onNotification: (notification) {
+                    if (notification.direction != ScrollDirection.idle) {
+                      FocusScope.of(context).unfocus();
+                    }
+                    return false;
+                  },
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    padding: const EdgeInsets.only(top: 16),
+                    child: Column(
+                      children: [
+                        _readOnlyField('Input', 'PROG IN 1'),
 
-                      _inputTextField(),
+                        _inputTextField(),
 
-                      _dropdown('Group', group, groupOptions, (v) {
-                        setState(() {
-                          group = v;
-                          function =
-                              functionOptionsMap[group]!
-                                  .first; // reset function
-                        });
-                      }),
+                        DropdownWidget(
+                          label: 'Group',
+                          value: group,
+                          items: groupOptions,
+                          onChanged: (v) {
+                            setState(() {
+                              group = v;
+                              function =
+                                  functionOptionsMap[group]!
+                                      .first; // reset function
+                            });
+                          },
+                        ),
 
-                      _dropdown(
-                        'Function',
-                        function,
-                        functionOptionsMap[group]!,
-                        (v) => setState(() => function = v),
-                      ),
+                        DropdownWidget(
+                          label: 'Function',
+                          value: function,
+                          items: functionOptionsMap[group]!,
+                          onChanged: (v) => setState(() => function = v),
+                        ),
 
-                      _dropdown('Enabled', enabled, yesNoOptions, (v) {
-                        setState(() {
-                          enabled = v;
+                        DropdownWidget(
+                          label: 'Enabled',
+                          value: enabled,
+                          items: yesNoOptions,
+                          onChanged: (v) {
+                            setState(() {
+                              enabled = v;
 
-                          // RULE: If Enabled = No → Test must be No
-                          if (enabled == 'No') {
-                            test = 'No';
-                          }
-                        });
-                      }),
+                              // RULE: If Enabled = No → Test must be No
+                              if (enabled == 'No') {
+                                test = 'No';
+                              }
+                            });
+                          },
+                        ),
 
-                      _dropdown('Test', test, yesNoOptions, (v) {
-                        setState(() {
-                          test = v;
+                        DropdownWidget(
+                          label: 'Test',
+                          value: test,
+                          items: yesNoOptions,
+                          onChanged: (v) {
+                            setState(() {
+                              test = v;
 
-                          // RULE: If Test = Yes → Enabled must be Yes
-                          if (test == 'Yes') {
-                            enabled = 'Yes';
-                          }
-                        });
-                      }),
+                              // RULE: If Test = Yes → Enabled must be Yes
+                              if (test == 'Yes') {
+                                enabled = 'Yes';
+                              }
+                            });
+                          },
+                        ),
 
-                      _dropdown(
-                        'Inverted',
-                        inverted,
-                        yesNoOptions,
-                        (v) => setState(() => inverted = v),
-                      ),
-                    ],
+                        DropdownWidget(
+                          label: 'Inverted',
+                          value: inverted,
+                          items: yesNoOptions,
+                          onChanged: (v) => setState(() => inverted = v),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -260,12 +287,15 @@ class _InputModeBottomSheetState extends State<InputModeBottomSheet> {
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: const Color(0xFFD0D0D0)),
             ),
-            child: Text(
-              value,
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: const Color(0xFF3D3D3D),
+            child: Padding(
+              padding: const EdgeInsets.only(left: 14),
+              child: Text(
+                value,
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: const Color(0xFF3D3D3D),
+                ),
               ),
             ),
           ),
@@ -284,8 +314,37 @@ class _InputModeBottomSheetState extends State<InputModeBottomSheet> {
           const SizedBox(height: 6),
           TextField(
             controller: inputTextCtrl,
-            onChanged: (_) => setState(() {}),
+            maxLength: 21,
+            buildCounter: (
+              context, {
+              required int currentLength,
+              required bool isFocused,
+              required int? maxLength,
+            }) {
+              if (!isFocused) return null;
+
+              return Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Text(
+                  "$currentLength / 21",
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    color:
+                        currentLength == 21
+                            ? const Color(0xFFEC1D24)
+                            : Colors.grey,
+                  ),
+                ),
+              );
+            },
+            inputFormatters: [LengthLimitingTextInputFormatter(21)],
+            // onChanged: (_) => setState(() {}),
             decoration: _inputDecoration(hasError: _inputTextError != null),
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: const Color(0xFF3D3D3D),
+            ),
           ),
           if (_inputTextError != null) ...[
             const SizedBox(height: 4),
@@ -303,57 +362,130 @@ class _InputModeBottomSheetState extends State<InputModeBottomSheet> {
     );
   }
 
-  Widget _dropdown(
-    String label,
-    String value,
-    List<String> items,
-    ValueChanged<String> onChanged,
-  ) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _label(label),
-          const SizedBox(height: 6),
-          SizedBox(
-            height: 48,
-            child: DropdownButtonFormField<String>(
-              value: value,
-              isExpanded: true,
-              items:
-                  items
-                      .map(
-                        (e) => DropdownMenuItem<String>(
-                          value: e,
-                          child: Text(e, overflow: TextOverflow.ellipsis),
-                        ),
-                      )
-                      .toList(),
-              onChanged: (v) => onChanged(v!),
-              decoration: _inputDecoration(),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  // Widget _dropdown(
+  //   String label,
+  //   String value,
+  //   List<String> items,
+  //   ValueChanged<String> onChanged,
+  // ) {
+  //   return Padding(
+  //     padding: const EdgeInsets.only(bottom: 14),
+  //     child: Column(
+  //       crossAxisAlignment: CrossAxisAlignment.start,
+  //       children: [
+  //         _label(label),
+  //         const SizedBox(height: 6),
+  //         SizedBox(
+  //           height: 48,
+  //           child: DropdownButtonFormField2<String>(
+  //             isExpanded: true,
+  //             value: value,
+
+  //             items:
+  //                 items
+  //                     .map(
+  //                       (e) => DropdownMenuItem<String>(
+  //                         value: e,
+  //                         child: Text(
+  //                           e,
+  //                           overflow: TextOverflow.ellipsis,
+  //                           style: GoogleFonts.inter(
+  //                             fontSize: 14,
+  //                             fontWeight: FontWeight.w500,
+  //                             color: const Color(0xFF3D3D3D),
+  //                           ),
+  //                         ),
+  //                       ),
+  //                     )
+  //                     .toList(),
+
+  //             onChanged: (v) => onChanged(v!),
+
+  //             // 🔥 REMOVE horizontal padding from buttonStyleData
+  //             buttonStyleData: ButtonStyleData(
+  //               height: 48,
+  //               padding: EdgeInsets.zero,
+  //               decoration: BoxDecoration(
+  //                 color: const Color(0xFFF8F8F8),
+  //                 borderRadius: BorderRadius.circular(12),
+  //               ),
+  //             ),
+
+  //             iconStyleData: const IconStyleData(
+  //               icon: Icon(
+  //                 Icons.keyboard_arrow_down_rounded,
+  //                 color: Color(0xFF3D3D3D),
+  //               ),
+  //               iconSize: 22,
+  //             ),
+
+  //             dropdownStyleData: DropdownStyleData(
+  //               maxHeight: 280,
+  //               decoration: BoxDecoration(
+  //                 color: Colors.white,
+  //                 borderRadius: BorderRadius.circular(12),
+  //               ),
+  //               elevation: 4,
+  //             ),
+
+  //             menuItemStyleData: const MenuItemStyleData(
+  //               height: 40,
+  //               padding: EdgeInsets.symmetric(horizontal: 14),
+  //             ),
+
+  //             // 🔥 CONTROL ALL PADDING HERE ONLY
+  //             decoration: InputDecoration(
+  //               filled: true,
+  //               fillColor: const Color(0xFFF8F8F8),
+  //               contentPadding: const EdgeInsets.symmetric(
+  //                 horizontal: 14,
+  //                 vertical: 12,
+  //               ),
+
+  //               enabledBorder: OutlineInputBorder(
+  //                 borderRadius: BorderRadius.circular(12),
+  //                 borderSide: const BorderSide(
+  //                   color: Color(0xFFD0D0D0),
+  //                   width: 1,
+  //                 ),
+  //               ),
+
+  //               focusedBorder: OutlineInputBorder(
+  //                 borderRadius: BorderRadius.circular(12),
+  //                 borderSide: const BorderSide(
+  //                   color: Color(0xFFEC1D24),
+  //                   width: 2,
+  //                 ),
+  //               ),
+  //             ),
+  //           ),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
   InputDecoration _inputDecoration({bool hasError = false}) {
     final borderColor =
         hasError ? const Color(0xFFEC1D24) : const Color(0xFFD0D0D0);
+
     return InputDecoration(
       filled: true,
       fillColor: const Color(0xFFF8F8F8),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+
+      // 🔥 SAME 24px HORIZONTAL
+      contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide(color: borderColor),
       ),
+
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide(color: borderColor),
       ),
+
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: const BorderSide(color: Color(0xFFEC1D24), width: 2),
