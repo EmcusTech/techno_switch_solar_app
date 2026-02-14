@@ -1200,17 +1200,27 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                         if (mode == 'bottomsheet_download') {
                           onDownloadComplete?.call();
                         } else if (ble.bleProcess.isExtOutApplyDone.value) {
-                          showApplySuccessDialog(
-                            context,
-                            'Extinguishing Output',
-                          );
+                          ble.bleProcess.isExtOutApplyButtonActive.value =
+                              true;
+                          await _saveExtOutCacheAndNotifyRefresh();
+                          if (mounted) {
+                            showApplySuccessDialog(
+                              context,
+                              'Extinguishing Output',
+                            );
+                          }
                         } else if (ble.bleProcess.isInputSetupApplyDone.value) {
-                          showApplySuccessDialog(context, 'Inputs');
+                          await _saveInputCacheAndNotifyRefresh();
+                          if (mounted) {
+                            showApplySuccessDialog(context, 'Inputs');
+                          }
                         } else if (ble.bleProcess.isRelaySetupApplyDone.value &&
                             mounted) {
+                          await _saveRelayCacheAndNotifyRefresh();
                           showApplySuccessDialog(context, 'Relays');
                         } else if (ble.bleProcess.isZoneSetupApplyDone.value &&
                             mounted) {
+                          await _saveZoneCacheAndNotifyRefresh();
                           showApplySuccessDialog(context, 'Zones');
                         } else {
                           Navigator.of(dialogContext).push(
@@ -1975,6 +1985,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
       'releaseTime': m.extZoneReleaseTime.value,
       'resetDelay': m.extZoneResetDelay.value,
       'text': m.extZoneText.value,
+      'isSolar': m.bleProcess.isExtOutApplyButtonActive.value,
     });
     _extOutRefreshTrigger.value++;
   }

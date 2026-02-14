@@ -190,7 +190,10 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
     manCtrl.text = (data['countdownMan'] as int?)?.toString() ?? '15';
     releaseCtrl.text = (data['releaseTime'] as int?)?.toString() ?? '10';
     resetDelayCtrl.text = (data['resetDelay'] as int?)?.toString() ?? '5';
-    // extZoneText if needed - check cache save
+    final isSolar = (data['isSolar'] as bool?) ?? false;
+    if (manager != null) {
+      manager!.bleProcess.isExtOutApplyButtonActive.value = isSolar;
+    }
   }
 
   void _loadFromManager() {
