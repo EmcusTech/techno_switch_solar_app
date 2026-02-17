@@ -125,9 +125,11 @@ class _InputModeBottomSheetState extends State<InputModeBottomSheet> {
     final f = (data['function'] as int?) ?? 0;
     final opts = functionOptionsMap[group]!;
     function = opts[f.clamp(0, opts.length - 1)];
-    enabled = (data['enabled'] as bool?) == true ? yesNoOptions[1] : yesNoOptions[0];
+    enabled =
+        (data['enabled'] as bool?) == true ? yesNoOptions[1] : yesNoOptions[0];
     test = (data['test'] as bool?) == true ? yesNoOptions[1] : yesNoOptions[0];
-    inverted = (data['inverted'] as bool?) == true ? yesNoOptions[1] : yesNoOptions[0];
+    inverted =
+        (data['inverted'] as bool?) == true ? yesNoOptions[1] : yesNoOptions[0];
     inputTextCtrl.text = (data['text'] as String?) ?? '';
   }
 
@@ -136,9 +138,11 @@ class _InputModeBottomSheetState extends State<InputModeBottomSheet> {
     manager = Get.find<BleLogController>().bleManager;
     group = groupOptions[manager!.inputSetupGroup.value];
     function = functionOptionsMap[group]![manager!.inputSetupFunction.value];
-    enabled = manager!.isInputSetupEnabled.value ? yesNoOptions[1] : yesNoOptions[0];
+    enabled =
+        manager!.isInputSetupEnabled.value ? yesNoOptions[1] : yesNoOptions[0];
     test = manager!.isInputSetupTest.value ? yesNoOptions[1] : yesNoOptions[0];
-    inverted = manager!.isInputSetupInverted.value ? yesNoOptions[1] : yesNoOptions[0];
+    inverted =
+        manager!.isInputSetupInverted.value ? yesNoOptions[1] : yesNoOptions[0];
     inputTextCtrl.text = manager!.inputSetupText.value;
     if (mounted) setState(() {});
   }
@@ -545,10 +549,7 @@ class _InputModeBottomSheetState extends State<InputModeBottomSheet> {
         onPressed: widget.onDownload,
         child: Text(
           'Download',
-          style: GoogleFonts.inter(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-          ),
+          style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600),
         ),
       ),
     );
