@@ -33,6 +33,7 @@ class BleProcess {
   int checkForZoneSetupApplyRes = 0;
   int zoneSetupFetchCommandStep = 0; // 1, 2, 3
   int zoneSetupApplyCommandStep = 0; // 1, 2, 3
+  int checkForRadioSetupFetchRes = 0;
   int validEventLogNum = 0;
   int read1000Logs = 0;
   bool logRetreivalEnded = false;
@@ -397,6 +398,11 @@ class BleProcess {
         checkForZoneSetupApplyRes = 1;
         break;
 
+      case OtaProcessState.sendRadioSetupFetchCmdPkt:
+        print("Sending Radio Setup Fetch Command");
+        checkForRadioSetupFetchRes = 1;
+        break;
+
       default:
         break;
     }
@@ -495,6 +501,23 @@ class BleProcess {
         await bleManager.sendPollPacket();
       }
       // checkDipSetCmdRsp = 0;
+    }
+
+    if (checkForRadioSetupFetchRes == 1) {
+      print(
+        "Checking Radio Setup Fetch CMD RSP Value ${rx.payload[12]}:::::${rx.payload[12] == 0x1D} ",
+      );
+      if (rx.payload[12] == 0x1D) {
+        bleManager.otaProcessState = OtaProcessState.notInUse;
+        checkForRadioSetupFetchRes = 0;
+        // isRadioSetupFetchCommandActive.value = false;
+        isAccessKeyValid.value = true;
+        print("We got the response for radio setup fetch");
+      } else {
+        print("Radio Setup Fetch Cmd Response not found, polling again");
+        startRxTimeout();
+        await bleManager.sendPollPacket();
+      }
     }
 
     // __ext out response
@@ -1158,6 +1181,48 @@ class BleProcess {
     // panelName.value = "";
   }
 
+  void resetProcessRadioSetupState() {
+    // Terminal guards
+    isOtaCompleted = false;
+    processNextOtaFrame = true;
+    logRetreivalEnded = false;
+
+    // Counters
+    checkForCtrlCmdRsp = 0;
+    checkForAccessKeyCmdRsp = 0;
+    checkDipSetCmdRsp = 0;
+    checkForExtCmdFetchRes = 0;
+    checkForInputSetupFetchRes = 0;
+    checkForRelaySetupApplyRes = 0;
+    validEventLogNum = 0;
+    read1000Logs = 0;
+    receivedPollCount = 0;
+    isExtOutApplyButtonActive.value = false;
+    relaySetupFetchCommandStep = 0;
+    checkForRelaySetupFetchRes = 0;
+
+    // Time tracking
+    // logStartingTime = null;
+    // logEndTime = null;
+
+    // OTA state
+    bleManager.otaProcessState = OtaProcessState.sendNetworkPacket;
+
+    // RX timeout
+    _rxTimeoutTimer?.cancel();
+    _rxTimeoutTimer = null;
+
+    _otherPacketsRxTimeoutTimer?.cancel();
+    _otherPacketsRxTimeoutTimer = null;
+
+    // UI notifiers
+    // validEventLogCount.value = 0;
+    // read1000LogsCount.value = 0;
+    // validEventLogs.value = [];
+    // isValidLogRecieved.value = false;
+    // panelName.value = "";
+  }
+
   String formatDuration(Duration d) {
     final m = d.inMinutes;
     final s = d.inSeconds.remainder(60);
@@ -1494,6 +1559,8 @@ class BleProcess {
         case OtaProcessState.sendZoneSetupFetchCmdPkt:
           break;
         case OtaProcessState.sendZoneSetupApplyCmdPkt:
+          break;
+        case OtaProcessState.sendRadioSetupFetchCmdPkt:
           break;
       }
       startRxTimeout();
