@@ -18,6 +18,7 @@ import 'package:techno_switch_solar_app/screens/scanning_screen.dart';
 import 'package:techno_switch_solar_app/screens/settings_screen.dart';
 import 'package:techno_switch_solar_app/screens/test_mode_screen.dart';
 import 'package:techno_switch_solar_app/utils/bluetooth_service.dart';
+import 'package:techno_switch_solar_app/utils/ble_name_utils.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/input_mode_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/radio_mode_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/relay_mode_bottomsheet.dart';
@@ -528,8 +529,6 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
 
     try {
       final deviceName = widget.selectedDevice.name;
-      print('deviceName: $deviceName');
-      print('hey hey TECHNOSWITCH_${widget.panelName.split('_').last}');
       if (deviceName.isEmpty) {
         throw Exception('Device name is empty');
       }
@@ -554,9 +553,8 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
 
       _scanSubscription = _bluetoothService.scanResultsStream.listen((results) {
         for (var result in results) {
-          // Match by device name
-          if (result.name ==
-              'TECHNOSWITCH_${widget.panelName.split('_').last}') {
+          // Match by full BLE name
+          if (result.name == widget.panelName) {
             if (!deviceFoundCompleter.isCompleted) {
               deviceFoundCompleter.complete(result);
             }
@@ -1477,7 +1475,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      widget.panelName.split('_').first,
+                      BleNameUtils.getDisplayPrefixFromBleName(widget.panelName),
                       style: GoogleFonts.inter(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
@@ -1485,7 +1483,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                       overflow: TextOverflow.ellipsis,
                     ),
                     Text(
-                      widget.panelName.split('_').last,
+                      BleNameUtils.getDisplayIdFromBleName(widget.panelName),
                       style: GoogleFonts.inter(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,

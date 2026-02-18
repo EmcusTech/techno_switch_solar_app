@@ -7,6 +7,7 @@ import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/controllers/updates_controller.dart';
 import 'package:techno_switch_solar_app/screens/device_connecting_screen.dart';
 import 'package:techno_switch_solar_app/widgets/firmware_upgrade_bottom_sheet.dart';
+import 'package:techno_switch_solar_app/utils/ble_name_utils.dart';
 
 class SettingsScreen extends StatefulWidget {
   final String panelName;
@@ -212,14 +213,14 @@ class _SettingsContentState extends State<_SettingsContent> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    widget.panelName.split('_').first,
+                    BleNameUtils.getDisplayPrefixFromBleName(widget.panelName),
                     style: GoogleFonts.inter(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
                   Text(
-                    widget.panelName.split('_').last,
+                    BleNameUtils.getDisplayIdFromBleName(widget.panelName),
                     style: GoogleFonts.inter(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,

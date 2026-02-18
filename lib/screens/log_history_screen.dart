@@ -9,6 +9,7 @@ import 'package:techno_switch_solar_app/models/log_retrieval_model.dart';
 import 'package:techno_switch_solar_app/screens/device_connecting_screen.dart';
 import 'package:techno_switch_solar_app/screens/event_log_screen.dart';
 import 'package:techno_switch_solar_app/services/log_retrieval_service.dart';
+import 'package:techno_switch_solar_app/utils/ble_name_utils.dart';
 
 class LogHistoryScreen extends StatefulWidget {
   final String panelName;
@@ -419,14 +420,14 @@ class LogHistoryScreenState extends State<LogHistoryScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    widget.panelName.split('_').first,
+                    BleNameUtils.getDisplayPrefixFromBleName(widget.panelName),
                     style: GoogleFonts.inter(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
                   Text(
-                    widget.panelName.split('_').last,
+                    BleNameUtils.getDisplayIdFromBleName(widget.panelName),
                     style: GoogleFonts.inter(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,

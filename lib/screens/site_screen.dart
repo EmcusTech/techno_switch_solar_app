@@ -14,6 +14,7 @@ import 'package:techno_switch_solar_app/services/log_retrieval_service.dart';
 import 'package:techno_switch_solar_app/services/panel_service.dart';
 import 'package:intl/intl.dart';
 import 'package:techno_switch_solar_app/widgets/common/common_cta_button.dart';
+import 'package:techno_switch_solar_app/utils/ble_name_utils.dart';
 
 class SiteScreen extends StatefulWidget {
   final SiteModel site;
@@ -890,8 +891,8 @@ class _SiteScreenState extends State<SiteScreen> {
           },
           itemBuilder: (context, index) {
             final panel = _panels[index];
-            // Standardize navigation name to advertised format for consistency
-            final panelName = 'TECHNOSWITCH_${panel.panelId}';
+            // Use full BLE name for reconnection (panelName from DB, or panelId if it's the full name)
+            final panelName = panel.panelName;
 
             return GestureDetector(
               onLongPress: () {
@@ -957,7 +958,10 @@ class _SiteScreenState extends State<SiteScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              panel.panelName,
+                              panel.deviceType == 'bluetooth'
+                                  ? BleNameUtils.getDisplayPrefixFromBleName(
+                                      panel.panelName)
+                                  : panel.panelName,
                               style: GoogleFonts.inter(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w700,
@@ -967,7 +971,10 @@ class _SiteScreenState extends State<SiteScreen> {
                               overflow: TextOverflow.ellipsis,
                             ),
                             Text(
-                              panel.panelId,
+                              panel.deviceType == 'bluetooth'
+                                  ? BleNameUtils.getDisplayIdFromBleName(
+                                      panel.panelName)
+                                  : panel.panelId,
                               style: GoogleFonts.inter(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w400,

@@ -11,6 +11,7 @@ import 'package:techno_switch_solar_app/services/navigation_service.dart';
 import 'package:techno_switch_solar_app/services/panel_service.dart';
 import 'package:techno_switch_solar_app/services/site_service.dart';
 import 'package:techno_switch_solar_app/widgets/site_creation_dialog.dart';
+import 'package:techno_switch_solar_app/utils/ble_name_utils.dart';
 // import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
 class LogRetrievalCompletedScreen extends StatefulWidget {
@@ -103,16 +104,11 @@ class _LogRetrievalCompletedScreenState
   }
 
   String _panelDisplayName(String name) {
-    final parts = name.split('_');
-    return parts.isNotEmpty ? parts.first : name;
+    return BleNameUtils.getDisplayPrefixFromBleName(name);
   }
 
   String _resolvedPanelId() {
-    if ((widget.panelId ?? '').isNotEmpty) return widget.panelId!;
-
-    final parts = widget.panelName.split('_');
-    if (parts.length > 1 && parts.last.isNotEmpty) return parts.last;
-
+    if (widget.panelId.isNotEmpty) return widget.panelId;
     return widget.panelName;
   }
 

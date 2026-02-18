@@ -110,6 +110,11 @@ class PanelService {
     return await _databaseHelper.getPanelByPanelId(panelId);
   }
 
+  /// Get panel by BLE name (full advertised name). Used for site management lookup.
+  Future<PanelModel?> getPanelByBleName(String bleName) async {
+    return await _databaseHelper.getPanelByPanelName(bleName);
+  }
+
   /// Get all panels for a site
   Future<List<PanelModel>> getPanelsBySiteId(int siteId) async {
     return await _databaseHelper.getPanelsBySiteId(siteId);

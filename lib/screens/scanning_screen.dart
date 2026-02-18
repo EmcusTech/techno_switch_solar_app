@@ -22,6 +22,7 @@ import 'package:techno_switch_solar_app/services/panel_service.dart';
 import 'package:techno_switch_solar_app/services/site_service.dart';
 import 'package:techno_switch_solar_app/models/site_model.dart';
 import 'package:techno_switch_solar_app/screens/simple_site_creation_screen.dart';
+import 'package:techno_switch_solar_app/utils/ble_name_utils.dart';
 
 enum ScanType { usb, bluetooth }
 
@@ -488,11 +489,14 @@ class _ScanningScreenState extends State<ScanningScreen>
   Future<int?> _ensureConnectedPanelHasSite({
     required DiscoveredDevice device,
   }) async {
-    final panelId = _extractPanelId(device.name);
-    if (panelId == null || panelId.trim().isEmpty) return null;
+    final bleName = device.name.trim();
+    if (bleName.isEmpty) return null;
 
     try {
-      final existingPanel = await _panelService.getPanelByPanelId(panelId);
+      // Look up by full BLE name (panelId or panelName)
+      var existingPanel =
+          await _panelService.getPanelByPanelId(bleName) ??
+          await _panelService.getPanelByBleName(bleName);
       final existingSiteId = existingPanel?.siteId;
       if (existingSiteId != null) return existingSiteId;
     } catch (_) {
@@ -502,17 +506,21 @@ class _ScanningScreenState extends State<ScanningScreen>
     final sites = await _siteService.getAllSites();
     final pickedSiteId = await _promptUserToPickOrCreateSite(
       sites: sites,
-      panelId: panelId,
-      panelName: device.name,
+      panelId: bleName,
+      panelName: bleName,
     );
 
     if (pickedSiteId == null) return null;
 
-    // Persist association (idempotent if already assigned to same site).
+    // Use full BLE name as panelId for new panels; use existing panelId if panel exists
+    final panel =
+        await _panelService.getPanelByPanelId(bleName) ??
+        await _panelService.getPanelByBleName(bleName);
+    final panelIdToUse = panel?.panelId ?? bleName;
     await _siteService.assignPanelToSite(
-      panelId,
+      panelIdToUse,
       pickedSiteId,
-      panelName: device.name,
+      panelName: bleName,
     );
     return pickedSiteId;
   }
@@ -1423,7 +1431,7 @@ class _ScanningScreenState extends State<ScanningScreen>
               SizedBox(height: 6),
               Expanded(
                 child: Text(
-                  label.split('_').last,
+                  BleNameUtils.getDisplayIdFromBleName(label),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   textAlign: TextAlign.center,
@@ -1609,15 +1617,6 @@ class _ScanningScreenState extends State<ScanningScreen>
     } catch (e) {
       return d.toString();
     }
-  }
-
-  String? _extractPanelId(String name) {
-    final trimmed = name.trim();
-    if (trimmed.isEmpty) return null;
-    final parts = trimmed.split('_');
-    if (parts.length < 2) return null;
-    final id = parts.last;
-    return id.isNotEmpty ? id : null;
   }
 
   void _showConnectingDialog({

@@ -16,6 +16,7 @@ import 'package:techno_switch_solar_app/utils/pdf_report_util.dart';
 import 'package:techno_switch_solar_app/widgets/site_creation_dialog.dart';
 import 'package:techno_switch_solar_app/screens/simple_site_creation_screen.dart';
 import 'package:techno_switch_solar_app/screens/device_connecting_screen.dart';
+import 'package:techno_switch_solar_app/utils/ble_name_utils.dart';
 
 class EventLogScreen extends StatefulWidget {
   final List<LogModel> logDataList;
@@ -110,19 +111,14 @@ class _EventLogContentState extends State<_EventLogContent> {
     return widget.panelName.trim();
   }
 
-  // Prefer provided panelId, otherwise derive from scanned device name (technoswitch_xxxx)
+  // Prefer provided panelId, otherwise use full BLE name for DB lookup
   String _resolvedPanelId() {
     if ((widget.panelId ?? '').isNotEmpty) return widget.panelId!;
-
-    final parts = widget.panelName.split('_');
-    if (parts.length > 1 && parts.last.isNotEmpty) return parts.last;
-
     return widget.panelName;
   }
 
   String _panelDisplayName(String name) {
-    final parts = name.split('_');
-    return parts.isNotEmpty ? parts.first : name;
+    return BleNameUtils.getDisplayPrefixFromBleName(name);
   }
 
   // Keep logs sorted by eventId (numeric if possible)
@@ -542,8 +538,10 @@ class _EventLogContentState extends State<_EventLogContent> {
                   await LogReportPdfUtil.generate(
                     logs: logs,
                     siteName: siteName,
-                    panelName: widget.panelName.split('_').first,
-                    panelSerialNumber: _resolvedPanelId(),
+                    panelName: BleNameUtils.getDisplayPrefixFromBleName(
+                        widget.panelName),
+                    panelSerialNumber:
+                        BleNameUtils.getDisplayIdFromBleName(widget.panelName),
                     installerName: installerName,
                     saqccNo: saqccNo,
                   );
@@ -1357,7 +1355,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                       ),
                     ),
                     Text(
-                      widget.panelName.split('_').last,
+                      BleNameUtils.getDisplayIdFromBleName(widget.panelName),
                       style: GoogleFonts.inter(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,

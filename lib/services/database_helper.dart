@@ -493,6 +493,21 @@ class DatabaseHelper {
     return null;
   }
 
+  /// Get panel by panel_name (BLE name). Used when looking up by full advertised name.
+  Future<PanelModel?> getPanelByPanelName(String panelName) async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.query(
+      'panels',
+      where: 'panel_name = ?',
+      whereArgs: [panelName],
+    );
+
+    if (maps.isNotEmpty) {
+      return PanelModel.fromMap(maps.first);
+    }
+    return null;
+  }
+
   /// Get all panels for a specific site
   Future<List<PanelModel>> getPanelsBySiteId(int siteId) async {
     final db = await database;
