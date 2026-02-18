@@ -278,6 +278,16 @@ class BleProcess {
   final ValueNotifier<bool> isRadioSetupFetchCommandActive =
       ValueNotifier<bool>(false);
 
+  final ValueNotifier<bool> isRadioSetupEnabled = ValueNotifier<bool>(false);
+  final ValueNotifier<int> radioSetupModule = ValueNotifier<int>(0);
+  final ValueNotifier<String> radioSetupName = ValueNotifier<String>("");
+  final ValueNotifier<String> radioSetupNo = ValueNotifier<String>("");
+  final ValueNotifier<bool> isRadioSetupAdvertised = ValueNotifier<bool>(false);
+  final ValueNotifier<bool> isRadioSetupConnected = ValueNotifier<bool>(false);
+  final ValueNotifier<bool> isRadioSetupServiced = ValueNotifier<bool>(false);
+  final ValueNotifier<bool> isRadioSetupProgrammed = ValueNotifier<bool>(false);
+  final ValueNotifier<bool> isRadioSetupBooted = ValueNotifier<bool>(false);
+
   // BleStates bleStateMachineState = BleStates.IDLE;
   BleStates bleCurrentState = BleStates.IDLE;
   DeviceConnectState deviceConnectState = DeviceConnectState.notConnected;
@@ -520,8 +530,9 @@ class BleProcess {
       if (rx.payload[12] == 0x1D) {
         bleManager.otaProcessState = OtaProcessState.notInUse;
         checkForRadioSetupFetchRes = 0;
-        // isRadioSetupFetchCommandActive.value = false;
-        isAccessKeyValid.value = true;
+        isRadioSetupEnabled.value =
+            // isRadioSetupFetchCommandActive.value = false;
+            isAccessKeyValid.value = true;
         print("We got the response for radio setup fetch");
       } else {
         print("Radio Setup Fetch Cmd Response not found, polling again");
