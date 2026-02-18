@@ -1415,7 +1415,7 @@ class _ScanningScreenState extends State<ScanningScreen>
           child: Column(
             children: [
               Text(
-                "TECHNOSWITCH",
+                BleNameUtils.getDisplayPrefixFromBleName(label),
                 style: GoogleFonts.inter(
                   fontSize: 8,
                   fontWeight: FontWeight.bold,

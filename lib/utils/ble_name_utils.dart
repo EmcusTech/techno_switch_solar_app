@@ -17,7 +17,13 @@ class BleNameUtils {
   /// Used for display when showing "Brand" + "ID" layout.
   static String getDisplayPrefixFromBleName(String bleName) {
     final trimmed = bleName.trim();
-    if (trimmed.length <= 8) return trimmed;
-    return trimmed.substring(0, trimmed.length - 8).trimRight();
+
+    final underscoreIndex = trimmed.indexOf('_');
+
+    if (underscoreIndex == -1) {
+      return trimmed; // No underscore found
+    }
+
+    return trimmed.substring(0, underscoreIndex);
   }
 }
