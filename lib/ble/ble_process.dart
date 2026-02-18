@@ -985,6 +985,7 @@ class BleProcess {
     checkForInputSetupFetchRes = 0;
     checkForRelaySetupApplyRes = 0;
     checkForInputSetupFetchRes = 0;
+    checkForRadioSetupFetchRes = 0;
     checkDipSetCmdRsp = 0;
     isExtOutApplyButtonActive.value = false;
     isExtOutCommandFetchActive.value = false;
@@ -1033,6 +1034,7 @@ class BleProcess {
     checkForInputSetupFetchRes = 0;
     checkForAccessKeyCmdRsp = 0;
     checkDipSetCmdRsp = 0;
+    checkForRadioSetupFetchRes = 0;
     checkForExtCmdFetchRes = 0;
     checkForInputSetupFetchRes = 0;
     checkForRelaySetupApplyRes = 0;
@@ -1076,6 +1078,7 @@ class BleProcess {
     checkForExtCmdFetchRes = 0;
     checkForInputSetupFetchRes = 0;
     checkForAccessKeyCmdRsp = 0;
+    checkForRadioSetupFetchRes = 0;
     checkDipSetCmdRsp = 0;
     checkForExtCmdFetchRes = 0;
     checkForInputSetupFetchRes = 0;
@@ -1119,6 +1122,7 @@ class BleProcess {
     checkDipSetCmdRsp = 0;
     checkForExtCmdFetchRes = 0;
     checkForInputSetupFetchRes = 0;
+    checkForRadioSetupFetchRes = 0;
     checkForRelaySetupApplyRes = 0;
     validEventLogNum = 0;
     read1000Logs = 0;
@@ -1162,6 +1166,7 @@ class BleProcess {
     checkForExtCmdFetchRes = 0;
     checkForInputSetupFetchRes = 0;
     checkForRelaySetupApplyRes = 0;
+    checkForRadioSetupFetchRes = 0;
     validEventLogNum = 0;
     read1000Logs = 0;
     receivedPollCount = 0;
@@ -1207,6 +1212,7 @@ class BleProcess {
     validEventLogNum = 0;
     read1000Logs = 0;
     receivedPollCount = 0;
+    checkForRadioSetupFetchRes = 0;
     isExtOutApplyButtonActive.value = false;
     relaySetupFetchCommandStep = 0;
     checkForRelaySetupFetchRes = 0;
