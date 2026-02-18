@@ -19,6 +19,7 @@ import 'package:techno_switch_solar_app/screens/settings_screen.dart';
 import 'package:techno_switch_solar_app/screens/test_mode_screen.dart';
 import 'package:techno_switch_solar_app/utils/bluetooth_service.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/input_mode_bottomsheet.dart';
+import 'package:techno_switch_solar_app/widgets/bottom_sheets/radio_mode_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/relay_mode_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/setting_bottom_sheets/ext_out_bottomsheet.dart';
 import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
@@ -1200,8 +1201,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                         if (mode == 'bottomsheet_download') {
                           onDownloadComplete?.call();
                         } else if (ble.bleProcess.isExtOutApplyDone.value) {
-                          ble.bleProcess.isExtOutApplyButtonActive.value =
-                              true;
+                          ble.bleProcess.isExtOutApplyButtonActive.value = true;
                           await _saveExtOutCacheAndNotifyRefresh();
                           if (mounted) {
                             showApplySuccessDialog(
@@ -1753,9 +1753,43 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 isDisabled: true,
               ),
               _peripheralTile(
-                peripheralName: 'Prog/Hold',
+                peripheralName: 'Radio',
                 iconPath: 'assets/svgs/peripheral_prog_hold_icon.svg',
-                isDisabled: true,
+                onTap: () {
+                  if (_selectedDevice.manufacturerData.isNotEmpty &&
+                      _selectedDevice.manufacturerData.last == 1) {
+                    showBootloaderModeDialog(context: context);
+                    return;
+                  }
+                  showRadioSetupBottomSheet(
+                    context: context,
+                    deviceId: _selectedDevice.id,
+                    onDownload: () {
+                      showPasswordPopup(
+                        onCall: () {
+                          ble.bleProcess.isRadioSetupFetchCommandActive.value =
+                              true;
+                          bleController.startRadioSetupFetch();
+                        },
+                        isZoneSetup: true,
+                        mode: 'bottomsheet_download',
+                        onDownloadComplete: _saveZoneCacheAndNotifyRefresh,
+                      );
+                    },
+                    onApply: () {
+                      showPasswordPopup(
+                        onCall: () {
+                          ble.bleProcess.isZoneSetupCommandApplyActive.value =
+                              true;
+                          bleController.startZoneSetupApply();
+                        },
+                        isZoneSetup: true,
+                        mode: 'bottomsheet_apply',
+                      );
+                    },
+                    refreshTrigger: _zoneRefreshTrigger,
+                  );
+                },
               ),
               _peripheralTile(
                 peripheralName: 'Aux',
@@ -1794,7 +1828,8 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                     onApply: () {
                       showPasswordPopup(
                         onCall: () {
-                          ble.bleProcess.isExtOutCommandApplyActive.value = true;
+                          ble.bleProcess.isExtOutCommandApplyActive.value =
+                              true;
                           bleController.startExtOutApply();
                         },
                         isExtOut: true,
@@ -1824,12 +1859,13 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       barrierColor: Colors.black.withOpacity(0.4),
-      builder: (_) => ExtOutBottomSheet(
-        deviceId: deviceId,
-        onDownload: onDownload,
-        onApply: onApply,
-        refreshTrigger: refreshTrigger,
-      ),
+      builder:
+          (_) => ExtOutBottomSheet(
+            deviceId: deviceId,
+            onDownload: onDownload,
+            onApply: onApply,
+            refreshTrigger: refreshTrigger,
+          ),
     );
   }
 
@@ -1845,12 +1881,13 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       barrierColor: Colors.black.withOpacity(0.4),
-      builder: (_) => InputModeBottomSheet(
-        deviceId: deviceId,
-        onDownload: onDownload,
-        onApply: onApply,
-        refreshTrigger: refreshTrigger,
-      ),
+      builder:
+          (_) => InputModeBottomSheet(
+            deviceId: deviceId,
+            onDownload: onDownload,
+            onApply: onApply,
+            refreshTrigger: refreshTrigger,
+          ),
     );
   }
 
@@ -1866,12 +1903,13 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       barrierColor: Colors.black.withOpacity(0.4),
-      builder: (_) => RelayModeBottomSheet(
-        deviceId: deviceId,
-        onDownload: onDownload,
-        onApply: onApply,
-        refreshTrigger: refreshTrigger,
-      ),
+      builder:
+          (_) => RelayModeBottomSheet(
+            deviceId: deviceId,
+            onDownload: onDownload,
+            onApply: onApply,
+            refreshTrigger: refreshTrigger,
+          ),
     );
   }
 
@@ -1887,12 +1925,35 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       barrierColor: Colors.black.withOpacity(0.4),
-      builder: (_) => ZoneBottomSheet(
-        deviceId: deviceId,
-        onDownload: onDownload,
-        onApply: onApply,
-        refreshTrigger: refreshTrigger,
-      ),
+      builder:
+          (_) => ZoneBottomSheet(
+            deviceId: deviceId,
+            onDownload: onDownload,
+            onApply: onApply,
+            refreshTrigger: refreshTrigger,
+          ),
+    );
+  }
+
+  void showRadioSetupBottomSheet({
+    required BuildContext context,
+    required String deviceId,
+    required VoidCallback onDownload,
+    required VoidCallback onApply,
+    required ValueNotifier<int> refreshTrigger,
+  }) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withOpacity(0.4),
+      builder:
+          (_) => RadioModeBottomSheet(
+            deviceId: deviceId,
+            onDownload: onDownload,
+            onApply: onApply,
+            refreshTrigger: refreshTrigger,
+          ),
     );
   }
 

@@ -277,6 +277,8 @@ class BleManager {
       bleProcess.zoneThreeSetupVerificationTime;
   ValueNotifier<bool> get isZoneSetupFetchCommandActive =>
       bleProcess.isZoneSetupFetchCommandActive;
+  ValueNotifier<bool> get isRadioSetupFetchCommandActive =>
+      bleProcess.isRadioSetupFetchCommandActive;
   void resetProtocolState() {
     // Packet counters
     u8TxPktCnt = 0;

@@ -274,6 +274,10 @@ class BleProcess {
   final ValueNotifier<String> zoneThreeSetupVerificationTime =
       ValueNotifier<String>("");
 
+  // Radio Setup Variables
+  final ValueNotifier<bool> isRadioSetupFetchCommandActive =
+      ValueNotifier<bool>(false);
+
   // BleStates bleStateMachineState = BleStates.IDLE;
   BleStates bleCurrentState = BleStates.IDLE;
   DeviceConnectState deviceConnectState = DeviceConnectState.notConnected;
@@ -465,6 +469,12 @@ class BleProcess {
           zoneSetupApplyCommandStep = 1;
           startRxTimeout();
           await bleManager.sendZoneSetupApplyFirstCmdPkt();
+        } else if (isRadioSetupFetchCommandActive.value) {
+          bleManager.otaProcessState =
+              OtaProcessState.sendRadioSetupFetchCmdPkt;
+          checkForAccessKeyCmdRsp = 0;
+          startRxTimeout();
+          await bleManager.sendRadioSetupFetchCmdPkt();
         } else {
           bleManager.otaProcessState = OtaProcessState.sendStopCntrlCmdPkt;
           checkForAccessKeyCmdRsp = 0;
