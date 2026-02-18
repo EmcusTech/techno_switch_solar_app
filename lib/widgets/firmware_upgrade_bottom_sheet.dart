@@ -22,6 +22,7 @@ import 'package:techno_switch_solar_app/services/firmware_upgrade_service.dart'
 import '../utils/bluetooth/ble_notify_data_handler.dart';
 import 'package:techno_switch_solar_app/utils/bluetooth_service.dart'
     as app_bluetooth;
+import 'package:techno_switch_solar_app/utils/ble_name_utils.dart';
 import 'package:techno_switch_solar_app/utils/logger.dart' as logger;
 
 enum FirmwareType { mainPanel, bleChip }
@@ -69,6 +70,7 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
   bool _isWaitingForJumpReconnect = false;
   bool _isWaitingForEndReconnect = false;
   String? _originalDeviceName; // Store device name for reconnection
+  String? _originalStableDeviceId; // Last 8 chars - stable across name changes (P_87654321 vs TECHNOSWITCH_87654321)
   int? _originalManufacturerData; // Store manufacturer data before jump command
   StreamSubscription<ConnectionStateUpdate>? _internalReconnectSub;
   bool _bootloaderNotifyReady = false;
@@ -228,9 +230,11 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
       _bootloaderNotifyReady = false;
       print("isChipInBootLoader: $isChipInBootLoader");
 
-      // Store original device name and manufacturer data before jump command
+      // Store original device name, stable ID, and manufacturer data before jump command
       if (isChipInBootLoader != true && _selectedDevice != null) {
         _originalDeviceName = _selectedDevice!.name;
+        _originalStableDeviceId =
+            BleNameUtils.getDisplayIdFromBleName(_selectedDevice!.name);
         // Store manufacturer data before jump command
         final md = _selectedDevice!.manufacturerData;
         _originalManufacturerData = md.isNotEmpty ? md.last : null;
@@ -427,40 +431,56 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
             'DEBUG SCAN: Device found - Name: ${result.name}, ID: ${result.id}, Manufacturer data: ${result.manufacturerData}, Length: ${result.manufacturerData.length}',
           );
 
-          // Match by device name
-          if (result.name == _originalDeviceName) {
-            device = result;
-            print(
-              "DEBUG SCAN: Device found - Name: ${result.name}, ID: ${result.id}, Manufacturer data: ${result.manufacturerData}, Length: ${result.manufacturerData.length}",
-            );
-            // Check manufacturer data from scan results
-            final manufacturerData = result.manufacturerData;
-            print(
-              'DEBUG: Matched device ${result.name} - Full manufacturer data array: $manufacturerData, Length: ${manufacturerData.length}',
-            );
-            if (manufacturerData.isNotEmpty) {
-              manufacturerDataFromScan = manufacturerData.last;
-              scanLastByte = manufacturerDataFromScan;
-              logger.Logger(
-                'Found device ${result.name} with manufacturer data array: $manufacturerData (last byte: $manufacturerDataFromScan)',
-              );
-            } else {
-              logger.Logger(
-                'Found device ${result.name} but manufacturer data is EMPTY: $manufacturerData',
-              );
-              print('DEBUG: Manufacturer data is empty for matched device');
-            }
+          final manufacturerData = result.manufacturerData;
+          final lastByte =
+              manufacturerData.isNotEmpty ? manufacturerData.last : null;
+          final stableId = BleNameUtils.getDisplayIdFromBleName(result.name);
 
-            if (isJumpCommand) {
-              if (scanLastByte == 1) {
-                // Bootloader detected - we're done
-                if (!scanDoneCompleter.isCompleted) {
-                  scanDoneCompleter.complete();
-                }
+          if (isJumpCommand) {
+            // For jump: prioritize device with [0,1] (bootloader) and matching stable ID
+            // Handles name change: P_87654321 -> TECHNOSWITCH_87654321 (both have "87654321")
+            final matchesStableId = _originalStableDeviceId != null &&
+                stableId.isNotEmpty &&
+                stableId == _originalStableDeviceId;
+            final isBootloader = lastByte == 1;
+
+            if (matchesStableId && isBootloader) {
+              device = result;
+              scanLastByte = lastByte;
+              manufacturerDataFromScan = lastByte;
+              logger.Logger(
+                'Found bootloader device ${result.name} (stable ID match) with manufacturer data: $manufacturerData',
+              );
+              if (!scanDoneCompleter.isCompleted) {
+                scanDoneCompleter.complete();
               }
-            } else {
+              return;
+            }
+            // Fallback: exact name match with bootloader (old firmware where name doesn't change)
+            if (result.name == _originalDeviceName && isBootloader) {
+              device = result;
+              scanLastByte = lastByte;
+              manufacturerDataFromScan = lastByte;
+              logger.Logger(
+                'Found bootloader device ${result.name} (name match) with manufacturer data: $manufacturerData',
+              );
+              if (!scanDoneCompleter.isCompleted) {
+                scanDoneCompleter.complete();
+              }
+              return;
+            }
+          } else {
+            // End command: match by name as before
+            if (result.name == _originalDeviceName) {
+              device = result;
+              if (manufacturerData.isNotEmpty) {
+                manufacturerDataFromScan = manufacturerData.last;
+                scanLastByte = manufacturerDataFromScan;
+              }
+              logger.Logger(
+                'Found device ${result.name} with manufacturer data array: $manufacturerData (last byte: $scanLastByte)',
+              );
               if (scanLastByte == 2) {
-                // Success detected - we're done
                 if (!scanDoneCompleter.isCompleted) {
                   scanDoneCompleter.complete();
                 }
