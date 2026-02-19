@@ -1083,6 +1083,94 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     );
   }
 
+  void showDownloadSuccessDialog(BuildContext context, String message) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 64,
+                  height: 64,
+                  decoration: BoxDecoration(
+                    color: Color(0xFFE8F5E9),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: SvgPicture.asset(
+                      'assets/svgs/check_circle_icon.svg',
+                      height: 40,
+                      width: 40,
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                ),
+                SizedBox(height: 16),
+                Text(
+                  "$message Downloaded",
+                  style: GoogleFonts.inter(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF3D3D3D),
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 8),
+                Text(
+                  'The $message has been successfully downloaded from the device.',
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w400,
+                    color: Color(0xFF918F8F),
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  child: GestureDetector(
+                    onTap: () {
+                      Navigator.of(dialogContext, rootNavigator: true).pop();
+                    },
+                    child: Container(
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: Color(0xFFEC1D24),
+                        borderRadius: BorderRadius.circular(24),
+                      ),
+                      child: Center(
+                        child: Text(
+                          'OK',
+                          style: GoogleFonts.inter(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   void showPasswordPopup({
     required Function() onCall,
     bool? isExtOut = false,
@@ -1090,7 +1178,8 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     bool? isRelaySetup = false,
     bool? isZoneSetup = false,
     String? mode,
-    VoidCallback? onDownloadComplete,
+    Future<void> Function()? onDownloadComplete,
+    String? downloadSuccessMessage,
   }) {
     // Reset navigation guard each time the dialog opens
     _navigatingToDeviceConnecting = false;
@@ -1197,7 +1286,20 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                         if (!mounted) return;
                         Navigator.of(dialogContext, rootNavigator: true).pop();
                         if (mode == 'bottomsheet_download') {
-                          onDownloadComplete?.call();
+                          await onDownloadComplete?.call();
+                          if (mounted) {
+                            final message = downloadSuccessMessage ??
+                                (isExtOut == true
+                                    ? 'Extinguishing Output'
+                                    : isInputSetup == true
+                                        ? 'Inputs'
+                                        : isRelaySetup == true
+                                            ? 'Relays'
+                                            : isZoneSetup == true
+                                                ? 'Zones'
+                                                : 'Configuration');
+                            showDownloadSuccessDialog(context, message);
+                          }
                         } else if (ble.bleProcess.isExtOutApplyDone.value) {
                           ble.bleProcess.isExtOutApplyButtonActive.value = true;
                           await _saveExtOutCacheAndNotifyRefresh();
@@ -1775,6 +1877,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                         isZoneSetup: true,
                         mode: 'bottomsheet_download',
                         onDownloadComplete: _saveZoneCacheAndNotifyRefresh,
+                        downloadSuccessMessage: 'Radio',
                       );
                     },
                     onApply: () {
