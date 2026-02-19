@@ -6,7 +6,7 @@ import FlutterMacOS
 import Foundation
 
 import file_picker
-import flutter_blue_plus
+import flutter_blue_plus_darwin
 import path_provider_foundation
 import printing
 import share_plus

@@ -1634,7 +1634,6 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
               _peripheralTile(
                 peripheralName: 'Relays',
                 iconPath: 'assets/svgs/peripheral_relay_icon.svg',
-                isDisabled: true,
                 onTap: () {
                   if (_selectedDevice.manufacturerData.isNotEmpty &&
                       _selectedDevice.manufacturerData.last == 1) {
@@ -1674,7 +1673,6 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
               _peripheralTile(
                 peripheralName: 'Inputs',
                 iconPath: 'assets/svgs/peripheral_input_icon.svg',
-                isDisabled: true,
                 onTap: () {
                   if (_selectedDevice.manufacturerData.isNotEmpty &&
                       _selectedDevice.manufacturerData.last == 1) {
@@ -1713,7 +1711,6 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
               _peripheralTile(
                 peripheralName: 'Zones',
                 iconPath: 'assets/svgs/peripheral_zones_icon.svg',
-                isDisabled: true,
                 onTap: () {
                   if (_selectedDevice.manufacturerData.isNotEmpty &&
                       _selectedDevice.manufacturerData.last == 1) {
@@ -1808,7 +1805,6 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
               _peripheralTile(
                 peripheralName: 'Ext Out',
                 iconPath: 'assets/svgs/peripheral_ext_out_icon.svg',
-                isDisabled: true,
                 onTap: () {
                   if (_selectedDevice.manufacturerData.isNotEmpty &&
                       _selectedDevice.manufacturerData.last == 1) {
