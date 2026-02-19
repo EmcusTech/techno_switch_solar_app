@@ -50,29 +50,118 @@ class _ScannedScreenState extends State<ScannedScreen> {
   }) async {
     if (!mounted) return null;
 
+    // If there are no sites at all, force create flow.
     if (sites.isEmpty) {
       final shouldCreate = await showDialog<bool>(
         context: context,
         barrierDismissible: false,
         builder: (dialogContext) {
-          return AlertDialog(
-            title: const Text('Create a site?'),
-            content: Text(
-              'This panel is not associated with any site yet. Create a site to continue.',
+          return Dialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(dialogContext).pop(false),
-                child: const Text('Cancel'),
+            child: Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
               ),
-              ElevatedButton(
-                onPressed: () => Navigator.of(dialogContext).pop(true),
-                child: const Text('Create site'),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 64,
+                    height: 64,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFFBDEE1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Center(
+                      child: Icon(
+                        Icons.domain_add,
+                        size: 32,
+                        color: Color(0xFFEC1D24),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Create a site?',
+                    style: GoogleFonts.inter(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF3D3D3D),
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'This panel is not associated with any site yet. Create a site to continue.',
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
+                      color: const Color(0xFF918F8F),
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Actions
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          style: OutlinedButton.styleFrom(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(24),
+                            ),
+                            side: const BorderSide(color: Color(0xFFEC1D24)),
+                          ),
+                          onPressed: () {
+                            Navigator.of(dialogContext).pop(false);
+                            _bleManager.disconnectConnectedDevice();
+                          },
+                          child: Text(
+                            'Cancel',
+                            style: GoogleFonts.inter(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFFEC1D24),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFEC1D24),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(24),
+                            ),
+                          ),
+                          onPressed: () {
+                            Navigator.of(dialogContext).pop(true);
+                          },
+                          child: Text(
+                            'Create site',
+                            style: GoogleFonts.inter(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-            ],
+            ),
           );
         },
       );
+
       if (shouldCreate != true) return null;
 
       final createdSiteId = await Navigator.of(context).push<int?>(
@@ -95,55 +184,258 @@ class _ScannedScreenState extends State<ScannedScreen> {
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) {
+        const double siteRowHeight = 64;
+        const int maxVisibleSites = 3;
+
+        final visibleCount =
+            sites.length < maxVisibleSites ? sites.length : maxVisibleSites;
+
+        final listHeight =
+            visibleCount * siteRowHeight + ((visibleCount - 1) * 8); // spacing
+
         return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              title: const Text('Select a site'),
-              content: SizedBox(
-                width: double.maxFinite,
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: sites.length,
-                  itemBuilder: (context, index) {
-                    final site = sites[index];
-                    return RadioListTile<int>(
-                      value: site.id ?? -1,
-                      groupValue: selected?.id,
-                      title: Text(site.siteName),
-                      subtitle:
-                          (site.companyName.trim().isNotEmpty ||
-                                  site.buildingName.trim().isNotEmpty)
-                              ? Text(
-                                [
-                                  site.companyName.trim(),
-                                  site.buildingName.trim(),
-                                ].where((s) => s.isNotEmpty).join(' • '),
-                              )
-                              : null,
-                      onChanged: (value) {
-                        setState(() => selected = site);
-                      },
-                    );
-                  },
+          builder: (_, setState) {
+            return Dialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // ───────── Icon ─────────
+                    Container(
+                      width: 64,
+                      height: 64,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFFBDEE1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Center(
+                        child: Icon(
+                          Icons.location_city,
+                          size: 32,
+                          color: Color(0xFFEC1D24),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // ───────── Title ─────────
+                    Text(
+                      'Select a site',
+                      style: GoogleFonts.inter(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF3D3D3D),
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+
+                    const SizedBox(height: 8),
+
+                    Text(
+                      'Choose the site where this panel should be assigned.',
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w400,
+                        color: const Color(0xFF918F8F),
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    // ───────── Site List (dynamic height) ─────────
+                    SizedBox(
+                      height: listHeight.toDouble(),
+                      child: ListView.separated(
+                        physics:
+                            sites.length > maxVisibleSites
+                                ? const BouncingScrollPhysics()
+                                : const NeverScrollableScrollPhysics(),
+                        itemCount: sites.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 8),
+                        itemBuilder: (_, index) {
+                          final site = sites[index];
+                          final isSelected = selected?.id == site.id;
+
+                          return GestureDetector(
+                            onTap: () => setState(() => selected = site),
+                            child: Container(
+                              height: siteRowHeight,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 12,
+                              ),
+                              decoration: BoxDecoration(
+                                color:
+                                    isSelected
+                                        ? const Color(
+                                          0xFFEC1D24,
+                                        ).withOpacity(0.08)
+                                        : const Color(0xFFF8F8F8),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color:
+                                      isSelected
+                                          ? const Color(0xFFEC1D24)
+                                          : const Color(0xFFD0D0D0),
+                                  width: isSelected ? 2 : 1,
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Text(
+                                          site.siteName,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: GoogleFonts.inter(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w600,
+                                            color: const Color(0xFF3D3D3D),
+                                          ),
+                                        ),
+                                        if (site.companyName
+                                                .trim()
+                                                .isNotEmpty ||
+                                            site.buildingName.trim().isNotEmpty)
+                                          Padding(
+                                            padding: const EdgeInsets.only(
+                                              top: 4,
+                                            ),
+                                            child: Text(
+                                              [
+                                                    site.companyName.trim(),
+                                                    site.buildingName.trim(),
+                                                  ]
+                                                  .where((s) => s.isNotEmpty)
+                                                  .join(' • '),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: GoogleFonts.inter(
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.w400,
+                                                color: const Color(0xFF918F8F),
+                                              ),
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                                  ),
+                                  if (isSelected)
+                                    const Icon(
+                                      Icons.check_circle,
+                                      color: Color(0xFFEC1D24),
+                                    ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    // ───────── Actions ─────────
+                    Column(
+                      children: [
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFFEC1D24),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(24),
+                              ),
+                            ),
+                            onPressed:
+                                selected == null
+                                    ? null
+                                    : () => Navigator.of(
+                                      dialogContext,
+                                    ).pop('select'),
+                            child: Text(
+                              'Continue',
+                              style: GoogleFonts.inter(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 12),
+
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextButton(
+                                onPressed: () {
+                                  Navigator.of(dialogContext).pop('cancel');
+                                  _bleManager.disconnectConnectedDevice();
+                                },
+                                child: Text(
+                                  'Cancel',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                    color: const Color(0xFF918F8F),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: OutlinedButton(
+                                style: OutlinedButton.styleFrom(
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(24),
+                                  ),
+                                  side: const BorderSide(
+                                    color: Color(0xFFEC1D24),
+                                    width: 1.5,
+                                  ),
+                                  backgroundColor: const Color(
+                                    0xFFEC1D24,
+                                  ).withOpacity(0.04),
+                                ),
+                                onPressed:
+                                    () => Navigator.of(
+                                      dialogContext,
+                                    ).pop('create'),
+                                child: Text(
+                                  'Create',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: const Color(0xFFEC1D24),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(dialogContext).pop('cancel'),
-                  child: const Text('Cancel'),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.of(dialogContext).pop('create'),
-                  child: const Text('Create new'),
-                ),
-                ElevatedButton(
-                  onPressed:
-                      selected == null
-                          ? null
-                          : () => Navigator.of(dialogContext).pop('select'),
-                  child: const Text('Continue'),
-                ),
-              ],
             );
           },
         );
@@ -412,6 +704,7 @@ class _ScannedScreenState extends State<ScannedScreen> {
     required DiscoveredDevice device,
     required BuildContext context,
   }) {
+    final screenContext = context;
     final bleController = Get.find<BleLogController>();
     final connectionNotifier = bleController.bleManager.isConnectedNotifier;
     final maxBleConnectionRetriesReachedNotifier =
@@ -426,58 +719,66 @@ class _ScannedScreenState extends State<ScannedScreen> {
     showDialog(
       context: context,
       barrierDismissible: false,
+      useRootNavigator: true,
       builder: (dialogContext) {
         return ListenableBuilder(
           listenable: mergedListenable,
-          builder: (context, _) {
+          builder: (_, __) {
             final isConnected = connectionNotifier.value;
             final maxBleConnectionRetriesReached =
                 maxBleConnectionRetriesReachedNotifier.value;
-            // When connected, wait 2 second then navigate
 
+            // When connected, close dialog and navigate
             if (isConnected && !hasNavigated) {
               hasNavigated = true;
-              Future.delayed(const Duration(seconds: 2), () async {
-                if (context.mounted && hasNavigated) {
-                  Navigator.of(context).pop();
-                  if (widget.isLiveEvent == true) {
-                    // bleController.startLogRetrieval();
-                    showPasswordPopup(
-                      device: device,
-                      onCall: () {
-                        bleController.startLogRetrieval();
-                      },
-                    );
-                  } else {
-                    final siteId = await _ensureConnectedPanelHasSite(
-                      device: device,
-                    );
 
-                    if (siteId == null) {
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              'No site selected. Please select/create a site to continue.',
-                            ),
+              WidgetsBinding.instance.addPostFrameCallback((_) async {
+                if (!dialogContext.mounted) return;
+
+                Navigator.of(dialogContext, rootNavigator: true).pop(true);
+
+                await Future.delayed(const Duration(milliseconds: 150));
+
+                if (!screenContext.mounted) return;
+
+                if (widget.isLiveEvent == true) {
+                  showPasswordPopup(
+                    device: device,
+                    onCall: () {
+                      bleController.startLogRetrieval();
+                    },
+                  );
+                } else {
+                  final siteId = await _ensureConnectedPanelHasSite(
+                    device: device,
+                  );
+
+                  if (siteId == null) {
+                    if (screenContext.mounted) {
+                      ScaffoldMessenger.of(screenContext).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            'No site selected. Please select or create a site.',
                           ),
-                        );
-                      }
-                      return;
+                        ),
+                      );
                     }
-                    Navigator.of(context).pushReplacement(
-                      MaterialPageRoute(
-                        builder:
-                            (context) => ProjectDashboardScreen(
-                              selectedDevice: device,
-                              panelVersionNo: device.id,
-                              panelName: device.name,
-                              siteId: siteId,
-                            ),
-                      ),
-                    );
+                    return;
                   }
-                  // Close dialog
+
+                  if (!screenContext.mounted) return;
+
+                  Navigator.of(screenContext, rootNavigator: true).pushReplacement(
+                    MaterialPageRoute(
+                      builder:
+                          (_) => ProjectDashboardScreen(
+                            selectedDevice: device,
+                            panelVersionNo: device.id,
+                            panelName: device.name,
+                            siteId: siteId,
+                          ),
+                    ),
+                  );
                 }
               });
             }
