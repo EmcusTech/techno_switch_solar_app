@@ -64,6 +64,7 @@ dependencies:
     git:
       url: https://github.com/EmcusTech/flutter_blue_plus-1.32.8.git
   dropdown_button2: ^2.3.9
+  flutter_slidable: ^3.1.2
 
 dev_dependencies:
   flutter_test:

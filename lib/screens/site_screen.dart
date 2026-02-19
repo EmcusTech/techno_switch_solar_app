@@ -1,12 +1,13 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/models/panel_model.dart';
 import 'package:techno_switch_solar_app/models/site_model.dart';
-import 'package:techno_switch_solar_app/screens/scanning_screen.dart';
 import 'package:techno_switch_solar_app/screens/site_detail_screen.dart';
 import 'package:techno_switch_solar_app/screens/project_dashboard.dart';
 import 'package:techno_switch_solar_app/services/site_service.dart';
@@ -38,7 +39,6 @@ class _SiteScreenState extends State<SiteScreen> {
   bool _isDeletingSite = false;
   int? _lastRetrievalLogCount;
   DateTime? _lastRetrievalDate;
-  bool _isPanelLongPressed = false;
 
   @override
   void initState() {
@@ -891,179 +891,171 @@ class _SiteScreenState extends State<SiteScreen> {
           },
           itemBuilder: (context, index) {
             final panel = _panels[index];
-            // Use full BLE name for reconnection (panelName from DB, or panelId if it's the full name)
             final panelName = panel.panelName;
 
-            return GestureDetector(
-              onLongPress: () {
-                if (!_isPanelLongPressed) {
-                  setState(() {
-                    _isPanelLongPressed = true;
-                  });
+            void onTap() {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => ProjectDashboardScreen(
+                    selectedDevice: DiscoveredDevice(
+                      name: panelName,
+                      id: panel.panelId,
+                      rssi: 0,
+                      serviceData: {},
+                      manufacturerData: Uint8List(0),
+                      serviceUuids: [],
+                    ),
+                    panelName: panelName,
+                    panelVersionNo: panel.deviceDisplayInfo,
+                    siteId: widget.site.id!,
+                    siteName: widget.site.siteName,
+                  ),
+                ),
+              );
+            }
 
-                  Future.delayed(const Duration(seconds: 4), () {
-                    if (mounted && _isPanelLongPressed) {
-                      setState(() {
-                        _isPanelLongPressed = false;
-                      });
-                    }
-                  });
-                }
-              },
-              onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder:
-                        (context) => ProjectDashboardScreen(
-                          selectedDevice: DiscoveredDevice(
-                            name: panelName,
-                            id: panel.panelId,
-                            rssi: 0,
-                            serviceData: {},
-                            manufacturerData: Uint8List(0),
-                            serviceUuids: [],
-                          ),
-                          panelName: panelName,
-                          panelVersionNo: panel.deviceDisplayInfo,
-                          siteId: widget.site.id!,
-                          siteName: widget.site.siteName,
-                        ),
-                  ),
-                );
-              },
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  border: Border.all(
-                    color: Color(0xFFB9B9B9).withValues(alpha: 0.31),
-                    width: 1,
-                  ),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 18.0,
-                    vertical: 12.0,
-                  ),
-                  child: Row(
-                    children: [
-                      Image.asset(
-                        'assets/images/panel_icon.png',
-                        height: 62,
-                        width: 62,
-                      ),
-                      SizedBox(width: 14.31),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              panel.deviceType == 'bluetooth'
-                                  ? BleNameUtils.getDisplayPrefixFromBleName(
-                                      panel.panelName)
-                                  : panel.panelName,
-                              style: GoogleFonts.inter(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w700,
-                                color: Color(0xFF3D3D3D),
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            Text(
-                              panel.deviceType == 'bluetooth'
-                                  ? BleNameUtils.getDisplayIdFromBleName(
-                                      panel.panelName)
-                                  : panel.panelId,
-                              style: GoogleFonts.inter(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w400,
-                                color: Color(0xFF918F8F),
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            // Text(
-                            //   '${panel.deviceType.toUpperCase()} • ${panel.deviceDisplayInfo}',
-                            //   style: GoogleFonts.inter(
-                            //     fontSize: 11,
-                            //     fontWeight: FontWeight.w400,
-                            //     color: Color(0xFF666666),
-                            //   ),
-                            //   maxLines: 1,
-                            //   overflow: TextOverflow.ellipsis,
-                            // ),
-                            // if (panel.lastConnected != null) ...[
-                            //   SizedBox(height: 2),
-                            //   Text(
-                            //     'Last connected: ${DateFormat('MMM d, y').format(panel.lastConnected!)}',
-                            //     style: GoogleFonts.inter(
-                            //       fontSize: 10,
-                            //       fontWeight: FontWeight.w400,
-                            //       color: Color(0xFF999999),
-                            //     ),
-                            //   ),
-                            // ],
-                            _buildLastLogSummary(),
-                          ],
-                        ),
-                      ),
-                      SizedBox(width: 8),
-                      GestureDetector(
-                        onTap: () {
-                          if (_isPanelLongPressed) {
-                            _confirmDeletePanel(panel);
-                          } else {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder:
-                                    (context) => ProjectDashboardScreen(
-                                      selectedDevice: DiscoveredDevice(
-                                        name: panelName,
-                                        id: panel.panelId,
-                                        rssi: 0,
-                                        serviceData: {},
-                                        manufacturerData: Uint8List(0),
-                                        serviceUuids: [],
-                                      ),
-                                      panelName: panelName,
-                                      panelVersionNo: panel.deviceDisplayInfo,
-                                      siteId: widget.site.id!,
-                                      siteName: widget.site.siteName,
-                                    ),
-                              ),
-                            );
-                          }
-                        },
-                        child:
-                            _isPanelLongPressed
-                                ? SvgPicture.asset(
-                                  "assets/svgs/delete_icon.svg",
-                                  colorFilter: ColorFilter.mode(
-                                    Color(0xFFFF6467),
-                                    BlendMode.srcIn,
-                                  ),
-                                )
-                                : Icon(
-                                  Icons.arrow_forward_ios,
-                                  size: 16,
-                                  color: Color(0xFFEC1D24),
-                                ),
-                      ),
-                      // IconButton(
-                      //   icon: const Icon(
-                      //     Icons.delete_outline,
-                      //     color: Color(0xFFEC1D24),
-                      //   ),
-                      //   tooltip: 'Delete panel',
-                      //   onPressed: () => _confirmDeletePanel(panel),
-                      // ),
-                    ],
-                  ),
-                ),
-              ),
+            return _PanelListItemWidget(
+              panel: panel,
+              lastLogSummary: _buildLastLogSummary(),
+              onTap: onTap,
+              onDelete: () => _confirmDeletePanel(panel),
             );
           },
+        ),
+      ),
+    );
+  }
+}
+
+class _PanelListItemWidget extends StatefulWidget {
+  final PanelModel panel;
+  final Widget lastLogSummary;
+  final VoidCallback onTap;
+  final VoidCallback onDelete;
+
+  const _PanelListItemWidget({
+    required this.panel,
+    required this.lastLogSummary,
+    required this.onTap,
+    required this.onDelete,
+  });
+
+  @override
+  State<_PanelListItemWidget> createState() => _PanelListItemWidgetState();
+}
+
+class _PanelListItemWidgetState extends State<_PanelListItemWidget>
+    with SingleTickerProviderStateMixin {
+  SlidableController? _slidableController;
+
+  @override
+  void initState() {
+    super.initState();
+    _slidableController = SlidableController(this);
+  }
+
+  @override
+  void dispose() {
+    _slidableController?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final panel = widget.panel;
+    return GestureDetector(
+      onLongPress: () {
+        _slidableController?.openEndActionPane();
+      },
+      child: Slidable(
+        controller: _slidableController,
+        endActionPane: ActionPane(
+          motion: const ScrollMotion(),
+          children: [
+            SlidableAction(
+              padding: EdgeInsets.zero,
+              borderRadius: const BorderRadius.only(
+                topRight: Radius.circular(8),
+                bottomRight: Radius.circular(8),
+              ),
+              onPressed: (BuildContext context) {
+                widget.onDelete();
+              },
+              backgroundColor: const Color.fromARGB(255, 245, 63, 57),
+              foregroundColor: Colors.white,
+              icon: CupertinoIcons.delete,
+              label: 'Delete',
+            ),
+          ],
+        ),
+        child: GestureDetector(
+          onTap: widget.onTap,
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              border: Border.all(
+                color: Color(0xFFB9B9B9).withValues(alpha: 0.31),
+                width: 1,
+              ),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 18.0,
+                vertical: 12.0,
+              ),
+              child: Row(
+                children: [
+                  Image.asset(
+                    'assets/images/panel_icon.png',
+                    height: 62,
+                    width: 62,
+                  ),
+                  SizedBox(width: 14.31),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          panel.deviceType == 'bluetooth'
+                              ? BleNameUtils.getDisplayPrefixFromBleName(
+                                  panel.panelName)
+                              : panel.panelName,
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF3D3D3D),
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        Text(
+                          panel.deviceType == 'bluetooth'
+                              ? BleNameUtils.getDisplayIdFromBleName(
+                                  panel.panelName)
+                              : panel.panelId,
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w400,
+                            color: Color(0xFF918F8F),
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        widget.lastLogSummary,
+                      ],
+                    ),
+                  ),
+                  SizedBox(width: 8),
+                  Icon(
+                    Icons.arrow_forward_ios,
+                    size: 16,
+                    color: Color(0xFFEC1D24),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ),
       ),
     );
