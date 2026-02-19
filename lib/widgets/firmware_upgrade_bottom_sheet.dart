@@ -70,7 +70,8 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
   bool _isWaitingForJumpReconnect = false;
   bool _isWaitingForEndReconnect = false;
   String? _originalDeviceName; // Store device name for reconnection
-  String? _originalStableDeviceId; // Last 8 chars - stable across name changes (P_87654321 vs TECHNOSWITCH_87654321)
+  String?
+  _originalStableDeviceId; // Last 8 chars - stable across name changes (P_87654321 vs TECHNOSWITCH_87654321)
   int? _originalManufacturerData; // Store manufacturer data before jump command
   StreamSubscription<ConnectionStateUpdate>? _internalReconnectSub;
   bool _bootloaderNotifyReady = false;
@@ -233,8 +234,9 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
       // Store original device name, stable ID, and manufacturer data before jump command
       if (isChipInBootLoader != true && _selectedDevice != null) {
         _originalDeviceName = _selectedDevice!.name;
-        _originalStableDeviceId =
-            BleNameUtils.getDisplayIdFromBleName(_selectedDevice!.name);
+        _originalStableDeviceId = BleNameUtils.getDisplayIdFromBleName(
+          _selectedDevice!.name,
+        );
         // Store manufacturer data before jump command
         final md = _selectedDevice!.manufacturerData;
         _originalManufacturerData = md.isNotEmpty ? md.last : null;
@@ -439,7 +441,8 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
           if (isJumpCommand) {
             // For jump: prioritize device with [0,1] (bootloader) and matching stable ID
             // Handles name change: P_87654321 -> TECHNOSWITCH_87654321 (both have "87654321")
-            final matchesStableId = _originalStableDeviceId != null &&
+            final matchesStableId =
+                _originalStableDeviceId != null &&
                 stableId.isNotEmpty &&
                 stableId == _originalStableDeviceId;
             final isBootloader = lastByte == 1;
@@ -1204,6 +1207,7 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
           title: 'Main Panel Firmware',
           description: 'Upgrade the main panel firmware',
           type: FirmwareType.mainPanel,
+          enabled: false,
         ),
         SizedBox(height: 16),
         _buildFirmwareTypeOption(
@@ -1264,18 +1268,27 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
     required String title,
     required String description,
     required FirmwareType type,
+    bool enabled = true,
   }) {
     final isSelected = _selectedFirmwareType == type;
     return GestureDetector(
-      onTap: () {
-        setState(() {
-          _selectedFirmwareType = type;
-        });
-      },
+      onTap:
+          enabled
+              ? () {
+                setState(() {
+                  _selectedFirmwareType = type;
+                });
+              }
+              : null,
       child: Container(
         padding: EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isSelected ? Color(0xFFEC1D24).withOpacity(0.1) : Colors.white,
+          color:
+              !enabled
+                  ? Colors.grey.shade200
+                  : (isSelected
+                      ? Color(0xFFEC1D24).withOpacity(0.1)
+                      : Colors.white),
           border: Border.all(
             color: isSelected ? Color(0xFFEC1D24) : Color(0xFFD9D9D9),
             width: isSelected ? 2 : 1,

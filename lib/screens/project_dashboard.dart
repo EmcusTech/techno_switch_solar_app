@@ -1288,16 +1288,17 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                         if (mode == 'bottomsheet_download') {
                           await onDownloadComplete?.call();
                           if (mounted) {
-                            final message = downloadSuccessMessage ??
+                            final message =
+                                downloadSuccessMessage ??
                                 (isExtOut == true
                                     ? 'Extinguishing Output'
                                     : isInputSetup == true
-                                        ? 'Inputs'
-                                        : isRelaySetup == true
-                                            ? 'Relays'
-                                            : isZoneSetup == true
-                                                ? 'Zones'
-                                                : 'Configuration');
+                                    ? 'Inputs'
+                                    : isRelaySetup == true
+                                    ? 'Relays'
+                                    : isZoneSetup == true
+                                    ? 'Zones'
+                                    : 'Configuration');
                             showDownloadSuccessDialog(context, message);
                           }
                         } else if (ble.bleProcess.isExtOutApplyDone.value) {
@@ -1736,6 +1737,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
               _peripheralTile(
                 peripheralName: 'Relays',
                 iconPath: 'assets/svgs/peripheral_relay_icon.svg',
+                isDisabled: true,
                 onTap: () {
                   if (_selectedDevice.manufacturerData.isNotEmpty &&
                       _selectedDevice.manufacturerData.last == 1) {
@@ -1775,6 +1777,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
               _peripheralTile(
                 peripheralName: 'Inputs',
                 iconPath: 'assets/svgs/peripheral_input_icon.svg',
+                isDisabled: true,
                 onTap: () {
                   if (_selectedDevice.manufacturerData.isNotEmpty &&
                       _selectedDevice.manufacturerData.last == 1) {
@@ -1813,6 +1816,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
               _peripheralTile(
                 peripheralName: 'Zones',
                 iconPath: 'assets/svgs/peripheral_zones_icon.svg',
+                isDisabled: true,
                 onTap: () {
                   if (_selectedDevice.manufacturerData.isNotEmpty &&
                       _selectedDevice.manufacturerData.last == 1) {
@@ -1908,6 +1912,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
               _peripheralTile(
                 peripheralName: 'Ext Out',
                 iconPath: 'assets/svgs/peripheral_ext_out_icon.svg',
+                isDisabled: true,
                 onTap: () {
                   if (_selectedDevice.manufacturerData.isNotEmpty &&
                       _selectedDevice.manufacturerData.last == 1) {
