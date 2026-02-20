@@ -282,6 +282,8 @@ class BleProcess {
   final ValueNotifier<bool> isRadioSetupCommandApplyActive =
       ValueNotifier<bool>(false);
 
+  final ValueNotifier<bool> isRadioSetupApplyDone = ValueNotifier<bool>(false);
+
   final ValueNotifier<bool> isRadioSetupEnabled = ValueNotifier<bool>(false);
   final ValueNotifier<int> radioSetupModule = ValueNotifier<int>(0);
   final ValueNotifier<String> radioSetupName = ValueNotifier<String>("");
@@ -564,6 +566,7 @@ class BleProcess {
         isRadioSetupConnected.value = rx.payload[15] == 0x01;
         print(rx.payload[37]);
         isAccessKeyValid.value = true;
+        isRadioSetupApplyDone.value = true;
         print("We got the response for radio setup fetch");
       } else {
         print("Radio Setup Fetch Cmd Response not found, polling again");

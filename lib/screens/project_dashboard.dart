@@ -1323,6 +1323,10 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                             mounted) {
                           await _saveZoneCacheAndNotifyRefresh();
                           showApplySuccessDialog(context, 'Zones');
+                        } else if (ble.bleProcess.isRadioSetupApplyDone.value &&
+                            mounted) {
+                          await _saveRadioCacheAndNotifyRefresh();
+                          showApplySuccessDialog(context, 'Radio');
                         } else {
                           Navigator.of(dialogContext).push(
                             MaterialPageRoute(
