@@ -3045,17 +3045,23 @@ class BleManager {
       }
     }
 
-    final String radioNoText = radioSetupNo.value;
+    final String radioNoText = radioSetupNo.value.trim();
     print("radioNoText: $radioNoText");
-    final List<int> radioNoTextBytes = radioNoText.codeUnits;
-    print("radioNoTextBytes: $radioNoTextBytes");
+
+    // Convert each character to actual numeric value
+    final List<int> radioNoTextBytes =
+        radioNoText.split('').map((e) => int.parse(e)).toList();
+
+    print("radioNoTextBytes (numeric): $radioNoTextBytes");
+
     final radioNoTextLength = radioNoTextBytes.length;
-    print("radioNoTextLength: $radioNoTextLength");
 
     final initialSetupNoindex = 37;
     for (int i = 0; i < 8; i++) {
       if (i < radioNoTextLength) {
-        u8_pkt[initialSetupNoindex + i] = radioNoTextBytes[i];
+        u8_pkt[initialSetupNoindex + i] = radioNoTextBytes[i] & 0xFF;
+      } else {
+        u8_pkt[initialSetupNoindex + i] = 0x00; // pad with 0
       }
     }
     // Update global counters
