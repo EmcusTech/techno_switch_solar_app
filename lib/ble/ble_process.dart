@@ -566,8 +566,6 @@ class BleProcess {
         isRadioSetupConnected.value = rx.payload[15] == 0x01;
         print(rx.payload[37]);
         isAccessKeyValid.value = true;
-        isRadioSetupCommandApplyActive.value = false;
-        isRadioSetupApplyDone.value = true;
         print("We got the response for radio setup fetch");
       } else {
         print("Radio Setup Fetch Cmd Response not found, polling again");
@@ -585,6 +583,8 @@ class BleProcess {
         checkForRadioSetupApplyRes = 0;
         // isRadioSetupApplyCommandActive.value = false;
         isAccessKeyValid.value = true;
+        isRadioSetupCommandApplyActive.value = false;
+        isRadioSetupApplyDone.value = true;
         print("We got the response for radio setup apply");
       } else {
         print("Radio Setup Apply Cmd Response not found, polling again");
