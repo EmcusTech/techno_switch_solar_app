@@ -34,6 +34,7 @@ class BleProcess {
   int zoneSetupFetchCommandStep = 0; // 1, 2, 3
   int zoneSetupApplyCommandStep = 0; // 1, 2, 3
   int checkForRadioSetupFetchRes = 0;
+  int checkForRadioSetupApplyRes = 0;
   int validEventLogNum = 0;
   int read1000Logs = 0;
   bool logRetreivalEnded = false;
@@ -417,6 +418,11 @@ class BleProcess {
         checkForRadioSetupFetchRes = 1;
         break;
 
+      case OtaProcessState.sendRadioSetupApplyCmdPkt:
+        print("Sending Radio Setup Apply Command");
+        checkForRadioSetupApplyRes = 1;
+        break;
+
       default:
         break;
     }
@@ -552,6 +558,23 @@ class BleProcess {
         print("We got the response for radio setup fetch");
       } else {
         print("Radio Setup Fetch Cmd Response not found, polling again");
+        startRxTimeout();
+        await bleManager.sendPollPacket();
+      }
+    }
+
+    if (checkForRadioSetupApplyRes == 1) {
+      print(
+        "Checking Radio Setup Apply CMD RSP Value ${rx.payload[12]}:::::${rx.payload[12] == 0x1D} ",
+      );
+      if (rx.payload[10] == 0x83) {
+        bleManager.otaProcessState = OtaProcessState.notInUse;
+        checkForRadioSetupApplyRes = 0;
+        // isRadioSetupApplyCommandActive.value = false;
+        isAccessKeyValid.value = true;
+        print("We got the response for radio setup apply");
+      } else {
+        print("Radio Setup Apply Cmd Response not found, polling again");
         startRxTimeout();
         await bleManager.sendPollPacket();
       }
@@ -1013,6 +1036,7 @@ class BleProcess {
     checkForRelaySetupApplyRes = 0;
     checkForInputSetupFetchRes = 0;
     checkForRadioSetupFetchRes = 0;
+    checkForRadioSetupApplyRes = 0;
     checkDipSetCmdRsp = 0;
     isExtOutApplyButtonActive.value = false;
     isExtOutCommandFetchActive.value = false;
@@ -1065,6 +1089,7 @@ class BleProcess {
     checkForExtCmdFetchRes = 0;
     checkForInputSetupFetchRes = 0;
     checkForRelaySetupApplyRes = 0;
+    checkForRadioSetupApplyRes = 0;
     validEventLogNum = 0;
     read1000Logs = 0;
     receivedPollCount = 0;
@@ -1110,6 +1135,7 @@ class BleProcess {
     checkForExtCmdFetchRes = 0;
     checkForInputSetupFetchRes = 0;
     checkForRelaySetupApplyRes = 0;
+    checkForRadioSetupApplyRes = 0;
     validEventLogNum = 0;
     read1000Logs = 0;
     receivedPollCount = 0;
@@ -1157,6 +1183,7 @@ class BleProcess {
     isExtOutApplyButtonActive.value = false;
     relaySetupFetchCommandStep = 0;
     checkForRelaySetupFetchRes = 0;
+    checkForRadioSetupApplyRes = 0;
 
     // Time tracking
     // logStartingTime = null;
@@ -1200,6 +1227,7 @@ class BleProcess {
     isExtOutApplyButtonActive.value = false;
     relaySetupFetchCommandStep = 0;
     checkForRelaySetupFetchRes = 0;
+    checkForRadioSetupApplyRes = 0;
 
     // Time tracking
     // logStartingTime = null;
@@ -1243,6 +1271,7 @@ class BleProcess {
     isExtOutApplyButtonActive.value = false;
     relaySetupFetchCommandStep = 0;
     checkForRelaySetupFetchRes = 0;
+    checkForRadioSetupApplyRes = 0;
 
     // Time tracking
     // logStartingTime = null;
@@ -1604,6 +1633,8 @@ class BleProcess {
         case OtaProcessState.sendZoneSetupApplyCmdPkt:
           break;
         case OtaProcessState.sendRadioSetupFetchCmdPkt:
+          break;
+        case OtaProcessState.sendRadioSetupApplyCmdPkt:
           break;
       }
       startRxTimeout();

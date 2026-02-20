@@ -85,6 +85,10 @@ class BleLogController extends GetxController {
     await bleManager.startRadioSetupFetch();
   }
 
+  Future<void> startRadioSetupApply() async {
+    await bleManager.startRadioSetupApply();
+  }
+
   sendNetworkPacket() async {
     await bleManager.sendNetworkPacket();
   }
