@@ -3046,8 +3046,11 @@ class BleManager {
     }
 
     final String radioNoText = radioSetupNo.value;
+    print("radioNoText: $radioNoText");
     final List<int> radioNoTextBytes = radioNoText.codeUnits;
+    print("radioNoTextBytes: $radioNoTextBytes");
     final radioNoTextLength = radioNoTextBytes.length;
+    print("radioNoTextLength: $radioNoTextLength");
 
     final initialSetupNoindex = 37;
     for (int i = 0; i < 8; i++) {
