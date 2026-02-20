@@ -821,18 +821,15 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
         onPressed: widget.onDownload,
         child: Text(
           'Download',
-          style: GoogleFonts.inter(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-          ),
+          style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600),
         ),
       ),
     );
   }
 
   Widget _applyButton({required bool formValid}) {
-    final canApply = manager != null &&
-        manager!.bleProcess.isExtOutApplyButtonActive.value;
+    final canApply =
+        manager != null && manager!.bleProcess.isExtOutApplyButtonActive.value;
 
     return SizedBox(
       height: 48,
@@ -870,17 +867,23 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
 
                   final String hexValue = ExtZoneModeCodec.encodeHex(config);
 
+                  manager!.isExtZoneEnabled.value = zoneEnable;
+
                   manager!.extZoneMode.value = hexValue;
                   manager!.extZoneCountdownAuto.value = int.parse(
                     autoCtrl.text.isEmpty ? '0' : autoCtrl.text,
                   );
                   manager!.extZoneCountdownMan.value = int.parse(manCtrl.text);
-                  manager!.extZoneReleaseTime.value =
-                      int.parse(releaseCtrl.text);
-                  manager!.extZoneResetDelay.value =
-                      int.parse(resetDelayCtrl.text);
-                  manager!.extZoneAction.value =
-                      returnIndex(action, actionOptions);
+                  manager!.extZoneReleaseTime.value = int.parse(
+                    releaseCtrl.text,
+                  );
+                  manager!.extZoneResetDelay.value = int.parse(
+                    resetDelayCtrl.text,
+                  );
+                  manager!.extZoneAction.value = returnIndex(
+                    action,
+                    actionOptions,
+                  );
                   manager!.extZoneFunction.value = functionInt;
                   manager!.extZoneActuatorType.value = actuaturTypeInt;
 
