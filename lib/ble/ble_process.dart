@@ -566,7 +566,7 @@ class BleProcess {
         isRadioSetupConnected.value = rx.payload[15] == 0x01;
         print(rx.payload[37]);
         isAccessKeyValid.value = true;
-        isRadioSetupFetchCommandActive.value = false;
+        isRadioSetupCommandApplyActive.value = false;
         isRadioSetupApplyDone.value = true;
         print("We got the response for radio setup fetch");
       } else {
