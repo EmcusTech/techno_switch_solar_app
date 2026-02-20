@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
+import 'package:techno_switch_solar_app/widgets/bottom_sheets/widgets/dropdown.dart';
 
 class RadioModeBottomSheet extends StatefulWidget {
   final String deviceId;
@@ -200,18 +201,18 @@ class _RadioModeBottomSheetState extends State<RadioModeBottomSheet> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               child: Column(
                 children: [
-                  _dropdown(
-                    'Enabled',
-                    radio.enabled,
-                    yesNoOptions,
-                    (v) => setState(() => radio.enabled = v),
+                  DropdownWidget(
+                    label: 'Enabled',
+                    value: radio.enabled,
+                    items: yesNoOptions,
+                    onChanged: (v) => setState(() => radio.enabled = v),
                   ),
 
-                  _dropdown(
-                    'Module',
-                    radio.module,
-                    moduleOptions,
-                    (v) => setState(() => radio.module = v),
+                  DropdownWidget(
+                    label: 'Module',
+                    value: radio.module,
+                    items: moduleOptions,
+                    onChanged: (v) => setState(() => radio.module = v),
                   ),
 
                   _textField(
@@ -229,39 +230,39 @@ class _RadioModeBottomSheetState extends State<RadioModeBottomSheet> {
                     inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   ),
 
-                  _dropdown(
-                    'Advertise',
-                    radio.advertise,
-                    yesNoOptions,
-                    (v) => setState(() => radio.advertise = v),
+                  DropdownWidget(
+                    label: 'Advertise',
+                    value: radio.advertise,
+                    items: yesNoOptions,
+                    onChanged: (v) => setState(() => radio.advertise = v),
                   ),
 
-                  _dropdown(
-                    'Connection',
-                    radio.connection,
-                    yesNoOptions,
-                    (v) => setState(() => radio.connection = v),
+                  DropdownWidget(
+                    label: 'Connection',
+                    value: radio.connection,
+                    items: yesNoOptions,
+                    onChanged: (v) => setState(() => radio.connection = v),
                   ),
 
-                  _dropdown(
-                    'Service',
-                    radio.service,
-                    yesNoOptions,
-                    (v) => setState(() => radio.service = v),
+                  DropdownWidget(
+                    label: 'Service',
+                    value: radio.service,
+                    items: yesNoOptions,
+                    onChanged: (v) => setState(() => radio.service = v),
                   ),
 
-                  _dropdown(
-                    'Programming',
-                    radio.programming,
-                    yesNoOptions,
-                    (v) => setState(() => radio.programming = v),
+                  DropdownWidget(
+                    label: 'Programming',
+                    value: radio.programming,
+                    items: yesNoOptions,
+                    onChanged: (v) => setState(() => radio.programming = v),
                   ),
 
-                  _dropdown(
-                    'Boot',
-                    radio.boot,
-                    yesNoOptions,
-                    (v) => setState(() => radio.boot = v),
+                  DropdownWidget(
+                    label: 'Boot',
+                    value: radio.boot,
+                    items: yesNoOptions,
+                    onChanged: (v) => setState(() => radio.boot = v),
                   ),
                 ],
               ),
@@ -344,37 +345,6 @@ class _RadioModeBottomSheetState extends State<RadioModeBottomSheet> {
   }
 
   // ───────────────── SHARED UI ─────────────────
-
-  Widget _dropdown(
-    String label,
-    String value,
-    List<String> items,
-    ValueChanged<String> onChanged,
-  ) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _label(label),
-          const SizedBox(height: 6),
-          SizedBox(
-            height: 48,
-            child: DropdownButtonFormField<String>(
-              value: value,
-              isExpanded: true,
-              items:
-                  items
-                      .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                      .toList(),
-              onChanged: (v) => onChanged(v!),
-              decoration: _inputDecoration(),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _textField({
     required String label,
