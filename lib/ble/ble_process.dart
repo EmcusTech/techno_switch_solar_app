@@ -279,6 +279,9 @@ class BleProcess {
   final ValueNotifier<bool> isRadioSetupFetchCommandActive =
       ValueNotifier<bool>(false);
 
+  final ValueNotifier<bool> isRadioSetupCommandApplyActive =
+      ValueNotifier<bool>(false);
+
   final ValueNotifier<bool> isRadioSetupEnabled = ValueNotifier<bool>(false);
   final ValueNotifier<int> radioSetupModule = ValueNotifier<int>(0);
   final ValueNotifier<String> radioSetupName = ValueNotifier<String>("");
@@ -491,6 +494,12 @@ class BleProcess {
           checkForAccessKeyCmdRsp = 0;
           startRxTimeout();
           await bleManager.sendRadioSetupFetchCmdPkt();
+        } else if (isRadioSetupCommandApplyActive.value) {
+          bleManager.otaProcessState =
+              OtaProcessState.sendRadioSetupApplyCmdPkt;
+          checkForAccessKeyCmdRsp = 0;
+          startRxTimeout();
+          await bleManager.sendRadioSetupApplyCmdPkt();
         } else {
           bleManager.otaProcessState = OtaProcessState.sendStopCntrlCmdPkt;
           checkForAccessKeyCmdRsp = 0;

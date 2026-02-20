@@ -1883,9 +1883,9 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                     onApply: () {
                       showPasswordPopup(
                         onCall: () {
-                          ble.bleProcess.isZoneSetupCommandApplyActive.value =
+                          ble.bleProcess.isRadioSetupCommandApplyActive.value =
                               true;
-                          bleController.startZoneSetupApply();
+                          bleController.startRadioSetupApply();
                         },
                         isZoneSetup: true,
                         mode: 'bottomsheet_apply',

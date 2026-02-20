@@ -295,6 +295,8 @@ class BleManager {
       bleProcess.isRadioSetupAdvertised;
   ValueNotifier<bool> get isRadioSetupConnected =>
       bleProcess.isRadioSetupConnected;
+  ValueNotifier<bool> get isRadioSetupCommandApplyActive =>
+      bleProcess.isRadioSetupCommandApplyActive;
   void resetProtocolState() {
     // Packet counters
     u8TxPktCnt = 0;
@@ -3016,6 +3018,75 @@ class BleManager {
 
     print(
       "TX/RX: TRANSMIT: Radio Setup Fetch Command time: ${DateTime.now().toIso8601String()}, packet: ${u8_pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+    );
+    // print(
+    //   u8_pkt
+    //       .map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase())
+    //       .join(' '),
+    // );
+
+    await sendSmallDataFrame(0x1000, 216, u8_pkt);
+  }
+
+  Future<void> sendRadioSetupApplyCmdPkt() async {
+    // Create 216-byte buffer
+    Uint8List u8_pkt = Uint8List(216);
+
+    final String radioNameText = radioSetupName.value;
+    final List<int> radioNameTextBytes = radioNameText.codeUnits;
+    final radioNameTextLength = radioNameTextBytes.length;
+
+    final initialindex = 21;
+    for (int i = 0; i < 16; i++) {
+      if (i < radioNameTextLength) {
+        u8_pkt[initialindex + i] = radioNameTextBytes[i];
+      } else {
+        u8_pkt[initialindex + i] = 0x20;
+      }
+    }
+
+    final String radioNoText = radioSetupNo.value;
+    final List<int> radioNoTextBytes = radioNoText.codeUnits;
+    final radioNoTextLength = radioNoTextBytes.length;
+
+    final initialSetupNoindex = 37;
+    for (int i = 0; i < 8; i++) {
+      if (i < radioNoTextLength) {
+        u8_pkt[initialSetupNoindex + i] = radioNoTextBytes[i];
+      }
+    }
+    // Update global counters
+    u8TxPktCnt += 1;
+
+    u8_pkt[0] = 0xFE;
+    u8_pkt[1] = 0x01;
+    u8_pkt[2] = 0x00;
+
+    u8_pkt[3] = 0x01; // pkt type
+    u8_pkt[4] = u8TxPktCnt & 0xFF; // tx pkt num
+    u8_pkt[5] = u8RxPktCnt & 0xFF; // rx pkt num
+    u8_pkt[6] = 0x00; // network number
+    u8_pkt[10] = 0x81; // mode
+    u8_pkt[11] = 0x00; // socket number
+    u8_pkt[12] = 0x1D; // command
+    u8_pkt[13] = isRadioSetupEnabled.value ? 0x01 : 0x00;
+    u8_pkt[14] = radioSetupModule.value & 0xFF;
+    u8_pkt[15] = isRadioSetupAdvertised.value ? 0x01 : 0x00;
+    u8_pkt[16] = isRadioSetupConnected.value ? 0x01 : 0x00;
+    u8_pkt[17] = isRadioSetupProgrammed.value ? 0x01 : 0x00;
+    u8_pkt[18] = isRadioSetupBooted.value ? 0x01 : 0x00;
+    u8_pkt[19] = isRadioSetupServiced.value ? 0x01 : 0x00;
+    u8_pkt[20] = radioNameTextLength & 0xFF;
+
+    // Compute checksum on first 213 bytes
+    int checksum = toolsFletcherChecksum(u8_pkt.sublist(0, 213));
+
+    u8_pkt[213] = (checksum >> 8) & 0xFF;
+    u8_pkt[214] = checksum & 0xFF;
+    u8_pkt[215] = 0xFD;
+
+    print(
+      "TX/RX: TRANSMIT: Radio Setup Apply Command time: ${DateTime.now().toIso8601String()}, packet: ${u8_pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
     );
     // print(
     //   u8_pkt
