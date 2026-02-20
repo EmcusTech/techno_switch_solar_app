@@ -94,15 +94,15 @@ class _RadioModeBottomSheetState extends State<RadioModeBottomSheet> {
 
     manager = Get.find<BleLogController>().bleManager;
 
-    // radio.enabled = manager!.radioEnabled.value ? 'Yes' : 'No';
-    // radio.module = manager!.radioModule.value == 0 ? 'None' : 'BLUENRG-MB';
-    // radio.nameController.text = manager!.radioName.value;
-    // radio.numberController.text = manager!.radioNumber.value;
-    // radio.advertise = manager!.radioAdvertise.value ? 'Yes' : 'No';
-    // radio.connection = manager!.radioConnection.value ? 'Yes' : 'No';
-    // radio.service = manager!.radioService.value ? 'Yes' : 'No';
-    // radio.programming = manager!.radioProgramming.value ? 'Yes' : 'No';
-    // radio.boot = manager!.radioBoot.value ? 'Yes' : 'No';
+    radio.enabled = manager!.isRadioSetupEnabled.value ? 'Yes' : 'No';
+    radio.module = manager!.radioSetupModule.value == 0 ? 'None' : 'BLUENRG-MB';
+    radio.nameController.text = manager!.radioSetupName.value;
+    radio.numberController.text = manager!.radioSetupNo.value;
+    radio.advertise = manager!.isRadioSetupAdvertised.value ? 'Yes' : 'No';
+    radio.connection = manager!.isRadioSetupConnected.value ? 'Yes' : 'No';
+    radio.service = manager!.isRadioSetupServiced.value ? 'Yes' : 'No';
+    radio.programming = manager!.isRadioSetupProgrammed.value ? 'Yes' : 'No';
+    radio.boot = manager!.isRadioSetupBooted.value ? 'Yes' : 'No';
 
     if (mounted) setState(() {});
   }

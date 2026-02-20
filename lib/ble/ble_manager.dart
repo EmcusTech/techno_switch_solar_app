@@ -279,6 +279,19 @@ class BleManager {
       bleProcess.isZoneSetupFetchCommandActive;
   ValueNotifier<bool> get isRadioSetupFetchCommandActive =>
       bleProcess.isRadioSetupFetchCommandActive;
+  ValueNotifier<bool> get isRadioSetupEnabled => bleProcess.isRadioSetupEnabled;
+  ValueNotifier<int> get radioSetupModule => bleProcess.radioSetupModule;
+  ValueNotifier<String> get radioSetupName => bleProcess.radioSetupName;
+  ValueNotifier<String> get radioSetupNo => bleProcess.radioSetupNo;
+  ValueNotifier<bool> get isRadioSetupBooted => bleProcess.isRadioSetupBooted;
+  ValueNotifier<bool> get isRadioSetupProgrammed =>
+      bleProcess.isRadioSetupProgrammed;
+  ValueNotifier<bool> get isRadioSetupServiced =>
+      bleProcess.isRadioSetupServiced;
+  ValueNotifier<bool> get isRadioSetupAdvertised =>
+      bleProcess.isRadioSetupAdvertised;
+  ValueNotifier<bool> get isRadioSetupConnected =>
+      bleProcess.isRadioSetupConnected;
   void resetProtocolState() {
     // Packet counters
     u8TxPktCnt = 0;

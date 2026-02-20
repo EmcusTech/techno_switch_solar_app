@@ -530,9 +530,27 @@ class BleProcess {
       if (rx.payload[12] == 0x1D) {
         bleManager.otaProcessState = OtaProcessState.notInUse;
         checkForRadioSetupFetchRes = 0;
-        isRadioSetupEnabled.value =
-            // isRadioSetupFetchCommandActive.value = false;
-            isAccessKeyValid.value = true;
+        isRadioSetupEnabled.value = rx.payload[13] == 0x01;
+        radioSetupModule.value = rx.payload[14];
+        radioSetupName.value = extractStringFromPayload(
+          rx.payload,
+          startIndex: 20,
+        );
+        String radioSetupNumber = "";
+        for (int i = 37; i < 45; i++) {
+          radioSetupNumber = radioSetupNumber + rx.payload[i].toString();
+        }
+
+        radioSetupNo.value = radioSetupNumber;
+        isRadioSetupBooted.value = rx.payload[18] == 0x01;
+        isRadioSetupProgrammed.value = rx.payload[17] == 0x01;
+        isRadioSetupServiced.value = rx.payload[19] == 0x01;
+        isRadioSetupAdvertised.value =
+            rx.payload[15] == 0x01 || rx.payload[16] == 0x01;
+        isRadioSetupConnected.value =
+            rx.payload[15] == 0x01 || rx.payload[16] == 0x01;
+        print(rx.payload[37]);
+        isAccessKeyValid.value = true;
         print("We got the response for radio setup fetch");
       } else {
         print("Radio Setup Fetch Cmd Response not found, polling again");
