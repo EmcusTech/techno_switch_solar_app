@@ -1876,7 +1876,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                         },
                         isZoneSetup: true,
                         mode: 'bottomsheet_download',
-                        onDownloadComplete: _saveZoneCacheAndNotifyRefresh,
+                        onDownloadComplete: _saveRadioCacheAndNotifyRefresh,
                         downloadSuccessMessage: 'Radio',
                       );
                     },
@@ -2153,6 +2153,22 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
       'isSolar': m.bleProcess.isExtOutApplyButtonActive.value,
     });
     _extOutRefreshTrigger.value++;
+  }
+
+  Future<void> _saveRadioCacheAndNotifyRefresh() async {
+    final m = _bleManager;
+    await PeripheralSetupCache.saveRadioSetup(_selectedDevice.id, {
+      'enabled': m.isRadioSetupEnabled.value,
+      'module': m.radioSetupModule.value,
+      'name': m.radioSetupName.value,
+      'number': m.radioSetupNo.value,
+      'advertise': m.isRadioSetupAdvertised.value,
+      'connection': m.isRadioSetupConnected.value,
+      'service': m.isRadioSetupServiced.value,
+      'programming': m.isRadioSetupProgrammed.value,
+      'boot': m.isRadioSetupBooted.value,
+    });
+    _zoneRefreshTrigger.value++;
   }
 
   Widget _peripheralTile({

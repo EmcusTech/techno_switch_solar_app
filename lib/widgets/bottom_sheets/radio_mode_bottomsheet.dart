@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
+import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/widgets/dropdown.dart';
 
 class RadioModeBottomSheet extends StatefulWidget {
@@ -76,7 +77,7 @@ class _RadioModeBottomSheetState extends State<RadioModeBottomSheet> {
   void initState() {
     super.initState();
     radio = RadioConfig();
-    _loadFromManager();
+    _loadData();
     widget.refreshTrigger.addListener(_onRefreshTriggered);
   }
 
@@ -88,6 +89,32 @@ class _RadioModeBottomSheetState extends State<RadioModeBottomSheet> {
 
   void _onRefreshTriggered() {
     _loadFromManager();
+  }
+
+  Future<void> _loadData() async {
+    if (Get.isRegistered<BleLogController>()) {
+      manager = Get.find<BleLogController>().bleManager;
+    }
+    final cached = await PeripheralSetupCache.loadRadioSetup(widget.deviceId);
+    if (cached != null) {
+      _applyCachedData(cached);
+      if (mounted) setState(() {});
+      return;
+    }
+    _loadFromManager();
+  }
+
+  void _applyCachedData(Map<String, dynamic> data) {
+    radio.enabled = (data['enabled'] as bool?) == true ? 'Yes' : 'No';
+    final module = (data['module'] as int?) ?? 0;
+    radio.module = module == 0 ? 'None' : 'BLUENRG-MB';
+    radio.nameController.text = (data['name'] as String?) ?? '';
+    radio.numberController.text = (data['number'] as String?) ?? '';
+    radio.advertise = (data['advertise'] as bool?) == true ? 'Yes' : 'No';
+    radio.connection = (data['connection'] as bool?) == true ? 'Yes' : 'No';
+    radio.service = (data['service'] as bool?) == true ? 'Yes' : 'No';
+    radio.programming = (data['programming'] as bool?) == true ? 'Yes' : 'No';
+    radio.boot = (data['boot'] as bool?) == true ? 'Yes' : 'No';
   }
 
   void _loadFromManager() {

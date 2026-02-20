@@ -13,6 +13,8 @@ class PeripheralSetupCache {
   static String _zoneKey(String deviceId) => '${_keyPrefix}${deviceId}_zone';
   static String _extOutKey(String deviceId) =>
       '${_keyPrefix}${deviceId}_ext_out';
+  static String _radioKey(String deviceId) =>
+      '${_keyPrefix}${deviceId}_radio';
 
   // ───────────────── Relay ─────────────────
 
@@ -90,6 +92,27 @@ class PeripheralSetupCache {
   static Future<Map<String, dynamic>?> loadExtOutSetup(String deviceId) async {
     final prefs = await SharedPreferences.getInstance();
     final raw = prefs.getString(_extOutKey(deviceId));
+    if (raw == null) return null;
+    try {
+      return Map<String, dynamic>.from(jsonDecode(raw) as Map);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  // ───────────────── Radio ─────────────────
+
+  static Future<void> saveRadioSetup(
+    String deviceId,
+    Map<String, dynamic> data,
+  ) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_radioKey(deviceId), jsonEncode(data));
+  }
+
+  static Future<Map<String, dynamic>?> loadRadioSetup(String deviceId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(_radioKey(deviceId));
     if (raw == null) return null;
     try {
       return Map<String, dynamic>.from(jsonDecode(raw) as Map);
