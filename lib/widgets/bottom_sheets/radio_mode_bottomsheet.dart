@@ -316,25 +316,20 @@ class _RadioModeBottomSheetState extends State<RadioModeBottomSheet> {
         onPressed:
             isValid && manager != null
                 ? () {
-                  // manager!.radioEnabled.value =
-                  //     radio.enabled == 'Yes';
-                  // manager!.radioModule.value =
-                  //     moduleOptions.indexOf(
-                  //         radio.module);
-                  // manager!.radioName.value =
-                  //     radio.nameController.text;
-                  // manager!.radioNumber.value =
-                  //     radio.numberController.text;
-                  // manager!.radioAdvertise.value =
-                  //     radio.advertise == 'Yes';
-                  // manager!.radioConnection.value =
-                  //     radio.connection == 'Yes';
-                  // manager!.radioService.value =
-                  //     radio.service == 'Yes';
-                  // manager!.radioProgramming.value =
-                  //     radio.programming == 'Yes';
-                  // manager!.radioBoot.value =
-                  //     radio.boot == 'Yes';
+                  manager!.isRadioSetupEnabled.value = radio.enabled == 'Yes';
+                  manager!.radioSetupModule.value = moduleOptions.indexOf(
+                    radio.module,
+                  );
+                  manager!.radioSetupName.value = radio.nameController.text;
+                  manager!.radioSetupNo.value = radio.numberController.text;
+                  manager!.isRadioSetupAdvertised.value =
+                      radio.advertise == 'Yes';
+                  manager!.isRadioSetupConnected.value =
+                      radio.connection == 'Yes';
+                  manager!.isRadioSetupServiced.value = radio.service == 'Yes';
+                  manager!.isRadioSetupProgrammed.value =
+                      radio.programming == 'Yes';
+                  manager!.isRadioSetupBooted.value = radio.boot == 'Yes';
 
                   widget.onApply();
                 }
