@@ -1919,9 +1919,9 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                               true;
                           bleController.startModuleSetupFetch();
                         },
-                        isExtOut: true,
                         mode: 'bottomsheet_download',
                         onDownloadComplete: _saveExtOutCacheAndNotifyRefresh,
+                        downloadSuccessMessage: 'Module',
                       );
                     },
                   );
