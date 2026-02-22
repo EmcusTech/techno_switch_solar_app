@@ -588,16 +588,16 @@ class BleProcess {
           rx.payload[33],
         ].join('.');
         moduleFirmware.value = [
+          rx.payload[34],
           rx.payload[35],
           rx.payload[36],
           rx.payload[37],
-          rx.payload[38],
         ].join('.');
         // Date: [39][40]=year, [41]=month, [42]=day (adjust byte order if needed)
-        final year = (rx.payload[39] << 8) | rx.payload[40]; // big-endian
+        final year = (rx.payload[38] << 8) | rx.payload[39]; // big-endian
         // Or: final year = (rx.payload[40] << 8) | rx.payload[39];  // little-endian
-        final month = rx.payload[41];
-        final day = rx.payload[42];
+        final month = rx.payload[40];
+        final day = rx.payload[41];
         moduleDate.value =
             '${year.toString().padLeft(4, '0')}-${month.toString().padLeft(2, '0')}-${day.toString().padLeft(2, '0')}';
         moduleProtocol.value = rx.payload[43];
