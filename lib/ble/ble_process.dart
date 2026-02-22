@@ -599,7 +599,7 @@ class BleProcess {
         final month = rx.payload[40];
         final day = rx.payload[41];
         moduleDate.value =
-            '${year.toString().padLeft(4, '0')}-${month.toString().padLeft(2, '0')}-${day.toString().padLeft(2, '0')}';
+            '${day.toString().padLeft(2, '0')}-${month.toString().padLeft(2, '0')}-${year.toString().padLeft(4, '0')}';
         moduleProtocol.value = rx.payload[43];
         isAccessKeyValid.value = true;
         isModuleSetupFetchCommandActive.value = false;
