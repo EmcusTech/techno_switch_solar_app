@@ -3,11 +3,17 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
+import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
 
 class ModuleInfoBottomSheet extends StatefulWidget {
+  final String deviceId;
   final VoidCallback onDownload;
 
-  const ModuleInfoBottomSheet({super.key, required this.onDownload});
+  const ModuleInfoBottomSheet({
+    super.key,
+    required this.deviceId,
+    required this.onDownload,
+  });
 
   @override
   State<ModuleInfoBottomSheet> createState() => _ModuleInfoBottomSheetState();
@@ -22,6 +28,28 @@ class _ModuleInfoBottomSheetState extends State<ModuleInfoBottomSheet> {
     if (Get.isRegistered<BleLogController>()) {
       manager = Get.find<BleLogController>().bleManager;
     }
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    if (manager == null) return;
+    final cached = await PeripheralSetupCache.loadModuleSetup(widget.deviceId);
+    if (cached != null) {
+      _applyCachedData(cached);
+    }
+  }
+
+  void _applyCachedData(Map<String, dynamic> data) {
+    if (manager == null) return;
+    manager!.moduleNo.value = (data['moduleNo'] as num?)?.toInt() ?? 0;
+    manager!.moduleEnabled.value = (data['enabled'] as bool?) ?? false;
+    manager!.moduleProduct.value = (data['product'] as String?) ?? '';
+    manager!.moduleId.value = (data['id'] as num?)?.toInt() ?? 0;
+    manager!.moduleRevision.value = (data['revision'] as num?)?.toInt() ?? 0;
+    manager!.moduleHardware.value = (data['hardware'] as String?) ?? '';
+    manager!.moduleFirmware.value = (data['firmware'] as String?) ?? '';
+    manager!.moduleDate.value = (data['date'] as String?) ?? '';
+    manager!.moduleProtocol.value = (data['protocol'] as num?)?.toInt() ?? 0;
   }
 
   @override

@@ -1920,7 +1920,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                           bleController.startModuleSetupFetch();
                         },
                         mode: 'bottomsheet_download',
-                        onDownloadComplete: _saveExtOutCacheAndNotifyRefresh,
+                        onDownloadComplete: _saveModuleCacheAndNotifyRefresh,
                         downloadSuccessMessage: 'Module',
                       );
                     },
@@ -1988,7 +1988,10 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       barrierColor: Colors.black.withOpacity(0.4),
-      builder: (_) => ModuleInfoBottomSheet(onDownload: onDownload),
+      builder: (_) => ModuleInfoBottomSheet(
+        deviceId: deviceId,
+        onDownload: onDownload,
+      ),
     );
   }
 
@@ -2210,6 +2213,21 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
       'boot': m.isRadioSetupBooted.value,
     });
     _zoneRefreshTrigger.value++;
+  }
+
+  Future<void> _saveModuleCacheAndNotifyRefresh() async {
+    final m = _bleManager;
+    await PeripheralSetupCache.saveModuleSetup(_selectedDevice.id, {
+      'moduleNo': m.moduleNo.value,
+      'enabled': m.moduleEnabled.value,
+      'product': m.moduleProduct.value,
+      'id': m.moduleId.value,
+      'revision': m.moduleRevision.value,
+      'hardware': m.moduleHardware.value,
+      'firmware': m.moduleFirmware.value,
+      'date': m.moduleDate.value,
+      'protocol': m.moduleProtocol.value,
+    });
   }
 
   Widget _peripheralTile({
