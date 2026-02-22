@@ -594,11 +594,11 @@ class BleProcess {
         isAccessKeyValid.value = true;
         isModuleSetupFetchCommandActive.value = false;
         print("We got the response for module setup fetch");
+      } else {
+        print("Module Setup Fetch Cmd Response not found, polling again");
+        startRxTimeout();
+        await bleManager.sendPollPacket();
       }
-    } else {
-      print("Module Setup Fetch Cmd Response not found, polling again");
-      startRxTimeout();
-      await bleManager.sendPollPacket();
     }
 
     if (checkForRadioSetupFetchRes == 1) {
