@@ -20,6 +20,7 @@ import 'package:techno_switch_solar_app/screens/test_mode_screen.dart';
 import 'package:techno_switch_solar_app/utils/bluetooth_service.dart';
 import 'package:techno_switch_solar_app/utils/ble_name_utils.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/input_mode_bottomsheet.dart';
+import 'package:techno_switch_solar_app/widgets/bottom_sheets/module_mode_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/radio_mode_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/relay_mode_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/setting_bottom_sheets/ext_out_bottomsheet.dart';
@@ -1900,9 +1901,31 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 },
               ),
               _peripheralTile(
-                peripheralName: 'Aux',
+                peripheralName: 'Module',
                 iconPath: 'assets/svgs/peripheral_aux_icon.svg',
-                isDisabled: true,
+                onTap: () {
+                  if (_selectedDevice.manufacturerData.isNotEmpty &&
+                      _selectedDevice.manufacturerData.last == 1) {
+                    showBootloaderModeDialog(context: context);
+                    return;
+                  }
+                  showModuleSetupBottomSheet(
+                    context: context,
+                    deviceId: _selectedDevice.id,
+                    onDownload: () {
+                      showPasswordPopup(
+                        onCall: () {
+                          ble.bleProcess.isModuleSetupFetchCommandActive.value =
+                              true;
+                          bleController.startModuleSetupFetch();
+                        },
+                        isExtOut: true,
+                        mode: 'bottomsheet_download',
+                        onDownloadComplete: _saveExtOutCacheAndNotifyRefresh,
+                      );
+                    },
+                  );
+                },
               ),
               _peripheralTile(
                 peripheralName: 'L-Bus',
@@ -1952,6 +1975,20 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
           ),
         ),
       ],
+    );
+  }
+
+  void showModuleSetupBottomSheet({
+    required BuildContext context,
+    required String deviceId,
+    required VoidCallback onDownload,
+  }) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withOpacity(0.4),
+      builder: (_) => ModuleInfoBottomSheet(onDownload: onDownload),
     );
   }
 
