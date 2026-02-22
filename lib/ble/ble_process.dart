@@ -590,7 +590,7 @@ class BleProcess {
           startIndex: 17,
         );
         moduleDate.value = extractStringFromPayload(rx.payload, startIndex: 17);
-        moduleProtocol.value = rx.payload[44];
+        moduleProtocol.value = rx.payload[43];
         isAccessKeyValid.value = true;
         isModuleSetupFetchCommandActive.value = false;
         print("We got the response for module setup fetch");
