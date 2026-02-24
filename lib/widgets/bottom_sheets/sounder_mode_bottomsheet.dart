@@ -22,8 +22,6 @@ class _SounderModeBottomSheetState extends State<SounderModeBottomSheet>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
-  int _expandedTileCount = 0;
-
   final List<String> groupOptions = ['None', 'General', 'Zone', 'Ext. Out'];
 
   final Map<String, List<String>> functionOptionsMap = {
@@ -83,9 +81,7 @@ class _SounderModeBottomSheetState extends State<SounderModeBottomSheet>
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
-
-    final maxHeight =
-        _expandedTileCount > 0 ? screenHeight * 0.80 : screenHeight * 0.55;
+    final maxHeight = screenHeight * 0.90;
 
     return SafeArea(
       child: AnimatedSize(
@@ -157,11 +153,6 @@ class _SounderModeBottomSheetState extends State<SounderModeBottomSheet>
       padding: const EdgeInsets.only(bottom: 16),
       child: _sectionContainer(
         child: ExpansionTile(
-          onExpansionChanged: (expanded) {
-            setState(() {
-              _expandedTileCount += expanded ? 1 : -1;
-            });
-          },
           tilePadding: const EdgeInsets.symmetric(horizontal: 16),
           childrenPadding: const EdgeInsets.symmetric(horizontal: 16),
           title: Text(

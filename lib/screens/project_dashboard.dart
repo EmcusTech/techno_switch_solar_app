@@ -2001,6 +2001,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
   }) {
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       builder:
           (_) =>
               SounderModeBottomSheet(onDownload: onDownload, onApply: onApply),
