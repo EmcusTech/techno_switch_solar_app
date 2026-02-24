@@ -25,6 +25,7 @@ import 'package:techno_switch_solar_app/widgets/bottom_sheets/radio_mode_bottoms
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/relay_mode_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/setting_bottom_sheets/ext_out_bottomsheet.dart';
 import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
+import 'package:techno_switch_solar_app/widgets/bottom_sheets/sounder_mode_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/zone_mode_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/firmware_upgrade_bottom_sheet.dart';
 
@@ -1858,7 +1859,20 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
               _peripheralTile(
                 peripheralName: 'Sounders',
                 iconPath: 'assets/svgs/peripheral_sounder_icon.svg',
-                isDisabled: true,
+                onTap: () {
+                  if (_selectedDevice.manufacturerData.isNotEmpty &&
+                      _selectedDevice.manufacturerData.last == 1) {
+                    showBootloaderModeDialog(context: context);
+                    return;
+                  }
+                  showSounderSetupBottomSheet(
+                    context: context,
+                    deviceId: _selectedDevice.id,
+                    onDownload: () {},
+                    onApply: () {},
+                    refreshTrigger: _zoneRefreshTrigger,
+                  );
+                },
               ),
               _peripheralTile(
                 peripheralName: 'Radio',
@@ -1978,6 +1992,21 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     );
   }
 
+  void showSounderSetupBottomSheet({
+    required BuildContext context,
+    required String deviceId,
+    required VoidCallback onDownload,
+    required VoidCallback onApply,
+    required ValueNotifier<int> refreshTrigger,
+  }) {
+    showModalBottomSheet(
+      context: context,
+      builder:
+          (_) =>
+              SounderModeBottomSheet(onDownload: onDownload, onApply: onApply),
+    );
+  }
+
   void showModuleSetupBottomSheet({
     required BuildContext context,
     required String deviceId,
@@ -1988,10 +2017,9 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       barrierColor: Colors.black.withOpacity(0.4),
-      builder: (_) => ModuleInfoBottomSheet(
-        deviceId: deviceId,
-        onDownload: onDownload,
-      ),
+      builder:
+          (_) =>
+              ModuleInfoBottomSheet(deviceId: deviceId, onDownload: onDownload),
     );
   }
 
