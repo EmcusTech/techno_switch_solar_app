@@ -264,31 +264,37 @@ class _SounderModeBottomSheetState extends State<SounderModeBottomSheet>
   Widget _advancedSection() {
     return Column(
       children: [
-        TabBar(
-          controller: _tabController,
-          isScrollable: true,
-          labelStyle: GoogleFonts.inter(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
+        Container(
+          height: 48,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            color: const Color(0xFFF8F8F8),
           ),
-          unselectedLabelStyle: GoogleFonts.inter(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
+          child: TabBar(
+            controller: _tabController,
+            indicatorSize: TabBarIndicatorSize.tab,
+            indicator: const UnderlineTabIndicator(
+              borderSide: BorderSide(width: 2.5, color: Color(0xFFEC1D24)),
+            ),
+            labelColor: const Color(0xFFEC1D24),
+            unselectedLabelColor: const Color(0xFF6E6E6E),
+            labelStyle: GoogleFonts.inter(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+            ),
+            unselectedLabelStyle: GoogleFonts.inter(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+            ),
+            tabs: const [
+              Tab(text: 'General'),
+              Tab(text: 'Zone'),
+              Tab(text: 'Ext Out'),
+              Tab(text: 'Delay'),
+            ],
           ),
-          labelColor: const Color(0xFFEC1D24),
-          unselectedLabelColor: Colors.grey,
-          indicator: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            color: const Color(0xFFEC1D24).withOpacity(0.1),
-          ),
-          tabs: const [
-            Tab(text: 'General'),
-            Tab(text: 'Zone'),
-            Tab(text: 'Ext Out'),
-            Tab(text: 'Delay'),
-          ],
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 20),
         SizedBox(
           height: 420,
           child: TabBarView(
