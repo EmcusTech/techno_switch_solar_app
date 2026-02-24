@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/widgets/dropdown.dart';
@@ -20,6 +21,8 @@ class SounderModeBottomSheet extends StatefulWidget {
 class _SounderModeBottomSheetState extends State<SounderModeBottomSheet>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+
+  int _expandedTileCount = 0;
 
   final List<String> groupOptions = ['None', 'General', 'Zone', 'Ext. Out'];
 
@@ -51,15 +54,21 @@ class _SounderModeBottomSheetState extends State<SounderModeBottomSheet>
 
   late List<SounderConfig> sounders;
 
+  final TextEditingController delayController = TextEditingController(
+    text: '0',
+  );
+
+  String delayed = 'No';
+
   @override
   void initState() {
     super.initState();
+
     _tabController = TabController(length: 4, vsync: this);
 
     sounders = List.generate(3, (i) {
       final config = SounderConfig(index: i);
 
-      // Sounder 1 locked as General - Fire Snd
       if (i == 0) {
         config.group = 'General';
         config.function = 'Fire Snd';
@@ -75,166 +84,212 @@ class _SounderModeBottomSheetState extends State<SounderModeBottomSheet>
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
 
+    final maxHeight =
+        _expandedTileCount > 0 ? screenHeight * 0.80 : screenHeight * 0.55;
+
     return SafeArea(
-      child: ConstrainedBox(
-        constraints: BoxConstraints(maxHeight: screenHeight * 0.9),
-        child: Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-          ),
-          padding: EdgeInsets.only(
-            left: 24,
-            right: 24,
-            top: 16,
-            bottom: MediaQuery.of(context).viewInsets.bottom + 16,
-          ),
-          child: Column(
-            children: [
-              _dragHandle(),
-              _title('Sounder Mode Configuration'),
-              Expanded(
-                child: SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      ...List.generate(3, (i) => _sounderTile(i)),
-                      const Divider(height: 32),
-                      _advancedSection(),
-                    ],
+      child: AnimatedSize(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeInOut,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxHeight: maxHeight),
+          child: Container(
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+            ),
+            padding: EdgeInsets.only(
+              left: 24,
+              right: 24,
+              top: 16,
+              bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+            ),
+            child: Column(
+              children: [
+                _dragHandle(),
+                _title('Sounder Mode Configuration'),
+
+                // BODY
+                Expanded(
+                  child: NotificationListener<UserScrollNotification>(
+                    onNotification: (notification) {
+                      if (notification.direction != ScrollDirection.idle) {
+                        FocusScope.of(context).unfocus();
+                      }
+                      return false;
+                    },
+                    child: SingleChildScrollView(
+                      physics: const BouncingScrollPhysics(),
+                      child: Column(
+                        children: [
+                          ...List.generate(3, (i) => _sounderTile(i)),
+                          const SizedBox(height: 24),
+                          _advancedHeader(),
+                          _advancedSection(),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(child: _downloadButton()),
-                  const SizedBox(width: 12),
-                  Expanded(child: _applyButton()),
-                ],
-              ),
-            ],
+
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(child: _downloadButton()),
+                    const SizedBox(width: 12),
+                    Expanded(child: _applyButton()),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  // ─────────────────────────────
-  // Sounder Tiles
-  // ─────────────────────────────
+  // ───────────────── SOUNDERS ─────────────────
 
   Widget _sounderTile(int index) {
     final sounder = sounders[index];
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
-      child: ExpansionTile(
-        title: Text(
-          'Sounder ${index + 1}',
-          style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+      child: _sectionContainer(
+        child: ExpansionTile(
+          onExpansionChanged: (expanded) {
+            setState(() {
+              _expandedTileCount += expanded ? 1 : -1;
+            });
+          },
+          tilePadding: const EdgeInsets.symmetric(horizontal: 16),
+          childrenPadding: const EdgeInsets.symmetric(horizontal: 16),
+          title: Text(
+            'Sounder ${index + 1}',
+            style: GoogleFonts.inter(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              color: const Color(0xFF3D3D3D),
+            ),
+          ),
+          children: [
+            _disabledField('Output', 'SNDR ${index + 1}'),
+
+            _textField(
+              label: 'Output Text',
+              controller: sounder.outputController,
+              maxLength: 21,
+            ),
+
+            if (!sounder.groupLocked)
+              DropdownWidget(
+                label: 'Group',
+                value: sounder.group,
+                items: groupOptions,
+                onChanged: (v) {
+                  setState(() {
+                    sounder.group = v;
+                    sounder.function = functionOptionsMap[v]!.first;
+                  });
+                },
+              ),
+
+            if (!sounder.functionLocked)
+              DropdownWidget(
+                label: 'Function',
+                value: sounder.function,
+                items: functionOptionsMap[sounder.group]!,
+                onChanged: (v) => setState(() => sounder.function = v),
+              ),
+
+            if (sounder.group == 'Zone')
+              _textField(
+                label: 'Zone',
+                controller: sounder.dynamicController,
+                keyboardType: TextInputType.number,
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(1),
+                ],
+              ),
+
+            if (sounder.group == 'Ext. Out')
+              _textField(
+                label: 'Ext. Out',
+                controller: sounder.dynamicController,
+                enabled: false,
+              ),
+
+            if (sounder.group != 'Ext. Out')
+              DropdownWidget(
+                label: 'Enabled',
+                value: sounder.enabled,
+                items: yesNoOptions,
+                onChanged: (v) => setState(() => sounder.enabled = v),
+              ),
+
+            DropdownWidget(
+              label: 'Test',
+              value: sounder.test,
+              items: yesNoOptions,
+              onChanged: (v) => setState(() => sounder.test = v),
+            ),
+
+            DropdownWidget(
+              label: 'Type',
+              value: sounder.type,
+              items: typeOptions,
+              onChanged: (v) => setState(() => sounder.type = v),
+            ),
+
+            const SizedBox(height: 14),
+          ],
         ),
-        children: [
-          _outputField(sounder),
-          _outputTextField(sounder),
-          if (!sounder.groupLocked) _groupDropdown(sounder),
-          if (!sounder.functionLocked) _functionDropdown(sounder),
-          if (sounder.group == 'Zone') _zoneField(sounder),
-          if (sounder.group == 'Ext. Out') _extOutField(sounder),
-          if (sounder.group != 'Ext. Out') _enabledDropdown(sounder),
-          _testDropdown(sounder),
-          _typeDropdown(sounder),
-          const SizedBox(height: 16),
-        ],
       ),
     );
   }
 
-  Widget _outputField(SounderConfig sounder) {
-    return _disabledField('Output', 'SNDR ${sounder.index + 1}');
-  }
+  // ───────────────── ADVANCED ─────────────────
 
-  Widget _outputTextField(SounderConfig sounder) {
-    return _textField('Output Text', sounder.outputController, maxLength: 21);
-  }
-
-  Widget _groupDropdown(SounderConfig sounder) {
-    return DropdownWidget(
-      label: 'Group',
-      value: sounder.group,
-      items: groupOptions,
-      onChanged: (v) {
-        setState(() {
-          sounder.group = v;
-          sounder.function = functionOptionsMap[v]!.first;
-        });
-      },
-    );
-  }
-
-  Widget _functionDropdown(SounderConfig sounder) {
-    return DropdownWidget(
-      label: 'Function',
-      value: sounder.function,
-      items: functionOptionsMap[sounder.group]!,
-      onChanged: (v) => setState(() => sounder.function = v),
-    );
-  }
-
-  Widget _zoneField(SounderConfig sounder) {
-    return _textField(
-      'Zone',
-      sounder.dynamicController,
-      keyboardType: TextInputType.number,
-    );
-  }
-
-  Widget _extOutField(SounderConfig sounder) {
-    return _textField('Ext. Out', sounder.dynamicController, enabled: false);
-  }
-
-  Widget _enabledDropdown(SounderConfig sounder) {
-    return DropdownWidget(
-      label: 'Enabled',
-      value: sounder.enabled,
-      items: yesNoOptions,
-      onChanged: (v) => setState(() => sounder.enabled = v),
-    );
-  }
-
-  Widget _testDropdown(SounderConfig sounder) {
-    return DropdownWidget(
-      label: 'Test',
-      value: sounder.test,
-      items: yesNoOptions,
-      onChanged: (v) => setState(() => sounder.test = v),
-    );
-  }
-
-  Widget _typeDropdown(SounderConfig sounder) {
-    return DropdownWidget(
-      label: 'Type',
-      value: sounder.type,
-      items: typeOptions,
-      onChanged: (v) => setState(() => sounder.type = v),
-    );
-  }
-
-  // ─────────────────────────────
-  // Advanced Section
-  // ─────────────────────────────
-
-  Widget _advancedSection() {
+  Widget _advancedHeader() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        const Divider(thickness: 1.2),
+        const SizedBox(height: 16),
         Text(
           'Advanced Configuration',
-          style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 16),
+          style: GoogleFonts.inter(
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+            color: const Color(0xFF3D3D3D),
+          ),
         ),
         const SizedBox(height: 16),
+      ],
+    );
+  }
+
+  Widget _advancedSection() {
+    return Column(
+      children: [
         TabBar(
           controller: _tabController,
           isScrollable: true,
+          labelStyle: GoogleFonts.inter(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+          ),
+          unselectedLabelStyle: GoogleFonts.inter(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+          ),
+          labelColor: const Color(0xFFEC1D24),
+          unselectedLabelColor: Colors.grey,
+          indicator: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            color: const Color(0xFFEC1D24).withOpacity(0.1),
+          ),
           tabs: const [
             Tab(text: 'General'),
             Tab(text: 'Zone'),
@@ -242,8 +297,9 @@ class _SounderModeBottomSheetState extends State<SounderModeBottomSheet>
             Tab(text: 'Delay'),
           ],
         ),
+        const SizedBox(height: 16),
         SizedBox(
-          height: 400,
+          height: 420,
           child: TabBarView(
             controller: _tabController,
             children: [_generalTab(), _zoneTab(), _extOutTab(), _delayTab()],
@@ -283,30 +339,38 @@ class _SounderModeBottomSheetState extends State<SounderModeBottomSheet>
     return ListView.builder(
       itemCount: 3,
       itemBuilder: (_, i) {
-        return ExpansionTile(
-          title: Text('Zone ${i + 1}'),
-          children: [
-            _disabledField('Function', 'Fire Snd'),
-            _disabledField('Zone', '${i + 1}'),
-            DropdownWidget(
-              label: 'Enabled',
-              value: 'No',
-              items: yesNoOptions,
-              onChanged: (_) {},
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 16),
+          child: _sectionContainer(
+            child: ExpansionTile(
+              title: Text(
+                'Zone ${i + 1}',
+                style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+              ),
+              children: [
+                _disabledField('Function', 'Fire Snd'),
+                _disabledField('Zone', '${i + 1}'),
+                DropdownWidget(
+                  label: 'Enabled',
+                  value: 'No',
+                  items: yesNoOptions,
+                  onChanged: (_) {},
+                ),
+                DropdownWidget(
+                  label: 'Test',
+                  value: 'No',
+                  items: yesNoOptions,
+                  onChanged: (_) {},
+                ),
+                DropdownWidget(
+                  label: 'Action',
+                  value: actionOptions.first,
+                  items: actionOptions,
+                  onChanged: (_) {},
+                ),
+              ],
             ),
-            DropdownWidget(
-              label: 'Test',
-              value: 'No',
-              items: yesNoOptions,
-              onChanged: (_) {},
-            ),
-            DropdownWidget(
-              label: 'Action',
-              value: actionOptions.first,
-              items: actionOptions,
-              onChanged: (_) {},
-            ),
-          ],
+          ),
         );
       },
     );
@@ -318,41 +382,49 @@ class _SounderModeBottomSheetState extends State<SounderModeBottomSheet>
     return ListView.builder(
       itemCount: functions.length,
       itemBuilder: (_, i) {
-        return ExpansionTile(
-          title: Text(functions[i]),
-          children: [
-            _disabledField('Function', functions[i]),
-            DropdownWidget(
-              label: 'Enabled',
-              value: 'No',
-              items: yesNoOptions,
-              onChanged: (_) {},
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 16),
+          child: _sectionContainer(
+            child: ExpansionTile(
+              title: Text(
+                functions[i],
+                style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+              ),
+              children: [
+                _disabledField('Function', functions[i]),
+                DropdownWidget(
+                  label: 'Enabled',
+                  value: 'No',
+                  items: yesNoOptions,
+                  onChanged: (_) {},
+                ),
+                DropdownWidget(
+                  label: 'Test',
+                  value: 'No',
+                  items: yesNoOptions,
+                  onChanged: (_) {},
+                ),
+                DropdownWidget(
+                  label: 'Countdown',
+                  value: extOutActionOptions.first,
+                  items: extOutActionOptions,
+                  onChanged: (_) {},
+                ),
+                DropdownWidget(
+                  label: 'Hold',
+                  value: extOutActionOptions.first,
+                  items: extOutActionOptions,
+                  onChanged: (_) {},
+                ),
+                DropdownWidget(
+                  label: 'Release',
+                  value: extOutActionOptions.first,
+                  items: extOutActionOptions,
+                  onChanged: (_) {},
+                ),
+              ],
             ),
-            DropdownWidget(
-              label: 'Test',
-              value: 'No',
-              items: yesNoOptions,
-              onChanged: (_) {},
-            ),
-            DropdownWidget(
-              label: 'Countdown',
-              value: extOutActionOptions.first,
-              items: extOutActionOptions,
-              onChanged: (_) {},
-            ),
-            DropdownWidget(
-              label: 'Hold',
-              value: extOutActionOptions.first,
-              items: extOutActionOptions,
-              onChanged: (_) {},
-            ),
-            DropdownWidget(
-              label: 'Release',
-              value: extOutActionOptions.first,
-              items: extOutActionOptions,
-              onChanged: (_) {},
-            ),
-          ],
+          ),
         );
       },
     );
@@ -362,24 +434,35 @@ class _SounderModeBottomSheetState extends State<SounderModeBottomSheet>
     return Column(
       children: [
         _textField(
-          'Delay (s)',
-          TextEditingController(),
+          label: 'Delay (s)',
+          controller: delayController,
           keyboardType: TextInputType.number,
           inputFormatters: [FilteringTextInputFormatter.digitsOnly],
         ),
         DropdownWidget(
           label: 'Delayed',
-          value: 'No',
+          value: delayed,
           items: yesNoOptions,
-          onChanged: (_) {},
+          onChanged: (v) => setState(() => delayed = v),
         ),
       ],
     );
   }
 
-  // ─────────────────────────────
-  // UI Helpers
-  // ─────────────────────────────
+  // ───────────────── UI HELPERS ─────────────────
+
+  Widget _sectionContainer({required Widget child}) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFDCDCDC)),
+      ),
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: child,
+      ),
+    );
+  }
 
   Widget _dragHandle() {
     return Container(
@@ -398,41 +481,11 @@ class _SounderModeBottomSheetState extends State<SounderModeBottomSheet>
       padding: const EdgeInsets.only(bottom: 16),
       child: Text(
         text,
-        style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.w700),
-      ),
-    );
-  }
-
-  Widget _textField(
-    String label,
-    TextEditingController controller, {
-    bool enabled = true,
-    int? maxLength,
-    TextInputType? keyboardType,
-    List<TextInputFormatter>? inputFormatters,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(label, style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
-          const SizedBox(height: 6),
-          TextField(
-            controller: controller,
-            enabled: enabled,
-            maxLength: maxLength,
-            keyboardType: keyboardType,
-            inputFormatters: inputFormatters,
-            decoration: InputDecoration(
-              filled: true,
-              fillColor: const Color(0xFFF8F8F8),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-          ),
-        ],
+        style: GoogleFonts.inter(
+          fontSize: 20,
+          fontWeight: FontWeight.w700,
+          color: const Color(0xFF3D3D3D),
+        ),
       ),
     );
   }
@@ -443,42 +496,125 @@ class _SounderModeBottomSheetState extends State<SounderModeBottomSheet>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+          _label(label),
           const SizedBox(height: 6),
           TextField(
             enabled: false,
             controller: TextEditingController(text: value),
-            decoration: InputDecoration(
-              filled: true,
-              fillColor: const Color(0xFFF8F8F8),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
+            decoration: _inputDecoration(),
           ),
         ],
       ),
     );
   }
 
+  Widget _textField({
+    required String label,
+    required TextEditingController controller,
+    bool enabled = true,
+    int? maxLength,
+    TextInputType? keyboardType,
+    List<TextInputFormatter>? inputFormatters,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _label(label),
+          const SizedBox(height: 6),
+          TextField(
+            controller: controller,
+            enabled: enabled,
+            maxLength: maxLength,
+            keyboardType: keyboardType,
+            inputFormatters: inputFormatters,
+            decoration: _inputDecoration(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _label(String text) {
+    return Text(
+      text,
+      style: GoogleFonts.inter(
+        fontSize: 13,
+        fontWeight: FontWeight.w600,
+        color: const Color(0xFF3D3D3D),
+      ),
+    );
+  }
+
+  InputDecoration _inputDecoration({bool hasError = false}) {
+    final borderColor =
+        hasError ? const Color(0xFFEC1D24) : const Color(0xFFD0D0D0);
+
+    return InputDecoration(
+      filled: true,
+      fillColor: const Color(0xFFF8F8F8),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: borderColor),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: borderColor),
+      ),
+      focusedBorder: const OutlineInputBorder(
+        borderRadius: BorderRadius.all(Radius.circular(12)),
+        borderSide: BorderSide(color: Color(0xFFEC1D24), width: 2),
+      ),
+    );
+  }
+
   Widget _downloadButton() {
-    return OutlinedButton(
-      onPressed: widget.onDownload,
-      child: const Text('Download'),
+    return SizedBox(
+      height: 48,
+      child: OutlinedButton(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: const Color(0xFFEC1D24),
+          side: const BorderSide(color: Color(0xFFEC1D24)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
+        ),
+        onPressed: widget.onDownload,
+        child: Text(
+          'Download',
+          style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600),
+        ),
+      ),
     );
   }
 
   Widget _applyButton() {
-    return ElevatedButton(
-      onPressed: widget.onApply,
-      child: const Text('Apply'),
+    return SizedBox(
+      height: 48,
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFFEC1D24),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
+        ),
+        onPressed: widget.onApply,
+        child: Text(
+          'Apply',
+          style: GoogleFonts.inter(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+          ),
+        ),
+      ),
     );
   }
 }
 
-// ─────────────────────────────
-// Model
-// ─────────────────────────────
+// ───────────────── MODEL ─────────────────
 
 class SounderConfig {
   final int index;
