@@ -20,6 +20,7 @@ import 'package:techno_switch_solar_app/screens/test_mode_screen.dart';
 import 'package:techno_switch_solar_app/utils/bluetooth_service.dart';
 import 'package:techno_switch_solar_app/utils/ble_name_utils.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/input_mode_bottomsheet.dart';
+import 'package:techno_switch_solar_app/widgets/bottom_sheets/l_bus_mode_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/module_mode_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/radio_mode_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/relay_mode_bottomsheet.dart';
@@ -1944,7 +1945,20 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
               _peripheralTile(
                 peripheralName: 'L-Bus',
                 iconPath: 'assets/svgs/peripheral_l_bus_icon.svg',
-                isDisabled: true,
+                onTap: () {
+                  if (_selectedDevice.manufacturerData.isNotEmpty &&
+                      _selectedDevice.manufacturerData.last == 1) {
+                    showBootloaderModeDialog(context: context);
+                    return;
+                  }
+                  showLBusSetupBottomSheet(
+                    context: context,
+                    deviceId: _selectedDevice.id,
+                    onDownload: () {},
+                    onApply: () {},
+                    refreshTrigger: _zoneRefreshTrigger,
+                  );
+                },
               ),
               _peripheralTile(
                 peripheralName: 'Ext Out',
@@ -1989,6 +2003,20 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
           ),
         ),
       ],
+    );
+  }
+
+  void showLBusSetupBottomSheet({
+    required BuildContext context,
+    required String deviceId,
+    required VoidCallback onDownload,
+    required VoidCallback onApply,
+    required ValueNotifier<int> refreshTrigger,
+  }) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => LBusBottomSheet(onDownload: onDownload, onApply: onApply),
     );
   }
 
