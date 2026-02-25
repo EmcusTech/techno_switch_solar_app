@@ -3338,7 +3338,7 @@ class BleManager {
     u8_pkt[215] = 0xFD;
 
     print(
-      "TX/RX: TRANSMIT: Module Setup Fetch Command time: ${DateTime.now().toIso8601String()}, packet: ${u8_pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+      "TX/RX: TRANSMIT: L-Bus Setup Fetch Command time: ${DateTime.now().toIso8601String()}, packet: ${u8_pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
     );
 
     await sendSmallDataFrame(0x1000, 216, u8_pkt);
