@@ -1954,7 +1954,18 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                   showLBusSetupBottomSheet(
                     context: context,
                     deviceId: _selectedDevice.id,
-                    onDownload: () {},
+                    onDownload: () {
+                      showPasswordPopup(
+                        onCall: () {
+                          ble.bleProcess.isLBusSetupFetchCommandActive.value =
+                              true;
+                          bleController.startLBusSetupFetch();
+                        },
+                        mode: 'bottomsheet_download',
+                        onDownloadComplete: _saveModuleCacheAndNotifyRefresh,
+                        downloadSuccessMessage: 'L-Bus',
+                      );
+                    },
                     onApply: () {},
                     refreshTrigger: _zoneRefreshTrigger,
                   );

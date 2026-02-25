@@ -51,6 +51,7 @@ enum BleStates {
   SEND_RADIO_SETUP_CMD_FETCH_PACKET,
   SEND_RADIO_SETUP_CMD_APPLY_PACKET,
   SEND_MODULE_SETUP_CMD_FETCH_PACKET,
+  SEND_L_BUS_SETUP_CMD_FETCH_PACKET,
   // add other states
 }
 
@@ -77,6 +78,7 @@ enum OtaProcessState {
   sendRadioSetupFetchCmdPkt,
   sendRadioSetupApplyCmdPkt,
   sendModuleSetupFetchCmdPkt,
+  sendLBusSetupFetchCmdPkt,
 }
 
 enum BleOperationMode {
@@ -94,6 +96,7 @@ enum BleOperationMode {
   radioSetupFetch,
   radioSetupApply,
   moduleSetupFetch,
+  lBusSetupFetch,
 }
 
 const String BLE_AUTHN_MSG = "TECHNOSWITCH-AUTH-APP";
@@ -313,6 +316,8 @@ class BleManager {
   ValueNotifier<String> get moduleFirmware => bleProcess.moduleFirmware;
   ValueNotifier<String> get moduleDate => bleProcess.moduleDate;
   ValueNotifier<int> get moduleProtocol => bleProcess.moduleProtocol;
+  ValueNotifier<bool> get isLBusSetupFetchCommandActive =>
+      bleProcess.isLBusSetupFetchCommandActive;
   void resetProtocolState() {
     // Packet counters
     u8TxPktCnt = 0;
@@ -404,6 +409,19 @@ class BleManager {
     otaProcessState = OtaProcessState.sendNetworkPacket;
   }
 
+  void resetProtocolLBusSetupState() {
+    // Packet counters
+    u8TxPktCnt = 0;
+    u8RxPktCnt = 0;
+    receivedPollCount = 0;
+
+    // Poll guards
+    _pollInFlight = false;
+
+    // OTA state
+    otaProcessState = OtaProcessState.sendNetworkPacket;
+  }
+
   void resetFirmwareState() {
     bleCurrentState = BleStates.SEND_START_FIRMWARE_PACKET;
     bleStateMachineState = BleStates.SEND_START_FIRMWARE_PACKET;
@@ -470,6 +488,15 @@ class BleManager {
     _pollInFlight = false;
     receivedPollCount = 0;
     currentOperationMode = BleOperationMode.moduleSetupFetch;
+  }
+
+  void resetLBusSetupState() {
+    bleCurrentState = BleStates.REQ_ENCY_KEY;
+    bleStateMachineState = BleStates.REQ_ENCY_KEY;
+    bleAESKey.clear();
+    _pollInFlight = false;
+    receivedPollCount = 0;
+    currentOperationMode = BleOperationMode.lBusSetupFetch;
   }
 
   void resetZoneSetupState() {
@@ -990,6 +1017,50 @@ class BleManager {
       );
       bleCurrentState = BleStates.SEND_MODULE_SETUP_CMD_FETCH_PACKET;
       bleStateMachineState = BleStates.SEND_MODULE_SETUP_CMD_FETCH_PACKET;
+      print("Current state: $bleStateMachineState");
+      // Send Network Packet
+      bleProcess.startOtherPacketsRxTimeout(
+        timeout: const Duration(seconds: 5),
+      );
+      Get.find<BleLogController>().sendNetworkPacket();
+    }
+  }
+
+  Future<void> startLBusSetupFetch() async {
+    if (!isConnected) {
+      throw Exception("Device not connected. Cannot start log retrieval.");
+    }
+
+    if (notifyChar == null || writeChar == null) {
+      throw Exception(
+        "BLE characteristics not initialized. Cannot start log retrieval.",
+      );
+    }
+
+    // Set operation mode to log retrieval
+    currentOperationMode = BleOperationMode.lBusSetupFetch;
+
+    // Reset protocol state to initial values
+    resetLBusSetupState();
+    resetProtocolLBusSetupState();
+
+    // IMPORTANT: Reset process state to clear isOtaCompleted flag
+    // This ensures polls aren't blocked after firmware upgrade
+    bleProcess.resetProcessLBusSetupState();
+
+    // Always ensure notify handler is registered (especially after reconnection)
+    // Check if subscription is null or if log retrieval hasn't been done once
+    if (_notifySub == null) {
+      print("Registering notify handler for L-Bus setup fetch");
+      await registerNotifyHandler();
+      // Give a small delay after registration to ensure subscription is active
+      await Future.delayed(const Duration(milliseconds: 200));
+    } else {
+      print(
+        "Notify handler already registered, proceeding with L-Bus setup fetch",
+      );
+      bleCurrentState = BleStates.SEND_L_BUS_SETUP_CMD_FETCH_PACKET;
+      bleStateMachineState = BleStates.SEND_L_BUS_SETUP_CMD_FETCH_PACKET;
       print("Current state: $bleStateMachineState");
       // Send Network Packet
       bleProcess.startOtherPacketsRxTimeout(
@@ -1624,6 +1695,15 @@ class BleManager {
           bleStateMachineState = BleStates.SEND_MODULE_SETUP_CMD_FETCH_PACKET;
           print("Current state: $bleStateMachineState (Module Setup Fetch)");
           // Send Network Packet for Module Setup Fetch
+          bleProcess.startOtherPacketsRxTimeout(
+            timeout: const Duration(seconds: 5),
+          );
+          Get.find<BleLogController>().sendNetworkPacket();
+        } else if (currentOperationMode == BleOperationMode.lBusSetupFetch) {
+          bleCurrentState = BleStates.SEND_L_BUS_SETUP_CMD_FETCH_PACKET;
+          bleStateMachineState = BleStates.SEND_L_BUS_SETUP_CMD_FETCH_PACKET;
+          print("Current state: $bleStateMachineState (L-Bus Setup Fetch)");
+          // Send Network Packet for L-Bus Setup Fetch
           bleProcess.startOtherPacketsRxTimeout(
             timeout: const Duration(seconds: 5),
           );
@@ -3215,6 +3295,40 @@ class BleManager {
     u8_pkt[10] = 0x00; // mode
     u8_pkt[11] = 0x00; // socket number
     u8_pkt[12] = 0x01; // command
+
+    // Compute checksum on first 213 bytes
+    int checksum = toolsFletcherChecksum(u8_pkt.sublist(0, 213));
+
+    u8_pkt[213] = (checksum >> 8) & 0xFF;
+    u8_pkt[214] = checksum & 0xFF;
+    u8_pkt[215] = 0xFD;
+
+    print(
+      "TX/RX: TRANSMIT: Module Setup Fetch Command time: ${DateTime.now().toIso8601String()}, packet: ${u8_pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+    );
+
+    await sendSmallDataFrame(0x1000, 216, u8_pkt);
+  }
+
+  Future<void> sendLBusSetupFetchCmdPkt({required int lBusNo}) async {
+    // Create 216-byte buffer
+    Uint8List u8_pkt = Uint8List(216);
+
+    // Update global counters
+    u8TxPktCnt += 1;
+
+    u8_pkt[0] = 0xFE;
+    u8_pkt[1] = 0x01;
+    u8_pkt[2] = 0x00;
+
+    u8_pkt[3] = 0x01; // pkt type
+    u8_pkt[4] = u8TxPktCnt & 0xFF; // tx pkt num
+    u8_pkt[5] = u8RxPktCnt & 0xFF; // rx pkt num
+    u8_pkt[6] = 0x00; // network number
+    u8_pkt[10] = 0x01; // mode
+    u8_pkt[11] = 0x00; // socket number
+    u8_pkt[12] = 0x10; // command
+    u8_pkt[13] = lBusNo; // L-Bus No
 
     // Compute checksum on first 213 bytes
     int checksum = toolsFletcherChecksum(u8_pkt.sublist(0, 213));
