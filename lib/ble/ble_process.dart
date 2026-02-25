@@ -37,6 +37,7 @@ class BleProcess {
   int checkForRadioSetupApplyRes = 0;
   int checkForModuleSetupFetchRes = 0;
   int checkForLBusSetupFetchRes = 0;
+  int lBusSetupFetchCommandStep = 0; // 1, 2, 3 ... 31
   int validEventLogNum = 0;
   int read1000Logs = 0;
   bool logRetreivalEnded = false;
@@ -542,6 +543,7 @@ class BleProcess {
         } else if (isLBusSetupFetchCommandActive.value) {
           bleManager.otaProcessState = OtaProcessState.sendLBusSetupFetchCmdPkt;
           checkForAccessKeyCmdRsp = 0;
+          lBusSetupFetchCommandStep = 1;
           startRxTimeout();
           await bleManager.sendLBusSetupFetchCmdPkt(lBusNo: 0x01);
         } else {
@@ -587,11 +589,24 @@ class BleProcess {
         "Checking L-Bus Setup Fetch CMD RSP Value ${rx.payload[12]}:::::${rx.payload[12] == 0x01} ",
       );
       if (rx.payload[12] == 0x10) {
-        bleManager.otaProcessState = OtaProcessState.notInUse;
-        checkForLBusSetupFetchRes = 0;
-        isLBusSetupFetchCommandActive.value = false;
-        isAccessKeyValid.value = true;
-        print("We got the response for l-bus setup fetch");
+        if (rx.payload[12] == 0x10) {
+          if (lBusSetupFetchCommandStep >= 1 &&
+              lBusSetupFetchCommandStep < 31) {
+            final nextBusNo = lBusSetupFetchCommandStep + 1;
+            print(
+              "CMD $lBusSetupFetchCommandStep Validated -> send CMD$nextBusNo, keep polling",
+            );
+            lBusSetupFetchCommandStep = nextBusNo;
+            startRxTimeout();
+            await bleManager.sendLBusSetupFetchCmdPkt(lBusNo: nextBusNo);
+          } else {
+            bleManager.otaProcessState = OtaProcessState.notInUse;
+            checkForLBusSetupFetchRes = 0;
+            isLBusSetupFetchCommandActive.value = false;
+            isAccessKeyValid.value = true;
+            print("We got the response for l-bus setup fetch");
+          }
+        }
       } else {
         print("L-Bus Setup Fetch Cmd Response not found, polling again");
         startRxTimeout();
