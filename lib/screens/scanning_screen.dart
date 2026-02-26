@@ -1625,6 +1625,8 @@ class _ScanningScreenState extends State<ScanningScreen>
   }) {
     final bleController = Get.find<BleLogController>();
     final connectionNotifier = bleController.bleManager.isConnectedNotifier;
+    final handshakeCompleteNotifier =
+        bleController.bleManager.handshakeCompleteNotifier;
     final maxRetriesNotifier =
         bleController.bleManager.maxBleConnectionRetriesReached;
 
@@ -1632,6 +1634,7 @@ class _ScanningScreenState extends State<ScanningScreen>
 
     final mergedListenable = Listenable.merge([
       connectionNotifier,
+      handshakeCompleteNotifier,
       maxRetriesNotifier,
     ]);
 
@@ -1644,10 +1647,11 @@ class _ScanningScreenState extends State<ScanningScreen>
           listenable: mergedListenable,
           builder: (_, __) {
             final isConnected = connectionNotifier.value;
+            final handshakeComplete = handshakeCompleteNotifier.value;
             final maxRetries = maxRetriesNotifier.value;
 
-            // 🔥 SUCCESS PATH
-            if (isConnected && !hasNavigated) {
+            // 🔥 SUCCESS PATH - wait for handshake (encryption + auth) to complete
+            if (handshakeComplete && !hasNavigated) {
               hasNavigated = true;
 
               // Close dialog first
@@ -1723,14 +1727,14 @@ class _ScanningScreenState extends State<ScanningScreen>
                       height: 64,
                       decoration: BoxDecoration(
                         color:
-                            isConnected
+                            handshakeComplete
                                 ? Colors.green.withValues(alpha: 0.1)
                                 : const Color(0xFFFBDEE1),
                         shape: BoxShape.circle,
                       ),
                       child: Center(
                         child:
-                            isConnected
+                            handshakeComplete
                                 ? const Icon(
                                   Icons.check_circle,
                                   size: 32,
@@ -1758,10 +1762,12 @@ class _ScanningScreenState extends State<ScanningScreen>
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      isConnected
+                      handshakeComplete
                           ? 'Preparing dashboard...'
                           : maxRetries
                           ? 'Please scan again and reconnect.'
+                          : isConnected
+                          ? 'Encrypting and authenticating...'
                           : 'Please wait while we connect to ${device.name}',
                       style: GoogleFonts.inter(
                         fontSize: 14,

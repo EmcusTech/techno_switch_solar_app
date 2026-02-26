@@ -13,6 +13,7 @@ class BleLogController extends GetxController {
     required DiscoveredDevice device,
     int? manufacturerDataOverride,
     bool fastReconnect = false,
+    bool skipConnectionHandshake = false,
     int? maxRetries,
     Duration? retryDelay,
     Duration? connectionTimeout,
@@ -32,6 +33,7 @@ class BleLogController extends GetxController {
     await bleManager.connectToKnownDevice(
       device: device,
       manufacturerDataOverride: manufacturerDataOverride,
+      skipConnectionHandshake: skipConnectionHandshake,
       maxRetries: resolvedMaxRetries,
       retryDelay: resolvedRetryDelay,
       connectionTimeout: resolvedConnectionTimeout,

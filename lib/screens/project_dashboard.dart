@@ -389,12 +389,15 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
   }) {
     final bleController = Get.find<BleLogController>();
     final connectionNotifier = bleController.bleManager.isConnectedNotifier;
+    final handshakeCompleteNotifier =
+        bleController.bleManager.handshakeCompleteNotifier;
     final maxBleConnectionRetriesReachedNotifier =
         bleController.bleManager.maxBleConnectionRetriesReached;
     bool hasNavigated = false;
 
     final mergedListenable = Listenable.merge([
       connectionNotifier,
+      handshakeCompleteNotifier,
       maxBleConnectionRetriesReachedNotifier,
     ]);
 
@@ -406,13 +409,14 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
           listenable: mergedListenable,
           builder: (context, _) {
             final isConnected = connectionNotifier.value;
+            final handshakeComplete = handshakeCompleteNotifier.value;
             final maxBleConnectionRetriesReached =
                 maxBleConnectionRetriesReachedNotifier.value;
 
-            // When connected, wait 2 seconds then close dialog
-            if (isConnected && !hasNavigated) {
+            // Close dialog when handshake is complete (encryption + auth done)
+            if (handshakeComplete && !hasNavigated) {
               hasNavigated = true;
-              Future.delayed(const Duration(seconds: 2), () {
+              Future.delayed(const Duration(milliseconds: 500), () {
                 if (context.mounted && hasNavigated) {
                   Navigator.of(dialogContext).pop();
                 }
@@ -438,14 +442,14 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                       height: 64,
                       decoration: BoxDecoration(
                         color:
-                            isConnected
+                            handshakeComplete
                                 ? Colors.green.withValues(alpha: 0.1)
                                 : Color(0xFFFBDEE1),
                         shape: BoxShape.circle,
                       ),
                       child: Center(
                         child:
-                            isConnected
+                            handshakeComplete
                                 ? Icon(
                                   Icons.check_circle,
                                   size: 32,
@@ -460,10 +464,12 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                     SizedBox(height: 16),
                     // Title
                     Text(
-                      isConnected
+                      handshakeComplete
                           ? 'Device Connected!'
                           : maxBleConnectionRetriesReached
                           ? 'Max Connection Retries Reached!'
+                          : isConnected
+                          ? 'Establishing secure connection...'
                           : 'Connecting...',
                       style: GoogleFonts.inter(
                         fontSize: 20,
@@ -475,10 +481,12 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                     SizedBox(height: 8),
                     // Subtitle
                     Text(
-                      isConnected
-                          ? 'Preparing...'
+                      handshakeComplete
+                          ? 'Ready'
                           : maxBleConnectionRetriesReached
                           ? 'Please try connecting again'
+                          : isConnected
+                          ? 'Encrypting and authenticating...'
                           : 'Please wait while we connect to ${device.name}',
                       style: GoogleFonts.inter(
                         fontSize: 14,

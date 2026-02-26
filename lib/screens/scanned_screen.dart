@@ -707,12 +707,15 @@ class _ScannedScreenState extends State<ScannedScreen> {
     final screenContext = context;
     final bleController = Get.find<BleLogController>();
     final connectionNotifier = bleController.bleManager.isConnectedNotifier;
+    final handshakeCompleteNotifier =
+        bleController.bleManager.handshakeCompleteNotifier;
     final maxBleConnectionRetriesReachedNotifier =
         bleController.bleManager.maxBleConnectionRetriesReached;
     bool hasNavigated = false;
 
     final mergedListenable = Listenable.merge([
       connectionNotifier,
+      handshakeCompleteNotifier,
       maxBleConnectionRetriesReachedNotifier,
     ]);
 
@@ -725,11 +728,12 @@ class _ScannedScreenState extends State<ScannedScreen> {
           listenable: mergedListenable,
           builder: (_, __) {
             final isConnected = connectionNotifier.value;
+            final handshakeComplete = handshakeCompleteNotifier.value;
             final maxBleConnectionRetriesReached =
                 maxBleConnectionRetriesReachedNotifier.value;
 
-            // When connected, close dialog and navigate
-            if (isConnected && !hasNavigated) {
+            // When handshake complete, close dialog and navigate
+            if (handshakeComplete && !hasNavigated) {
               hasNavigated = true;
 
               WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -802,14 +806,14 @@ class _ScannedScreenState extends State<ScannedScreen> {
                       height: 64,
                       decoration: BoxDecoration(
                         color:
-                            isConnected
+                            handshakeComplete
                                 ? Colors.green.withValues(alpha: 0.1)
                                 : Color(0xFFFBDEE1),
                         shape: BoxShape.circle,
                       ),
                       child: Center(
                         child:
-                            isConnected
+                            handshakeComplete
                                 ? Icon(
                                   Icons.check_circle,
                                   size: 32,
@@ -824,10 +828,12 @@ class _ScannedScreenState extends State<ScannedScreen> {
                     SizedBox(height: 16),
                     // Title
                     Text(
-                      isConnected
+                      handshakeComplete
                           ? 'Device Connected!'
                           : maxBleConnectionRetriesReached
                           ? 'Max Connection Retries Reached!'
+                          : isConnected
+                          ? 'Establishing secure connection...'
                           : 'Connecting...',
                       style: GoogleFonts.inter(
                         fontSize: 20,
@@ -839,10 +845,12 @@ class _ScannedScreenState extends State<ScannedScreen> {
                     SizedBox(height: 8),
                     // Subtitle
                     Text(
-                      isConnected
+                      handshakeComplete
                           ? 'Preparing to navigate...'
                           : maxBleConnectionRetriesReached
                           ? 'Please scan again and connect to the device'
+                          : isConnected
+                          ? 'Encrypting and authenticating...'
                           : 'Please wait while we connect to ${device.name}',
                       style: GoogleFonts.inter(
                         fontSize: 14,

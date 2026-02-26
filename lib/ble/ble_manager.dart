@@ -165,6 +165,13 @@ class BleManager {
 
   ValueNotifier<bool> get isConnectedNotifier => _isConnectedNotifier;
 
+  /// True when encryption + auth handshake is complete. UI should keep connection
+  /// popup visible and disable tiles until this is true.
+  final ValueNotifier<bool> handshakeCompleteNotifier =
+      ValueNotifier<bool>(false);
+
+  Completer<void>? _handshakeCompleter;
+
   bool get isConnected => _isConnectedNotifier.value;
 
   // Hold onto the connected BluetoothDevice so any screen can disconnect cleanly
@@ -542,25 +549,20 @@ class BleManager {
     // This ensures polls aren't blocked after firmware upgrade
     bleProcess.resetProcessState();
 
-    // Always ensure notify handler is registered (especially after reconnection)
-    // Check if subscription is null or if log retrieval hasn't been done once
-    if (_notifySub == null && !isLogRetrievalDoneOnce) {
-      print("Registering notify handler for log retrieval");
-      await registerNotifyHandler();
-      isLogRetrievalDoneOnce = true;
-      // Give a small delay after registration to ensure subscription is active
-      await Future.delayed(const Duration(milliseconds: 200));
-    } else {
-      print("Notify handler already registered, proceeding with log retrieval");
-      bleCurrentState = BleStates.PROCESS_PANEL_EVT_LOG_READ;
-      bleStateMachineState = BleStates.PROCESS_PANEL_EVT_LOG_READ;
-      print("Current state: $bleStateMachineState");
-      // Send Network Packet
-      bleProcess.startOtherPacketsRxTimeout(
-        timeout: const Duration(seconds: 5),
+    // Handshake (encryption + auth) is done at connection time - proceed directly
+    if (_notifySub == null) {
+      throw Exception(
+        "BLE handshake not complete. Please wait for connection to finish.",
       );
-      Get.find<BleLogController>().sendNetworkPacket();
     }
+    print("Proceeding with log retrieval");
+    bleCurrentState = BleStates.PROCESS_PANEL_EVT_LOG_READ;
+    bleStateMachineState = BleStates.PROCESS_PANEL_EVT_LOG_READ;
+    print("Current state: $bleStateMachineState");
+    bleProcess.startOtherPacketsRxTimeout(
+      timeout: const Duration(seconds: 5),
+    );
+    Get.find<BleLogController>().sendNetworkPacket();
   }
 
   Future<void> startExtOutFetch() async {
@@ -585,24 +587,19 @@ class BleManager {
     // This ensures polls aren't blocked after firmware upgrade
     bleProcess.resetProcessExtOutState();
 
-    // Always ensure notify handler is registered (especially after reconnection)
-    // Check if subscription is null or if log retrieval hasn't been done once
     if (_notifySub == null) {
-      print("Registering notify handler for ext out fetch");
-      await registerNotifyHandler();
-      // Give a small delay after registration to ensure subscription is active
-      await Future.delayed(const Duration(milliseconds: 200));
-    } else {
-      print("Notify handler already registered, proceeding with ext out fetch");
-      bleCurrentState = BleStates.SEND_EXT_OUT_SETUP_CMD_FETCH_PACKET;
-      bleStateMachineState = BleStates.SEND_EXT_OUT_SETUP_CMD_FETCH_PACKET;
-      print("Current state: $bleStateMachineState");
-      // Send Network Packet
-      bleProcess.startOtherPacketsRxTimeout(
-        timeout: const Duration(seconds: 5),
+      throw Exception(
+        "BLE handshake not complete. Please wait for connection to finish.",
       );
-      Get.find<BleLogController>().sendNetworkPacket();
     }
+    print("Proceeding with ext out fetch");
+    bleCurrentState = BleStates.SEND_EXT_OUT_SETUP_CMD_FETCH_PACKET;
+    bleStateMachineState = BleStates.SEND_EXT_OUT_SETUP_CMD_FETCH_PACKET;
+    print("Current state: $bleStateMachineState");
+    bleProcess.startOtherPacketsRxTimeout(
+      timeout: const Duration(seconds: 5),
+    );
+    Get.find<BleLogController>().sendNetworkPacket();
   }
 
   Future<void> startExtOutApply() async {
@@ -627,24 +624,19 @@ class BleManager {
     // This ensures polls aren't blocked after firmware upgrade
     bleProcess.resetProcessExtOutState();
 
-    // Always ensure notify handler is registered (especially after reconnection)
-    // Check if subscription is null or if log retrieval hasn't been done once
     if (_notifySub == null) {
-      print("Registering notify handler for ext out apply");
-      await registerNotifyHandler();
-      // Give a small delay after registration to ensure subscription is active
-      await Future.delayed(const Duration(milliseconds: 200));
-    } else {
-      print("Notify handler already registered, proceeding with ext out fetch");
-      bleCurrentState = BleStates.SEND_EXT_OUT_SETUP_CMD_APPLY_PACKET;
-      bleStateMachineState = BleStates.SEND_EXT_OUT_SETUP_CMD_APPLY_PACKET;
-      print("Current state: $bleStateMachineState");
-      // Send Network Packet
-      bleProcess.startOtherPacketsRxTimeout(
-        timeout: const Duration(seconds: 5),
+      throw Exception(
+        "BLE handshake not complete. Please wait for connection to finish.",
       );
-      Get.find<BleLogController>().sendNetworkPacket();
     }
+    print("Proceeding with ext out apply");
+    bleCurrentState = BleStates.SEND_EXT_OUT_SETUP_CMD_APPLY_PACKET;
+    bleStateMachineState = BleStates.SEND_EXT_OUT_SETUP_CMD_APPLY_PACKET;
+    print("Current state: $bleStateMachineState");
+    bleProcess.startOtherPacketsRxTimeout(
+      timeout: const Duration(seconds: 5),
+    );
+    Get.find<BleLogController>().sendNetworkPacket();
   }
 
   Future<void> startInputSetupFetch() async {
@@ -669,24 +661,19 @@ class BleManager {
     // This ensures polls aren't blocked after firmware upgrade
     bleProcess.resetProcessInputSetupState();
 
-    // Always ensure notify handler is registered (especially after reconnection)
-    // Check if subscription is null or if log retrieval hasn't been done once
     if (_notifySub == null) {
-      print("Registering notify handler for input setup fetch");
-      await registerNotifyHandler();
-      // Give a small delay after registration to ensure subscription is active
-      await Future.delayed(const Duration(milliseconds: 200));
-    } else {
-      print("Notify handler already registered, proceeding with ext out fetch");
-      bleCurrentState = BleStates.SEND_INPUT_SETUP_CMD_FETCH_PACKET;
-      bleStateMachineState = BleStates.SEND_INPUT_SETUP_CMD_FETCH_PACKET;
-      print("Current state: $bleStateMachineState");
-      // Send Network Packet
-      bleProcess.startOtherPacketsRxTimeout(
-        timeout: const Duration(seconds: 5),
+      throw Exception(
+        "BLE handshake not complete. Please wait for connection to finish.",
       );
-      Get.find<BleLogController>().sendNetworkPacket();
     }
+    print("Proceeding with input setup fetch");
+    bleCurrentState = BleStates.SEND_INPUT_SETUP_CMD_FETCH_PACKET;
+    bleStateMachineState = BleStates.SEND_INPUT_SETUP_CMD_FETCH_PACKET;
+    print("Current state: $bleStateMachineState");
+    bleProcess.startOtherPacketsRxTimeout(
+      timeout: const Duration(seconds: 5),
+    );
+    Get.find<BleLogController>().sendNetworkPacket();
   }
 
   Future<void> startInputSetupApply() async {
@@ -711,24 +698,19 @@ class BleManager {
     // This ensures polls aren't blocked after firmware upgrade
     bleProcess.resetProcessInputSetupState();
 
-    // Always ensure notify handler is registered (especially after reconnection)
-    // Check if subscription is null or if log retrieval hasn't been done once
     if (_notifySub == null) {
-      print("Registering notify handler for input setup apply");
-      await registerNotifyHandler();
-      // Give a small delay after registration to ensure subscription is active
-      await Future.delayed(const Duration(milliseconds: 200));
-    } else {
-      print("Notify handler already registered, proceeding with ext out fetch");
-      bleCurrentState = BleStates.SEND_INPUT_SETUP_CMD_APPLY_PACKET;
-      bleStateMachineState = BleStates.SEND_INPUT_SETUP_CMD_APPLY_PACKET;
-      print("Current state: $bleStateMachineState");
-      // Send Network Packet
-      bleProcess.startOtherPacketsRxTimeout(
-        timeout: const Duration(seconds: 5),
+      throw Exception(
+        "BLE handshake not complete. Please wait for connection to finish.",
       );
-      Get.find<BleLogController>().sendNetworkPacket();
     }
+    print("Proceeding with input setup apply");
+    bleCurrentState = BleStates.SEND_INPUT_SETUP_CMD_APPLY_PACKET;
+    bleStateMachineState = BleStates.SEND_INPUT_SETUP_CMD_APPLY_PACKET;
+    print("Current state: $bleStateMachineState");
+    bleProcess.startOtherPacketsRxTimeout(
+      timeout: const Duration(seconds: 5),
+    );
+    Get.find<BleLogController>().sendNetworkPacket();
   }
 
   Future<void> startRelaySetupFetch() async {
@@ -753,24 +735,19 @@ class BleManager {
     // This ensures polls aren't blocked after firmware upgrade
     bleProcess.resetProcessRelaySetupState();
 
-    // Always ensure notify handler is registered (especially after reconnection)
-    // Check if subscription is null or if log retrieval hasn't been done once
     if (_notifySub == null) {
-      print("Registering notify handler for relay setup fetch");
-      await registerNotifyHandler();
-      // Give a small delay after registration to ensure subscription is active
-      await Future.delayed(const Duration(milliseconds: 200));
-    } else {
-      print("Notify handler already registered, proceeding with ext out fetch");
-      bleCurrentState = BleStates.SEND_RELAY_SETUP_CMD_FETCH_PACKET;
-      bleStateMachineState = BleStates.SEND_RELAY_SETUP_CMD_FETCH_PACKET;
-      print("Current state: $bleStateMachineState");
-      // Send Network Packet
-      bleProcess.startOtherPacketsRxTimeout(
-        timeout: const Duration(seconds: 5),
+      throw Exception(
+        "BLE handshake not complete. Please wait for connection to finish.",
       );
-      Get.find<BleLogController>().sendNetworkPacket();
     }
+    print("Proceeding with relay setup fetch");
+    bleCurrentState = BleStates.SEND_RELAY_SETUP_CMD_FETCH_PACKET;
+    bleStateMachineState = BleStates.SEND_RELAY_SETUP_CMD_FETCH_PACKET;
+    print("Current state: $bleStateMachineState");
+    bleProcess.startOtherPacketsRxTimeout(
+      timeout: const Duration(seconds: 5),
+    );
+    Get.find<BleLogController>().sendNetworkPacket();
   }
 
   Future<void> startRelaySetupApply() async {
@@ -795,24 +772,19 @@ class BleManager {
     // This ensures polls aren't blocked after firmware upgrade
     bleProcess.resetProcessRelaySetupState();
 
-    // Always ensure notify handler is registered (especially after reconnection)
-    // Check if subscription is null or if log retrieval hasn't been done once
     if (_notifySub == null) {
-      print("Registering notify handler for relay setup apply");
-      await registerNotifyHandler();
-      // Give a small delay after registration to ensure subscription is active
-      await Future.delayed(const Duration(milliseconds: 200));
-    } else {
-      print("Notify handler already registered, proceeding with ext out fetch");
-      bleCurrentState = BleStates.SEND_RELAY_SETUP_CMD_APPLY_PACKET;
-      bleStateMachineState = BleStates.SEND_RELAY_SETUP_CMD_APPLY_PACKET;
-      print("Current state: $bleStateMachineState");
-      // Send Network Packet
-      bleProcess.startOtherPacketsRxTimeout(
-        timeout: const Duration(seconds: 5),
+      throw Exception(
+        "BLE handshake not complete. Please wait for connection to finish.",
       );
-      Get.find<BleLogController>().sendNetworkPacket();
     }
+    print("Proceeding with relay setup apply");
+    bleCurrentState = BleStates.SEND_RELAY_SETUP_CMD_APPLY_PACKET;
+    bleStateMachineState = BleStates.SEND_RELAY_SETUP_CMD_APPLY_PACKET;
+    print("Current state: $bleStateMachineState");
+    bleProcess.startOtherPacketsRxTimeout(
+      timeout: const Duration(seconds: 5),
+    );
+    Get.find<BleLogController>().sendNetworkPacket();
   }
 
   Future<void> startZoneSetupFetch() async {
@@ -837,26 +809,19 @@ class BleManager {
     // This ensures polls aren't blocked after firmware upgrade
     bleProcess.resetProcessZoneSetupState();
 
-    // Always ensure notify handler is registered (especially after reconnection)
-    // Check if subscription is null or if log retrieval hasn't been done once
     if (_notifySub == null) {
-      print("Registering notify handler for zone setup fetch");
-      await registerNotifyHandler();
-      // Give a small delay after registration to ensure subscription is active
-      await Future.delayed(const Duration(milliseconds: 200));
-    } else {
-      print(
-        "Notify handler already registered, proceeding with Zone Setup Fetch",
+      throw Exception(
+        "BLE handshake not complete. Please wait for connection to finish.",
       );
-      bleCurrentState = BleStates.SEND_ZONE_SETUP_CMD_FETCH_PACKET;
-      bleStateMachineState = BleStates.SEND_ZONE_SETUP_CMD_FETCH_PACKET;
-      print("Current state: $bleStateMachineState");
-      // Send Network Packet
-      bleProcess.startOtherPacketsRxTimeout(
-        timeout: const Duration(seconds: 5),
-      );
-      Get.find<BleLogController>().sendNetworkPacket();
     }
+    print("Proceeding with zone setup fetch");
+    bleCurrentState = BleStates.SEND_ZONE_SETUP_CMD_FETCH_PACKET;
+    bleStateMachineState = BleStates.SEND_ZONE_SETUP_CMD_FETCH_PACKET;
+    print("Current state: $bleStateMachineState");
+    bleProcess.startOtherPacketsRxTimeout(
+      timeout: const Duration(seconds: 5),
+    );
+    Get.find<BleLogController>().sendNetworkPacket();
   }
 
   Future<void> startZoneSetupApply() async {
@@ -881,26 +846,19 @@ class BleManager {
     // This ensures polls aren't blocked after firmware upgrade
     bleProcess.resetProcessZoneSetupState();
 
-    // Always ensure notify handler is registered (especially after reconnection)
-    // Check if subscription is null or if log retrieval hasn't been done once
     if (_notifySub == null) {
-      print("Registering notify handler for zone setup apply");
-      await registerNotifyHandler();
-      // Give a small delay after registration to ensure subscription is active
-      await Future.delayed(const Duration(milliseconds: 200));
-    } else {
-      print(
-        "Notify handler already registered, proceeding with zone setup apply",
+      throw Exception(
+        "BLE handshake not complete. Please wait for connection to finish.",
       );
-      bleCurrentState = BleStates.SEND_ZONE_SETUP_CMD_APPLY_PACKET;
-      bleStateMachineState = BleStates.SEND_ZONE_SETUP_CMD_APPLY_PACKET;
-      print("Current state: $bleStateMachineState");
-      // Send Network Packet
-      bleProcess.startOtherPacketsRxTimeout(
-        timeout: const Duration(seconds: 5),
-      );
-      Get.find<BleLogController>().sendNetworkPacket();
     }
+    print("Proceeding with zone setup apply");
+    bleCurrentState = BleStates.SEND_ZONE_SETUP_CMD_APPLY_PACKET;
+    bleStateMachineState = BleStates.SEND_ZONE_SETUP_CMD_APPLY_PACKET;
+    print("Current state: $bleStateMachineState");
+    bleProcess.startOtherPacketsRxTimeout(
+      timeout: const Duration(seconds: 5),
+    );
+    Get.find<BleLogController>().sendNetworkPacket();
   }
 
   Future<void> startRadioSetupFetch() async {
@@ -925,26 +883,19 @@ class BleManager {
     // This ensures polls aren't blocked after firmware upgrade
     bleProcess.resetProcessRadioSetupState();
 
-    // Always ensure notify handler is registered (especially after reconnection)
-    // Check if subscription is null or if log retrieval hasn't been done once
     if (_notifySub == null) {
-      print("Registering notify handler for Radio setup fetch");
-      await registerNotifyHandler();
-      // Give a small delay after registration to ensure subscription is active
-      await Future.delayed(const Duration(milliseconds: 200));
-    } else {
-      print(
-        "Notify handler already registered, proceeding with Radio setup fetch",
+      throw Exception(
+        "BLE handshake not complete. Please wait for connection to finish.",
       );
-      bleCurrentState = BleStates.SEND_RADIO_SETUP_CMD_FETCH_PACKET;
-      bleStateMachineState = BleStates.SEND_RADIO_SETUP_CMD_FETCH_PACKET;
-      print("Current state: $bleStateMachineState");
-      // Send Network Packet
-      bleProcess.startOtherPacketsRxTimeout(
-        timeout: const Duration(seconds: 5),
-      );
-      Get.find<BleLogController>().sendNetworkPacket();
     }
+    print("Proceeding with radio setup fetch");
+    bleCurrentState = BleStates.SEND_RADIO_SETUP_CMD_FETCH_PACKET;
+    bleStateMachineState = BleStates.SEND_RADIO_SETUP_CMD_FETCH_PACKET;
+    print("Current state: $bleStateMachineState");
+    bleProcess.startOtherPacketsRxTimeout(
+      timeout: const Duration(seconds: 5),
+    );
+    Get.find<BleLogController>().sendNetworkPacket();
   }
 
   Future<void> startRadioSetupApply() async {
@@ -969,26 +920,19 @@ class BleManager {
     // This ensures polls aren't blocked after firmware upgrade
     bleProcess.resetProcessRadioSetupState();
 
-    // Always ensure notify handler is registered (especially after reconnection)
-    // Check if subscription is null or if log retrieval hasn't been done once
     if (_notifySub == null) {
-      print("Registering notify handler for Radio setup fetch");
-      await registerNotifyHandler();
-      // Give a small delay after registration to ensure subscription is active
-      await Future.delayed(const Duration(milliseconds: 200));
-    } else {
-      print(
-        "Notify handler already registered, proceeding with Radio setup fetch",
+      throw Exception(
+        "BLE handshake not complete. Please wait for connection to finish.",
       );
-      bleCurrentState = BleStates.SEND_RADIO_SETUP_CMD_APPLY_PACKET;
-      bleStateMachineState = BleStates.SEND_RADIO_SETUP_CMD_APPLY_PACKET;
-      print("Current state: $bleStateMachineState");
-      // Send Network Packet
-      bleProcess.startOtherPacketsRxTimeout(
-        timeout: const Duration(seconds: 5),
-      );
-      Get.find<BleLogController>().sendNetworkPacket();
     }
+    print("Proceeding with radio setup apply");
+    bleCurrentState = BleStates.SEND_RADIO_SETUP_CMD_APPLY_PACKET;
+    bleStateMachineState = BleStates.SEND_RADIO_SETUP_CMD_APPLY_PACKET;
+    print("Current state: $bleStateMachineState");
+    bleProcess.startOtherPacketsRxTimeout(
+      timeout: const Duration(seconds: 5),
+    );
+    Get.find<BleLogController>().sendNetworkPacket();
   }
 
   Future<void> startModuleSetupFetch() async {
@@ -1013,26 +957,19 @@ class BleManager {
     // This ensures polls aren't blocked after firmware upgrade
     bleProcess.resetProcessModuleSetupState();
 
-    // Always ensure notify handler is registered (especially after reconnection)
-    // Check if subscription is null or if log retrieval hasn't been done once
     if (_notifySub == null) {
-      print("Registering notify handler for Module setup fetch");
-      await registerNotifyHandler();
-      // Give a small delay after registration to ensure subscription is active
-      await Future.delayed(const Duration(milliseconds: 200));
-    } else {
-      print(
-        "Notify handler already registered, proceeding with Module setup fetch",
+      throw Exception(
+        "BLE handshake not complete. Please wait for connection to finish.",
       );
-      bleCurrentState = BleStates.SEND_MODULE_SETUP_CMD_FETCH_PACKET;
-      bleStateMachineState = BleStates.SEND_MODULE_SETUP_CMD_FETCH_PACKET;
-      print("Current state: $bleStateMachineState");
-      // Send Network Packet
-      bleProcess.startOtherPacketsRxTimeout(
-        timeout: const Duration(seconds: 5),
-      );
-      Get.find<BleLogController>().sendNetworkPacket();
     }
+    print("Proceeding with module setup fetch");
+    bleCurrentState = BleStates.SEND_MODULE_SETUP_CMD_FETCH_PACKET;
+    bleStateMachineState = BleStates.SEND_MODULE_SETUP_CMD_FETCH_PACKET;
+    print("Current state: $bleStateMachineState");
+    bleProcess.startOtherPacketsRxTimeout(
+      timeout: const Duration(seconds: 5),
+    );
+    Get.find<BleLogController>().sendNetworkPacket();
   }
 
   Future<void> startLBusSetupFetch() async {
@@ -1057,26 +994,19 @@ class BleManager {
     // This ensures polls aren't blocked after firmware upgrade
     bleProcess.resetProcessLBusSetupState();
 
-    // Always ensure notify handler is registered (especially after reconnection)
-    // Check if subscription is null or if log retrieval hasn't been done once
     if (_notifySub == null) {
-      print("Registering notify handler for L-Bus setup fetch");
-      await registerNotifyHandler();
-      // Give a small delay after registration to ensure subscription is active
-      await Future.delayed(const Duration(milliseconds: 200));
-    } else {
-      print(
-        "Notify handler already registered, proceeding with L-Bus setup fetch",
+      throw Exception(
+        "BLE handshake not complete. Please wait for connection to finish.",
       );
-      bleCurrentState = BleStates.SEND_L_BUS_SETUP_CMD_FETCH_PACKET;
-      bleStateMachineState = BleStates.SEND_L_BUS_SETUP_CMD_FETCH_PACKET;
-      print("Current state: $bleStateMachineState");
-      // Send Network Packet
-      bleProcess.startOtherPacketsRxTimeout(
-        timeout: const Duration(seconds: 5),
-      );
-      Get.find<BleLogController>().sendNetworkPacket();
     }
+    print("Proceeding with L-Bus setup fetch");
+    bleCurrentState = BleStates.SEND_L_BUS_SETUP_CMD_FETCH_PACKET;
+    bleStateMachineState = BleStates.SEND_L_BUS_SETUP_CMD_FETCH_PACKET;
+    print("Current state: $bleStateMachineState");
+    bleProcess.startOtherPacketsRxTimeout(
+      timeout: const Duration(seconds: 5),
+    );
+    Get.find<BleLogController>().sendNetworkPacket();
   }
 
   Future<void> startLBusSetupApply() async {
@@ -1101,27 +1031,21 @@ class BleManager {
     // This ensures polls aren't blocked after firmware upgrade
     bleProcess.resetProcessLBusSetupState();
 
-    // Always ensure notify handler is registered (especially after reconnection)
-    // Check if subscription is null or if log retrieval hasn't been done once
     if (_notifySub == null) {
-      print("Registering notify handler for L-Bus setup apply");
-      await registerNotifyHandler();
-      // Give a small delay after registration to ensure subscription is active
-      await Future.delayed(const Duration(milliseconds: 200));
-    } else {
-      print(
-        "Notify handler already registered, proceeding with L-Bus setup apply",
+      throw Exception(
+        "BLE handshake not complete. Please wait for connection to finish.",
       );
-      bleCurrentState = BleStates.SEND_L_BUS_SETUP_CMD_APPLY_PACKET;
-      bleStateMachineState = BleStates.SEND_L_BUS_SETUP_CMD_APPLY_PACKET;
-      print("Current state: $bleStateMachineState");
-      // Send Network Packet
-      bleProcess.startOtherPacketsRxTimeout(
-        timeout: const Duration(seconds: 5),
-      );
-      Get.find<BleLogController>().sendNetworkPacket();
     }
+    print("Proceeding with L-Bus setup apply");
+    bleCurrentState = BleStates.SEND_L_BUS_SETUP_CMD_APPLY_PACKET;
+    bleStateMachineState = BleStates.SEND_L_BUS_SETUP_CMD_APPLY_PACKET;
+    print("Current state: $bleStateMachineState");
+    bleProcess.startOtherPacketsRxTimeout(
+      timeout: const Duration(seconds: 5),
+    );
+    Get.find<BleLogController>().sendNetworkPacket();
   }
+
   // Future<void> startExtOut() async {
   //   if (!isConnected) {
   //     throw Exception("Device not connected. Cannot start log retrieval.");
@@ -1185,6 +1109,7 @@ class BleManager {
     Duration connectionTimeout = const Duration(seconds: 10),
     required DiscoveredDevice device,
     int? manufacturerDataOverride,
+    bool skipConnectionHandshake = false,
   }) async {
     int attempt = 0;
 
@@ -1212,6 +1137,7 @@ class BleManager {
           device,
           manufacturerDataOverride: manufacturerDataOverride,
           connectionTimeout: connectionTimeout,
+          skipConnectionHandshake: skipConnectionHandshake,
         );
         print("BLE connected successfully");
         return; // ✅ SUCCESS
@@ -1263,6 +1189,7 @@ class BleManager {
     DiscoveredDevice device, {
     int? manufacturerDataOverride,
     Duration connectionTimeout = const Duration(seconds: 10),
+    bool skipConnectionHandshake = false,
   }) async {
     await [
       Permission.bluetoothConnect,
@@ -1374,6 +1301,7 @@ class BleManager {
 
             if (update.connectionState == DeviceConnectionState.disconnected) {
               _isConnectedNotifier.value = false;
+              handshakeCompleteNotifier.value = false;
               isBleDisconnected = true;
               _isGattConnected = false;
               _connectedOnce = false;
@@ -1383,6 +1311,14 @@ class BleManager {
 
               // Reset log retrieval flag so notify handler is re-registered on reconnect
               isLogRetrievalDoneOnce = false;
+
+              // Unblock any waiters if handshake was in progress
+              if (_handshakeCompleter != null && !_handshakeCompleter!.isCompleted) {
+                _handshakeCompleter!.completeError(
+                  Exception("Disconnected during handshake"),
+                );
+                _handshakeCompleter = null;
+              }
 
               if (!connectedCompleter.isCompleted) {
                 connectedCompleter.completeError(
@@ -1400,6 +1336,20 @@ class BleManager {
         );
 
     await connectedCompleter.future;
+
+    // Run encryption + auth handshake at connection time (unless skipped for bootloader)
+    if (!skipConnectionHandshake) {
+      handshakeCompleteNotifier.value = false;
+      _handshakeCompleter = Completer<void>();
+      currentOperationMode = BleOperationMode.none;
+      await registerNotifyHandler();
+      try {
+        await _handshakeCompleter!.future;
+        handshakeCompleteNotifier.value = true;
+      } finally {
+        _handshakeCompleter = null;
+      }
+    }
   }
 
   /// REGISTER NOTIFICATIONS
@@ -1513,6 +1463,7 @@ class BleManager {
     selectedDevice = null;
     connectedBtDevice.value = null;
     _isConnectedNotifier.value = false;
+    handshakeCompleteNotifier.value = false;
   }
 
   /// SHUTDOWN
@@ -1556,7 +1507,13 @@ class BleManager {
     writeChar = null;
     isBleDisconnected = true;
     _isConnectedNotifier.value = false;
+    handshakeCompleteNotifier.value = false;
     isLogRetrievalDoneOnce = false;
+
+    if (_handshakeCompleter != null && !_handshakeCompleter!.isCompleted) {
+      _handshakeCompleter!.completeError(Exception("BLE shutdown"));
+      _handshakeCompleter = null;
+    }
   }
 
   // ----------------------
@@ -1637,7 +1594,15 @@ class BleManager {
         await Future.delayed(Duration(seconds: 1));
 
         // Route to appropriate state based on operation mode
-        if (currentOperationMode == BleOperationMode.firmwareUpgrade) {
+        if (currentOperationMode == BleOperationMode.none) {
+          // Connection handshake complete - device ready for operations
+          bleCurrentState = BleStates.IDLE;
+          bleStateMachineState = BleStates.IDLE;
+          print("Connection handshake complete - device ready for operations");
+          if (_handshakeCompleter != null && !_handshakeCompleter!.isCompleted) {
+            _handshakeCompleter!.complete();
+          }
+        } else if (currentOperationMode == BleOperationMode.firmwareUpgrade) {
           // Firmware upgrade path
           bleCurrentState = BleStates.SEND_START_FIRMWARE_PACKET;
           bleStateMachineState = BleStates.SEND_START_FIRMWARE_PACKET;
