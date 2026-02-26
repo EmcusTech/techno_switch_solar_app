@@ -3445,8 +3445,8 @@ class BleManager {
             : 0x00;
     u8_pkt[18] = 0x01;
     u8_pkt[19] = 0x64;
-    u8_pkt[20] = lBusNo == 1 ? 0x00 : 0x50;
-    u8_pkt[21] = lBusNo == 1 ? 0x00 : 0x58;
+    u8_pkt[20] = lBusNo == 1 ? 0x00 : 0x02;
+    u8_pkt[21] = lBusNo == 1 ? 0x50 : 0x58;
     u8_pkt[22] = lBusDeviceTextLength & 0xFF;
 
     // Compute checksum on first 213 bytes
