@@ -228,12 +228,7 @@ class _RadioModeBottomSheetState extends State<RadioModeBottomSheet> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               child: Column(
                 children: [
-                  DropdownWidget(
-                    label: 'Enabled',
-                    value: radio.enabled,
-                    items: yesNoOptions,
-                    onChanged: (v) => setState(() => radio.enabled = v),
-                  ),
+                  _disabledField('Enabled', 'Yes'),
 
                   DropdownWidget(
                     label: 'Module',
@@ -316,7 +311,7 @@ class _RadioModeBottomSheetState extends State<RadioModeBottomSheet> {
         onPressed:
             isValid && manager != null
                 ? () {
-                  manager!.isRadioSetupEnabled.value = radio.enabled == 'Yes';
+                  manager!.isRadioSetupEnabled.value = true; // Fixed to Yes
                   manager!.radioSetupModule.value = moduleOptions.indexOf(
                     radio.module,
                   );
@@ -424,6 +419,37 @@ class _RadioModeBottomSheetState extends State<RadioModeBottomSheet> {
       child: Text(
         text,
         style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.w700),
+      ),
+    );
+  }
+
+  Widget _disabledField(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _label(label),
+          const SizedBox(height: 6),
+          Container(
+            height: 48,
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF8F8F8),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0xFFD0D0D0)),
+            ),
+            alignment: Alignment.centerLeft,
+            child: Text(
+              value,
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: const Color(0xFF3D3D3D),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
