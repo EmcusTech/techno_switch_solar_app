@@ -29,8 +29,6 @@ class RadioModeBottomSheet extends StatefulWidget {
 class _RadioModeBottomSheetState extends State<RadioModeBottomSheet> {
   BleManager? manager;
 
-  int _expandedTileCount = 0;
-
   final List<String> yesNoOptions = ['No', 'Yes'];
   final List<String> moduleOptions = ['None', 'BLUENRG-MB'];
 
@@ -140,8 +138,6 @@ class _RadioModeBottomSheetState extends State<RadioModeBottomSheet> {
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
-    final maxHeight =
-        _expandedTileCount > 0 ? screenHeight * 0.75 : screenHeight * 0.45;
 
     _updateValidationErrors();
     final isValid = _computeIsValid();
@@ -151,7 +147,7 @@ class _RadioModeBottomSheetState extends State<RadioModeBottomSheet> {
         duration: const Duration(milliseconds: 200),
         curve: Curves.easeInOut,
         child: ConstrainedBox(
-          constraints: BoxConstraints(maxHeight: maxHeight),
+          constraints: BoxConstraints(maxHeight: screenHeight * 0.75),
           child: Container(
             decoration: const BoxDecoration(
               color: Colors.white,
@@ -178,7 +174,7 @@ class _RadioModeBottomSheetState extends State<RadioModeBottomSheet> {
                     child: SingleChildScrollView(
                       physics: const BouncingScrollPhysics(),
                       padding: const EdgeInsets.only(top: 16),
-                      child: _radioTile(),
+                      child: _radioFields(),
                     ),
                   ),
                 ),
@@ -198,109 +194,86 @@ class _RadioModeBottomSheetState extends State<RadioModeBottomSheet> {
     );
   }
 
-  // ───────────────── TILE ─────────────────
+  // ───────────────── FIELDS ─────────────────
 
-  Widget _radioTile() {
+  Widget _radioFields() {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: const Color(0xFFDCDCDC)),
       ),
-      child: Theme(
-        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-        child: ExpansionTile(
-          onExpansionChanged: (expanded) {
-            setState(() {
-              _expandedTileCount += expanded ? 1 : -1;
-            });
-          },
-          tilePadding: const EdgeInsets.symmetric(horizontal: 16),
-          title: Text(
-            'Radio Setup',
-            style: GoogleFonts.inter(
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
-              color: const Color(0xFF3D3D3D),
-            ),
-          ),
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              child: Column(
-                children: [
-                  if (manager != null)
-                    ValueListenableBuilder<String>(
-                      valueListenable: manager!.bleFirmwareVersion,
-                      builder: (_, version, __) => _disabledField(
-                        'BLE Firmware Version',
-                        version.isEmpty ? '—' : version,
-                      ),
-                    )
-                  else
-                    _disabledField('BLE Firmware Version', '—'),
-                  _disabledField('Enabled', 'Yes'),
-
-                  DropdownWidget(
-                    label: 'Module',
-                    value: radio.module,
-                    items: moduleOptions,
-                    onChanged: (v) => setState(() => radio.module = v),
-                  ),
-
-                  _textField(
-                    label: 'Name',
-                    controller: radio.nameController,
-                    error: _nameError,
-                    maxLength: 21,
-                  ),
-
-                  _textField(
-                    label: 'Number',
-                    controller: radio.numberController,
-                    error: _numberError,
-                    keyboardType: TextInputType.number,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  ),
-
-                  DropdownWidget(
-                    label: 'Advertise',
-                    value: radio.advertise,
-                    items: yesNoOptions,
-                    onChanged: (v) => setState(() => radio.advertise = v),
-                  ),
-
-                  DropdownWidget(
-                    label: 'Connection',
-                    value: radio.connection,
-                    items: yesNoOptions,
-                    onChanged: (v) => setState(() => radio.connection = v),
-                  ),
-
-                  DropdownWidget(
-                    label: 'Service',
-                    value: radio.service,
-                    items: yesNoOptions,
-                    onChanged: (v) => setState(() => radio.service = v),
-                  ),
-
-                  DropdownWidget(
-                    label: 'Programming',
-                    value: radio.programming,
-                    items: yesNoOptions,
-                    onChanged: (v) => setState(() => radio.programming = v),
-                  ),
-
-                  DropdownWidget(
-                    label: 'Boot',
-                    value: radio.boot,
-                    items: yesNoOptions,
-                    onChanged: (v) => setState(() => radio.boot = v),
-                  ),
-                ],
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      child: Column(
+        children: [
+          if (manager != null)
+            ValueListenableBuilder<String>(
+              valueListenable: manager!.bleFirmwareVersion,
+              builder: (_, version, __) => _disabledField(
+                'BLE Firmware Version',
+                version.isEmpty ? '—' : version,
               ),
-            ),
-          ],
-        ),
+            )
+          else
+            _disabledField('BLE Firmware Version', '—'),
+          _disabledField('Enabled', 'Yes'),
+
+          DropdownWidget(
+            label: 'Module',
+            value: radio.module,
+            items: moduleOptions,
+            onChanged: (v) => setState(() => radio.module = v),
+          ),
+
+          _textField(
+            label: 'Name',
+            controller: radio.nameController,
+            error: _nameError,
+            maxLength: 21,
+          ),
+
+          _textField(
+            label: 'Number',
+            controller: radio.numberController,
+            error: _numberError,
+            keyboardType: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+          ),
+
+          DropdownWidget(
+            label: 'Advertise',
+            value: radio.advertise,
+            items: yesNoOptions,
+            onChanged: (v) => setState(() => radio.advertise = v),
+          ),
+
+          DropdownWidget(
+            label: 'Connection',
+            value: radio.connection,
+            items: yesNoOptions,
+            onChanged: (v) => setState(() => radio.connection = v),
+          ),
+
+          DropdownWidget(
+            label: 'Service',
+            value: radio.service,
+            items: yesNoOptions,
+            onChanged: (v) => setState(() => radio.service = v),
+          ),
+
+          DropdownWidget(
+            label: 'Programming',
+            value: radio.programming,
+            items: yesNoOptions,
+            onChanged: (v) => setState(() => radio.programming = v),
+          ),
+
+          DropdownWidget(
+            label: 'Boot',
+            value: radio.boot,
+            items: yesNoOptions,
+            onChanged: (v) => setState(() => radio.boot = v),
+          ),
+        ],
       ),
     );
   }
