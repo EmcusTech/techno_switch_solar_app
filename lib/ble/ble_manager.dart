@@ -11,6 +11,7 @@ import 'aes_key.dart' as aes;
 import 'ble_process.dart';
 import 'dart:typed_data';
 import 'package:techno_switch_solar_app/models/l_bus_setup_data_model.dart';
+import 'package:techno_switch_solar_app/utils/l_bus_payload_config.dart';
 
 const int BLE_FAILED = 0;
 const int BLE_SUCCESS = 1;
@@ -3409,13 +3410,14 @@ class BleManager {
     // Create 216-byte buffer
     Uint8List u8_pkt = Uint8List(216);
 
-    final String lBusDeviceText =
-        lBusSetupDataList.value[lBusNo - 1].deviceText;
+    final data = lBusSetupDataList.value[lBusNo - 1];
+
+    final String lBusDeviceText = data.deviceText;
     final List<int> lBusDeviceTextBytes = lBusDeviceText.codeUnits;
     final lBusDeviceTextLength = lBusDeviceTextBytes.length;
 
     print("lBusDeviceText: $lBusDeviceText");
-    print("lBusProduct: ${lBusSetupDataList.value[lBusNo - 1].product}");
+    print("lBusProduct: ${data.product}");
 
     final initialindex = 23;
     for (int i = 0; i < lBusDeviceTextLength; i++) {
@@ -3423,6 +3425,14 @@ class BleManager {
         u8_pkt[initialindex + i] = lBusDeviceTextBytes[i];
       }
     }
+
+    final statusConfig = LBusRepeaterStatusConfig(
+      enable:
+          data.enabled == 'Yes'
+              ? LBusRepeaterEnable.enabled
+              : LBusRepeaterEnable.disabled,
+      idLed: data.idLed == 'Yes' ? LBusIdLed.on : LBusIdLed.off,
+    );
 
     // Update global counters
     u8TxPktCnt += 1;
@@ -3443,6 +3453,7 @@ class BleManager {
         lBusSetupDataList.value[lBusNo - 1].product == 'Rhino103R'
             ? 0x16
             : 0x00;
+    u8_pkt[17] = LBusRepeaterStatusCodec.encode(statusConfig);
     u8_pkt[18] = 0x01;
     u8_pkt[19] = 0x64;
     u8_pkt[20] = lBusNo == 1 ? 0x00 : 0x02;
