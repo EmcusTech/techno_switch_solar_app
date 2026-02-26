@@ -77,9 +77,13 @@ class LBusSetupData {
       }
     }
 
+    final product =
+        payload.length > 14 && payload[14] == 0x16 ? 'Rhino103R' : 'None';
+
     return LBusSetupData(
       enabled: statusConfig.enable == LBusRepeaterEnable.enabled ? 'Yes' : 'No',
       idLed: statusConfig.idLed == LBusIdLed.on ? 'Yes' : 'No',
+      product: product,
       deviceText: deviceText,
     );
   }
