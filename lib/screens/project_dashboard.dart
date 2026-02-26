@@ -1486,9 +1486,10 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                             String? status;
                             if (_controller.text.length == 4 &&
                                 isAccessKeyValidValue == null) {
-                              status = processDescValue.isNotEmpty
-                                  ? processDescValue
-                                  : "Validating access key...";
+                              status =
+                                  processDescValue.isNotEmpty
+                                      ? processDescValue
+                                      : "Validating access key...";
                             } else if (isAccessKeyValidValue == true) {
                               status = "Validation success";
                             }
@@ -1924,7 +1925,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 },
               ),
               _peripheralTile(
-                peripheralName: 'Module',
+                peripheralName: 'Panel Info',
                 iconPath: 'assets/svgs/peripheral_aux_icon.svg',
                 onTap: () {
                   if (_selectedDevice.manufacturerData.isNotEmpty &&
@@ -2324,8 +2325,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
 
   Future<void> _saveLBusCacheAndNotifyRefresh() async {
     final m = _bleManager;
-    final buses =
-        m.lBusSetupDataList.value.map((e) => e.toJson()).toList();
+    final buses = m.lBusSetupDataList.value.map((e) => e.toJson()).toList();
     await PeripheralSetupCache.saveLBusSetup(_selectedDevice.id, buses);
     _zoneRefreshTrigger.value++;
   }

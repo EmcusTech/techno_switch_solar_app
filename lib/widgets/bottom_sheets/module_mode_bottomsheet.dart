@@ -91,7 +91,7 @@ class _ModuleInfoBottomSheetState extends State<ModuleInfoBottomSheet> {
               Padding(
                 padding: const EdgeInsets.only(bottom: 16),
                 child: Text(
-                  'Module Information',
+                  'Panel Information',
                   style: GoogleFonts.inter(
                     fontSize: 20,
                     fontWeight: FontWeight.w700,
