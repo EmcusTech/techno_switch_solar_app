@@ -609,9 +609,9 @@ class BleProcess {
 
     if (checkForLBusSetupApplyRes == 1) {
       print(
-        "Checking L-Bus Setup Apply CMD RSP Value ${rx.payload[12]}:::::${rx.payload[12] == 0x10} ",
+        "Checking L-Bus Setup Apply CMD RSP Value ${rx.payload[12]}:::::${rx.payload[12] == 0x02} ",
       );
-      if (rx.payload[12] == 0x10) {
+      if (rx.payload[12] == 0x02) {
         bleManager.otaProcessState = OtaProcessState.notInUse;
         checkForLBusSetupApplyRes = 0;
         isLBusSetupApplyCommandActive.value = false;

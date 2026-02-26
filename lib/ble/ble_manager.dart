@@ -3436,6 +3436,10 @@ class BleManager {
     u8_pkt[11] = 0x00; // socket number
     u8_pkt[12] = 0x10; // command
     u8_pkt[13] = lBusNo; // L-Bus No
+    u8_pkt[14] =
+        lBusSetupDataList.value[lBusNo - 1].product == 'Rhino103R'
+            ? 0x16
+            : 0x00;
     u8_pkt[18] = 0x01;
     u8_pkt[19] = 0x64;
     u8_pkt[20] = lBusNo == 1 ? 0x00 : 0x50;
