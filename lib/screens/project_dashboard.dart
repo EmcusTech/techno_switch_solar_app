@@ -1480,12 +1480,15 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
 
                         const SizedBox(height: 12),
                         // Status text during validation/success
-                        Builder(
-                          builder: (_) {
+                        ValueListenableBuilder<String>(
+                          valueListenable: bleProcess.processDesc,
+                          builder: (_, processDescValue, __) {
                             String? status;
                             if (_controller.text.length == 4 &&
                                 isAccessKeyValidValue == null) {
-                              status = "Validating access key...";
+                              status = processDescValue.isNotEmpty
+                                  ? processDescValue
+                                  : "Validating access key...";
                             } else if (isAccessKeyValidValue == true) {
                               status = "Validation success";
                             }

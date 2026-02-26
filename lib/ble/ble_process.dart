@@ -563,12 +563,14 @@ class BleProcess {
           bleManager.otaProcessState = OtaProcessState.sendLBusSetupFetchCmdPkt;
           checkForAccessKeyCmdRsp = 0;
           lBusSetupFetchCommandStep = 1;
+          processDesc.value = "Downloading L-Bus 1/31";
           startRxTimeout();
           await bleManager.sendLBusSetupFetchCmdPkt(lBusNo: 1);
         } else if (isLBusSetupApplyCommandActive.value) {
           bleManager.otaProcessState = OtaProcessState.sendLBusSetupApplyCmdPkt;
           checkForAccessKeyCmdRsp = 0;
           lBusSetupApplyCommandStep = 1;
+          processDesc.value = "Applying L-Bus 1/31";
           startRxTimeout();
           await bleManager.sendLBusSetupApplyCmdPkt(lBusNo: 1);
         } else {
@@ -616,6 +618,7 @@ class BleProcess {
       if (rx.payload[12] == 0x02) {
         if (lBusSetupApplyCommandStep >= 1 && lBusSetupApplyCommandStep < 31) {
           final nextBusNo = lBusSetupApplyCommandStep + 1;
+          processDesc.value = "Applying L-Bus $nextBusNo/31";
           print(
             "CMD $lBusSetupApplyCommandStep Validated -> send CMD$nextBusNo, keep polling",
           );
@@ -652,6 +655,7 @@ class BleProcess {
 
         if (lBusSetupFetchCommandStep >= 1 && lBusSetupFetchCommandStep < 31) {
           final nextBusNo = lBusSetupFetchCommandStep + 1;
+          processDesc.value = "Downloading L-Bus $nextBusNo/31";
           print(
             "CMD $lBusSetupFetchCommandStep Validated -> send CMD$nextBusNo, keep polling",
           );
