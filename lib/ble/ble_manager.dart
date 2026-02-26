@@ -3415,8 +3415,6 @@ class BleManager {
     final lBusDeviceTextLength = lBusDeviceTextBytes.length;
 
     print("lBusDeviceText: $lBusDeviceText");
-    print("lBusDeviceTextBytes: $lBusDeviceTextBytes");
-    print("lBusDeviceTextLength: $lBusDeviceTextLength");
     print("lBusProduct: ${lBusSetupDataList.value[lBusNo - 1].product}");
 
     final initialindex = 23;
