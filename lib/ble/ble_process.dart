@@ -323,6 +323,8 @@ class BleProcess {
     false,
   );
 
+  final ValueNotifier<bool> isLBusSetupApplyDone = ValueNotifier<bool>(false);
+
   final ValueNotifier<List<LBusSetupData>> lBusSetupDataList =
       ValueNotifier<List<LBusSetupData>>(
         List.generate(31, (_) => const LBusSetupData()),
@@ -615,6 +617,7 @@ class BleProcess {
         bleManager.otaProcessState = OtaProcessState.notInUse;
         checkForLBusSetupApplyRes = 0;
         isLBusSetupApplyCommandActive.value = false;
+        isLBusSetupApplyDone.value = true;
         isAccessKeyValid.value = true;
         print("We got the response for l-bus setup apply");
       } else {

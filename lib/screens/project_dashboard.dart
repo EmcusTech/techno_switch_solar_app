@@ -1058,6 +1058,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                       ble.bleProcess.isInputSetupApplyDone.value = false;
                       ble.bleProcess.isRelaySetupApplyDone.value = false;
                       ble.bleProcess.isZoneSetupApplyDone.value = false;
+                      ble.bleProcess.isLBusSetupApplyDone.value = false;
                     },
                     child: Container(
                       height: 48,
@@ -1330,6 +1331,10 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                             mounted) {
                           await _saveRadioCacheAndNotifyRefresh();
                           showApplySuccessDialog(context, 'Radio');
+                        } else if (ble.bleProcess.isLBusSetupApplyDone.value &&
+                            mounted) {
+                          // await _saveLBusCacheAndNotifyRefresh();
+                          showApplySuccessDialog(context, 'L-Bus');
                         } else {
                           Navigator.of(dialogContext).push(
                             MaterialPageRoute(
