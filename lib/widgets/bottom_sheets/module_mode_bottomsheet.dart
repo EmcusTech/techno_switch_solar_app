@@ -106,6 +106,17 @@ class _ModuleInfoBottomSheetState extends State<ModuleInfoBottomSheet> {
                   physics: const BouncingScrollPhysics(),
                   child: Column(
                     children: [
+                      if (manager != null)
+                        ValueListenableBuilder<String>(
+                          valueListenable: manager!.bleFirmwareVersion,
+                          builder:
+                              (_, version, __) => _disabledField(
+                                'BLE Firmware Version',
+                                version.isEmpty ? '—' : version,
+                              ),
+                        )
+                      else
+                        _disabledField('BLE Firmware Version', '—'),
                       _reactiveTile('Module No', manager!.moduleNo),
                       _reactiveTileBool('Enabled', manager!.moduleEnabled),
                       _reactiveTile('Product', manager!.moduleProduct),
@@ -157,7 +168,47 @@ class _ModuleInfoBottomSheetState extends State<ModuleInfoBottomSheet> {
     );
   }
 
+  Widget _label(String text) {
+    return Text(
+      text,
+      style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600),
+    );
+  }
+
+  Widget _disabledField(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _label(label),
+          const SizedBox(height: 6),
+          Container(
+            height: 48,
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF8F8F8),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0xFFD0D0D0)),
+            ),
+            alignment: Alignment.centerLeft,
+            child: Text(
+              value,
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: const Color(0xFF3D3D3D),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   /// ---------- Reactive Tile (Generic) ----------
+  ///
+  ///
 
   Widget _reactiveTile<T>(String label, ValueNotifier<T> notifier) {
     return ValueListenableBuilder<T>(

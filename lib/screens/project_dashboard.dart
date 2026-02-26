@@ -1896,6 +1896,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
               _peripheralTile(
                 peripheralName: 'Radio',
                 iconPath: 'assets/svgs/peripheral_prog_hold_icon.svg',
+                isDisabled: true,
                 onTap: () {
                   if (_selectedDevice.manufacturerData.isNotEmpty &&
                       _selectedDevice.manufacturerData.last == 1) {
