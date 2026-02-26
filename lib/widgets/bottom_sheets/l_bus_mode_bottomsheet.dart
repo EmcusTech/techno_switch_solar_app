@@ -4,6 +4,8 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
+import 'package:techno_switch_solar_app/models/l_bus_setup_data_model.dart';
+import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/widgets/dropdown.dart';
 
 class LBusBottomSheet extends StatefulWidget {
@@ -82,6 +84,14 @@ class _LBusBottomSheetState extends State<LBusBottomSheet> {
     if (Get.isRegistered<BleLogController>()) {
       manager = Get.find<BleLogController>().bleManager;
       manager?.lBusSetupDataList.addListener(_onListChanged);
+    }
+    final cached = await PeripheralSetupCache.loadLBusSetup(widget.deviceId);
+    if (cached != null && cached.isNotEmpty) {
+      final list = cached.map((e) => LBusSetupData.fromJson(e)).toList();
+      while (list.length < 31) {
+        list.add(const LBusSetupData());
+      }
+      manager?.lBusSetupDataList.value = list;
     }
     _loadFromManager();
   }

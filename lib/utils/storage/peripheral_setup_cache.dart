@@ -17,6 +17,8 @@ class PeripheralSetupCache {
       '${_keyPrefix}${deviceId}_radio';
   static String _moduleKey(String deviceId) =>
       '${_keyPrefix}${deviceId}_module';
+  static String _lBusKey(String deviceId) =>
+      '${_keyPrefix}${deviceId}_l_bus';
 
   // ───────────────── Relay ─────────────────
 
@@ -139,6 +141,34 @@ class PeripheralSetupCache {
     if (raw == null) return null;
     try {
       return Map<String, dynamic>.from(jsonDecode(raw) as Map);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  // ───────────────── L-Bus ─────────────────
+
+  static Future<void> saveLBusSetup(
+    String deviceId,
+    List<Map<String, dynamic>> buses,
+  ) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_lBusKey(deviceId), jsonEncode({'buses': buses}));
+  }
+
+  static Future<List<Map<String, dynamic>>?> loadLBusSetup(
+    String deviceId,
+  ) async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(_lBusKey(deviceId));
+    if (raw == null) return null;
+    try {
+      final decoded = jsonDecode(raw) as Map<String, dynamic>;
+      final buses = decoded['buses'] as List<dynamic>?;
+      if (buses == null) return null;
+      return buses
+          .map((e) => Map<String, dynamic>.from(e as Map))
+          .toList();
     } catch (_) {
       return null;
     }

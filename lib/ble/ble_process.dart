@@ -1557,7 +1557,6 @@ class BleProcess {
     checkForLBusSetupFetchRes = 0;
     lBusSetupFetchCommandStep = 0;
     checkForLBusSetupApplyRes = 0;
-    lBusSetupDataList.value = List.generate(31, (_) => const LBusSetupData());
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;

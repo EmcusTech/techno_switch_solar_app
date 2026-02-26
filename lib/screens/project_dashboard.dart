@@ -1333,7 +1333,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                           showApplySuccessDialog(context, 'Radio');
                         } else if (ble.bleProcess.isLBusSetupApplyDone.value &&
                             mounted) {
-                          // await _saveLBusCacheAndNotifyRefresh();
+                          await _saveLBusCacheAndNotifyRefresh();
                           showApplySuccessDialog(context, 'L-Bus');
                         } else {
                           Navigator.of(dialogContext).push(
@@ -1967,7 +1967,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                           bleController.startLBusSetupFetch();
                         },
                         mode: 'bottomsheet_download',
-                        onDownloadComplete: _saveModuleCacheAndNotifyRefresh,
+                        onDownloadComplete: _saveLBusCacheAndNotifyRefresh,
                         downloadSuccessMessage: 'L-Bus',
                       );
                     },
@@ -2317,6 +2317,14 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
       'date': m.moduleDate.value,
       'protocol': m.moduleProtocol.value,
     });
+  }
+
+  Future<void> _saveLBusCacheAndNotifyRefresh() async {
+    final m = _bleManager;
+    final buses =
+        m.lBusSetupDataList.value.map((e) => e.toJson()).toList();
+    await PeripheralSetupCache.saveLBusSetup(_selectedDevice.id, buses);
+    _zoneRefreshTrigger.value++;
   }
 
   Widget _peripheralTile({
