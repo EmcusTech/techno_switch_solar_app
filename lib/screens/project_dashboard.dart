@@ -1966,7 +1966,17 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                         downloadSuccessMessage: 'L-Bus',
                       );
                     },
-                    onApply: () {},
+                    onApply: () {
+                      showPasswordPopup(
+                        onCall: () {
+                          ble.bleProcess.isLBusSetupApplyCommandActive.value =
+                              true;
+                          bleController.startLBusSetupApply();
+                        },
+                        mode: 'bottomsheet_apply',
+                        downloadSuccessMessage: 'L-Bus',
+                      );
+                    },
                     refreshTrigger: _zoneRefreshTrigger,
                   );
                 },

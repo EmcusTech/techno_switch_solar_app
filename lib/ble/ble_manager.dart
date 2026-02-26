@@ -324,6 +324,8 @@ class BleManager {
       bleProcess.isLBusSetupFetchCommandActive;
   ValueNotifier<List<LBusSetupData>> get lBusSetupDataList =>
       bleProcess.lBusSetupDataList;
+  ValueNotifier<bool> get isLBusSetupApplyCommandActive =>
+      bleProcess.isLBusSetupApplyCommandActive;
   void resetProtocolState() {
     // Packet counters
     u8TxPktCnt = 0;
