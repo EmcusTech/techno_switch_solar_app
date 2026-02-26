@@ -278,6 +278,7 @@ class _LBusBottomSheetState extends State<LBusBottomSheet> {
       onChanged: (v) {
         final number = int.parse(v.split(' ').last);
         setState(() {
+          _saveCurrentBusToManager();
           selectedBus = number;
           _loadFromManager();
         });

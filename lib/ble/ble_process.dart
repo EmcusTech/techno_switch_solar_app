@@ -614,12 +614,22 @@ class BleProcess {
         "Checking L-Bus Setup Apply CMD RSP Value ${rx.payload[12]}:::::${rx.payload[12] == 0x02} ",
       );
       if (rx.payload[12] == 0x02) {
-        bleManager.otaProcessState = OtaProcessState.notInUse;
-        checkForLBusSetupApplyRes = 0;
-        isLBusSetupApplyCommandActive.value = false;
-        isLBusSetupApplyDone.value = true;
-        isAccessKeyValid.value = true;
-        print("We got the response for l-bus setup apply");
+        if (lBusSetupApplyCommandStep >= 1 && lBusSetupApplyCommandStep < 31) {
+          final nextBusNo = lBusSetupApplyCommandStep + 1;
+          print(
+            "CMD $lBusSetupApplyCommandStep Validated -> send CMD$nextBusNo, keep polling",
+          );
+          lBusSetupApplyCommandStep = nextBusNo;
+          startRxTimeout();
+          await bleManager.sendLBusSetupApplyCmdPkt(lBusNo: nextBusNo);
+        } else {
+          bleManager.otaProcessState = OtaProcessState.notInUse;
+          checkForLBusSetupApplyRes = 0;
+          isLBusSetupApplyCommandActive.value = false;
+          isLBusSetupApplyDone.value = true;
+          isAccessKeyValid.value = true;
+          print("We got the response for l-bus setup apply");
+        }
       } else {
         print("L-Bus Setup Apply Cmd Response not found, polling again");
         startRxTimeout();
