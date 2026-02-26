@@ -597,10 +597,7 @@ class BleProcess {
       if (rx.payload[12] == 0x10) {
         final busIndex = lBusSetupFetchCommandStep - 1;
         if (busIndex >= 0 && busIndex < 31) {
-          final parsed = LBusSetupData.fromPayload(
-            rx.payload,
-            extractString: extractStringFromPayload,
-          );
+          final parsed = LBusSetupData.fromPayload(rx.payload);
           final updated = List<LBusSetupData>.from(lBusSetupDataList.value);
           updated[busIndex] = parsed;
           lBusSetupDataList.value = updated;

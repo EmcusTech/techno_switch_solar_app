@@ -39,10 +39,12 @@ class _LBusBottomSheetState extends State<LBusBottomSheet> {
   final TextEditingController idController = TextEditingController();
   final TextEditingController revisionController = TextEditingController();
   final TextEditingController productRevController = TextEditingController();
-  final TextEditingController hardwareController =
-      TextEditingController(text: '—');
-  final TextEditingController firmwareController =
-      TextEditingController(text: '—');
+  final TextEditingController hardwareController = TextEditingController(
+    text: '—',
+  );
+  final TextEditingController firmwareController = TextEditingController(
+    text: '—',
+  );
   final TextEditingController dateController = TextEditingController();
   final TextEditingController protocolController = TextEditingController();
 
@@ -89,8 +91,7 @@ class _LBusBottomSheetState extends State<LBusBottomSheet> {
     manager = Get.find<BleLogController>().bleManager;
 
     final index = selectedBus - 1;
-    if (index < 0 ||
-        index >= manager!.lBusSetupDataList.value.length) {
+    if (index < 0 || index >= manager!.lBusSetupDataList.value.length) {
       return;
     }
 
@@ -98,9 +99,16 @@ class _LBusBottomSheetState extends State<LBusBottomSheet> {
 
     if (mounted) {
       setState(() {
-        enabled = data.enabled;
-        idLed = data.idLed;
-        product = data.product;
+        enabled =
+            yesNoOptions.contains(data.enabled)
+                ? data.enabled
+                : yesNoOptions.first;
+        idLed =
+            yesNoOptions.contains(data.idLed) ? data.idLed : yesNoOptions.first;
+        product =
+            productOptions.contains(data.product)
+                ? data.product
+                : productOptions.first;
         deviceTextController.text = data.deviceText;
         idController.text = data.id.toString();
         revisionController.text = data.revision.toString();
@@ -118,117 +126,113 @@ class _LBusBottomSheetState extends State<LBusBottomSheet> {
     final screenHeight = MediaQuery.of(context).size.height;
 
     return SafeArea(
-          child: ConstrainedBox(
-            constraints: BoxConstraints(maxHeight: screenHeight * 0.90),
-            child: Container(
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius:
-                    BorderRadius.vertical(top: Radius.circular(16)),
-              ),
-              padding: EdgeInsets.only(
-                left: 24,
-                right: 24,
-                top: 16,
-                bottom: MediaQuery.of(context).viewInsets.bottom + 16,
-              ),
-              child: Column(
-                children: [
-                  _dragHandle(),
-                  _title('L-Bus Configuration'),
-                  Expanded(
-                    child: SingleChildScrollView(
-                      physics: const BouncingScrollPhysics(),
-                      child: Column(
-                        children: [
-                          _deviceSelector(),
-                          const SizedBox(height: 16),
-                          _sectionContainer(
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 16,
-                              ),
-                              child: Column(
-                                children: [
-                                  _disabledField(
-                                    'L-Bus No',
-                                    selectedBus.toString(),
-                                  ),
-                                  DropdownWidget(
-                                    label: 'Enabled',
-                                    value: enabled,
-                                    items: yesNoOptions,
-                                    onChanged: (v) =>
-                                        setState(() => enabled = v),
-                                  ),
-                                  DropdownWidget(
-                                    label: 'ID LED',
-                                    value: idLed,
-                                    items: yesNoOptions,
-                                    onChanged: (v) =>
-                                        setState(() => idLed = v),
-                                  ),
-                                  DropdownWidget(
-                                    label: 'Product',
-                                    value: product,
-                                    items: productOptions,
-                                    onChanged: (v) =>
-                                        setState(() => product = v),
-                                  ),
-                                  _textField(
-                                    label: 'L-Bus Device Text',
-                                    controller: deviceTextController,
-                                  ),
-                                  _numericField(
-                                    label: 'ID',
-                                    controller: idController,
-                                  ),
-                                  _numericField(
-                                    label: 'Revision',
-                                    controller: revisionController,
-                                  ),
-                                  _textField(
-                                    label: 'Product Rev.',
-                                    controller: productRevController,
-                                  ),
-                                  _disabledField(
-                                    'Hardware',
-                                    hardwareController.text,
-                                  ),
-                                  _disabledField(
-                                    'Firmware',
-                                    firmwareController.text,
-                                  ),
-                                  _textField(
-                                    label: 'Date',
-                                    controller: dateController,
-                                  ),
-                                  _numericField(
-                                    label: 'Protocol',
-                                    controller: protocolController,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxHeight: screenHeight * 0.90),
+        child: Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+          ),
+          padding: EdgeInsets.only(
+            left: 24,
+            right: 24,
+            top: 16,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+          ),
+          child: Column(
+            children: [
+              _dragHandle(),
+              _title('L-Bus Configuration'),
+              Expanded(
+                child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  child: Column(
                     children: [
-                      Expanded(child: _downloadButton()),
-                      const SizedBox(width: 12),
-                      Expanded(child: _applyButton()),
+                      _deviceSelector(),
+                      const SizedBox(height: 16),
+                      _sectionContainer(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 16,
+                          ),
+                          child: Column(
+                            children: [
+                              _disabledField(
+                                'L-Bus No',
+                                selectedBus.toString(),
+                              ),
+                              DropdownWidget(
+                                label: 'Enabled',
+                                value: enabled,
+                                items: yesNoOptions,
+                                onChanged: (v) => setState(() => enabled = v),
+                              ),
+                              DropdownWidget(
+                                label: 'ID LED',
+                                value: idLed,
+                                items: yesNoOptions,
+                                onChanged: (v) => setState(() => idLed = v),
+                              ),
+                              DropdownWidget(
+                                label: 'Product',
+                                value: product,
+                                items: productOptions,
+                                onChanged: (v) => setState(() => product = v),
+                              ),
+                              _textField(
+                                label: 'L-Bus Device Text',
+                                controller: deviceTextController,
+                              ),
+                              _numericField(
+                                label: 'ID',
+                                controller: idController,
+                              ),
+                              _numericField(
+                                label: 'Revision',
+                                controller: revisionController,
+                              ),
+                              _textField(
+                                label: 'Product Rev.',
+                                controller: productRevController,
+                              ),
+                              _disabledField(
+                                'Hardware',
+                                hardwareController.text,
+                              ),
+                              _disabledField(
+                                'Firmware',
+                                firmwareController.text,
+                              ),
+                              _textField(
+                                label: 'Date',
+                                controller: dateController,
+                              ),
+                              _numericField(
+                                label: 'Protocol',
+                                controller: protocolController,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                     ],
                   ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(child: _downloadButton()),
+                  const SizedBox(width: 12),
+                  Expanded(child: _applyButton()),
                 ],
               ),
-            ),
+            ],
           ),
-        );
+        ),
+      ),
+    );
   }
 
   Widget _deviceSelector() {
@@ -293,10 +297,7 @@ class _LBusBottomSheetState extends State<LBusBottomSheet> {
         children: [
           _label(label),
           const SizedBox(height: 6),
-          TextField(
-            controller: controller,
-            decoration: _inputDecoration(),
-          ),
+          TextField(controller: controller, decoration: _inputDecoration()),
         ],
       ),
     );
