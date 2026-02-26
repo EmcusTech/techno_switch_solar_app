@@ -10,6 +10,7 @@ import 'package:techno_switch_solar_app/utils/zone_mode_util.dart';
 import 'ble_manager.dart';
 import 'ble_frame.dart';
 import '../models/log_model.dart';
+import '../models/l_bus_setup_data_model.dart';
 import '../utils/event_constants.dart';
 import '../utils/timestamp_converter.dart';
 
@@ -316,6 +317,11 @@ class BleProcess {
     false,
   );
 
+  final ValueNotifier<List<LBusSetupData>> lBusSetupDataList =
+      ValueNotifier<List<LBusSetupData>>(
+        List.generate(31, (_) => const LBusSetupData()),
+      );
+
   // BleStates bleStateMachineState = BleStates.IDLE;
   BleStates bleCurrentState = BleStates.IDLE;
   DeviceConnectState deviceConnectState = DeviceConnectState.notConnected;
@@ -586,26 +592,34 @@ class BleProcess {
 
     if (checkForLBusSetupFetchRes == 1) {
       print(
-        "Checking L-Bus Setup Fetch CMD RSP Value ${rx.payload[12]}:::::${rx.payload[12] == 0x01} ",
+        "Checking L-Bus Setup Fetch CMD RSP Value ${rx.payload[12]}:::::${rx.payload[12] == 0x10} ",
       );
       if (rx.payload[12] == 0x10) {
-        if (rx.payload[12] == 0x10) {
-          if (lBusSetupFetchCommandStep >= 1 &&
-              lBusSetupFetchCommandStep < 31) {
-            final nextBusNo = lBusSetupFetchCommandStep + 1;
-            print(
-              "CMD $lBusSetupFetchCommandStep Validated -> send CMD$nextBusNo, keep polling",
-            );
-            lBusSetupFetchCommandStep = nextBusNo;
-            startRxTimeout();
-            await bleManager.sendLBusSetupFetchCmdPkt(lBusNo: nextBusNo);
-          } else {
-            bleManager.otaProcessState = OtaProcessState.notInUse;
-            checkForLBusSetupFetchRes = 0;
-            isLBusSetupFetchCommandActive.value = false;
-            isAccessKeyValid.value = true;
-            print("We got the response for l-bus setup fetch");
-          }
+        final busIndex = lBusSetupFetchCommandStep - 1;
+        if (busIndex >= 0 && busIndex < 31) {
+          final parsed = LBusSetupData.fromPayload(
+            rx.payload,
+            extractString: extractStringFromPayload,
+          );
+          final updated = List<LBusSetupData>.from(lBusSetupDataList.value);
+          updated[busIndex] = parsed;
+          lBusSetupDataList.value = updated;
+        }
+
+        if (lBusSetupFetchCommandStep >= 1 && lBusSetupFetchCommandStep < 31) {
+          final nextBusNo = lBusSetupFetchCommandStep + 1;
+          print(
+            "CMD $lBusSetupFetchCommandStep Validated -> send CMD$nextBusNo, keep polling",
+          );
+          lBusSetupFetchCommandStep = nextBusNo;
+          startRxTimeout();
+          await bleManager.sendLBusSetupFetchCmdPkt(lBusNo: nextBusNo);
+        } else {
+          bleManager.otaProcessState = OtaProcessState.notInUse;
+          checkForLBusSetupFetchRes = 0;
+          isLBusSetupFetchCommandActive.value = false;
+          isAccessKeyValid.value = true;
+          print("We got the response for l-bus setup fetch");
         }
       } else {
         print("L-Bus Setup Fetch Cmd Response not found, polling again");
@@ -1500,6 +1514,8 @@ class BleProcess {
     checkForRelaySetupFetchRes = 0;
     checkForRadioSetupApplyRes = 0;
     checkForLBusSetupFetchRes = 0;
+    lBusSetupFetchCommandStep = 0;
+    lBusSetupDataList.value = List.generate(31, (_) => const LBusSetupData());
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;

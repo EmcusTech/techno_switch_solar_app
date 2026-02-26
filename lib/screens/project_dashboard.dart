@@ -2027,7 +2027,12 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      builder: (_) => LBusBottomSheet(onDownload: onDownload, onApply: onApply),
+      builder: (_) => LBusBottomSheet(
+        deviceId: deviceId,
+        onDownload: onDownload,
+        onApply: onApply,
+        refreshTrigger: refreshTrigger,
+      ),
     );
   }
 

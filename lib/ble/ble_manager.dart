@@ -10,6 +10,7 @@ import 'ble_frame.dart';
 import 'aes_key.dart' as aes;
 import 'ble_process.dart';
 import 'dart:typed_data';
+import 'package:techno_switch_solar_app/models/l_bus_setup_data_model.dart';
 
 const int BLE_FAILED = 0;
 const int BLE_SUCCESS = 1;
@@ -318,6 +319,8 @@ class BleManager {
   ValueNotifier<int> get moduleProtocol => bleProcess.moduleProtocol;
   ValueNotifier<bool> get isLBusSetupFetchCommandActive =>
       bleProcess.isLBusSetupFetchCommandActive;
+  ValueNotifier<List<LBusSetupData>> get lBusSetupDataList =>
+      bleProcess.lBusSetupDataList;
   void resetProtocolState() {
     // Packet counters
     u8TxPktCnt = 0;
