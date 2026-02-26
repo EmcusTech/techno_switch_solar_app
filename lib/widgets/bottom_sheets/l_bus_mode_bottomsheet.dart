@@ -131,6 +131,31 @@ class _LBusBottomSheetState extends State<LBusBottomSheet> {
     }
   }
 
+  void _saveCurrentBusToManager() {
+    if (manager == null) return;
+    final index = selectedBus - 1;
+    if (index < 0 || index >= manager!.lBusSetupDataList.value.length) return;
+
+    final existing = manager!.lBusSetupDataList.value[index];
+    final updated = existing.copyWith(
+      enabled: enabled,
+      idLed: idLed,
+      product: product,
+      deviceText: deviceTextController.text,
+      id: int.tryParse(idController.text) ?? existing.id,
+      revision: int.tryParse(revisionController.text) ?? existing.revision,
+      productRev: productRevController.text,
+      hardware: hardwareController.text,
+      firmware: firmwareController.text,
+      date: dateController.text,
+      protocol: int.tryParse(protocolController.text) ?? existing.protocol,
+    );
+
+    final list = List<LBusSetupData>.from(manager!.lBusSetupDataList.value);
+    list[index] = updated;
+    manager!.lBusSetupDataList.value = list;
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
@@ -414,7 +439,10 @@ class _LBusBottomSheetState extends State<LBusBottomSheet> {
             borderRadius: BorderRadius.circular(24),
           ),
         ),
-        onPressed: widget.onApply,
+        onPressed: () {
+          _saveCurrentBusToManager();
+          widget.onApply();
+        },
         child: Text(
           'Apply',
           style: GoogleFonts.inter(
