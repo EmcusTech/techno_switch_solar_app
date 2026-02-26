@@ -39,6 +39,8 @@ class BleProcess {
   int checkForModuleSetupFetchRes = 0;
   int checkForLBusSetupFetchRes = 0;
   int lBusSetupFetchCommandStep = 0; // 1, 2, 3 ... 31
+  int checkForLBusSetupApplyRes = 0;
+  int lBusSetupApplyCommandStep = 0; // 1, 2, 3 ... 31
   int validEventLogNum = 0;
   int read1000Logs = 0;
   bool logRetreivalEnded = false;
@@ -317,6 +319,10 @@ class BleProcess {
     false,
   );
 
+  final ValueNotifier<bool> isLBusSetupApplyCommandActive = ValueNotifier<bool>(
+    false,
+  );
+
   final ValueNotifier<List<LBusSetupData>> lBusSetupDataList =
       ValueNotifier<List<LBusSetupData>>(
         List.generate(31, (_) => const LBusSetupData()),
@@ -466,6 +472,11 @@ class BleProcess {
         checkForLBusSetupFetchRes = 1;
         break;
 
+      case OtaProcessState.sendLBusSetupApplyCmdPkt:
+        print("Sending L-Bus Setup Apply Command");
+        checkForLBusSetupApplyRes = 1;
+        break;
+
       case OtaProcessState.otaWaitRsp:
         break;
     }
@@ -551,7 +562,13 @@ class BleProcess {
           checkForAccessKeyCmdRsp = 0;
           lBusSetupFetchCommandStep = 1;
           startRxTimeout();
-          await bleManager.sendLBusSetupFetchCmdPkt(lBusNo: 0x01);
+          await bleManager.sendLBusSetupFetchCmdPkt(lBusNo: 1);
+        } else if (isLBusSetupApplyCommandActive.value) {
+          bleManager.otaProcessState = OtaProcessState.sendLBusSetupApplyCmdPkt;
+          checkForAccessKeyCmdRsp = 0;
+          lBusSetupApplyCommandStep = 1;
+          startRxTimeout();
+          await bleManager.sendLBusSetupApplyCmdPkt(lBusNo: 1);
         } else {
           bleManager.otaProcessState = OtaProcessState.sendStopCntrlCmdPkt;
           checkForAccessKeyCmdRsp = 0;
@@ -588,6 +605,23 @@ class BleProcess {
         await bleManager.sendPollPacket();
       }
       // checkDipSetCmdRsp = 0;
+    }
+
+    if (checkForLBusSetupApplyRes == 1) {
+      print(
+        "Checking L-Bus Setup Apply CMD RSP Value ${rx.payload[12]}:::::${rx.payload[12] == 0x10} ",
+      );
+      if (rx.payload[12] == 0x10) {
+        bleManager.otaProcessState = OtaProcessState.notInUse;
+        checkForLBusSetupApplyRes = 0;
+        isLBusSetupApplyCommandActive.value = false;
+        isAccessKeyValid.value = true;
+        print("We got the response for l-bus setup apply");
+      } else {
+        print("L-Bus Setup Apply Cmd Response not found, polling again");
+        startRxTimeout();
+        await bleManager.sendPollPacket();
+      }
     }
 
     if (checkForLBusSetupFetchRes == 1) {
@@ -1186,6 +1220,7 @@ class BleProcess {
     isExtOutApplyButtonActive.value = false;
     isExtOutCommandFetchActive.value = false;
     checkForLBusSetupFetchRes = 0;
+    checkForLBusSetupApplyRes = 0;
     // Counters
     checkForCtrlCmdRsp = 0;
     checkForAccessKeyCmdRsp = 0;
@@ -1241,6 +1276,7 @@ class BleProcess {
     receivedPollCount = 0;
     isExtOutApplyButtonActive.value = false;
     checkForLBusSetupFetchRes = 0;
+    checkForLBusSetupApplyRes = 0;
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -1288,6 +1324,7 @@ class BleProcess {
     receivedPollCount = 0;
     isExtOutApplyButtonActive.value = false;
     checkForLBusSetupFetchRes = 0;
+    checkForLBusSetupApplyRes = 0;
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -1333,6 +1370,7 @@ class BleProcess {
     checkForRadioSetupApplyRes = 0;
     checkForModuleSetupFetchRes = 0;
     checkForLBusSetupFetchRes = 0;
+    checkForLBusSetupApplyRes = 0;
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -1378,6 +1416,7 @@ class BleProcess {
     checkForRadioSetupApplyRes = 0;
     checkForModuleSetupFetchRes = 0;
     checkForLBusSetupFetchRes = 0;
+    checkForLBusSetupApplyRes = 0;
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -1423,6 +1462,7 @@ class BleProcess {
     checkForRadioSetupApplyRes = 0;
     checkForModuleSetupFetchRes = 0;
     checkForLBusSetupFetchRes = 0;
+    checkForLBusSetupApplyRes = 0;
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -1467,6 +1507,7 @@ class BleProcess {
     checkForRelaySetupFetchRes = 0;
     checkForRadioSetupApplyRes = 0;
     checkForLBusSetupFetchRes = 0;
+    checkForLBusSetupApplyRes = 0;
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -1512,6 +1553,7 @@ class BleProcess {
     checkForRadioSetupApplyRes = 0;
     checkForLBusSetupFetchRes = 0;
     lBusSetupFetchCommandStep = 0;
+    checkForLBusSetupApplyRes = 0;
     lBusSetupDataList.value = List.generate(31, (_) => const LBusSetupData());
     // Time tracking
     // logStartingTime = null;
@@ -1879,6 +1921,8 @@ class BleProcess {
         case OtaProcessState.sendModuleSetupFetchCmdPkt:
           break;
         case OtaProcessState.sendLBusSetupFetchCmdPkt:
+          break;
+        case OtaProcessState.sendLBusSetupApplyCmdPkt:
           break;
       }
       startRxTimeout();
