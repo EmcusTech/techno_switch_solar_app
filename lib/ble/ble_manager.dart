@@ -3414,6 +3414,10 @@ class BleManager {
     final List<int> lBusDeviceTextBytes = lBusDeviceText.codeUnits;
     final lBusDeviceTextLength = lBusDeviceTextBytes.length;
 
+    print("lBusDeviceText: $lBusDeviceText");
+    print("lBusDeviceTextBytes: $lBusDeviceTextBytes");
+    print("lBusDeviceTextLength: $lBusDeviceTextLength");
+
     final initialindex = 23;
     for (int i = 0; i < lBusDeviceTextLength; i++) {
       if (i < lBusDeviceTextLength) {
