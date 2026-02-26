@@ -170,6 +170,9 @@ class BleManager {
   final ValueNotifier<bool> handshakeCompleteNotifier =
       ValueNotifier<bool>(false);
 
+  /// BLE firmware version from encryption key response payload (e.g. "00.00.0001")
+  final ValueNotifier<String> bleFirmwareVersion = ValueNotifier<String>('');
+
   Completer<void>? _handshakeCompleter;
 
   bool get isConnected => _isConnectedNotifier.value;
@@ -1302,6 +1305,7 @@ class BleManager {
             if (update.connectionState == DeviceConnectionState.disconnected) {
               _isConnectedNotifier.value = false;
               handshakeCompleteNotifier.value = false;
+              bleFirmwareVersion.value = '';
               isBleDisconnected = true;
               _isGattConnected = false;
               _connectedOnce = false;
@@ -1464,6 +1468,7 @@ class BleManager {
     connectedBtDevice.value = null;
     _isConnectedNotifier.value = false;
     handshakeCompleteNotifier.value = false;
+    bleFirmwareVersion.value = '';
   }
 
   /// SHUTDOWN
@@ -1508,6 +1513,7 @@ class BleManager {
     isBleDisconnected = true;
     _isConnectedNotifier.value = false;
     handshakeCompleteNotifier.value = false;
+    bleFirmwareVersion.value = '';
     isLogRetrievalDoneOnce = false;
 
     if (_handshakeCompleter != null && !_handshakeCompleter!.isCompleted) {
@@ -1574,6 +1580,17 @@ class BleManager {
         print("Validation success");
         bleAESKey["AES_KEY"] = bleRxFrame.payload;
         print("Received key: ${bleAESKey['AES_KEY']}");
+
+        // Parse BLE firmware version from payload (last 10 bytes: "XX.XX.XXXX")
+        final payload = bleRxFrame.payload;
+        if (payload.length >= 10) {
+          final versionBytes = payload.sublist(payload.length - 10);
+          final version = String.fromCharCodes(versionBytes);
+          bleFirmwareVersion.value = version;
+          print("BLE firmware version: $version");
+        } else {
+          bleFirmwareVersion.value = '';
+        }
 
         await Future.delayed(Duration(milliseconds: 300));
         bleStateMachineState = BleStates.SEND_AUTHN_MSG;

@@ -228,6 +228,16 @@ class _RadioModeBottomSheetState extends State<RadioModeBottomSheet> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               child: Column(
                 children: [
+                  if (manager != null)
+                    ValueListenableBuilder<String>(
+                      valueListenable: manager!.bleFirmwareVersion,
+                      builder: (_, version, __) => _disabledField(
+                        'BLE Firmware Version',
+                        version.isEmpty ? '—' : version,
+                      ),
+                    )
+                  else
+                    _disabledField('BLE Firmware Version', '—'),
                   _disabledField('Enabled', 'Yes'),
 
                   DropdownWidget(
