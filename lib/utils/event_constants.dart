@@ -486,6 +486,8 @@ class EventConstants {
         returnIdentifier = "Zone $rxpar0 Short Circuit";
       } else if (rxpar1 == 4) {
         returnIdentifier = "Zone $rxpar0 Low Resistance";
+      } else {
+        returnIdentifier = "Zone $rxpar0";
       }
     } else if (evttype == evtTypeArea) {
       returnIdentifier = "Area $rxpar0";
@@ -584,6 +586,12 @@ class EventConstants {
           returnIdentifier = "Flash not ready";
         }
       }
+    } else if (evttype == evtTypeInput) {
+      returnIdentifier = "Prog in 1";
+    } else if (evttype == evtTypeZoneEquipment) {
+      returnIdentifier = "Fire Snd, Zone $rxpar1";
+    } else if (evttype == evtTypeExtZoneEquipment) {
+      returnIdentifier = "Ext. Snd 2";
     }
 
     // try {

@@ -896,20 +896,21 @@ class _SiteScreenState extends State<SiteScreen> {
             void onTap() {
               Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (context) => ProjectDashboardScreen(
-                    selectedDevice: DiscoveredDevice(
-                      name: panelName,
-                      id: panel.panelId,
-                      rssi: 0,
-                      serviceData: {},
-                      manufacturerData: Uint8List(0),
-                      serviceUuids: [],
-                    ),
-                    panelName: panelName,
-                    panelVersionNo: panel.deviceDisplayInfo,
-                    siteId: widget.site.id!,
-                    siteName: widget.site.siteName,
-                  ),
+                  builder:
+                      (context) => ProjectDashboardScreen(
+                        selectedDevice: DiscoveredDevice(
+                          name: panelName,
+                          id: panel.panelId,
+                          rssi: 0,
+                          serviceData: {},
+                          manufacturerData: Uint8List(0),
+                          serviceUuids: [],
+                        ),
+                        panelName: panelName,
+                        panelVersionNo: panel.deviceDisplayInfo,
+                        siteId: widget.site.id!,
+                        siteName: widget.site.siteName,
+                      ),
                 ),
               );
             }
@@ -1019,7 +1020,8 @@ class _PanelListItemWidgetState extends State<_PanelListItemWidget>
                         Text(
                           panel.deviceType == 'bluetooth'
                               ? BleNameUtils.getDisplayPrefixFromBleName(
-                                  panel.panelName)
+                                panel.panelName,
+                              )
                               : panel.panelName,
                           style: GoogleFonts.inter(
                             fontSize: 14,
@@ -1032,7 +1034,8 @@ class _PanelListItemWidgetState extends State<_PanelListItemWidget>
                         Text(
                           panel.deviceType == 'bluetooth'
                               ? BleNameUtils.getDisplayIdFromBleName(
-                                  panel.panelName)
+                                panel.panelName,
+                              )
                               : panel.panelId,
                           style: GoogleFonts.inter(
                             fontSize: 12,
