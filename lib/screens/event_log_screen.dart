@@ -1909,31 +1909,31 @@ class _LogListViewState extends State<_LogListView>
         // we get vertical space available to this widget, use it to size the internal ListView
         final double availableHeight = constraints.maxHeight;
 
-        return SingleChildScrollView(
-          controller: _horizontalController,
-          scrollDirection: Axis.horizontal,
-          physics: const ClampingScrollPhysics(),
-          child: SizedBox(
-            width: _totalTableWidth + 16,
-            height:
-                availableHeight, // constrain vertical space for internal Column/ListView
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // header (will scroll horizontally because it's inside the outer SingleChildScrollView)
-                _buildHeader(),
-                const Divider(height: 1, thickness: 1),
-                // Expanded ListView takes remaining vertical space and scrolls vertically only.
-                Expanded(
-                  child: NotificationListener<ScrollNotification>(
-                    onNotification: _onScrollNotification,
-                    child: Scrollbar(
-                      controller: _verticalController,
-                      thumbVisibility: _scrollBarVisible,
-                      child: ListView.builder(
-                        controller: _verticalController,
-                        itemCount: _sortedLogs.length,
-                        itemBuilder: (context, index) {
+        return Stack(
+          children: [
+            // Layer 1: Horizontal scroll + table (no scrollbar in flow)
+            SingleChildScrollView(
+              controller: _horizontalController,
+              scrollDirection: Axis.horizontal,
+              physics: const ClampingScrollPhysics(),
+              child: SizedBox(
+                width: _totalTableWidth + 16,
+                height:
+                    availableHeight, // constrain vertical space for internal Column/ListView
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // header (will scroll horizontally because it's inside the outer SingleChildScrollView)
+                    _buildHeader(),
+                    const Divider(height: 1, thickness: 1),
+                    // Expanded ListView takes remaining vertical space and scrolls vertically only.
+                    Expanded(
+                      child: NotificationListener<ScrollNotification>(
+                        onNotification: _onScrollNotification,
+                        child: ListView.builder(
+                          controller: _verticalController,
+                          itemCount: _sortedLogs.length,
+                          itemBuilder: (context, index) {
                       final log = _sortedLogs[index];
                       return Column(
                         children: [
@@ -2021,13 +2021,26 @@ class _LogListViewState extends State<_LogListView>
                         ],
                       );
                     },
+                        ),
                       ),
                     ),
-                  ),
+                  ],
                 ),
-              ],
+              ),
             ),
-          ),
+            // Layer 2: Overlay scrollbar (fixed on right of viewport)
+            Positioned(
+              right: 0,
+              top: _headerHeight + 1,
+              bottom: 0,
+              child: Scrollbar(
+                controller: _verticalController,
+                thumbVisibility: _scrollBarVisible,
+                interactive: true,
+                child: SizedBox(width: 12),
+              ),
+            ),
+          ],
         );
       },
     );
@@ -2077,14 +2090,13 @@ class _LogTableViewState extends State<_LogTableView>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    return NotificationListener<ScrollNotification>(
-      onNotification: _onScrollNotification,
-      child: Scrollbar(
-        controller: _scrollController,
-        thumbVisibility: _scrollBarVisible,
-        child: ListView.separated(
-          controller: _scrollController,
-              shrinkWrap: true,
+    return Stack(
+      children: [
+        NotificationListener<ScrollNotification>(
+          onNotification: _onScrollNotification,
+          child: ListView.separated(
+            controller: _scrollController,
+            shrinkWrap: true,
           // physics: NeverScrollableScrollPhysics(),
           itemCount: widget.displayLogs.length,
           separatorBuilder: (context, index) => SizedBox(height: 10),
@@ -2210,8 +2222,21 @@ class _LogTableViewState extends State<_LogTableView>
           ),
         );
       },
+    ),
+  ),
+        // Overlay scrollbar (on top of list)
+        Positioned(
+          right: 0,
+          top: 0,
+          bottom: 0,
+          child: Scrollbar(
+            controller: _scrollController,
+            thumbVisibility: _scrollBarVisible,
+            interactive: true,
+            child: SizedBox(width: 12),
+          ),
         ),
-      ),
+      ],
     );
   }
 
