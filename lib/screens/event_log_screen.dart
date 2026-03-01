@@ -1,4 +1,6 @@
 // event_log_screen_sync_headers.dart
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
@@ -1595,6 +1597,9 @@ class _LogListViewState extends State<_LogListView>
 
   // One horizontal controller for header + all rows (they will be inside the same horizontal scroll view)
   final ScrollController _horizontalController = ScrollController();
+  final ScrollController _verticalController = ScrollController();
+  bool _scrollBarVisible = false;
+  Timer? _scrollBarHideTimer;
 
   // Sorting state
   String? _sortColumn;
@@ -1713,9 +1718,25 @@ class _LogListViewState extends State<_LogListView>
     }
   }
 
+  bool _onScrollNotification(ScrollNotification notification) {
+    if (notification is ScrollUpdateNotification ||
+        notification is ScrollStartNotification) {
+      _scrollBarHideTimer?.cancel();
+      if (!_scrollBarVisible) {
+        setState(() => _scrollBarVisible = true);
+      }
+      _scrollBarHideTimer = Timer(const Duration(seconds: 2), () {
+        if (mounted) setState(() => _scrollBarVisible = false);
+      });
+    }
+    return false;
+  }
+
   @override
   void dispose() {
     _horizontalController.dispose();
+    _verticalController.dispose();
+    _scrollBarHideTimer?.cancel();
     super.dispose();
   }
 
@@ -1904,9 +1925,15 @@ class _LogListViewState extends State<_LogListView>
                 const Divider(height: 1, thickness: 1),
                 // Expanded ListView takes remaining vertical space and scrolls vertically only.
                 Expanded(
-                  child: ListView.builder(
-                    itemCount: _sortedLogs.length,
-                    itemBuilder: (context, index) {
+                  child: NotificationListener<ScrollNotification>(
+                    onNotification: _onScrollNotification,
+                    child: Scrollbar(
+                      controller: _verticalController,
+                      thumbVisibility: _scrollBarVisible,
+                      child: ListView.builder(
+                        controller: _verticalController,
+                        itemCount: _sortedLogs.length,
+                        itemBuilder: (context, index) {
                       final log = _sortedLogs[index];
                       return Column(
                         children: [
@@ -1994,6 +2021,8 @@ class _LogListViewState extends State<_LogListView>
                         ],
                       );
                     },
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -2020,15 +2049,46 @@ class _LogTableViewState extends State<_LogTableView>
   @override
   bool get wantKeepAlive => true;
 
+  final ScrollController _scrollController = ScrollController();
+  bool _scrollBarVisible = false;
+  Timer? _scrollBarHideTimer;
+
+  bool _onScrollNotification(ScrollNotification notification) {
+    if (notification is ScrollUpdateNotification ||
+        notification is ScrollStartNotification) {
+      _scrollBarHideTimer?.cancel();
+      if (!_scrollBarVisible) {
+        setState(() => _scrollBarVisible = true);
+      }
+      _scrollBarHideTimer = Timer(const Duration(seconds: 2), () {
+        if (mounted) setState(() => _scrollBarVisible = false);
+      });
+    }
+    return false;
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    _scrollBarHideTimer?.cancel();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    return ListView.separated(
-      shrinkWrap: true,
-      // physics: NeverScrollableScrollPhysics(),
-      itemCount: widget.displayLogs.length,
-      separatorBuilder: (context, index) => SizedBox(height: 10),
-      itemBuilder: (context, index) {
+    return NotificationListener<ScrollNotification>(
+      onNotification: _onScrollNotification,
+      child: Scrollbar(
+        controller: _scrollController,
+        thumbVisibility: _scrollBarVisible,
+        child: ListView.separated(
+          controller: _scrollController,
+              shrinkWrap: true,
+          // physics: NeverScrollableScrollPhysics(),
+          itemCount: widget.displayLogs.length,
+          separatorBuilder: (context, index) => SizedBox(height: 10),
+          itemBuilder: (context, index) {
         final log = widget.displayLogs[index];
         return Container(
           width: double.infinity,
@@ -2150,6 +2210,8 @@ class _LogTableViewState extends State<_LogTableView>
           ),
         );
       },
+        ),
+      ),
     );
   }
 
