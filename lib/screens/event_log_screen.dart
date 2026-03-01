@@ -1598,7 +1598,7 @@ class _LogListViewState extends State<_LogListView>
   // One horizontal controller for header + all rows (they will be inside the same horizontal scroll view)
   final ScrollController _horizontalController = ScrollController();
   final ScrollController _verticalController = ScrollController();
-  bool _scrollBarVisible = false;
+  bool _scrollBarVisible = true;
   Timer? _scrollBarHideTimer;
 
   // Sorting state
@@ -1930,10 +1930,15 @@ class _LogListViewState extends State<_LogListView>
                     Expanded(
                       child: NotificationListener<ScrollNotification>(
                         onNotification: _onScrollNotification,
-                        child: ListView.builder(
+                        child: Scrollbar(
                           controller: _verticalController,
-                          itemCount: _sortedLogs.length,
-                          itemBuilder: (context, index) {
+                          thumbVisibility: _scrollBarVisible,
+                          trackVisibility: _scrollBarVisible,
+                          interactive: true,
+                          child: ListView.builder(
+                            controller: _verticalController,
+                            itemCount: _sortedLogs.length,
+                            itemBuilder: (context, index) {
                       final log = _sortedLogs[index];
                       return Column(
                         children: [
@@ -2021,6 +2026,7 @@ class _LogListViewState extends State<_LogListView>
                         ],
                       );
                     },
+                          ),
                         ),
                       ),
                     ),
@@ -2028,7 +2034,7 @@ class _LogListViewState extends State<_LogListView>
                 ),
               ),
             ),
-            // Layer 2: Overlay scrollbar (fixed on right of viewport)
+            // Layer 2: Overlay scrollbar (fixed on right of viewport) - mirrors the inline one for visibility
             Positioned(
               right: 0,
               top: _headerHeight + 1,
@@ -2036,7 +2042,9 @@ class _LogListViewState extends State<_LogListView>
               child: Scrollbar(
                 controller: _verticalController,
                 thumbVisibility: _scrollBarVisible,
+                trackVisibility: _scrollBarVisible,
                 interactive: true,
+                thickness: 8,
                 child: SizedBox(width: 12),
               ),
             ),
@@ -2063,7 +2071,7 @@ class _LogTableViewState extends State<_LogTableView>
   bool get wantKeepAlive => true;
 
   final ScrollController _scrollController = ScrollController();
-  bool _scrollBarVisible = false;
+  bool _scrollBarVisible = true;
   Timer? _scrollBarHideTimer;
 
   bool _onScrollNotification(ScrollNotification notification) {
@@ -2094,9 +2102,14 @@ class _LogTableViewState extends State<_LogTableView>
       children: [
         NotificationListener<ScrollNotification>(
           onNotification: _onScrollNotification,
-          child: ListView.separated(
+          child: Scrollbar(
             controller: _scrollController,
-            shrinkWrap: true,
+            thumbVisibility: _scrollBarVisible,
+            trackVisibility: _scrollBarVisible,
+            interactive: true,
+            child: ListView.separated(
+              controller: _scrollController,
+              shrinkWrap: true,
           // physics: NeverScrollableScrollPhysics(),
           itemCount: widget.displayLogs.length,
           separatorBuilder: (context, index) => SizedBox(height: 10),
@@ -2222,8 +2235,9 @@ class _LogTableViewState extends State<_LogTableView>
           ),
         );
       },
+        ),
+      ),
     ),
-  ),
         // Overlay scrollbar (on top of list)
         Positioned(
           right: 0,
@@ -2232,7 +2246,9 @@ class _LogTableViewState extends State<_LogTableView>
           child: Scrollbar(
             controller: _scrollController,
             thumbVisibility: _scrollBarVisible,
+            trackVisibility: _scrollBarVisible,
             interactive: true,
+            thickness: 8,
             child: SizedBox(width: 12),
           ),
         ),
