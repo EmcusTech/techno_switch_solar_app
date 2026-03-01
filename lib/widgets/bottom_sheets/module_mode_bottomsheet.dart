@@ -104,35 +104,41 @@ class _ModuleInfoBottomSheetState extends State<ModuleInfoBottomSheet> {
               Expanded(
                 child: SingleChildScrollView(
                   physics: const BouncingScrollPhysics(),
-                  child: Column(
-                    children: [
-                      if (manager != null)
-                        ValueListenableBuilder<String>(
-                          valueListenable: manager!.bleFirmwareVersion,
-                          builder:
-                              (_, version, __) => _disabledField(
-                                'BLE Firmware Version',
-                                version.isEmpty ? '—' : version,
-                              ),
-                        )
-                      else
-                        _disabledField('BLE Firmware Version', '—'),
-                      _reactiveTile('Module No', manager!.moduleNo),
-                      _reactiveTileBool('Enabled', manager!.moduleEnabled),
-                      _reactiveTile('Product', manager!.moduleProduct),
-                      _reactiveTile('ID', manager!.moduleId),
-                      _reactiveTile('Revision', manager!.moduleRevision),
-                      _reactiveTile(
-                        'Hardware Version',
-                        manager!.moduleHardware,
-                      ),
-                      _reactiveTile(
-                        'Firmware Version',
-                        manager!.moduleFirmware,
-                      ),
-                      _reactiveTile('Manufacturing Date', manager!.moduleDate),
-                      _reactiveTile('Protocol No', manager!.moduleProtocol),
-                    ],
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 16),
+                    child: Column(
+                      children: [
+                        if (manager != null)
+                          ValueListenableBuilder<String>(
+                            valueListenable: manager!.bleFirmwareVersion,
+                            builder:
+                                (_, version, __) => _disabledField(
+                                  'BLE Firmware Version',
+                                  version.isEmpty ? '—' : version,
+                                ),
+                          )
+                        else
+                          _disabledField('BLE Firmware Version', '—'),
+                        _reactiveTile('Module No', manager!.moduleNo),
+                        _reactiveTileBool('Enabled', manager!.moduleEnabled),
+                        _reactiveTile('Product', manager!.moduleProduct),
+                        _reactiveTile('ID', manager!.moduleId),
+                        _reactiveTile('Revision', manager!.moduleRevision),
+                        _reactiveTile(
+                          'Hardware Version',
+                          manager!.moduleHardware,
+                        ),
+                        _reactiveTile(
+                          'Firmware Version',
+                          manager!.moduleFirmware,
+                        ),
+                        _reactiveTile(
+                          'Manufacturing Date',
+                          manager!.moduleDate,
+                        ),
+                        _reactiveTile('Protocol No', manager!.moduleProtocol),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -249,7 +255,7 @@ class _ModuleInfoBottomSheetState extends State<ModuleInfoBottomSheet> {
           const SizedBox(height: 6),
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
             decoration: BoxDecoration(
               color: const Color(0xFFF8F8F8),
               borderRadius: BorderRadius.circular(12),
