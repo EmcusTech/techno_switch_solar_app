@@ -953,6 +953,14 @@ class _PanelListItemWidgetState extends State<_PanelListItemWidget>
   void initState() {
     super.initState();
     _slidableController = SlidableController(this);
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted || _slidableController == null) return;
+      await _slidableController!.openEndActionPane();
+      await Future.delayed(const Duration(seconds: 2));
+      if (mounted) {
+        _slidableController?.close();
+      }
+    });
   }
 
   @override
