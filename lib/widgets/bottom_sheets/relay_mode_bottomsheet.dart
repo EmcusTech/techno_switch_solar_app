@@ -165,23 +165,31 @@ class _RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
     relays[0].test = manager!.isRelayOneSetupTest.value ? 'Yes' : 'No';
     relays[0].group = groupOptions[manager!.relayOneSetupGroup.value];
     relays[0].function =
-        functionOptionsMap[relays[0].group]![manager!.relayOneSetupFunction.value];
-    relays[0].outputTextController.text = manager!.relayOneSetupOutputText.value;
+        functionOptionsMap[relays[0].group]![manager!
+            .relayOneSetupFunction
+            .value];
+    relays[0].outputTextController.text =
+        manager!.relayOneSetupOutputText.value;
     relays[0].dynamicController.text = manager!.relayOneSetupDynamicText.value;
 
     relays[1].enabled = manager!.isRelayTwoSetupEnabled.value ? 'Yes' : 'No';
     relays[1].test = manager!.isRelayTwoSetupTest.value ? 'Yes' : 'No';
     relays[1].group = groupOptions[manager!.relayTwoSetupGroup.value];
     relays[1].function =
-        functionOptionsMap[relays[1].group]![manager!.relayTwoSetupFunction.value];
-    relays[1].outputTextController.text = manager!.relayTwoSetupOutputText.value;
+        functionOptionsMap[relays[1].group]![manager!
+            .relayTwoSetupFunction
+            .value];
+    relays[1].outputTextController.text =
+        manager!.relayTwoSetupOutputText.value;
     relays[1].dynamicController.text = manager!.relayTwoSetupDynamicText.value;
 
     relays[2].enabled = manager!.isRelayThreeSetupEnabled.value ? 'Yes' : 'No';
     relays[2].test = manager!.isRelayThreeSetupTest.value ? 'Yes' : 'No';
     relays[2].group = groupOptions[manager!.relayThreeSetupGroup.value];
     relays[2].function =
-        functionOptionsMap[relays[2].group]![manager!.relayThreeSetupFunction.value];
+        functionOptionsMap[relays[2].group]![manager!
+            .relayThreeSetupFunction
+            .value];
     relays[2].outputTextController.text =
         manager!.relayThreeSetupOutputText.value;
     relays[2].dynamicController.text =
@@ -199,7 +207,7 @@ class _RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
     final maxHeight =
-        _expandedTileCount > 0 ? screenHeight * 0.75 : screenHeight * 0.45;
+        _expandedTileCount > 0 ? screenHeight * 0.75 : screenHeight * 0.49;
     _updateValidationErrors();
     final isValid = _computeIsValid();
 
@@ -209,55 +217,51 @@ class _RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
         curve: Curves.easeInOut,
         child: ConstrainedBox(
           constraints: BoxConstraints(maxHeight: maxHeight),
-        child: Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-          ),
-          padding: EdgeInsets.only(
-            left: 24,
-            right: 24,
-            top: 16,
-            bottom: MediaQuery.of(context).viewInsets.bottom + 16,
-          ),
-          child: Column(
-            children: [
-              _dragHandle(),
-              _title('Relay Mode Configuration'),
+          child: Container(
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+            ),
+            padding: EdgeInsets.only(
+              left: 24,
+              right: 24,
+              top: 16,
+              bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+            ),
+            child: Column(
+              children: [
+                _dragHandle(),
+                _title('Relay Mode Configuration'),
 
-              Expanded(
-                child: NotificationListener<UserScrollNotification>(
-                  onNotification: (notification) {
-                    if (notification.direction != ScrollDirection.idle) {
-                      FocusScope.of(context).unfocus();
-                    }
-                    return false;
-                  },
-                  child: SingleChildScrollView(
-                    physics: const BouncingScrollPhysics(),
-                    padding: const EdgeInsets.only(top: 16),
-                    child: Column(
-                      children: List.generate(3, (i) => _relayTile(i)),
+                Expanded(
+                  child: NotificationListener<UserScrollNotification>(
+                    onNotification: (notification) {
+                      if (notification.direction != ScrollDirection.idle) {
+                        FocusScope.of(context).unfocus();
+                      }
+                      return false;
+                    },
+                    child: SingleChildScrollView(
+                      physics: const BouncingScrollPhysics(),
+                      padding: const EdgeInsets.only(top: 16),
+                      child: Column(
+                        children: List.generate(3, (i) => _relayTile(i)),
+                      ),
                     ),
                   ),
                 ),
-              ),
 
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: _downloadButton(),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _applyButton(isValid: isValid),
-                  ),
-                ],
-              ),
-            ],
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(child: _downloadButton()),
+                    const SizedBox(width: 12),
+                    Expanded(child: _applyButton(isValid: isValid)),
+                  ],
+                ),
+              ],
+            ),
           ),
-        ),
         ),
       ),
     );
@@ -602,10 +606,7 @@ class _RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
         onPressed: widget.onDownload,
         child: Text(
           'Download',
-          style: GoogleFonts.inter(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-          ),
+          style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600),
         ),
       ),
     );
