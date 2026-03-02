@@ -1727,9 +1727,9 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
           ),
           SizedBox(height: 10),
           _buildPeripheralOverview(),
-          SizedBox(height: 42),
+          SizedBox(height: 16),
           _buildPanelActions(),
-          SizedBox(height: 80),
+          // SizedBox(height: 80),
         ],
       ),
     );
@@ -1747,7 +1747,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
             // color: Colors.white,
           ),
         ),
-        SizedBox(height: 18),
+        SizedBox(height: 8),
         SizedBox(
           height: 223,
           width: double.infinity,
@@ -2407,7 +2407,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
             // color: Colors.white,
           ),
         ),
-        SizedBox(height: 18),
+        SizedBox(height: 8),
         SizedBox(
           width: double.infinity,
           child: GridView.count(
