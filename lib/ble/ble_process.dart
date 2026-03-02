@@ -1743,6 +1743,7 @@ class BleProcess {
       print("Event log number: $eventLogNum");
       print("I/O number type: ${payload[29]}");
       print("I/O number: ${payload[30] - payload[31]}");
+      print("I/O type: ${payload[33]}");
 
       // Create LogModel
       return LogModel(

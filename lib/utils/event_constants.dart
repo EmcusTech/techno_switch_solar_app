@@ -584,6 +584,24 @@ class EventConstants {
           returnIdentifier = "Corrupted RTOS mailbox";
         } else if (rxpar1 == 13) {
           returnIdentifier = "Flash not ready";
+        } else if (rxpar1 == 14) {
+          returnIdentifier = "Database error";
+        } else if (rxpar1 == 15) {
+          returnIdentifier = "System restart";
+        } else if (rxpar1 == 16) {
+          returnIdentifier = "Invalid network";
+        } else if (rxpar1 == 17) {
+          returnIdentifier = "Invalid network address";
+        } else if (rxpar1 == 18) {
+          returnIdentifier = "Serial SRAM error";
+        } else if (rxpar1 == 19) {
+          returnIdentifier = "Serial FLASH error";
+        } else if (rxpar1 == 20) {
+          returnIdentifier = "Memory copy error";
+        } else if (rxpar1 == 21) {
+          returnIdentifier = "Serial FLASH not ready";
+        } else if (rxpar1 == 22) {
+          returnIdentifier = "Serial SRAM not ready";
         }
       }
     } else if (evttype == evtTypeInput) {
