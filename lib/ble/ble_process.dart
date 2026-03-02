@@ -1147,6 +1147,9 @@ class BleProcess {
             rxLastEvtLogNum,
           );
           if (parsedLog != null) {
+            print(
+              "Valid Log Packet ${rx.payload.map((b) => b.toRadixString(16).padLeft(2, '0')).join(" ")}",
+            );
             isValidLogRecieved.value = true;
             final currentLogs = List<LogModel>.from(validEventLogs.value);
             currentLogs.add(parsedLog);
