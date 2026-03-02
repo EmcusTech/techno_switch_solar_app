@@ -1740,6 +1740,9 @@ class BleProcess {
         }
       }
 
+      print("I/O number type: ${payload[29]}");
+      print("I/O number: ${payload[30] - payload[31]}");
+
       // Create LogModel
       return LogModel(
         panelText: panelSource,
