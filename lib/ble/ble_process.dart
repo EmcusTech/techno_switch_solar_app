@@ -1785,6 +1785,8 @@ class BleProcess {
                   payload[42],
                   payload[43],
                   payload[44],
+                  payload[29],
+                  payload[33],
                 )
                 : null,
         text: evtTextAscii,
