@@ -1786,6 +1786,7 @@ class BleProcess {
                   payload[43],
                   payload[44],
                   payload[29],
+                  payload[31],
                   payload[33],
                 )
                 : null,

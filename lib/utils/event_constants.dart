@@ -477,7 +477,7 @@ class EventConstants {
     int rxpar1,
     int rxpar2,
     int ioType,
-    // int ioNumber,
+    int ioNumber,
     int ioParaType,
   ) {
     String returnIdentifier = "-";
@@ -611,9 +611,9 @@ class EventConstants {
       returnIdentifier = "Prog in 1";
     } else if (evttype == evtTypeOutput) {
       if (ioParaType == 1) {
-        returnIdentifier = "Relay";
+        returnIdentifier = "Relay ${ioNumber - 3}";
       } else if (ioParaType == 2) {
-        returnIdentifier = "Sounder";
+        returnIdentifier = "SNDR $ioNumber";
       }
     } else if (evttype == evtTypeZoneEquipment) {
       returnIdentifier = "Fire Snd, Zone $rxpar1";
