@@ -818,7 +818,10 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
             borderRadius: BorderRadius.circular(24),
           ),
         ),
-        onPressed: widget.onDownload,
+        onPressed: () {
+          FocusManager.instance.primaryFocus?.unfocus();
+          widget.onDownload();
+        },
         child: Text(
           'Download',
           style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600),
@@ -844,6 +847,7 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
         onPressed:
             (canApply && formValid && manager != null)
                 ? () {
+                  FocusManager.instance.primaryFocus?.unfocus();
                   int zoneEnable = returnIndex(enabled, enabledOptions);
                   int holdRestart = returnIndex(holdCount, holdCountOptions);
                   int resetAllowedInt = returnIndex(
