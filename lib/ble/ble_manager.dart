@@ -1327,6 +1327,8 @@ class BleManager {
       } finally {
         _handshakeCompleter = null;
       }
+    } else if (isBootLoaderMode) {
+      handshakeCompleteNotifier.value = true;
     }
   }
 
