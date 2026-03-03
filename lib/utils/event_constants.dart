@@ -167,6 +167,7 @@ class EventConstants {
       "Voltage monitoring reset 1",
       "Voltage monitoring reset 2",
       "Independent watchdog",
+      "Cold start",
     ],
 
     // 4 - Network
