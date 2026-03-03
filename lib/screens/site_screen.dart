@@ -878,7 +878,7 @@ class _SiteScreenState extends State<SiteScreen> {
     }
 
     return SizedBox(
-      height: MediaQuery.sizeOf(context).height - 650,
+      height: MediaQuery.sizeOf(context).height * 0.45,
       child: RefreshIndicator(
         color: Color(0xFFEC1D24),
         onRefresh: _refreshSites,
