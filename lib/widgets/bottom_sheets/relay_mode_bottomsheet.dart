@@ -604,7 +604,7 @@ class _RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
           ),
         ),
         onPressed: () {
-          FocusScope.of(context).unfocus();
+          FocusManager.instance.primaryFocus?.unfocus();
           widget.onDownload();
         },
         child: Text(
@@ -629,7 +629,7 @@ class _RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
         onPressed:
             isValid && manager != null
                 ? () {
-                  FocusScope.of(context).unfocus();
+                  FocusManager.instance.primaryFocus?.unfocus();
                   for (int i = 0; i < 3; i++) {
                     final relay = relays[i];
 
