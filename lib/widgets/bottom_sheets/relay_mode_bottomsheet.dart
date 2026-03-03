@@ -603,7 +603,10 @@ class _RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
             borderRadius: BorderRadius.circular(24),
           ),
         ),
-        onPressed: widget.onDownload,
+        onPressed: () {
+          FocusScope.of(context).unfocus();
+          widget.onDownload();
+        },
         child: Text(
           'Download',
           style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600),
@@ -626,6 +629,7 @@ class _RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
         onPressed:
             isValid && manager != null
                 ? () {
+                  FocusScope.of(context).unfocus();
                   for (int i = 0; i < 3; i++) {
                     final relay = relays[i];
 
