@@ -167,8 +167,9 @@ class BleManager {
 
   /// True when encryption + auth handshake is complete. UI should keep connection
   /// popup visible and disable tiles until this is true.
-  final ValueNotifier<bool> handshakeCompleteNotifier =
-      ValueNotifier<bool>(false);
+  final ValueNotifier<bool> handshakeCompleteNotifier = ValueNotifier<bool>(
+    false,
+  );
 
   /// BLE firmware version from encryption key response payload (e.g. "00.00.0001")
   final ValueNotifier<String> bleFirmwareVersion = ValueNotifier<String>('');
@@ -562,9 +563,7 @@ class BleManager {
     bleCurrentState = BleStates.PROCESS_PANEL_EVT_LOG_READ;
     bleStateMachineState = BleStates.PROCESS_PANEL_EVT_LOG_READ;
     print("Current state: $bleStateMachineState");
-    bleProcess.startOtherPacketsRxTimeout(
-      timeout: const Duration(seconds: 5),
-    );
+    bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
     Get.find<BleLogController>().sendNetworkPacket();
   }
 
@@ -599,9 +598,7 @@ class BleManager {
     bleCurrentState = BleStates.SEND_EXT_OUT_SETUP_CMD_FETCH_PACKET;
     bleStateMachineState = BleStates.SEND_EXT_OUT_SETUP_CMD_FETCH_PACKET;
     print("Current state: $bleStateMachineState");
-    bleProcess.startOtherPacketsRxTimeout(
-      timeout: const Duration(seconds: 5),
-    );
+    bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
     Get.find<BleLogController>().sendNetworkPacket();
   }
 
@@ -636,9 +633,7 @@ class BleManager {
     bleCurrentState = BleStates.SEND_EXT_OUT_SETUP_CMD_APPLY_PACKET;
     bleStateMachineState = BleStates.SEND_EXT_OUT_SETUP_CMD_APPLY_PACKET;
     print("Current state: $bleStateMachineState");
-    bleProcess.startOtherPacketsRxTimeout(
-      timeout: const Duration(seconds: 5),
-    );
+    bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
     Get.find<BleLogController>().sendNetworkPacket();
   }
 
@@ -673,9 +668,7 @@ class BleManager {
     bleCurrentState = BleStates.SEND_INPUT_SETUP_CMD_FETCH_PACKET;
     bleStateMachineState = BleStates.SEND_INPUT_SETUP_CMD_FETCH_PACKET;
     print("Current state: $bleStateMachineState");
-    bleProcess.startOtherPacketsRxTimeout(
-      timeout: const Duration(seconds: 5),
-    );
+    bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
     Get.find<BleLogController>().sendNetworkPacket();
   }
 
@@ -710,9 +703,7 @@ class BleManager {
     bleCurrentState = BleStates.SEND_INPUT_SETUP_CMD_APPLY_PACKET;
     bleStateMachineState = BleStates.SEND_INPUT_SETUP_CMD_APPLY_PACKET;
     print("Current state: $bleStateMachineState");
-    bleProcess.startOtherPacketsRxTimeout(
-      timeout: const Duration(seconds: 5),
-    );
+    bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
     Get.find<BleLogController>().sendNetworkPacket();
   }
 
@@ -747,9 +738,7 @@ class BleManager {
     bleCurrentState = BleStates.SEND_RELAY_SETUP_CMD_FETCH_PACKET;
     bleStateMachineState = BleStates.SEND_RELAY_SETUP_CMD_FETCH_PACKET;
     print("Current state: $bleStateMachineState");
-    bleProcess.startOtherPacketsRxTimeout(
-      timeout: const Duration(seconds: 5),
-    );
+    bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
     Get.find<BleLogController>().sendNetworkPacket();
   }
 
@@ -784,9 +773,7 @@ class BleManager {
     bleCurrentState = BleStates.SEND_RELAY_SETUP_CMD_APPLY_PACKET;
     bleStateMachineState = BleStates.SEND_RELAY_SETUP_CMD_APPLY_PACKET;
     print("Current state: $bleStateMachineState");
-    bleProcess.startOtherPacketsRxTimeout(
-      timeout: const Duration(seconds: 5),
-    );
+    bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
     Get.find<BleLogController>().sendNetworkPacket();
   }
 
@@ -821,9 +808,7 @@ class BleManager {
     bleCurrentState = BleStates.SEND_ZONE_SETUP_CMD_FETCH_PACKET;
     bleStateMachineState = BleStates.SEND_ZONE_SETUP_CMD_FETCH_PACKET;
     print("Current state: $bleStateMachineState");
-    bleProcess.startOtherPacketsRxTimeout(
-      timeout: const Duration(seconds: 5),
-    );
+    bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
     Get.find<BleLogController>().sendNetworkPacket();
   }
 
@@ -858,9 +843,7 @@ class BleManager {
     bleCurrentState = BleStates.SEND_ZONE_SETUP_CMD_APPLY_PACKET;
     bleStateMachineState = BleStates.SEND_ZONE_SETUP_CMD_APPLY_PACKET;
     print("Current state: $bleStateMachineState");
-    bleProcess.startOtherPacketsRxTimeout(
-      timeout: const Duration(seconds: 5),
-    );
+    bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
     Get.find<BleLogController>().sendNetworkPacket();
   }
 
@@ -895,9 +878,7 @@ class BleManager {
     bleCurrentState = BleStates.SEND_RADIO_SETUP_CMD_FETCH_PACKET;
     bleStateMachineState = BleStates.SEND_RADIO_SETUP_CMD_FETCH_PACKET;
     print("Current state: $bleStateMachineState");
-    bleProcess.startOtherPacketsRxTimeout(
-      timeout: const Duration(seconds: 5),
-    );
+    bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
     Get.find<BleLogController>().sendNetworkPacket();
   }
 
@@ -932,9 +913,7 @@ class BleManager {
     bleCurrentState = BleStates.SEND_RADIO_SETUP_CMD_APPLY_PACKET;
     bleStateMachineState = BleStates.SEND_RADIO_SETUP_CMD_APPLY_PACKET;
     print("Current state: $bleStateMachineState");
-    bleProcess.startOtherPacketsRxTimeout(
-      timeout: const Duration(seconds: 5),
-    );
+    bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
     Get.find<BleLogController>().sendNetworkPacket();
   }
 
@@ -969,9 +948,7 @@ class BleManager {
     bleCurrentState = BleStates.SEND_MODULE_SETUP_CMD_FETCH_PACKET;
     bleStateMachineState = BleStates.SEND_MODULE_SETUP_CMD_FETCH_PACKET;
     print("Current state: $bleStateMachineState");
-    bleProcess.startOtherPacketsRxTimeout(
-      timeout: const Duration(seconds: 5),
-    );
+    bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
     Get.find<BleLogController>().sendNetworkPacket();
   }
 
@@ -1006,9 +983,7 @@ class BleManager {
     bleCurrentState = BleStates.SEND_L_BUS_SETUP_CMD_FETCH_PACKET;
     bleStateMachineState = BleStates.SEND_L_BUS_SETUP_CMD_FETCH_PACKET;
     print("Current state: $bleStateMachineState");
-    bleProcess.startOtherPacketsRxTimeout(
-      timeout: const Duration(seconds: 5),
-    );
+    bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
     Get.find<BleLogController>().sendNetworkPacket();
   }
 
@@ -1043,9 +1018,7 @@ class BleManager {
     bleCurrentState = BleStates.SEND_L_BUS_SETUP_CMD_APPLY_PACKET;
     bleStateMachineState = BleStates.SEND_L_BUS_SETUP_CMD_APPLY_PACKET;
     print("Current state: $bleStateMachineState");
-    bleProcess.startOtherPacketsRxTimeout(
-      timeout: const Duration(seconds: 5),
-    );
+    bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
     Get.find<BleLogController>().sendNetworkPacket();
   }
 
@@ -1317,7 +1290,8 @@ class BleManager {
               isLogRetrievalDoneOnce = false;
 
               // Unblock any waiters if handshake was in progress
-              if (_handshakeCompleter != null && !_handshakeCompleter!.isCompleted) {
+              if (_handshakeCompleter != null &&
+                  !_handshakeCompleter!.isCompleted) {
                 _handshakeCompleter!.completeError(
                   Exception("Disconnected during handshake"),
                 );
@@ -1341,8 +1315,8 @@ class BleManager {
 
     await connectedCompleter.future;
 
-    // Run encryption + auth handshake at connection time (unless skipped for bootloader)
-    if (!skipConnectionHandshake) {
+    final isBootLoaderMode = lastByte == 1;
+    if (!skipConnectionHandshake && !isBootLoaderMode) {
       handshakeCompleteNotifier.value = false;
       _handshakeCompleter = Completer<void>();
       currentOperationMode = BleOperationMode.none;
@@ -1616,7 +1590,8 @@ class BleManager {
           bleCurrentState = BleStates.IDLE;
           bleStateMachineState = BleStates.IDLE;
           print("Connection handshake complete - device ready for operations");
-          if (_handshakeCompleter != null && !_handshakeCompleter!.isCompleted) {
+          if (_handshakeCompleter != null &&
+              !_handshakeCompleter!.isCompleted) {
             _handshakeCompleter!.complete();
           }
         } else if (currentOperationMode == BleOperationMode.firmwareUpgrade) {
