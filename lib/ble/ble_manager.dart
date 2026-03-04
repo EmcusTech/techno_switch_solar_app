@@ -1081,7 +1081,7 @@ class BleManager {
   /// SCAN & CONNECT
   Future<void> connectToKnownDevice({
     int maxRetries = 3,
-    Duration retryDelay = const Duration(seconds: 1),
+    Duration retryDelay = const Duration(seconds: 2),
     Duration connectionTimeout = const Duration(seconds: 10),
     required DiscoveredDevice device,
     int? manufacturerDataOverride,
@@ -1210,6 +1210,8 @@ class BleManager {
     print(
       "DEBUG CONNECTION: Final manufacturer data array: $md, Last byte: $lastByte",
     );
+
+    await Future.delayed(const Duration(milliseconds: 500));
 
     _connectionSub = flutterReactiveBle
         .connectToDevice(id: device.id, connectionTimeout: connectionTimeout)
