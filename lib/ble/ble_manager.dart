@@ -1211,7 +1211,7 @@ class BleManager {
       "DEBUG CONNECTION: Final manufacturer data array: $md, Last byte: $lastByte",
     );
 
-    await Future.delayed(const Duration(milliseconds: 500));
+    await Future.delayed(const Duration(seconds: 2));
 
     _connectionSub = flutterReactiveBle
         .connectToDevice(id: device.id, connectionTimeout: connectionTimeout)

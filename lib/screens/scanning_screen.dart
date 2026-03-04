@@ -955,7 +955,7 @@ class _ScanningScreenState extends State<ScanningScreen>
     );
   }
 
-  void _stopScanningForConnection() async {
+  Future<void> _stopScanningForConnection() async {
     if (mounted) setState(() => _isScanning = false);
     _scanTimer?.cancel();
     _autoStopTimer?.cancel();
@@ -967,7 +967,7 @@ class _ScanningScreenState extends State<ScanningScreen>
   }
 
   Future<void> _onDeviceSelected(DiscoveredDevice device) async {
-    _stopScanningForConnection();
+    await _stopScanningForConnection();
     _showConnectingDialog(device: device, context: context);
     await Get.find<BleLogController>().connectToDevice(device: device);
   }
