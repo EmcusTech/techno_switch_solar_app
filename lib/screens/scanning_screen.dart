@@ -955,14 +955,14 @@ class _ScanningScreenState extends State<ScanningScreen>
     );
   }
 
-  void _stopScanningForConnection() {
+  void _stopScanningForConnection() async {
     if (mounted) setState(() => _isScanning = false);
     _scanTimer?.cancel();
     _autoStopTimer?.cancel();
     _countdownTimer?.cancel();
 
     if (_selectedScanType == ScanType.bluetooth) {
-      _bluetoothService.stopScanning();
+      await _bluetoothService.stopScanning();
     }
   }
 
