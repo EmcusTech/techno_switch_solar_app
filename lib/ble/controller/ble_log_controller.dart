@@ -23,12 +23,12 @@ class BleLogController extends GetxController {
         retryDelay ??
         (fastReconnect
             ? const Duration(milliseconds: 300)
-            : const Duration(seconds: 1));
+            : const Duration(milliseconds: 200));
     final Duration resolvedConnectionTimeout =
         connectionTimeout ??
         (fastReconnect
             ? const Duration(seconds: 4)
-            : const Duration(seconds: 10));
+            : const Duration(seconds: 5));
 
     await bleManager.connectToKnownDevice(
       device: device,

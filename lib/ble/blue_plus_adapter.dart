@@ -230,14 +230,19 @@ class FlutterReactiveBle {
     return controller.stream;
   }
 
+  /// Ensures scan is stopped at the BLE layer before connecting.
+  Future<void> stopScan() async {
+    await fbp.FlutterBluePlus.stopScan();
+  }
+
   Stream<ConnectionStateUpdate> connectToDevice({
     required String id,
+    fbp.BluetoothDevice? deviceOverride,
     Duration? connectionTimeout,
   }) {
-    final device = _deviceCache.putIfAbsent(
-      id,
-      () => fbp.BluetoothDevice.fromId(id),
-    );
+    final device = deviceOverride != null
+        ? (_deviceCache[id] = deviceOverride)
+        : _deviceCache.putIfAbsent(id, () => fbp.BluetoothDevice.fromId(id));
     final controller = StreamController<ConnectionStateUpdate>.broadcast();
 
     final stateSub = device.connectionState.listen(
@@ -263,7 +268,7 @@ class FlutterReactiveBle {
     () async {
       try {
         await device.connect(
-          timeout: connectionTimeout ?? const Duration(seconds: 10),
+          timeout: connectionTimeout ?? const Duration(seconds: 5),
           autoConnect: false,
         );
       } catch (_) {

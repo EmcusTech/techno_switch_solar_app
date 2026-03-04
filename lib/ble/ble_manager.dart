@@ -1081,8 +1081,8 @@ class BleManager {
   /// SCAN & CONNECT
   Future<void> connectToKnownDevice({
     int maxRetries = 3,
-    Duration retryDelay = const Duration(seconds: 2),
-    Duration connectionTimeout = const Duration(seconds: 10),
+    Duration retryDelay = const Duration(milliseconds: 200),
+    Duration connectionTimeout = const Duration(seconds: 5),
     required DiscoveredDevice device,
     int? manufacturerDataOverride,
     bool skipConnectionHandshake = false,
@@ -1164,7 +1164,7 @@ class BleManager {
   Future<void> _connectOnce(
     DiscoveredDevice device, {
     int? manufacturerDataOverride,
-    Duration connectionTimeout = const Duration(seconds: 10),
+    Duration connectionTimeout = const Duration(seconds: 5),
     bool skipConnectionHandshake = false,
   }) async {
     await [
@@ -1211,10 +1211,16 @@ class BleManager {
       "DEBUG CONNECTION: Final manufacturer data array: $md, Last byte: $lastByte",
     );
 
-    await Future.delayed(const Duration(seconds: 2));
+    // Ensure scan is fully stopped before every attempt (including retries)
+    await flutterReactiveBle.stopScan();
+    await Future.delayed(const Duration(milliseconds: 200));
 
     _connectionSub = flutterReactiveBle
-        .connectToDevice(id: device.id, connectionTimeout: connectionTimeout)
+        .connectToDevice(
+          id: device.id,
+          deviceOverride: device.device,
+          connectionTimeout: connectionTimeout,
+        )
         .listen(
           (update) async {
             print("Connection state: ${update.connectionState}");
