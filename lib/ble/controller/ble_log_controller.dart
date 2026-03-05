@@ -18,7 +18,7 @@ class BleLogController extends GetxController {
     Duration? retryDelay,
     Duration? connectionTimeout,
   }) async {
-    final int resolvedMaxRetries = maxRetries ?? (fastReconnect ? 3 : 3);
+    final int resolvedMaxRetries = maxRetries ?? (fastReconnect ? 3 : 10);
     final Duration resolvedRetryDelay =
         retryDelay ??
         (fastReconnect
