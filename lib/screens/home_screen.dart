@@ -196,11 +196,11 @@ class _HomeContentState extends State<_HomeContent> {
         children: [
           _buildHeader(context),
           Padding(
-            padding: const EdgeInsets.only(top: 300),
+            padding: const EdgeInsets.only(top: 250),
             child: _buildQuickLinks(context),
           ),
           Padding(
-            padding: const EdgeInsets.only(top: 404),
+            padding: const EdgeInsets.only(top: 354),
             child: _buildRecentSites(),
           ),
         ],
@@ -212,7 +212,7 @@ class _HomeContentState extends State<_HomeContent> {
     return Stack(
       children: [
         Padding(
-          padding: const EdgeInsets.only(top: 80),
+          padding: const EdgeInsets.only(top: 40),
           child: Align(
             alignment: Alignment.topCenter,
             child: Opacity(
@@ -230,7 +230,7 @@ class _HomeContentState extends State<_HomeContent> {
         ),
         SvgPicture.asset('assets/svgs/background_1.svg'),
         Padding(
-          padding: const EdgeInsets.only(top: 80),
+          padding: const EdgeInsets.only(top: 40),
           child: Column(
             children: [
               Align(
