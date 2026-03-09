@@ -1080,7 +1080,7 @@ class BleManager {
 
   /// SCAN & CONNECT
   Future<void> connectToKnownDevice({
-    int maxRetries = 3,
+    int maxRetries = 10,
     Duration retryDelay = const Duration(seconds: 1),
     Duration connectionTimeout = const Duration(seconds: 10),
     required DiscoveredDevice device,

@@ -632,7 +632,8 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
             device: device!,
             manufacturerDataOverride: manufacturerDataToUse,
             fastReconnect: fastReconnect,
-            skipConnectionHandshake: true, // Bootloader reconnect - auth done via registerNotifyHandlerForFirmwareUpgrade
+            skipConnectionHandshake:
+                true, // Bootloader reconnect - auth done via registerNotifyHandlerForFirmwareUpgrade
           );
 
           // Wait for connection to be fully established
