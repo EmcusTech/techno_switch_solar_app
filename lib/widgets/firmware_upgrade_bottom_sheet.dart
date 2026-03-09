@@ -1729,12 +1729,20 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
             color: Color(0xFF979797),
           ),
         ),
-        Text(
-          value,
-          style: GoogleFonts.inter(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: valueColor ?? Color(0xFF1B1F26),
+        SizedBox(
+          width: MediaQuery.of(context).size.width * 0.4,
+          child: Expanded(
+            child: Text(
+              value,
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: valueColor ?? Color(0xFF1B1F26),
+              ),
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.end,
+            ),
           ),
         ),
       ],

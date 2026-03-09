@@ -920,6 +920,7 @@ class _SiteScreenState extends State<SiteScreen> {
               lastLogSummary: _buildLastLogSummary(),
               onTap: onTap,
               onDelete: () => _confirmDeletePanel(panel),
+              isAutomated: index == 0,
             );
           },
         ),
@@ -933,12 +934,14 @@ class _PanelListItemWidget extends StatefulWidget {
   final Widget lastLogSummary;
   final VoidCallback onTap;
   final VoidCallback onDelete;
+  final bool isAutomated;
 
   const _PanelListItemWidget({
     required this.panel,
     required this.lastLogSummary,
     required this.onTap,
     required this.onDelete,
+    required this.isAutomated,
   });
 
   @override
@@ -953,14 +956,16 @@ class _PanelListItemWidgetState extends State<_PanelListItemWidget>
   void initState() {
     super.initState();
     _slidableController = SlidableController(this);
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      if (!mounted || _slidableController == null) return;
-      await _slidableController!.openEndActionPane();
-      await Future.delayed(const Duration(seconds: 2));
-      if (mounted) {
-        _slidableController?.close();
-      }
-    });
+    if (widget.isAutomated) {
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        if (!mounted || _slidableController == null) return;
+        await _slidableController!.openEndActionPane();
+        await Future.delayed(const Duration(seconds: 2));
+        if (mounted) {
+          _slidableController?.close();
+        }
+      });
+    }
   }
 
   @override
