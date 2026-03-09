@@ -1053,7 +1053,7 @@ class _PanelListItemWidgetState extends State<_PanelListItemWidget>
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        widget.lastLogSummary,
+                        // widget.lastLogSummary,
                       ],
                     ),
                   ),
