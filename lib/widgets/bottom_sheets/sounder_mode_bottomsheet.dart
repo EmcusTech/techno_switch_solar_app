@@ -21,6 +21,7 @@ class SounderModeBottomSheet extends StatefulWidget {
 class _SounderModeBottomSheetState extends State<SounderModeBottomSheet>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  final ScrollController sounderBottomSheetController = ScrollController();
 
   final List<String> groupOptions = ['None', 'General', 'Zone', 'Ext. Out'];
 
@@ -115,6 +116,7 @@ class _SounderModeBottomSheetState extends State<SounderModeBottomSheet>
                       return false;
                     },
                     child: SingleChildScrollView(
+                      controller: sounderBottomSheetController,
                       physics: const BouncingScrollPhysics(),
                       child: Column(
                         children: [
@@ -292,6 +294,13 @@ class _SounderModeBottomSheetState extends State<SounderModeBottomSheet>
               Tab(text: 'Ext Out'),
               Tab(text: 'Delay'),
             ],
+            onTap: (_) {
+              sounderBottomSheetController.animateTo(
+                sounderBottomSheetController.position.maxScrollExtent,
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOut,
+              );
+            },
           ),
         ),
         const SizedBox(height: 20),
@@ -340,6 +349,8 @@ class _SounderModeBottomSheetState extends State<SounderModeBottomSheet>
           padding: const EdgeInsets.only(bottom: 16),
           child: _sectionContainer(
             child: ExpansionTile(
+              tilePadding: const EdgeInsets.symmetric(horizontal: 16),
+              childrenPadding: const EdgeInsets.symmetric(horizontal: 16),
               title: Text(
                 'Zone ${i + 1}',
                 style: GoogleFonts.inter(fontWeight: FontWeight.w600),
@@ -383,6 +394,8 @@ class _SounderModeBottomSheetState extends State<SounderModeBottomSheet>
           padding: const EdgeInsets.only(bottom: 16),
           child: _sectionContainer(
             child: ExpansionTile(
+              tilePadding: const EdgeInsets.symmetric(horizontal: 16),
+              childrenPadding: const EdgeInsets.symmetric(horizontal: 16),
               title: Text(
                 functions[i],
                 style: GoogleFonts.inter(fontWeight: FontWeight.w600),

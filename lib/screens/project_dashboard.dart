@@ -1877,7 +1877,6 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
               _peripheralTile(
                 peripheralName: 'Sounders',
                 iconPath: 'assets/svgs/peripheral_sounder_icon.svg',
-                isDisabled: true,
                 onTap: () {
                   if (_selectedDevice.manufacturerData.isNotEmpty &&
                       _selectedDevice.manufacturerData.last == 1) {
