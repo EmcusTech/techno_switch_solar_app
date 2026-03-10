@@ -103,6 +103,10 @@ class BleLogController extends GetxController {
     await bleManager.startLBusSetupApply();
   }
 
+  Future<void> startSounderSetupFetch() async {
+    await bleManager.startSounderSetupFetch();
+  }
+
   sendNetworkPacket() async {
     await bleManager.sendNetworkPacket();
   }

@@ -1886,7 +1886,21 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                   showSounderSetupBottomSheet(
                     context: context,
                     deviceId: _selectedDevice.id,
-                    onDownload: () {},
+                    onDownload: () {
+                      showPasswordPopup(
+                        onCall: () {
+                          ble
+                              .bleProcess
+                              .isSounderSetupFetchCommandActive
+                              .value = true;
+                          bleController.startSounderSetupFetch();
+                        },
+                        isZoneSetup: true,
+                        mode: 'bottomsheet_download',
+                        // onDownloadComplete: _saveRadioCacheAndNotifyRefresh,
+                        downloadSuccessMessage: 'Sounder',
+                      );
+                    },
                     onApply: () {},
                     refreshTrigger: _zoneRefreshTrigger,
                   );

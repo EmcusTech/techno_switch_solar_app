@@ -55,6 +55,7 @@ enum BleStates {
   SEND_MODULE_SETUP_CMD_FETCH_PACKET,
   SEND_L_BUS_SETUP_CMD_FETCH_PACKET,
   SEND_L_BUS_SETUP_CMD_APPLY_PACKET,
+  SEND_SOUNDER_SETUP_CMD_FETCH_PACKET,
   // add other states
 }
 
@@ -83,6 +84,7 @@ enum OtaProcessState {
   sendModuleSetupFetchCmdPkt,
   sendLBusSetupFetchCmdPkt,
   sendLBusSetupApplyCmdPkt,
+  sendSounderSetupFetchCmdPkt,
 }
 
 enum BleOperationMode {
@@ -102,6 +104,7 @@ enum BleOperationMode {
   moduleSetupFetch,
   lBusSetupFetch,
   lBusSetupApply,
+  sounderSetupFetch,
 }
 
 const String BLE_AUTHN_MSG = "TECHNOSWITCH-AUTH-APP";
@@ -442,6 +445,19 @@ class BleManager {
     otaProcessState = OtaProcessState.sendNetworkPacket;
   }
 
+  void resetProtocolSounderSetupState() {
+    // Packet counters
+    u8TxPktCnt = 0;
+    u8RxPktCnt = 0;
+    receivedPollCount = 0;
+
+    // Poll guards
+    _pollInFlight = false;
+
+    // OTA state
+    otaProcessState = OtaProcessState.sendNetworkPacket;
+  }
+
   void resetFirmwareState() {
     bleCurrentState = BleStates.SEND_START_FIRMWARE_PACKET;
     bleStateMachineState = BleStates.SEND_START_FIRMWARE_PACKET;
@@ -526,6 +542,15 @@ class BleManager {
     _pollInFlight = false;
     receivedPollCount = 0;
     currentOperationMode = BleOperationMode.zoneSetupFetch;
+  }
+
+  void resetSounderSetupState() {
+    bleCurrentState = BleStates.REQ_ENCY_KEY;
+    bleStateMachineState = BleStates.REQ_ENCY_KEY;
+    bleAESKey.clear();
+    _pollInFlight = false;
+    receivedPollCount = 0;
+    currentOperationMode = BleOperationMode.sounderSetupFetch;
   }
 
   /// Initialize and start log retrieval process
@@ -1022,6 +1047,40 @@ class BleManager {
     Get.find<BleLogController>().sendNetworkPacket();
   }
 
+  Future<void> startSounderSetupFetch() async {
+    if (!isConnected) {
+      throw Exception("Device not connected. Cannot start log retrieval.");
+    }
+
+    if (notifyChar == null || writeChar == null) {
+      throw Exception(
+        "BLE characteristics not initialized. Cannot start log retrieval.",
+      );
+    }
+
+    // Set operation mode to log retrieval
+    currentOperationMode = BleOperationMode.sounderSetupFetch;
+
+    // Reset protocol state to initial values
+    resetSounderSetupState();
+    resetProtocolSounderSetupState();
+
+    // IMPORTANT: Reset process state to clear isOtaCompleted flag
+    // This ensures polls aren't blocked after firmware upgrade
+    bleProcess.resetProcessSounderSetupState();
+
+    if (_notifySub == null) {
+      throw Exception(
+        "BLE handshake not complete. Please wait for connection to finish.",
+      );
+    }
+    print("Proceeding with Sounder setup fetch");
+    bleCurrentState = BleStates.SEND_SOUNDER_SETUP_CMD_FETCH_PACKET;
+    bleStateMachineState = BleStates.SEND_SOUNDER_SETUP_CMD_FETCH_PACKET;
+    print("Current state: $bleStateMachineState");
+    bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
+    Get.find<BleLogController>().sendNetworkPacket();
+  }
   // Future<void> startExtOut() async {
   //   if (!isConnected) {
   //     throw Exception("Device not connected. Cannot start log retrieval.");
@@ -1725,6 +1784,15 @@ class BleManager {
           bleStateMachineState = BleStates.SEND_L_BUS_SETUP_CMD_APPLY_PACKET;
           print("Current state: $bleStateMachineState (L-Bus Setup Apply)");
           // Send Network Packet for L-Bus Setup Apply
+          bleProcess.startOtherPacketsRxTimeout(
+            timeout: const Duration(seconds: 5),
+          );
+          Get.find<BleLogController>().sendNetworkPacket();
+        } else if (currentOperationMode == BleOperationMode.sounderSetupFetch) {
+          bleCurrentState = BleStates.SEND_SOUNDER_SETUP_CMD_FETCH_PACKET;
+          bleStateMachineState = BleStates.SEND_SOUNDER_SETUP_CMD_FETCH_PACKET;
+          print("Current state: $bleStateMachineState (Sounder Setup Fetch)");
+          // Send Network Packet for Sounder Setup Fetch
           bleProcess.startOtherPacketsRxTimeout(
             timeout: const Duration(seconds: 5),
           );
@@ -3428,6 +3496,147 @@ class BleManager {
 
     print(
       "TX/RX: TRANSMIT: L-Bus Setup Apply Command time: ${DateTime.now().toIso8601String()}, packet: ${u8_pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+    );
+
+    await sendSmallDataFrame(0x1000, 216, u8_pkt);
+  }
+
+  Future<void> sendSounderSetupRelayFetchCmdPkt({
+    required int outputMaxZone,
+  }) async {
+    // Create 216-byte buffer
+    Uint8List u8_pkt = Uint8List(216);
+
+    // Update global counters
+    u8TxPktCnt += 1;
+
+    u8_pkt[0] = 0xFE;
+    u8_pkt[1] = 0x01;
+    u8_pkt[2] = 0x00;
+
+    u8_pkt[3] = 0x01; // pkt type
+    u8_pkt[4] = u8TxPktCnt & 0xFF; // tx pkt num
+    u8_pkt[5] = u8RxPktCnt & 0xFF; // rx pkt num
+    u8_pkt[6] = 0x00; // network number
+    u8_pkt[10] = 0x01; // mode
+    u8_pkt[11] = 0x00; // socket number
+    u8_pkt[12] = 0x07; // command
+    u8_pkt[13] = 0x00; // output max zone byte 1
+    u8_pkt[14] = outputMaxZone; // output max zone byte 2
+
+    // Compute checksum on first 213 bytes
+    int checksum = toolsFletcherChecksum(u8_pkt.sublist(0, 213));
+
+    u8_pkt[213] = (checksum >> 8) & 0xFF;
+    u8_pkt[214] = checksum & 0xFF;
+    u8_pkt[215] = 0xFD;
+
+    print(
+      "TX/RX: TRANSMIT: Sounder Setup Relay $outputMaxZone Fetch Command time: ${DateTime.now().toIso8601String()}, packet: ${u8_pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+    );
+
+    await sendSmallDataFrame(0x1000, 216, u8_pkt);
+  }
+
+  Future<void> sendSounderSetupGeneralFetchCmdPkt() async {
+    // Create 216-byte buffer
+    Uint8List u8_pkt = Uint8List(216);
+
+    // Update global counters
+    u8TxPktCnt += 1;
+
+    u8_pkt[0] = 0xFE;
+    u8_pkt[1] = 0x01;
+    u8_pkt[2] = 0x00;
+
+    u8_pkt[3] = 0x01; // pkt type
+    u8_pkt[4] = u8TxPktCnt & 0xFF; // tx pkt num
+    u8_pkt[5] = u8RxPktCnt & 0xFF; // rx pkt num
+    u8_pkt[6] = 0x00; // network number
+    u8_pkt[10] = 0x01; // mode
+    u8_pkt[11] = 0x00; // socket number
+    u8_pkt[12] = 0x14; // command
+
+    // Compute checksum on first 213 bytes
+    int checksum = toolsFletcherChecksum(u8_pkt.sublist(0, 213));
+
+    u8_pkt[213] = (checksum >> 8) & 0xFF;
+    u8_pkt[214] = checksum & 0xFF;
+    u8_pkt[215] = 0xFD;
+
+    print(
+      "TX/RX: TRANSMIT: Sounder Setup General Fetch Command time: ${DateTime.now().toIso8601String()}, packet: ${u8_pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+    );
+
+    await sendSmallDataFrame(0x1000, 216, u8_pkt);
+  }
+
+  Future<void> sendSounderSetupZoneFetchCmdPkt({
+    required int zoneMaxZone,
+  }) async {
+    // Create 216-byte buffer
+    Uint8List u8_pkt = Uint8List(216);
+
+    // Update global counters
+    u8TxPktCnt += 1;
+
+    u8_pkt[0] = 0xFE;
+    u8_pkt[1] = 0x01;
+    u8_pkt[2] = 0x00;
+
+    u8_pkt[3] = 0x01; // pkt type
+    u8_pkt[4] = u8TxPktCnt & 0xFF; // tx pkt num
+    u8_pkt[5] = u8RxPktCnt & 0xFF; // rx pkt num
+    u8_pkt[6] = 0x00; // network number
+    u8_pkt[10] = 0x01; // mode
+    u8_pkt[11] = 0x00; // socket number
+    u8_pkt[12] = 0x19; // command
+    u8_pkt[13] = zoneMaxZone; // ext max zone
+    // Compute checksum on first 213 bytes
+    int checksum = toolsFletcherChecksum(u8_pkt.sublist(0, 213));
+
+    u8_pkt[213] = (checksum >> 8) & 0xFF;
+    u8_pkt[214] = checksum & 0xFF;
+    u8_pkt[215] = 0xFD;
+
+    print(
+      "TX/RX: TRANSMIT: Sounder Setup Zone $zoneMaxZone Fetch Command time: ${DateTime.now().toIso8601String()}, packet: ${u8_pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+    );
+
+    await sendSmallDataFrame(0x1000, 216, u8_pkt);
+  }
+
+  Future<void> sendSounderSetupExtOutFetchCmdPkt({
+    required int extMaxZone,
+  }) async {
+    // Create 216-byte buffer
+    Uint8List u8_pkt = Uint8List(216);
+
+    // Update global counters
+    u8TxPktCnt += 1;
+
+    u8_pkt[0] = 0xFE;
+    u8_pkt[1] = 0x01;
+    u8_pkt[2] = 0x00;
+
+    u8_pkt[3] = 0x01; // pkt type
+    u8_pkt[4] = u8TxPktCnt & 0xFF; // tx pkt num
+    u8_pkt[5] = u8RxPktCnt & 0xFF; // rx pkt num
+    u8_pkt[6] = 0x00; // network number
+    u8_pkt[10] = 0x01; // mode
+    u8_pkt[11] = 0x00; // socket number
+    u8_pkt[12] = 0x1B; // command
+    u8_pkt[13] = 0x01;
+    u8_pkt[14] = extMaxZone; // ext max zone
+    // Compute checksum on first 213 bytes
+    int checksum = toolsFletcherChecksum(u8_pkt.sublist(0, 213));
+
+    u8_pkt[213] = (checksum >> 8) & 0xFF;
+    u8_pkt[214] = checksum & 0xFF;
+    u8_pkt[215] = 0xFD;
+
+    print(
+      "TX/RX: TRANSMIT: Sounder Setup Ext Out $extMaxZone Fetch Command time: ${DateTime.now().toIso8601String()}, packet: ${u8_pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
     );
 
     await sendSmallDataFrame(0x1000, 216, u8_pkt);

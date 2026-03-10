@@ -41,6 +41,10 @@ class BleProcess {
   int lBusSetupFetchCommandStep = 0; // 1, 2, 3 ... 31
   int checkForLBusSetupApplyRes = 0;
   int lBusSetupApplyCommandStep = 0; // 1, 2, 3 ... 31
+  int checkForSounderSetupFetchRes = 0;
+  int sounderSetupFetchRelayCommandStep = 0; // 1, 2, 3
+  int sounderSetupFetchZoneCommandStep = 1; // 1, 2, 3
+  int sounderSetupFetchExtOutCommandStep = 1; // 1, 2, 3
   int validEventLogNum = 0;
   int read1000Logs = 0;
   bool logRetreivalEnded = false;
@@ -330,6 +334,10 @@ class BleProcess {
         List.generate(31, (_) => const LBusSetupData()),
       );
 
+  // Sounder Setup Variables
+  final ValueNotifier<bool> isSounderSetupFetchCommandActive =
+      ValueNotifier<bool>(false);
+
   // BleStates bleStateMachineState = BleStates.IDLE;
   BleStates bleCurrentState = BleStates.IDLE;
   DeviceConnectState deviceConnectState = DeviceConnectState.notConnected;
@@ -479,6 +487,11 @@ class BleProcess {
         checkForLBusSetupApplyRes = 1;
         break;
 
+      case OtaProcessState.sendSounderSetupFetchCmdPkt:
+        print("Sending Sounder Setup Fetch Command");
+        checkForSounderSetupFetchRes = 1;
+        break;
+
       case OtaProcessState.otaWaitRsp:
         break;
     }
@@ -573,6 +586,14 @@ class BleProcess {
           processDesc.value = "Applying L-Bus 1/31";
           startRxTimeout();
           await bleManager.sendLBusSetupApplyCmdPkt(lBusNo: 1);
+        } else if (isSounderSetupFetchCommandActive.value) {
+          bleManager.otaProcessState =
+              OtaProcessState.sendSounderSetupFetchCmdPkt;
+          checkForAccessKeyCmdRsp = 0;
+          sounderSetupFetchRelayCommandStep = 1;
+          processDesc.value = "Downloading Sounder (Relays) 1/3";
+          startRxTimeout();
+          await bleManager.sendSounderSetupRelayFetchCmdPkt(outputMaxZone: 1);
         } else {
           bleManager.otaProcessState = OtaProcessState.sendStopCntrlCmdPkt;
           checkForAccessKeyCmdRsp = 0;
@@ -609,6 +630,80 @@ class BleProcess {
         await bleManager.sendPollPacket();
       }
       // checkDipSetCmdRsp = 0;
+    }
+
+    if (checkForSounderSetupFetchRes == 1) {
+      print(
+        "Checking Sounder Setup Fetch CMD RSP Value ${rx.payload[12]}:::::${rx.payload[12] == 0x07} ",
+      );
+      if (rx.payload[12] == 0x07) {
+        if (sounderSetupFetchRelayCommandStep >= 1 &&
+            sounderSetupFetchRelayCommandStep < 3) {
+          final nextRelayNo = sounderSetupFetchRelayCommandStep + 1;
+          processDesc.value = "Downloading Sounder (Relays) $nextRelayNo/3";
+          print(
+            "CMD $sounderSetupFetchRelayCommandStep Validated -> send CMD$nextRelayNo, keep polling",
+          );
+          sounderSetupFetchRelayCommandStep = nextRelayNo;
+          startRxTimeout();
+          await bleManager.sendSounderSetupRelayFetchCmdPkt(
+            outputMaxZone: nextRelayNo,
+          );
+        } else {
+          processDesc.value = "Downloading Sounder (General)";
+          startRxTimeout();
+          await bleManager.sendSounderSetupGeneralFetchCmdPkt();
+        }
+      } else if (rx.payload[12] == 0x14) {
+        print("We got the response for sounder setup fetch General Equipment");
+        processDesc.value = "Downloading Sounder (Zones) 1/3";
+        startRxTimeout();
+        await bleManager.sendSounderSetupZoneFetchCmdPkt(zoneMaxZone: 1);
+      } else if (rx.payload[12] == 0x19) {
+        print("We got the response for sounder setup fetch Zone");
+        if (sounderSetupFetchZoneCommandStep >= 1 &&
+            sounderSetupFetchZoneCommandStep < 3) {
+          final nextZoneNo = sounderSetupFetchZoneCommandStep + 1;
+          processDesc.value = "Downloading Sounder (Zones) $nextZoneNo/3";
+          print(
+            "CMD $sounderSetupFetchZoneCommandStep Validated -> send CMD$nextZoneNo, keep polling",
+          );
+          sounderSetupFetchZoneCommandStep = nextZoneNo;
+          startRxTimeout();
+          await bleManager.sendSounderSetupZoneFetchCmdPkt(
+            zoneMaxZone: nextZoneNo,
+          );
+        } else {
+          processDesc.value = "Downloading Sounder (Ext Out) 1/3";
+          startRxTimeout();
+          await bleManager.sendSounderSetupExtOutFetchCmdPkt(extMaxZone: 1);
+        }
+      } else if (rx.payload[12] == 0x1B) {
+        print("We got the response for sounder setup fetch Ext Out");
+        if (sounderSetupFetchExtOutCommandStep >= 1 &&
+            sounderSetupFetchExtOutCommandStep < 3) {
+          final nextExtOutNo = sounderSetupFetchExtOutCommandStep + 1;
+          processDesc.value = "Downloading Sounder (Ext Out) $nextExtOutNo/3";
+          print(
+            "CMD $sounderSetupFetchExtOutCommandStep Validated -> send CMD$nextExtOutNo, keep polling",
+          );
+          sounderSetupFetchExtOutCommandStep = nextExtOutNo;
+          startRxTimeout();
+          await bleManager.sendSounderSetupExtOutFetchCmdPkt(
+            extMaxZone: nextExtOutNo,
+          );
+        } else {
+          bleManager.otaProcessState = OtaProcessState.notInUse;
+          checkForSounderSetupFetchRes = 0;
+          isSounderSetupFetchCommandActive.value = false;
+          isAccessKeyValid.value = true;
+          print("We got the response for sounder setup fetch");
+        }
+      } else {
+        print("Sounder Setup Fetch Cmd Response not found, polling again");
+        startRxTimeout();
+        await bleManager.sendPollPacket();
+      }
     }
 
     if (checkForLBusSetupApplyRes == 1) {
@@ -1596,6 +1691,52 @@ class BleProcess {
     // panelName.value = "";
   }
 
+  void resetProcessSounderSetupState() {
+    // Terminal guards
+    isOtaCompleted = false;
+    processNextOtaFrame = true;
+    logRetreivalEnded = false;
+
+    // Counters
+    checkForCtrlCmdRsp = 0;
+    checkForAccessKeyCmdRsp = 0;
+    checkDipSetCmdRsp = 0;
+    checkForExtCmdFetchRes = 0;
+    checkForInputSetupFetchRes = 0;
+    checkForRelaySetupApplyRes = 0;
+    validEventLogNum = 0;
+    read1000Logs = 0;
+    receivedPollCount = 0;
+    checkForRadioSetupFetchRes = 0;
+    isExtOutApplyButtonActive.value = false;
+    relaySetupFetchCommandStep = 0;
+    checkForRelaySetupFetchRes = 0;
+    checkForRadioSetupApplyRes = 0;
+    checkForLBusSetupFetchRes = 0;
+    lBusSetupFetchCommandStep = 0;
+    checkForLBusSetupApplyRes = 0;
+    // Time tracking
+    // logStartingTime = null;
+    // logEndTime = null;
+
+    // OTA state
+    bleManager.otaProcessState = OtaProcessState.sendNetworkPacket;
+
+    // RX timeout
+    _rxTimeoutTimer?.cancel();
+    _rxTimeoutTimer = null;
+
+    _otherPacketsRxTimeoutTimer?.cancel();
+    _otherPacketsRxTimeoutTimer = null;
+
+    // UI notifiers
+    // validEventLogCount.value = 0;
+    // read1000LogsCount.value = 0;
+    // validEventLogs.value = [];
+    // isValidLogRecieved.value = false;
+    // panelName.value = "";
+  }
+
   String formatDuration(Duration d) {
     final m = d.inMinutes;
     final s = d.inSeconds.remainder(60);
@@ -1950,6 +2091,8 @@ class BleProcess {
         case OtaProcessState.sendLBusSetupFetchCmdPkt:
           break;
         case OtaProcessState.sendLBusSetupApplyCmdPkt:
+          break;
+        case OtaProcessState.sendSounderSetupFetchCmdPkt:
           break;
       }
       startRxTimeout();
