@@ -237,6 +237,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
   final ValueNotifier<int> _inputRefreshTrigger = ValueNotifier(0);
   final ValueNotifier<int> _zoneRefreshTrigger = ValueNotifier(0);
   final ValueNotifier<int> _extOutRefreshTrigger = ValueNotifier(0);
+  final ValueNotifier<int> _sounderRefreshTrigger = ValueNotifier(0);
 
   // Connection state
   bool _isConnecting = false;
@@ -1286,14 +1287,11 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                     if (isAccessKeyValidValue != null) {
                       cancelAccessKeyTimer();
                     }
-                    // Auto-close on success and navigate, but defer to next frame
-                    // to avoid build-phase setState/overlay errors.
                     if (isAccessKeyValidValue == true &&
                         !_navigatingToDeviceConnecting) {
                       _navigatingToDeviceConnecting = true;
                       WidgetsBinding.instance.addPostFrameCallback((_) async {
                         if (!mounted) return;
-                        // Briefly show success before navigating
                         await Future.delayed(const Duration(seconds: 1));
                         if (!mounted) return;
                         Navigator.of(dialogContext, rootNavigator: true).pop();
@@ -2091,8 +2089,11 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
       context: context,
       isScrollControlled: true,
       builder:
-          (_) =>
-              SounderModeBottomSheet(onDownload: onDownload, onApply: onApply),
+          (_) => SounderModeBottomSheet(
+            onDownload: onDownload,
+            onApply: onApply,
+            refreshTrigger: refreshTrigger,
+          ),
     );
   }
 

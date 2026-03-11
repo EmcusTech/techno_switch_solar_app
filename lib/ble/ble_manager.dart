@@ -341,6 +341,46 @@ class BleManager {
       bleProcess.lBusSetupDataList;
   ValueNotifier<bool> get isLBusSetupApplyCommandActive =>
       bleProcess.isLBusSetupApplyCommandActive;
+
+  ValueNotifier<int> get sounderOneRelayFunctionGroup =>
+      bleProcess.sounderOneRelayFunctionGroup;
+  ValueNotifier<int> get sounderOneRelayFunction =>
+      bleProcess.sounderOneRelayFunction;
+  ValueNotifier<int> get sounderOneFunctionNo =>
+      bleProcess.sounderOneFunctionNo;
+  ValueNotifier<String> get sounderOneOutputText =>
+      bleProcess.sounderOneOutputText;
+
+  ValueNotifier<int> get sounderTwoRelayFunctionGroup =>
+      bleProcess.sounderTwoRelayFunctionGroup;
+  ValueNotifier<int> get sounderTwoRelayFunction =>
+      bleProcess.sounderTwoRelayFunction;
+  ValueNotifier<int> get sounderTwoFunctionNo =>
+      bleProcess.sounderTwoFunctionNo;
+  ValueNotifier<String> get sounderTwoOutputText =>
+      bleProcess.sounderTwoOutputText;
+
+  ValueNotifier<int> get sounderThreeRelayFunctionGroup =>
+      bleProcess.sounderThreeRelayFunctionGroup;
+  ValueNotifier<int> get sounderThreeRelayFunction =>
+      bleProcess.sounderThreeRelayFunction;
+  ValueNotifier<int> get sounderThreeFunctionNo =>
+      bleProcess.sounderThreeFunctionNo;
+  ValueNotifier<String> get sounderThreeOutputText =>
+      bleProcess.sounderThreeOutputText;
+
+  ValueNotifier<bool> get isSounderOneEnabled => bleProcess.isSounderOneEnabled;
+  ValueNotifier<bool> get isSounderOneTest => bleProcess.isSounderOneTest;
+  ValueNotifier<bool> get isSounderOneNormal => bleProcess.isSounderOneNormal;
+  ValueNotifier<bool> get isSounderTwoEnabled => bleProcess.isSounderTwoEnabled;
+  ValueNotifier<bool> get isSounderTwoTest => bleProcess.isSounderTwoTest;
+  ValueNotifier<bool> get isSounderTwoNormal => bleProcess.isSounderTwoNormal;
+  ValueNotifier<bool> get isSounderThreeEnabled =>
+      bleProcess.isSounderThreeEnabled;
+  ValueNotifier<bool> get isSounderThreeTest => bleProcess.isSounderThreeTest;
+  ValueNotifier<bool> get isSounderThreeNormal =>
+      bleProcess.isSounderThreeNormal;
+
   void resetProtocolState() {
     // Packet counters
     u8TxPktCnt = 0;

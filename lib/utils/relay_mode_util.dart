@@ -7,13 +7,17 @@ enum OutputEnable { disabled, enabled }
 
 enum OutputMode { normal, test }
 
+enum SupervisionMode { normal, mtl5525 }
+
 class OutputModeConfig {
   final OutputEnable outputEnable;
   final OutputMode outputMode;
+  final SupervisionMode supervisionMode;
 
   const OutputModeConfig({
     required this.outputEnable,
     required this.outputMode,
+    required this.supervisionMode,
   });
 
   @override
@@ -21,7 +25,8 @@ class OutputModeConfig {
     return '''
 Output Enable  : $outputEnable
 Output Mode    : $outputMode
-(Default → Latched, Not Inverted, Normal Supervision)
+Supervision    : $supervisionMode
+(Default → Latched, Not Inverted)
 ''';
   }
 }
@@ -60,11 +65,15 @@ class OutputModeCodec {
 
   // ================= DECODER =================
   static OutputModeConfig decode(int value) {
+    bool isMtl = (value & 0x30) != 0; //0x10 | 0x20
+
     return OutputModeConfig(
       outputEnable:
           (value & 0x01) != 0 ? OutputEnable.enabled : OutputEnable.disabled,
 
       outputMode: (value & 0x02) != 0 ? OutputMode.test : OutputMode.normal,
+
+      supervisionMode: isMtl ? SupervisionMode.mtl5525 : SupervisionMode.normal,
     );
   }
 
@@ -82,6 +91,7 @@ void main() {
   final config = OutputModeConfig(
     outputEnable: OutputEnable.enabled,
     outputMode: OutputMode.test,
+    supervisionMode: SupervisionMode.normal,
   );
 
   final String hexValue = OutputModeCodec.encodeHex(config);

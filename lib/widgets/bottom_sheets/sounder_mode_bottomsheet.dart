@@ -1,17 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
+import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:techno_switch_solar_app/ble/ble_manager.dart';
+import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
+import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/widgets/dropdown.dart';
 
 class SounderModeBottomSheet extends StatefulWidget {
   final VoidCallback onDownload;
   final VoidCallback onApply;
+  final ValueNotifier<int> refreshTrigger;
 
   const SounderModeBottomSheet({
     super.key,
     required this.onDownload,
     required this.onApply,
+    required this.refreshTrigger,
   });
 
   @override
@@ -21,6 +27,7 @@ class SounderModeBottomSheet extends StatefulWidget {
 class _SounderModeBottomSheetState extends State<SounderModeBottomSheet>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  BleManager? manager;
   final ScrollController sounderBottomSheetController = ScrollController();
 
   final List<String> groupOptions = ['None', 'General', 'Zone', 'Ext. Out'];
@@ -77,6 +84,72 @@ class _SounderModeBottomSheetState extends State<SounderModeBottomSheet>
 
       return config;
     });
+
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    if (Get.isRegistered<BleLogController>()) {
+      manager = Get.find<BleLogController>().bleManager;
+    }
+    // final cached = await PeripheralSetupCache.loadExtOutSetup(widget.deviceId);
+    // if (cached != null) {
+    //   _applyCachedData(cached);
+    //   if (mounted) setState(() {});
+    //   return;
+    // }
+    _loadFromManager();
+  }
+
+  void _onRefreshTriggered() {
+    _loadFromManager();
+  }
+
+  void _loadFromManager() {
+    if (!Get.isRegistered<BleLogController>()) return;
+    final sounderOne = sounders[0];
+    final sounderTwo = sounders[1];
+    final sounderThree = sounders[2];
+
+    sounderOne.enabled = manager!.isSounderOneEnabled.value ? 'Yes' : 'No';
+    sounderOne.test = manager!.isSounderOneTest.value ? 'Yes' : 'No';
+    sounderOne.type =
+        manager!.isSounderOneNormal.value ? 'Normal' : 'IS (MTL5525)';
+    sounderTwo.enabled = manager!.isSounderTwoEnabled.value ? 'Yes' : 'No';
+    sounderTwo.test = manager!.isSounderTwoTest.value ? 'Yes' : 'No';
+    sounderTwo.type =
+        manager!.isSounderTwoNormal.value ? 'Normal' : 'IS (MTL5525)';
+    sounderThree.enabled = manager!.isSounderThreeEnabled.value ? 'Yes' : 'No';
+    sounderThree.test = manager!.isSounderThreeTest.value ? 'Yes' : 'No';
+    sounderThree.type =
+        manager!.isSounderThreeNormal.value ? 'Normal' : 'IS (MTL5525)';
+    sounderOne.outputController.text = manager!.sounderOneOutputText.value;
+    sounderTwo.outputController.text = manager!.sounderTwoOutputText.value;
+    sounderThree.outputController.text = manager!.sounderThreeOutputText.value;
+
+    sounderOne.group =
+        groupOptions[manager!.sounderOneRelayFunctionGroup.value];
+    sounderTwo.group =
+        groupOptions[manager!.sounderTwoRelayFunctionGroup.value];
+    sounderThree.group =
+        groupOptions[manager!.sounderThreeRelayFunctionGroup.value];
+    sounderOne.function =
+        functionOptionsMap[sounderOne.group]![manager!
+            .sounderOneRelayFunction
+            .value];
+    sounderTwo.function =
+        functionOptionsMap[sounderTwo.group]![manager!
+            .sounderTwoRelayFunction
+            .value];
+    sounderThree.function =
+        functionOptionsMap[sounderThree.group]![manager!
+            .sounderThreeRelayFunction
+            .value];
+
+    sounderTwo.dynamicController.text =
+        manager!.sounderTwoFunctionNo.value.toString();
+    sounderThree.dynamicController.text =
+        manager!.sounderThreeFunctionNo.value.toString();
   }
 
   @override

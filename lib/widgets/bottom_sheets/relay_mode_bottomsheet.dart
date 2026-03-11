@@ -642,6 +642,7 @@ class _RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
                               ? OutputEnable.enabled
                               : OutputEnable.disabled,
                       outputMode: isTest ? OutputMode.test : OutputMode.normal,
+                      supervisionMode: SupervisionMode.normal,
                     );
 
                     final String hexValue = OutputModeCodec.encodeHex(config);

@@ -338,6 +338,35 @@ class BleProcess {
   final ValueNotifier<bool> isSounderSetupFetchCommandActive =
       ValueNotifier<bool>(false);
 
+  //sounder relay variables
+  final ValueNotifier<int> sounderOneRelayFunctionGroup = ValueNotifier<int>(0);
+  final ValueNotifier<int> sounderOneRelayFunction = ValueNotifier<int>(0);
+  final ValueNotifier<int> sounderOneFunctionNo = ValueNotifier<int>(0);
+  final ValueNotifier<String> sounderOneOutputText = ValueNotifier<String>("");
+  final ValueNotifier<bool> isSounderOneEnabled = ValueNotifier<bool>(false);
+  final ValueNotifier<bool> isSounderOneTest = ValueNotifier<bool>(false);
+  final ValueNotifier<bool> isSounderOneNormal = ValueNotifier<bool>(false);
+
+  final ValueNotifier<int> sounderTwoRelayFunctionGroup = ValueNotifier<int>(0);
+  final ValueNotifier<int> sounderTwoRelayFunction = ValueNotifier<int>(0);
+  final ValueNotifier<int> sounderTwoFunctionNo = ValueNotifier<int>(0);
+  final ValueNotifier<String> sounderTwoOutputText = ValueNotifier<String>("");
+  final ValueNotifier<bool> isSounderTwoEnabled = ValueNotifier<bool>(false);
+  final ValueNotifier<bool> isSounderTwoTest = ValueNotifier<bool>(false);
+  final ValueNotifier<bool> isSounderTwoNormal = ValueNotifier<bool>(false);
+
+  final ValueNotifier<int> sounderThreeRelayFunctionGroup = ValueNotifier<int>(
+    0,
+  );
+  final ValueNotifier<int> sounderThreeRelayFunction = ValueNotifier<int>(0);
+  final ValueNotifier<int> sounderThreeFunctionNo = ValueNotifier<int>(0);
+  final ValueNotifier<String> sounderThreeOutputText = ValueNotifier<String>(
+    "",
+  );
+  final ValueNotifier<bool> isSounderThreeEnabled = ValueNotifier<bool>(false);
+  final ValueNotifier<bool> isSounderThreeTest = ValueNotifier<bool>(false);
+  final ValueNotifier<bool> isSounderThreeNormal = ValueNotifier<bool>(false);
+
   // BleStates bleStateMachineState = BleStates.IDLE;
   BleStates bleCurrentState = BleStates.IDLE;
   DeviceConnectState deviceConnectState = DeviceConnectState.notConnected;
@@ -638,21 +667,94 @@ class BleProcess {
       );
       if (rx.payload[12] == 0x07) {
         if (sounderSetupFetchRelayCommandStep >= 1 &&
-            sounderSetupFetchRelayCommandStep < 3) {
+            sounderSetupFetchRelayCommandStep <= 3) {
           final nextRelayNo = sounderSetupFetchRelayCommandStep + 1;
           processDesc.value = "Downloading Sounder (Relays) $nextRelayNo/3";
           print(
             "CMD $sounderSetupFetchRelayCommandStep Validated -> send CMD$nextRelayNo, keep polling",
           );
+
+          if (sounderSetupFetchRelayCommandStep == 1) {
+            final OutputModeConfig config = OutputModeCodec.fromHex(
+              rx.payload[15].toRadixString(16),
+            );
+            final bool outputEnabled =
+                config.outputEnable == OutputEnable.enabled;
+            final bool outputMode = config.outputMode == OutputMode.test;
+            final bool supervisionMode =
+                config.supervisionMode == SupervisionMode.normal;
+            isSounderOneEnabled.value = outputEnabled;
+            isSounderOneTest.value = outputMode;
+            isSounderOneNormal.value = supervisionMode;
+            // sounderOneRelayoutputMode.value = rx.payload[15];
+            sounderOneRelayFunctionGroup.value = rx.payload[23];
+            sounderOneRelayFunction.value = rx.payload[24];
+            sounderOneFunctionNo.value = rx.payload[22];
+            sounderOneOutputText.value = extractStringFromPayload(
+              rx.payload,
+              startIndex: 25,
+            );
+          } else if (sounderSetupFetchRelayCommandStep == 2) {
+            final OutputModeConfig config = OutputModeCodec.fromHex(
+              rx.payload[15].toRadixString(16),
+            );
+            final bool outputEnabled =
+                config.outputEnable == OutputEnable.enabled;
+            final bool outputMode = config.outputMode == OutputMode.test;
+            final bool supervisionMode =
+                config.supervisionMode == SupervisionMode.normal;
+            isSounderTwoEnabled.value = outputEnabled;
+            isSounderTwoTest.value = outputMode;
+            isSounderTwoNormal.value = supervisionMode;
+            // sounderTwoRelayoutputMode.value = rx.payload[15];
+            sounderTwoRelayFunctionGroup.value = rx.payload[23];
+            print(
+              "Sounder Two Relay Function Group: ${sounderTwoRelayFunctionGroup.value}",
+            );
+            sounderTwoRelayFunction.value = rx.payload[24];
+            sounderTwoFunctionNo.value = rx.payload[22];
+            sounderTwoOutputText.value = extractStringFromPayload(
+              rx.payload,
+              startIndex: 25,
+            );
+          } else if (sounderSetupFetchRelayCommandStep == 3) {
+            final OutputModeConfig config = OutputModeCodec.fromHex(
+              rx.payload[15].toRadixString(16),
+            );
+            final bool outputEnabled =
+                config.outputEnable == OutputEnable.enabled;
+            final bool outputMode = config.outputMode == OutputMode.test;
+            final bool supervisionMode =
+                config.supervisionMode == SupervisionMode.normal;
+            isSounderThreeEnabled.value = outputEnabled;
+            isSounderThreeTest.value = outputMode;
+            isSounderThreeNormal.value = supervisionMode;
+            // sounderThreeRelayoutputMode.value = rx.payload[15];
+            sounderThreeRelayFunctionGroup.value = rx.payload[23];
+            print(
+              "Sounder Three Relay Function Group: ${sounderThreeRelayFunctionGroup.value}",
+            );
+            sounderThreeRelayFunction.value = rx.payload[24];
+            print(
+              "Sounder Three Relay Function: ${sounderThreeRelayFunction.value}",
+            );
+            sounderThreeFunctionNo.value = rx.payload[22];
+            sounderThreeOutputText.value = extractStringFromPayload(
+              rx.payload,
+              startIndex: 25,
+            );
+          }
           sounderSetupFetchRelayCommandStep = nextRelayNo;
-          startRxTimeout();
-          await bleManager.sendSounderSetupRelayFetchCmdPkt(
-            outputMaxZone: nextRelayNo,
-          );
-        } else {
-          processDesc.value = "Downloading Sounder (General)";
-          startRxTimeout();
-          await bleManager.sendSounderSetupGeneralFetchCmdPkt();
+          if (sounderSetupFetchRelayCommandStep <= 3) {
+            startRxTimeout();
+            await bleManager.sendSounderSetupRelayFetchCmdPkt(
+              outputMaxZone: nextRelayNo,
+            );
+          } else {
+            processDesc.value = "Downloading Sounder (General)";
+            startRxTimeout();
+            await bleManager.sendSounderSetupGeneralFetchCmdPkt();
+          }
         }
       } else if (rx.payload[12] == 0x14) {
         print("We got the response for sounder setup fetch General Equipment");
@@ -697,6 +799,7 @@ class BleProcess {
           checkForSounderSetupFetchRes = 0;
           isSounderSetupFetchCommandActive.value = false;
           isAccessKeyValid.value = true;
+          processDesc.value = "Sounder Setup Fetch Completed";
           print("We got the response for sounder setup fetch");
         }
       } else {
