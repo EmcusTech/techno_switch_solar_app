@@ -391,6 +391,16 @@ class BleManager {
       bleProcess.isSounderGeneralDelay;
   ValueNotifier<int> get sounderGeneralDelay => bleProcess.sounderGeneralDelay;
 
+  ValueNotifier<bool> get isZoneOneEnabled => bleProcess.isZoneOneEnabled;
+  ValueNotifier<bool> get isZoneOneTest => bleProcess.isZoneOneTest;
+  ValueNotifier<int> get zoneOneAction => bleProcess.zoneOneAction;
+  ValueNotifier<bool> get isZoneTwoEnabled => bleProcess.isZoneTwoEnabled;
+  ValueNotifier<bool> get isZoneTwoTest => bleProcess.isZoneTwoTest;
+  ValueNotifier<int> get zoneTwoAction => bleProcess.zoneTwoAction;
+  ValueNotifier<bool> get isZoneThreeEnabled => bleProcess.isZoneThreeEnabled;
+  ValueNotifier<bool> get isZoneThreeTest => bleProcess.isZoneThreeTest;
+  ValueNotifier<int> get zoneThreeAction => bleProcess.zoneThreeAction;
+
   void resetProtocolState() {
     // Packet counters
     u8TxPktCnt = 0;

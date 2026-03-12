@@ -7,6 +7,7 @@ import 'package:techno_switch_solar_app/utils/general_quipment_mode_util.dart';
 import 'package:techno_switch_solar_app/utils/input_mode_util.dart';
 import 'package:techno_switch_solar_app/utils/relay_mode_util.dart';
 import 'package:techno_switch_solar_app/utils/ext_zone_mode_util.dart';
+import 'package:techno_switch_solar_app/utils/zone_equipment_mode_util.dart';
 import 'package:techno_switch_solar_app/utils/zone_mode_util.dart';
 import 'ble_manager.dart';
 import 'ble_frame.dart';
@@ -376,6 +377,20 @@ class BleProcess {
   final ValueNotifier<int> sounderGeneralAction = ValueNotifier<int>(0);
   final ValueNotifier<bool> isSounderGeneralDelay = ValueNotifier<bool>(false);
   final ValueNotifier<int> sounderGeneralDelay = ValueNotifier<int>(0);
+
+  // Sounder Zone Equipment Variables
+  final ValueNotifier<bool> isZoneOneEnabled = ValueNotifier<bool>(false);
+  final ValueNotifier<bool> isZoneOneTest = ValueNotifier<bool>(false);
+  final ValueNotifier<int> zoneOneAction = ValueNotifier<int>(0);
+
+  final ValueNotifier<bool> isZoneTwoEnabled = ValueNotifier<bool>(false);
+  final ValueNotifier<bool> isZoneTwoTest = ValueNotifier<bool>(false);
+  final ValueNotifier<int> zoneTwoAction = ValueNotifier<int>(0);
+
+  final ValueNotifier<bool> isZoneThreeEnabled = ValueNotifier<bool>(false);
+  final ValueNotifier<bool> isZoneThreeTest = ValueNotifier<bool>(false);
+  final ValueNotifier<int> zoneThreeAction = ValueNotifier<int>(0);
+
   // BleStates bleStateMachineState = BleStates.IDLE;
   BleStates bleCurrentState = BleStates.IDLE;
   DeviceConnectState deviceConnectState = DeviceConnectState.notConnected;
@@ -629,6 +644,7 @@ class BleProcess {
               OtaProcessState.sendSounderSetupFetchCmdPkt;
           checkForAccessKeyCmdRsp = 0;
           sounderSetupFetchRelayCommandStep = 1;
+          sounderSetupFetchZoneCommandStep = 1;
           processDesc.value = "Downloading Sounder (Relays) 1/3";
           startRxTimeout();
           await bleManager.sendSounderSetupRelayFetchCmdPkt(outputMaxZone: 1);
@@ -784,21 +800,65 @@ class BleProcess {
       } else if (rx.payload[12] == 0x19) {
         print("We got the response for sounder setup fetch Zone");
         if (sounderSetupFetchZoneCommandStep >= 1 &&
-            sounderSetupFetchZoneCommandStep < 3) {
+            sounderSetupFetchZoneCommandStep <= 3) {
           final nextZoneNo = sounderSetupFetchZoneCommandStep + 1;
           processDesc.value = "Downloading Sounder (Zones) $nextZoneNo/3";
           print(
             "CMD $sounderSetupFetchZoneCommandStep Validated -> send CMD$nextZoneNo, keep polling",
           );
+          if (sounderSetupFetchZoneCommandStep == 1) {
+            final ZoneEquipmentModeConfig config =
+                ZoneEquipmentModeCodec.fromHex(
+                  rx.payload[15].toRadixString(16),
+                );
+            final bool zoneEnabled =
+                config.zoneEnable == ZoneEquipmentEnable.enabled;
+            final bool zoneMode = config.zoneMode == ZoneEquipmentMode.test;
+            final bool zoneSounderDelay =
+                config.sounderDelay == ZoneSounderDelay.enabled;
+
+            isZoneOneEnabled.value = zoneEnabled;
+            isZoneOneTest.value = zoneMode;
+            zoneOneAction.value = rx.payload[16];
+            print("zone one action: ${zoneOneAction.value}");
+          } else if (sounderSetupFetchZoneCommandStep == 2) {
+            final ZoneEquipmentModeConfig config =
+                ZoneEquipmentModeCodec.fromHex(
+                  rx.payload[15].toRadixString(16),
+                );
+            final bool zoneEnabled =
+                config.zoneEnable == ZoneEquipmentEnable.enabled;
+            final bool zoneMode = config.zoneMode == ZoneEquipmentMode.test;
+            final bool zoneSounderDelay =
+                config.sounderDelay == ZoneSounderDelay.enabled;
+            isZoneTwoEnabled.value = zoneEnabled;
+            isZoneTwoTest.value = zoneMode;
+            zoneTwoAction.value = rx.payload[16];
+          } else if (sounderSetupFetchZoneCommandStep == 3) {
+            final ZoneEquipmentModeConfig config =
+                ZoneEquipmentModeCodec.fromHex(
+                  rx.payload[15].toRadixString(16),
+                );
+            final bool zoneEnabled =
+                config.zoneEnable == ZoneEquipmentEnable.enabled;
+            final bool zoneMode = config.zoneMode == ZoneEquipmentMode.test;
+            final bool zoneSounderDelay =
+                config.sounderDelay == ZoneSounderDelay.enabled;
+            isZoneThreeEnabled.value = zoneEnabled;
+            isZoneThreeTest.value = zoneMode;
+            zoneThreeAction.value = rx.payload[16];
+          }
           sounderSetupFetchZoneCommandStep = nextZoneNo;
-          startRxTimeout();
-          await bleManager.sendSounderSetupZoneFetchCmdPkt(
-            zoneMaxZone: nextZoneNo,
-          );
-        } else {
-          processDesc.value = "Downloading Sounder (Ext Out) 1/3";
-          startRxTimeout();
-          await bleManager.sendSounderSetupExtOutFetchCmdPkt(extMaxZone: 1);
+          if (sounderSetupFetchZoneCommandStep <= 3) {
+            startRxTimeout();
+            await bleManager.sendSounderSetupZoneFetchCmdPkt(
+              zoneMaxZone: nextZoneNo,
+            );
+          } else {
+            processDesc.value = "Downloading Sounder (Ext Out) 1/3";
+            startRxTimeout();
+            await bleManager.sendSounderSetupExtOutFetchCmdPkt(extMaxZone: 1);
+          }
         }
       } else if (rx.payload[12] == 0x1B) {
         print("We got the response for sounder setup fetch Ext Out");

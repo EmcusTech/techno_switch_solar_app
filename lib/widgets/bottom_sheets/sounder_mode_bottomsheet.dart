@@ -59,6 +59,7 @@ class _SounderModeBottomSheetState extends State<SounderModeBottomSheet>
   ];
 
   late List<SounderConfig> sounders;
+  late List<ZoneConfig> zones;
 
   final TextEditingController delayController = TextEditingController(
     text: '0',
@@ -84,6 +85,8 @@ class _SounderModeBottomSheetState extends State<SounderModeBottomSheet>
 
       return config;
     });
+
+    zones = List.generate(3, (i) => ZoneConfig(index: i));
 
     _loadData();
   }
@@ -152,6 +155,21 @@ class _SounderModeBottomSheetState extends State<SounderModeBottomSheet>
         manager!.sounderThreeFunctionNo.value.toString();
 
     delayController.text = manager!.sounderGeneralDelay.value.toString();
+
+    final zoneOne = zones[0];
+    final zoneTwo = zones[1];
+    final zoneThree = zones[2];
+
+    zoneOne.enabled = manager!.isZoneOneEnabled.value ? 'Yes' : 'No';
+    zoneOne.test = manager!.isZoneOneTest.value ? 'Yes' : 'No';
+    zoneOne.action = actionOptions[manager!.zoneOneAction.value];
+    zoneTwo.enabled = manager!.isZoneTwoEnabled.value ? 'Yes' : 'No';
+    zoneTwo.test = manager!.isZoneTwoTest.value ? 'Yes' : 'No';
+    zoneTwo.action = actionOptions[manager!.zoneTwoAction.value];
+    zoneThree.enabled = manager!.isZoneThreeEnabled.value ? 'Yes' : 'No';
+    zoneThree.test = manager!.isZoneThreeTest.value ? 'Yes' : 'No';
+    zoneThree.action = actionOptions[manager!.zoneThreeAction.value];
+    print("zone one action loaded: ${zoneOne.action}");
   }
 
   @override
@@ -416,45 +434,51 @@ class _SounderModeBottomSheetState extends State<SounderModeBottomSheet>
     );
   }
 
+  Widget _zoneTile(int index) {
+    final zone = zones[index];
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: _sectionContainer(
+        child: ExpansionTile(
+          tilePadding: const EdgeInsets.symmetric(horizontal: 16),
+          childrenPadding: const EdgeInsets.symmetric(horizontal: 16),
+          title: Text(
+            'Zone ${index + 1}',
+            style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+          ),
+          children: [
+            _disabledField('Function', 'Fire Snd'),
+            _disabledField('Zone', '${index + 1}'),
+            DropdownWidget(
+              label: 'Enabled',
+              value: zone.enabled,
+              items: yesNoOptions,
+              onChanged: (v) => setState(() => zone.enabled = v),
+            ),
+            DropdownWidget(
+              label: 'Test',
+              value: zone.test,
+              items: yesNoOptions,
+              onChanged: (v) => setState(() => zone.test = v),
+            ),
+            DropdownWidget(
+              label: 'Action',
+              value: zone.action,
+              items: actionOptions,
+              onChanged: (v) => setState(() => zone.action = v),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _zoneTab() {
     return ListView.builder(
       itemCount: 3,
       itemBuilder: (_, i) {
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 16),
-          child: _sectionContainer(
-            child: ExpansionTile(
-              tilePadding: const EdgeInsets.symmetric(horizontal: 16),
-              childrenPadding: const EdgeInsets.symmetric(horizontal: 16),
-              title: Text(
-                'Zone ${i + 1}',
-                style: GoogleFonts.inter(fontWeight: FontWeight.w600),
-              ),
-              children: [
-                _disabledField('Function', 'Fire Snd'),
-                _disabledField('Zone', '${i + 1}'),
-                DropdownWidget(
-                  label: 'Enabled',
-                  value: 'No',
-                  items: yesNoOptions,
-                  onChanged: (_) {},
-                ),
-                DropdownWidget(
-                  label: 'Test',
-                  value: 'No',
-                  items: yesNoOptions,
-                  onChanged: (_) {},
-                ),
-                DropdownWidget(
-                  label: 'Action',
-                  value: actionOptions.first,
-                  items: actionOptions,
-                  onChanged: (_) {},
-                ),
-              ],
-            ),
-          ),
-        );
+        return _zoneTile(i);
       },
     );
   }
@@ -717,4 +741,14 @@ class SounderConfig {
   TextEditingController dynamicController = TextEditingController();
 
   SounderConfig({required this.index});
+}
+
+class ZoneConfig {
+  final int index;
+
+  String enabled = 'No';
+  String test = 'No';
+  String action = 'Continuous';
+
+  ZoneConfig({required this.index});
 }
