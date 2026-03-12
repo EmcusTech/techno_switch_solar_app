@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
+import 'package:techno_switch_solar_app/utils/ext_out_equipment_mode_util.dart';
 import 'package:techno_switch_solar_app/utils/general_quipment_mode_util.dart';
 import 'package:techno_switch_solar_app/utils/input_mode_util.dart';
 import 'package:techno_switch_solar_app/utils/relay_mode_util.dart';
@@ -391,6 +392,25 @@ class BleProcess {
   final ValueNotifier<bool> isZoneThreeTest = ValueNotifier<bool>(false);
   final ValueNotifier<int> zoneThreeAction = ValueNotifier<int>(0);
 
+  //Sounder ext out variables
+  final ValueNotifier<bool> isExtOutOneEnabled = ValueNotifier<bool>(false);
+  final ValueNotifier<bool> isExtOutOneTest = ValueNotifier<bool>(false);
+  final ValueNotifier<int> extoutOneCountdownAction = ValueNotifier<int>(0);
+  final ValueNotifier<int> extoutOneHoldAction = ValueNotifier<int>(0);
+  final ValueNotifier<int> extoutOneReleaseAction = ValueNotifier<int>(0);
+
+  final ValueNotifier<bool> isExtOutTwoEnabled = ValueNotifier<bool>(false);
+  final ValueNotifier<bool> isExtOutTwoTest = ValueNotifier<bool>(false);
+  final ValueNotifier<int> extoutTwoCountdownAction = ValueNotifier<int>(0);
+  final ValueNotifier<int> extoutTwoHoldAction = ValueNotifier<int>(0);
+  final ValueNotifier<int> extoutTwoReleaseAction = ValueNotifier<int>(0);
+
+  final ValueNotifier<bool> isExtOutThreeEnabled = ValueNotifier<bool>(false);
+  final ValueNotifier<bool> isExtOutThreeTest = ValueNotifier<bool>(false);
+  final ValueNotifier<int> extoutThreeCountdownAction = ValueNotifier<int>(0);
+  final ValueNotifier<int> extoutThreeHoldAction = ValueNotifier<int>(0);
+  final ValueNotifier<int> extoutThreeReleaseAction = ValueNotifier<int>(0);
+
   // BleStates bleStateMachineState = BleStates.IDLE;
   BleStates bleCurrentState = BleStates.IDLE;
   DeviceConnectState deviceConnectState = DeviceConnectState.notConnected;
@@ -645,6 +665,7 @@ class BleProcess {
           checkForAccessKeyCmdRsp = 0;
           sounderSetupFetchRelayCommandStep = 1;
           sounderSetupFetchZoneCommandStep = 1;
+          sounderSetupFetchExtOutCommandStep = 1;
           processDesc.value = "Downloading Sounder (Relays) 1/3";
           startRxTimeout();
           await bleManager.sendSounderSetupRelayFetchCmdPkt(outputMaxZone: 1);
@@ -863,17 +884,67 @@ class BleProcess {
       } else if (rx.payload[12] == 0x1B) {
         print("We got the response for sounder setup fetch Ext Out");
         if (sounderSetupFetchExtOutCommandStep >= 1 &&
-            sounderSetupFetchExtOutCommandStep < 3) {
+            sounderSetupFetchExtOutCommandStep <= 3) {
           final nextExtOutNo = sounderSetupFetchExtOutCommandStep + 1;
           processDesc.value = "Downloading Sounder (Ext Out) $nextExtOutNo/3";
           print(
             "CMD $sounderSetupFetchExtOutCommandStep Validated -> send CMD$nextExtOutNo, keep polling",
           );
+          if (sounderSetupFetchExtOutCommandStep == 1) {
+            final ExtZoneEquipmentModeConfig config =
+                ExtZoneEquipmentModeCodec.fromHex(
+                  rx.payload[15].toRadixString(16),
+                );
+            final bool zoneEnabled =
+                config.zoneEnable == ExtZoneEquipmentEnable.enabled;
+            final bool zoneMode = config.zoneMode == ExtZoneEquipmentMode.test;
+
+            isExtOutOneEnabled.value = zoneEnabled;
+            isExtOutOneTest.value = zoneMode;
+            extoutOneCountdownAction.value = rx.payload[16];
+            extoutOneHoldAction.value = rx.payload[17];
+            extoutOneReleaseAction.value = rx.payload[18];
+          } else if (sounderSetupFetchExtOutCommandStep == 2) {
+            final ExtZoneEquipmentModeConfig config =
+                ExtZoneEquipmentModeCodec.fromHex(
+                  rx.payload[15].toRadixString(16),
+                );
+            final bool zoneEnabled =
+                config.zoneEnable == ExtZoneEquipmentEnable.enabled;
+            final bool zoneMode = config.zoneMode == ExtZoneEquipmentMode.test;
+            isExtOutTwoEnabled.value = zoneEnabled;
+            isExtOutTwoTest.value = zoneMode;
+            extoutTwoCountdownAction.value = rx.payload[16];
+            extoutTwoHoldAction.value = rx.payload[17];
+            extoutTwoReleaseAction.value = rx.payload[18];
+          } else if (sounderSetupFetchExtOutCommandStep == 3) {
+            final ExtZoneEquipmentModeConfig config =
+                ExtZoneEquipmentModeCodec.fromHex(
+                  rx.payload[15].toRadixString(16),
+                );
+            final bool zoneEnabled =
+                config.zoneEnable == ExtZoneEquipmentEnable.enabled;
+            final bool zoneMode = config.zoneMode == ExtZoneEquipmentMode.test;
+            isExtOutThreeEnabled.value = zoneEnabled;
+            isExtOutThreeTest.value = zoneMode;
+            extoutThreeCountdownAction.value = rx.payload[16];
+            extoutThreeHoldAction.value = rx.payload[17];
+            extoutThreeReleaseAction.value = rx.payload[18];
+          }
           sounderSetupFetchExtOutCommandStep = nextExtOutNo;
-          startRxTimeout();
-          await bleManager.sendSounderSetupExtOutFetchCmdPkt(
-            extMaxZone: nextExtOutNo,
-          );
+          if (sounderSetupFetchExtOutCommandStep <= 3) {
+            startRxTimeout();
+            await bleManager.sendSounderSetupExtOutFetchCmdPkt(
+              extMaxZone: nextExtOutNo,
+            );
+          } else {
+            bleManager.otaProcessState = OtaProcessState.notInUse;
+            checkForSounderSetupFetchRes = 0;
+            isSounderSetupFetchCommandActive.value = false;
+            isAccessKeyValid.value = true;
+            processDesc.value = "Sounder Setup Fetch Completed";
+            print("We got the response for sounder setup fetch");
+          }
         } else {
           bleManager.otaProcessState = OtaProcessState.notInUse;
           checkForSounderSetupFetchRes = 0;

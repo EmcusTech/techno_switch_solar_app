@@ -400,6 +400,29 @@ class BleManager {
   ValueNotifier<bool> get isZoneThreeEnabled => bleProcess.isZoneThreeEnabled;
   ValueNotifier<bool> get isZoneThreeTest => bleProcess.isZoneThreeTest;
   ValueNotifier<int> get zoneThreeAction => bleProcess.zoneThreeAction;
+  ValueNotifier<bool> get isExtOutOneEnabled => bleProcess.isExtOutOneEnabled;
+  ValueNotifier<bool> get isExtOutOneTest => bleProcess.isExtOutOneTest;
+  ValueNotifier<int> get extoutOneCountdownAction =>
+      bleProcess.extoutOneCountdownAction;
+  ValueNotifier<int> get extoutOneHoldAction => bleProcess.extoutOneHoldAction;
+  ValueNotifier<int> get extoutOneReleaseAction =>
+      bleProcess.extoutOneReleaseAction;
+  ValueNotifier<bool> get isExtOutTwoEnabled => bleProcess.isExtOutTwoEnabled;
+  ValueNotifier<bool> get isExtOutTwoTest => bleProcess.isExtOutTwoTest;
+  ValueNotifier<int> get extoutTwoCountdownAction =>
+      bleProcess.extoutTwoCountdownAction;
+  ValueNotifier<int> get extoutTwoHoldAction => bleProcess.extoutTwoHoldAction;
+  ValueNotifier<int> get extoutTwoReleaseAction =>
+      bleProcess.extoutTwoReleaseAction;
+  ValueNotifier<bool> get isExtOutThreeEnabled =>
+      bleProcess.isExtOutThreeEnabled;
+  ValueNotifier<bool> get isExtOutThreeTest => bleProcess.isExtOutThreeTest;
+  ValueNotifier<int> get extoutThreeCountdownAction =>
+      bleProcess.extoutThreeCountdownAction;
+  ValueNotifier<int> get extoutThreeHoldAction =>
+      bleProcess.extoutThreeHoldAction;
+  ValueNotifier<int> get extoutThreeReleaseAction =>
+      bleProcess.extoutThreeReleaseAction;
 
   void resetProtocolState() {
     // Packet counters

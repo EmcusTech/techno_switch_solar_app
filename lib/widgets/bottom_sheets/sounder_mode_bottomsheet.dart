@@ -58,8 +58,11 @@ class _SounderModeBottomSheetState extends State<SounderModeBottomSheet>
     'Off',
   ];
 
+  final functions = ['Ext. Snd 1', 'Ext. Snd 2', 'Man. Release Snd'];
+
   late List<SounderConfig> sounders;
   late List<ZoneConfig> zones;
+  late List<ExtOutConfig> extOuts;
 
   final TextEditingController delayController = TextEditingController(
     text: '0',
@@ -87,6 +90,8 @@ class _SounderModeBottomSheetState extends State<SounderModeBottomSheet>
     });
 
     zones = List.generate(3, (i) => ZoneConfig(index: i));
+
+    extOuts = List.generate(3, (i) => ExtOutConfig(index: i));
 
     _loadData();
   }
@@ -169,7 +174,35 @@ class _SounderModeBottomSheetState extends State<SounderModeBottomSheet>
     zoneThree.enabled = manager!.isZoneThreeEnabled.value ? 'Yes' : 'No';
     zoneThree.test = manager!.isZoneThreeTest.value ? 'Yes' : 'No';
     zoneThree.action = actionOptions[manager!.zoneThreeAction.value];
-    print("zone one action loaded: ${zoneOne.action}");
+
+    final extOutOne = extOuts[0];
+    final extOutTwo = extOuts[1];
+    final extOutThree = extOuts[2];
+
+    extOutOne.enabled = manager!.isExtOutOneEnabled.value ? 'Yes' : 'No';
+    extOutOne.test = manager!.isExtOutOneTest.value ? 'Yes' : 'No';
+    extOutOne.countdownAction =
+        extOutActionOptions[manager!.extoutOneCountdownAction.value];
+    extOutOne.holdAction =
+        extOutActionOptions[manager!.extoutOneHoldAction.value];
+    extOutOne.releaseAction =
+        extOutActionOptions[manager!.extoutOneReleaseAction.value];
+    extOutTwo.enabled = manager!.isExtOutTwoEnabled.value ? 'Yes' : 'No';
+    extOutTwo.test = manager!.isExtOutTwoTest.value ? 'Yes' : 'No';
+    extOutTwo.countdownAction =
+        extOutActionOptions[manager!.extoutTwoCountdownAction.value];
+    extOutTwo.holdAction =
+        extOutActionOptions[manager!.extoutTwoHoldAction.value];
+    extOutTwo.releaseAction =
+        extOutActionOptions[manager!.extoutTwoReleaseAction.value];
+    extOutThree.enabled = manager!.isExtOutThreeEnabled.value ? 'Yes' : 'No';
+    extOutThree.test = manager!.isExtOutThreeTest.value ? 'Yes' : 'No';
+    extOutThree.countdownAction =
+        extOutActionOptions[manager!.extoutThreeCountdownAction.value];
+    extOutThree.holdAction =
+        extOutActionOptions[manager!.extoutThreeHoldAction.value];
+    extOutThree.releaseAction =
+        extOutActionOptions[manager!.extoutThreeReleaseAction.value];
   }
 
   @override
@@ -483,58 +516,62 @@ class _SounderModeBottomSheetState extends State<SounderModeBottomSheet>
     );
   }
 
-  Widget _extOutTab() {
-    final functions = ['Ext. Snd 1', 'Ext. Snd 2', 'Man. Release Snd'];
+  Widget _extOutTile(int index) {
+    final extOut = extOuts[index];
 
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: _sectionContainer(
+        child: ExpansionTile(
+          tilePadding: const EdgeInsets.symmetric(horizontal: 16),
+          childrenPadding: const EdgeInsets.symmetric(horizontal: 16),
+          title: Text(
+            functions[index],
+            style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+          ),
+          children: [
+            _disabledField('Function', functions[index]),
+            DropdownWidget(
+              label: 'Enabled',
+              value: extOut.enabled,
+              items: yesNoOptions,
+              onChanged: (v) => setState(() => extOut.enabled = v),
+            ),
+            DropdownWidget(
+              label: 'Test',
+              value: extOut.test,
+              items: yesNoOptions,
+              onChanged: (v) => setState(() => extOut.enabled = v),
+            ),
+            DropdownWidget(
+              label: 'Countdown',
+              value: extOut.countdownAction,
+              items: extOutActionOptions,
+              onChanged: (v) => setState(() => extOut.countdownAction = v),
+            ),
+            DropdownWidget(
+              label: 'Hold',
+              value: extOut.holdAction,
+              items: extOutActionOptions,
+              onChanged: (v) => setState(() => extOut.holdAction = v),
+            ),
+            DropdownWidget(
+              label: 'Release',
+              value: extOut.releaseAction,
+              items: extOutActionOptions,
+              onChanged: (v) => setState(() => extOut.releaseAction = v),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _extOutTab() {
     return ListView.builder(
       itemCount: functions.length,
       itemBuilder: (_, i) {
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 16),
-          child: _sectionContainer(
-            child: ExpansionTile(
-              tilePadding: const EdgeInsets.symmetric(horizontal: 16),
-              childrenPadding: const EdgeInsets.symmetric(horizontal: 16),
-              title: Text(
-                functions[i],
-                style: GoogleFonts.inter(fontWeight: FontWeight.w600),
-              ),
-              children: [
-                _disabledField('Function', functions[i]),
-                DropdownWidget(
-                  label: 'Enabled',
-                  value: 'No',
-                  items: yesNoOptions,
-                  onChanged: (_) {},
-                ),
-                DropdownWidget(
-                  label: 'Test',
-                  value: 'No',
-                  items: yesNoOptions,
-                  onChanged: (_) {},
-                ),
-                DropdownWidget(
-                  label: 'Countdown',
-                  value: extOutActionOptions.first,
-                  items: extOutActionOptions,
-                  onChanged: (_) {},
-                ),
-                DropdownWidget(
-                  label: 'Hold',
-                  value: extOutActionOptions.first,
-                  items: extOutActionOptions,
-                  onChanged: (_) {},
-                ),
-                DropdownWidget(
-                  label: 'Release',
-                  value: extOutActionOptions.first,
-                  items: extOutActionOptions,
-                  onChanged: (_) {},
-                ),
-              ],
-            ),
-          ),
-        );
+        return _extOutTile(i);
       },
     );
   }
@@ -751,4 +788,16 @@ class ZoneConfig {
   String action = 'Continuous';
 
   ZoneConfig({required this.index});
+}
+
+class ExtOutConfig {
+  final int index;
+
+  String enabled = 'No';
+  String test = 'No';
+  String countdownAction = 'Continuous';
+  String holdAction = 'Continuous';
+  String releaseAction = 'Continuous';
+
+  ExtOutConfig({required this.index});
 }
