@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
+import 'package:techno_switch_solar_app/utils/general_quipment_mode_util.dart';
 import 'package:techno_switch_solar_app/utils/input_mode_util.dart';
 import 'package:techno_switch_solar_app/utils/relay_mode_util.dart';
 import 'package:techno_switch_solar_app/utils/ext_zone_mode_util.dart';
@@ -367,6 +368,14 @@ class BleProcess {
   final ValueNotifier<bool> isSounderThreeTest = ValueNotifier<bool>(false);
   final ValueNotifier<bool> isSounderThreeNormal = ValueNotifier<bool>(false);
 
+  //Sounder general variables
+  final ValueNotifier<bool> isSounderGeneralEnabled = ValueNotifier<bool>(
+    false,
+  );
+  final ValueNotifier<bool> isSounderGeneralTest = ValueNotifier<bool>(false);
+  final ValueNotifier<int> sounderGeneralAction = ValueNotifier<int>(0);
+  final ValueNotifier<bool> isSounderGeneralDelay = ValueNotifier<bool>(false);
+  final ValueNotifier<int> sounderGeneralDelay = ValueNotifier<int>(0);
   // BleStates bleStateMachineState = BleStates.IDLE;
   BleStates bleCurrentState = BleStates.IDLE;
   DeviceConnectState deviceConnectState = DeviceConnectState.notConnected;
@@ -758,6 +767,17 @@ class BleProcess {
         }
       } else if (rx.payload[12] == 0x14) {
         print("We got the response for sounder setup fetch General Equipment");
+        final GeneralEquipmentModeConfig config =
+            GeneralEquipmentModeCodec.fromHex(rx.payload[14].toRadixString(16));
+        final bool equipmentEnabled =
+            config.equipmentEnable == EquipmentEnable.enabled;
+        final bool equipmentMode = config.equipmentMode == EquipmentMode.test;
+        final bool sounderDelay = config.sounderDelay == SounderDelay.enabled;
+        isSounderGeneralEnabled.value = equipmentEnabled;
+        isSounderGeneralTest.value = equipmentMode;
+        isSounderGeneralDelay.value = sounderDelay;
+        sounderGeneralAction.value = rx.payload[15];
+        sounderGeneralDelay.value = rx.payload[19];
         processDesc.value = "Downloading Sounder (Zones) 1/3";
         startRxTimeout();
         await bleManager.sendSounderSetupZoneFetchCmdPkt(zoneMaxZone: 1);

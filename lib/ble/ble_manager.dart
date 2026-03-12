@@ -381,6 +381,16 @@ class BleManager {
   ValueNotifier<bool> get isSounderThreeNormal =>
       bleProcess.isSounderThreeNormal;
 
+  ValueNotifier<bool> get isSounderGeneralEnabled =>
+      bleProcess.isSounderGeneralEnabled;
+  ValueNotifier<bool> get isSounderGeneralTest =>
+      bleProcess.isSounderGeneralTest;
+  ValueNotifier<int> get sounderGeneralAction =>
+      bleProcess.sounderGeneralAction;
+  ValueNotifier<bool> get isSounderGeneralDelay =>
+      bleProcess.isSounderGeneralDelay;
+  ValueNotifier<int> get sounderGeneralDelay => bleProcess.sounderGeneralDelay;
+
   void resetProtocolState() {
     // Packet counters
     u8TxPktCnt = 0;

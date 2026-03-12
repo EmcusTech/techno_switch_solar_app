@@ -150,6 +150,8 @@ class _SounderModeBottomSheetState extends State<SounderModeBottomSheet>
         manager!.sounderTwoFunctionNo.value.toString();
     sounderThree.dynamicController.text =
         manager!.sounderThreeFunctionNo.value.toString();
+
+    delayController.text = manager!.sounderGeneralDelay.value.toString();
   }
 
   @override
@@ -394,19 +396,19 @@ class _SounderModeBottomSheetState extends State<SounderModeBottomSheet>
         _disabledField('Function', 'Fire Snd'),
         DropdownWidget(
           label: 'Enabled',
-          value: 'No',
+          value: yesNoOptions[manager!.isSounderGeneralEnabled.value ? 1 : 0],
           items: yesNoOptions,
           onChanged: (_) {},
         ),
         DropdownWidget(
           label: 'Test',
-          value: 'No',
+          value: yesNoOptions[manager!.isSounderGeneralTest.value ? 1 : 0],
           items: yesNoOptions,
           onChanged: (_) {},
         ),
         DropdownWidget(
           label: 'Action',
-          value: actionOptions.first,
+          value: actionOptions[manager!.sounderGeneralAction.value],
           items: actionOptions,
           onChanged: (_) {},
         ),
@@ -524,9 +526,9 @@ class _SounderModeBottomSheetState extends State<SounderModeBottomSheet>
         ),
         DropdownWidget(
           label: 'Delayed',
-          value: delayed,
+          value: yesNoOptions[manager!.isSounderGeneralDelay.value ? 1 : 0],
           items: yesNoOptions,
-          onChanged: (v) => setState(() => delayed = v),
+          onChanged: (_) {},
         ),
       ],
     );
