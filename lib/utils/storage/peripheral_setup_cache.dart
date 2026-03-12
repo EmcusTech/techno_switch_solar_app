@@ -8,17 +8,36 @@ class PeripheralSetupCache {
 
   static const String _keyPrefix = 'peripheral_';
 
-  static String _relayKey(String deviceId) => '${_keyPrefix}${deviceId}_relay';
-  static String _inputKey(String deviceId) => '${_keyPrefix}${deviceId}_input';
-  static String _zoneKey(String deviceId) => '${_keyPrefix}${deviceId}_zone';
-  static String _extOutKey(String deviceId) =>
-      '${_keyPrefix}${deviceId}_ext_out';
-  static String _radioKey(String deviceId) =>
-      '${_keyPrefix}${deviceId}_radio';
-  static String _moduleKey(String deviceId) =>
-      '${_keyPrefix}${deviceId}_module';
-  static String _lBusKey(String deviceId) =>
-      '${_keyPrefix}${deviceId}_l_bus';
+  static String _relayKey(String deviceId) => '$_keyPrefix${deviceId}_relay';
+  static String _inputKey(String deviceId) => '$_keyPrefix${deviceId}_input';
+  static String _zoneKey(String deviceId) => '$_keyPrefix${deviceId}_zone';
+  static String _extOutKey(String deviceId) => '$_keyPrefix${deviceId}_ext_out';
+  static String _radioKey(String deviceId) => '$_keyPrefix${deviceId}_radio';
+  static String _moduleKey(String deviceId) => '$_keyPrefix${deviceId}_module';
+  static String _lBusKey(String deviceId) => '$_keyPrefix${deviceId}_l_bus';
+  static String _sounderKey(String deviceId) =>
+      '$_keyPrefix${deviceId}_sounder';
+
+  // ───────────────── Sounder ─────────────────
+
+  static Future<void> saveSounderSetup(
+    String deviceId,
+    Map<String, dynamic> data,
+  ) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_sounderKey(deviceId), jsonEncode(data));
+  }
+
+  static Future<Map<String, dynamic>?> loadSounderSetup(String deviceId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(_sounderKey(deviceId));
+    if (raw == null) return null;
+    try {
+      return Map<String, dynamic>.from(jsonDecode(raw) as Map);
+    } catch (_) {
+      return null;
+    }
+  }
 
   // ───────────────── Relay ─────────────────
 
@@ -166,9 +185,7 @@ class PeripheralSetupCache {
       final decoded = jsonDecode(raw) as Map<String, dynamic>;
       final buses = decoded['buses'] as List<dynamic>?;
       if (buses == null) return null;
-      return buses
-          .map((e) => Map<String, dynamic>.from(e as Map))
-          .toList();
+      return buses.map((e) => Map<String, dynamic>.from(e as Map)).toList();
     } catch (_) {
       return null;
     }

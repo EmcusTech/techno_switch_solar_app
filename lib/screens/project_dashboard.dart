@@ -1895,12 +1895,12 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                         },
                         isZoneSetup: true,
                         mode: 'bottomsheet_download',
-                        // onDownloadComplete: _saveRadioCacheAndNotifyRefresh,
+                        onDownloadComplete: _saveSounderCacheAndNotifyRefresh,
                         downloadSuccessMessage: 'Sounder',
                       );
                     },
                     onApply: () {},
-                    refreshTrigger: _zoneRefreshTrigger,
+                    refreshTrigger: _sounderRefreshTrigger,
                   );
                 },
               ),
@@ -2088,8 +2088,11 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withOpacity(0.4),
       builder:
           (_) => SounderModeBottomSheet(
+            deviceId: deviceId,
             onDownload: onDownload,
             onApply: onApply,
             refreshTrigger: refreshTrigger,
@@ -2315,6 +2318,83 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
       'isSolar': m.bleProcess.isExtOutApplyButtonActive.value,
     });
     _extOutRefreshTrigger.value++;
+  }
+
+  Future<void> _saveSounderCacheAndNotifyRefresh() async {
+    final m = _bleManager;
+    await PeripheralSetupCache.saveSounderSetup(_selectedDevice.id, {
+      's1': {
+        'enabled': m.isSounderOneEnabled.value,
+        'test': m.isSounderOneTest.value,
+        'normal': m.isSounderOneNormal.value,
+        'outputText': m.sounderOneOutputText.value,
+        'group': m.sounderOneRelayFunctionGroup.value,
+        'function': m.sounderOneRelayFunction.value,
+        'functionNo': m.sounderOneFunctionNo.value,
+      },
+      's2': {
+        'enabled': m.isSounderTwoEnabled.value,
+        'test': m.isSounderTwoTest.value,
+        'normal': m.isSounderTwoNormal.value,
+        'outputText': m.sounderTwoOutputText.value,
+        'group': m.sounderTwoRelayFunctionGroup.value,
+        'function': m.sounderTwoRelayFunction.value,
+        'functionNo': m.sounderTwoFunctionNo.value,
+      },
+      's3': {
+        'enabled': m.isSounderThreeEnabled.value,
+        'test': m.isSounderThreeTest.value,
+        'normal': m.isSounderThreeNormal.value,
+        'outputText': m.sounderThreeOutputText.value,
+        'group': m.sounderThreeRelayFunctionGroup.value,
+        'function': m.sounderThreeRelayFunction.value,
+        'functionNo': m.sounderThreeFunctionNo.value,
+      },
+      'z1': {
+        'enabled': m.isZoneOneEnabled.value,
+        'test': m.isZoneOneTest.value,
+        'action': m.zoneOneAction.value,
+      },
+      'z2': {
+        'enabled': m.isZoneTwoEnabled.value,
+        'test': m.isZoneTwoTest.value,
+        'action': m.zoneTwoAction.value,
+      },
+      'z3': {
+        'enabled': m.isZoneThreeEnabled.value,
+        'test': m.isZoneThreeTest.value,
+        'action': m.zoneThreeAction.value,
+      },
+      'e1': {
+        'enabled': m.isExtOutOneEnabled.value,
+        'test': m.isExtOutOneTest.value,
+        'countdownAction': m.extoutOneCountdownAction.value,
+        'holdAction': m.extoutOneHoldAction.value,
+        'releaseAction': m.extoutOneReleaseAction.value,
+      },
+      'e2': {
+        'enabled': m.isExtOutTwoEnabled.value,
+        'test': m.isExtOutTwoTest.value,
+        'countdownAction': m.extoutTwoCountdownAction.value,
+        'holdAction': m.extoutTwoHoldAction.value,
+        'releaseAction': m.extoutTwoReleaseAction.value,
+      },
+      'e3': {
+        'enabled': m.isExtOutThreeEnabled.value,
+        'test': m.isExtOutThreeTest.value,
+        'countdownAction': m.extoutThreeCountdownAction.value,
+        'holdAction': m.extoutThreeHoldAction.value,
+        'releaseAction': m.extoutThreeReleaseAction.value,
+      },
+      'general': {
+        'enabled': m.isSounderGeneralEnabled.value,
+        'test': m.isSounderGeneralTest.value,
+        'action': m.sounderGeneralAction.value,
+        'delay': m.sounderGeneralDelay.value,
+        'delayed': m.isSounderGeneralDelay.value,
+      },
+    });
+    _sounderRefreshTrigger.value++;
   }
 
   Future<void> _saveRadioCacheAndNotifyRefresh() async {
