@@ -1190,6 +1190,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     bool? isInputSetup = false,
     bool? isRelaySetup = false,
     bool? isZoneSetup = false,
+    bool? isSounderSetup = false,
     String? mode,
     Future<void> Function()? onDownloadComplete,
     String? downloadSuccessMessage,
@@ -1308,6 +1309,8 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                                     ? 'Relays'
                                     : isZoneSetup == true
                                     ? 'Zones'
+                                    : isSounderSetup == true
+                                    ? 'Sounders'
                                     : 'Configuration');
                             showDownloadSuccessDialog(context, message);
                           }
@@ -1893,13 +1896,25 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                               .value = true;
                           bleController.startSounderSetupFetch();
                         },
-                        isZoneSetup: true,
+                        isSounderSetup: true,
                         mode: 'bottomsheet_download',
                         onDownloadComplete: _saveSounderCacheAndNotifyRefresh,
                         downloadSuccessMessage: 'Sounder',
                       );
                     },
-                    onApply: () {},
+                    onApply: () {
+                      showPasswordPopup(
+                        onCall: () {
+                          ble
+                              .bleProcess
+                              .isSounderSetupApplyCommandActive
+                              .value = true;
+                          bleController.startSounderSetupApply();
+                        },
+                        isSounderSetup: true,
+                        mode: 'bottomsheet_apply',
+                      );
+                    },
                     refreshTrigger: _sounderRefreshTrigger,
                   );
                 },
@@ -1975,7 +1990,6 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
               _peripheralTile(
                 peripheralName: 'L-Bus',
                 iconPath: 'assets/svgs/peripheral_l_bus_icon.svg',
-                isDisabled: true,
                 onTap: () {
                   if (_selectedDevice.manufacturerData.isNotEmpty &&
                       _selectedDevice.manufacturerData.last == 1) {

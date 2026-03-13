@@ -49,6 +49,10 @@ class BleProcess {
   int sounderSetupFetchRelayCommandStep = 0; // 1, 2, 3
   int sounderSetupFetchZoneCommandStep = 1; // 1, 2, 3
   int sounderSetupFetchExtOutCommandStep = 1; // 1, 2, 3
+  int sounderSetupApplyRelayCommandStep = 0; // 1, 2, 3
+  int sounderSetupApplyGeneralCommandStep = 0; // 1, 2, 3
+  int sounderSetupApplyZoneCommandStep = 0; // 1, 2, 3
+  int sounderSetupApplyExtOutCommandStep = 0; // 1, 2, 3
   int validEventLogNum = 0;
   int read1000Logs = 0;
   bool logRetreivalEnded = false;
@@ -386,6 +390,7 @@ class BleProcess {
   final ValueNotifier<bool> isSounderGeneralEnabled = ValueNotifier<bool>(
     false,
   );
+  final ValueNotifier<String> sounderGeneralMode = ValueNotifier<String>("");
   final ValueNotifier<bool> isSounderGeneralTest = ValueNotifier<bool>(false);
   final ValueNotifier<int> sounderGeneralAction = ValueNotifier<int>(0);
   final ValueNotifier<bool> isSounderGeneralDelay = ValueNotifier<bool>(false);
@@ -683,6 +688,7 @@ class BleProcess {
           sounderSetupFetchRelayCommandStep = 1;
           sounderSetupFetchZoneCommandStep = 1;
           sounderSetupFetchExtOutCommandStep = 1;
+          sounderSetupApplyRelayCommandStep = 1;
           processDesc.value = "Downloading Sounder (Relays) 1/3";
           startRxTimeout();
           await bleManager.sendSounderSetupRelayFetchCmdPkt(outputMaxZone: 1);
@@ -995,6 +1001,28 @@ class BleProcess {
         "Checking Sounder Setup Apply CMD RSP Value ${rx.payload[12]}:::::${rx.payload[12] == 0x02} ",
       );
       if (rx.payload[12] == 0x02) {
+        if (sounderSetupApplyRelayCommandStep >= 1 &&
+            sounderSetupApplyRelayCommandStep <= 3) {
+          final nextRelayNo = sounderSetupApplyRelayCommandStep + 1;
+          processDesc.value = "Applying Sounder (Relays) $nextRelayNo/3";
+          print(
+            "CMD $sounderSetupApplyRelayCommandStep Validated -> send CMD$nextRelayNo, keep polling",
+          );
+          sounderSetupApplyRelayCommandStep = nextRelayNo;
+          if (sounderSetupApplyRelayCommandStep <= 3) {
+            startRxTimeout();
+            await bleManager.sendSounderSetupRelayApplyCmdPkt(
+              outputMaxZone: nextRelayNo,
+            );
+          } else {
+            print("end reached (inner), $sounderSetupApplyRelayCommandStep");
+            sounderSetupApplyGeneralCommandStep = 1;
+            startRxTimeout();
+            await bleManager.sendSounderSetupGeneralApplyCmdPkt();
+          }
+        } else if (sounderSetupApplyGeneralCommandStep == 1) {
+          print("Entered General Apply Command Step");
+        }
         print("We got the response for sounder setup apply");
       } else {
         print("Sounder Setup Apply Cmd Response not found, polling again");

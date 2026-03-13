@@ -433,6 +433,7 @@ class BleManager {
       bleProcess.sounderTwoRelayOutputMode;
   ValueNotifier<String> get sounderThreeRelayOutputMode =>
       bleProcess.sounderThreeRelayOutputMode;
+  ValueNotifier<String> get sounderGeneralMode => bleProcess.sounderGeneralMode;
 
   void resetProtocolState() {
     // Packet counters
@@ -3788,17 +3789,26 @@ class BleManager {
     String outputText = "";
     int outputNo = 0;
     String outputMode = "";
+    int function = 0;
+    int group = 0;
     if (outputMaxZone == 1) {
       outputText = sounderOneOutputText.value;
       outputNo = sounderOneFunctionNo.value;
+      function = sounderOneRelayFunction.value;
+      group = sounderOneRelayFunctionGroup.value;
+      print("Sounder One Function No: $outputNo");
       outputMode = sounderOneRelayOutputMode.value;
     } else if (outputMaxZone == 2) {
       outputText = sounderTwoOutputText.value;
       outputNo = sounderTwoFunctionNo.value;
+      function = sounderTwoRelayFunction.value;
+      group = sounderTwoRelayFunctionGroup.value;
       outputMode = sounderTwoRelayOutputMode.value;
     } else if (outputMaxZone == 3) {
       outputText = sounderThreeOutputText.value;
       outputNo = sounderThreeFunctionNo.value;
+      function = sounderThreeRelayFunction.value;
+      group = sounderThreeRelayFunctionGroup.value;
       outputMode = sounderThreeRelayOutputMode.value;
     }
     final List<int> outputTextBytes = outputText.codeUnits;
@@ -3830,7 +3840,9 @@ class BleManager {
     u8_pkt[20] = outputMaxZone;
     u8_pkt[21] = 0x01;
     u8_pkt[22] = outputNo;
-    u8_pkt[23] = u8_pkt[25] = outputTextLength & 0xFF;
+    u8_pkt[23] = group;
+    u8_pkt[24] = function;
+    u8_pkt[25] = outputTextLength & 0xFF;
 
     // Compute checksum on first 213 bytes
     int checksum = toolsFletcherChecksum(u8_pkt.sublist(0, 213));
@@ -3841,6 +3853,43 @@ class BleManager {
 
     print(
       "TX/RX: TRANSMIT: Sounder Setup Relay $outputMaxZone Fetch Command time: ${DateTime.now().toIso8601String()}, packet: ${u8_pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+    );
+
+    await sendSmallDataFrame(0x1000, 216, u8_pkt);
+  }
+
+  Future<void> sendSounderSetupGeneralApplyCmdPkt() async {
+    // Create 216-byte buffer
+    Uint8List u8_pkt = Uint8List(216);
+
+    // Update global counters
+    u8TxPktCnt += 1;
+
+    u8_pkt[0] = 0xFE;
+    u8_pkt[1] = 0x01;
+    u8_pkt[2] = 0x00;
+
+    u8_pkt[3] = 0x01; // pkt type
+    u8_pkt[4] = u8TxPktCnt & 0xFF; // tx pkt num
+    u8_pkt[5] = u8RxPktCnt & 0xFF; // rx pkt num
+    u8_pkt[6] = 0x00; // network number
+    u8_pkt[10] = 0x81; // mode
+    u8_pkt[11] = 0x00; // socket number
+    u8_pkt[12] = 0x14; // command
+    u8_pkt[13] = 0x00;
+    u8_pkt[14] = int.parse(sounderGeneralMode.value, radix: 16); // general mode
+    u8_pkt[15] = sounderGeneralAction.value; // general action
+    u8_pkt[18] = sounderGeneralDelay.value; // general delay
+
+    // Compute checksum on first 213 bytes
+    int checksum = toolsFletcherChecksum(u8_pkt.sublist(0, 213));
+
+    u8_pkt[213] = (checksum >> 8) & 0xFF;
+    u8_pkt[214] = checksum & 0xFF;
+    u8_pkt[215] = 0xFD;
+
+    print(
+      "TX/RX: TRANSMIT: Sounder Setup General Fetch Command time: ${DateTime.now().toIso8601String()}, packet: ${u8_pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
     );
 
     await sendSmallDataFrame(0x1000, 216, u8_pkt);

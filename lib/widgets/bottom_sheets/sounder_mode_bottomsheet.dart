@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
+import 'package:techno_switch_solar_app/utils/relay_mode_util.dart';
 import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/widgets/dropdown.dart';
 
@@ -878,6 +879,10 @@ class _SounderModeBottomSheetState extends State<SounderModeBottomSheet>
     );
   }
 
+  int returnIndex(String value, List<String> list) {
+    return list.indexOf(value);
+  }
+
   Widget _downloadButton() {
     return SizedBox(
       height: 48,
@@ -917,9 +922,70 @@ class _SounderModeBottomSheetState extends State<SounderModeBottomSheet>
                   FocusManager.instance.primaryFocus?.unfocus();
                   for (int i = 0; i < 3; i++) {
                     final sounder = sounders[i];
-                    final zone = zones[i];
-                    final extOut = extOuts[i];
+
+                    bool isEnabled = sounder.enabled == 'Yes';
+                    bool isTest = sounder.test == 'Yes';
+                    bool isNormal = sounder.type == 'Normal';
+                    String outputText = sounder.outputController.text;
+                    int functionNo =
+                        int.tryParse(sounder.dynamicController.text) ?? 0;
+                    int groupIndex = returnIndex(sounder.group, groupOptions);
+                    int functionIndex = returnIndex(
+                      sounder.function,
+                      functionOptionsMap[sounder.group]!,
+                    );
+
+                    final config = OutputModeConfig(
+                      outputEnable:
+                          isEnabled
+                              ? OutputEnable.enabled
+                              : OutputEnable.disabled,
+                      outputMode: isTest ? OutputMode.test : OutputMode.normal,
+                      supervisionMode:
+                          isNormal
+                              ? SupervisionMode.normal
+                              : SupervisionMode.mtl5525,
+                    );
+                    final String hexValue = OutputModeCodec.encodeHex(config);
+
+                    switch (i) {
+                      case 0:
+                        manager!.sounderOneRelayOutputMode.value = hexValue;
+                        manager!.sounderOneRelayFunctionGroup.value =
+                            groupIndex;
+                        manager!.sounderOneRelayFunction.value = functionIndex;
+                        manager!.sounderOneFunctionNo.value = functionNo;
+                        manager!.sounderOneOutputText.value = outputText;
+                        manager!.isSounderOneEnabled.value = isEnabled;
+                        manager!.isSounderOneTest.value = isTest;
+                        manager!.isSounderOneNormal.value = isNormal;
+                        break;
+                      case 1:
+                        manager!.sounderTwoRelayOutputMode.value = hexValue;
+                        manager!.sounderTwoRelayFunctionGroup.value =
+                            groupIndex;
+                        manager!.sounderTwoRelayFunction.value = functionIndex;
+                        manager!.sounderTwoFunctionNo.value = functionNo;
+                        manager!.sounderTwoOutputText.value = outputText;
+                        manager!.isSounderTwoEnabled.value = isEnabled;
+                        manager!.isSounderTwoTest.value = isTest;
+                        manager!.isSounderTwoNormal.value = isNormal;
+                        break;
+                      case 2:
+                        manager!.sounderThreeRelayOutputMode.value = hexValue;
+                        manager!.sounderThreeRelayFunctionGroup.value =
+                            groupIndex;
+                        manager!.sounderThreeRelayFunction.value =
+                            functionIndex;
+                        manager!.sounderThreeFunctionNo.value = functionNo;
+                        manager!.sounderThreeOutputText.value = outputText;
+                        manager!.isSounderThreeEnabled.value = isEnabled;
+                        manager!.isSounderThreeTest.value = isTest;
+                        manager!.isSounderThreeNormal.value = isNormal;
+                        break;
+                    }
                   }
+
                   widget.onApply();
                 }
                 : null,
