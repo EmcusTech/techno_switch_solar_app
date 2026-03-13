@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
+import 'package:techno_switch_solar_app/utils/general_quipment_mode_util.dart';
 import 'package:techno_switch_solar_app/utils/relay_mode_util.dart';
 import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/widgets/dropdown.dart';
@@ -986,6 +987,27 @@ class _SounderModeBottomSheetState extends State<SounderModeBottomSheet>
                     }
                   }
 
+                  // apply general tab
+                  final generalConfig = GeneralEquipmentModeConfig(
+                    equipmentEnable:
+                        manager!.isSounderGeneralEnabled.value
+                            ? EquipmentEnable.enabled
+                            : EquipmentEnable.disabled,
+                    equipmentMode:
+                        manager!.isSounderGeneralTest.value
+                            ? EquipmentMode.test
+                            : EquipmentMode.normal,
+                    sounderDelay:
+                        manager!.isSounderGeneralDelay.value
+                            ? SounderDelay.enabled
+                            : SounderDelay.disabled,
+                  );
+                  manager!.sounderGeneralMode.value =
+                      GeneralEquipmentModeCodec.encodeHex(generalConfig);
+                  manager!.sounderGeneralDelay.value =
+                      int.tryParse(delayController.text) ?? 0;
+
+                  // apply zone tab
                   widget.onApply();
                 }
                 : null,

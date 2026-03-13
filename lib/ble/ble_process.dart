@@ -400,15 +400,17 @@ class BleProcess {
   final ValueNotifier<bool> isZoneOneEnabled = ValueNotifier<bool>(false);
   final ValueNotifier<bool> isZoneOneTest = ValueNotifier<bool>(false);
   final ValueNotifier<int> zoneOneAction = ValueNotifier<int>(0);
+  final ValueNotifier<String> sounderZoneOneMode = ValueNotifier<String>("");
 
   final ValueNotifier<bool> isZoneTwoEnabled = ValueNotifier<bool>(false);
   final ValueNotifier<bool> isZoneTwoTest = ValueNotifier<bool>(false);
   final ValueNotifier<int> zoneTwoAction = ValueNotifier<int>(0);
+  final ValueNotifier<String> sounderZoneTwoMode = ValueNotifier<String>("");
 
   final ValueNotifier<bool> isZoneThreeEnabled = ValueNotifier<bool>(false);
   final ValueNotifier<bool> isZoneThreeTest = ValueNotifier<bool>(false);
   final ValueNotifier<int> zoneThreeAction = ValueNotifier<int>(0);
-
+  final ValueNotifier<String> sounderZoneThreeMode = ValueNotifier<String>("");
   //Sounder ext out variables
   final ValueNotifier<bool> isExtOutOneEnabled = ValueNotifier<bool>(false);
   final ValueNotifier<bool> isExtOutOneTest = ValueNotifier<bool>(false);
@@ -1021,7 +1023,23 @@ class BleProcess {
             await bleManager.sendSounderSetupGeneralApplyCmdPkt();
           }
         } else if (sounderSetupApplyGeneralCommandStep == 1) {
+          processDesc.value = "Applying Sounder (General)";
           print("Entered General Apply Command Step");
+          sounderSetupApplyZoneCommandStep = 1;
+          startRxTimeout();
+          await bleManager.sendSounderSetupZoneApplyCmdPkt(zoneMaxZone: 1);
+        } else if (sounderSetupApplyZoneCommandStep == 1) {
+          processDesc.value = "Applying Sounder (Zones) 2/3";
+          print("Entered Zones Apply Command Step");
+          sounderSetupApplyZoneCommandStep = 2;
+          startRxTimeout();
+          await bleManager.sendSounderSetupZoneApplyCmdPkt(zoneMaxZone: 2);
+        } else if (sounderSetupApplyZoneCommandStep == 2) {
+          processDesc.value = "Applying Sounder (Zones) 3/3";
+          print("Entered Zones Apply Command Step");
+          sounderSetupApplyZoneCommandStep = 3;
+          startRxTimeout();
+          await bleManager.sendSounderSetupZoneApplyCmdPkt(zoneMaxZone: 3);
         }
         print("We got the response for sounder setup apply");
       } else {

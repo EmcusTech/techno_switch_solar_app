@@ -435,6 +435,11 @@ class BleManager {
       bleProcess.sounderThreeRelayOutputMode;
   ValueNotifier<String> get sounderGeneralMode => bleProcess.sounderGeneralMode;
 
+  ValueNotifier<String> get sounderZoneOneMode => bleProcess.sounderZoneOneMode;
+  ValueNotifier<String> get sounderZoneTwoMode => bleProcess.sounderZoneTwoMode;
+  ValueNotifier<String> get sounderZoneThreeMode =>
+      bleProcess.sounderZoneThreeMode;
+
   void resetProtocolState() {
     // Packet counters
     u8TxPktCnt = 0;
@@ -3879,7 +3884,7 @@ class BleManager {
     u8_pkt[13] = 0x00;
     u8_pkt[14] = int.parse(sounderGeneralMode.value, radix: 16); // general mode
     u8_pkt[15] = sounderGeneralAction.value; // general action
-    u8_pkt[18] = sounderGeneralDelay.value; // general delay
+    u8_pkt[19] = sounderGeneralDelay.value; // general delay
 
     // Compute checksum on first 213 bytes
     int checksum = toolsFletcherChecksum(u8_pkt.sublist(0, 213));
@@ -3890,6 +3895,58 @@ class BleManager {
 
     print(
       "TX/RX: TRANSMIT: Sounder Setup General Fetch Command time: ${DateTime.now().toIso8601String()}, packet: ${u8_pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+    );
+
+    await sendSmallDataFrame(0x1000, 216, u8_pkt);
+  }
+
+  Future<void> sendSounderSetupZoneApplyCmdPkt({
+    required int zoneMaxZone,
+  }) async {
+    // Create 216-byte buffer
+    Uint8List u8_pkt = Uint8List(216);
+
+    String zoneMode = "";
+    int zoneAction = 0;
+    if (zoneMaxZone == 1) {
+      zoneMode = sounderZoneOneMode.value;
+      zoneAction = zoneOneAction.value;
+    } else if (zoneMaxZone == 2) {
+      zoneMode = sounderZoneTwoMode.value;
+      zoneAction = zoneTwoAction.value;
+    } else if (zoneMaxZone == 3) {
+      zoneMode = sounderZoneThreeMode.value;
+      zoneAction = zoneThreeAction.value;
+    }
+
+    // Update global counters
+    u8TxPktCnt += 1;
+
+    u8_pkt[0] = 0xFE;
+    u8_pkt[1] = 0x01;
+    u8_pkt[2] = 0x00;
+
+    u8_pkt[3] = 0x01; // pkt type
+    u8_pkt[4] = u8TxPktCnt & 0xFF; // tx pkt num
+    u8_pkt[5] = u8RxPktCnt & 0xFF; // rx pkt num
+    u8_pkt[6] = 0x00; // network number
+    u8_pkt[10] = 0x81; // mode
+    u8_pkt[11] = 0x00; // socket number
+    u8_pkt[12] = 0x19; // command
+    u8_pkt[13] = zoneMaxZone; // ext max zone
+    u8_pkt[14] = 0x00;
+    u8_pkt[15] = int.parse(zoneMode, radix: 16); // zone mode
+    u8_pkt[16] = zoneAction;
+    u8_pkt[20] = sounderGeneralDelay.value;
+    // Compute checksum on first 213 bytes
+    int checksum = toolsFletcherChecksum(u8_pkt.sublist(0, 213));
+
+    u8_pkt[213] = (checksum >> 8) & 0xFF;
+    u8_pkt[214] = checksum & 0xFF;
+    u8_pkt[215] = 0xFD;
+
+    print(
+      "TX/RX: TRANSMIT: Sounder Setup Zone $zoneMaxZone Fetch Command time: ${DateTime.now().toIso8601String()}, packet: ${u8_pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
     );
 
     await sendSmallDataFrame(0x1000, 216, u8_pkt);
