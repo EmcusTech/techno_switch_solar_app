@@ -7,6 +7,7 @@ import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/utils/general_quipment_mode_util.dart';
 import 'package:techno_switch_solar_app/utils/relay_mode_util.dart';
+import 'package:techno_switch_solar_app/utils/zone_equipment_mode_util.dart';
 import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/widgets/dropdown.dart';
 
@@ -1008,6 +1009,47 @@ class _SounderModeBottomSheetState extends State<SounderModeBottomSheet>
                       int.tryParse(delayController.text) ?? 0;
 
                   // apply zone tab
+                  for (int i = 0; i < 3; i++) {
+                    final zone = zones[i];
+                    bool isEnabled = zone.enabled == 'Yes';
+                    bool isTest = zone.test == 'Yes';
+                    int actionIndex = returnIndex(zone.action, actionOptions);
+                    final zoneConfig = ZoneEquipmentModeConfig(
+                      zoneEnable:
+                          isEnabled
+                              ? ZoneEquipmentEnable.enabled
+                              : ZoneEquipmentEnable.disabled,
+                      zoneMode:
+                          isTest
+                              ? ZoneEquipmentMode.test
+                              : ZoneEquipmentMode.normal,
+                      sounderDelay: ZoneSounderDelay.disabled,
+                    );
+                    final String zoneHexValue =
+                        ZoneEquipmentModeCodec.encodeHex(zoneConfig);
+
+                    switch (i) {
+                      case 0:
+                        manager!.sounderZoneOneMode.value = zoneHexValue;
+                        manager!.isZoneOneEnabled.value = isEnabled;
+                        manager!.isZoneOneTest.value = isTest;
+                        manager!.zoneOneAction.value = actionIndex;
+                        break;
+                      case 1:
+                        manager!.sounderZoneTwoMode.value = zoneHexValue;
+                        manager!.isZoneTwoEnabled.value = isEnabled;
+                        manager!.isZoneTwoTest.value = isTest;
+                        manager!.zoneTwoAction.value = actionIndex;
+                        break;
+                      case 2:
+                        manager!.sounderZoneThreeMode.value = zoneHexValue;
+                        manager!.isZoneThreeEnabled.value = isEnabled;
+                        manager!.isZoneThreeTest.value = isTest;
+                        manager!.zoneThreeAction.value = actionIndex;
+                        break;
+                    }
+                  }
+
                   widget.onApply();
                 }
                 : null,

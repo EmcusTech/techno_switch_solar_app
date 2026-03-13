@@ -1025,19 +1025,18 @@ class BleProcess {
         } else if (sounderSetupApplyGeneralCommandStep == 1) {
           processDesc.value = "Applying Sounder (General)";
           print("Entered General Apply Command Step");
-          sounderSetupApplyZoneCommandStep = 1;
-          startRxTimeout();
-          await bleManager.sendSounderSetupZoneApplyCmdPkt(zoneMaxZone: 1);
-        } else if (sounderSetupApplyZoneCommandStep == 1) {
-          processDesc.value = "Applying Sounder (Zones) 2/3";
-          print("Entered Zones Apply Command Step");
           sounderSetupApplyZoneCommandStep = 2;
           startRxTimeout();
-          await bleManager.sendSounderSetupZoneApplyCmdPkt(zoneMaxZone: 2);
+          await bleManager.sendSounderSetupZoneApplyCmdPkt(zoneMaxZone: 1);
         } else if (sounderSetupApplyZoneCommandStep == 2) {
-          processDesc.value = "Applying Sounder (Zones) 3/3";
+          processDesc.value = "Applying Sounder (Zones) 2/3";
           print("Entered Zones Apply Command Step");
           sounderSetupApplyZoneCommandStep = 3;
+          startRxTimeout();
+          await bleManager.sendSounderSetupZoneApplyCmdPkt(zoneMaxZone: 2);
+        } else if (sounderSetupApplyZoneCommandStep == 3) {
+          processDesc.value = "Applying Sounder (Zones) 3/3";
+          print("Entered Zones Apply Command Step");
           startRxTimeout();
           await bleManager.sendSounderSetupZoneApplyCmdPkt(zoneMaxZone: 3);
         }
