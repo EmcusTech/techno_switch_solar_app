@@ -440,6 +440,13 @@ class BleManager {
   ValueNotifier<String> get sounderZoneThreeMode =>
       bleProcess.sounderZoneThreeMode;
 
+  ValueNotifier<String> get sounderExtOutOneMode =>
+      bleProcess.sounderExtOutOneMode;
+  ValueNotifier<String> get sounderExtOutTwoMode =>
+      bleProcess.sounderExtOutTwoMode;
+  ValueNotifier<String> get sounderExtOutThreeMode =>
+      bleProcess.sounderExtOutThreeMode;
+
   void resetProtocolState() {
     // Packet counters
     u8TxPktCnt = 0;
@@ -3958,6 +3965,27 @@ class BleManager {
     // Create 216-byte buffer
     Uint8List u8_pkt = Uint8List(216);
 
+    String extOutMode = "";
+    int extOutCountdownAction = 0;
+    int extOutHoldAction = 0;
+    int extOutReleaseAction = 0;
+    if (extMaxZone == 1) {
+      extOutMode = sounderExtOutOneMode.value;
+      extOutCountdownAction = extoutOneCountdownAction.value;
+      extOutHoldAction = extoutOneHoldAction.value;
+      extOutReleaseAction = extoutOneReleaseAction.value;
+    } else if (extMaxZone == 2) {
+      extOutMode = sounderExtOutTwoMode.value;
+      extOutCountdownAction = extoutTwoCountdownAction.value;
+      extOutHoldAction = extoutTwoHoldAction.value;
+      extOutReleaseAction = extoutTwoReleaseAction.value;
+    } else if (extMaxZone == 3) {
+      extOutMode = sounderExtOutThreeMode.value;
+      extOutCountdownAction = extoutThreeCountdownAction.value;
+      extOutHoldAction = extoutThreeHoldAction.value;
+      extOutReleaseAction = extoutThreeReleaseAction.value;
+    }
+
     // Update global counters
     u8TxPktCnt += 1;
 
@@ -3974,6 +4002,10 @@ class BleManager {
     u8_pkt[12] = 0x1B; // command
     u8_pkt[13] = 0x01;
     u8_pkt[14] = extMaxZone; // ext max zone
+    u8_pkt[15] = int.parse(extOutMode, radix: 16); // ext out mode
+    u8_pkt[16] = extOutCountdownAction;
+    u8_pkt[17] = extOutHoldAction;
+    u8_pkt[18] = extOutReleaseAction;
 
     // Compute checksum on first 213 bytes
     int checksum = toolsFletcherChecksum(u8_pkt.sublist(0, 213));

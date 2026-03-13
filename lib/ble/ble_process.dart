@@ -421,18 +421,23 @@ class BleProcess {
   final ValueNotifier<int> extoutOneCountdownAction = ValueNotifier<int>(0);
   final ValueNotifier<int> extoutOneHoldAction = ValueNotifier<int>(0);
   final ValueNotifier<int> extoutOneReleaseAction = ValueNotifier<int>(0);
+  final ValueNotifier<String> sounderExtOutOneMode = ValueNotifier<String>("");
 
   final ValueNotifier<bool> isExtOutTwoEnabled = ValueNotifier<bool>(false);
   final ValueNotifier<bool> isExtOutTwoTest = ValueNotifier<bool>(false);
   final ValueNotifier<int> extoutTwoCountdownAction = ValueNotifier<int>(0);
   final ValueNotifier<int> extoutTwoHoldAction = ValueNotifier<int>(0);
   final ValueNotifier<int> extoutTwoReleaseAction = ValueNotifier<int>(0);
+  final ValueNotifier<String> sounderExtOutTwoMode = ValueNotifier<String>("");
 
   final ValueNotifier<bool> isExtOutThreeEnabled = ValueNotifier<bool>(false);
   final ValueNotifier<bool> isExtOutThreeTest = ValueNotifier<bool>(false);
   final ValueNotifier<int> extoutThreeCountdownAction = ValueNotifier<int>(0);
   final ValueNotifier<int> extoutThreeHoldAction = ValueNotifier<int>(0);
   final ValueNotifier<int> extoutThreeReleaseAction = ValueNotifier<int>(0);
+  final ValueNotifier<String> sounderExtOutThreeMode = ValueNotifier<String>(
+    "",
+  );
 
   // BleStates bleStateMachineState = BleStates.IDLE;
   BleStates bleCurrentState = BleStates.IDLE;

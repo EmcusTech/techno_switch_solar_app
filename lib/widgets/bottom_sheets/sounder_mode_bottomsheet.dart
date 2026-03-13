@@ -7,6 +7,7 @@ import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/utils/general_quipment_mode_util.dart';
 import 'package:techno_switch_solar_app/utils/relay_mode_util.dart';
+import 'package:techno_switch_solar_app/utils/ext_out_equipment_mode_util.dart';
 import 'package:techno_switch_solar_app/utils/zone_equipment_mode_util.dart';
 import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/widgets/dropdown.dart';
@@ -1051,6 +1052,66 @@ class _SounderModeBottomSheetState extends State<SounderModeBottomSheet>
                   }
 
                   // apply ext out tab
+                  for (int i = 0; i < 3; i++) {
+                    final extOut = extOuts[i];
+                    bool isEnabled = extOut.enabled == 'Yes';
+                    bool isTest = extOut.test == 'Yes';
+                    int countdownIndex = returnIndex(
+                      extOut.countdownAction,
+                      extOutActionOptions,
+                    );
+                    int holdIndex = returnIndex(
+                      extOut.holdAction,
+                      extOutActionOptions,
+                    );
+                    int releaseIndex = returnIndex(
+                      extOut.releaseAction,
+                      extOutActionOptions,
+                    );
+
+                    final extOutConfig = ExtZoneEquipmentModeConfig(
+                      zoneEnable:
+                          isEnabled
+                              ? ExtZoneEquipmentEnable.enabled
+                              : ExtZoneEquipmentEnable.disabled,
+                      zoneMode:
+                          isTest
+                              ? ExtZoneEquipmentMode.test
+                              : ExtZoneEquipmentMode.normal,
+                    );
+                    final String extOutHexValue =
+                        ExtZoneEquipmentModeCodec.encodeHex(extOutConfig);
+
+                    switch (i) {
+                      case 0:
+                        manager!.sounderExtOutOneMode.value = extOutHexValue;
+                        manager!.isExtOutOneEnabled.value = isEnabled;
+                        manager!.isExtOutOneTest.value = isTest;
+                        manager!.extoutOneCountdownAction.value =
+                            countdownIndex;
+                        manager!.extoutOneHoldAction.value = holdIndex;
+                        manager!.extoutOneReleaseAction.value = releaseIndex;
+                        break;
+                      case 1:
+                        manager!.sounderExtOutTwoMode.value = extOutHexValue;
+                        manager!.isExtOutTwoEnabled.value = isEnabled;
+                        manager!.isExtOutTwoTest.value = isTest;
+                        manager!.extoutTwoCountdownAction.value =
+                            countdownIndex;
+                        manager!.extoutTwoHoldAction.value = holdIndex;
+                        manager!.extoutTwoReleaseAction.value = releaseIndex;
+                        break;
+                      case 2:
+                        manager!.sounderExtOutThreeMode.value = extOutHexValue;
+                        manager!.isExtOutThreeEnabled.value = isEnabled;
+                        manager!.isExtOutThreeTest.value = isTest;
+                        manager!.extoutThreeCountdownAction.value =
+                            countdownIndex;
+                        manager!.extoutThreeHoldAction.value = holdIndex;
+                        manager!.extoutThreeReleaseAction.value = releaseIndex;
+                        break;
+                    }
+                  }
 
                   widget.onApply();
                 }
