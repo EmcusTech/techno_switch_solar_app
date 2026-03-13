@@ -45,6 +45,7 @@ class BleProcess {
   int checkForLBusSetupApplyRes = 0;
   int lBusSetupApplyCommandStep = 0; // 1, 2, 3 ... 31
   int checkForSounderSetupFetchRes = 0;
+  int checkForSounderSetupApplyRes = 0;
   int sounderSetupFetchRelayCommandStep = 0; // 1, 2, 3
   int sounderSetupFetchZoneCommandStep = 1; // 1, 2, 3
   int sounderSetupFetchExtOutCommandStep = 1; // 1, 2, 3
@@ -341,6 +342,9 @@ class BleProcess {
   final ValueNotifier<bool> isSounderSetupFetchCommandActive =
       ValueNotifier<bool>(false);
 
+  final ValueNotifier<bool> isSounderSetupApplyCommandActive =
+      ValueNotifier<bool>(false);
+
   //sounder relay variables
   final ValueNotifier<int> sounderOneRelayFunctionGroup = ValueNotifier<int>(0);
   final ValueNotifier<int> sounderOneRelayFunction = ValueNotifier<int>(0);
@@ -349,6 +353,9 @@ class BleProcess {
   final ValueNotifier<bool> isSounderOneEnabled = ValueNotifier<bool>(false);
   final ValueNotifier<bool> isSounderOneTest = ValueNotifier<bool>(false);
   final ValueNotifier<bool> isSounderOneNormal = ValueNotifier<bool>(false);
+  final ValueNotifier<String> sounderOneRelayOutputMode = ValueNotifier<String>(
+    "",
+  );
 
   final ValueNotifier<int> sounderTwoRelayFunctionGroup = ValueNotifier<int>(0);
   final ValueNotifier<int> sounderTwoRelayFunction = ValueNotifier<int>(0);
@@ -357,6 +364,9 @@ class BleProcess {
   final ValueNotifier<bool> isSounderTwoEnabled = ValueNotifier<bool>(false);
   final ValueNotifier<bool> isSounderTwoTest = ValueNotifier<bool>(false);
   final ValueNotifier<bool> isSounderTwoNormal = ValueNotifier<bool>(false);
+  final ValueNotifier<String> sounderTwoRelayOutputMode = ValueNotifier<String>(
+    "",
+  );
 
   final ValueNotifier<int> sounderThreeRelayFunctionGroup = ValueNotifier<int>(
     0,
@@ -369,6 +379,8 @@ class BleProcess {
   final ValueNotifier<bool> isSounderThreeEnabled = ValueNotifier<bool>(false);
   final ValueNotifier<bool> isSounderThreeTest = ValueNotifier<bool>(false);
   final ValueNotifier<bool> isSounderThreeNormal = ValueNotifier<bool>(false);
+  final ValueNotifier<String> sounderThreeRelayOutputMode =
+      ValueNotifier<String>("");
 
   //Sounder general variables
   final ValueNotifier<bool> isSounderGeneralEnabled = ValueNotifier<bool>(
@@ -565,6 +577,11 @@ class BleProcess {
         checkForSounderSetupFetchRes = 1;
         break;
 
+      case OtaProcessState.sendSounderSetupApplyCmdPkt:
+        print("Sending Sounder Setup Apply Command");
+        checkForSounderSetupApplyRes = 1;
+        break;
+
       case OtaProcessState.otaWaitRsp:
         break;
     }
@@ -669,6 +686,16 @@ class BleProcess {
           processDesc.value = "Downloading Sounder (Relays) 1/3";
           startRxTimeout();
           await bleManager.sendSounderSetupRelayFetchCmdPkt(outputMaxZone: 1);
+        } else if (isSounderSetupApplyCommandActive.value) {
+          bleManager.otaProcessState =
+              OtaProcessState.sendSounderSetupApplyCmdPkt;
+          checkForAccessKeyCmdRsp = 0;
+          // sounderSetupApplyRelayCommandStep = 1;
+          // sounderSetupApplyZoneCommandStep = 1;
+          // sounderSetupApplyExtOutCommandStep = 1;
+          processDesc.value = "Applying Sounder (Relays) 1/3";
+          startRxTimeout();
+          await bleManager.sendSounderSetupRelayApplyCmdPkt(outputMaxZone: 1);
         } else {
           bleManager.otaProcessState = OtaProcessState.sendStopCntrlCmdPkt;
           checkForAccessKeyCmdRsp = 0;
@@ -743,6 +770,9 @@ class BleProcess {
           } else if (sounderSetupFetchRelayCommandStep == 2) {
             final OutputModeConfig config = OutputModeCodec.fromHex(
               rx.payload[15].toRadixString(16),
+            );
+            print(
+              "The second sounder setup fetch relay response: ${rx.payload[15].toRadixString(16)}",
             );
             final bool outputEnabled =
                 config.outputEnable == OutputEnable.enabled;
@@ -955,6 +985,19 @@ class BleProcess {
         }
       } else {
         print("Sounder Setup Fetch Cmd Response not found, polling again");
+        startRxTimeout();
+        await bleManager.sendPollPacket();
+      }
+    }
+
+    if (checkForSounderSetupApplyRes == 1) {
+      print(
+        "Checking Sounder Setup Apply CMD RSP Value ${rx.payload[12]}:::::${rx.payload[12] == 0x02} ",
+      );
+      if (rx.payload[12] == 0x02) {
+        print("We got the response for sounder setup apply");
+      } else {
+        print("Sounder Setup Apply Cmd Response not found, polling again");
         startRxTimeout();
         await bleManager.sendPollPacket();
       }
@@ -1590,6 +1633,8 @@ class BleProcess {
     isExtOutCommandFetchActive.value = false;
     checkForLBusSetupFetchRes = 0;
     checkForLBusSetupApplyRes = 0;
+    checkForSounderSetupFetchRes = 0;
+    checkForSounderSetupApplyRes = 0;
     // Counters
     checkForCtrlCmdRsp = 0;
     checkForAccessKeyCmdRsp = 0;
@@ -1646,6 +1691,8 @@ class BleProcess {
     isExtOutApplyButtonActive.value = false;
     checkForLBusSetupFetchRes = 0;
     checkForLBusSetupApplyRes = 0;
+    checkForSounderSetupFetchRes = 0;
+    checkForSounderSetupApplyRes = 0;
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -1694,6 +1741,8 @@ class BleProcess {
     isExtOutApplyButtonActive.value = false;
     checkForLBusSetupFetchRes = 0;
     checkForLBusSetupApplyRes = 0;
+    checkForSounderSetupFetchRes = 0;
+    checkForSounderSetupApplyRes = 0;
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -1740,6 +1789,8 @@ class BleProcess {
     checkForModuleSetupFetchRes = 0;
     checkForLBusSetupFetchRes = 0;
     checkForLBusSetupApplyRes = 0;
+    checkForSounderSetupFetchRes = 0;
+    checkForSounderSetupApplyRes = 0;
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -1786,6 +1837,8 @@ class BleProcess {
     checkForModuleSetupFetchRes = 0;
     checkForLBusSetupFetchRes = 0;
     checkForLBusSetupApplyRes = 0;
+    checkForSounderSetupFetchRes = 0;
+    checkForSounderSetupApplyRes = 0;
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -1832,6 +1885,8 @@ class BleProcess {
     checkForModuleSetupFetchRes = 0;
     checkForLBusSetupFetchRes = 0;
     checkForLBusSetupApplyRes = 0;
+    checkForSounderSetupFetchRes = 0;
+    checkForSounderSetupApplyRes = 0;
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -1877,6 +1932,8 @@ class BleProcess {
     checkForRadioSetupApplyRes = 0;
     checkForLBusSetupFetchRes = 0;
     checkForLBusSetupApplyRes = 0;
+    checkForSounderSetupFetchRes = 0;
+    checkForSounderSetupApplyRes = 0;
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -1923,6 +1980,8 @@ class BleProcess {
     checkForLBusSetupFetchRes = 0;
     lBusSetupFetchCommandStep = 0;
     checkForLBusSetupApplyRes = 0;
+    checkForSounderSetupFetchRes = 0;
+    checkForSounderSetupApplyRes = 0;
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -1969,6 +2028,8 @@ class BleProcess {
     checkForLBusSetupFetchRes = 0;
     lBusSetupFetchCommandStep = 0;
     checkForLBusSetupApplyRes = 0;
+    checkForSounderSetupFetchRes = 0;
+    checkForSounderSetupApplyRes = 0;
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -2347,6 +2408,8 @@ class BleProcess {
         case OtaProcessState.sendLBusSetupApplyCmdPkt:
           break;
         case OtaProcessState.sendSounderSetupFetchCmdPkt:
+          break;
+        case OtaProcessState.sendSounderSetupApplyCmdPkt:
           break;
       }
       startRxTimeout();

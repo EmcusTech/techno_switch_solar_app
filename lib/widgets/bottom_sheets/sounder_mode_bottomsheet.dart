@@ -137,64 +137,135 @@ class _SounderModeBottomSheetState extends State<SounderModeBottomSheet>
     if (s1 != null) {
       sounders[0].enabled = (s1['enabled'] as bool?) ?? false ? 'Yes' : 'No';
       sounders[0].test = (s1['test'] as bool?) ?? false ? 'Yes' : 'No';
-      sounders[0].type = (s1['normal'] as bool?) ?? true ? 'Normal' : 'IS (MTL5525)';
+      sounders[0].type =
+          (s1['normal'] as bool?) ?? true ? 'Normal' : 'IS (MTL5525)';
       sounders[0].outputController.text = (s1['outputText'] as String?) ?? '';
-      sounders[0].group = groupOptions[((s1['group'] as int?) ?? 0).clamp(0, groupOptions.length - 1)];
-      sounders[0].function = functionOptionsMap[sounders[0].group]![((s1['function'] as int?) ?? 0).clamp(0, functionOptionsMap[sounders[0].group]!.length - 1)];
+      sounders[0].group =
+          groupOptions[((s1['group'] as int?) ?? 0).clamp(
+            0,
+            groupOptions.length - 1,
+          )];
+      sounders[0].function =
+          functionOptionsMap[sounders[0].group]![((s1['function'] as int?) ?? 0)
+              .clamp(0, functionOptionsMap[sounders[0].group]!.length - 1)];
     }
     if (s2 != null) {
       sounders[1].enabled = (s2['enabled'] as bool?) ?? false ? 'Yes' : 'No';
       sounders[1].test = (s2['test'] as bool?) ?? false ? 'Yes' : 'No';
-      sounders[1].type = (s2['normal'] as bool?) ?? true ? 'Normal' : 'IS (MTL5525)';
+      sounders[1].type =
+          (s2['normal'] as bool?) ?? true ? 'Normal' : 'IS (MTL5525)';
       sounders[1].outputController.text = (s2['outputText'] as String?) ?? '';
-      sounders[1].group = groupOptions[((s2['group'] as int?) ?? 0).clamp(0, groupOptions.length - 1)];
-      sounders[1].function = functionOptionsMap[sounders[1].group]![((s2['function'] as int?) ?? 0).clamp(0, functionOptionsMap[sounders[1].group]!.length - 1)];
-      sounders[1].dynamicController.text = (s2['functionNo'] as int?)?.toString() ?? '0';
+      sounders[1].group =
+          groupOptions[((s2['group'] as int?) ?? 0).clamp(
+            0,
+            groupOptions.length - 1,
+          )];
+      sounders[1].function =
+          functionOptionsMap[sounders[1].group]![((s2['function'] as int?) ?? 0)
+              .clamp(0, functionOptionsMap[sounders[1].group]!.length - 1)];
+      sounders[1].dynamicController.text =
+          (s2['functionNo'] as int?)?.toString() ?? '0';
     }
     if (s3 != null) {
       sounders[2].enabled = (s3['enabled'] as bool?) ?? false ? 'Yes' : 'No';
       sounders[2].test = (s3['test'] as bool?) ?? false ? 'Yes' : 'No';
-      sounders[2].type = (s3['normal'] as bool?) ?? true ? 'Normal' : 'IS (MTL5525)';
+      sounders[2].type =
+          (s3['normal'] as bool?) ?? true ? 'Normal' : 'IS (MTL5525)';
       sounders[2].outputController.text = (s3['outputText'] as String?) ?? '';
-      sounders[2].group = groupOptions[((s3['group'] as int?) ?? 0).clamp(0, groupOptions.length - 1)];
-      sounders[2].function = functionOptionsMap[sounders[2].group]![((s3['function'] as int?) ?? 0).clamp(0, functionOptionsMap[sounders[2].group]!.length - 1)];
-      sounders[2].dynamicController.text = (s3['functionNo'] as int?)?.toString() ?? '0';
+      sounders[2].group =
+          groupOptions[((s3['group'] as int?) ?? 0).clamp(
+            0,
+            groupOptions.length - 1,
+          )];
+      sounders[2].function =
+          functionOptionsMap[sounders[2].group]![((s3['function'] as int?) ?? 0)
+              .clamp(0, functionOptionsMap[sounders[2].group]!.length - 1)];
+      sounders[2].dynamicController.text =
+          (s3['functionNo'] as int?)?.toString() ?? '0';
     }
     if (z1 != null) {
       zones[0].enabled = (z1['enabled'] as bool?) ?? false ? 'Yes' : 'No';
       zones[0].test = (z1['test'] as bool?) ?? false ? 'Yes' : 'No';
-      zones[0].action = actionOptions[((z1['action'] as int?) ?? 0).clamp(0, actionOptions.length - 1)];
+      zones[0].action =
+          actionOptions[((z1['action'] as int?) ?? 0).clamp(
+            0,
+            actionOptions.length - 1,
+          )];
     }
     if (z2 != null) {
       zones[1].enabled = (z2['enabled'] as bool?) ?? false ? 'Yes' : 'No';
       zones[1].test = (z2['test'] as bool?) ?? false ? 'Yes' : 'No';
-      zones[1].action = actionOptions[((z2['action'] as int?) ?? 0).clamp(0, actionOptions.length - 1)];
+      zones[1].action =
+          actionOptions[((z2['action'] as int?) ?? 0).clamp(
+            0,
+            actionOptions.length - 1,
+          )];
     }
     if (z3 != null) {
       zones[2].enabled = (z3['enabled'] as bool?) ?? false ? 'Yes' : 'No';
       zones[2].test = (z3['test'] as bool?) ?? false ? 'Yes' : 'No';
-      zones[2].action = actionOptions[((z3['action'] as int?) ?? 0).clamp(0, actionOptions.length - 1)];
+      zones[2].action =
+          actionOptions[((z3['action'] as int?) ?? 0).clamp(
+            0,
+            actionOptions.length - 1,
+          )];
     }
     if (e1 != null) {
       extOuts[0].enabled = (e1['enabled'] as bool?) ?? false ? 'Yes' : 'No';
       extOuts[0].test = (e1['test'] as bool?) ?? false ? 'Yes' : 'No';
-      extOuts[0].countdownAction = extOutActionOptions[((e1['countdownAction'] as int?) ?? 0).clamp(0, extOutActionOptions.length - 1)];
-      extOuts[0].holdAction = extOutActionOptions[((e1['holdAction'] as int?) ?? 0).clamp(0, extOutActionOptions.length - 1)];
-      extOuts[0].releaseAction = extOutActionOptions[((e1['releaseAction'] as int?) ?? 0).clamp(0, extOutActionOptions.length - 1)];
+      extOuts[0].countdownAction =
+          extOutActionOptions[((e1['countdownAction'] as int?) ?? 0).clamp(
+            0,
+            extOutActionOptions.length - 1,
+          )];
+      extOuts[0].holdAction =
+          extOutActionOptions[((e1['holdAction'] as int?) ?? 0).clamp(
+            0,
+            extOutActionOptions.length - 1,
+          )];
+      extOuts[0].releaseAction =
+          extOutActionOptions[((e1['releaseAction'] as int?) ?? 0).clamp(
+            0,
+            extOutActionOptions.length - 1,
+          )];
     }
     if (e2 != null) {
       extOuts[1].enabled = (e2['enabled'] as bool?) ?? false ? 'Yes' : 'No';
       extOuts[1].test = (e2['test'] as bool?) ?? false ? 'Yes' : 'No';
-      extOuts[1].countdownAction = extOutActionOptions[((e2['countdownAction'] as int?) ?? 0).clamp(0, extOutActionOptions.length - 1)];
-      extOuts[1].holdAction = extOutActionOptions[((e2['holdAction'] as int?) ?? 0).clamp(0, extOutActionOptions.length - 1)];
-      extOuts[1].releaseAction = extOutActionOptions[((e2['releaseAction'] as int?) ?? 0).clamp(0, extOutActionOptions.length - 1)];
+      extOuts[1].countdownAction =
+          extOutActionOptions[((e2['countdownAction'] as int?) ?? 0).clamp(
+            0,
+            extOutActionOptions.length - 1,
+          )];
+      extOuts[1].holdAction =
+          extOutActionOptions[((e2['holdAction'] as int?) ?? 0).clamp(
+            0,
+            extOutActionOptions.length - 1,
+          )];
+      extOuts[1].releaseAction =
+          extOutActionOptions[((e2['releaseAction'] as int?) ?? 0).clamp(
+            0,
+            extOutActionOptions.length - 1,
+          )];
     }
     if (e3 != null) {
       extOuts[2].enabled = (e3['enabled'] as bool?) ?? false ? 'Yes' : 'No';
       extOuts[2].test = (e3['test'] as bool?) ?? false ? 'Yes' : 'No';
-      extOuts[2].countdownAction = extOutActionOptions[((e3['countdownAction'] as int?) ?? 0).clamp(0, extOutActionOptions.length - 1)];
-      extOuts[2].holdAction = extOutActionOptions[((e3['holdAction'] as int?) ?? 0).clamp(0, extOutActionOptions.length - 1)];
-      extOuts[2].releaseAction = extOutActionOptions[((e3['releaseAction'] as int?) ?? 0).clamp(0, extOutActionOptions.length - 1)];
+      extOuts[2].countdownAction =
+          extOutActionOptions[((e3['countdownAction'] as int?) ?? 0).clamp(
+            0,
+            extOutActionOptions.length - 1,
+          )];
+      extOuts[2].holdAction =
+          extOutActionOptions[((e3['holdAction'] as int?) ?? 0).clamp(
+            0,
+            extOutActionOptions.length - 1,
+          )];
+      extOuts[2].releaseAction =
+          extOutActionOptions[((e3['releaseAction'] as int?) ?? 0).clamp(
+            0,
+            extOutActionOptions.length - 1,
+          )];
     }
     final gen = data['general'] as Map<String, dynamic>?;
     if (gen != null) {
@@ -818,7 +889,10 @@ class _SounderModeBottomSheetState extends State<SounderModeBottomSheet>
             borderRadius: BorderRadius.circular(24),
           ),
         ),
-        onPressed: widget.onDownload,
+        onPressed: () {
+          FocusManager.instance.primaryFocus?.unfocus();
+          widget.onDownload();
+        },
         child: Text(
           'Download',
           style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600),
@@ -837,7 +911,18 @@ class _SounderModeBottomSheetState extends State<SounderModeBottomSheet>
             borderRadius: BorderRadius.circular(24),
           ),
         ),
-        onPressed: widget.onApply,
+        onPressed:
+            manager != null
+                ? () {
+                  FocusManager.instance.primaryFocus?.unfocus();
+                  for (int i = 0; i < 3; i++) {
+                    final sounder = sounders[i];
+                    final zone = zones[i];
+                    final extOut = extOuts[i];
+                  }
+                  widget.onApply();
+                }
+                : null,
         child: Text(
           'Apply',
           style: GoogleFonts.inter(

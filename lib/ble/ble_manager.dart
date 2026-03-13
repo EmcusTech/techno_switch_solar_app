@@ -56,6 +56,7 @@ enum BleStates {
   SEND_L_BUS_SETUP_CMD_FETCH_PACKET,
   SEND_L_BUS_SETUP_CMD_APPLY_PACKET,
   SEND_SOUNDER_SETUP_CMD_FETCH_PACKET,
+  SEND_SOUNDER_SETUP_CMD_APPLY_PACKET,
   // add other states
 }
 
@@ -85,6 +86,7 @@ enum OtaProcessState {
   sendLBusSetupFetchCmdPkt,
   sendLBusSetupApplyCmdPkt,
   sendSounderSetupFetchCmdPkt,
+  sendSounderSetupApplyCmdPkt,
 }
 
 enum BleOperationMode {
@@ -105,6 +107,7 @@ enum BleOperationMode {
   lBusSetupFetch,
   lBusSetupApply,
   sounderSetupFetch,
+  sounderSetupApply,
 }
 
 const String BLE_AUTHN_MSG = "TECHNOSWITCH-AUTH-APP";
@@ -423,6 +426,13 @@ class BleManager {
       bleProcess.extoutThreeHoldAction;
   ValueNotifier<int> get extoutThreeReleaseAction =>
       bleProcess.extoutThreeReleaseAction;
+
+  ValueNotifier<String> get sounderOneRelayOutputMode =>
+      bleProcess.sounderOneRelayOutputMode;
+  ValueNotifier<String> get sounderTwoRelayOutputMode =>
+      bleProcess.sounderTwoRelayOutputMode;
+  ValueNotifier<String> get sounderThreeRelayOutputMode =>
+      bleProcess.sounderThreeRelayOutputMode;
 
   void resetProtocolState() {
     // Packet counters
@@ -1164,6 +1174,41 @@ class BleManager {
     bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
     Get.find<BleLogController>().sendNetworkPacket();
   }
+
+  Future<void> startSounderSetupApply() async {
+    if (!isConnected) {
+      throw Exception("Device not connected. Cannot start log retrieval.");
+    }
+
+    if (notifyChar == null || writeChar == null) {
+      throw Exception(
+        "BLE characteristics not initialized. Cannot start log retrieval.",
+      );
+    }
+
+    // Set operation mode to log retrieval
+    currentOperationMode = BleOperationMode.sounderSetupApply;
+
+    // Reset protocol state to initial values
+    resetSounderSetupState();
+    resetProtocolSounderSetupState();
+
+    // IMPORTANT: Reset process state to clear isOtaCompleted flag
+    // This ensures polls aren't blocked after firmware upgrade
+    bleProcess.resetProcessSounderSetupState();
+
+    if (_notifySub == null) {
+      throw Exception(
+        "BLE handshake not complete. Please wait for connection to finish.",
+      );
+    }
+    print("Proceeding with Sounder setup apply");
+    bleCurrentState = BleStates.SEND_SOUNDER_SETUP_CMD_APPLY_PACKET;
+    bleStateMachineState = BleStates.SEND_SOUNDER_SETUP_CMD_APPLY_PACKET;
+    print("Current state: $bleStateMachineState");
+    bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
+    Get.find<BleLogController>().sendNetworkPacket();
+  }
   // Future<void> startExtOut() async {
   //   if (!isConnected) {
   //     throw Exception("Device not connected. Cannot start log retrieval.");
@@ -1876,6 +1921,15 @@ class BleManager {
           bleStateMachineState = BleStates.SEND_SOUNDER_SETUP_CMD_FETCH_PACKET;
           print("Current state: $bleStateMachineState (Sounder Setup Fetch)");
           // Send Network Packet for Sounder Setup Fetch
+          bleProcess.startOtherPacketsRxTimeout(
+            timeout: const Duration(seconds: 5),
+          );
+          Get.find<BleLogController>().sendNetworkPacket();
+        } else if (currentOperationMode == BleOperationMode.sounderSetupApply) {
+          bleCurrentState = BleStates.SEND_SOUNDER_SETUP_CMD_APPLY_PACKET;
+          bleStateMachineState = BleStates.SEND_SOUNDER_SETUP_CMD_APPLY_PACKET;
+          print("Current state: $bleStateMachineState (Sounder Setup Apply)");
+          // Send Network Packet for Sounder Setup Apply
           bleProcess.startOtherPacketsRxTimeout(
             timeout: const Duration(seconds: 5),
           );
@@ -3720,6 +3774,73 @@ class BleManager {
 
     print(
       "TX/RX: TRANSMIT: Sounder Setup Ext Out $extMaxZone Fetch Command time: ${DateTime.now().toIso8601String()}, packet: ${u8_pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+    );
+
+    await sendSmallDataFrame(0x1000, 216, u8_pkt);
+  }
+
+  Future<void> sendSounderSetupRelayApplyCmdPkt({
+    required int outputMaxZone,
+  }) async {
+    // Create 216-byte buffer
+    Uint8List u8_pkt = Uint8List(216);
+
+    String outputText = "";
+    int outputNo = 0;
+    String outputMode = "";
+    if (outputMaxZone == 1) {
+      outputText = sounderOneOutputText.value;
+      outputNo = sounderOneFunctionNo.value;
+      outputMode = sounderOneRelayOutputMode.value;
+    } else if (outputMaxZone == 2) {
+      outputText = sounderTwoOutputText.value;
+      outputNo = sounderTwoFunctionNo.value;
+      outputMode = sounderTwoRelayOutputMode.value;
+    } else if (outputMaxZone == 3) {
+      outputText = sounderThreeOutputText.value;
+      outputNo = sounderThreeFunctionNo.value;
+      outputMode = sounderThreeRelayOutputMode.value;
+    }
+    final List<int> outputTextBytes = outputText.codeUnits;
+    final outputTextLength = outputTextBytes.length;
+
+    final initialindex = 26;
+    for (int i = 0; i < outputTextLength; i++) {
+      u8_pkt[initialindex + i] = outputTextBytes[i];
+    }
+
+    // Update global counters
+    u8TxPktCnt += 1;
+
+    u8_pkt[0] = 0xFE;
+    u8_pkt[1] = 0x01;
+    u8_pkt[2] = 0x00;
+
+    u8_pkt[3] = 0x01; // pkt type
+    u8_pkt[4] = u8TxPktCnt & 0xFF; // tx pkt num
+    u8_pkt[5] = u8RxPktCnt & 0xFF; // rx pkt num
+    u8_pkt[6] = 0x00; // network number
+    u8_pkt[10] = 0x81; // mode
+    u8_pkt[11] = 0x00; // socket number
+    u8_pkt[12] = 0x07; // command
+    u8_pkt[13] = 0x00; // output max zone byte 1
+    u8_pkt[14] = outputMaxZone; // output max zone byte 2
+    u8_pkt[15] = int.parse(outputMode, radix: 16);
+    u8_pkt[16] = 0x02;
+    u8_pkt[20] = outputMaxZone;
+    u8_pkt[21] = 0x01;
+    u8_pkt[22] = outputNo;
+    u8_pkt[23] = u8_pkt[25] = outputTextLength & 0xFF;
+
+    // Compute checksum on first 213 bytes
+    int checksum = toolsFletcherChecksum(u8_pkt.sublist(0, 213));
+
+    u8_pkt[213] = (checksum >> 8) & 0xFF;
+    u8_pkt[214] = checksum & 0xFF;
+    u8_pkt[215] = 0xFD;
+
+    print(
+      "TX/RX: TRANSMIT: Sounder Setup Relay $outputMaxZone Fetch Command time: ${DateTime.now().toIso8601String()}, packet: ${u8_pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
     );
 
     await sendSmallDataFrame(0x1000, 216, u8_pkt);
