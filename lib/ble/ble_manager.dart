@@ -3951,4 +3951,41 @@ class BleManager {
 
     await sendSmallDataFrame(0x1000, 216, u8_pkt);
   }
+
+  Future<void> sendSounderSetupExtOutApplyCmdPkt({
+    required int extMaxZone,
+  }) async {
+    // Create 216-byte buffer
+    Uint8List u8_pkt = Uint8List(216);
+
+    // Update global counters
+    u8TxPktCnt += 1;
+
+    u8_pkt[0] = 0xFE;
+    u8_pkt[1] = 0x01;
+    u8_pkt[2] = 0x00;
+
+    u8_pkt[3] = 0x01; // pkt type
+    u8_pkt[4] = u8TxPktCnt & 0xFF; // tx pkt num
+    u8_pkt[5] = u8RxPktCnt & 0xFF; // rx pkt num
+    u8_pkt[6] = 0x00; // network number
+    u8_pkt[10] = 0x81; // mode
+    u8_pkt[11] = 0x00; // socket number
+    u8_pkt[12] = 0x1B; // command
+    u8_pkt[13] = 0x01;
+    u8_pkt[14] = extMaxZone; // ext max zone
+
+    // Compute checksum on first 213 bytes
+    int checksum = toolsFletcherChecksum(u8_pkt.sublist(0, 213));
+
+    u8_pkt[213] = (checksum >> 8) & 0xFF;
+    u8_pkt[214] = checksum & 0xFF;
+    u8_pkt[215] = 0xFD;
+
+    print(
+      "TX/RX: TRANSMIT: Sounder Setup Ext Out $extMaxZone Fetch Command time: ${DateTime.now().toIso8601String()}, packet: ${u8_pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+    );
+
+    await sendSmallDataFrame(0x1000, 216, u8_pkt);
+  }
 }

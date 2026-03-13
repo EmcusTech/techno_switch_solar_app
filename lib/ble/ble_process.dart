@@ -349,6 +349,10 @@ class BleProcess {
   final ValueNotifier<bool> isSounderSetupApplyCommandActive =
       ValueNotifier<bool>(false);
 
+  final ValueNotifier<bool> isSounderSetupApplyDone = ValueNotifier<bool>(
+    false,
+  );
+
   //sounder relay variables
   final ValueNotifier<int> sounderOneRelayFunctionGroup = ValueNotifier<int>(0);
   final ValueNotifier<int> sounderOneRelayFunction = ValueNotifier<int>(0);
@@ -1023,22 +1027,56 @@ class BleProcess {
             await bleManager.sendSounderSetupGeneralApplyCmdPkt();
           }
         } else if (sounderSetupApplyGeneralCommandStep == 1) {
-          processDesc.value = "Applying Sounder (General)";
-          print("Entered General Apply Command Step");
-          sounderSetupApplyZoneCommandStep = 2;
+          processDesc.value = "Applying Sounder (Zones) 1/3";
+          print("Entered Zone Apply phase");
+          sounderSetupApplyGeneralCommandStep = 0;
+          sounderSetupApplyZoneCommandStep = 1;
           startRxTimeout();
           await bleManager.sendSounderSetupZoneApplyCmdPkt(zoneMaxZone: 1);
-        } else if (sounderSetupApplyZoneCommandStep == 2) {
-          processDesc.value = "Applying Sounder (Zones) 2/3";
-          print("Entered Zones Apply Command Step");
-          sounderSetupApplyZoneCommandStep = 3;
-          startRxTimeout();
-          await bleManager.sendSounderSetupZoneApplyCmdPkt(zoneMaxZone: 2);
-        } else if (sounderSetupApplyZoneCommandStep == 3) {
-          processDesc.value = "Applying Sounder (Zones) 3/3";
-          print("Entered Zones Apply Command Step");
-          startRxTimeout();
-          await bleManager.sendSounderSetupZoneApplyCmdPkt(zoneMaxZone: 3);
+        } else if (sounderSetupApplyZoneCommandStep >= 1 &&
+            sounderSetupApplyZoneCommandStep <= 3) {
+          final nextZoneNo = sounderSetupApplyZoneCommandStep + 1;
+          processDesc.value = "Applying Sounder (Zones) $nextZoneNo/3";
+          print(
+            "CMD $sounderSetupApplyZoneCommandStep Validated -> send Zone $nextZoneNo, keep polling",
+          );
+          sounderSetupApplyZoneCommandStep = nextZoneNo;
+          if (sounderSetupApplyZoneCommandStep <= 3) {
+            startRxTimeout();
+            await bleManager.sendSounderSetupZoneApplyCmdPkt(
+              zoneMaxZone: nextZoneNo,
+            );
+          } else {
+            sounderSetupApplyExtOutCommandStep = 1;
+            startRxTimeout();
+            await bleManager.sendSounderSetupExtOutApplyCmdPkt(extMaxZone: 1);
+            // print("Zone apply phase complete");
+            // bleManager.otaProcessState = OtaProcessState.notInUse;
+            // checkForSounderSetupApplyRes = 0;
+            // isSounderSetupApplyCommandActive.value = false;
+            // isAccessKeyValid.value = true;
+          }
+        } else if (sounderSetupApplyExtOutCommandStep >= 1 &&
+            sounderSetupApplyExtOutCommandStep <= 3) {
+          final nextExtOutNo = sounderSetupApplyExtOutCommandStep + 1;
+          processDesc.value = "Applying Sounder (Ext Out) $nextExtOutNo/3";
+          print(
+            "CMD $sounderSetupApplyExtOutCommandStep Validated -> send Ext Out $nextExtOutNo, keep polling",
+          );
+          sounderSetupApplyExtOutCommandStep = nextExtOutNo;
+          if (sounderSetupApplyExtOutCommandStep <= 3) {
+            startRxTimeout();
+            await bleManager.sendSounderSetupExtOutApplyCmdPkt(
+              extMaxZone: nextExtOutNo,
+            );
+          } else {
+            print("Ext Out apply phase complete");
+            bleManager.otaProcessState = OtaProcessState.notInUse;
+            checkForSounderSetupApplyRes = 0;
+            isSounderSetupApplyCommandActive.value = false;
+            isSounderSetupApplyDone.value = true;
+            isAccessKeyValid.value = true;
+          }
         }
         print("We got the response for sounder setup apply");
       } else {

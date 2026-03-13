@@ -1344,6 +1344,13 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                             mounted) {
                           await _saveLBusCacheAndNotifyRefresh();
                           showApplySuccessDialog(context, 'L-Bus');
+                        } else if (ble
+                                .bleProcess
+                                .isSounderSetupApplyDone
+                                .value &&
+                            mounted) {
+                          await _saveSounderCacheAndNotifyRefresh();
+                          showApplySuccessDialog(context, 'Sounders');
                         } else {
                           Navigator.of(dialogContext).push(
                             MaterialPageRoute(

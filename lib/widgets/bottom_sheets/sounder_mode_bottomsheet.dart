@@ -1050,6 +1050,8 @@ class _SounderModeBottomSheetState extends State<SounderModeBottomSheet>
                     }
                   }
 
+                  // apply ext out tab
+
                   widget.onApply();
                 }
                 : null,
