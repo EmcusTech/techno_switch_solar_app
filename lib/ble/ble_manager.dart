@@ -450,6 +450,15 @@ class BleManager {
   ValueNotifier<String> get sounderExtOutThreeMode =>
       bleProcess.sounderExtOutThreeMode;
 
+  ValueNotifier<int> get serviceDueYear => bleProcess.serviceDueYear;
+  ValueNotifier<int> get serviceDueMonth => bleProcess.serviceDueMonth;
+  ValueNotifier<int> get serviceDueDay => bleProcess.serviceDueDay;
+  ValueNotifier<int> get serviceDueHour => bleProcess.serviceDueHour;
+  ValueNotifier<int> get serviceDueMinute => bleProcess.serviceDueMinute;
+  ValueNotifier<String> get serviceDueCompany => bleProcess.serviceDueCompany;
+  ValueNotifier<String> get serviceDueContact => bleProcess.serviceDueContact;
+  ValueNotifier<int> get serviceDueReminder => bleProcess.serviceDueReminder;
+
   void resetProtocolState() {
     // Packet counters
     u8TxPktCnt = 0;

@@ -447,8 +447,17 @@ class BleProcess {
     "",
   );
 
+  // Service Due Setup Variables
   final ValueNotifier<bool> isServiceDueFetchCommandActive =
       ValueNotifier<bool>(false);
+  final ValueNotifier<int> serviceDueYear = ValueNotifier<int>(0);
+  final ValueNotifier<int> serviceDueMonth = ValueNotifier<int>(0);
+  final ValueNotifier<int> serviceDueDay = ValueNotifier<int>(0);
+  final ValueNotifier<int> serviceDueHour = ValueNotifier<int>(0);
+  final ValueNotifier<int> serviceDueMinute = ValueNotifier<int>(0);
+  final ValueNotifier<String> serviceDueCompany = ValueNotifier<String>("");
+  final ValueNotifier<String> serviceDueContact = ValueNotifier<String>("");
+  final ValueNotifier<int> serviceDueReminder = ValueNotifier<int>(0);
 
   // BleStates bleStateMachineState = BleStates.IDLE;
   BleStates bleCurrentState = BleStates.IDLE;
@@ -778,8 +787,26 @@ class BleProcess {
       print("Checking Service Due Fetch CMD RSP");
       if (rx.payload[12] == 0x18) {
         print("We got service due fetch response");
+        serviceDueYear.value = (rx.payload[13] << 8) | rx.payload[14];
+        serviceDueMonth.value = rx.payload[15];
+        serviceDueDay.value = rx.payload[16];
+        serviceDueHour.value = rx.payload[17];
+        serviceDueMinute.value = rx.payload[18];
+        serviceDueCompany.value = extractStringFromPayload(
+          rx.payload,
+          startIndex: 20,
+        );
+        serviceDueContact.value = extractStringFromPayload(
+          rx.payload,
+          startIndex: 34,
+        );
+        serviceDueReminder.value = rx.payload[19];
         bleManager.otaProcessState = OtaProcessState.notInUse;
         checkForServiceDueFetchRes = 0;
+        isServiceDueFetchCommandActive.value = false;
+        isAccessKeyValid.value = true;
+        processDesc.value = "Service Due Fetch Completed";
+        print("We got the response for service due fetch");
       } else {
         print("Service Due Fetch Cmd Response not found, polling again");
         startRxTimeout();

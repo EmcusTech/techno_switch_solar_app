@@ -34,6 +34,20 @@ class _ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
     if (Get.isRegistered<BleLogController>()) {
       manager = Get.find<BleLogController>().bleManager;
     }
+
+    _loadFromManager();
+  }
+
+  void _loadFromManager() {
+    if (manager == null) return;
+    config.yearController.text = manager!.serviceDueYear.value.toString();
+    config.monthController.text = manager!.serviceDueMonth.value.toString();
+    config.dayController.text = manager!.serviceDueDay.value.toString();
+    config.hourController.text = manager!.serviceDueHour.value.toString();
+    config.minuteController.text = manager!.serviceDueMinute.value.toString();
+    config.companyController.text = manager!.serviceDueCompany.value;
+    config.contactController.text = manager!.serviceDueContact.value;
+    config.reminder = manager!.serviceDueReminder.value == 0 ? 'Off' : 'On';
   }
 
   @override
@@ -93,6 +107,11 @@ class _ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
                       _textField(
                         label: "Company",
                         controller: config.companyController,
+                      ),
+
+                      _textField(
+                        label: "Contact",
+                        controller: config.contactController,
                       ),
 
                       DropdownWidget(
@@ -303,4 +322,5 @@ class ServiceDueConfig {
   final TextEditingController hourController = TextEditingController();
   final TextEditingController minuteController = TextEditingController();
   final TextEditingController companyController = TextEditingController();
+  final TextEditingController contactController = TextEditingController();
 }
