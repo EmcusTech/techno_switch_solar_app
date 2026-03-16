@@ -347,6 +347,8 @@ class BleProcess {
     [],
   );
 
+  final ValueNotifier<bool> isLbusFetchHasErrors = ValueNotifier<bool>(false);
+
   // Sounder Setup Variables
   final ValueNotifier<bool> isSounderSetupFetchCommandActive =
       ValueNotifier<bool>(false);
@@ -1184,8 +1186,25 @@ class BleProcess {
           lBusSetupFetchCommandStep == 31) {
         // Response for sendLBusEnabledBusDataFetchCmdPkt
         if (rx.payload[12] == 0x01) {
-          //this is where we we parse the Id, Revision, Product rev, Hardware, Firmware, Date, Protocol
-        } else if (rx.payload[12] == 0x02 && rx.payload[13] == 0x14) {}
+          // Parse Id, Revision, Product rev, Hardware, Firmware, Date, Protocol
+          // Preserve existing values (enabled, idLed, product, deviceText) via copyWith
+          if (lBusSetupDataFetchCommandStep < enabledLBusNumbers.value.length) {
+            final busNo =
+                enabledLBusNumbers.value[lBusSetupDataFetchCommandStep];
+            final busIndex = busNo - 1;
+            final existing = lBusSetupDataList.value[busIndex];
+            final updated = LBusSetupData.mergeFromEnabledBusPayload(
+              existing,
+              rx.payload,
+            );
+            final list = List<LBusSetupData>.from(lBusSetupDataList.value);
+            list[busIndex] = updated;
+            lBusSetupDataList.value = list;
+          }
+        } else if (rx.payload[12] == 0x02 && rx.payload[13] == 0x14) {
+          // Handle 0x02/0x14 response if needed
+          isLbusFetchHasErrors.value = true;
+        }
         final nextIndex = lBusSetupDataFetchCommandStep + 1;
         if (nextIndex < enabledLBusNumbers.value.length) {
           lBusSetupDataFetchCommandStep = nextIndex;

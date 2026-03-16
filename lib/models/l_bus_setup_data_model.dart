@@ -88,6 +88,56 @@ class LBusSetupData {
     );
   }
 
+  /// Merges id, revision, productRev, hardware, firmware, date, protocol from
+  /// the Enabled Bus Data (0x01) payload into this record. Preserves enabled, idLed, product, deviceText.
+  static LBusSetupData mergeFromEnabledBusPayload(
+    LBusSetupData existing,
+    List<int> payload,
+  ) {
+    if (payload.length < 44) return existing;
+    String productRev = '';
+    if (payload.length >
+        LBusPayloadIndices.enabledBusDataProductRevStart + 1) {
+      final length =
+          payload[LBusPayloadIndices.enabledBusDataProductRevStart];
+      final start = LBusPayloadIndices.enabledBusDataProductRevStart + 1;
+      final end = start + length;
+      if (end <= payload.length && length > 0) {
+        try {
+          productRev = utf8.decode(payload.sublist(start, end));
+        } catch (_) {}
+      }
+    }
+    final hardware = [
+      payload[LBusPayloadIndices.enabledBusDataHardwareStart],
+      payload[LBusPayloadIndices.enabledBusDataHardwareStart + 1],
+      payload[LBusPayloadIndices.enabledBusDataHardwareStart + 2],
+      payload[LBusPayloadIndices.enabledBusDataHardwareStart + 3],
+    ].join('.');
+    final firmware = [
+      payload[LBusPayloadIndices.enabledBusDataFirmwareStart],
+      payload[LBusPayloadIndices.enabledBusDataFirmwareStart + 1],
+      payload[LBusPayloadIndices.enabledBusDataFirmwareStart + 2],
+      payload[LBusPayloadIndices.enabledBusDataFirmwareStart + 3],
+    ].join('.');
+    final year = (payload[LBusPayloadIndices.enabledBusDataDateYearHi] << 8) |
+        payload[LBusPayloadIndices.enabledBusDataDateYearLo];
+    final month = payload[LBusPayloadIndices.enabledBusDataDateMonth];
+    final day = payload[LBusPayloadIndices.enabledBusDataDateDay];
+    final date =
+        '${day.toString().padLeft(2, '0')}-${month.toString().padLeft(2, '0')}-${year.toString().padLeft(4, '0')}';
+
+    return existing.copyWith(
+      id: payload[LBusPayloadIndices.enabledBusDataId],
+      revision: payload[LBusPayloadIndices.enabledBusDataRevision],
+      productRev: productRev,
+      hardware: hardware,
+      firmware: firmware,
+      date: date,
+      protocol: payload[LBusPayloadIndices.enabledBusDataProtocol],
+    );
+  }
+
   Map<String, dynamic> toJson() => {
     'enabled': enabled,
     'idLed': idLed,

@@ -1150,6 +1150,17 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                   ),
                   textAlign: TextAlign.center,
                 ),
+                Text(
+                  ble.bleProcess.isLbusFetchHasErrors.value
+                      ? 'There was an error downloading few $message(s)'
+                      : '',
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w400,
+                    color: Color(0xFF918F8F),
+                  ),
+                  textAlign: TextAlign.center,
+                ),
                 SizedBox(height: 24),
                 SizedBox(
                   width: double.infinity,

@@ -60,4 +60,18 @@ class LBusPayloadIndices {
   /// Index 23: Start of L-Bus device text bytes
   /// Text: payload[23] ... payload[23 + length - 1]
   static const int deviceTextStart = 23;
+
+  /// Payload indices for L-Bus Enabled Bus Data Fetch (command 0x01) response
+  /// Same layout as Module Setup Fetch for id, revision, productRev, hardware, firmware, date, protocol
+  static const int enabledBusDataId = 15;
+  static const int enabledBusDataRevision = 16;
+  static const int enabledBusDataProductRevStart =
+      17; // length at 17, string at 18+
+  static const int enabledBusDataHardwareStart = 30; // 4 bytes
+  static const int enabledBusDataFirmwareStart = 34; // 4 bytes
+  static const int enabledBusDataDateYearHi = 38;
+  static const int enabledBusDataDateYearLo = 39;
+  static const int enabledBusDataDateMonth = 40;
+  static const int enabledBusDataDateDay = 41;
+  static const int enabledBusDataProtocol = 43;
 }
