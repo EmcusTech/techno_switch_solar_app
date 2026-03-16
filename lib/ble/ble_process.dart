@@ -42,6 +42,7 @@ class BleProcess {
   int checkForModuleSetupFetchRes = 0;
   int checkForLBusSetupFetchRes = 0;
   int lBusSetupFetchCommandStep = 0; // 1, 2, 3 ... 31
+  int lBusSetupDataFetchCommandStep = 0; // 1, 2, 3 ... 31
   int checkForLBusSetupApplyRes = 0;
   int lBusSetupApplyCommandStep = 0; // 1, 2, 3 ... 31
   int checkForSounderSetupFetchRes = 0;
@@ -341,6 +342,10 @@ class BleProcess {
       ValueNotifier<List<LBusSetupData>>(
         List.generate(31, (_) => const LBusSetupData()),
       );
+
+  final ValueNotifier<List<int>> enabledLBusNumbers = ValueNotifier<List<int>>(
+    [],
+  );
 
   // Sounder Setup Variables
   final ValueNotifier<bool> isSounderSetupFetchCommandActive =
@@ -682,6 +687,7 @@ class BleProcess {
           bleManager.otaProcessState = OtaProcessState.sendLBusSetupFetchCmdPkt;
           checkForAccessKeyCmdRsp = 0;
           lBusSetupFetchCommandStep = 1;
+          lBusSetupDataFetchCommandStep = 1;
           processDesc.value = "Downloading L-Bus 1/31";
           startRxTimeout();
           await bleManager.sendLBusSetupFetchCmdPkt(lBusNo: 1);
@@ -1151,11 +1157,51 @@ class BleProcess {
           startRxTimeout();
           await bleManager.sendLBusSetupFetchCmdPkt(lBusNo: nextBusNo);
         } else {
+          // All 31 buses received – compute enabled list now (includes bus 31)
+          enabledLBusNumbers.value = [
+            for (var i = 0; i < lBusSetupDataList.value.length; i++)
+              if (lBusSetupDataList.value[i].enabled == 'Yes') i + 1,
+          ];
+
+          print("enabledLBusNumbers count: ${enabledLBusNumbers.value.length}");
+
+          if (enabledLBusNumbers.value.isNotEmpty) {
+            lBusSetupDataFetchCommandStep = 0;
+            processDesc.value = "Downloading Enabled L-Bus 1/31";
+            startRxTimeout();
+            await bleManager.sendLBusEnabledBusDataFetchCmdPkt(
+              lBusNo: enabledLBusNumbers.value[0],
+            );
+          } else {
+            bleManager.otaProcessState = OtaProcessState.notInUse;
+            checkForLBusSetupFetchRes = 0;
+            isLBusSetupFetchCommandActive.value = false;
+            isAccessKeyValid.value = true;
+            print("We got the response for l-bus setup fetch");
+          }
+        }
+      } else if ((rx.payload[12] == 0x02 || rx.payload[12] == 0x01) &&
+          lBusSetupFetchCommandStep == 31) {
+        // Response for sendLBusEnabledBusDataFetchCmdPkt
+        if (rx.payload[12] == 0x01) {
+          //this is where we we parse the Id, Revision, Product rev, Hardware, Firmware, Date, Protocol
+        } else if (rx.payload[12] == 0x02 && rx.payload[13] == 0x14) {}
+        final nextIndex = lBusSetupDataFetchCommandStep + 1;
+        if (nextIndex < enabledLBusNumbers.value.length) {
+          lBusSetupDataFetchCommandStep = nextIndex;
+          final nextBusNo = enabledLBusNumbers.value[nextIndex];
+          processDesc.value = "Downloading Enabled L-Bus $nextBusNo/31";
+          startRxTimeout();
+          await bleManager.sendLBusEnabledBusDataFetchCmdPkt(lBusNo: nextBusNo);
+        } else {
+          // All enabled bus data fetched – complete
           bleManager.otaProcessState = OtaProcessState.notInUse;
           checkForLBusSetupFetchRes = 0;
           isLBusSetupFetchCommandActive.value = false;
           isAccessKeyValid.value = true;
-          print("We got the response for l-bus setup fetch");
+          print(
+            "We got the response for l-bus setup fetch (enabled bus data complete)",
+          );
         }
       } else {
         print("L-Bus Setup Fetch Cmd Response not found, polling again");
