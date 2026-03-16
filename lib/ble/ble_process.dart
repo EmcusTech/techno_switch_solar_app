@@ -54,6 +54,7 @@ class BleProcess {
   int sounderSetupApplyGeneralCommandStep = 0; // 1, 2, 3
   int sounderSetupApplyZoneCommandStep = 0; // 1, 2, 3
   int sounderSetupApplyExtOutCommandStep = 0; // 1, 2, 3
+  int checkForServiceDueFetchRes = 0;
   int validEventLogNum = 0;
   int read1000Logs = 0;
   bool logRetreivalEnded = false;
@@ -446,6 +447,9 @@ class BleProcess {
     "",
   );
 
+  final ValueNotifier<bool> isServiceDueFetchCommandActive =
+      ValueNotifier<bool>(false);
+
   // BleStates bleStateMachineState = BleStates.IDLE;
   BleStates bleCurrentState = BleStates.IDLE;
   DeviceConnectState deviceConnectState = DeviceConnectState.notConnected;
@@ -605,6 +609,11 @@ class BleProcess {
         checkForSounderSetupApplyRes = 1;
         break;
 
+      case OtaProcessState.sendServiceDueFetchCmdPkt:
+        print("Sending Service Due Fetch Command");
+        checkForServiceDueFetchRes = 1;
+        break;
+
       case OtaProcessState.otaWaitRsp:
         break;
     }
@@ -721,6 +730,12 @@ class BleProcess {
           processDesc.value = "Applying Sounder (Relays) 1/3";
           startRxTimeout();
           await bleManager.sendSounderSetupRelayApplyCmdPkt(outputMaxZone: 1);
+        } else if (isServiceDueFetchCommandActive.value) {
+          bleManager.otaProcessState =
+              OtaProcessState.sendServiceDueFetchCmdPkt;
+          checkForAccessKeyCmdRsp = 0;
+          startRxTimeout();
+          await bleManager.sendServiceDueFetchCmdPkt();
         } else {
           bleManager.otaProcessState = OtaProcessState.sendStopCntrlCmdPkt;
           checkForAccessKeyCmdRsp = 0;
@@ -757,6 +772,19 @@ class BleProcess {
         await bleManager.sendPollPacket();
       }
       // checkDipSetCmdRsp = 0;
+    }
+
+    if (checkForServiceDueFetchRes == 1) {
+      print("Checking Service Due Fetch CMD RSP");
+      if (rx.payload[12] == 0x18) {
+        print("We got service due fetch response");
+        bleManager.otaProcessState = OtaProcessState.notInUse;
+        checkForServiceDueFetchRes = 0;
+      } else {
+        print("Service Due Fetch Cmd Response not found, polling again");
+        startRxTimeout();
+        await bleManager.sendPollPacket();
+      }
     }
 
     if (checkForSounderSetupFetchRes == 1) {
@@ -2213,6 +2241,54 @@ class BleProcess {
     // panelName.value = "";
   }
 
+  void resetProcessServiceDueState() {
+    // Terminal guards
+    isOtaCompleted = false;
+    processNextOtaFrame = true;
+    logRetreivalEnded = false;
+
+    // Counters
+    checkForCtrlCmdRsp = 0;
+    checkForAccessKeyCmdRsp = 0;
+    checkDipSetCmdRsp = 0;
+    checkForExtCmdFetchRes = 0;
+    checkForInputSetupFetchRes = 0;
+    checkForRelaySetupApplyRes = 0;
+    validEventLogNum = 0;
+    read1000Logs = 0;
+    receivedPollCount = 0;
+    checkForRadioSetupFetchRes = 0;
+    isExtOutApplyButtonActive.value = false;
+    relaySetupFetchCommandStep = 0;
+    checkForRelaySetupFetchRes = 0;
+    checkForRadioSetupApplyRes = 0;
+    checkForLBusSetupFetchRes = 0;
+    lBusSetupFetchCommandStep = 0;
+    checkForLBusSetupApplyRes = 0;
+    checkForSounderSetupFetchRes = 0;
+    checkForSounderSetupApplyRes = 0;
+    // Time tracking
+    // logStartingTime = null;
+    // logEndTime = null;
+
+    // OTA state
+    bleManager.otaProcessState = OtaProcessState.sendNetworkPacket;
+
+    // RX timeout
+    _rxTimeoutTimer?.cancel();
+    _rxTimeoutTimer = null;
+
+    _otherPacketsRxTimeoutTimer?.cancel();
+    _otherPacketsRxTimeoutTimer = null;
+
+    // UI notifiers
+    // validEventLogCount.value = 0;
+    // read1000LogsCount.value = 0;
+    // validEventLogs.value = [];
+    // isValidLogRecieved.value = false;
+    // panelName.value = "";
+  }
+
   String formatDuration(Duration d) {
     final m = d.inMinutes;
     final s = d.inSeconds.remainder(60);
@@ -2571,6 +2647,8 @@ class BleProcess {
         case OtaProcessState.sendSounderSetupFetchCmdPkt:
           break;
         case OtaProcessState.sendSounderSetupApplyCmdPkt:
+          break;
+        case OtaProcessState.sendServiceDueFetchCmdPkt:
           break;
       }
       startRxTimeout();

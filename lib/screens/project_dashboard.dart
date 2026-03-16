@@ -24,6 +24,7 @@ import 'package:techno_switch_solar_app/widgets/bottom_sheets/l_bus_mode_bottoms
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/module_mode_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/radio_mode_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/relay_mode_bottomsheet.dart';
+import 'package:techno_switch_solar_app/widgets/bottom_sheets/service_due_mode_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/setting_bottom_sheets/ext_out_bottomsheet.dart';
 import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/sounder_mode_bottomsheet.dart';
@@ -1202,6 +1203,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     bool? isRelaySetup = false,
     bool? isZoneSetup = false,
     bool? isSounderSetup = false,
+    bool? isServiceDueSetup = false,
     String? mode,
     Future<void> Function()? onDownloadComplete,
     String? downloadSuccessMessage,
@@ -1322,6 +1324,8 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                                     ? 'Zones'
                                     : isSounderSetup == true
                                     ? 'Sounders'
+                                    : isServiceDueSetup == true
+                                    ? 'Service Due'
                                     : 'Configuration');
                             showDownloadSuccessDialog(context, message);
                           }
@@ -2132,6 +2136,24 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     );
   }
 
+  void showServiceDueSetupBottomSheet({
+    required BuildContext context,
+    required String deviceId,
+    required VoidCallback onDownload,
+    required VoidCallback onApply,
+    required ValueNotifier<int> refreshTrigger,
+  }) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withOpacity(0.4),
+      builder:
+          (_) =>
+              ServiceDueBottomSheet(onDownload: onDownload, onApply: onApply),
+    );
+  }
+
   void showModuleSetupBottomSheet({
     required BuildContext context,
     required String deviceId,
@@ -2594,7 +2616,32 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
               _peripheralTile(
                 peripheralName: 'Service Due',
                 iconPath: 'assets/svgs/panel_action_service_due_icon.svg',
-                isDisabled: true,
+                onTap: () {
+                  if (_selectedDevice.manufacturerData.isNotEmpty &&
+                      _selectedDevice.manufacturerData.last == 1) {
+                    showBootloaderModeDialog(context: context);
+                    return;
+                  }
+                  showServiceDueSetupBottomSheet(
+                    context: context,
+                    deviceId: _selectedDevice.id,
+                    onDownload: () {
+                      showPasswordPopup(
+                        onCall: () {
+                          ble.bleProcess.isServiceDueFetchCommandActive.value =
+                              true;
+                          bleController.startServiceDueFetch();
+                        },
+                        isServiceDueSetup: true,
+                        mode: 'bottomsheet_download',
+                        onDownloadComplete: _saveSounderCacheAndNotifyRefresh,
+                        downloadSuccessMessage: 'Service Due',
+                      );
+                    },
+                    onApply: () {},
+                    refreshTrigger: _zoneRefreshTrigger,
+                  );
+                },
               ),
               _peripheralTile(
                 peripheralName: 'Factory Prog',
