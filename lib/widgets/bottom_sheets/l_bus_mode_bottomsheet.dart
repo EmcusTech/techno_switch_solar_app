@@ -123,8 +123,10 @@ class _LBusBottomSheetState extends State<LBusBottomSheet> {
         idController.text = data.id.toString();
         revisionController.text = data.revision.toString();
         productRevController.text = data.productRev;
-        hardwareController.text = data.hardware;
-        firmwareController.text = data.firmware;
+        hardwareController.text =
+            data.hardware.isEmpty ? '—' : data.hardware;
+        firmwareController.text =
+            data.firmware.isEmpty ? '—' : data.firmware;
         dateController.text = data.date;
         protocolController.text = data.protocol.toString();
       });
@@ -231,13 +233,13 @@ class _LBusBottomSheetState extends State<LBusBottomSheet> {
                                 label: 'Product Rev.',
                                 controller: productRevController,
                               ),
-                              _disabledField(
+                              _readOnlyField(
                                 'Hardware',
-                                hardwareController.text,
+                                hardwareController,
                               ),
-                              _disabledField(
+                              _readOnlyField(
                                 'Firmware',
-                                firmwareController.text,
+                                firmwareController,
                               ),
                               _textField(
                                 label: 'Date',
@@ -372,6 +374,27 @@ class _LBusBottomSheetState extends State<LBusBottomSheet> {
           TextField(
             enabled: false,
             controller: TextEditingController(text: value),
+            decoration: _inputDecoration(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _readOnlyField(
+    String label,
+    TextEditingController controller,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _label(label),
+          const SizedBox(height: 6),
+          TextField(
+            controller: controller,
+            readOnly: true,
             decoration: _inputDecoration(),
           ),
         ],
