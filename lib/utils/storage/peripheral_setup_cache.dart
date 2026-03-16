@@ -17,6 +17,8 @@ class PeripheralSetupCache {
   static String _lBusKey(String deviceId) => '$_keyPrefix${deviceId}_l_bus';
   static String _sounderKey(String deviceId) =>
       '$_keyPrefix${deviceId}_sounder';
+  static String _serviceDueKey(String deviceId) =>
+      '$_keyPrefix${deviceId}_service_due';
 
   // ───────────────── Sounder ─────────────────
 
@@ -186,6 +188,29 @@ class PeripheralSetupCache {
       final buses = decoded['buses'] as List<dynamic>?;
       if (buses == null) return null;
       return buses.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+    } catch (_) {
+      return null;
+    }
+  }
+
+  // ───────────────── Service Due ─────────────────
+
+  static Future<void> saveServiceDueSetup(
+    String deviceId,
+    Map<String, dynamic> data,
+  ) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_serviceDueKey(deviceId), jsonEncode(data));
+  }
+
+  static Future<Map<String, dynamic>?> loadServiceDueSetup(
+    String deviceId,
+  ) async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(_serviceDueKey(deviceId));
+    if (raw == null) return null;
+    try {
+      return Map<String, dynamic>.from(jsonDecode(raw) as Map);
     } catch (_) {
       return null;
     }

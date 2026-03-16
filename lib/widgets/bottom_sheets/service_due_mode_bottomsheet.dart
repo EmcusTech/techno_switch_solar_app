@@ -4,16 +4,21 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
+import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/widgets/dropdown.dart';
 
 class ServiceDueBottomSheet extends StatefulWidget {
+  final String deviceId;
   final VoidCallback onDownload;
   final VoidCallback onApply;
+  final ValueNotifier<int> refreshTrigger;
 
   const ServiceDueBottomSheet({
     super.key,
+    required this.deviceId,
     required this.onDownload,
     required this.onApply,
+    required this.refreshTrigger,
   });
 
   @override
@@ -35,7 +40,39 @@ class _ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
       manager = Get.find<BleLogController>().bleManager;
     }
 
+    _loadData();
+    widget.refreshTrigger.addListener(_onRefreshTriggered);
+  }
+
+  @override
+  void dispose() {
+    widget.refreshTrigger.removeListener(_onRefreshTriggered);
+    super.dispose();
+  }
+
+  void _onRefreshTriggered() {
     _loadFromManager();
+  }
+
+  Future<void> _loadData() async {
+    final cached = await PeripheralSetupCache.loadServiceDueSetup(widget.deviceId);
+    if (cached != null) {
+      _applyCachedData(cached);
+      if (mounted) setState(() {});
+      return;
+    }
+    _loadFromManager();
+  }
+
+  void _applyCachedData(Map<String, dynamic> data) {
+    config.yearController.text = (data['year'] as num?)?.toString() ?? '0';
+    config.monthController.text = (data['month'] as num?)?.toString() ?? '0';
+    config.dayController.text = (data['day'] as num?)?.toString() ?? '0';
+    config.hourController.text = (data['hour'] as num?)?.toString() ?? '0';
+    config.minuteController.text = (data['minute'] as num?)?.toString() ?? '0';
+    config.companyController.text = (data['company'] as String?) ?? '';
+    config.contactController.text = (data['contact'] as String?) ?? '';
+    config.reminder = (data['reminder'] as int?) == 1 ? 'On' : 'Off';
   }
 
   void _loadFromManager() {
@@ -48,6 +85,7 @@ class _ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
     config.companyController.text = manager!.serviceDueCompany.value;
     config.contactController.text = manager!.serviceDueContact.value;
     config.reminder = manager!.serviceDueReminder.value == 0 ? 'Off' : 'On';
+    if (mounted) setState(() {});
   }
 
   @override

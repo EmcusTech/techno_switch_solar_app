@@ -239,6 +239,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
   final ValueNotifier<int> _zoneRefreshTrigger = ValueNotifier(0);
   final ValueNotifier<int> _extOutRefreshTrigger = ValueNotifier(0);
   final ValueNotifier<int> _sounderRefreshTrigger = ValueNotifier(0);
+  final ValueNotifier<int> _serviceDueRefreshTrigger = ValueNotifier(0);
 
   // Connection state
   bool _isConnecting = false;
@@ -2149,8 +2150,12 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
       backgroundColor: Colors.transparent,
       barrierColor: Colors.black.withOpacity(0.4),
       builder:
-          (_) =>
-              ServiceDueBottomSheet(onDownload: onDownload, onApply: onApply),
+          (_) => ServiceDueBottomSheet(
+            deviceId: deviceId,
+            onDownload: onDownload,
+            onApply: onApply,
+            refreshTrigger: refreshTrigger,
+          ),
     );
   }
 
@@ -2451,6 +2456,21 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     _sounderRefreshTrigger.value++;
   }
 
+  Future<void> _saveServiceDueCacheAndNotifyRefresh() async {
+    final m = _bleManager;
+    await PeripheralSetupCache.saveServiceDueSetup(_selectedDevice.id, {
+      'year': m.serviceDueYear.value,
+      'month': m.serviceDueMonth.value,
+      'day': m.serviceDueDay.value,
+      'hour': m.serviceDueHour.value,
+      'minute': m.serviceDueMinute.value,
+      'company': m.serviceDueCompany.value,
+      'contact': m.serviceDueContact.value,
+      'reminder': m.serviceDueReminder.value,
+    });
+    _serviceDueRefreshTrigger.value++;
+  }
+
   Future<void> _saveRadioCacheAndNotifyRefresh() async {
     final m = _bleManager;
     await PeripheralSetupCache.saveRadioSetup(_selectedDevice.id, {
@@ -2634,12 +2654,12 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                         },
                         isServiceDueSetup: true,
                         mode: 'bottomsheet_download',
-                        onDownloadComplete: _saveSounderCacheAndNotifyRefresh,
+                        onDownloadComplete: _saveServiceDueCacheAndNotifyRefresh,
                         downloadSuccessMessage: 'Service Due',
                       );
                     },
                     onApply: () {},
-                    refreshTrigger: _zoneRefreshTrigger,
+                    refreshTrigger: _serviceDueRefreshTrigger,
                   );
                 },
               ),
