@@ -115,6 +115,10 @@ class BleLogController extends GetxController {
     await bleManager.startServiceDueFetch();
   }
 
+  Future<void> startServiceDueApply() async {
+    await bleManager.startServiceDueApply();
+  }
+
   sendNetworkPacket() async {
     await bleManager.sendNetworkPacket();
   }

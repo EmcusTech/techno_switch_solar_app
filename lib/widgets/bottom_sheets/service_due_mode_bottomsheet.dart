@@ -55,7 +55,9 @@ class _ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
   }
 
   Future<void> _loadData() async {
-    final cached = await PeripheralSetupCache.loadServiceDueSetup(widget.deviceId);
+    final cached = await PeripheralSetupCache.loadServiceDueSetup(
+      widget.deviceId,
+    );
     if (cached != null) {
       _applyCachedData(cached);
       if (mounted) setState(() {});
@@ -326,13 +328,18 @@ class _ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
           if (manager == null) return;
           FocusManager.instance.primaryFocus?.unfocus();
 
-          // manager!.serviceYear.value = config.yearController.text;
-          // manager!.serviceMonth.value = config.monthController.text;
-          // manager!.serviceDay.value = config.dayController.text;
-          // manager!.serviceHour.value = config.hourController.text;
-          // manager!.serviceMinute.value = config.minuteController.text;
-          // manager!.serviceCompany.value = config.companyController.text;
-          // manager!.serviceReminder.value = config.reminder == 'On';
+          manager!.serviceDueYear.value = int.parse(config.yearController.text);
+          manager!.serviceDueMonth.value = int.parse(
+            config.monthController.text,
+          );
+          manager!.serviceDueDay.value = int.parse(config.dayController.text);
+          manager!.serviceDueHour.value = int.parse(config.hourController.text);
+          manager!.serviceDueMinute.value = int.parse(
+            config.minuteController.text,
+          );
+          manager!.serviceDueCompany.value = config.companyController.text;
+          manager!.serviceDueContact.value = config.contactController.text;
+          manager!.serviceDueReminder.value = config.reminder == 'On' ? 1 : 0;
 
           widget.onApply();
         },

@@ -55,6 +55,7 @@ class BleProcess {
   int sounderSetupApplyZoneCommandStep = 0; // 1, 2, 3
   int sounderSetupApplyExtOutCommandStep = 0; // 1, 2, 3
   int checkForServiceDueFetchRes = 0;
+  int checkForServiceDueApplyRes = 0;
   int validEventLogNum = 0;
   int read1000Logs = 0;
   bool logRetreivalEnded = false;
@@ -450,6 +451,10 @@ class BleProcess {
   // Service Due Setup Variables
   final ValueNotifier<bool> isServiceDueFetchCommandActive =
       ValueNotifier<bool>(false);
+
+  final ValueNotifier<bool> isServiceDueApplyCommandActive =
+      ValueNotifier<bool>(false);
+  final ValueNotifier<bool> isServiceDueApplyDone = ValueNotifier<bool>(false);
   final ValueNotifier<int> serviceDueYear = ValueNotifier<int>(0);
   final ValueNotifier<int> serviceDueMonth = ValueNotifier<int>(0);
   final ValueNotifier<int> serviceDueDay = ValueNotifier<int>(0);
@@ -623,6 +628,11 @@ class BleProcess {
         checkForServiceDueFetchRes = 1;
         break;
 
+      case OtaProcessState.sendServiceDueApplyCmdPkt:
+        print("Sending Service Due Apply Command");
+        checkForServiceDueApplyRes = 1;
+        break;
+
       case OtaProcessState.otaWaitRsp:
         break;
     }
@@ -745,6 +755,12 @@ class BleProcess {
           checkForAccessKeyCmdRsp = 0;
           startRxTimeout();
           await bleManager.sendServiceDueFetchCmdPkt();
+        } else if (isServiceDueApplyCommandActive.value) {
+          bleManager.otaProcessState =
+              OtaProcessState.sendServiceDueApplyCmdPkt;
+          checkForAccessKeyCmdRsp = 0;
+          startRxTimeout();
+          await bleManager.sendServiceDueApplyCmdPkt();
         } else {
           bleManager.otaProcessState = OtaProcessState.sendStopCntrlCmdPkt;
           checkForAccessKeyCmdRsp = 0;
@@ -809,6 +825,23 @@ class BleProcess {
         print("We got the response for service due fetch");
       } else {
         print("Service Due Fetch Cmd Response not found, polling again");
+        startRxTimeout();
+        await bleManager.sendPollPacket();
+      }
+    }
+
+    if (checkForServiceDueApplyRes == 1) {
+      print("Checking Service Due Apply CMD RSP");
+      if (rx.payload[12] == 0x02 && rx.payload[10] == 0x83) {
+        print("We got service due apply response");
+        bleManager.otaProcessState = OtaProcessState.notInUse;
+        checkForServiceDueApplyRes = 0;
+        isServiceDueApplyCommandActive.value = false;
+        isServiceDueApplyDone.value = true;
+        isAccessKeyValid.value = true;
+        processDesc.value = "Service Due Apply Completed";
+      } else {
+        print("Service Due Apply Cmd Response not found, polling again");
         startRxTimeout();
         await bleManager.sendPollPacket();
       }
@@ -1851,6 +1884,7 @@ class BleProcess {
     checkForLBusSetupApplyRes = 0;
     checkForSounderSetupFetchRes = 0;
     checkForSounderSetupApplyRes = 0;
+    checkForServiceDueFetchRes = 0;
     // Counters
     checkForCtrlCmdRsp = 0;
     checkForAccessKeyCmdRsp = 0;
@@ -1909,6 +1943,7 @@ class BleProcess {
     checkForLBusSetupApplyRes = 0;
     checkForSounderSetupFetchRes = 0;
     checkForSounderSetupApplyRes = 0;
+    checkForServiceDueFetchRes = 0;
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -1959,6 +1994,7 @@ class BleProcess {
     checkForLBusSetupApplyRes = 0;
     checkForSounderSetupFetchRes = 0;
     checkForSounderSetupApplyRes = 0;
+    checkForServiceDueFetchRes = 0;
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -2007,6 +2043,7 @@ class BleProcess {
     checkForLBusSetupApplyRes = 0;
     checkForSounderSetupFetchRes = 0;
     checkForSounderSetupApplyRes = 0;
+    checkForServiceDueFetchRes = 0;
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -2055,6 +2092,7 @@ class BleProcess {
     checkForLBusSetupApplyRes = 0;
     checkForSounderSetupFetchRes = 0;
     checkForSounderSetupApplyRes = 0;
+    checkForServiceDueFetchRes = 0;
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -2103,6 +2141,7 @@ class BleProcess {
     checkForLBusSetupApplyRes = 0;
     checkForSounderSetupFetchRes = 0;
     checkForSounderSetupApplyRes = 0;
+    checkForServiceDueFetchRes = 0;
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -2150,6 +2189,7 @@ class BleProcess {
     checkForLBusSetupApplyRes = 0;
     checkForSounderSetupFetchRes = 0;
     checkForSounderSetupApplyRes = 0;
+    checkForServiceDueFetchRes = 0;
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -2198,6 +2238,7 @@ class BleProcess {
     checkForLBusSetupApplyRes = 0;
     checkForSounderSetupFetchRes = 0;
     checkForSounderSetupApplyRes = 0;
+    checkForServiceDueFetchRes = 0;
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -2246,6 +2287,7 @@ class BleProcess {
     checkForLBusSetupApplyRes = 0;
     checkForSounderSetupFetchRes = 0;
     checkForSounderSetupApplyRes = 0;
+    checkForServiceDueFetchRes = 0;
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -2294,6 +2336,7 @@ class BleProcess {
     checkForLBusSetupApplyRes = 0;
     checkForSounderSetupFetchRes = 0;
     checkForSounderSetupApplyRes = 0;
+    checkForServiceDueFetchRes = 0;
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -2676,6 +2719,8 @@ class BleProcess {
         case OtaProcessState.sendSounderSetupApplyCmdPkt:
           break;
         case OtaProcessState.sendServiceDueFetchCmdPkt:
+          break;
+        case OtaProcessState.sendServiceDueApplyCmdPkt:
           break;
       }
       startRxTimeout();

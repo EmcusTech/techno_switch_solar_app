@@ -58,6 +58,7 @@ enum BleStates {
   SEND_SOUNDER_SETUP_CMD_FETCH_PACKET,
   SEND_SOUNDER_SETUP_CMD_APPLY_PACKET,
   SEND_SERVICE_DUE_SETUP_CMD_FETCH_PACKET,
+  SEND_SERVICE_DUE_SETUP_CMD_APPLY_PACKET,
   // add other states
 }
 
@@ -89,6 +90,7 @@ enum OtaProcessState {
   sendSounderSetupFetchCmdPkt,
   sendSounderSetupApplyCmdPkt,
   sendServiceDueFetchCmdPkt,
+  sendServiceDueApplyCmdPkt,
 }
 
 enum BleOperationMode {
@@ -111,6 +113,7 @@ enum BleOperationMode {
   sounderSetupFetch,
   sounderSetupApply,
   serviceDueFetch,
+  serviceDueApply,
 }
 
 const String BLE_AUTHN_MSG = "TECHNOSWITCH-AUTH-APP";
@@ -1291,6 +1294,41 @@ class BleManager {
     bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
     Get.find<BleLogController>().sendNetworkPacket();
   }
+
+  Future<void> startServiceDueApply() async {
+    if (!isConnected) {
+      throw Exception("Device not connected. Cannot start log retrieval.");
+    }
+
+    if (notifyChar == null || writeChar == null) {
+      throw Exception(
+        "BLE characteristics not initialized. Cannot start log retrieval.",
+      );
+    }
+
+    // Set operation mode to log retrieval
+    currentOperationMode = BleOperationMode.serviceDueApply;
+
+    // Reset protocol state to initial values
+    resetServiceDueState();
+    resetProtocolServiceDueState();
+
+    // IMPORTANT: Reset process state to clear isOtaCompleted flag
+    // This ensures polls aren't blocked after firmware upgrade
+    bleProcess.resetProcessServiceDueState();
+
+    if (_notifySub == null) {
+      throw Exception(
+        "BLE handshake not complete. Please wait for connection to finish.",
+      );
+    }
+    print("Proceeding with Service due apply");
+    bleCurrentState = BleStates.SEND_SERVICE_DUE_SETUP_CMD_APPLY_PACKET;
+    bleStateMachineState = BleStates.SEND_SERVICE_DUE_SETUP_CMD_APPLY_PACKET;
+    print("Current state: $bleStateMachineState");
+    bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
+    Get.find<BleLogController>().sendNetworkPacket();
+  }
   // Future<void> startExtOut() async {
   //   if (!isConnected) {
   //     throw Exception("Device not connected. Cannot start log retrieval.");
@@ -2022,6 +2060,16 @@ class BleManager {
               BleStates.SEND_SERVICE_DUE_SETUP_CMD_FETCH_PACKET;
           print("Current state: $bleStateMachineState (Service due fetch)");
           // Send Network Packet for Service due fetch
+          bleProcess.startOtherPacketsRxTimeout(
+            timeout: const Duration(seconds: 5),
+          );
+          Get.find<BleLogController>().sendNetworkPacket();
+        } else if (currentOperationMode == BleOperationMode.serviceDueApply) {
+          bleCurrentState = BleStates.SEND_SERVICE_DUE_SETUP_CMD_APPLY_PACKET;
+          bleStateMachineState =
+              BleStates.SEND_SERVICE_DUE_SETUP_CMD_APPLY_PACKET;
+          print("Current state: $bleStateMachineState (Service due apply)");
+          // Send Network Packet for Service due apply
           bleProcess.startOtherPacketsRxTimeout(
             timeout: const Duration(seconds: 5),
           );
@@ -4160,6 +4208,71 @@ class BleManager {
 
     print(
       "TX/RX: TRANSMIT: Service due fetch Command time: ${DateTime.now().toIso8601String()}, packet: ${u8_pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+    );
+
+    await sendSmallDataFrame(0x1000, 216, u8_pkt);
+  }
+
+  Future<void> sendServiceDueApplyCmdPkt() async {
+    // Create 216-byte buffer
+    Uint8List u8_pkt = Uint8List(216);
+
+    final String serviceDueCompanyText = serviceDueCompany.value;
+    final String serviceDueContactText = serviceDueContact.value;
+
+    final List<int> serviceDueCompanyTextBytes =
+        serviceDueCompanyText.codeUnits;
+    final List<int> serviceDueContactTextBytes =
+        serviceDueContactText.codeUnits;
+
+    final int serviceDueCompanyTextLength = serviceDueCompanyTextBytes.length;
+    final int serviceDueContactTextLength = serviceDueContactTextBytes.length;
+
+    final serviceDueCompanyTextInitialIndex = 21;
+    final serviceDueContactTextInitialIndex = 35;
+
+    for (int i = 0; i < serviceDueCompanyTextLength; i++) {
+      u8_pkt[serviceDueCompanyTextInitialIndex + i] =
+          serviceDueCompanyTextBytes[i];
+    }
+    for (int i = 0; i < serviceDueContactTextLength; i++) {
+      u8_pkt[serviceDueContactTextInitialIndex + i] =
+          serviceDueContactTextBytes[i];
+    }
+
+    // Update global counters
+    u8TxPktCnt += 1;
+
+    u8_pkt[0] = 0xFE;
+    u8_pkt[1] = 0x01;
+    u8_pkt[2] = 0x00;
+
+    u8_pkt[3] = 0x01; // pkt type
+    u8_pkt[4] = u8TxPktCnt & 0xFF; // tx pkt num
+    u8_pkt[5] = u8RxPktCnt & 0xFF; // rx pkt num
+    u8_pkt[6] = 0x00; // network number
+    u8_pkt[10] = 0x81; // mode
+    u8_pkt[11] = 0x00; // socket number
+    u8_pkt[12] = 0x18; // command
+    u8_pkt[13] = (serviceDueYear.value >> 8) & 0xFF;
+    u8_pkt[14] = serviceDueYear.value & 0xFF;
+    u8_pkt[15] = serviceDueMonth.value & 0xFF;
+    u8_pkt[16] = serviceDueDay.value & 0xFF;
+    u8_pkt[17] = serviceDueHour.value & 0xFF;
+    u8_pkt[18] = serviceDueMinute.value & 0xFF;
+    u8_pkt[19] = serviceDueReminder.value;
+    u8_pkt[20] = serviceDueCompanyTextLength & 0xFF;
+    u8_pkt[34] = serviceDueContactTextLength & 0xFF;
+
+    // Compute checksum on first 213 bytes
+    int checksum = toolsFletcherChecksum(u8_pkt.sublist(0, 213));
+
+    u8_pkt[213] = (checksum >> 8) & 0xFF;
+    u8_pkt[214] = checksum & 0xFF;
+    u8_pkt[215] = 0xFD;
+
+    print(
+      "TX/RX: TRANSMIT: Service due Apply Command time: ${DateTime.now().toIso8601String()}, packet: ${u8_pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
     );
 
     await sendSmallDataFrame(0x1000, 216, u8_pkt);

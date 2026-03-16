@@ -1367,6 +1367,10 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                             mounted) {
                           await _saveSounderCacheAndNotifyRefresh();
                           showApplySuccessDialog(context, 'Sounders');
+                        } else if (ble.bleProcess.isServiceDueApplyDone.value &&
+                            mounted) {
+                          await _saveServiceDueCacheAndNotifyRefresh();
+                          showApplySuccessDialog(context, 'Service Due');
                         } else {
                           Navigator.of(dialogContext).push(
                             MaterialPageRoute(
@@ -2654,11 +2658,22 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                         },
                         isServiceDueSetup: true,
                         mode: 'bottomsheet_download',
-                        onDownloadComplete: _saveServiceDueCacheAndNotifyRefresh,
+                        onDownloadComplete:
+                            _saveServiceDueCacheAndNotifyRefresh,
                         downloadSuccessMessage: 'Service Due',
                       );
                     },
-                    onApply: () {},
+                    onApply: () {
+                      showPasswordPopup(
+                        onCall: () {
+                          ble.bleProcess.isServiceDueApplyCommandActive.value =
+                              true;
+                          bleController.startServiceDueApply();
+                        },
+                        isServiceDueSetup: true,
+                        mode: 'bottomsheet_apply',
+                      );
+                    },
                     refreshTrigger: _serviceDueRefreshTrigger,
                   );
                 },
