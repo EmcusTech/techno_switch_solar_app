@@ -2180,8 +2180,12 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
       backgroundColor: Colors.transparent,
       barrierColor: Colors.black.withOpacity(0.4),
       builder:
-          (_) =>
-              AccessCodesBottomSheet(onDownload: onDownload, onApply: onApply),
+          (_) => AccessCodesBottomSheet(
+            deviceId: deviceId,
+            onDownload: onDownload,
+            onApply: onApply,
+            refreshTrigger: refreshTrigger,
+          ),
     );
   }
 
@@ -2535,6 +2539,14 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     _zoneRefreshTrigger.value++;
   }
 
+  Future<void> _saveAccessCodeCacheAndNotifyRefresh() async {
+    final m = _bleManager;
+    final codes =
+        m.accessCodeSetupDataList.value.map((e) => e.toJson()).toList();
+    await PeripheralSetupCache.saveAccessCodeSetup(_selectedDevice.id, codes);
+    _serviceDueRefreshTrigger.value++;
+  }
+
   Widget _peripheralTile({
     required String peripheralName,
     required String iconPath,
@@ -2724,7 +2736,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                         },
                         isAccessCodeSetup: true,
                         mode: 'bottomsheet_download',
-                        // onDownloadComplete: _saveAccessCodeCacheAndNotifyRefresh,
+                        onDownloadComplete: _saveAccessCodeCacheAndNotifyRefresh,
                         downloadSuccessMessage: 'Access Code',
                       );
                     },

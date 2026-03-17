@@ -1,16 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:techno_switch_solar_app/ble/ble_manager.dart';
+import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
+import 'package:techno_switch_solar_app/models/access_code_mode_model.dart';
+import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/widgets/dropdown.dart';
 
 class AccessCodesBottomSheet extends StatefulWidget {
+  final String deviceId;
   final VoidCallback onDownload;
   final VoidCallback onApply;
+  final ValueNotifier<int> refreshTrigger;
 
   const AccessCodesBottomSheet({
     super.key,
+    required this.deviceId,
     required this.onDownload,
     required this.onApply,
+    required this.refreshTrigger,
   });
 
   @override
@@ -18,6 +27,7 @@ class AccessCodesBottomSheet extends StatefulWidget {
 }
 
 class _AccessCodesBottomSheetState extends State<AccessCodesBottomSheet> {
+  BleManager? manager;
   int selectedCode = 1;
 
   final List<String> accessLevelNames = [
@@ -27,42 +37,100 @@ class _AccessCodesBottomSheetState extends State<AccessCodesBottomSheet> {
     'Commissioning',
   ];
 
-  late List<AccessCodeConfig> accessCodes;
-
   final TextEditingController accessLevelController = TextEditingController();
   final TextEditingController accessCodeController = TextEditingController();
 
   String accessLevelName = 'Not Used';
 
+  void _onListChanged() {
+    _loadFromManager();
+  }
+
   @override
   void initState() {
     super.initState();
-
-    accessCodes = List.generate(8, (_) => AccessCodeConfig());
-
-    _loadCurrent();
+    widget.refreshTrigger.addListener(_onRefreshTriggered);
+    _loadData();
   }
 
   @override
   void dispose() {
+    widget.refreshTrigger.removeListener(_onRefreshTriggered);
+    manager?.accessCodeSetupDataList.removeListener(_onListChanged);
     accessLevelController.dispose();
     accessCodeController.dispose();
     super.dispose();
   }
 
-  void _loadCurrent() {
-    final data = accessCodes[selectedCode - 1];
-
-    accessLevelController.text = data.level.toString();
-    accessLevelName = accessLevelNames[data.level - 1];
-    accessCodeController.text = data.code;
+  void _onRefreshTriggered() {
+    _loadFromManager();
   }
 
-  void _saveCurrent() {
-    final data = accessCodes[selectedCode - 1];
+  Future<void> _loadData() async {
+    if (Get.isRegistered<BleLogController>()) {
+      manager = Get.find<BleLogController>().bleManager;
+      manager?.accessCodeSetupDataList.addListener(_onListChanged);
+    }
+    final cached = await PeripheralSetupCache.loadAccessCodeSetup(
+      widget.deviceId,
+    );
+    if (cached != null && cached.isNotEmpty) {
+      final list = cached.map((e) => AccessCodeSetupData.fromJson(e)).toList();
+      while (list.length < 8) {
+        list.add(const AccessCodeSetupData());
+      }
+      manager?.accessCodeSetupDataList.value = list;
+    }
+    _loadFromManager();
+  }
 
-    data.level = int.tryParse(accessLevelController.text) ?? 1;
-    data.code = accessCodeController.text;
+  void _loadFromManager() {
+    if (!Get.isRegistered<BleLogController>()) return;
+    manager = Get.find<BleLogController>().bleManager;
+
+    final index = selectedCode - 1;
+    if (index < 0 || index >= manager!.accessCodeSetupDataList.value.length) {
+      return;
+    }
+
+    final data = manager!.accessCodeSetupDataList.value[index];
+
+    if (mounted) {
+      setState(() {
+        accessLevelController.text = data.accessLevel.toString();
+        accessLevelName =
+            accessLevelNames.contains(data.accessLevelName)
+                ? data.accessLevelName
+                : (data.accessLevel >= 0 &&
+                    data.accessLevel < accessLevelNames.length)
+                ? accessLevelNames[data.accessLevel]
+                : accessLevelNames.first;
+        accessCodeController.text = data.accessCode;
+      });
+    }
+  }
+
+  void _saveCurrentToManager() {
+    if (manager == null) return;
+    final index = selectedCode - 1;
+    if (index < 0 || index >= manager!.accessCodeSetupDataList.value.length)
+      return;
+
+    final existing = manager!.accessCodeSetupDataList.value[index];
+    final levelIndex = accessLevelNames.indexOf(accessLevelName);
+    final level = levelIndex >= 0 ? levelIndex : existing.accessLevel;
+
+    final updated = existing.copyWith(
+      accessLevel: level,
+      accessLevelName: accessLevelName,
+      accessCode: accessCodeController.text,
+    );
+
+    final list = List<AccessCodeSetupData>.from(
+      manager!.accessCodeSetupDataList.value,
+    );
+    list[index] = updated;
+    manager!.accessCodeSetupDataList.value = list;
   }
 
   @override
@@ -128,7 +196,7 @@ class _AccessCodesBottomSheetState extends State<AccessCodesBottomSheet> {
                                     int index = accessLevelNames.indexOf(v);
 
                                     accessLevelController.text =
-                                        (index + 1).toString();
+                                        index.toString();
                                   });
                                 },
                               ),
@@ -171,9 +239,9 @@ class _AccessCodesBottomSheetState extends State<AccessCodesBottomSheet> {
         final number = int.parse(v.split(' ').last);
 
         setState(() {
-          _saveCurrent();
+          _saveCurrentToManager();
           selectedCode = number;
-          _loadCurrent();
+          _loadFromManager();
         });
       },
     );
@@ -317,7 +385,7 @@ class _AccessCodesBottomSheetState extends State<AccessCodesBottomSheet> {
           ),
         ),
         onPressed: () {
-          _saveCurrent();
+          _saveCurrentToManager();
           widget.onApply();
         },
         child: Text(
@@ -331,10 +399,4 @@ class _AccessCodesBottomSheetState extends State<AccessCodesBottomSheet> {
       ),
     );
   }
-}
-
-class AccessCodeConfig {
-  int level = 1;
-
-  String code = '';
 }

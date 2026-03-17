@@ -783,6 +783,7 @@ class BleProcess {
               OtaProcessState.sendAccessCodeSetupFetchCmdPkt;
           checkForAccessKeyCmdRsp = 0;
           accessCodeSetupFetchCommandStep = 1;
+          processDesc.value = "Downloading Access Code 1/8";
           startRxTimeout();
           await bleManager.sendAccessCodeSetupFetchCmdPkt(accessCodeNo: 1);
         } else {
@@ -1948,6 +1949,8 @@ class BleProcess {
     checkForSounderSetupFetchRes = 0;
     checkForSounderSetupApplyRes = 0;
     checkForServiceDueFetchRes = 0;
+    checkForAccessCodeSetupFetchRes = 0;
+    accessCodeSetupFetchCommandStep = 0;
     // Counters
     checkForCtrlCmdRsp = 0;
     checkForAccessKeyCmdRsp = 0;
@@ -2007,6 +2010,8 @@ class BleProcess {
     checkForSounderSetupFetchRes = 0;
     checkForSounderSetupApplyRes = 0;
     checkForServiceDueFetchRes = 0;
+    checkForAccessCodeSetupFetchRes = 0;
+    accessCodeSetupFetchCommandStep = 0;
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -2058,6 +2063,8 @@ class BleProcess {
     checkForSounderSetupFetchRes = 0;
     checkForSounderSetupApplyRes = 0;
     checkForServiceDueFetchRes = 0;
+    checkForAccessCodeSetupFetchRes = 0;
+    accessCodeSetupFetchCommandStep = 0;
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -2107,6 +2114,8 @@ class BleProcess {
     checkForSounderSetupFetchRes = 0;
     checkForSounderSetupApplyRes = 0;
     checkForServiceDueFetchRes = 0;
+    checkForAccessCodeSetupFetchRes = 0;
+    accessCodeSetupFetchCommandStep = 0;
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -2156,6 +2165,8 @@ class BleProcess {
     checkForSounderSetupFetchRes = 0;
     checkForSounderSetupApplyRes = 0;
     checkForServiceDueFetchRes = 0;
+    checkForAccessCodeSetupFetchRes = 0;
+    accessCodeSetupFetchCommandStep = 0;
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -2205,6 +2216,8 @@ class BleProcess {
     checkForSounderSetupFetchRes = 0;
     checkForSounderSetupApplyRes = 0;
     checkForServiceDueFetchRes = 0;
+    checkForAccessCodeSetupFetchRes = 0;
+    accessCodeSetupFetchCommandStep = 0;
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -2253,6 +2266,8 @@ class BleProcess {
     checkForSounderSetupFetchRes = 0;
     checkForSounderSetupApplyRes = 0;
     checkForServiceDueFetchRes = 0;
+    checkForAccessCodeSetupFetchRes = 0;
+    accessCodeSetupFetchCommandStep = 0;
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -2302,6 +2317,8 @@ class BleProcess {
     checkForSounderSetupFetchRes = 0;
     checkForSounderSetupApplyRes = 0;
     checkForServiceDueFetchRes = 0;
+    checkForAccessCodeSetupFetchRes = 0;
+    accessCodeSetupFetchCommandStep = 0;
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -2351,6 +2368,8 @@ class BleProcess {
     checkForSounderSetupFetchRes = 0;
     checkForSounderSetupApplyRes = 0;
     checkForServiceDueFetchRes = 0;
+    checkForAccessCodeSetupFetchRes = 0;
+    accessCodeSetupFetchCommandStep = 0;
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -2400,6 +2419,8 @@ class BleProcess {
     checkForSounderSetupFetchRes = 0;
     checkForSounderSetupApplyRes = 0;
     checkForServiceDueFetchRes = 0;
+    checkForAccessCodeSetupFetchRes = 0;
+    accessCodeSetupFetchCommandStep = 0;
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -2449,6 +2470,8 @@ class BleProcess {
     checkForSounderSetupFetchRes = 0;
     checkForSounderSetupApplyRes = 0;
     checkForServiceDueFetchRes = 0;
+    checkForAccessCodeSetupFetchRes = 0;
+    accessCodeSetupFetchCommandStep = 0;
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;

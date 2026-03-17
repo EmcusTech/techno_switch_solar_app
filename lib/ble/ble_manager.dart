@@ -10,6 +10,7 @@ import 'ble_frame.dart';
 import 'aes_key.dart' as aes;
 import 'ble_process.dart';
 import 'dart:typed_data';
+import 'package:techno_switch_solar_app/models/access_code_mode_model.dart';
 import 'package:techno_switch_solar_app/models/l_bus_setup_data_model.dart';
 import 'package:techno_switch_solar_app/utils/l_bus_payload_config.dart';
 
@@ -353,6 +354,9 @@ class BleManager {
       bleProcess.lBusSetupDataList;
   ValueNotifier<bool> get isLBusSetupApplyCommandActive =>
       bleProcess.isLBusSetupApplyCommandActive;
+
+  ValueNotifier<List<AccessCodeSetupData>> get accessCodeSetupDataList =>
+      bleProcess.accessCodeSetupDataList;
 
   ValueNotifier<int> get sounderOneRelayFunctionGroup =>
       bleProcess.sounderOneRelayFunctionGroup;

@@ -8,7 +8,7 @@ class AccessCodeSetupData {
 
   const AccessCodeSetupData({
     this.accessCodeNo = 1,
-    this.accessLevel = 1,
+    this.accessLevel = 0,
     this.accessLevelName = 'Not Used',
     this.accessCode = '',
   });
@@ -57,8 +57,8 @@ class AccessCodeSetupData {
     }
 
     final levelName =
-        (level >= 1 && level <= accessLevelNames.length)
-            ? accessLevelNames[level - 1]
+        (level >= 0 && level < accessLevelNames.length)
+            ? accessLevelNames[level]
             : accessLevelNames.first;
 
     return AccessCodeSetupData(
@@ -79,7 +79,7 @@ class AccessCodeSetupData {
   static AccessCodeSetupData fromJson(Map<String, dynamic> json) {
     return AccessCodeSetupData(
       accessCodeNo: json['accessCodeNo'] as int? ?? 1,
-      accessLevel: json['accessLevel'] as int? ?? 1,
+      accessLevel: json['accessLevel'] as int? ?? 0,
       accessLevelName: json['accessLevelName'] as String? ?? 'Not Used',
       accessCode: json['accessCode'] as String? ?? '',
     );

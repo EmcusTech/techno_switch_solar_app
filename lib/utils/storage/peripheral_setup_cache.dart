@@ -19,6 +19,8 @@ class PeripheralSetupCache {
       '$_keyPrefix${deviceId}_sounder';
   static String _serviceDueKey(String deviceId) =>
       '$_keyPrefix${deviceId}_service_due';
+  static String _accessCodeKey(String deviceId) =>
+      '$_keyPrefix${deviceId}_access_code';
 
   // ───────────────── Sounder ─────────────────
 
@@ -188,6 +190,35 @@ class PeripheralSetupCache {
       final buses = decoded['buses'] as List<dynamic>?;
       if (buses == null) return null;
       return buses.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+    } catch (_) {
+      return null;
+    }
+  }
+
+  // ───────────────── Access Code ─────────────────
+
+  static Future<void> saveAccessCodeSetup(
+    String deviceId,
+    List<Map<String, dynamic>> codes,
+  ) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(
+      _accessCodeKey(deviceId),
+      jsonEncode({'codes': codes}),
+    );
+  }
+
+  static Future<List<Map<String, dynamic>>?> loadAccessCodeSetup(
+    String deviceId,
+  ) async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(_accessCodeKey(deviceId));
+    if (raw == null) return null;
+    try {
+      final decoded = jsonDecode(raw) as Map<String, dynamic>;
+      final codes = decoded['codes'] as List<dynamic>?;
+      if (codes == null) return null;
+      return codes.map((e) => Map<String, dynamic>.from(e as Map)).toList();
     } catch (_) {
       return null;
     }
