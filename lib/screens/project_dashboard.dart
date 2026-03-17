@@ -19,6 +19,7 @@ import 'package:techno_switch_solar_app/screens/settings_screen.dart';
 import 'package:techno_switch_solar_app/screens/test_mode_screen.dart';
 import 'package:techno_switch_solar_app/utils/bluetooth_service.dart';
 import 'package:techno_switch_solar_app/utils/ble_name_utils.dart';
+import 'package:techno_switch_solar_app/widgets/bottom_sheets/access_code_mode_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/input_mode_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/l_bus_mode_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/module_mode_bottomsheet.dart';
@@ -166,7 +167,7 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
             showSelectedLabels: false,
             showUnselectedLabels: false,
             onTap: (index) {
-              if (disabledIndexes.contains(index)) return; // 🚫 disabled
+              if (disabledIndexes.contains(index)) return;
               _onItemTapped(index);
             },
             items: [
@@ -1205,6 +1206,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     bool? isZoneSetup = false,
     bool? isSounderSetup = false,
     bool? isServiceDueSetup = false,
+    bool? isAccessCodeSetup = false,
     String? mode,
     Future<void> Function()? onDownloadComplete,
     String? downloadSuccessMessage,
@@ -1327,6 +1329,8 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                                     ? 'Sounders'
                                     : isServiceDueSetup == true
                                     ? 'Service Due'
+                                    : isAccessCodeSetup == true
+                                    ? 'Access Code'
                                     : 'Configuration');
                             showDownloadSuccessDialog(context, message);
                           }
@@ -2163,6 +2167,24 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     );
   }
 
+  showAccessCodeSetupBottomSheet({
+    required BuildContext context,
+    required String deviceId,
+    required VoidCallback onDownload,
+    required VoidCallback onApply,
+    required ValueNotifier<int> refreshTrigger,
+  }) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withOpacity(0.4),
+      builder:
+          (_) =>
+              AccessCodesBottomSheet(onDownload: onDownload, onApply: onApply),
+    );
+  }
+
   void showModuleSetupBottomSheet({
     required BuildContext context,
     required String deviceId,
@@ -2679,9 +2701,37 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 },
               ),
               _peripheralTile(
-                peripheralName: 'Factory Prog',
-                iconPath: 'assets/svgs/panel_action_factory_prog_icon.svg',
-                isDisabled: true,
+                peripheralName: 'Accees Code',
+                iconPath: 'assets/svgs/panel_action_access_code_icon.svg',
+                onTap: () {
+                  if (_selectedDevice.manufacturerData.isNotEmpty &&
+                      _selectedDevice.manufacturerData.last == 1) {
+                    showBootloaderModeDialog(context: context);
+                    return;
+                  }
+
+                  showAccessCodeSetupBottomSheet(
+                    context: context,
+                    deviceId: _selectedDevice.id,
+                    onDownload: () {
+                      showPasswordPopup(
+                        onCall: () {
+                          ble
+                              .bleProcess
+                              .isAccessCodeSetupFetchCommandActive
+                              .value = true;
+                          bleController.startAccessCodeSetupFetch();
+                        },
+                        isAccessCodeSetup: true,
+                        mode: 'bottomsheet_download',
+                        // onDownloadComplete: _saveAccessCodeCacheAndNotifyRefresh,
+                        downloadSuccessMessage: 'Access Code',
+                      );
+                    },
+                    onApply: () {},
+                    refreshTrigger: _serviceDueRefreshTrigger,
+                  );
+                },
               ),
               _peripheralTile(
                 peripheralName: 'Config Log',

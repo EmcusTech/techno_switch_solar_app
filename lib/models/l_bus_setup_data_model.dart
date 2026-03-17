@@ -96,10 +96,8 @@ class LBusSetupData {
   ) {
     if (payload.length < 44) return existing;
     String productRev = '';
-    if (payload.length >
-        LBusPayloadIndices.enabledBusDataProductRevStart + 1) {
-      final length =
-          payload[LBusPayloadIndices.enabledBusDataProductRevStart];
+    if (payload.length > LBusPayloadIndices.enabledBusDataProductRevStart + 1) {
+      final length = payload[LBusPayloadIndices.enabledBusDataProductRevStart];
       final start = LBusPayloadIndices.enabledBusDataProductRevStart + 1;
       final end = start + length;
       if (end <= payload.length && length > 0) {
@@ -120,7 +118,8 @@ class LBusSetupData {
       payload[LBusPayloadIndices.enabledBusDataFirmwareStart + 2],
       payload[LBusPayloadIndices.enabledBusDataFirmwareStart + 3],
     ].join('.');
-    final year = (payload[LBusPayloadIndices.enabledBusDataDateYearHi] << 8) |
+    final year =
+        (payload[LBusPayloadIndices.enabledBusDataDateYearHi] << 8) |
         payload[LBusPayloadIndices.enabledBusDataDateYearLo];
     final month = payload[LBusPayloadIndices.enabledBusDataDateMonth];
     final day = payload[LBusPayloadIndices.enabledBusDataDateDay];

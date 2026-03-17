@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
+import 'package:techno_switch_solar_app/models/access_code_mode_model.dart';
 import 'package:techno_switch_solar_app/utils/ext_out_equipment_mode_util.dart';
 import 'package:techno_switch_solar_app/utils/general_quipment_mode_util.dart';
 import 'package:techno_switch_solar_app/utils/input_mode_util.dart';
@@ -56,6 +57,8 @@ class BleProcess {
   int sounderSetupApplyExtOutCommandStep = 0; // 1, 2, 3
   int checkForServiceDueFetchRes = 0;
   int checkForServiceDueApplyRes = 0;
+  int checkForAccessCodeSetupFetchRes = 0;
+  int accessCodeSetupFetchCommandStep = 0; // 1, 2, 3
   int validEventLogNum = 0;
   int read1000Logs = 0;
   bool logRetreivalEnded = false;
@@ -464,6 +467,15 @@ class BleProcess {
   final ValueNotifier<String> serviceDueContact = ValueNotifier<String>("");
   final ValueNotifier<int> serviceDueReminder = ValueNotifier<int>(0);
 
+  // Access Code Setup Variables
+  final ValueNotifier<bool> isAccessCodeSetupFetchCommandActive =
+      ValueNotifier<bool>(false);
+
+  final ValueNotifier<List<AccessCodeSetupData>> accessCodeSetupDataList =
+      ValueNotifier<List<AccessCodeSetupData>>(
+        List.generate(8, (_) => const AccessCodeSetupData()),
+      );
+
   // BleStates bleStateMachineState = BleStates.IDLE;
   BleStates bleCurrentState = BleStates.IDLE;
   DeviceConnectState deviceConnectState = DeviceConnectState.notConnected;
@@ -633,6 +645,11 @@ class BleProcess {
         checkForServiceDueApplyRes = 1;
         break;
 
+      case OtaProcessState.sendAccessCodeSetupFetchCmdPkt:
+        print("Sending Access Code Setup Fetch Command");
+        checkForAccessCodeSetupFetchRes = 1;
+        break;
+
       case OtaProcessState.otaWaitRsp:
         break;
     }
@@ -761,6 +778,13 @@ class BleProcess {
           checkForAccessKeyCmdRsp = 0;
           startRxTimeout();
           await bleManager.sendServiceDueApplyCmdPkt();
+        } else if (isAccessCodeSetupFetchCommandActive.value) {
+          bleManager.otaProcessState =
+              OtaProcessState.sendAccessCodeSetupFetchCmdPkt;
+          checkForAccessKeyCmdRsp = 0;
+          accessCodeSetupFetchCommandStep = 1;
+          startRxTimeout();
+          await bleManager.sendAccessCodeSetupFetchCmdPkt(accessCodeNo: 1);
         } else {
           bleManager.otaProcessState = OtaProcessState.sendStopCntrlCmdPkt;
           checkForAccessKeyCmdRsp = 0;
@@ -797,6 +821,45 @@ class BleProcess {
         await bleManager.sendPollPacket();
       }
       // checkDipSetCmdRsp = 0;
+    }
+
+    if (checkForAccessCodeSetupFetchRes == 1) {
+      print("Checking Access Code Setup Fetch CMD RSP");
+      if (rx.payload[12] == 0x03) {
+        final accessCodeIndex = accessCodeSetupFetchCommandStep - 1;
+        if (accessCodeIndex >= 0 && accessCodeIndex < 8) {
+          final parsed = AccessCodeSetupData.fromPayload(rx.payload);
+          final updated = List<AccessCodeSetupData>.from(
+            accessCodeSetupDataList.value,
+          );
+          updated[accessCodeIndex] = parsed;
+          accessCodeSetupDataList.value = updated;
+        }
+
+        if (accessCodeSetupFetchCommandStep >= 1 &&
+            accessCodeSetupFetchCommandStep < 8) {
+          final nextAccessCodeNo = accessCodeSetupFetchCommandStep + 1;
+          processDesc.value = "Downloading Access Code $nextAccessCodeNo/8";
+          print(
+            "CMD $accessCodeSetupFetchCommandStep Validated -> send CMD$nextAccessCodeNo, keep polling",
+          );
+          accessCodeSetupFetchCommandStep = nextAccessCodeNo;
+          startRxTimeout();
+          await bleManager.sendAccessCodeSetupFetchCmdPkt(
+            accessCodeNo: nextAccessCodeNo,
+          );
+        } else {
+          bleManager.otaProcessState = OtaProcessState.notInUse;
+          checkForAccessCodeSetupFetchRes = 0;
+          isAccessCodeSetupFetchCommandActive.value = false;
+          isAccessKeyValid.value = true;
+          processDesc.value = "Access Code Setup Fetch Completed";
+        }
+      } else {
+        print("Access Code Setup Fetch Cmd Response not found, polling again");
+        startRxTimeout();
+        await bleManager.sendPollPacket();
+      }
     }
 
     if (checkForServiceDueFetchRes == 1) {
@@ -2359,6 +2422,55 @@ class BleProcess {
     // panelName.value = "";
   }
 
+  void resetProcessAccessCodeSetupState() {
+    // Terminal guards
+    isOtaCompleted = false;
+    processNextOtaFrame = true;
+    logRetreivalEnded = false;
+
+    // Counters
+    checkForCtrlCmdRsp = 0;
+    checkForAccessKeyCmdRsp = 0;
+    checkDipSetCmdRsp = 0;
+    checkForExtCmdFetchRes = 0;
+    checkForInputSetupFetchRes = 0;
+    checkForRelaySetupApplyRes = 0;
+    validEventLogNum = 0;
+    read1000Logs = 0;
+    receivedPollCount = 0;
+    checkForRadioSetupFetchRes = 0;
+    isExtOutApplyButtonActive.value = false;
+    relaySetupFetchCommandStep = 0;
+    checkForRelaySetupFetchRes = 0;
+    checkForRadioSetupApplyRes = 0;
+    checkForLBusSetupFetchRes = 0;
+    lBusSetupFetchCommandStep = 0;
+    checkForLBusSetupApplyRes = 0;
+    checkForSounderSetupFetchRes = 0;
+    checkForSounderSetupApplyRes = 0;
+    checkForServiceDueFetchRes = 0;
+    // Time tracking
+    // logStartingTime = null;
+    // logEndTime = null;
+
+    // OTA state
+    bleManager.otaProcessState = OtaProcessState.sendNetworkPacket;
+
+    // RX timeout
+    _rxTimeoutTimer?.cancel();
+    _rxTimeoutTimer = null;
+
+    _otherPacketsRxTimeoutTimer?.cancel();
+    _otherPacketsRxTimeoutTimer = null;
+
+    // UI notifiers
+    // validEventLogCount.value = 0;
+    // read1000LogsCount.value = 0;
+    // validEventLogs.value = [];
+    // isValidLogRecieved.value = false;
+    // panelName.value = "";
+  }
+
   String formatDuration(Duration d) {
     final m = d.inMinutes;
     final s = d.inSeconds.remainder(60);
@@ -2721,6 +2833,8 @@ class BleProcess {
         case OtaProcessState.sendServiceDueFetchCmdPkt:
           break;
         case OtaProcessState.sendServiceDueApplyCmdPkt:
+          break;
+        case OtaProcessState.sendAccessCodeSetupFetchCmdPkt:
           break;
       }
       startRxTimeout();
