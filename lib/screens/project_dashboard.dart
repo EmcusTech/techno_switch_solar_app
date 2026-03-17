@@ -1375,6 +1375,13 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                             mounted) {
                           await _saveServiceDueCacheAndNotifyRefresh();
                           showApplySuccessDialog(context, 'Service Due');
+                        } else if (ble
+                                .bleProcess
+                                .isAccessCodeSetupApplyDone
+                                .value &&
+                            mounted) {
+                          await _saveAccessCodeCacheAndNotifyRefresh();
+                          showApplySuccessDialog(context, 'Access Code');
                         } else {
                           Navigator.of(dialogContext).push(
                             MaterialPageRoute(

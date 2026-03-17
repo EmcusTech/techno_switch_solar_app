@@ -58,8 +58,9 @@ class BleProcess {
   int checkForServiceDueFetchRes = 0;
   int checkForServiceDueApplyRes = 0;
   int checkForAccessCodeSetupFetchRes = 0;
-  int accessCodeSetupFetchCommandStep = 0; // 1, 2, 3
+  int accessCodeSetupFetchCommandStep = 0; // 1, 2, 3 ... 8
   int checkForAccessCodeSetupApplyRes = 0;
+  int accessCodeSetupApplyCommandStep = 0; // 1, 2, 3 ... 8
   int validEventLogNum = 0;
   int read1000Logs = 0;
   bool logRetreivalEnded = false;
@@ -803,6 +804,7 @@ class BleProcess {
           bleManager.otaProcessState =
               OtaProcessState.sendAccessCodeSetupApplyCmdPkt;
           checkForAccessKeyCmdRsp = 0;
+          accessCodeSetupApplyCommandStep = 1;
           processDesc.value = "Applying Access Code 1/8";
           startRxTimeout();
           await bleManager.sendAccessCodeSetupApplyCmdPkt(accessCodeNo: 1);
@@ -884,15 +886,31 @@ class BleProcess {
     }
 
     if (checkForAccessCodeSetupApplyRes == 1) {
-      print("Checking Access Code Setup Apply CMD RSP");
+      print(
+        "Checking Access Code Setup Apply CMD RSP Value ${rx.payload[12]}:::::${rx.payload[12] == 0x02} ",
+      );
       if (rx.payload[12] == 0x02) {
-        print("We got access code setup apply response");
-        bleManager.otaProcessState = OtaProcessState.notInUse;
-        checkForAccessCodeSetupApplyRes = 0;
-        isAccessCodeSetupApplyCommandActive.value = false;
-        isAccessCodeSetupApplyDone.value = true;
-        isAccessKeyValid.value = true;
-        processDesc.value = "Access Code Setup Apply Completed";
+        if (accessCodeSetupApplyCommandStep >= 1 &&
+            accessCodeSetupApplyCommandStep < 8) {
+          final nextAccessCodeNo = accessCodeSetupApplyCommandStep + 1;
+          processDesc.value = "Applying Access Code $nextAccessCodeNo/8";
+          print(
+            "CMD $accessCodeSetupApplyCommandStep Validated -> send CMD$nextAccessCodeNo, keep polling",
+          );
+          accessCodeSetupApplyCommandStep = nextAccessCodeNo;
+          startRxTimeout();
+          await bleManager.sendAccessCodeSetupApplyCmdPkt(
+            accessCodeNo: nextAccessCodeNo,
+          );
+        } else {
+          bleManager.otaProcessState = OtaProcessState.notInUse;
+          checkForAccessCodeSetupApplyRes = 0;
+          isAccessCodeSetupApplyCommandActive.value = false;
+          isAccessCodeSetupApplyDone.value = true;
+          isAccessKeyValid.value = true;
+          processDesc.value = "Access Code Setup Apply Completed";
+          print("We got the response for access code setup apply");
+        }
       } else {
         print("Access Code Setup Apply Cmd Response not found, polling again");
         startRxTimeout();
@@ -1988,6 +2006,9 @@ class BleProcess {
     checkForServiceDueFetchRes = 0;
     checkForAccessCodeSetupFetchRes = 0;
     accessCodeSetupFetchCommandStep = 0;
+    checkForAccessCodeSetupApplyRes = 0;
+    accessCodeSetupApplyCommandStep = 0;
+    isLbusFetchHasErrors.value = false;
     // Counters
     checkForCtrlCmdRsp = 0;
     checkForAccessKeyCmdRsp = 0;
@@ -2049,6 +2070,9 @@ class BleProcess {
     checkForServiceDueFetchRes = 0;
     checkForAccessCodeSetupFetchRes = 0;
     accessCodeSetupFetchCommandStep = 0;
+    checkForAccessCodeSetupApplyRes = 0;
+    accessCodeSetupApplyCommandStep = 0;
+    isLbusFetchHasErrors.value = false;
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -2102,6 +2126,9 @@ class BleProcess {
     checkForServiceDueFetchRes = 0;
     checkForAccessCodeSetupFetchRes = 0;
     accessCodeSetupFetchCommandStep = 0;
+    checkForAccessCodeSetupApplyRes = 0;
+    accessCodeSetupApplyCommandStep = 0;
+    isLbusFetchHasErrors.value = false;
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -2153,6 +2180,9 @@ class BleProcess {
     checkForServiceDueFetchRes = 0;
     checkForAccessCodeSetupFetchRes = 0;
     accessCodeSetupFetchCommandStep = 0;
+    checkForAccessCodeSetupApplyRes = 0;
+    accessCodeSetupApplyCommandStep = 0;
+    isLbusFetchHasErrors.value = false;
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -2204,6 +2234,9 @@ class BleProcess {
     checkForServiceDueFetchRes = 0;
     checkForAccessCodeSetupFetchRes = 0;
     accessCodeSetupFetchCommandStep = 0;
+    checkForAccessCodeSetupApplyRes = 0;
+    accessCodeSetupApplyCommandStep = 0;
+    isLbusFetchHasErrors.value = false;
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -2255,6 +2288,9 @@ class BleProcess {
     checkForServiceDueFetchRes = 0;
     checkForAccessCodeSetupFetchRes = 0;
     accessCodeSetupFetchCommandStep = 0;
+    checkForAccessCodeSetupApplyRes = 0;
+    accessCodeSetupApplyCommandStep = 0;
+    isLbusFetchHasErrors.value = false;
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -2305,6 +2341,9 @@ class BleProcess {
     checkForServiceDueFetchRes = 0;
     checkForAccessCodeSetupFetchRes = 0;
     accessCodeSetupFetchCommandStep = 0;
+    checkForAccessCodeSetupApplyRes = 0;
+    accessCodeSetupApplyCommandStep = 0;
+    isLbusFetchHasErrors.value = false;
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -2356,6 +2395,9 @@ class BleProcess {
     checkForServiceDueFetchRes = 0;
     checkForAccessCodeSetupFetchRes = 0;
     accessCodeSetupFetchCommandStep = 0;
+    checkForAccessCodeSetupApplyRes = 0;
+    accessCodeSetupApplyCommandStep = 0;
+    isLbusFetchHasErrors.value = false;
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -2407,6 +2449,9 @@ class BleProcess {
     checkForServiceDueFetchRes = 0;
     checkForAccessCodeSetupFetchRes = 0;
     accessCodeSetupFetchCommandStep = 0;
+    checkForAccessCodeSetupApplyRes = 0;
+    accessCodeSetupApplyCommandStep = 0;
+    isLbusFetchHasErrors.value = false;
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -2458,6 +2503,9 @@ class BleProcess {
     checkForServiceDueFetchRes = 0;
     checkForAccessCodeSetupFetchRes = 0;
     accessCodeSetupFetchCommandStep = 0;
+    checkForAccessCodeSetupApplyRes = 0;
+    accessCodeSetupApplyCommandStep = 0;
+    isLbusFetchHasErrors.value = false;
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -2509,6 +2557,9 @@ class BleProcess {
     checkForServiceDueFetchRes = 0;
     checkForAccessCodeSetupFetchRes = 0;
     accessCodeSetupFetchCommandStep = 0;
+    checkForAccessCodeSetupApplyRes = 0;
+    accessCodeSetupApplyCommandStep = 0;
+    isLbusFetchHasErrors.value = false;
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
