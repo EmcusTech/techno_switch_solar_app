@@ -61,6 +61,7 @@ enum BleStates {
   SEND_SERVICE_DUE_SETUP_CMD_FETCH_PACKET,
   SEND_SERVICE_DUE_SETUP_CMD_APPLY_PACKET,
   SEND_ACCESS_CODE_SETUP_CMD_FETCH_PACKET,
+  SEND_ACCESS_CODE_SETUP_CMD_APPLY_PACKET,
   // add other states
 }
 
@@ -94,6 +95,7 @@ enum OtaProcessState {
   sendServiceDueFetchCmdPkt,
   sendServiceDueApplyCmdPkt,
   sendAccessCodeSetupFetchCmdPkt,
+  sendAccessCodeSetupApplyCmdPkt,
 }
 
 enum BleOperationMode {
@@ -118,6 +120,7 @@ enum BleOperationMode {
   serviceDueFetch,
   serviceDueApply,
   accessCodeSetupFetch,
+  accessCodeSetupApply,
 }
 
 const String BLE_AUTHN_MSG = "TECHNOSWITCH-AUTH-APP";
@@ -1393,6 +1396,41 @@ class BleManager {
     bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
     Get.find<BleLogController>().sendNetworkPacket();
   }
+
+  Future<void> startAccessCodeSetupApply() async {
+    if (!isConnected) {
+      throw Exception("Device not connected. Cannot start log retrieval.");
+    }
+
+    if (notifyChar == null || writeChar == null) {
+      throw Exception(
+        "BLE characteristics not initialized. Cannot start log retrieval.",
+      );
+    }
+
+    // Set operation mode to log retrieval
+    currentOperationMode = BleOperationMode.accessCodeSetupApply;
+
+    // Reset protocol state to initial values
+    resetAccessCodeSetupState();
+    resetProtocolAccessCodeSetupState();
+
+    // IMPORTANT: Reset process state to clear isOtaCompleted flag
+    // This ensures polls aren't blocked after firmware upgrade
+    bleProcess.resetProcessAccessCodeSetupState();
+
+    if (_notifySub == null) {
+      throw Exception(
+        "BLE handshake not complete. Please wait for connection to finish.",
+      );
+    }
+    print("Proceeding with Access code setup fetch");
+    bleCurrentState = BleStates.SEND_ACCESS_CODE_SETUP_CMD_APPLY_PACKET;
+    bleStateMachineState = BleStates.SEND_ACCESS_CODE_SETUP_CMD_APPLY_PACKET;
+    print("Current state: $bleStateMachineState");
+    bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
+    Get.find<BleLogController>().sendNetworkPacket();
+  }
   // Future<void> startExtOut() async {
   //   if (!isConnected) {
   //     throw Exception("Device not connected. Cannot start log retrieval.");
@@ -2147,6 +2185,19 @@ class BleManager {
             "Current state: $bleStateMachineState (Access code setup fetch)",
           );
           // Send Network Packet for Access code setup fetch
+          bleProcess.startOtherPacketsRxTimeout(
+            timeout: const Duration(seconds: 5),
+          );
+          Get.find<BleLogController>().sendNetworkPacket();
+        } else if (currentOperationMode ==
+            BleOperationMode.accessCodeSetupApply) {
+          bleCurrentState = BleStates.SEND_ACCESS_CODE_SETUP_CMD_APPLY_PACKET;
+          bleStateMachineState =
+              BleStates.SEND_ACCESS_CODE_SETUP_CMD_APPLY_PACKET;
+          print(
+            "Current state: $bleStateMachineState (Access code setup apply)",
+          );
+          // Send Network Packet for Access code setup apply
           bleProcess.startOtherPacketsRxTimeout(
             timeout: const Duration(seconds: 5),
           );
@@ -4375,7 +4426,7 @@ class BleManager {
     u8_pkt[10] = 0x01; // mode
     u8_pkt[11] = 0x00; // socket number
     u8_pkt[12] = 0x03; // command
-    u8_pkt[13] = accessCodeNo; // L-Bus No
+    u8_pkt[13] = accessCodeNo; // access code no
 
     // Compute checksum on first 213 bytes
     int checksum = toolsFletcherChecksum(u8_pkt.sublist(0, 213));
@@ -4386,6 +4437,60 @@ class BleManager {
 
     print(
       "TX/RX: TRANSMIT: Access Code $accessCodeNo Setup Fetch Command time: ${DateTime.now().toIso8601String()}, packet: ${u8_pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+    );
+
+    await sendSmallDataFrame(0x1000, 216, u8_pkt);
+  }
+
+  Future<void> sendAccessCodeSetupApplyCmdPkt({
+    required int accessCodeNo,
+  }) async {
+    // Create 216-byte buffer
+    Uint8List u8_pkt = Uint8List(216);
+
+    final data = accessCodeSetupDataList.value[accessCodeNo - 1];
+
+    final String accessCodeText = data.accessCode;
+    final List<int> accessCodeTextBytes = accessCodeText.codeUnits;
+    final accessCodeTextLength = accessCodeTextBytes.length;
+
+    print("accessCodeText: $accessCodeText");
+    print("accessCodeNo: ${data.accessCodeNo}");
+
+    final initialindex = 16;
+    for (int i = 0; i < accessCodeTextLength; i++) {
+      if (i < accessCodeTextLength) {
+        u8_pkt[initialindex + i] = accessCodeTextBytes[i];
+      }
+    }
+
+    // Update global counters
+    u8TxPktCnt += 1;
+
+    u8_pkt[0] = 0xFE;
+    u8_pkt[1] = 0x01;
+    u8_pkt[2] = 0x00;
+
+    u8_pkt[3] = 0x01; // pkt type
+    u8_pkt[4] = u8TxPktCnt & 0xFF; // tx pkt num
+    u8_pkt[5] = u8RxPktCnt & 0xFF; // rx pkt num
+    u8_pkt[6] = 0x00; // network number
+    u8_pkt[10] = 0x81; // mode
+    u8_pkt[11] = 0x00; // socket number
+    u8_pkt[12] = 0x03; // command
+    u8_pkt[13] = data.accessCodeNo; // access code no
+    u8_pkt[14] = data.accessLevel; // access level
+    u8_pkt[15] = accessCodeTextLength & 0xFF; // access code text length
+
+    // Compute checksum on first 213 bytes
+    int checksum = toolsFletcherChecksum(u8_pkt.sublist(0, 213));
+
+    u8_pkt[213] = (checksum >> 8) & 0xFF;
+    u8_pkt[214] = checksum & 0xFF;
+    u8_pkt[215] = 0xFD;
+
+    print(
+      "TX/RX: TRANSMIT: Access Code $accessCodeNo Setup Apply Command time: ${DateTime.now().toIso8601String()}, packet: ${u8_pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
     );
 
     await sendSmallDataFrame(0x1000, 216, u8_pkt);

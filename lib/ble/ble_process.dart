@@ -59,6 +59,7 @@ class BleProcess {
   int checkForServiceDueApplyRes = 0;
   int checkForAccessCodeSetupFetchRes = 0;
   int accessCodeSetupFetchCommandStep = 0; // 1, 2, 3
+  int checkForAccessCodeSetupApplyRes = 0;
   int validEventLogNum = 0;
   int read1000Logs = 0;
   bool logRetreivalEnded = false;
@@ -471,6 +472,13 @@ class BleProcess {
   final ValueNotifier<bool> isAccessCodeSetupFetchCommandActive =
       ValueNotifier<bool>(false);
 
+  final ValueNotifier<bool> isAccessCodeSetupApplyCommandActive =
+      ValueNotifier<bool>(false);
+
+  final ValueNotifier<bool> isAccessCodeSetupApplyDone = ValueNotifier<bool>(
+    false,
+  );
+
   final ValueNotifier<List<AccessCodeSetupData>> accessCodeSetupDataList =
       ValueNotifier<List<AccessCodeSetupData>>(
         List.generate(8, (_) => const AccessCodeSetupData()),
@@ -650,6 +658,11 @@ class BleProcess {
         checkForAccessCodeSetupFetchRes = 1;
         break;
 
+      case OtaProcessState.sendAccessCodeSetupApplyCmdPkt:
+        print("Sending Access Code Setup Apply Command");
+        checkForAccessCodeSetupApplyRes = 1;
+        break;
+
       case OtaProcessState.otaWaitRsp:
         break;
     }
@@ -786,6 +799,13 @@ class BleProcess {
           processDesc.value = "Downloading Access Code 1/8";
           startRxTimeout();
           await bleManager.sendAccessCodeSetupFetchCmdPkt(accessCodeNo: 1);
+        } else if (isAccessCodeSetupApplyCommandActive.value) {
+          bleManager.otaProcessState =
+              OtaProcessState.sendAccessCodeSetupApplyCmdPkt;
+          checkForAccessKeyCmdRsp = 0;
+          processDesc.value = "Applying Access Code 1/8";
+          startRxTimeout();
+          await bleManager.sendAccessCodeSetupApplyCmdPkt(accessCodeNo: 1);
         } else {
           bleManager.otaProcessState = OtaProcessState.sendStopCntrlCmdPkt;
           checkForAccessKeyCmdRsp = 0;
@@ -858,6 +878,23 @@ class BleProcess {
         }
       } else {
         print("Access Code Setup Fetch Cmd Response not found, polling again");
+        startRxTimeout();
+        await bleManager.sendPollPacket();
+      }
+    }
+
+    if (checkForAccessCodeSetupApplyRes == 1) {
+      print("Checking Access Code Setup Apply CMD RSP");
+      if (rx.payload[12] == 0x02) {
+        print("We got access code setup apply response");
+        bleManager.otaProcessState = OtaProcessState.notInUse;
+        checkForAccessCodeSetupApplyRes = 0;
+        isAccessCodeSetupApplyCommandActive.value = false;
+        isAccessCodeSetupApplyDone.value = true;
+        isAccessKeyValid.value = true;
+        processDesc.value = "Access Code Setup Apply Completed";
+      } else {
+        print("Access Code Setup Apply Cmd Response not found, polling again");
         startRxTimeout();
         await bleManager.sendPollPacket();
       }
@@ -2858,6 +2895,8 @@ class BleProcess {
         case OtaProcessState.sendServiceDueApplyCmdPkt:
           break;
         case OtaProcessState.sendAccessCodeSetupFetchCmdPkt:
+          break;
+        case OtaProcessState.sendAccessCodeSetupApplyCmdPkt:
           break;
       }
       startRxTimeout();

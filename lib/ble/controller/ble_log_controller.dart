@@ -123,6 +123,10 @@ class BleLogController extends GetxController {
     await bleManager.startAccessCodeSetupFetch();
   }
 
+  Future<void> startAccessCodeSetupApply() async {
+    await bleManager.startAccessCodeSetupApply();
+  }
+
   sendNetworkPacket() async {
     await bleManager.sendNetworkPacket();
   }

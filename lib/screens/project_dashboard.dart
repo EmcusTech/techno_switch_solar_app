@@ -2713,7 +2713,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 },
               ),
               _peripheralTile(
-                peripheralName: 'Accees Code',
+                peripheralName: 'Access Code',
                 iconPath: 'assets/svgs/panel_action_access_code_icon.svg',
                 onTap: () {
                   if (_selectedDevice.manufacturerData.isNotEmpty &&
@@ -2736,11 +2736,24 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                         },
                         isAccessCodeSetup: true,
                         mode: 'bottomsheet_download',
-                        onDownloadComplete: _saveAccessCodeCacheAndNotifyRefresh,
+                        onDownloadComplete:
+                            _saveAccessCodeCacheAndNotifyRefresh,
                         downloadSuccessMessage: 'Access Code',
                       );
                     },
-                    onApply: () {},
+                    onApply: () {
+                      showPasswordPopup(
+                        onCall: () {
+                          ble
+                              .bleProcess
+                              .isAccessCodeSetupApplyCommandActive
+                              .value = true;
+                          bleController.startAccessCodeSetupApply();
+                        },
+                        isAccessCodeSetup: true,
+                        mode: 'bottomsheet_apply',
+                      );
+                    },
                     refreshTrigger: _serviceDueRefreshTrigger,
                   );
                 },
