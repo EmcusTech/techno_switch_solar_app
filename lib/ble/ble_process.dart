@@ -62,6 +62,8 @@ class BleProcess {
   int checkForAccessCodeSetupApplyRes = 0;
   int accessCodeSetupApplyCommandStep = 0; // 1, 2, 3 ... 8
   int checkForPanelInfoSetupFetchRes = 0;
+  int checkForPanelInfoSetupApplyRes = 0;
+  int panelInfoSetupApplyCommandStep = 0; // 1, 2, 3
   int validEventLogNum = 0;
   int read1000Logs = 0;
   bool logRetreivalEnded = false;
@@ -691,6 +693,11 @@ class BleProcess {
         checkForPanelInfoSetupFetchRes = 1;
         break;
 
+      case OtaProcessState.sendPanelInfoSetupApplyCmdPkt:
+        print("Sending Panel Info Setup Apply Command");
+        checkForPanelInfoSetupApplyRes = 1;
+        break;
+
       case OtaProcessState.otaWaitRsp:
         break;
     }
@@ -841,6 +848,13 @@ class BleProcess {
           checkForAccessKeyCmdRsp = 0;
           startRxTimeout();
           await bleManager.sendPanelInfoPanelIdFetchCmdPkt();
+        } else if (isPanelInfoSetupApplyCommandActive.value) {
+          bleManager.otaProcessState =
+              OtaProcessState.sendPanelInfoSetupApplyCmdPkt;
+          panelInfoSetupApplyCommandStep = 1;
+          checkForAccessKeyCmdRsp = 0;
+          startRxTimeout();
+          await bleManager.sendPanelInfoPanelIdApplyCmdPkt();
         } else {
           bleManager.otaProcessState = OtaProcessState.sendStopCntrlCmdPkt;
           checkForAccessKeyCmdRsp = 0;
@@ -910,6 +924,33 @@ class BleProcess {
         processDesc.value = "Panel Info Setup Fetch Completed";
       } else {
         print("Panel Info Setup Fetch Cmd Response not found, polling again");
+        startRxTimeout();
+        await bleManager.sendPollPacket();
+      }
+    }
+
+    if (checkForPanelInfoSetupApplyRes == 1) {
+      print("Checking Panel Info Setup Apply CMD RSP");
+      if (rx.payload[12] == 0x02 && panelInfoSetupApplyCommandStep == 1) {
+        panelInfoSetupApplyCommandStep = 2;
+        startRxTimeout();
+        await bleManager.sendPanelInfoDateTimeApplyCmdPkt();
+      } else if (rx.payload[12] == 0x02 &&
+          panelInfoSetupApplyCommandStep == 2) {
+        panelInfoSetupApplyCommandStep = 3;
+        startRxTimeout();
+        await bleManager.sendPanelInfoEventReminderDelayApplyCmdPkt();
+      } else if (rx.payload[12] == 0x02 &&
+          panelInfoSetupApplyCommandStep == 3) {
+        print("We got panel info setup apply response");
+        bleManager.otaProcessState = OtaProcessState.notInUse;
+        checkForPanelInfoSetupApplyRes = 0;
+        isPanelInfoSetupApplyCommandActive.value = false;
+        isPanelInfoSetupApplyDone.value = true;
+        isAccessKeyValid.value = true;
+        processDesc.value = "Panel Info Setup Apply Completed";
+      } else {
+        print("Panel Info Setup Apply Cmd Response not found, polling again");
         startRxTimeout();
         await bleManager.sendPollPacket();
       }
@@ -2078,6 +2119,8 @@ class BleProcess {
     checkForAccessCodeSetupApplyRes = 0;
     accessCodeSetupApplyCommandStep = 0;
     isLbusFetchHasErrors.value = false;
+    checkForPanelInfoSetupFetchRes = 0;
+    checkForPanelInfoSetupApplyRes = 0;
     // Counters
     checkForCtrlCmdRsp = 0;
     checkForAccessKeyCmdRsp = 0;
@@ -2142,6 +2185,8 @@ class BleProcess {
     checkForAccessCodeSetupApplyRes = 0;
     accessCodeSetupApplyCommandStep = 0;
     isLbusFetchHasErrors.value = false;
+    checkForPanelInfoSetupFetchRes = 0;
+    checkForPanelInfoSetupApplyRes = 0;
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -2198,6 +2243,8 @@ class BleProcess {
     checkForAccessCodeSetupApplyRes = 0;
     accessCodeSetupApplyCommandStep = 0;
     isLbusFetchHasErrors.value = false;
+    checkForPanelInfoSetupFetchRes = 0;
+    checkForPanelInfoSetupApplyRes = 0;
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -2252,6 +2299,8 @@ class BleProcess {
     checkForAccessCodeSetupApplyRes = 0;
     accessCodeSetupApplyCommandStep = 0;
     isLbusFetchHasErrors.value = false;
+    checkForPanelInfoSetupFetchRes = 0;
+    checkForPanelInfoSetupApplyRes = 0;
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -2306,6 +2355,8 @@ class BleProcess {
     checkForAccessCodeSetupApplyRes = 0;
     accessCodeSetupApplyCommandStep = 0;
     isLbusFetchHasErrors.value = false;
+    checkForPanelInfoSetupFetchRes = 0;
+    checkForPanelInfoSetupApplyRes = 0;
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -2360,6 +2411,8 @@ class BleProcess {
     checkForAccessCodeSetupApplyRes = 0;
     accessCodeSetupApplyCommandStep = 0;
     isLbusFetchHasErrors.value = false;
+    checkForPanelInfoSetupFetchRes = 0;
+    checkForPanelInfoSetupApplyRes = 0;
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -2413,6 +2466,8 @@ class BleProcess {
     checkForAccessCodeSetupApplyRes = 0;
     accessCodeSetupApplyCommandStep = 0;
     isLbusFetchHasErrors.value = false;
+    checkForPanelInfoSetupFetchRes = 0;
+    checkForPanelInfoSetupApplyRes = 0;
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -2467,6 +2522,8 @@ class BleProcess {
     checkForAccessCodeSetupApplyRes = 0;
     accessCodeSetupApplyCommandStep = 0;
     isLbusFetchHasErrors.value = false;
+    checkForPanelInfoSetupFetchRes = 0;
+    checkForPanelInfoSetupApplyRes = 0;
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -2521,6 +2578,8 @@ class BleProcess {
     checkForAccessCodeSetupApplyRes = 0;
     accessCodeSetupApplyCommandStep = 0;
     isLbusFetchHasErrors.value = false;
+    checkForPanelInfoSetupFetchRes = 0;
+    checkForPanelInfoSetupApplyRes = 0;
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -2575,6 +2634,8 @@ class BleProcess {
     checkForAccessCodeSetupApplyRes = 0;
     accessCodeSetupApplyCommandStep = 0;
     isLbusFetchHasErrors.value = false;
+    checkForPanelInfoSetupFetchRes = 0;
+    checkForPanelInfoSetupApplyRes = 0;
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -2629,6 +2690,8 @@ class BleProcess {
     checkForAccessCodeSetupApplyRes = 0;
     accessCodeSetupApplyCommandStep = 0;
     isLbusFetchHasErrors.value = false;
+    checkForPanelInfoSetupFetchRes = 0;
+    checkForPanelInfoSetupApplyRes = 0;
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -2683,6 +2746,8 @@ class BleProcess {
     checkForAccessCodeSetupApplyRes = 0;
     accessCodeSetupApplyCommandStep = 0;
     isLbusFetchHasErrors.value = false;
+    checkForPanelInfoSetupFetchRes = 0;
+    checkForPanelInfoSetupApplyRes = 0;
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -3073,6 +3138,8 @@ class BleProcess {
         case OtaProcessState.sendAccessCodeSetupApplyCmdPkt:
           break;
         case OtaProcessState.sendPanelInfoSetupFetchCmdPkt:
+          break;
+        case OtaProcessState.sendPanelInfoSetupApplyCmdPkt:
           break;
       }
       startRxTimeout();

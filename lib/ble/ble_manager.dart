@@ -63,6 +63,7 @@ enum BleStates {
   SEND_ACCESS_CODE_SETUP_CMD_FETCH_PACKET,
   SEND_ACCESS_CODE_SETUP_CMD_APPLY_PACKET,
   SEND_PANEL_INFO_SETUP_CMD_FETCH_PACKET,
+  SEND_PANEL_INFO_SETUP_CMD_APPLY_PACKET,
   // add other states
 }
 
@@ -98,6 +99,7 @@ enum OtaProcessState {
   sendAccessCodeSetupFetchCmdPkt,
   sendAccessCodeSetupApplyCmdPkt,
   sendPanelInfoSetupFetchCmdPkt,
+  sendPanelInfoSetupApplyCmdPkt,
 }
 
 enum BleOperationMode {
@@ -124,6 +126,7 @@ enum BleOperationMode {
   accessCodeSetupFetch,
   accessCodeSetupApply,
   panelInfoSetupFetch,
+  panelInfoSetupApply,
 }
 
 const String BLE_AUTHN_MSG = "TECHNOSWITCH-AUTH-APP";
@@ -1502,6 +1505,41 @@ class BleManager {
     bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
     Get.find<BleLogController>().sendNetworkPacket();
   }
+
+  Future<void> startPanelInfoSetupApply() async {
+    if (!isConnected) {
+      throw Exception("Device not connected. Cannot start log retrieval.");
+    }
+
+    if (notifyChar == null || writeChar == null) {
+      throw Exception(
+        "BLE characteristics not initialized. Cannot start log retrieval.",
+      );
+    }
+
+    // Set operation mode to log retrieval
+    currentOperationMode = BleOperationMode.panelInfoSetupApply;
+
+    // Reset protocol state to initial values
+    resetPanelInfoSetupState();
+    resetProtocolPanelInfoSetupState();
+
+    // IMPORTANT: Reset process state to clear isOtaCompleted flag
+    // This ensures polls aren't blocked after firmware upgrade
+    bleProcess.resetProcessPanelInfoSetupState();
+
+    if (_notifySub == null) {
+      throw Exception(
+        "BLE handshake not complete. Please wait for connection to finish.",
+      );
+    }
+    print("Proceeding with Panel info setup apply");
+    bleCurrentState = BleStates.SEND_PANEL_INFO_SETUP_CMD_APPLY_PACKET;
+    bleStateMachineState = BleStates.SEND_PANEL_INFO_SETUP_CMD_APPLY_PACKET;
+    print("Current state: $bleStateMachineState");
+    bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
+    Get.find<BleLogController>().sendNetworkPacket();
+  }
   // Future<void> startExtOut() async {
   //   if (!isConnected) {
   //     throw Exception("Device not connected. Cannot start log retrieval.");
@@ -2282,6 +2320,19 @@ class BleManager {
             "Current state: $bleStateMachineState (Panel info setup fetch)",
           );
           // Send Network Packet for Panel info setup fetch
+          bleProcess.startOtherPacketsRxTimeout(
+            timeout: const Duration(seconds: 5),
+          );
+          Get.find<BleLogController>().sendNetworkPacket();
+        } else if (currentOperationMode ==
+            BleOperationMode.panelInfoSetupApply) {
+          bleCurrentState = BleStates.SEND_PANEL_INFO_SETUP_CMD_APPLY_PACKET;
+          bleStateMachineState =
+              BleStates.SEND_PANEL_INFO_SETUP_CMD_APPLY_PACKET;
+          print(
+            "Current state: $bleStateMachineState (Panel info setup apply)",
+          );
+          // Send Network Packet for Panel info setup apply
           bleProcess.startOtherPacketsRxTimeout(
             timeout: const Duration(seconds: 5),
           );
@@ -4675,6 +4726,132 @@ class BleManager {
 
     print(
       "TX/RX: TRANSMIT: Panel info fetch Event Reminder Delay Command time: ${DateTime.now().toIso8601String()}, packet: ${u8_pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+    );
+
+    await sendSmallDataFrame(0x1000, 216, u8_pkt);
+  }
+
+  Future<void> sendPanelInfoPanelIdApplyCmdPkt() async {
+    // Create 216-byte buffer
+    Uint8List u8_pkt = Uint8List(216);
+
+    final String panelNameText = panelInfoPanelName.value;
+    final List<int> panelNameTextBytes = panelNameText.codeUnits;
+    final panelNameTextLength = panelNameTextBytes.length;
+
+    final initialindex = 19;
+    for (int i = 0; i < panelNameTextLength; i++) {
+      if (i < panelNameTextLength) {
+        u8_pkt[initialindex + i] = panelNameTextBytes[i];
+      }
+    }
+
+    // Update global counters
+    u8TxPktCnt += 1;
+
+    u8_pkt[0] = 0xFE;
+    u8_pkt[1] = 0x01;
+    u8_pkt[2] = 0x00;
+
+    u8_pkt[3] = 0x01; // pkt type
+    u8_pkt[4] = u8TxPktCnt & 0xFF; // tx pkt num
+    u8_pkt[5] = u8RxPktCnt & 0xFF; // rx pkt num
+    u8_pkt[6] = 0x00; // network number
+    u8_pkt[10] = 0x81; // mode
+    u8_pkt[11] = 0x00; // socket number
+    u8_pkt[12] = 0x08; // command
+    u8_pkt[16] = panelInfoPanelNo.value; // panel no
+    u8_pkt[18] = panelNameTextLength & 0xFF; // panel name text length
+
+    // Compute checksum on first 213 bytes
+    int checksum = toolsFletcherChecksum(u8_pkt.sublist(0, 213));
+
+    u8_pkt[213] = (checksum >> 8) & 0xFF;
+    u8_pkt[214] = checksum & 0xFF;
+    u8_pkt[215] = 0xFD;
+
+    print(
+      "TX/RX: TRANSMIT: Panel info fetch Panel ID Command time: ${DateTime.now().toIso8601String()}, packet: ${u8_pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+    );
+
+    await sendSmallDataFrame(0x1000, 216, u8_pkt);
+  }
+
+  Future<void> sendPanelInfoDateTimeApplyCmdPkt() async {
+    // Create 216-byte buffer
+    Uint8List u8_pkt = Uint8List(216);
+
+    // Update global counters
+    u8TxPktCnt += 1;
+
+    u8_pkt[0] = 0xFE;
+    u8_pkt[1] = 0x01;
+    u8_pkt[2] = 0x00;
+
+    u8_pkt[3] = 0x01; // pkt type
+    u8_pkt[4] = u8TxPktCnt & 0xFF; // tx pkt num
+    u8_pkt[5] = u8RxPktCnt & 0xFF; // rx pkt num
+    u8_pkt[6] = 0x00; // network number
+    u8_pkt[10] = 0x83; // mode
+    u8_pkt[11] = 0x00; // socket number
+    u8_pkt[12] = 0x01; // command
+    u8_pkt[13] = (panelInfoYear.value >> 8) & 0xFF; // year
+    u8_pkt[14] = panelInfoYear.value & 0xFF; // year
+    u8_pkt[15] = panelInfoMonth.value & 0xFF; // month
+    u8_pkt[16] = panelInfoDay.value & 0xFF; // day
+    u8_pkt[17] = panelInfoHour.value & 0xFF; // hour
+    u8_pkt[18] = panelInfoMinute.value & 0xFF; // minute
+    u8_pkt[19] = panelInfoSecond.value & 0xFF; // second
+
+    // Compute checksum on first 213 bytes
+    int checksum = toolsFletcherChecksum(u8_pkt.sublist(0, 213));
+
+    u8_pkt[213] = (checksum >> 8) & 0xFF;
+    u8_pkt[214] = checksum & 0xFF;
+    u8_pkt[215] = 0xFD;
+
+    print(
+      "TX/RX: TRANSMIT: Panel info apply DateTime Command time: ${DateTime.now().toIso8601String()}, packet: ${u8_pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+    );
+
+    await sendSmallDataFrame(0x1000, 216, u8_pkt);
+  }
+
+  Future<void> sendPanelInfoEventReminderDelayApplyCmdPkt() async {
+    // Create 216-byte buffer
+    Uint8List u8_pkt = Uint8List(216);
+
+    // Update global counters
+    u8TxPktCnt += 1;
+
+    u8_pkt[0] = 0xFE;
+    u8_pkt[1] = 0x01;
+    u8_pkt[2] = 0x00;
+
+    u8_pkt[3] = 0x01; // pkt type
+    u8_pkt[4] = u8TxPktCnt & 0xFF; // tx pkt num
+    u8_pkt[5] = u8RxPktCnt & 0xFF; // rx pkt num
+    u8_pkt[6] = 0x00; // network number
+    u8_pkt[10] = 0x81; // mode
+    u8_pkt[11] = 0x00; // socket number
+    u8_pkt[12] = 0x09; // command
+    u8_pkt[13] = 0x04; // delay type -> Event Reminder
+    u8_pkt[14] = 0x01; // delay Mode
+    u8_pkt[15] =
+        (panelInfoEventReminderDelay.value >> 8) &
+        0xFF; // delay value first byte
+    u8_pkt[16] =
+        panelInfoEventReminderDelay.value & 0xFF; // delay value second byte
+
+    // Compute checksum on first 213 bytes
+    int checksum = toolsFletcherChecksum(u8_pkt.sublist(0, 213));
+
+    u8_pkt[213] = (checksum >> 8) & 0xFF;
+    u8_pkt[214] = checksum & 0xFF;
+    u8_pkt[215] = 0xFD;
+
+    print(
+      "TX/RX: TRANSMIT: Panel info apply Event Reminder Delay Command time: ${DateTime.now().toIso8601String()}, packet: ${u8_pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
     );
 
     await sendSmallDataFrame(0x1000, 216, u8_pkt);

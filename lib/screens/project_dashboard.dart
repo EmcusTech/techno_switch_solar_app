@@ -1386,6 +1386,13 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                             mounted) {
                           await _saveAccessCodeCacheAndNotifyRefresh();
                           showApplySuccessDialog(context, 'Access Code');
+                        } else if (ble
+                                .bleProcess
+                                .isPanelInfoSetupApplyDone
+                                .value &&
+                            mounted) {
+                          await _savePanelInfoCacheAndNotifyRefresh();
+                          showApplySuccessDialog(context, 'Panel Info');
                         } else {
                           Navigator.of(dialogContext).push(
                             MaterialPageRoute(
@@ -2825,8 +2832,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                         },
                         isPanelInfoSetup: true,
                         mode: 'bottomsheet_download',
-                        onDownloadComplete:
-                            _savePanelInfoCacheAndNotifyRefresh,
+                        onDownloadComplete: _savePanelInfoCacheAndNotifyRefresh,
                         downloadSuccessMessage: 'Panel Info',
                       );
                     },
@@ -2837,7 +2843,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                               .bleProcess
                               .isPanelInfoSetupApplyCommandActive
                               .value = true;
-                          // startPanelInfoSetupApply not yet in controller
+                          bleController.startPanelInfoSetupApply();
                         },
                         isPanelInfoSetup: true,
                         mode: 'bottomsheet_apply',
