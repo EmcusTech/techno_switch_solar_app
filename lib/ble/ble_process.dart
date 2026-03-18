@@ -66,6 +66,7 @@ class BleProcess {
   int panelInfoSetupApplyCommandStep = 0; // 1, 2, 3
   int checkForGeneralModuleSetupFetchRes = 0;
   int checkForGeneralModuleSetupApplyRes = 0;
+  int generalModuleSetupApplyCommandStep = 0; // 1, 2, 3
   int validEventLogNum = 0;
   int read1000Logs = 0;
   bool logRetreivalEnded = false;
@@ -897,6 +898,7 @@ class BleProcess {
         } else if (isGeneralModuleSetupApplyCommandActive.value) {
           bleManager.otaProcessState =
               OtaProcessState.sendGeneralModuleSetupApplyCmdPkt;
+          generalModuleSetupApplyCommandStep = 1;
           checkForAccessKeyCmdRsp = 0;
           startRxTimeout();
           await bleManager.sendGeneralModuleLvlTimeOutApplyCmdPkt();
@@ -990,7 +992,27 @@ class BleProcess {
 
     if (checkForGeneralModuleSetupApplyRes == 1) {
       print("Checking General Module Setup Apply CMD RSP");
-      if (rx.payload[12] == 0x02) {
+      if (rx.payload[12] == 0x02 && generalModuleSetupApplyCommandStep == 1) {
+        generalModuleSetupApplyCommandStep = 2;
+        startRxTimeout();
+        await bleManager.sendGeneralModuleSilenceBuzzerLvlApplyCmdPkt();
+      } else if (rx.payload[12] == 0x02 &&
+          generalModuleSetupApplyCommandStep == 2) {
+        generalModuleSetupApplyCommandStep = 3;
+        startRxTimeout();
+        await bleManager.sendGeneralModuleSilenceSounderLvlApplyCmdPkt();
+      } else if (rx.payload[12] == 0x02 &&
+          generalModuleSetupApplyCommandStep == 3) {
+        generalModuleSetupApplyCommandStep = 4;
+        startRxTimeout();
+        await bleManager.sendGeneralModuleResetLvlApplyCmdPkt();
+      } else if (rx.payload[12] == 0x02 &&
+          generalModuleSetupApplyCommandStep == 4) {
+        generalModuleSetupApplyCommandStep = 5;
+        startRxTimeout();
+        await bleManager.sendGeneralModuleFaultLatchingApplyCmdPkt();
+      } else if (rx.payload[12] == 0x02 &&
+          generalModuleSetupApplyCommandStep == 5) {
         print("We got general module setup apply response");
         bleManager.otaProcessState = OtaProcessState.notInUse;
         checkForGeneralModuleSetupApplyRes = 0;
