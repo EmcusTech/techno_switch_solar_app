@@ -242,6 +242,8 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
   final ValueNotifier<int> _extOutRefreshTrigger = ValueNotifier(0);
   final ValueNotifier<int> _sounderRefreshTrigger = ValueNotifier(0);
   final ValueNotifier<int> _serviceDueRefreshTrigger = ValueNotifier(0);
+  final ValueNotifier<int> _accessCodeRefreshTrigger = ValueNotifier(0);
+  final ValueNotifier<int> _panelInfoRefreshTrigger = ValueNotifier(0);
 
   // Connection state
   bool _isConnecting = false;
@@ -2584,7 +2586,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     final codes =
         m.accessCodeSetupDataList.value.map((e) => e.toJson()).toList();
     await PeripheralSetupCache.saveAccessCodeSetup(_selectedDevice.id, codes);
-    _serviceDueRefreshTrigger.value++;
+    _accessCodeRefreshTrigger.value++;
   }
 
   Future<void> _savePanelInfoCacheAndNotifyRefresh() async {
@@ -2600,7 +2602,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
       'second': m.panelInfoSecond.value,
       'delay': m.panelInfoEventReminderDelay.value,
     });
-    _serviceDueRefreshTrigger.value++;
+    _panelInfoRefreshTrigger.value++;
   }
 
   Widget _peripheralTile({
@@ -2810,7 +2812,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                         mode: 'bottomsheet_apply',
                       );
                     },
-                    refreshTrigger: _serviceDueRefreshTrigger,
+                    refreshTrigger: _accessCodeRefreshTrigger,
                   );
                 },
               ),
@@ -2849,7 +2851,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                         mode: 'bottomsheet_apply',
                       );
                     },
-                    refreshTrigger: _serviceDueRefreshTrigger,
+                    refreshTrigger: _panelInfoRefreshTrigger,
                   );
                 },
               ),
