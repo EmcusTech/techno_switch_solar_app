@@ -2214,10 +2214,10 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
       barrierColor: Colors.black.withOpacity(0.4),
       builder:
           (_) => PanelInfoBottomSheet(
-            // deviceId: deviceId,
+            deviceId: deviceId,
             onDownload: onDownload,
             onApply: onApply,
-            // refreshTrigger: refreshTrigger,
+            refreshTrigger: refreshTrigger,
           ),
     );
   }
@@ -2580,6 +2580,22 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     _serviceDueRefreshTrigger.value++;
   }
 
+  Future<void> _savePanelInfoCacheAndNotifyRefresh() async {
+    final m = _bleManager;
+    await PeripheralSetupCache.savePanelInfoSetup(_selectedDevice.id, {
+      'panelId': m.panelInfoPanelNo.value,
+      'panelName': m.panelInfoPanelName.value,
+      'year': m.panelInfoYear.value,
+      'month': m.panelInfoMonth.value,
+      'day': m.panelInfoDay.value,
+      'hour': m.panelInfoHour.value,
+      'minute': m.panelInfoMinute.value,
+      'second': m.panelInfoSecond.value,
+      'delay': m.panelInfoEventReminderDelay.value,
+    });
+    _serviceDueRefreshTrigger.value++;
+  }
+
   Widget _peripheralTile({
     required String peripheralName,
     required String iconPath,
@@ -2810,11 +2826,23 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                         isPanelInfoSetup: true,
                         mode: 'bottomsheet_download',
                         onDownloadComplete:
-                            _saveAccessCodeCacheAndNotifyRefresh,
+                            _savePanelInfoCacheAndNotifyRefresh,
                         downloadSuccessMessage: 'Panel Info',
                       );
                     },
-                    onApply: () {},
+                    onApply: () {
+                      showPasswordPopup(
+                        onCall: () {
+                          ble
+                              .bleProcess
+                              .isPanelInfoSetupApplyCommandActive
+                              .value = true;
+                          // startPanelInfoSetupApply not yet in controller
+                        },
+                        isPanelInfoSetup: true,
+                        mode: 'bottomsheet_apply',
+                      );
+                    },
                     refreshTrigger: _serviceDueRefreshTrigger,
                   );
                 },

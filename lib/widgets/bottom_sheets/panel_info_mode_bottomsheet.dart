@@ -6,15 +6,20 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
+import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
 
 class PanelInfoBottomSheet extends StatefulWidget {
+  final String deviceId;
   final VoidCallback onDownload;
   final VoidCallback onApply;
+  final ValueNotifier<int> refreshTrigger;
 
   const PanelInfoBottomSheet({
     super.key,
+    required this.deviceId,
     required this.onDownload,
     required this.onApply,
+    required this.refreshTrigger,
   });
 
   @override
@@ -26,18 +31,7 @@ class _PanelInfoBottomSheetState extends State<PanelInfoBottomSheet> {
 
   int _expandedTileCount = 0;
 
-  /// Controllers
-  final panelIdController = TextEditingController();
-  final panelNameController = TextEditingController();
-
-  final yearController = TextEditingController();
-  final monthController = TextEditingController();
-  final dayController = TextEditingController();
-  final hourController = TextEditingController();
-  final minuteController = TextEditingController();
-  final secondController = TextEditingController();
-
-  final delayController = TextEditingController();
+  final PanelInfoConfig config = PanelInfoConfig();
 
   bool useMobileTime = false;
   Timer? _timer;
@@ -49,21 +43,76 @@ class _PanelInfoBottomSheetState extends State<PanelInfoBottomSheet> {
     if (Get.isRegistered<BleLogController>()) {
       manager = Get.find<BleLogController>().bleManager;
     }
+
+    _loadData();
+    widget.refreshTrigger.addListener(_onRefreshTriggered);
   }
 
   @override
   void dispose() {
     _timer?.cancel();
-    panelIdController.dispose();
-    panelNameController.dispose();
-    yearController.dispose();
-    monthController.dispose();
-    dayController.dispose();
-    hourController.dispose();
-    minuteController.dispose();
-    secondController.dispose();
-    delayController.dispose();
+    widget.refreshTrigger.removeListener(_onRefreshTriggered);
+    config.dispose();
     super.dispose();
+  }
+
+  void _onRefreshTriggered() {
+    _loadFromManager();
+  }
+
+  Future<void> _loadData() async {
+    final cached = await PeripheralSetupCache.loadPanelInfoSetup(
+      widget.deviceId,
+    );
+    if (cached != null) {
+      _applyCachedData(cached);
+      if (mounted) setState(() {});
+      return;
+    }
+    _loadFromManager();
+  }
+
+  void _applyCachedData(Map<String, dynamic> data) {
+    config.panelIdController.text =
+        (data['panelId'] as num?)?.toString() ?? '0';
+    config.panelNameController.text = (data['panelName'] as String?) ?? '';
+    config.yearController.text = (data['year'] as num?)?.toString() ?? '0';
+    config.monthController.text = (data['month'] as num?)?.toString() ?? '0';
+    config.dayController.text = (data['day'] as num?)?.toString() ?? '0';
+    config.hourController.text = (data['hour'] as num?)?.toString() ?? '0';
+    config.minuteController.text = (data['minute'] as num?)?.toString() ?? '0';
+    config.secondController.text = (data['second'] as num?)?.toString() ?? '0';
+    config.delayController.text = (data['delay'] as num?)?.toString() ?? '0';
+    useMobileTime = (data['useMobileTime'] as bool?) ?? false;
+    if (useMobileTime) {
+      _startLiveTime();
+    }
+  }
+
+  void _loadFromManager() {
+    if (manager == null) return;
+    config.panelIdController.text = manager!.panelInfoPanelNo.value.toString();
+    config.panelNameController.text = manager!.panelInfoPanelName.value;
+    config.yearController.text = manager!.panelInfoYear.value.toString();
+    config.monthController.text = manager!.panelInfoMonth.value
+        .toString()
+        .padLeft(2, '0');
+    config.dayController.text = manager!.panelInfoDay.value.toString().padLeft(
+      2,
+      '0',
+    );
+    config.hourController.text = manager!.panelInfoHour.value
+        .toString()
+        .padLeft(2, '0');
+    config.minuteController.text = manager!.panelInfoMinute.value
+        .toString()
+        .padLeft(2, '0');
+    config.secondController.text = manager!.panelInfoSecond.value
+        .toString()
+        .padLeft(2, '0');
+    config.delayController.text =
+        manager!.panelInfoEventReminderDelay.value.toString();
+    if (mounted) setState(() {});
   }
 
   /// ───────── TIME LOGIC ─────────
@@ -74,12 +123,12 @@ class _PanelInfoBottomSheetState extends State<PanelInfoBottomSheet> {
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
       final now = DateTime.now();
 
-      yearController.text = now.year.toString();
-      monthController.text = now.month.toString().padLeft(2, '0');
-      dayController.text = now.day.toString().padLeft(2, '0');
-      hourController.text = now.hour.toString().padLeft(2, '0');
-      minuteController.text = now.minute.toString().padLeft(2, '0');
-      secondController.text = now.second.toString().padLeft(2, '0');
+      config.yearController.text = now.year.toString();
+      config.monthController.text = now.month.toString().padLeft(2, '0');
+      config.dayController.text = now.day.toString().padLeft(2, '0');
+      config.hourController.text = now.hour.toString().padLeft(2, '0');
+      config.minuteController.text = now.minute.toString().padLeft(2, '0');
+      config.secondController.text = now.second.toString().padLeft(2, '0');
     });
   }
 
@@ -173,8 +222,8 @@ class _PanelInfoBottomSheetState extends State<PanelInfoBottomSheet> {
     return _tileWrapper(
       title: "Panel Info",
       children: [
-        _textField("Panel ID", panelIdController),
-        _textField("Panel Name", panelNameController),
+        _textField("Panel ID", config.panelIdController),
+        _textField("Panel Name", config.panelNameController),
       ],
     );
   }
@@ -194,12 +243,12 @@ class _PanelInfoBottomSheetState extends State<PanelInfoBottomSheet> {
             Switch(value: useMobileTime, onChanged: _toggleMobileTime),
           ],
         ),
-        _numberField("Year", yearController),
-        _numberField("Month", monthController),
-        _numberField("Day", dayController),
-        _numberField("Hour", hourController),
-        _numberField("Minute", minuteController),
-        _numberField("Second", secondController),
+        _numberField("Year", config.yearController),
+        _numberField("Month", config.monthController),
+        _numberField("Day", config.dayController),
+        _numberField("Hour", config.hourController),
+        _numberField("Minute", config.minuteController),
+        _numberField("Second", config.secondController),
       ],
     );
   }
@@ -207,7 +256,7 @@ class _PanelInfoBottomSheetState extends State<PanelInfoBottomSheet> {
   Widget _eventReminderTile() {
     return _tileWrapper(
       title: "Event Reminder",
-      children: [_numberField("Delay (s)", delayController)],
+      children: [_numberField("Delay (s)", config.delayController)],
     );
   }
 
@@ -343,13 +392,36 @@ class _PanelInfoBottomSheetState extends State<PanelInfoBottomSheet> {
             borderRadius: BorderRadius.circular(24),
           ),
         ),
-        onPressed: widget.onDownload,
+        onPressed: () {
+          FocusManager.instance.primaryFocus?.unfocus();
+          widget.onDownload();
+        },
         child: Text(
           'Download',
           style: GoogleFonts.inter(fontWeight: FontWeight.w600),
         ),
       ),
     );
+  }
+
+  void _pushToManager() {
+    if (manager == null) return;
+    manager!.panelInfoPanelNo.value =
+        int.tryParse(config.panelIdController.text) ?? 0;
+    manager!.panelInfoPanelName.value = config.panelNameController.text;
+    manager!.panelInfoYear.value =
+        int.tryParse(config.yearController.text) ?? 0;
+    manager!.panelInfoMonth.value =
+        int.tryParse(config.monthController.text) ?? 0;
+    manager!.panelInfoDay.value = int.tryParse(config.dayController.text) ?? 0;
+    manager!.panelInfoHour.value =
+        int.tryParse(config.hourController.text) ?? 0;
+    manager!.panelInfoMinute.value =
+        int.tryParse(config.minuteController.text) ?? 0;
+    manager!.panelInfoSecond.value =
+        int.tryParse(config.secondController.text) ?? 0;
+    manager!.panelInfoEventReminderDelay.value =
+        int.tryParse(config.delayController.text) ?? 0;
   }
 
   Widget _applyButton() {
@@ -362,7 +434,12 @@ class _PanelInfoBottomSheetState extends State<PanelInfoBottomSheet> {
             borderRadius: BorderRadius.circular(24),
           ),
         ),
-        onPressed: widget.onApply,
+        onPressed: () {
+          if (manager == null) return;
+          FocusManager.instance.primaryFocus?.unfocus();
+          _pushToManager();
+          widget.onApply();
+        },
         child: Text(
           'Apply',
           style: GoogleFonts.inter(
@@ -372,5 +449,31 @@ class _PanelInfoBottomSheetState extends State<PanelInfoBottomSheet> {
         ),
       ),
     );
+  }
+}
+
+// ───────────────── MODEL ─────────────────
+
+class PanelInfoConfig {
+  final TextEditingController panelIdController = TextEditingController();
+  final TextEditingController panelNameController = TextEditingController();
+  final TextEditingController yearController = TextEditingController();
+  final TextEditingController monthController = TextEditingController();
+  final TextEditingController dayController = TextEditingController();
+  final TextEditingController hourController = TextEditingController();
+  final TextEditingController minuteController = TextEditingController();
+  final TextEditingController secondController = TextEditingController();
+  final TextEditingController delayController = TextEditingController();
+
+  void dispose() {
+    panelIdController.dispose();
+    panelNameController.dispose();
+    yearController.dispose();
+    monthController.dispose();
+    dayController.dispose();
+    hourController.dispose();
+    minuteController.dispose();
+    secondController.dispose();
+    delayController.dispose();
   }
 }
