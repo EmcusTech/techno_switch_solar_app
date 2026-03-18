@@ -902,6 +902,7 @@ class BleProcess {
       } else if (rx.payload[12] == 0x09) {
         panelInfoEventReminderDelay.value =
             (rx.payload[15] << 8) | rx.payload[16];
+        print("We got the response for panel info event reminder delay fetch");
         bleManager.otaProcessState = OtaProcessState.notInUse;
         checkForPanelInfoSetupFetchRes = 0;
         isPanelInfoSetupFetchCommandActive.value = false;
