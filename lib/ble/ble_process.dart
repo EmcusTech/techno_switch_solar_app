@@ -65,6 +65,7 @@ class BleProcess {
   int checkForPanelInfoSetupApplyRes = 0;
   int panelInfoSetupApplyCommandStep = 0; // 1, 2, 3
   int checkForGeneralModuleSetupFetchRes = 0;
+  int checkForGeneralModuleSetupApplyRes = 0;
   int validEventLogNum = 0;
   int read1000Logs = 0;
   bool logRetreivalEnded = false;
@@ -725,6 +726,11 @@ class BleProcess {
         checkForGeneralModuleSetupFetchRes = 1;
         break;
 
+      case OtaProcessState.sendGeneralModuleSetupApplyCmdPkt:
+        print("Sending General Module Setup Apply Command");
+        checkForGeneralModuleSetupApplyRes = 1;
+        break;
+
       case OtaProcessState.otaWaitRsp:
         break;
     }
@@ -888,6 +894,12 @@ class BleProcess {
           checkForAccessKeyCmdRsp = 0;
           startRxTimeout();
           await bleManager.sendGeneralModuleLvlTimeOutFetchCmdPkt();
+        } else if (isGeneralModuleSetupApplyCommandActive.value) {
+          bleManager.otaProcessState =
+              OtaProcessState.sendGeneralModuleSetupApplyCmdPkt;
+          checkForAccessKeyCmdRsp = 0;
+          startRxTimeout();
+          await bleManager.sendGeneralModuleLvlTimeOutApplyCmdPkt();
         } else {
           bleManager.otaProcessState = OtaProcessState.sendStopCntrlCmdPkt;
           checkForAccessKeyCmdRsp = 0;
@@ -970,6 +982,25 @@ class BleProcess {
       } else {
         print(
           "General Module Setup Fetch Cmd Response not found, polling again",
+        );
+        startRxTimeout();
+        await bleManager.sendPollPacket();
+      }
+    }
+
+    if (checkForGeneralModuleSetupApplyRes == 1) {
+      print("Checking General Module Setup Apply CMD RSP");
+      if (rx.payload[12] == 0x02) {
+        print("We got general module setup apply response");
+        bleManager.otaProcessState = OtaProcessState.notInUse;
+        checkForGeneralModuleSetupApplyRes = 0;
+        isGeneralModuleSetupApplyCommandActive.value = false;
+        isGeneralModuleSetupApplyDone.value = true;
+        isAccessKeyValid.value = true;
+        processDesc.value = "General Module Setup Apply Completed";
+      } else {
+        print(
+          "General Module Setup Apply Cmd Response not found, polling again",
         );
         startRxTimeout();
         await bleManager.sendPollPacket();
@@ -2204,6 +2235,8 @@ class BleProcess {
     isLbusFetchHasErrors.value = false;
     checkForPanelInfoSetupFetchRes = 0;
     checkForPanelInfoSetupApplyRes = 0;
+    checkForGeneralModuleSetupFetchRes = 0;
+    checkForGeneralModuleSetupApplyRes = 0;
     // Counters
     checkForCtrlCmdRsp = 0;
     checkForAccessKeyCmdRsp = 0;
@@ -2270,6 +2303,8 @@ class BleProcess {
     isLbusFetchHasErrors.value = false;
     checkForPanelInfoSetupFetchRes = 0;
     checkForPanelInfoSetupApplyRes = 0;
+    checkForGeneralModuleSetupFetchRes = 0;
+    checkForGeneralModuleSetupApplyRes = 0;
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -2328,6 +2363,8 @@ class BleProcess {
     isLbusFetchHasErrors.value = false;
     checkForPanelInfoSetupFetchRes = 0;
     checkForPanelInfoSetupApplyRes = 0;
+    checkForGeneralModuleSetupFetchRes = 0;
+    checkForGeneralModuleSetupApplyRes = 0;
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -2384,6 +2421,8 @@ class BleProcess {
     isLbusFetchHasErrors.value = false;
     checkForPanelInfoSetupFetchRes = 0;
     checkForPanelInfoSetupApplyRes = 0;
+    checkForGeneralModuleSetupFetchRes = 0;
+    checkForGeneralModuleSetupApplyRes = 0;
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -2440,6 +2479,8 @@ class BleProcess {
     isLbusFetchHasErrors.value = false;
     checkForPanelInfoSetupFetchRes = 0;
     checkForPanelInfoSetupApplyRes = 0;
+    checkForGeneralModuleSetupFetchRes = 0;
+    checkForGeneralModuleSetupApplyRes = 0;
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -2496,6 +2537,8 @@ class BleProcess {
     isLbusFetchHasErrors.value = false;
     checkForPanelInfoSetupFetchRes = 0;
     checkForPanelInfoSetupApplyRes = 0;
+    checkForGeneralModuleSetupFetchRes = 0;
+    checkForGeneralModuleSetupApplyRes = 0;
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -2551,6 +2594,8 @@ class BleProcess {
     isLbusFetchHasErrors.value = false;
     checkForPanelInfoSetupFetchRes = 0;
     checkForPanelInfoSetupApplyRes = 0;
+    checkForGeneralModuleSetupFetchRes = 0;
+    checkForGeneralModuleSetupApplyRes = 0;
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -2607,6 +2652,8 @@ class BleProcess {
     isLbusFetchHasErrors.value = false;
     checkForPanelInfoSetupFetchRes = 0;
     checkForPanelInfoSetupApplyRes = 0;
+    checkForGeneralModuleSetupFetchRes = 0;
+    checkForGeneralModuleSetupApplyRes = 0;
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -2663,6 +2710,8 @@ class BleProcess {
     isLbusFetchHasErrors.value = false;
     checkForPanelInfoSetupFetchRes = 0;
     checkForPanelInfoSetupApplyRes = 0;
+    checkForGeneralModuleSetupFetchRes = 0;
+    checkForGeneralModuleSetupApplyRes = 0;
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -2719,6 +2768,8 @@ class BleProcess {
     isLbusFetchHasErrors.value = false;
     checkForPanelInfoSetupFetchRes = 0;
     checkForPanelInfoSetupApplyRes = 0;
+    checkForGeneralModuleSetupFetchRes = 0;
+    checkForGeneralModuleSetupApplyRes = 0;
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -2775,6 +2826,8 @@ class BleProcess {
     isLbusFetchHasErrors.value = false;
     checkForPanelInfoSetupFetchRes = 0;
     checkForPanelInfoSetupApplyRes = 0;
+    checkForGeneralModuleSetupFetchRes = 0;
+    checkForGeneralModuleSetupApplyRes = 0;
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -2831,6 +2884,8 @@ class BleProcess {
     isLbusFetchHasErrors.value = false;
     checkForPanelInfoSetupFetchRes = 0;
     checkForPanelInfoSetupApplyRes = 0;
+    checkForGeneralModuleSetupFetchRes = 0;
+    checkForGeneralModuleSetupApplyRes = 0;
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -2887,6 +2942,8 @@ class BleProcess {
     isLbusFetchHasErrors.value = false;
     checkForPanelInfoSetupFetchRes = 0;
     checkForPanelInfoSetupApplyRes = 0;
+    checkForGeneralModuleSetupFetchRes = 0;
+    checkForGeneralModuleSetupApplyRes = 0;
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -3281,6 +3338,8 @@ class BleProcess {
         case OtaProcessState.sendPanelInfoSetupApplyCmdPkt:
           break;
         case OtaProcessState.sendGeneralModuleSetupFetchCmdPkt:
+          break;
+        case OtaProcessState.sendGeneralModuleSetupApplyCmdPkt:
           break;
       }
       startRxTimeout();

@@ -1400,6 +1400,13 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                             mounted) {
                           await _savePanelInfoCacheAndNotifyRefresh();
                           showApplySuccessDialog(context, 'Panel Info');
+                        } else if (ble
+                                .bleProcess
+                                .isGeneralModuleSetupApplyDone
+                                .value &&
+                            mounted) {
+                          await _saveGeneralModuleCacheAndNotifyRefresh();
+                          showApplySuccessDialog(context, 'General Module');
                         } else {
                           Navigator.of(dialogContext).push(
                             MaterialPageRoute(
@@ -2644,10 +2651,10 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
         bp.generalModuleSilenceSounderLvl.value,
         ['Access Level 2', 'Access Level 3'],
       ),
-      'resetLevel': _generalModuleLevelToLabel(
-        bp.generalModuleResetLvl.value,
-        ['Access Level 2', 'Access Level 3'],
-      ),
+      'resetLevel': _generalModuleLevelToLabel(bp.generalModuleResetLvl.value, [
+        'Access Level 2',
+        'Access Level 3',
+      ]),
       'faultLatching': bp.generalModuleFaultLatching.value == 0 ? 'No' : 'Yes',
     });
     _generalModuleRefreshTrigger.value++;
@@ -2932,17 +2939,17 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                       );
                     },
                     onApply: () {
-                      // showPasswordPopup(
-                      //   onCall: () {
-                      //     ble
-                      //         .bleProcess
-                      //         .isGeneralModuleSetupApplyCommandActive
-                      //         .value = true;
-                      //     bleController.startGeneralModuleSetupApply();
-                      //   },
-                      //   isGeneralModuleSetup: true,
-                      //   mode: 'bottomsheet_apply',
-                      // );
+                      showPasswordPopup(
+                        onCall: () {
+                          ble
+                              .bleProcess
+                              .isGeneralModuleSetupApplyCommandActive
+                              .value = true;
+                          bleController.startGeneralModuleSetupApply();
+                        },
+                        isGeneralModuleSetup: true,
+                        mode: 'bottomsheet_apply',
+                      );
                     },
                     refreshTrigger: _generalModuleRefreshTrigger,
                   );
