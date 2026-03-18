@@ -62,6 +62,7 @@ enum BleStates {
   SEND_SERVICE_DUE_SETUP_CMD_APPLY_PACKET,
   SEND_ACCESS_CODE_SETUP_CMD_FETCH_PACKET,
   SEND_ACCESS_CODE_SETUP_CMD_APPLY_PACKET,
+  SEND_PANEL_INFO_SETUP_CMD_FETCH_PACKET,
   // add other states
 }
 
@@ -96,6 +97,7 @@ enum OtaProcessState {
   sendServiceDueApplyCmdPkt,
   sendAccessCodeSetupFetchCmdPkt,
   sendAccessCodeSetupApplyCmdPkt,
+  sendPanelInfoSetupFetchCmdPkt,
 }
 
 enum BleOperationMode {
@@ -121,6 +123,7 @@ enum BleOperationMode {
   serviceDueApply,
   accessCodeSetupFetch,
   accessCodeSetupApply,
+  panelInfoSetupFetch,
 }
 
 const String BLE_AUTHN_MSG = "TECHNOSWITCH-AUTH-APP";
@@ -615,6 +618,19 @@ class BleManager {
     otaProcessState = OtaProcessState.sendNetworkPacket;
   }
 
+  void resetProtocolPanelInfoSetupState() {
+    // Packet counters
+    u8TxPktCnt = 0;
+    u8RxPktCnt = 0;
+    receivedPollCount = 0;
+
+    // Poll guards
+    _pollInFlight = false;
+
+    // OTA state
+    otaProcessState = OtaProcessState.sendNetworkPacket;
+  }
+
   void resetFirmwareState() {
     bleCurrentState = BleStates.SEND_START_FIRMWARE_PACKET;
     bleStateMachineState = BleStates.SEND_START_FIRMWARE_PACKET;
@@ -726,6 +742,15 @@ class BleManager {
     _pollInFlight = false;
     receivedPollCount = 0;
     currentOperationMode = BleOperationMode.accessCodeSetupFetch;
+  }
+
+  void resetPanelInfoSetupState() {
+    bleCurrentState = BleStates.REQ_ENCY_KEY;
+    bleStateMachineState = BleStates.REQ_ENCY_KEY;
+    bleAESKey.clear();
+    _pollInFlight = false;
+    receivedPollCount = 0;
+    currentOperationMode = BleOperationMode.panelInfoSetupFetch;
   }
 
   /// Initialize and start log retrieval process
@@ -1427,6 +1452,41 @@ class BleManager {
     print("Proceeding with Access code setup fetch");
     bleCurrentState = BleStates.SEND_ACCESS_CODE_SETUP_CMD_APPLY_PACKET;
     bleStateMachineState = BleStates.SEND_ACCESS_CODE_SETUP_CMD_APPLY_PACKET;
+    print("Current state: $bleStateMachineState");
+    bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
+    Get.find<BleLogController>().sendNetworkPacket();
+  }
+
+  Future<void> startPanelInfoSetupFetch() async {
+    if (!isConnected) {
+      throw Exception("Device not connected. Cannot start log retrieval.");
+    }
+
+    if (notifyChar == null || writeChar == null) {
+      throw Exception(
+        "BLE characteristics not initialized. Cannot start log retrieval.",
+      );
+    }
+
+    // Set operation mode to log retrieval
+    currentOperationMode = BleOperationMode.panelInfoSetupFetch;
+
+    // Reset protocol state to initial values
+    resetPanelInfoSetupState();
+    resetProtocolPanelInfoSetupState();
+
+    // IMPORTANT: Reset process state to clear isOtaCompleted flag
+    // This ensures polls aren't blocked after firmware upgrade
+    bleProcess.resetProcessPanelInfoSetupState();
+
+    if (_notifySub == null) {
+      throw Exception(
+        "BLE handshake not complete. Please wait for connection to finish.",
+      );
+    }
+    print("Proceeding with Panel info setup fetch");
+    bleCurrentState = BleStates.SEND_PANEL_INFO_SETUP_CMD_FETCH_PACKET;
+    bleStateMachineState = BleStates.SEND_PANEL_INFO_SETUP_CMD_FETCH_PACKET;
     print("Current state: $bleStateMachineState");
     bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
     Get.find<BleLogController>().sendNetworkPacket();
@@ -2198,6 +2258,19 @@ class BleManager {
             "Current state: $bleStateMachineState (Access code setup apply)",
           );
           // Send Network Packet for Access code setup apply
+          bleProcess.startOtherPacketsRxTimeout(
+            timeout: const Duration(seconds: 5),
+          );
+          Get.find<BleLogController>().sendNetworkPacket();
+        } else if (currentOperationMode ==
+            BleOperationMode.panelInfoSetupFetch) {
+          bleCurrentState = BleStates.SEND_PANEL_INFO_SETUP_CMD_FETCH_PACKET;
+          bleStateMachineState =
+              BleStates.SEND_PANEL_INFO_SETUP_CMD_FETCH_PACKET;
+          print(
+            "Current state: $bleStateMachineState (Panel info setup fetch)",
+          );
+          // Send Network Packet for Panel info setup fetch
           bleProcess.startOtherPacketsRxTimeout(
             timeout: const Duration(seconds: 5),
           );
@@ -4491,6 +4564,39 @@ class BleManager {
 
     print(
       "TX/RX: TRANSMIT: Access Code $accessCodeNo Setup Apply Command time: ${DateTime.now().toIso8601String()}, packet: ${u8_pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+    );
+
+    await sendSmallDataFrame(0x1000, 216, u8_pkt);
+  }
+
+  Future<void> sendPanelInfoFetchCmdPkt() async {
+    // Create 216-byte buffer
+    Uint8List u8_pkt = Uint8List(216);
+
+    // Update global counters
+    u8TxPktCnt += 1;
+
+    u8_pkt[0] = 0xFE;
+    u8_pkt[1] = 0x01;
+    u8_pkt[2] = 0x00;
+
+    u8_pkt[3] = 0x01; // pkt type
+    u8_pkt[4] = u8TxPktCnt & 0xFF; // tx pkt num
+    u8_pkt[5] = u8RxPktCnt & 0xFF; // rx pkt num
+    u8_pkt[6] = 0x00; // network number
+    u8_pkt[10] = 0x01; // mode
+    u8_pkt[11] = 0x00; // socket number
+    u8_pkt[12] = 0x08; // command
+
+    // Compute checksum on first 213 bytes
+    int checksum = toolsFletcherChecksum(u8_pkt.sublist(0, 213));
+
+    u8_pkt[213] = (checksum >> 8) & 0xFF;
+    u8_pkt[214] = checksum & 0xFF;
+    u8_pkt[215] = 0xFD;
+
+    print(
+      "TX/RX: TRANSMIT: Panel info fetch Command time: ${DateTime.now().toIso8601String()}, packet: ${u8_pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
     );
 
     await sendSmallDataFrame(0x1000, 216, u8_pkt);

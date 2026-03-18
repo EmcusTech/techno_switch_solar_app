@@ -61,6 +61,7 @@ class BleProcess {
   int accessCodeSetupFetchCommandStep = 0; // 1, 2, 3 ... 8
   int checkForAccessCodeSetupApplyRes = 0;
   int accessCodeSetupApplyCommandStep = 0; // 1, 2, 3 ... 8
+  int checkForPanelInfoSetupFetchRes = 0;
   int validEventLogNum = 0;
   int read1000Logs = 0;
   bool logRetreivalEnded = false;
@@ -664,6 +665,11 @@ class BleProcess {
         checkForAccessCodeSetupApplyRes = 1;
         break;
 
+      case OtaProcessState.sendPanelInfoSetupFetchCmdPkt:
+        print("Sending Panel Info Setup Fetch Command");
+        checkForPanelInfoSetupFetchRes = 1;
+        break;
+
       case OtaProcessState.otaWaitRsp:
         break;
     }
@@ -844,6 +850,22 @@ class BleProcess {
         await bleManager.sendPollPacket();
       }
       // checkDipSetCmdRsp = 0;
+    }
+
+    if (checkForPanelInfoSetupFetchRes == 1) {
+      print("Checking Panel Info Setup Fetch CMD RSP");
+      if (rx.payload[12] == 0x08) {
+        print("We got panel info setup fetch response");
+        bleManager.otaProcessState = OtaProcessState.notInUse;
+        checkForPanelInfoSetupFetchRes = 0;
+        // isPanelInfoSetupFetchCommandActive.value = false;
+        isAccessKeyValid.value = true;
+        processDesc.value = "Panel Info Setup Fetch Completed";
+      } else {
+        print("Panel Info Setup Fetch Cmd Response not found, polling again");
+        startRxTimeout();
+        await bleManager.sendPollPacket();
+      }
     }
 
     if (checkForAccessCodeSetupFetchRes == 1) {
@@ -2582,6 +2604,60 @@ class BleProcess {
     // panelName.value = "";
   }
 
+  void resetProcessPanelInfoSetupState() {
+    // Terminal guards
+    isOtaCompleted = false;
+    processNextOtaFrame = true;
+    logRetreivalEnded = false;
+
+    // Counters
+    checkForCtrlCmdRsp = 0;
+    checkForAccessKeyCmdRsp = 0;
+    checkDipSetCmdRsp = 0;
+    checkForExtCmdFetchRes = 0;
+    checkForInputSetupFetchRes = 0;
+    checkForRelaySetupApplyRes = 0;
+    validEventLogNum = 0;
+    read1000Logs = 0;
+    receivedPollCount = 0;
+    checkForRadioSetupFetchRes = 0;
+    isExtOutApplyButtonActive.value = false;
+    relaySetupFetchCommandStep = 0;
+    checkForRelaySetupFetchRes = 0;
+    checkForRadioSetupApplyRes = 0;
+    checkForLBusSetupFetchRes = 0;
+    lBusSetupFetchCommandStep = 0;
+    checkForLBusSetupApplyRes = 0;
+    checkForSounderSetupFetchRes = 0;
+    checkForSounderSetupApplyRes = 0;
+    checkForServiceDueFetchRes = 0;
+    checkForAccessCodeSetupFetchRes = 0;
+    accessCodeSetupFetchCommandStep = 0;
+    checkForAccessCodeSetupApplyRes = 0;
+    accessCodeSetupApplyCommandStep = 0;
+    isLbusFetchHasErrors.value = false;
+    // Time tracking
+    // logStartingTime = null;
+    // logEndTime = null;
+
+    // OTA state
+    bleManager.otaProcessState = OtaProcessState.sendNetworkPacket;
+
+    // RX timeout
+    _rxTimeoutTimer?.cancel();
+    _rxTimeoutTimer = null;
+
+    _otherPacketsRxTimeoutTimer?.cancel();
+    _otherPacketsRxTimeoutTimer = null;
+
+    // UI notifiers
+    // validEventLogCount.value = 0;
+    // read1000LogsCount.value = 0;
+    // validEventLogs.value = [];
+    // isValidLogRecieved.value = false;
+    // panelName.value = "";
+  }
+
   String formatDuration(Duration d) {
     final m = d.inMinutes;
     final s = d.inSeconds.remainder(60);
@@ -2948,6 +3024,8 @@ class BleProcess {
         case OtaProcessState.sendAccessCodeSetupFetchCmdPkt:
           break;
         case OtaProcessState.sendAccessCodeSetupApplyCmdPkt:
+          break;
+        case OtaProcessState.sendPanelInfoSetupFetchCmdPkt:
           break;
       }
       startRxTimeout();
