@@ -144,6 +144,7 @@ class _PanelInfoBottomSheetState extends State<PanelInfoBottomSheet> {
         _startLiveTime();
       } else {
         _stopLiveTime();
+        _loadFromManager();
       }
     });
   }
