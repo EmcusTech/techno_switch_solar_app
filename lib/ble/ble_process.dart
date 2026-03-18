@@ -931,26 +931,37 @@ class BleProcess {
       if (rx.payload[12] == 0x09) {
         print("We got general module lvl time out fetch response");
         generalModuleLvlTimeOut.value = rx.payload[15] << 8 | rx.payload[16];
+        print("General Module LVL Time-out: ${generalModuleLvlTimeOut.value}");
         startRxTimeout();
         await bleManager.sendGeneralModuleSilenceBuzzerLvlFetchCmdPkt();
       } else if (rx.payload[12] == 0x15 && rx.payload[13] == 0x09) {
         print("We got general module silence buzzer lvl fetch response");
-        generalModuleSilenceBuzzerLvl.value = rx.payload[14];
+        generalModuleSilenceBuzzerLvl.value = rx.payload[14] - 1;
+        print(
+          "General Module Silence Buzzer LVL: ${generalModuleSilenceBuzzerLvl.value}",
+        );
         startRxTimeout();
         await bleManager.sendGeneralModuleSilenceSounderLvlFetchCmdPkt();
       } else if (rx.payload[12] == 0x15 && rx.payload[13] == 0x0A) {
         print("We got general module silence sounder lvl fetch response");
-        generalModuleSilenceSounderLvl.value = rx.payload[14];
+        generalModuleSilenceSounderLvl.value = rx.payload[14] - 2;
+        print(
+          "General Module Silence Sounder LVL: ${generalModuleSilenceSounderLvl.value}",
+        );
         startRxTimeout();
         await bleManager.sendGeneralModuleResetLvlFetchCmdPkt();
       } else if (rx.payload[12] == 0x15 && rx.payload[13] == 0x0C) {
         print("We got general module reset lvl fetch response");
-        generalModuleResetLvl.value = rx.payload[14];
+        generalModuleResetLvl.value = rx.payload[14] - 2;
+        print("General Module Reset LVL: ${generalModuleResetLvl.value}");
         startRxTimeout();
         await bleManager.sendGeneralModuleFaultLatchingFetchCmdPkt();
       } else if (rx.payload[12] == 0x15 && rx.payload[13] == 0x12) {
         print("We got general module fault latching fetch response");
         generalModuleFaultLatching.value = rx.payload[14];
+        print(
+          "General Module Fault Latching: ${generalModuleFaultLatching.value}",
+        );
         bleManager.otaProcessState = OtaProcessState.notInUse;
         checkForGeneralModuleSetupFetchRes = 0;
         isGeneralModuleSetupFetchCommandActive.value = false;
