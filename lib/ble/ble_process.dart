@@ -64,6 +64,7 @@ class BleProcess {
   int checkForPanelInfoSetupFetchRes = 0;
   int checkForPanelInfoSetupApplyRes = 0;
   int panelInfoSetupApplyCommandStep = 0; // 1, 2, 3
+  int checkForGeneralModuleSetupFetchRes = 0;
   int validEventLogNum = 0;
   int read1000Logs = 0;
   bool logRetreivalEnded = false;
@@ -509,6 +510,17 @@ class BleProcess {
   final ValueNotifier<int> panelInfoSecond = ValueNotifier<int>(0);
   final ValueNotifier<int> panelInfoEventReminderDelay = ValueNotifier<int>(0);
 
+  // General Module Setup Variables
+  final ValueNotifier<bool> isGeneralModuleSetupFetchCommandActive =
+      ValueNotifier<bool>(false);
+
+  final ValueNotifier<bool> isGeneralModuleSetupApplyCommandActive =
+      ValueNotifier<bool>(false);
+
+  final ValueNotifier<bool> isGeneralModuleSetupApplyDone = ValueNotifier<bool>(
+    false,
+  );
+
   // BleStates bleStateMachineState = BleStates.IDLE;
   BleStates bleCurrentState = BleStates.IDLE;
   DeviceConnectState deviceConnectState = DeviceConnectState.notConnected;
@@ -698,6 +710,11 @@ class BleProcess {
         checkForPanelInfoSetupApplyRes = 1;
         break;
 
+      case OtaProcessState.sendGeneralModuleSetupFetchCmdPkt:
+        print("Sending General Module Setup Fetch Command");
+        checkForGeneralModuleSetupFetchRes = 1;
+        break;
+
       case OtaProcessState.otaWaitRsp:
         break;
     }
@@ -855,6 +872,12 @@ class BleProcess {
           checkForAccessKeyCmdRsp = 0;
           startRxTimeout();
           await bleManager.sendPanelInfoPanelIdApplyCmdPkt();
+        } else if (isGeneralModuleSetupFetchCommandActive.value) {
+          bleManager.otaProcessState =
+              OtaProcessState.sendGeneralModuleSetupFetchCmdPkt;
+          checkForAccessKeyCmdRsp = 0;
+          startRxTimeout();
+          await bleManager.sendGeneralModuleLvlTimeOutFetchCmdPkt();
         } else {
           bleManager.otaProcessState = OtaProcessState.sendStopCntrlCmdPkt;
           checkForAccessKeyCmdRsp = 0;
@@ -891,6 +914,24 @@ class BleProcess {
         await bleManager.sendPollPacket();
       }
       // checkDipSetCmdRsp = 0;
+    }
+
+    if (checkForGeneralModuleSetupFetchRes == 1) {
+      print("Checking General Module Setup Fetch CMD RSP");
+      if (rx.payload[12] == 0x09) {
+        print("We got general module setup fetch response");
+        bleManager.otaProcessState = OtaProcessState.notInUse;
+        checkForGeneralModuleSetupFetchRes = 0;
+        isGeneralModuleSetupFetchCommandActive.value = false;
+        isAccessKeyValid.value = true;
+        processDesc.value = "General Module Setup Fetch Completed";
+      } else {
+        print(
+          "General Module Setup Fetch Cmd Response not found, polling again",
+        );
+        startRxTimeout();
+        await bleManager.sendPollPacket();
+      }
     }
 
     if (checkForPanelInfoSetupFetchRes == 1) {
@@ -2770,6 +2811,62 @@ class BleProcess {
     // panelName.value = "";
   }
 
+  void resetProcessGeneralModuleSetupState() {
+    // Terminal guards
+    isOtaCompleted = false;
+    processNextOtaFrame = true;
+    logRetreivalEnded = false;
+
+    // Counters
+    checkForCtrlCmdRsp = 0;
+    checkForAccessKeyCmdRsp = 0;
+    checkDipSetCmdRsp = 0;
+    checkForExtCmdFetchRes = 0;
+    checkForInputSetupFetchRes = 0;
+    checkForRelaySetupApplyRes = 0;
+    validEventLogNum = 0;
+    read1000Logs = 0;
+    receivedPollCount = 0;
+    checkForRadioSetupFetchRes = 0;
+    isExtOutApplyButtonActive.value = false;
+    relaySetupFetchCommandStep = 0;
+    checkForRelaySetupFetchRes = 0;
+    checkForRadioSetupApplyRes = 0;
+    checkForLBusSetupFetchRes = 0;
+    lBusSetupFetchCommandStep = 0;
+    checkForLBusSetupApplyRes = 0;
+    checkForSounderSetupFetchRes = 0;
+    checkForSounderSetupApplyRes = 0;
+    checkForServiceDueFetchRes = 0;
+    checkForAccessCodeSetupFetchRes = 0;
+    accessCodeSetupFetchCommandStep = 0;
+    checkForAccessCodeSetupApplyRes = 0;
+    accessCodeSetupApplyCommandStep = 0;
+    isLbusFetchHasErrors.value = false;
+    checkForPanelInfoSetupFetchRes = 0;
+    checkForPanelInfoSetupApplyRes = 0;
+    // Time tracking
+    // logStartingTime = null;
+    // logEndTime = null;
+
+    // OTA state
+    bleManager.otaProcessState = OtaProcessState.sendNetworkPacket;
+
+    // RX timeout
+    _rxTimeoutTimer?.cancel();
+    _rxTimeoutTimer = null;
+
+    _otherPacketsRxTimeoutTimer?.cancel();
+    _otherPacketsRxTimeoutTimer = null;
+
+    // UI notifiers
+    // validEventLogCount.value = 0;
+    // read1000LogsCount.value = 0;
+    // validEventLogs.value = [];
+    // isValidLogRecieved.value = false;
+    // panelName.value = "";
+  }
+
   String formatDuration(Duration d) {
     final m = d.inMinutes;
     final s = d.inSeconds.remainder(60);
@@ -3140,6 +3237,8 @@ class BleProcess {
         case OtaProcessState.sendPanelInfoSetupFetchCmdPkt:
           break;
         case OtaProcessState.sendPanelInfoSetupApplyCmdPkt:
+          break;
+        case OtaProcessState.sendGeneralModuleSetupFetchCmdPkt:
           break;
       }
       startRxTimeout();

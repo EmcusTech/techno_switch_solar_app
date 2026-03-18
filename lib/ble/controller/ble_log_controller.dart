@@ -135,6 +135,10 @@ class BleLogController extends GetxController {
     await bleManager.startPanelInfoSetupApply();
   }
 
+  Future<void> startGeneralModuleSetupFetch() async {
+    await bleManager.startGeneralModuleSetupFetch();
+  }
+
   sendNetworkPacket() async {
     await bleManager.sendNetworkPacket();
   }
