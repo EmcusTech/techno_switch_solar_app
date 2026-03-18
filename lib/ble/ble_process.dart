@@ -521,6 +521,16 @@ class BleProcess {
     false,
   );
 
+  final ValueNotifier<int> generalModuleLvlTimeOut = ValueNotifier<int>(0);
+  final ValueNotifier<int> generalModuleSilenceBuzzerLvl = ValueNotifier<int>(
+    0,
+  );
+  final ValueNotifier<int> generalModuleSilenceSounderLvl = ValueNotifier<int>(
+    0,
+  );
+  final ValueNotifier<int> generalModuleResetLvl = ValueNotifier<int>(0);
+  final ValueNotifier<int> generalModuleFaultLatching = ValueNotifier<int>(0);
+
   // BleStates bleStateMachineState = BleStates.IDLE;
   BleStates bleCurrentState = BleStates.IDLE;
   DeviceConnectState deviceConnectState = DeviceConnectState.notConnected;
@@ -919,7 +929,28 @@ class BleProcess {
     if (checkForGeneralModuleSetupFetchRes == 1) {
       print("Checking General Module Setup Fetch CMD RSP");
       if (rx.payload[12] == 0x09) {
-        print("We got general module setup fetch response");
+        print("We got general module lvl time out fetch response");
+        generalModuleLvlTimeOut.value = rx.payload[15] << 8 | rx.payload[16];
+        startRxTimeout();
+        await bleManager.sendGeneralModuleSilenceBuzzerLvlFetchCmdPkt();
+      } else if (rx.payload[12] == 0x15 && rx.payload[13] == 0x09) {
+        print("We got general module silence buzzer lvl fetch response");
+        generalModuleSilenceBuzzerLvl.value = rx.payload[14];
+        startRxTimeout();
+        await bleManager.sendGeneralModuleSilenceSounderLvlFetchCmdPkt();
+      } else if (rx.payload[12] == 0x15 && rx.payload[13] == 0x0A) {
+        print("We got general module silence sounder lvl fetch response");
+        generalModuleSilenceSounderLvl.value = rx.payload[14];
+        startRxTimeout();
+        await bleManager.sendGeneralModuleResetLvlFetchCmdPkt();
+      } else if (rx.payload[12] == 0x15 && rx.payload[13] == 0x0C) {
+        print("We got general module reset lvl fetch response");
+        generalModuleResetLvl.value = rx.payload[14];
+        startRxTimeout();
+        await bleManager.sendGeneralModuleFaultLatchingFetchCmdPkt();
+      } else if (rx.payload[12] == 0x15 && rx.payload[13] == 0x12) {
+        print("We got general module fault latching fetch response");
+        generalModuleFaultLatching.value = rx.payload[14];
         bleManager.otaProcessState = OtaProcessState.notInUse;
         checkForGeneralModuleSetupFetchRes = 0;
         isGeneralModuleSetupFetchCommandActive.value = false;
