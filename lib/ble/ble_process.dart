@@ -486,6 +486,27 @@ class BleProcess {
         List.generate(8, (_) => const AccessCodeSetupData()),
       );
 
+  // Panel Info Setup Variables
+  final ValueNotifier<bool> isPanelInfoSetupFetchCommandActive =
+      ValueNotifier<bool>(false);
+
+  final ValueNotifier<bool> isPanelInfoSetupApplyCommandActive =
+      ValueNotifier<bool>(false);
+
+  final ValueNotifier<bool> isPanelInfoSetupApplyDone = ValueNotifier<bool>(
+    false,
+  );
+
+  final ValueNotifier<int> panelInfoPanelNo = ValueNotifier<int>(0);
+  final ValueNotifier<String> panelInfoPanelName = ValueNotifier<String>("");
+  final ValueNotifier<int> panelInfoYear = ValueNotifier<int>(0);
+  final ValueNotifier<int> panelInfoMonth = ValueNotifier<int>(0);
+  final ValueNotifier<int> panelInfoDay = ValueNotifier<int>(0);
+  final ValueNotifier<int> panelInfoHour = ValueNotifier<int>(0);
+  final ValueNotifier<int> panelInfoMinute = ValueNotifier<int>(0);
+  final ValueNotifier<int> panelInfoSecond = ValueNotifier<int>(0);
+  final ValueNotifier<int> panelInfoEventReminderDelay = ValueNotifier<int>(0);
+
   // BleStates bleStateMachineState = BleStates.IDLE;
   BleStates bleCurrentState = BleStates.IDLE;
   DeviceConnectState deviceConnectState = DeviceConnectState.notConnected;
@@ -814,6 +835,12 @@ class BleProcess {
           processDesc.value = "Applying Access Code 1/8";
           startRxTimeout();
           await bleManager.sendAccessCodeSetupApplyCmdPkt(accessCodeNo: 1);
+        } else if (isPanelInfoSetupFetchCommandActive.value) {
+          bleManager.otaProcessState =
+              OtaProcessState.sendPanelInfoSetupFetchCmdPkt;
+          checkForAccessKeyCmdRsp = 0;
+          startRxTimeout();
+          await bleManager.sendPanelInfoPanelIdFetchCmdPkt();
         } else {
           bleManager.otaProcessState = OtaProcessState.sendStopCntrlCmdPkt;
           checkForAccessKeyCmdRsp = 0;
@@ -856,9 +883,28 @@ class BleProcess {
       print("Checking Panel Info Setup Fetch CMD RSP");
       if (rx.payload[12] == 0x08) {
         print("We got panel info setup fetch response");
+        panelInfoPanelNo.value = rx.payload[16];
+        panelInfoPanelName.value = extractStringFromPayload(
+          rx.payload,
+          startIndex: 18,
+        );
+        startRxTimeout();
+        await bleManager.sendPanelInfoDateTimeFetchCmdPkt();
+      } else if (rx.payload[12] == 0x01) {
+        panelInfoYear.value = (rx.payload[13] << 8) | rx.payload[14];
+        panelInfoMonth.value = rx.payload[15];
+        panelInfoDay.value = rx.payload[16];
+        panelInfoHour.value = rx.payload[17];
+        panelInfoMinute.value = rx.payload[18];
+        panelInfoSecond.value = rx.payload[19];
+        startRxTimeout();
+        await bleManager.sendPanelInfoEventReminderDelayFetchCmdPkt();
+      } else if (rx.payload[12] == 0x09) {
+        panelInfoEventReminderDelay.value =
+            (rx.payload[15] << 8) | rx.payload[16];
         bleManager.otaProcessState = OtaProcessState.notInUse;
         checkForPanelInfoSetupFetchRes = 0;
-        // isPanelInfoSetupFetchCommandActive.value = false;
+        isPanelInfoSetupFetchCommandActive.value = false;
         isAccessKeyValid.value = true;
         processDesc.value = "Panel Info Setup Fetch Completed";
       } else {

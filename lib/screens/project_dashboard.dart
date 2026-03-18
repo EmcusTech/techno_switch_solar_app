@@ -23,6 +23,7 @@ import 'package:techno_switch_solar_app/widgets/bottom_sheets/access_code_mode_b
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/input_mode_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/l_bus_mode_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/module_mode_bottomsheet.dart';
+import 'package:techno_switch_solar_app/widgets/bottom_sheets/panel_info_mode_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/radio_mode_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/relay_mode_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/service_due_mode_bottomsheet.dart';
@@ -1207,6 +1208,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     bool? isSounderSetup = false,
     bool? isServiceDueSetup = false,
     bool? isAccessCodeSetup = false,
+    bool? isPanelInfoSetup = false,
     String? mode,
     Future<void> Function()? onDownloadComplete,
     String? downloadSuccessMessage,
@@ -1331,6 +1333,8 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                                     ? 'Service Due'
                                     : isAccessCodeSetup == true
                                     ? 'Access Code'
+                                    : isPanelInfoSetup == true
+                                    ? 'Panel Info'
                                     : 'Configuration');
                             showDownloadSuccessDialog(context, message);
                           }
@@ -1999,7 +2003,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 },
               ),
               _peripheralTile(
-                peripheralName: 'Panel Info',
+                peripheralName: 'Module Info',
                 iconPath: 'assets/svgs/peripheral_aux_icon.svg',
                 onTap: () {
                   if (_selectedDevice.manufacturerData.isNotEmpty &&
@@ -2192,6 +2196,28 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
             onDownload: onDownload,
             onApply: onApply,
             refreshTrigger: refreshTrigger,
+          ),
+    );
+  }
+
+  showPanelInfoSetupBottomSheet({
+    required BuildContext context,
+    required String deviceId,
+    required VoidCallback onDownload,
+    required VoidCallback onApply,
+    required ValueNotifier<int> refreshTrigger,
+  }) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withOpacity(0.4),
+      builder:
+          (_) => PanelInfoBottomSheet(
+            // deviceId: deviceId,
+            onDownload: onDownload,
+            onApply: onApply,
+            // refreshTrigger: refreshTrigger,
           ),
     );
   }
@@ -2761,6 +2787,34 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                         mode: 'bottomsheet_apply',
                       );
                     },
+                    refreshTrigger: _serviceDueRefreshTrigger,
+                  );
+                },
+              ),
+              _peripheralTile(
+                peripheralName: 'Panel Info',
+                iconPath: 'assets/svgs/panel_action_panel_info_icon.svg',
+                onTap: () {
+                  showPanelInfoSetupBottomSheet(
+                    context: context,
+                    deviceId: _selectedDevice.id,
+                    onDownload: () {
+                      showPasswordPopup(
+                        onCall: () {
+                          ble
+                              .bleProcess
+                              .isPanelInfoSetupFetchCommandActive
+                              .value = true;
+                          bleController.startPanelInfoSetupFetch();
+                        },
+                        isPanelInfoSetup: true,
+                        mode: 'bottomsheet_download',
+                        onDownloadComplete:
+                            _saveAccessCodeCacheAndNotifyRefresh,
+                        downloadSuccessMessage: 'Panel Info',
+                      );
+                    },
+                    onApply: () {},
                     refreshTrigger: _serviceDueRefreshTrigger,
                   );
                 },
