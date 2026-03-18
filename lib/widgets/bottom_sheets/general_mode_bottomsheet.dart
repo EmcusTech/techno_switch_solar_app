@@ -5,16 +5,21 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
+import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/widgets/dropdown.dart';
 
 class GeneralModuleBottomSheet extends StatefulWidget {
+  final String deviceId;
   final VoidCallback onDownload;
   final VoidCallback onApply;
+  final ValueNotifier<int> refreshTrigger;
 
   const GeneralModuleBottomSheet({
     super.key,
+    required this.deviceId,
     required this.onDownload,
     required this.onApply,
+    required this.refreshTrigger,
   });
 
   @override
@@ -47,12 +52,88 @@ class _GeneralModuleBottomSheetState extends State<GeneralModuleBottomSheet> {
     if (Get.isRegistered<BleLogController>()) {
       manager = Get.find<BleLogController>().bleManager;
     }
+
+    _loadData();
+    widget.refreshTrigger.addListener(_onRefreshTriggered);
   }
 
   @override
   void dispose() {
+    widget.refreshTrigger.removeListener(_onRefreshTriggered);
     lvlTimeoutController.dispose();
     super.dispose();
+  }
+
+  void _onRefreshTriggered() {
+    _loadFromManager();
+  }
+
+  Future<void> _loadData() async {
+    final cached =
+        await PeripheralSetupCache.loadGeneralModuleSetup(widget.deviceId);
+    if (cached != null) {
+      _applyCachedData(cached);
+      if (mounted) setState(() {});
+      return;
+    }
+    _loadFromManager();
+  }
+
+  void _applyCachedData(Map<String, dynamic> data) {
+    lvlTimeoutController.text =
+        (data['lvlTimeout'] as num?)?.toString() ?? '0';
+    silenceBuzzerLevel = (data['silenceBuzzerLevel'] as String?) ??
+        buzzerOptions.first;
+    silenceSoundersLevel = (data['silenceSoundersLevel'] as String?) ??
+        sounderOptions.first;
+    resetLevel =
+        (data['resetLevel'] as String?) ?? resetOptions.first;
+    faultLatching = (data['faultLatching'] as String?) ?? yesNoOptions.first;
+  }
+
+  void _loadFromManager() {
+    if (manager == null) return;
+    final bp = manager!.bleProcess;
+    lvlTimeoutController.text = bp.generalModuleLvlTimeOut.value.toString();
+    silenceBuzzerLevel = bp.generalModuleSilenceBuzzerLvl.value < buzzerOptions.length
+        ? buzzerOptions[bp.generalModuleSilenceBuzzerLvl.value]
+        : buzzerOptions.first;
+    silenceSoundersLevel =
+        bp.generalModuleSilenceSounderLvl.value < sounderOptions.length
+            ? sounderOptions[bp.generalModuleSilenceSounderLvl.value]
+            : sounderOptions.first;
+    resetLevel = bp.generalModuleResetLvl.value < resetOptions.length
+        ? resetOptions[bp.generalModuleResetLvl.value]
+        : resetOptions.first;
+    faultLatching = bp.generalModuleFaultLatching.value < yesNoOptions.length
+        ? yesNoOptions[bp.generalModuleFaultLatching.value]
+        : yesNoOptions.first;
+    if (mounted) setState(() {});
+  }
+
+  void _pushToManager() {
+    if (manager == null) return;
+    final bp = manager!.bleProcess;
+    bp.generalModuleLvlTimeOut.value =
+        int.tryParse(lvlTimeoutController.text) ?? 0;
+    bp.generalModuleSilenceBuzzerLvl.value =
+        buzzerOptions.indexOf(silenceBuzzerLevel).clamp(0, buzzerOptions.length - 1);
+    bp.generalModuleSilenceSounderLvl.value =
+        sounderOptions.indexOf(silenceSoundersLevel).clamp(0, sounderOptions.length - 1);
+    bp.generalModuleResetLvl.value =
+        resetOptions.indexOf(resetLevel).clamp(0, resetOptions.length - 1);
+    bp.generalModuleFaultLatching.value =
+        yesNoOptions.indexOf(faultLatching).clamp(0, yesNoOptions.length - 1);
+  }
+
+  Future<void> _saveToCache() async {
+    await PeripheralSetupCache.saveGeneralModuleSetup(widget.deviceId, {
+      'lvlTimeout': int.tryParse(lvlTimeoutController.text) ?? 0,
+      'silenceBuzzerLevel': silenceBuzzerLevel,
+      'silenceSoundersLevel': silenceSoundersLevel,
+      'resetLevel': resetLevel,
+      'faultLatching': faultLatching,
+    });
   }
 
   @override
@@ -231,7 +312,10 @@ class _GeneralModuleBottomSheetState extends State<GeneralModuleBottomSheet> {
             borderRadius: BorderRadius.circular(24),
           ),
         ),
-        onPressed: widget.onDownload,
+        onPressed: () {
+          FocusManager.instance.primaryFocus?.unfocus();
+          widget.onDownload();
+        },
         child: Text(
           'Download',
           style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600),
@@ -250,7 +334,14 @@ class _GeneralModuleBottomSheetState extends State<GeneralModuleBottomSheet> {
             borderRadius: BorderRadius.circular(24),
           ),
         ),
-        onPressed: widget.onApply,
+        onPressed: () async {
+          if (manager == null) return;
+          FocusManager.instance.primaryFocus?.unfocus();
+          _pushToManager();
+          await _saveToCache();
+          widget.refreshTrigger.value++;
+          widget.onApply();
+        },
         child: Text(
           'Apply',
           style: GoogleFonts.inter(

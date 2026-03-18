@@ -245,6 +245,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
   final ValueNotifier<int> _serviceDueRefreshTrigger = ValueNotifier(0);
   final ValueNotifier<int> _accessCodeRefreshTrigger = ValueNotifier(0);
   final ValueNotifier<int> _panelInfoRefreshTrigger = ValueNotifier(0);
+  final ValueNotifier<int> _generalModuleRefreshTrigger = ValueNotifier(0);
 
   // Connection state
   bool _isConnecting = false;
@@ -2249,10 +2250,10 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
       barrierColor: Colors.black.withOpacity(0.4),
       builder:
           (_) => GeneralModuleBottomSheet(
-            // deviceId: deviceId,
+            deviceId: deviceId,
             onDownload: onDownload,
             onApply: onApply,
-            // refreshTrigger: refreshTrigger,
+            refreshTrigger: refreshTrigger,
           ),
     );
   }
@@ -2631,6 +2632,32 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     _panelInfoRefreshTrigger.value++;
   }
 
+  Future<void> _saveGeneralModuleCacheAndNotifyRefresh() async {
+    final bp = _bleManager.bleProcess;
+    await PeripheralSetupCache.saveGeneralModuleSetup(_selectedDevice.id, {
+      'lvlTimeout': bp.generalModuleLvlTimeOut.value,
+      'silenceBuzzerLevel': _generalModuleLevelToLabel(
+        bp.generalModuleSilenceBuzzerLvl.value,
+        ['Access Level 1', 'Access Level 2'],
+      ),
+      'silenceSoundersLevel': _generalModuleLevelToLabel(
+        bp.generalModuleSilenceSounderLvl.value,
+        ['Access Level 2', 'Access Level 3'],
+      ),
+      'resetLevel': _generalModuleLevelToLabel(
+        bp.generalModuleResetLvl.value,
+        ['Access Level 2', 'Access Level 3'],
+      ),
+      'faultLatching': bp.generalModuleFaultLatching.value == 0 ? 'No' : 'Yes',
+    });
+    _generalModuleRefreshTrigger.value++;
+  }
+
+  String _generalModuleLevelToLabel(int index, List<String> options) {
+    if (index >= 0 && index < options.length) return options[index];
+    return options.first;
+  }
+
   Widget _peripheralTile({
     required String peripheralName,
     required String iconPath,
@@ -2899,7 +2926,8 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                         },
                         isGeneralModuleSetup: true,
                         mode: 'bottomsheet_download',
-                        onDownloadComplete: _savePanelInfoCacheAndNotifyRefresh,
+                        onDownloadComplete:
+                            _saveGeneralModuleCacheAndNotifyRefresh,
                         downloadSuccessMessage: 'General Module',
                       );
                     },
@@ -2908,15 +2936,15 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                       //   onCall: () {
                       //     ble
                       //         .bleProcess
-                      //         .isPanelInfoSetupApplyCommandActive
+                      //         .isGeneralModuleSetupApplyCommandActive
                       //         .value = true;
-                      //     bleController.startPanelInfoSetupApply();
+                      //     bleController.startGeneralModuleSetupApply();
                       //   },
-                      //   isPanelInfoSetup: true,
+                      //   isGeneralModuleSetup: true,
                       //   mode: 'bottomsheet_apply',
                       // );
                     },
-                    refreshTrigger: _panelInfoRefreshTrigger,
+                    refreshTrigger: _generalModuleRefreshTrigger,
                   );
                 },
               ),
