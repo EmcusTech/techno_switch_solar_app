@@ -1934,7 +1934,7 @@ class _LogListViewState extends State<_LogListView>
                                 _buildDataCell(
                                   log.eventDateTime != null
                                       ? DateFormat(
-                                        'dd-MM-yyyy\nhh:mm:ss a',
+                                        'dd/MM/yyyy\nhh:mm:ss a',
                                       ).format(log.eventDateTime!)
                                       : '',
                                   wDateTime,
@@ -2068,7 +2068,7 @@ class _LogTableViewState extends State<_LogTableView>
                       Text(
                         log.eventDateTime != null
                             ? DateFormat(
-                              'dd/MM/yyyy - hh:mm a',
+                              'dd/MM/yyyy - hh:mm:ss a',
                             ).format(log.eventDateTime!.toLocal())
                             : 'N/A',
                         style: GoogleFonts.inter(

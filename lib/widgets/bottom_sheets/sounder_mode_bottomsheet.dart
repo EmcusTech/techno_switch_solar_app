@@ -76,6 +76,23 @@ class _SounderModeBottomSheetState extends State<SounderModeBottomSheet>
 
   String delayed = 'No';
 
+  String? _delayError;
+
+  bool _isDelayValid() {
+    final val = int.tryParse(delayController.text);
+    return val != null && val >= 0 && val <= 600;
+  }
+
+  void _updateDelayError() {
+    final val = int.tryParse(delayController.text);
+
+    if (val == null || val < 0 || val > 600) {
+      _delayError = 'Delay must be between 0 and 600 seconds';
+    } else {
+      _delayError = null;
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -743,14 +760,30 @@ class _SounderModeBottomSheetState extends State<SounderModeBottomSheet>
   }
 
   Widget _delayTab() {
+    _updateDelayError();
+
     return Column(
       children: [
         _textField(
           label: 'Delay (s)',
           controller: delayController,
           keyboardType: TextInputType.number,
-          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+          inputFormatters: [
+            FilteringTextInputFormatter.digitsOnly,
+            LengthLimitingTextInputFormatter(3),
+          ],
+          decoration: _inputDecoration(hasError: _delayError != null),
+          onChanged: (value) => setState(() => _updateDelayError()),
         ),
+        if (_delayError != null)
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              _delayError!,
+              style: GoogleFonts.inter(fontSize: 12, color: Color(0xFFEC1D24)),
+            ),
+          ),
+        const SizedBox(height: 14),
         DropdownWidget(
           label: 'Delayed',
           value: yesNoOptions[manager!.isSounderGeneralDelay.value ? 1 : 0],
@@ -827,6 +860,8 @@ class _SounderModeBottomSheetState extends State<SounderModeBottomSheet>
     int? maxLength,
     TextInputType? keyboardType,
     List<TextInputFormatter>? inputFormatters,
+    InputDecoration? decoration,
+    Function(String)? onChanged,
   }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
@@ -841,7 +876,8 @@ class _SounderModeBottomSheetState extends State<SounderModeBottomSheet>
             maxLength: maxLength,
             keyboardType: keyboardType,
             inputFormatters: inputFormatters,
-            decoration: _inputDecoration(),
+            decoration: decoration ?? _inputDecoration(),
+            onChanged: onChanged,
           ),
         ],
       ),
@@ -910,6 +946,7 @@ class _SounderModeBottomSheetState extends State<SounderModeBottomSheet>
   }
 
   Widget _applyButton() {
+    final isDelayValid = _isDelayValid();
     return SizedBox(
       height: 48,
       child: ElevatedButton(
@@ -920,7 +957,7 @@ class _SounderModeBottomSheetState extends State<SounderModeBottomSheet>
           ),
         ),
         onPressed:
-            manager != null
+            manager != null && isDelayValid
                 ? () {
                   FocusManager.instance.primaryFocus?.unfocus();
                   for (int i = 0; i < 3; i++) {
