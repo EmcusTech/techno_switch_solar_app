@@ -539,9 +539,11 @@ class _EventLogContentState extends State<_EventLogContent> {
                     logs: logs,
                     siteName: siteName,
                     panelName: BleNameUtils.getDisplayPrefixFromBleName(
-                        widget.panelName),
-                    panelSerialNumber:
-                        BleNameUtils.getDisplayIdFromBleName(widget.panelName),
+                      widget.panelName,
+                    ),
+                    panelSerialNumber: BleNameUtils.getDisplayIdFromBleName(
+                      widget.panelName,
+                    ),
                     installerName: installerName,
                     saqccNo: saqccNo,
                   );
@@ -2017,139 +2019,155 @@ class _LogTableView extends StatefulWidget {
 
 class _LogTableViewState extends State<_LogTableView>
     with AutomaticKeepAliveClientMixin {
+  final ScrollController _scrollController = ScrollController();
+
   @override
   bool get wantKeepAlive => true;
 
   @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     super.build(context);
-    return ListView.separated(
-      shrinkWrap: true,
-      // physics: NeverScrollableScrollPhysics(),
-      itemCount: widget.displayLogs.length,
-      separatorBuilder: (context, index) => SizedBox(height: 10),
-      itemBuilder: (context, index) {
-        final log = widget.displayLogs[index];
-        return Container(
-          width: double.infinity,
-          decoration: BoxDecoration(
-            color: Color(0xFFF9F9F9),
-            border: Border.all(color: Color(0xFFD7D7D7), width: 1),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.only(
-              left: 12,
-              right: 12,
-              top: 19,
-              bottom: 24,
+    return Scrollbar(
+      controller: _scrollController,
+      // thumbVisibility: true,
+      trackVisibility: true,
+      thickness: 12,
+      radius: const Radius.circular(10),
+      child: ListView.separated(
+        controller: _scrollController,
+        shrinkWrap: true,
+        // physics: NeverScrollableScrollPhysics(),
+        itemCount: widget.displayLogs.length,
+        separatorBuilder: (context, index) => SizedBox(height: 10),
+        itemBuilder: (context, index) {
+          final log = widget.displayLogs[index];
+          return Container(
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: Color(0xFFF9F9F9),
+              border: Border.all(color: Color(0xFFD7D7D7), width: 1),
+              borderRadius: BorderRadius.circular(10),
             ),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      log.eventDateTime != null
-                          ? DateFormat(
-                            'dd/MM/yyyy - hh:mm a',
-                          ).format(log.eventDateTime!.toLocal())
-                          : 'N/A',
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w400,
-                        color: Color(0xFF696969),
-                      ),
-                    ),
-                    Spacer(),
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Color(0xFF0F72E9),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 5.5,
-                          vertical: 0.5,
+            child: Padding(
+              padding: const EdgeInsets.only(
+                left: 12,
+                right: 12,
+                top: 19,
+                bottom: 24,
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        log.eventDateTime != null
+                            ? DateFormat(
+                              'dd/MM/yyyy - hh:mm a',
+                            ).format(log.eventDateTime!.toLocal())
+                            : 'N/A',
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w400,
+                          color: Color(0xFF696969),
                         ),
-                        child: Text(
-                          log.eventId ?? '-',
-                          style: GoogleFonts.inter(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
+                      ),
+                      Spacer(),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Color(0xFF0F72E9),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 5.5,
+                            vertical: 0.5,
+                          ),
+                          child: Text(
+                            log.eventId ?? '-',
+                            style: GoogleFonts.inter(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
                       ),
+                    ],
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 13),
+                    child: Divider(
+                      color: Color(0xFF000000).withAlpha(43),
+                      thickness: 1,
                     ),
-                  ],
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 13),
-                  child: Divider(
-                    color: Color(0xFF000000).withAlpha(43),
-                    thickness: 1,
                   ),
-                ),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    _buildInfoColumn('Panel No', log.panelNo ?? ''),
-                    _buildInfoColumn('L-Bus No', log.lBusNo ?? ''),
-                    _buildInfoColumn('Module No', log.moduleNo ?? ''),
-                  ],
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 13),
-                  child: Divider(
-                    color: Color(0xFF000000).withAlpha(43),
-                    thickness: 1,
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _buildInfoColumn('Panel No', log.panelNo ?? ''),
+                      _buildInfoColumn('L-Bus No', log.lBusNo ?? ''),
+                      _buildInfoColumn('Module No', log.moduleNo ?? ''),
+                    ],
                   ),
-                ),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    _buildInfoColumn('Status', log.eventStatus ?? ''),
-                    _buildInfoColumn('Event Class', log.eventClass ?? ''),
-                    _buildInfoColumn('Source', log.eventSource ?? ''),
-                  ],
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 13),
-                  child: Divider(
-                    color: Color(0xFF000000).withAlpha(43),
-                    thickness: 1,
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 13),
+                    child: Divider(
+                      color: Color(0xFF000000).withAlpha(43),
+                      thickness: 1,
+                    ),
                   ),
-                ),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    _buildInfoColumn('Event Type', log.eventType ?? ''),
-                    _buildInfoColumn('Event', log.eventSubType ?? ''),
-                  ],
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 13),
-                  child: Divider(
-                    color: Color(0xFF000000).withAlpha(43),
-                    thickness: 1,
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _buildInfoColumn('Status', log.eventStatus ?? ''),
+                      _buildInfoColumn('Event Class', log.eventClass ?? ''),
+                      _buildInfoColumn('Source', log.eventSource ?? ''),
+                    ],
                   ),
-                ),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    _buildInfoColumn('Identifier', log.identifier ?? ''),
-                    _buildInfoColumn('Text', log.text ?? ''),
-                  ],
-                ),
-              ],
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 13),
+                    child: Divider(
+                      color: Color(0xFF000000).withAlpha(43),
+                      thickness: 1,
+                    ),
+                  ),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _buildInfoColumn('Event Type', log.eventType ?? ''),
+                      _buildInfoColumn('Event', log.eventSubType ?? ''),
+                    ],
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 13),
+                    child: Divider(
+                      color: Color(0xFF000000).withAlpha(43),
+                      thickness: 1,
+                    ),
+                  ),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _buildInfoColumn('Identifier', log.identifier ?? ''),
+                      _buildInfoColumn('Text', log.text ?? ''),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 

@@ -598,7 +598,7 @@ class BleProcess {
 
       case OtaProcessState.sendStopCntrlCmdPkt:
         print("Sending Stop Control Command");
-        processDesc.value = "Sending Stop Control Command";
+        // processDesc.value = "Sending Stop Control Command";
         if (checkForCtrlCmdRsp == 1) {
           logRetreivalEnded = true;
           bleManager.otaProcessState = OtaProcessState.sendStopCntrlCmdPkt;
@@ -742,6 +742,7 @@ class BleProcess {
 
       if (rx.payload[13] != 0x0a &&
           String.fromCharCodes(rx.payload.sublist(14, 18)) == accessKey.value) {
+        // processDesc.value = "Validation Success";
         // isAccessKeyValid.value = true;
         print("ACCESS KEY RECEIVED → NEXT CONTROL CMD");
         if (isInputSetupFetchCommandActive.value) {
@@ -773,6 +774,7 @@ class BleProcess {
               OtaProcessState.sendRelaySetupFetchCmdPkt;
           checkForAccessKeyCmdRsp = 0;
           relaySetupFetchCommandStep = 1;
+          processDesc.value = "Downloading Relay 1/3";
           startRxTimeout();
           await bleManager.sendRelaySetupFetchFirstCmdPkt();
         } else if (isRelaySetupCommandApplyActive.value) {
@@ -780,12 +782,14 @@ class BleProcess {
               OtaProcessState.sendRelaySetupApplyCmdPkt;
           checkForAccessKeyCmdRsp = 0;
           relaySetupApplyCommandStep = 1;
+          processDesc.value = "Applying Relay 1/3";
           startRxTimeout();
           await bleManager.sendRelaySetupApplyFirstCmdPkt();
         } else if (isZoneSetupFetchCommandActive.value) {
           bleManager.otaProcessState = OtaProcessState.sendZoneSetupFetchCmdPkt;
           checkForAccessKeyCmdRsp = 0;
           zoneSetupFetchCommandStep = 1;
+          processDesc.value = "Downloading Zone 1/3";
           startRxTimeout();
           await bleManager.sendZoneSetupFetchFirstCmdPkt();
         } else if (isZoneSetupCommandApplyActive.value) {
@@ -852,12 +856,14 @@ class BleProcess {
           bleManager.otaProcessState =
               OtaProcessState.sendServiceDueFetchCmdPkt;
           checkForAccessKeyCmdRsp = 0;
+          processDesc.value = "Downloading Service Due";
           startRxTimeout();
           await bleManager.sendServiceDueFetchCmdPkt();
         } else if (isServiceDueApplyCommandActive.value) {
           bleManager.otaProcessState =
               OtaProcessState.sendServiceDueApplyCmdPkt;
           checkForAccessKeyCmdRsp = 0;
+          processDesc.value = "Applying Service Due";
           startRxTimeout();
           await bleManager.sendServiceDueApplyCmdPkt();
         } else if (isAccessCodeSetupFetchCommandActive.value) {
@@ -880,6 +886,7 @@ class BleProcess {
           bleManager.otaProcessState =
               OtaProcessState.sendPanelInfoSetupFetchCmdPkt;
           checkForAccessKeyCmdRsp = 0;
+          processDesc.value = "Downloading Panel Info";
           startRxTimeout();
           await bleManager.sendPanelInfoPanelIdFetchCmdPkt();
         } else if (isPanelInfoSetupApplyCommandActive.value) {
@@ -887,12 +894,14 @@ class BleProcess {
               OtaProcessState.sendPanelInfoSetupApplyCmdPkt;
           panelInfoSetupApplyCommandStep = 1;
           checkForAccessKeyCmdRsp = 0;
+          processDesc.value = "Applying Panel Info";
           startRxTimeout();
           await bleManager.sendPanelInfoPanelIdApplyCmdPkt();
         } else if (isGeneralModuleSetupFetchCommandActive.value) {
           bleManager.otaProcessState =
               OtaProcessState.sendGeneralModuleSetupFetchCmdPkt;
           checkForAccessKeyCmdRsp = 0;
+          processDesc.value = "Downloading General Module";
           startRxTimeout();
           await bleManager.sendGeneralModuleLvlTimeOutFetchCmdPkt();
         } else if (isGeneralModuleSetupApplyCommandActive.value) {
@@ -900,6 +909,7 @@ class BleProcess {
               OtaProcessState.sendGeneralModuleSetupApplyCmdPkt;
           generalModuleSetupApplyCommandStep = 1;
           checkForAccessKeyCmdRsp = 0;
+          processDesc.value = "Applying General Module Level Time-out";
           startRxTimeout();
           await bleManager.sendGeneralModuleLvlTimeOutApplyCmdPkt();
         } else {
@@ -944,12 +954,14 @@ class BleProcess {
       print("Checking General Module Setup Fetch CMD RSP");
       if (rx.payload[12] == 0x09) {
         print("We got general module lvl time out fetch response");
+        processDesc.value = "Downloading General Module Silence Buzzer LVL";
         generalModuleLvlTimeOut.value = rx.payload[15] << 8 | rx.payload[16];
         print("General Module LVL Time-out: ${generalModuleLvlTimeOut.value}");
         startRxTimeout();
         await bleManager.sendGeneralModuleSilenceBuzzerLvlFetchCmdPkt();
       } else if (rx.payload[12] == 0x15 && rx.payload[13] == 0x09) {
         print("We got general module silence buzzer lvl fetch response");
+        processDesc.value = "Downloading General Module Silence Sounder LVL";
         generalModuleSilenceBuzzerLvl.value = rx.payload[14] - 1;
         print(
           "General Module Silence Buzzer LVL: ${generalModuleSilenceBuzzerLvl.value}",
@@ -958,6 +970,7 @@ class BleProcess {
         await bleManager.sendGeneralModuleSilenceSounderLvlFetchCmdPkt();
       } else if (rx.payload[12] == 0x15 && rx.payload[13] == 0x0A) {
         print("We got general module silence sounder lvl fetch response");
+        processDesc.value = "Downloading General Module Reset LVL";
         generalModuleSilenceSounderLvl.value = rx.payload[14] - 2;
         print(
           "General Module Silence Sounder LVL: ${generalModuleSilenceSounderLvl.value}",
@@ -966,6 +979,7 @@ class BleProcess {
         await bleManager.sendGeneralModuleResetLvlFetchCmdPkt();
       } else if (rx.payload[12] == 0x15 && rx.payload[13] == 0x0C) {
         print("We got general module reset lvl fetch response");
+        processDesc.value = "Downloading General Module Fault Latching";
         generalModuleResetLvl.value = rx.payload[14] - 2;
         print("General Module Reset LVL: ${generalModuleResetLvl.value}");
         startRxTimeout();
@@ -994,21 +1008,25 @@ class BleProcess {
       print("Checking General Module Setup Apply CMD RSP");
       if (rx.payload[12] == 0x02 && generalModuleSetupApplyCommandStep == 1) {
         generalModuleSetupApplyCommandStep = 2;
+        processDesc.value = "Applying General Module Silence Buzzer LVL";
         startRxTimeout();
         await bleManager.sendGeneralModuleSilenceBuzzerLvlApplyCmdPkt();
       } else if (rx.payload[12] == 0x02 &&
           generalModuleSetupApplyCommandStep == 2) {
         generalModuleSetupApplyCommandStep = 3;
+        processDesc.value = "Applying General Module Silence Sounder LVL";
         startRxTimeout();
         await bleManager.sendGeneralModuleSilenceSounderLvlApplyCmdPkt();
       } else if (rx.payload[12] == 0x02 &&
           generalModuleSetupApplyCommandStep == 3) {
         generalModuleSetupApplyCommandStep = 4;
+        processDesc.value = "Applying General Module Reset LVL";
         startRxTimeout();
         await bleManager.sendGeneralModuleResetLvlApplyCmdPkt();
       } else if (rx.payload[12] == 0x02 &&
           generalModuleSetupApplyCommandStep == 4) {
         generalModuleSetupApplyCommandStep = 5;
+        processDesc.value = "Applying General Module Fault Latching";
         startRxTimeout();
         await bleManager.sendGeneralModuleFaultLatchingApplyCmdPkt();
       } else if (rx.payload[12] == 0x02 &&
@@ -1856,11 +1874,13 @@ class BleProcess {
       if (rx.payload[10] == 0x83) {
         if (relaySetupApplyCommandStep == 1) {
           print("CMD 1 Validated -> send CMD2, keep polling");
+          processDesc.value = "Applying Relay 2/3";
           relaySetupApplyCommandStep = 2;
           startRxTimeout();
           await bleManager.sendRelaySetupApplySecondCmdPkt();
         } else if (relaySetupApplyCommandStep == 2) {
           print("CMD 2 Validated -> send CMD3, keep polling");
+          processDesc.value = "Applying Relay 3/3";
           relaySetupApplyCommandStep = 3;
           startRxTimeout();
           await bleManager.sendRelaySetupApplyThirdCmdPkt();
@@ -1923,6 +1943,7 @@ class BleProcess {
       );
       if (rx.payload[12] == 0x07) {
         if (relaySetupFetchCommandStep == 1) {
+          processDesc.value = "Downloading Relay 2/3";
           print("CMD 1 Validated -> send CMD2, keep polling");
 
           final OutputModeConfig config = OutputModeCodec.fromHex(
@@ -1942,6 +1963,7 @@ class BleProcess {
           startRxTimeout();
           await bleManager.sendRelaySetupFetchSecondCmdPkt();
         } else if (relaySetupFetchCommandStep == 2) {
+          processDesc.value = "Downloading Relay 3/3";
           print("CMD 2 Validated -> send CMD3, keep polling");
 
           final OutputModeConfig config = OutputModeCodec.fromHex(
@@ -2030,6 +2052,7 @@ class BleProcess {
         print("We got the response for zone setup fetch");
         if (zoneSetupFetchCommandStep == 1) {
           print("CMD 1 Validated -> send CMD2, keep polling");
+          processDesc.value = "Downloading Zone 2/3";
           final ZoneModeConfig config = ZoneModeCodec.fromHex(
             rx.payload[14].toRadixString(16),
           );
@@ -2051,6 +2074,7 @@ class BleProcess {
           await bleManager.sendZoneSetupFetchSecondCmdPkt();
         } else if (zoneSetupFetchCommandStep == 2) {
           print("CMD 2 Validated -> send CMD3, keep polling");
+          processDesc.value = "Downloading Zone 3/3";
           final ZoneModeConfig config = ZoneModeCodec.fromHex(
             rx.payload[14].toRadixString(16),
           );
@@ -3087,7 +3111,7 @@ class BleProcess {
       // }
 
       // Extract event text (bytes 42-124)
-      String evtTextAscii = "System-Text---------1";
+      String evtTextAscii = "";
       if (payload.length >= 124) {
         List<int> evtText = payload.sublist(55, 137);
         if (evtText.length > 1 && evtText[1] != 0x00) {

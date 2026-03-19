@@ -144,7 +144,7 @@ class _ScannedScreenState extends State<ScannedScreen> {
                             Navigator.of(dialogContext).pop(true);
                           },
                           child: Text(
-                            'Create site',
+                            'Create',
                             style: GoogleFonts.inter(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
@@ -772,7 +772,10 @@ class _ScannedScreenState extends State<ScannedScreen> {
 
                   if (!screenContext.mounted) return;
 
-                  Navigator.of(screenContext, rootNavigator: true).pushReplacement(
+                  Navigator.of(
+                    screenContext,
+                    rootNavigator: true,
+                  ).pushReplacement(
                     MaterialPageRoute(
                       builder:
                           (_) => ProjectDashboardScreen(
@@ -1152,7 +1155,7 @@ class _ScannedScreenState extends State<ScannedScreen> {
                                 isAccessKeyValidValue == null) {
                               status = "Validating access key...";
                             } else if (isAccessKeyValidValue == true) {
-                              status = "Validation success";
+                              status = "Success";
                             }
                             // If invalid, re-focus the field to show keyboard
                             if (isAccessKeyValidValue == false) {
@@ -1275,7 +1278,8 @@ class _ScannedScreenState extends State<ScannedScreen> {
                       children: [
                         Text(
                           BleNameUtils.getDisplayPrefixFromBleName(
-                              _getDeviceName(device)),
+                            _getDeviceName(device),
+                          ),
                           style: GoogleFonts.inter(
                             fontSize: 14,
                             fontWeight: FontWeight.w700,
@@ -1284,7 +1288,8 @@ class _ScannedScreenState extends State<ScannedScreen> {
                         ),
                         Text(
                           BleNameUtils.getDisplayIdFromBleName(
-                              _getDeviceName(device)),
+                            _getDeviceName(device),
+                          ),
                           style: GoogleFonts.inter(
                             fontSize: 14,
                             fontWeight: FontWeight.w700,

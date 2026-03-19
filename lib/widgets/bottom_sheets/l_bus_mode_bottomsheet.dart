@@ -123,10 +123,8 @@ class _LBusBottomSheetState extends State<LBusBottomSheet> {
         idController.text = data.id.toString();
         revisionController.text = data.revision.toString();
         productRevController.text = data.productRev;
-        hardwareController.text =
-            data.hardware.isEmpty ? '—' : data.hardware;
-        firmwareController.text =
-            data.firmware.isEmpty ? '—' : data.firmware;
+        hardwareController.text = data.hardware.isEmpty ? '—' : data.hardware;
+        firmwareController.text = data.firmware.isEmpty ? '—' : data.firmware;
         dateController.text = data.date;
         protocolController.text = data.protocol.toString();
       });
@@ -233,14 +231,8 @@ class _LBusBottomSheetState extends State<LBusBottomSheet> {
                                 label: 'Product Rev.',
                                 controller: productRevController,
                               ),
-                              _readOnlyField(
-                                'Hardware',
-                                hardwareController,
-                              ),
-                              _readOnlyField(
-                                'Firmware',
-                                firmwareController,
-                              ),
+                              _readOnlyField('Hardware', hardwareController),
+                              _readOnlyField('Firmware', firmwareController),
                               _textField(
                                 label: 'Date',
                                 controller: dateController,
@@ -381,10 +373,7 @@ class _LBusBottomSheetState extends State<LBusBottomSheet> {
     );
   }
 
-  Widget _readOnlyField(
-    String label,
-    TextEditingController controller,
-  ) {
+  Widget _readOnlyField(String label, TextEditingController controller) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
       child: Column(
@@ -444,7 +433,10 @@ class _LBusBottomSheetState extends State<LBusBottomSheet> {
             borderRadius: BorderRadius.circular(24),
           ),
         ),
-        onPressed: widget.onDownload,
+        onPressed: () {
+          FocusManager.instance.primaryFocus?.unfocus();
+          widget.onDownload();
+        },
         child: Text(
           'Download',
           style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600),
@@ -464,6 +456,7 @@ class _LBusBottomSheetState extends State<LBusBottomSheet> {
           ),
         ),
         onPressed: () {
+          FocusManager.instance.primaryFocus?.unfocus();
           _saveCurrentBusToManager();
           widget.onApply();
         },

@@ -168,7 +168,7 @@ class _ScanningScreenState extends State<ScanningScreen>
                             Navigator.of(dialogContext).pop(true);
                           },
                           child: Text(
-                            'Create site',
+                            'Create',
                             style: GoogleFonts.inter(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
@@ -2049,7 +2049,7 @@ class _ScanningScreenState extends State<ScanningScreen>
                                 isAccessKeyValidValue == null) {
                               status = "Validating access key...";
                             } else if (isAccessKeyValidValue == true) {
-                              status = "Validation success";
+                              status = "Success";
                             }
                             if (isAccessKeyValidValue == false) {
                               if (_controller.text.isNotEmpty) {

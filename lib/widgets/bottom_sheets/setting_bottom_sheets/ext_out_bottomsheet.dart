@@ -57,7 +57,7 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
     'Continue',
   ];
   List<String> actionOptions = [
-    'Continously On',
+    'Continous',
     'Pulse 100ms On',
     'Pulse 300ms On',
     'Pulse 600ms On',

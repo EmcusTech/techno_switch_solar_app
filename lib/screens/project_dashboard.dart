@@ -1076,6 +1076,14 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                       ble.bleProcess.isRelaySetupApplyDone.value = false;
                       ble.bleProcess.isZoneSetupApplyDone.value = false;
                       ble.bleProcess.isLBusSetupApplyDone.value = false;
+                      ble.bleProcess.isRadioSetupApplyDone.value = false;
+                      ble.bleProcess.isLBusSetupApplyDone.value = false;
+                      ble.bleProcess.isSounderSetupApplyDone.value = false;
+                      ble.bleProcess.isServiceDueApplyDone.value = false;
+                      ble.bleProcess.isAccessCodeSetupApplyDone.value = false;
+                      ble.bleProcess.isPanelInfoSetupApplyDone.value = false;
+                      ble.bleProcess.isGeneralModuleSetupApplyDone.value =
+                          false;
                     },
                     child: Container(
                       height: 48,
@@ -1563,7 +1571,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                                       ? processDescValue
                                       : "Validating access key...";
                             } else if (isAccessKeyValidValue == true) {
-                              status = "Validation success";
+                              status = "Success";
                             }
                             // If invalid, re-focus the field to show keyboard
                             if (isAccessKeyValidValue == false) {

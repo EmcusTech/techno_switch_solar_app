@@ -365,7 +365,10 @@ class _AccessCodesBottomSheetState extends State<AccessCodesBottomSheet> {
             borderRadius: BorderRadius.circular(24),
           ),
         ),
-        onPressed: widget.onDownload,
+        onPressed: () {
+          FocusManager.instance.primaryFocus?.unfocus();
+          widget.onDownload();
+        },
         child: Text(
           'Download',
           style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600),
@@ -385,6 +388,7 @@ class _AccessCodesBottomSheetState extends State<AccessCodesBottomSheet> {
           ),
         ),
         onPressed: () {
+          FocusManager.instance.primaryFocus?.unfocus();
           _saveCurrentToManager();
           widget.onApply();
         },
