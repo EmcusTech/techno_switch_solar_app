@@ -1157,18 +1157,21 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                   textAlign: TextAlign.center,
                 ),
                 SizedBox(height: 8),
-                Text(
-                  'The $message has been successfully downloaded from the device.',
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w400,
-                    color: Color(0xFF918F8F),
+                Visibility(
+                  visible: !ble.bleProcess.isLbusFetchHasErrors.value,
+                  child: Text(
+                    'The $message has been successfully downloaded from the device.',
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
+                      color: Color(0xFF918F8F),
+                    ),
+                    textAlign: TextAlign.center,
                   ),
-                  textAlign: TextAlign.center,
                 ),
                 Text(
                   ble.bleProcess.isLbusFetchHasErrors.value
-                      ? 'There was an error downloading few $message(s)'
+                      ? 'There was an error downloading\nL-Bus ${ble.bleProcess.lbusFetchErrors.value.join(", ")}'
                       : '',
                   style: GoogleFonts.inter(
                     fontSize: 14,

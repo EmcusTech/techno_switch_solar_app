@@ -362,6 +362,9 @@ class BleProcess {
 
   final ValueNotifier<bool> isLbusFetchHasErrors = ValueNotifier<bool>(false);
 
+  final ValueNotifier<List<String>> lbusFetchErrors =
+      ValueNotifier<List<String>>([]);
+
   // Sounder Setup Variables
   final ValueNotifier<bool> isSounderSetupFetchCommandActive =
       ValueNotifier<bool>(false);
@@ -1675,6 +1678,10 @@ class BleProcess {
         } else if (rx.payload[12] == 0x02 && rx.payload[13] == 0x14) {
           // Handle 0x02/0x14 response if needed
           isLbusFetchHasErrors.value = true;
+          lbusFetchErrors.value.add(
+            (lBusSetupDataFetchCommandStep + 1).toString(),
+          );
+          print("L-Bus Setup Fetch Error: $lBusSetupDataFetchCommandStep");
         }
         final nextIndex = lBusSetupDataFetchCommandStep + 1;
         if (nextIndex < enabledLBusNumbers.value.length) {
@@ -2279,6 +2286,7 @@ class BleProcess {
     checkForAccessCodeSetupApplyRes = 0;
     accessCodeSetupApplyCommandStep = 0;
     isLbusFetchHasErrors.value = false;
+    lbusFetchErrors.value.clear();
     checkForPanelInfoSetupFetchRes = 0;
     checkForPanelInfoSetupApplyRes = 0;
     checkForGeneralModuleSetupFetchRes = 0;
@@ -2347,6 +2355,7 @@ class BleProcess {
     checkForAccessCodeSetupApplyRes = 0;
     accessCodeSetupApplyCommandStep = 0;
     isLbusFetchHasErrors.value = false;
+    lbusFetchErrors.value.clear();
     checkForPanelInfoSetupFetchRes = 0;
     checkForPanelInfoSetupApplyRes = 0;
     checkForGeneralModuleSetupFetchRes = 0;
@@ -2407,6 +2416,7 @@ class BleProcess {
     checkForAccessCodeSetupApplyRes = 0;
     accessCodeSetupApplyCommandStep = 0;
     isLbusFetchHasErrors.value = false;
+    lbusFetchErrors.value.clear();
     checkForPanelInfoSetupFetchRes = 0;
     checkForPanelInfoSetupApplyRes = 0;
     checkForGeneralModuleSetupFetchRes = 0;
@@ -2465,6 +2475,7 @@ class BleProcess {
     checkForAccessCodeSetupApplyRes = 0;
     accessCodeSetupApplyCommandStep = 0;
     isLbusFetchHasErrors.value = false;
+    lbusFetchErrors.value.clear();
     checkForPanelInfoSetupFetchRes = 0;
     checkForPanelInfoSetupApplyRes = 0;
     checkForGeneralModuleSetupFetchRes = 0;
@@ -2523,6 +2534,7 @@ class BleProcess {
     checkForAccessCodeSetupApplyRes = 0;
     accessCodeSetupApplyCommandStep = 0;
     isLbusFetchHasErrors.value = false;
+    lbusFetchErrors.value.clear();
     checkForPanelInfoSetupFetchRes = 0;
     checkForPanelInfoSetupApplyRes = 0;
     checkForGeneralModuleSetupFetchRes = 0;
@@ -2581,6 +2593,7 @@ class BleProcess {
     checkForAccessCodeSetupApplyRes = 0;
     accessCodeSetupApplyCommandStep = 0;
     isLbusFetchHasErrors.value = false;
+    lbusFetchErrors.value.clear();
     checkForPanelInfoSetupFetchRes = 0;
     checkForPanelInfoSetupApplyRes = 0;
     checkForGeneralModuleSetupFetchRes = 0;
@@ -2638,6 +2651,7 @@ class BleProcess {
     checkForAccessCodeSetupApplyRes = 0;
     accessCodeSetupApplyCommandStep = 0;
     isLbusFetchHasErrors.value = false;
+    lbusFetchErrors.value.clear();
     checkForPanelInfoSetupFetchRes = 0;
     checkForPanelInfoSetupApplyRes = 0;
     checkForGeneralModuleSetupFetchRes = 0;
@@ -2696,6 +2710,7 @@ class BleProcess {
     checkForAccessCodeSetupApplyRes = 0;
     accessCodeSetupApplyCommandStep = 0;
     isLbusFetchHasErrors.value = false;
+    lbusFetchErrors.value.clear();
     checkForPanelInfoSetupFetchRes = 0;
     checkForPanelInfoSetupApplyRes = 0;
     checkForGeneralModuleSetupFetchRes = 0;
@@ -2754,6 +2769,7 @@ class BleProcess {
     checkForAccessCodeSetupApplyRes = 0;
     accessCodeSetupApplyCommandStep = 0;
     isLbusFetchHasErrors.value = false;
+    lbusFetchErrors.value.clear();
     checkForPanelInfoSetupFetchRes = 0;
     checkForPanelInfoSetupApplyRes = 0;
     checkForGeneralModuleSetupFetchRes = 0;
@@ -2812,6 +2828,7 @@ class BleProcess {
     checkForAccessCodeSetupApplyRes = 0;
     accessCodeSetupApplyCommandStep = 0;
     isLbusFetchHasErrors.value = false;
+    lbusFetchErrors.value.clear();
     checkForPanelInfoSetupFetchRes = 0;
     checkForPanelInfoSetupApplyRes = 0;
     checkForGeneralModuleSetupFetchRes = 0;
@@ -2870,6 +2887,7 @@ class BleProcess {
     checkForAccessCodeSetupApplyRes = 0;
     accessCodeSetupApplyCommandStep = 0;
     isLbusFetchHasErrors.value = false;
+    lbusFetchErrors.value.clear();
     checkForPanelInfoSetupFetchRes = 0;
     checkForPanelInfoSetupApplyRes = 0;
     checkForGeneralModuleSetupFetchRes = 0;
@@ -2928,6 +2946,7 @@ class BleProcess {
     checkForAccessCodeSetupApplyRes = 0;
     accessCodeSetupApplyCommandStep = 0;
     isLbusFetchHasErrors.value = false;
+    lbusFetchErrors.value.clear();
     checkForPanelInfoSetupFetchRes = 0;
     checkForPanelInfoSetupApplyRes = 0;
     checkForGeneralModuleSetupFetchRes = 0;
@@ -2986,6 +3005,7 @@ class BleProcess {
     checkForAccessCodeSetupApplyRes = 0;
     accessCodeSetupApplyCommandStep = 0;
     isLbusFetchHasErrors.value = false;
+    lbusFetchErrors.value.clear();
     checkForPanelInfoSetupFetchRes = 0;
     checkForPanelInfoSetupApplyRes = 0;
     checkForGeneralModuleSetupFetchRes = 0;

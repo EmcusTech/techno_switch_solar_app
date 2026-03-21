@@ -960,7 +960,7 @@ class _PanelListItemWidgetState extends State<_PanelListItemWidget>
       WidgetsBinding.instance.addPostFrameCallback((_) async {
         if (!mounted || _slidableController == null) return;
         await _slidableController!.openEndActionPane();
-        await Future.delayed(const Duration(seconds: 2));
+        await Future.delayed(const Duration(milliseconds: 500));
         if (mounted) {
           _slidableController?.close();
         }
