@@ -122,26 +122,36 @@ class _ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
                       _numberField(
                         label: "Year",
                         controller: config.yearController,
+                        min: 0,
+                        max: 9999,
                       ),
 
                       _numberField(
                         label: "Month",
                         controller: config.monthController,
+                        min: 1,
+                        max: 12,
                       ),
 
                       _numberField(
                         label: "Day",
                         controller: config.dayController,
+                        min: 1,
+                        max: 31,
                       ),
 
                       _numberField(
                         label: "Hour",
                         controller: config.hourController,
+                        min: 0,
+                        max: 23,
                       ),
 
                       _numberField(
                         label: "Minute",
                         controller: config.minuteController,
+                        min: 0,
+                        max: 59,
                       ),
 
                       _textField(
@@ -149,7 +159,7 @@ class _ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
                         controller: config.companyController,
                       ),
 
-                      _textField(
+                      _contactField(
                         label: "Contact",
                         controller: config.contactController,
                       ),
@@ -226,26 +236,7 @@ class _ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
 
   // ───────────────── TEXT FIELD ─────────────────
 
-  Widget _textField({
-    required String label,
-    required TextEditingController controller,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _label(label),
-          const SizedBox(height: 6),
-          TextField(controller: controller, decoration: _inputDecoration()),
-        ],
-      ),
-    );
-  }
-
-  // ───────────────── NUMBER FIELD ─────────────────
-
-  Widget _numberField({
+  Widget _contactField({
     required String label,
     required TextEditingController controller,
   }) {
@@ -258,8 +249,121 @@ class _ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
           const SizedBox(height: 6),
           TextField(
             controller: controller,
-            keyboardType: TextInputType.number,
+            keyboardType: TextInputType.phone,
+            maxLength: 13,
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            onChanged: (_) => setState(() {}),
+            decoration: _inputDecoration(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _textField({
+    required String label,
+    required TextEditingController controller,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _label(label),
+          const SizedBox(height: 6),
+          TextField(
+            controller: controller,
+            maxLength: 13,
+            onChanged: (_) => setState(() {}),
+            decoration: _inputDecoration(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  bool _isValidDateTime() {
+    if (config.yearController.text.isEmpty ||
+        config.monthController.text.isEmpty ||
+        config.dayController.text.isEmpty ||
+        config.hourController.text.isEmpty ||
+        config.minuteController.text.isEmpty) {
+      return false;
+    }
+
+    final year = int.parse(config.yearController.text);
+    final month = int.parse(config.monthController.text);
+    final day = int.parse(config.dayController.text);
+    final hour = int.parse(config.hourController.text);
+    final minute = int.parse(config.minuteController.text);
+
+    if (year < 2010 || year > 9999) return false;
+    if (month < 1 || month > 12) return false;
+    if (day < 1 || day > 31) return false;
+    if (hour < 0 || hour > 23) return false;
+    if (minute < 0 || minute > 59) return false;
+
+    try {
+      final dt = DateTime(year, month, day, hour, minute);
+
+      if (dt.year != year || dt.month != month || dt.day != day) {
+        return false;
+      }
+
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  // bool _isValidCompany() {
+  //   final company = config.companyController.text.trim();
+  //   if (company.length > 13) return false;
+
+  //   return true;
+  // }
+
+  // bool _isValidContact() {
+  //   final contact = config.contactController.text.trim();
+
+  //   if (contact.isEmpty) return false;
+
+  //   // length check
+  //   if (contact.length > 13) return false;
+
+  //   // digits only (extra safety, even though formatter exists)
+  //   if (!RegExp(r'^\d+$').hasMatch(contact)) return false;
+
+  //   // // optional: Indian mobile logic
+  //   // if (!RegExp(r'^[6-9]').hasMatch(contact)) return false;
+
+  //   return true;
+  // }
+
+  // ───────────────── NUMBER FIELD ─────────────────
+
+  Widget _numberField({
+    required String label,
+    required TextEditingController controller,
+    required int min,
+    required int max,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _label(label),
+          const SizedBox(height: 6),
+          TextField(
+            controller: controller,
+            keyboardType: TextInputType.number,
+            inputFormatters: [
+              FilteringTextInputFormatter.digitsOnly,
+              LengthLimitingTextInputFormatter(4), // safe upper cap
+              RangeInputFormatter(min: min, max: max),
+            ],
+            onChanged: (_) => setState(() {}),
             decoration: _inputDecoration(),
           ),
         ],
@@ -324,25 +428,37 @@ class _ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
             borderRadius: BorderRadius.circular(24),
           ),
         ),
-        onPressed: () {
-          if (manager == null) return;
-          FocusManager.instance.primaryFocus?.unfocus();
+        onPressed:
+            (!_isValidDateTime())
+                ? null
+                : () {
+                  if (manager == null) return;
+                  FocusManager.instance.primaryFocus?.unfocus();
 
-          manager!.serviceDueYear.value = int.parse(config.yearController.text);
-          manager!.serviceDueMonth.value = int.parse(
-            config.monthController.text,
-          );
-          manager!.serviceDueDay.value = int.parse(config.dayController.text);
-          manager!.serviceDueHour.value = int.parse(config.hourController.text);
-          manager!.serviceDueMinute.value = int.parse(
-            config.minuteController.text,
-          );
-          manager!.serviceDueCompany.value = config.companyController.text;
-          manager!.serviceDueContact.value = config.contactController.text;
-          manager!.serviceDueReminder.value = config.reminder == 'On' ? 1 : 0;
+                  manager!.serviceDueYear.value = int.parse(
+                    config.yearController.text,
+                  );
+                  manager!.serviceDueMonth.value = int.parse(
+                    config.monthController.text,
+                  );
+                  manager!.serviceDueDay.value = int.parse(
+                    config.dayController.text,
+                  );
+                  manager!.serviceDueHour.value = int.parse(
+                    config.hourController.text,
+                  );
+                  manager!.serviceDueMinute.value = int.parse(
+                    config.minuteController.text,
+                  );
+                  manager!.serviceDueCompany.value =
+                      config.companyController.text;
+                  manager!.serviceDueContact.value =
+                      config.contactController.text;
+                  manager!.serviceDueReminder.value =
+                      config.reminder == 'On' ? 1 : 0;
 
-          widget.onApply();
-        },
+                  widget.onApply();
+                },
         child: Text(
           'Apply',
           style: GoogleFonts.inter(
@@ -368,4 +484,32 @@ class ServiceDueConfig {
   final TextEditingController minuteController = TextEditingController();
   final TextEditingController companyController = TextEditingController();
   final TextEditingController contactController = TextEditingController();
+}
+
+// ───────────────── VALIDATION ─────────────────
+
+class RangeInputFormatter extends TextInputFormatter {
+  final int min;
+  final int max;
+
+  RangeInputFormatter({required this.min, required this.max});
+
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    if (newValue.text.isEmpty) return newValue;
+    if (newValue.text.length < oldValue.text.length) return newValue;
+
+    final int? value = int.tryParse(newValue.text);
+    if (value == null) return oldValue;
+
+    if (value >= min && value <= max) return newValue;
+
+    final maxDigits = max.toString().length;
+    if (newValue.text.length < maxDigits && value <= max) return newValue;
+
+    return oldValue;
+  }
 }
