@@ -2686,7 +2686,13 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
       onTap: () async {
         if (isDisabled == true) return;
 
-        if (!bleController.isConnected) {
+        // if (!bleController.isConnected) {
+        //   await showBluetootohOffDialog(context: context);
+        // } else {
+        //   onTap?.call();
+        // }
+
+        if (false) {
           await showBluetootohOffDialog(context: context);
         } else {
           onTap?.call();

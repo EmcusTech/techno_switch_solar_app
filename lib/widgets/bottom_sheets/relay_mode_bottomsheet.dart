@@ -207,7 +207,7 @@ class _RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
     final maxHeight =
-        _expandedTileCount > 0 ? screenHeight * 0.75 : screenHeight * 0.49;
+        _expandedTileCount > 0 ? screenHeight * 0.8 : screenHeight * 0.5;
     _updateValidationErrors();
     final isValid = _computeIsValid();
 

@@ -162,7 +162,7 @@ class _LBusBottomSheetState extends State<LBusBottomSheet> {
 
     return SafeArea(
       child: ConstrainedBox(
-        constraints: BoxConstraints(maxHeight: screenHeight * 0.90),
+        constraints: BoxConstraints(maxHeight: screenHeight * 0.80),
         child: Container(
           decoration: const BoxDecoration(
             color: Colors.white,

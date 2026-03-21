@@ -391,7 +391,7 @@ class _SounderModeBottomSheetState extends State<SounderModeBottomSheet>
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
-    final maxHeight = screenHeight * 0.90;
+    final maxHeight = screenHeight * 0.80;
 
     return SafeArea(
       child: AnimatedSize(
@@ -590,11 +590,11 @@ class _SounderModeBottomSheetState extends State<SounderModeBottomSheet>
             labelColor: const Color(0xFFEC1D24),
             unselectedLabelColor: const Color(0xFF6E6E6E),
             labelStyle: GoogleFonts.inter(
-              fontSize: 14,
+              fontSize: 13,
               fontWeight: FontWeight.w600,
             ),
             unselectedLabelStyle: GoogleFonts.inter(
-              fontSize: 14,
+              fontSize: 13,
               fontWeight: FontWeight.w500,
             ),
             tabs: const [

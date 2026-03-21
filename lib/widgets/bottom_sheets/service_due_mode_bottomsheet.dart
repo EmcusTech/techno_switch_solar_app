@@ -92,7 +92,7 @@ class _ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final maxHeight = MediaQuery.of(context).size.height * 0.70;
+    final maxHeight = MediaQuery.of(context).size.height * 0.80;
 
     return SafeArea(
       child: ConstrainedBox(

@@ -225,8 +225,12 @@ class _PanelInfoBottomSheetState extends State<PanelInfoBottomSheet> {
     return _tileWrapper(
       title: "Panel Info",
       children: [
-        _textField("Panel No", config.panelIdController,
-            isNumeric: true, maxLength: 2),
+        _textField(
+          "Panel No",
+          config.panelIdController,
+          isNumeric: true,
+          maxLength: 2,
+        ),
         _textField("Panel Name", config.panelNameController, maxLength: 21),
       ],
     );
@@ -451,7 +455,8 @@ class _PanelInfoBottomSheetState extends State<PanelInfoBottomSheet> {
         config.dayController.text.isEmpty ||
         config.hourController.text.isEmpty ||
         config.minuteController.text.isEmpty ||
-        config.secondController.text.isEmpty) return false;
+        config.secondController.text.isEmpty)
+      return false;
 
     final year = int.tryParse(config.yearController.text) ?? 0;
     final month = int.tryParse(config.monthController.text) ?? 0;
@@ -511,14 +516,15 @@ class _PanelInfoBottomSheetState extends State<PanelInfoBottomSheet> {
             borderRadius: BorderRadius.circular(24),
           ),
         ),
-        onPressed: _isValidPanelInfo()
-            ? () {
-                if (manager == null) return;
-                FocusManager.instance.primaryFocus?.unfocus();
-                _pushToManager();
-                widget.onApply();
-              }
-            : null,
+        onPressed:
+            _isValidPanelInfo()
+                ? () {
+                  if (manager == null) return;
+                  FocusManager.instance.primaryFocus?.unfocus();
+                  _pushToManager();
+                  widget.onApply();
+                }
+                : null,
         child: Text(
           'Apply',
           style: GoogleFonts.inter(

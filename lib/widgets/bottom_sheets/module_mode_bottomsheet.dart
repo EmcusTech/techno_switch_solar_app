@@ -54,7 +54,7 @@ class _ModuleInfoBottomSheetState extends State<ModuleInfoBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final maxHeight = MediaQuery.of(context).size.height * 0.7;
+    final maxHeight = MediaQuery.of(context).size.height * 0.8;
 
     if (manager == null) {
       return const SizedBox.shrink();
