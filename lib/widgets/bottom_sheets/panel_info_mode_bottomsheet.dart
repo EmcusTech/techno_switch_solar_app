@@ -121,6 +121,7 @@ class _PanelInfoBottomSheetState extends State<PanelInfoBottomSheet> {
     _timer?.cancel();
 
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (!mounted) return;
       final now = DateTime.now();
 
       config.yearController.text = now.year.toString();
@@ -129,6 +130,7 @@ class _PanelInfoBottomSheetState extends State<PanelInfoBottomSheet> {
       config.hourController.text = now.hour.toString().padLeft(2, '0');
       config.minuteController.text = now.minute.toString().padLeft(2, '0');
       config.secondController.text = now.second.toString().padLeft(2, '0');
+      setState(() {});
     });
   }
 
@@ -223,8 +225,9 @@ class _PanelInfoBottomSheetState extends State<PanelInfoBottomSheet> {
     return _tileWrapper(
       title: "Panel Info",
       children: [
-        _textField("Panel ID", config.panelIdController),
-        _textField("Panel Name", config.panelNameController),
+        _textField("Panel No", config.panelIdController,
+            isNumeric: true, maxLength: 2),
+        _textField("Panel Name", config.panelNameController, maxLength: 21),
       ],
     );
   }
@@ -244,12 +247,12 @@ class _PanelInfoBottomSheetState extends State<PanelInfoBottomSheet> {
             Switch(value: useMobileTime, onChanged: _toggleMobileTime),
           ],
         ),
-        _numberField("Year", config.yearController),
-        _numberField("Month", config.monthController),
-        _numberField("Day", config.dayController),
-        _numberField("Hour", config.hourController),
-        _numberField("Minute", config.minuteController),
-        _numberField("Second", config.secondController),
+        _numberField("Year", config.yearController, maxLength: 4),
+        _numberField("Month", config.monthController, maxLength: 2),
+        _numberField("Day", config.dayController, maxLength: 2),
+        _numberField("Hour", config.hourController, maxLength: 2),
+        _numberField("Minute", config.minuteController, maxLength: 2),
+        _numberField("Second", config.secondController, maxLength: 2),
       ],
     );
   }
@@ -257,7 +260,9 @@ class _PanelInfoBottomSheetState extends State<PanelInfoBottomSheet> {
   Widget _eventReminderTile() {
     return _tileWrapper(
       title: "Event Reminder",
-      children: [_numberField("Delay (s)", config.delayController)],
+      children: [
+        _numberField("Delay (s)", config.delayController, maxLength: 3),
+      ],
     );
   }
 
@@ -298,7 +303,12 @@ class _PanelInfoBottomSheetState extends State<PanelInfoBottomSheet> {
 
   // ───────── INPUTS ─────────
 
-  Widget _textField(String label, TextEditingController controller) {
+  Widget _textField(
+    String label,
+    TextEditingController controller, {
+    bool isNumeric = false,
+    int? maxLength,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
       child: Column(
@@ -306,13 +316,28 @@ class _PanelInfoBottomSheetState extends State<PanelInfoBottomSheet> {
         children: [
           _label(label),
           const SizedBox(height: 6),
-          TextField(controller: controller, decoration: _inputDecoration()),
+          TextField(
+            controller: controller,
+            keyboardType: isNumeric ? TextInputType.number : TextInputType.text,
+            maxLength: maxLength,
+            inputFormatters: [
+              if (isNumeric) FilteringTextInputFormatter.digitsOnly,
+              if (maxLength != null)
+                LengthLimitingTextInputFormatter(maxLength),
+            ],
+            onChanged: (_) => setState(() {}),
+            decoration: _inputDecoration(),
+          ),
         ],
       ),
     );
   }
 
-  Widget _numberField(String label, TextEditingController controller) {
+  Widget _numberField(
+    String label,
+    TextEditingController controller, {
+    int? maxLength,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
       child: Column(
@@ -323,7 +348,12 @@ class _PanelInfoBottomSheetState extends State<PanelInfoBottomSheet> {
           TextField(
             controller: controller,
             keyboardType: TextInputType.number,
-            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            inputFormatters: [
+              FilteringTextInputFormatter.digitsOnly,
+              if (maxLength != null)
+                LengthLimitingTextInputFormatter(maxLength),
+            ],
+            onChanged: (_) => setState(() {}),
             decoration: _inputDecoration(),
           ),
         ],
@@ -405,6 +435,52 @@ class _PanelInfoBottomSheetState extends State<PanelInfoBottomSheet> {
     );
   }
 
+  bool _isValidPanelInfo() {
+    // Panel No: 1–31
+    final panelNo = int.tryParse(config.panelIdController.text);
+    if (panelNo == null || panelNo < 1 || panelNo > 31) return false;
+
+    // Panel Name: max 21 chars, non-empty
+    final panelName = config.panelNameController.text.trim();
+    if (panelName.isEmpty) return false;
+    if (panelName.length > 21) return false;
+
+    // DateTime: year 1970–9999, month 1–12, day 1–31, hour 0–23, minute 0–59, second 0–59
+    if (config.yearController.text.isEmpty ||
+        config.monthController.text.isEmpty ||
+        config.dayController.text.isEmpty ||
+        config.hourController.text.isEmpty ||
+        config.minuteController.text.isEmpty ||
+        config.secondController.text.isEmpty) return false;
+
+    final year = int.tryParse(config.yearController.text) ?? 0;
+    final month = int.tryParse(config.monthController.text) ?? 0;
+    final day = int.tryParse(config.dayController.text) ?? 0;
+    final hour = int.tryParse(config.hourController.text) ?? 0;
+    final minute = int.tryParse(config.minuteController.text) ?? 0;
+    final second = int.tryParse(config.secondController.text) ?? 0;
+
+    if (year < 1970 || year > 9999) return false;
+    if (month < 1 || month > 12) return false;
+    if (day < 1 || day > 31) return false;
+    if (hour < 0 || hour > 23) return false;
+    if (minute < 0 || minute > 59) return false;
+    if (second < 0 || second > 59) return false;
+
+    try {
+      final dt = DateTime(year, month, day, hour, minute, second);
+      if (dt.year != year || dt.month != month || dt.day != day) return false;
+    } catch (_) {
+      return false;
+    }
+
+    // Event Reminder Delay: 10–600
+    final delay = int.tryParse(config.delayController.text);
+    if (delay == null || delay < 10 || delay > 600) return false;
+
+    return true;
+  }
+
   void _pushToManager() {
     if (manager == null) return;
     manager!.panelInfoPanelNo.value =
@@ -435,12 +511,14 @@ class _PanelInfoBottomSheetState extends State<PanelInfoBottomSheet> {
             borderRadius: BorderRadius.circular(24),
           ),
         ),
-        onPressed: () {
-          if (manager == null) return;
-          FocusManager.instance.primaryFocus?.unfocus();
-          _pushToManager();
-          widget.onApply();
-        },
+        onPressed: _isValidPanelInfo()
+            ? () {
+                if (manager == null) return;
+                FocusManager.instance.primaryFocus?.unfocus();
+                _pushToManager();
+                widget.onApply();
+              }
+            : null,
         child: Text(
           'Apply',
           style: GoogleFonts.inter(

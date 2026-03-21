@@ -111,6 +111,14 @@ class _GeneralModuleBottomSheetState extends State<GeneralModuleBottomSheet> {
     if (mounted) setState(() {});
   }
 
+  bool _isValidGeneralModule() {
+    final lvlTimeout = int.tryParse(lvlTimeoutController.text);
+    if (lvlTimeout == null || lvlTimeout < 30 || lvlTimeout > 300) {
+      return false;
+    }
+    return true;
+  }
+
   void _pushToManager() {
     if (manager == null) return;
     final bp = manager!.bleProcess;
@@ -172,7 +180,11 @@ class _GeneralModuleBottomSheetState extends State<GeneralModuleBottomSheet> {
                     padding: const EdgeInsets.only(top: 16),
                     child: Column(
                       children: [
-                        _numberField("LVL Time-out (s)", lvlTimeoutController),
+                        _numberField(
+                          "LVL Time-out (s)",
+                          lvlTimeoutController,
+                          maxLength: 3,
+                        ),
 
                         DropdownWidget(
                           label: "Silence Buzzer Level",
@@ -227,7 +239,11 @@ class _GeneralModuleBottomSheetState extends State<GeneralModuleBottomSheet> {
 
   // ───────── INPUTS ─────────
 
-  Widget _numberField(String label, TextEditingController controller) {
+  Widget _numberField(
+    String label,
+    TextEditingController controller, {
+    int? maxLength,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
       child: Column(
@@ -238,7 +254,12 @@ class _GeneralModuleBottomSheetState extends State<GeneralModuleBottomSheet> {
           TextField(
             controller: controller,
             keyboardType: TextInputType.number,
-            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            inputFormatters: [
+              FilteringTextInputFormatter.digitsOnly,
+              if (maxLength != null)
+                LengthLimitingTextInputFormatter(maxLength),
+            ],
+            onChanged: (_) => setState(() {}),
             decoration: _inputDecoration(),
           ),
         ],
@@ -334,14 +355,16 @@ class _GeneralModuleBottomSheetState extends State<GeneralModuleBottomSheet> {
             borderRadius: BorderRadius.circular(24),
           ),
         ),
-        onPressed: () async {
-          if (manager == null) return;
-          FocusManager.instance.primaryFocus?.unfocus();
-          _pushToManager();
-          await _saveToCache();
-          widget.refreshTrigger.value++;
-          widget.onApply();
-        },
+        onPressed: _isValidGeneralModule()
+            ? () async {
+                if (manager == null) return;
+                FocusManager.instance.primaryFocus?.unfocus();
+                _pushToManager();
+                await _saveToCache();
+                widget.refreshTrigger.value++;
+                widget.onApply();
+              }
+            : null,
         child: Text(
           'Apply',
           style: GoogleFonts.inter(
