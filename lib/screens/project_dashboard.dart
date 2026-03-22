@@ -1652,161 +1652,140 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
           color: Colors.white,
           borderRadius: BorderRadius.circular(35),
         ),
-        child: SingleChildScrollView(child: _buildDashboard()),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Fixed header - Panel Information Row (out of scroll region)
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(children: [_buildPanelInfoHeader()]),
+            ),
+            // Scrollable content
+            Expanded(
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                  child: Column(
+                    children: [
+                      _buildPeripheralOverview(),
+                      _buildPanelActions(),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildDashboard() {
-    return Padding(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        children: [
-          // Panel Information Row
-          Row(
+  Widget _buildPanelInfoHeader() {
+    return Row(
+      children: [
+        SvgPicture.asset('assets/svgs/panel_icon.svg', height: 62, width: 62),
+        SizedBox(width: 14),
+        Expanded(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SvgPicture.asset(
-                'assets/svgs/panel_icon.svg',
-                height: 62,
-                width: 62,
+              Text(
+                BleNameUtils.getDisplayPrefixFromBleName(widget.panelName),
+                style: GoogleFonts.inter(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                ),
+                overflow: TextOverflow.ellipsis,
               ),
-              SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      BleNameUtils.getDisplayPrefixFromBleName(
-                        widget.panelName,
+              Text(
+                BleNameUtils.getDisplayIdFromBleName(widget.panelName),
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: Color(0xFF979797),
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+              ValueListenableBuilder(
+                valueListenable: ble.isConnectedNotifier,
+                builder: (context, isConnected, child) {
+                  if (isConnected) {
+                    return RichText(
+                      text: TextSpan(
+                        children: [
+                          TextSpan(
+                            text: 'Connected',
+                            style: GoogleFonts.inter(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: Color(0xFF00A706),
+                            ),
+                          ),
+                        ],
                       ),
-                      style: GoogleFonts.inter(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    Text(
-                      BleNameUtils.getDisplayIdFromBleName(widget.panelName),
-                      style: GoogleFonts.inter(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: Color(0xFF979797),
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    ValueListenableBuilder(
-                      valueListenable: ble.isConnectedNotifier,
-                      builder: (context, isConnected, child) {
-                        if (isConnected) {
-                          return RichText(
+                    );
+                  } else {
+                    return Row(
+                      children: [
+                        Expanded(
+                          child: RichText(
                             text: TextSpan(
                               children: [
-                                // TextSpan(
-                                //   text: 'Status : ',
-                                //   style: GoogleFonts.inter(
-                                //     fontSize: 14,
-                                //     fontWeight: FontWeight.w500,
-                                //     color: Color(0xFF979797),
-                                //   ),
-                                // ),
                                 TextSpan(
-                                  text: 'Connected',
+                                  text: 'Disconnected',
                                   style: GoogleFonts.inter(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w500,
-                                    color: Color(0xFF00A706),
+                                    color: Color(0xFFEC1D24),
                                   ),
                                 ),
                               ],
                             ),
-                          );
-                        } else {
-                          return Row(
-                            children: [
-                              Expanded(
-                                child: RichText(
-                                  text: TextSpan(
-                                    children: [
-                                      // TextSpan(
-                                      //   text: 'Status : ',
-                                      //   style: GoogleFonts.inter(
-                                      //     fontSize: 14,
-                                      //     fontWeight: FontWeight.w500,
-                                      //     color: Color(0xFF979797),
-                                      //   ),
-                                      // ),
-                                      TextSpan(
-                                        text: 'Disconnected',
-                                        style: GoogleFonts.inter(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w500,
-                                          color: Color(0xFFEC1D24),
-                                        ),
-                                      ),
-                                    ],
+                          ),
+                        ),
+                        SizedBox(width: 8),
+                        _isConnecting
+                            ? SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Color(0xFFEC1D24),
+                                ),
+                              ),
+                            )
+                            : GestureDetector(
+                              onTap: _connectToDeviceByName,
+                              child: Container(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Color(0xFFEC1D24),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  'Connect',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.white,
                                   ),
                                 ),
                               ),
-                              SizedBox(width: 8),
-                              _isConnecting
-                                  ? SizedBox(
-                                    width: 16,
-                                    height: 16,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      valueColor: AlwaysStoppedAnimation<Color>(
-                                        Color(0xFFEC1D24),
-                                      ),
-                                    ),
-                                  )
-                                  : GestureDetector(
-                                    onTap: _connectToDeviceByName,
-                                    child: Container(
-                                      padding: EdgeInsets.symmetric(
-                                        horizontal: 12,
-                                        vertical: 6,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: Color(0xFFEC1D24),
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: Text(
-                                        'Connect',
-                                        style: GoogleFonts.inter(
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w600,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                            ],
-                          );
-                        }
-                      },
-                    ),
-                  ],
-                ),
+                            ),
+                      ],
+                    );
+                  }
+                },
               ),
-              // Spacer(),
-              // Transform.rotate(
-              //   angle: 180 * 3.14159 / 360,
-              //   child: Icon(
-              //     Icons.arrow_forward_ios,
-              //     size: 18,
-              //     color: Color(0xFF696969),
-              //   ),
-              // ),
             ],
           ),
-          SizedBox(height: 10),
-          _buildPeripheralOverview(),
-          SizedBox(height: 16),
-          _buildPanelActions(),
-          // SizedBox(height: 80),
-        ],
-      ),
+        ),
+      ],
     );
   }
 

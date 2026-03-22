@@ -63,7 +63,7 @@ class EventConstants {
     "Supervisory",
     "General equipment",
     "Ext. zone",
-    "Zone equipment",
+    "Zone Sounder",
     "Area equipment",
     "Ext. zone equipment",
     "Timer alarm",
