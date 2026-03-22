@@ -6,6 +6,7 @@ import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/screens/splash_screen.dart';
 import 'package:techno_switch_solar_app/services/app_services.dart';
+import 'package:techno_switch_solar_app/services/mock_data_service.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 void main() async {
@@ -15,6 +16,9 @@ void main() async {
 
   // Initialize app services
   await AppServices.initialize();
+
+  // Seed mock site + panel for testing (skips if already exists)
+  await seedMockData();
 
   await FlutterLogs.initLogs(
     logLevelsEnabled: <LogLevel>[
