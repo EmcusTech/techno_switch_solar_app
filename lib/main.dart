@@ -18,7 +18,7 @@ void main() async {
   await AppServices.initialize();
 
   // Seed mock site + panel for testing (skips if already exists)
-  await seedMockData();
+  // await seedMockData();
 
   await FlutterLogs.initLogs(
     logLevelsEnabled: <LogLevel>[

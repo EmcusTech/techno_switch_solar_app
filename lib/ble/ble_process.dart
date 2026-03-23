@@ -1156,7 +1156,7 @@ class BleProcess {
       print(
         "Checking Access Code Setup Apply CMD RSP Value ${rx.payload[12]}:::::${rx.payload[12] == 0x02} ",
       );
-      if (rx.payload[12] == 0x02) {
+      if (rx.payload[10] == 0x83 && rx.payload[12] == 0x02) {
         if (accessCodeSetupApplyCommandStep >= 1 &&
             accessCodeSetupApplyCommandStep < 8) {
           final nextAccessCodeNo = accessCodeSetupApplyCommandStep + 1;

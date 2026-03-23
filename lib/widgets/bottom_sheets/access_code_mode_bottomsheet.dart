@@ -29,6 +29,7 @@ class AccessCodesBottomSheet extends StatefulWidget {
 class _AccessCodesBottomSheetState extends State<AccessCodesBottomSheet> {
   BleManager? manager;
   int selectedCode = 1;
+  bool isAccessCodeEnabled = true;
 
   final List<String> accessLevelNames = [
     'Not Used',
@@ -197,6 +198,13 @@ class _AccessCodesBottomSheetState extends State<AccessCodesBottomSheet> {
 
                                     accessLevelController.text =
                                         index.toString();
+
+                                    if (v == accessLevelNames.first) {
+                                      isAccessCodeEnabled = false;
+                                      accessCodeController.clear();
+                                    } else {
+                                      isAccessCodeEnabled = true;
+                                    }
                                   });
                                 },
                               ),
