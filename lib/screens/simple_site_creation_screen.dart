@@ -112,15 +112,15 @@ class _SimpleSiteCreationScreenState extends State<SimpleSiteCreationScreen> {
             );
 
             // Show message and navigate to existing site
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  'Panel already installed at "${existingSite.siteName}". ${widget.retrievedLogs.length} logs saved to existing site.',
-                ),
-                backgroundColor: Color(0xFF0F72E9),
-                duration: Duration(seconds: 4),
-              ),
-            );
+            // ScaffoldMessenger.of(context).showSnackBar(
+            //   SnackBar(
+            //     content: Text(
+            //       'Panel already installed at "${existingSite.siteName}". ${widget.retrievedLogs.length} logs saved to existing site.',
+            //     ),
+            //     backgroundColor: Color(0xFF0F72E9),
+            //     duration: Duration(seconds: 4),
+            //   ),
+            // );
 
             // Navigate to the existing site screen
             // Get updated site information with new log count
@@ -180,13 +180,13 @@ class _SimpleSiteCreationScreenState extends State<SimpleSiteCreationScreen> {
           _isLoading = false;
         });
 
-        // Show error snackbar
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Please fix the errors in the form'),
-            backgroundColor: Color(0xFFEC1D24),
-          ),
-        );
+        // // Show error snackbar
+        // ScaffoldMessenger.of(context).showSnackBar(
+        //   SnackBar(
+        //     content: Text('Please fix the errors in the form'),
+        //     backgroundColor: Color(0xFFEC1D24),
+        //   ),
+        // );
         return;
       }
 
@@ -241,13 +241,13 @@ class _SimpleSiteCreationScreenState extends State<SimpleSiteCreationScreen> {
           print('DEBUG: Panel association failed: $e');
 
           // Show error to user
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Warning: Panel association failed - $e'),
-              backgroundColor: Color(0xFFFF9800),
-              duration: Duration(seconds: 4),
-            ),
-          );
+          // ScaffoldMessenger.of(context).showSnackBar(
+          //   SnackBar(
+          //     content: Text('Warning: Panel association failed - $e'),
+          //     backgroundColor: Color(0xFFFF9800),
+          //     duration: Duration(seconds: 4),
+          //   ),
+          // );
         }
       } else {
         print(
@@ -255,7 +255,7 @@ class _SimpleSiteCreationScreenState extends State<SimpleSiteCreationScreen> {
         );
       }
 
-      // Show success message
+      // // Show success message
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -280,12 +280,12 @@ class _SimpleSiteCreationScreenState extends State<SimpleSiteCreationScreen> {
         _isLoading = false;
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error creating site: $error'),
-          backgroundColor: Color(0xFFEC1D24),
-        ),
-      );
+      // ScaffoldMessenger.of(context).showSnackBar(
+      //   SnackBar(
+      //     content: Text('Error creating site: $error'),
+      //     backgroundColor: Color(0xFFEC1D24),
+      //   ),
+      // );
     }
   }
 
