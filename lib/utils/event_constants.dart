@@ -62,7 +62,7 @@ class EventConstants {
     "Zone Input",
     "Supervisory",
     "General equipment",
-    "Ext. zone",
+    "Ext. Out",
     "Zone Sounder",
     "Area equipment",
     "Ext. zone equipment",
@@ -105,7 +105,7 @@ class EventConstants {
       "External fault",
       "External alarm 1",
       "Configuration defaulted",
-      "Vaux overload",
+      "AUX OUT Overload",
       "External alarm 2",
       "Evacuation",
       "External Supervisory on",
@@ -134,7 +134,7 @@ class EventConstants {
       "N/A",
       "External fault ok",
       "External controls disabled",
-      "Vaux ok",
+      "Vaux Ok",
       "External Supervisory off",
       "External controls enabled",
       "External supply fault ok",
@@ -146,8 +146,8 @@ class EventConstants {
       "External silence sounders",
       "External activate sounders",
       "I/O suspended",
-      "Local Controls enabled",
-      "Local Controls disabled",
+      "Local Controls Enabled",
+      "Local Controls Disabled",
     ],
 
     // 3 - Restart
@@ -172,8 +172,8 @@ class EventConstants {
 
     // 4 - Network
     [
-      "Network communication down",
-      "Network communication up",
+      "Network Comms Down",
+      "Network Comms Up",
       "Invalid Product Type",
       "No Permission",
       "Invalid Hardware Version (Major & Minor)",
@@ -206,13 +206,13 @@ class EventConstants {
       "Test Off",
       "Alarm (Auto)",
       "Fault",
-      "Supervisory fault",
-      "Supervisory normal",
-      "Test-alarm on",
-      "Test-alarm off",
-      "Alarm off (Auto)",
+      "Supervisory Fault",
+      "Supervisory Normal",
+      "Test-alarm On",
+      "Test-alarm Off",
+      "Alarm Off (Auto)",
       "Alarm (MCP)",
-      "Alarm off (MCP)",
+      "Alarm Off (MCP)",
       "Evacuation",
     ],
 
@@ -247,16 +247,16 @@ class EventConstants {
     ["Enabled", "Disabled", "Test On", "Test Off"],
 
     // 10 - Supervised Input
-    ["Supervisory fault", "Supervisory normal"],
+    ["Supervisory Fault", "Supervisory Normal"],
 
     // 11 - Supervised Output
-    ["Supervisory fault", "Supervisory normal"],
+    ["Supervisory Fault", "Supervisory Normal"],
 
     // 12 - Zone Input
-    ["Supervisory fault", "Supervisory normal"],
+    ["Supervisory Fault", "Supervisory Normal"],
 
     // 13 - Supervisory
-    ["Process limit", "Mailbox limit", "Queue limit"],
+    ["Process Limit", "Mailbox Limit", "Queue Limit"],
 
     // 14 - General Equipment
     [
@@ -266,8 +266,8 @@ class EventConstants {
       "Test Off",
       "Fault",
       "Normal",
-      "Delay enabled",
-      "Delay disabled",
+      "Delay Enabled",
+      "Delay Disabled",
     ],
 
     // 15 - Ext. Zone
@@ -300,8 +300,8 @@ class EventConstants {
       "Release count down continued",
       "Release count down terminated",
       "Extinguishant release start",
-      "Actuator undefined",
-      "Actuator defined",
+      "Actuator Undefined",
+      "Actuator Defined",
       "Manual test-release on",
       "Manual test-release off",
       "Automatic test-release on",
@@ -331,8 +331,8 @@ class EventConstants {
       "Extnl Manual Trigger Fault off",
       "Extnl Gas Disable Fault on",
       "Extnl Gas Disable Fault off",
-      "Extnl Extinguishing Flt Fault on",
-      "Extnl Extinguishing Flt Fault off",
+      "Extnl Extinguishing Flt Fault On",
+      "Extnl Extinguishing Flt Fault Off",
     ],
 
     // 16 - Zone Equipment
@@ -343,8 +343,8 @@ class EventConstants {
       "Test Off",
       "Fault",
       "Normal",
-      "Delay enabled",
-      "Delay disabled",
+      "Delay Enabled",
+      "Delay Disabled",
     ],
 
     // 17 - Area Equipment
@@ -355,8 +355,8 @@ class EventConstants {
       "Test Off",
       "Fault",
       "Normal",
-      "Delay enabled",
-      "Delay disabled",
+      "Delay Enabled",
+      "Delay Disabled",
     ],
 
     // 18 - Ext. Zone Equipment
@@ -367,50 +367,50 @@ class EventConstants {
       "Test Off",
       "Fault",
       "Normal",
-      "Delay enabled",
-      "Delay disabled",
+      "Delay Enabled",
+      "Delay Disabled",
     ],
 
     // 19 - Timer alarm
-    ["Alarm on", "Alarm off"],
+    ["Alarm On", "Alarm Off"],
 
     // 20 - Service due
-    ["Service due"],
+    ["Service Due"],
 
     // 21 - Supply
     [
-      "Earth fault ok",
-      "Earth fault high",
-      "Earth fault low",
-      "Vin voltage ok",
-      "Vin voltage high",
-      "Vin voltage low",
-      "Vout voltage ok",
-      "Vout voltage high",
-      "Vout voltage low",
-      "Mains ok",
-      "Mains fault",
-      "Battery voltage ok",
-      "Battery voltage high",
-      "Battery voltage low",
-      "Battery low warning",
-      "Battery shut-off",
-      "Battery disconnected",
-      "Battery connected",
-      "Charger fault",
-      "Charger ok",
-      "Booster fault",
-      "Booster ok",
-      "Battery test fault",
-      "Battery test ok",
-      "Supply fault",
-      "Supply fault ok",
-      "Extnl fault",
-      "Extnl fault ok",
+      "Earth Fault Ok",
+      "Earth Fault High",
+      "Earth Fault Low",
+      "Vin Voltage Ok",
+      "Vin Voltage High",
+      "Vin Voltage Low",
+      "Vout Voltage Ok",
+      "Vout Voltage High",
+      "Vout Voltage Low",
+      "Mains Ok",
+      "Mains Fault",
+      "Battery Voltage Ok",
+      "Battery Voltage High",
+      "Battery Voltage Low",
+      "Battery Low Warning",
+      "Battery Shut-Off",
+      "Battery Disconnected",
+      "Battery Connected",
+      "Charger Fault",
+      "Charger Ok",
+      "Booster Fault",
+      "Booster Ok",
+      "Battery Test Fault",
+      "Battery Test Ok",
+      "Supply Fault",
+      "Supply Fault Ok",
+      "Extnl Fault",
+      "Extnl Fault Ok",
     ],
 
     // 22 - Network
-    ["Ring open", "Ring closed", "Ring disconnect", "Test on", "Test off"],
+    ["Ring Open", "Ring Closed", "Ring Disconnect", "Test On", "Test Off"],
   ];
 
   static String getEventStatusValue(int evtStatus) {
