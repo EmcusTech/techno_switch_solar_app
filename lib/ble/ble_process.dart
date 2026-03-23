@@ -116,6 +116,8 @@ class BleProcess {
 
   final ValueNotifier<String> accessKey = ValueNotifier<String>("");
 
+  final ValueNotifier<int> accessKeyLength = ValueNotifier<int>(0);
+
   final ValueNotifier<int> bleManufacturerData = ValueNotifier<int>(0);
 
   // Ext Out Variables
@@ -743,8 +745,15 @@ class BleProcess {
     if (checkForAccessKeyCmdRsp == 1) {
       print("Checking ACCESS KEY CMD RSP...");
 
+      print(
+        "The access key is : ${String.fromCharCodes(rx.payload.sublist(14, 14 + accessKeyLength.value))}",
+      );
+
       if (rx.payload[13] != 0x0a &&
-          String.fromCharCodes(rx.payload.sublist(14, 18)) == accessKey.value) {
+          String.fromCharCodes(
+                rx.payload.sublist(14, 14 + accessKeyLength.value),
+              ) ==
+              accessKey.value) {
         // processDesc.value = "Validation Success";
         // isAccessKeyValid.value = true;
         print("ACCESS KEY RECEIVED → NEXT CONTROL CMD");
@@ -922,7 +931,10 @@ class BleProcess {
           await bleManager.sendStopCntrlCmdPkt();
         }
       } else if (rx.payload[13] == 0x0a &&
-          String.fromCharCodes(rx.payload.sublist(14, 18)) == accessKey.value) {
+          String.fromCharCodes(
+                rx.payload.sublist(14, 14 + accessKeyLength.value),
+              ) ==
+              accessKey.value) {
         isAccessKeyValid.value = false;
         processDesc.value = "Wrong password. Try again.";
         resetProcessState();

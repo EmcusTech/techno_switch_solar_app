@@ -215,6 +215,8 @@ class BleManager {
 
   ValueNotifier<String> get accessKey => bleProcess.accessKey;
 
+  ValueNotifier<int> get accessKeyLength => bleProcess.accessKeyLength;
+
   ValueNotifier<bool?> get isAccessKeyValid => bleProcess.isAccessKeyValid;
 
   ValueNotifier<int> get bleManufacturerData => bleProcess.bleManufacturerData;
@@ -2806,6 +2808,22 @@ class BleManager {
 
     // Create 216-byte packet
     List<int> pkt = List.filled(216, 0);
+
+    print("accessKey: ${accessKey.value}");
+    print("accessKey length: ${accessKey.value.length}");
+
+    String accessKeyString = accessKey.value;
+    List<int> accessKeyBytes = accessKeyString.codeUnits;
+    accessKeyLength.value = accessKeyBytes.length;
+
+    for (int i = 0; i < accessKeyLength.value; i++) {
+      if (i < accessKeyLength.value) {
+        pkt[14 + i] = accessKeyBytes[i];
+      }
+    }
+
+    print("pkt[14]: ${pkt[14]}");
+
     pkt[0] = 0xFE;
     pkt[1] = 0x01;
     pkt[2] = 0x00;
@@ -2817,14 +2835,7 @@ class BleManager {
     pkt[10] = 0x83; // mode
     pkt[11] = 0x00; // socket number
     pkt[12] = 0x04;
-    pkt[13] = 0x04;
-
-    // "1974"
-    List<int> accessKeyBytes = accessKey.value.codeUnits;
-    pkt[14] = accessKeyBytes[0];
-    pkt[15] = accessKeyBytes[1];
-    pkt[16] = accessKeyBytes[2];
-    pkt[17] = accessKeyBytes[3];
+    pkt[13] = accessKeyLength.value & 0xFF;
 
     // Compute checksum on first 213 bytes
     int checksum = toolsFletcherChecksum(pkt.sublist(0, 216 - 3));

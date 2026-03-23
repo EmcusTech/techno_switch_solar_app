@@ -1291,7 +1291,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
 
                 // Title
                 Text(
-                  'Enter 4-Digit Password',
+                  'Enter Access Code',
                   style: GoogleFonts.inter(
                     fontSize: 20,
                     fontWeight: FontWeight.w700,
@@ -1300,19 +1300,18 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                   textAlign: TextAlign.center,
                 ),
 
-                SizedBox(height: 8),
+                // SizedBox(height: 8),
 
-                // Subtitle
-                Text(
-                  'Please enter the password to continue',
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w400,
-                    color: Color(0xFF918F8F),
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-
+                // // Subtitle
+                // Text(
+                //   'Please enter the password to continue',
+                //   style: GoogleFonts.inter(
+                //     fontSize: 14,
+                //     fontWeight: FontWeight.w400,
+                //     color: Color(0xFF918F8F),
+                //   ),
+                //   textAlign: TextAlign.center,
+                // ),
                 SizedBox(height: 24),
 
                 // Password Input Field + CTA
@@ -1440,7 +1439,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                           focusNode: _focusNode,
                           keyboardType: TextInputType.number,
                           obscureText: true,
-                          maxLength: 4,
+                          maxLength: 8,
                           textAlign: TextAlign.center,
                           style: GoogleFonts.inter(
                             fontSize: 24,
@@ -1450,51 +1449,54 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                           ),
                           inputFormatters: [
                             FilteringTextInputFormatter.digitsOnly,
-                            LengthLimitingTextInputFormatter(4),
                           ],
                           onChanged: (val) {
                             accessKey.value = val;
-                            if (val.length == 4) {
-                              errorText.value = null;
-                              // reset validation state for new attempt
-                              // cancelAccessKeyTimer();
-                              // accessKeyValidationTimer = Timer(
-                              //   const Duration(seconds: 10),
-                              //   () {
-                              //     if (!mounted) return;
-                              //     if (isAccessKeyValid.value == null) {
-                              //       final navigator = Navigator.maybeOf(
-                              //         dialogContext,
-                              //         rootNavigator: true,
-                              //       );
-                              //       navigator?.maybePop();
 
-                              //       WidgetsBinding.instance.addPostFrameCallback((
-                              //         _,
-                              //       ) {
-                              //         if (!mounted) return;
-                              //         Navigator.of(dialogContext).push(
-                              //           MaterialPageRoute(
-                              //             builder:
-                              //                 (_) =>
-                              //                     const LogRetrievalFailedScreen(),
-                              //           ),
-                              //         );
-                              //       });
-                              //     }
-                              //   },
-                              // );
-                              bleProcess.isAccessKeyValid.value = null;
-                              // Dismiss keyboard and start validation
-                              FocusScope.of(dialogContext).unfocus();
-                              // Provide immediate feedback while validating
-                              bleProcess.processDesc.value =
-                                  "Validating access key...";
-                              onCall();
-                            }
+                            //reset state
+                            errorText.value = null;
+                            bleProcess.isAccessKeyValid.value = null;
+                            // if (val.length == 4) {
+                            //   errorText.value = null;
+                            //   // reset validation state for new attempt
+                            //   // cancelAccessKeyTimer();
+                            //   // accessKeyValidationTimer = Timer(
+                            //   //   const Duration(seconds: 10),
+                            //   //   () {
+                            //   //     if (!mounted) return;
+                            //   //     if (isAccessKeyValid.value == null) {
+                            //   //       final navigator = Navigator.maybeOf(
+                            //   //         dialogContext,
+                            //   //         rootNavigator: true,
+                            //   //       );
+                            //   //       navigator?.maybePop();
+
+                            //   //       WidgetsBinding.instance.addPostFrameCallback((
+                            //   //         _,
+                            //   //       ) {
+                            //   //         if (!mounted) return;
+                            //   //         Navigator.of(dialogContext).push(
+                            //   //           MaterialPageRoute(
+                            //   //             builder:
+                            //   //                 (_) =>
+                            //   //                     const LogRetrievalFailedScreen(),
+                            //   //           ),
+                            //   //         );
+                            //   //       });
+                            //   //     }
+                            //   //   },
+                            //   // );
+                            //   bleProcess.isAccessKeyValid.value = null;
+                            //   // Dismiss keyboard and start validation
+                            //   FocusScope.of(dialogContext).unfocus();
+                            //   // Provide immediate feedback while validating
+                            //   bleProcess.processDesc.value =
+                            //       "Validating access key...";
+                            //   onCall();
+                            // }
                           },
                           decoration: InputDecoration(
-                            hintText: '••••',
+                            hintText: '••••••••',
                             hintStyle: GoogleFonts.inter(
                               fontSize: 24,
                               fontWeight: FontWeight.w600,
@@ -1567,7 +1569,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                           valueListenable: bleProcess.processDesc,
                           builder: (_, processDescValue, __) {
                             String? status;
-                            if (_controller.text.length == 4 &&
+                            if (_controller.text.isNotEmpty &&
                                 isAccessKeyValidValue == null) {
                               status =
                                   processDescValue.isNotEmpty
@@ -1601,28 +1603,63 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                           },
                         ),
 
-                        SizedBox(height: 16),
-
-                        // Cancel Button only when not validating or already successful
-                        if (!(_controller.text.length == 4 &&
-                                isAccessKeyValidValue == null) &&
-                            isAccessKeyValidValue != true)
-                          SizedBox(
-                            width: double.infinity,
-                            child: GestureDetector(
-                              onTap: () {
-                                cancelAccessKeyTimer();
-                                Navigator.of(dialogContext).pop();
-                              },
-                              child: Container(
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            // if (!(_controller.text.length == 4 &&
+                            //         isAccessKeyValidValue == null) &&
+                            //     isAccessKeyValidValue != true)
+                            Expanded(
+                              child: SizedBox(
                                 height: 48,
-                                decoration: BoxDecoration(
-                                  color: Color(0xFFEC1D24),
-                                  borderRadius: BorderRadius.circular(24),
-                                ),
-                                child: Center(
+                                child: OutlinedButton(
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: const Color(0xFFEC1D24),
+                                    side: const BorderSide(
+                                      color: Color(0xFFEC1D24),
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(24),
+                                    ),
+                                  ),
+                                  onPressed: () {
+                                    cancelAccessKeyTimer();
+                                    Navigator.of(dialogContext).pop();
+                                  },
                                   child: Text(
                                     'Cancel',
+                                    style: GoogleFonts.inter(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            SizedBox(width: 12),
+                            Expanded(
+                              child: SizedBox(
+                                height: 48,
+                                child: ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFFEC1D24),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(24),
+                                    ),
+                                  ),
+                                  onPressed: () {
+                                    FocusScope.of(dialogContext).unfocus();
+
+                                    bleProcess.isAccessKeyValid.value = null;
+                                    bleProcess.processDesc.value =
+                                        "Validating access key...";
+
+                                    accessKey.value = _controller.text;
+
+                                    onCall(); // 🔥 only trigger here
+                                  },
+                                  child: Text(
+                                    'Verify',
                                     style: GoogleFonts.inter(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w600,
@@ -1632,7 +1669,8 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                                 ),
                               ),
                             ),
-                          ),
+                          ],
+                        ),
                       ],
                     );
                   },
