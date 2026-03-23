@@ -111,6 +111,15 @@ class _AccessCodesBottomSheetState extends State<AccessCodesBottomSheet> {
     }
   }
 
+  bool _isValidAccessCode() {
+    if (accessLevelName == accessLevelNames.first) {
+      return true;
+    }
+    final code = int.tryParse(accessCodeController.text);
+    if (code == null || code < 1 || code > 99999999) return false;
+    return true;
+  }
+
   void _saveCurrentToManager() {
     if (manager == null) return;
     final index = selectedCode - 1;
@@ -212,6 +221,9 @@ class _AccessCodesBottomSheetState extends State<AccessCodesBottomSheet> {
                               _textField(
                                 label: 'Access Code',
                                 controller: accessCodeController,
+                                isNumeric: true,
+                                maxLength: 8,
+                                onChanged: () => setState(() {}),
                               ),
                             ],
                           ),
@@ -295,6 +307,9 @@ class _AccessCodesBottomSheetState extends State<AccessCodesBottomSheet> {
     required String label,
     required TextEditingController controller,
     bool enabled = true,
+    bool isNumeric = false,
+    int? maxLength,
+    VoidCallback? onChanged,
   }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
@@ -306,6 +321,14 @@ class _AccessCodesBottomSheetState extends State<AccessCodesBottomSheet> {
           TextField(
             controller: controller,
             enabled: enabled,
+            keyboardType: isNumeric ? TextInputType.number : TextInputType.text,
+            maxLength: maxLength,
+            inputFormatters: [
+              if (isNumeric) FilteringTextInputFormatter.digitsOnly,
+              if (maxLength != null)
+                LengthLimitingTextInputFormatter(maxLength),
+            ],
+            onChanged: onChanged != null ? (_) => onChanged() : null,
             decoration: _inputDecoration(),
           ),
         ],
@@ -395,11 +418,13 @@ class _AccessCodesBottomSheetState extends State<AccessCodesBottomSheet> {
             borderRadius: BorderRadius.circular(24),
           ),
         ),
-        onPressed: () {
-          FocusManager.instance.primaryFocus?.unfocus();
-          _saveCurrentToManager();
-          widget.onApply();
-        },
+        onPressed: _isValidAccessCode()
+            ? () {
+                FocusManager.instance.primaryFocus?.unfocus();
+                _saveCurrentToManager();
+                widget.onApply();
+              }
+            : null,
         child: Text(
           'Apply',
           style: GoogleFonts.inter(
