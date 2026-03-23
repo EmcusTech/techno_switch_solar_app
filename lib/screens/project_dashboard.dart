@@ -1706,6 +1706,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                   child: Column(
                     children: [
                       _buildPeripheralOverview(),
+                      SizedBox(height: 12),
                       _buildPanelActions(),
                     ],
                   ),
