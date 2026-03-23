@@ -103,6 +103,9 @@ class _EventLogContentState extends State<_EventLogContent> {
   int _textFieldResetKey = 0;
   bool _isHandlingBack = false;
 
+  final TextEditingController _eventIdFilterController =
+      TextEditingController();
+
   final PanelService _panelService = PanelService();
   final SiteService _siteService = SiteService();
 
@@ -145,7 +148,24 @@ class _EventLogContentState extends State<_EventLogContent> {
 
   List<LogModel> _getDisplayLogs() {
     final baseLogs = _getBaseLogs();
-    return _filtersApplied ? _filteredLogs : baseLogs;
+    final afterSheetFilters = _filtersApplied ? _filteredLogs : baseLogs;
+    return _applyEventIdQuickFilter(afterSheetFilters);
+  }
+
+  /// Narrows the log list to entries whose [LogModel.eventId] matches the
+  /// quick-filter field (exact or numeric equality, e.g. `5` matches `"005"`).
+  List<LogModel> _applyEventIdQuickFilter(List<LogModel> logs) {
+    final q = _eventIdFilterController.text.trim();
+    if (q.isEmpty) return logs;
+    return logs.where((log) {
+      final eid = log.eventId?.trim() ?? '';
+      if (eid.isEmpty) return false;
+      if (eid == q) return true;
+      final qNum = int.tryParse(q);
+      final eNum = int.tryParse(eid);
+      if (qNum != null && eNum != null && qNum == eNum) return true;
+      return false;
+    }).toList();
   }
 
   @override
@@ -171,6 +191,12 @@ class _EventLogContentState extends State<_EventLogContent> {
             : ble.bleProcess.validEventLogs.value,
       );
     }
+  }
+
+  @override
+  void dispose() {
+    _eventIdFilterController.dispose();
+    super.dispose();
   }
 
   // Future<void> _handleBackNavigation() async {
@@ -502,7 +528,9 @@ class _EventLogContentState extends State<_EventLogContent> {
                 title: 'Export as PDF',
                 onTap: () async {
                   Navigator.pop(context);
-                  final logs = _filtersApplied ? _filteredLogs : _getBaseLogs();
+                  final logs = _applyEventIdQuickFilter(
+                    _filtersApplied ? _filteredLogs : _getBaseLogs(),
+                  );
                   if (logs.isEmpty) return;
 
                   //Resolve site data
@@ -676,8 +704,11 @@ class _EventLogContentState extends State<_EventLogContent> {
               valueListenable: ble.bleProcess.validEventLogs,
               builder: (context, validLogs, child) {
                 final baseLogs = _sortLogsByEventId(validLogs);
-                final logsToDisplay =
+                final afterSheetFilters =
                     _filtersApplied ? _filteredLogs : baseLogs;
+                final logsToDisplay = _applyEventIdQuickFilter(
+                  afterSheetFilters,
+                );
                 return _buildLogStatus(logsToDisplay);
               },
             );
@@ -1406,6 +1437,7 @@ class _EventLogContentState extends State<_EventLogContent> {
 
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Text(
                 "Log View",
@@ -1416,8 +1448,72 @@ class _EventLogContentState extends State<_EventLogContent> {
                 ),
               ),
               Row(
+                mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
+                  SizedBox(
+                    width: 88,
+                    height: 32,
+                    child: TextField(
+                      controller: _eventIdFilterController,
+                      onChanged: (_) => setState(() {}),
+                      keyboardType: TextInputType.text,
+                      textAlignVertical: TextAlignVertical.center,
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF3A3A3A),
+                      ),
+                      decoration: InputDecoration(
+                        hintText: 'ID',
+                        hintStyle: GoogleFonts.inter(
+                          fontSize: 12,
+                          color: Color(0xFFBDBDBD),
+                        ),
+                        isDense: true,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 6,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(4),
+                          borderSide: BorderSide(color: Color(0xFFD7D7D7)),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(4),
+                          borderSide: BorderSide(color: Color(0xFFD7D7D7)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(4),
+                          borderSide: BorderSide(
+                            color: Color(0xFFEC1D24),
+                            width: 2,
+                          ),
+                        ),
+                        suffixIcon:
+                            _eventIdFilterController.text.isNotEmpty
+                                ? IconButton(
+                                  iconSize: 16,
+                                  padding: EdgeInsets.zero,
+                                  constraints: const BoxConstraints(
+                                    minWidth: 28,
+                                    minHeight: 28,
+                                  ),
+                                  icon: Icon(
+                                    Icons.close,
+                                    size: 16,
+                                    color: Color(0xFF918F8F),
+                                  ),
+                                  onPressed: () {
+                                    _eventIdFilterController.clear();
+                                    setState(() {});
+                                  },
+                                )
+                                : null,
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 8),
                   GestureDetector(
                     onTap:
                         () => setState(() {
