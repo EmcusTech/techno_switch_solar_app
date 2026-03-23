@@ -131,6 +131,10 @@ class _LBusBottomSheetState extends State<LBusBottomSheet> {
     }
   }
 
+  bool _isValidLBus() {
+    return deviceTextController.text.length <= 21;
+  }
+
   void _saveCurrentBusToManager() {
     if (manager == null) return;
     final index = selectedBus - 1;
@@ -218,6 +222,8 @@ class _LBusBottomSheetState extends State<LBusBottomSheet> {
                               _textField(
                                 label: 'L-Bus Device Text',
                                 controller: deviceTextController,
+                                maxLength: 21,
+                                onChanged: () => setState(() {}),
                               ),
                               _numericField(
                                 label: 'ID',
@@ -319,6 +325,8 @@ class _LBusBottomSheetState extends State<LBusBottomSheet> {
   Widget _textField({
     required String label,
     required TextEditingController controller,
+    int? maxLength,
+    VoidCallback? onChanged,
   }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
@@ -327,7 +335,16 @@ class _LBusBottomSheetState extends State<LBusBottomSheet> {
         children: [
           _label(label),
           const SizedBox(height: 6),
-          TextField(controller: controller, decoration: _inputDecoration()),
+          TextField(
+            controller: controller,
+            maxLength: maxLength,
+            inputFormatters: [
+              if (maxLength != null)
+                LengthLimitingTextInputFormatter(maxLength),
+            ],
+            onChanged: onChanged != null ? (_) => onChanged() : null,
+            decoration: _inputDecoration(),
+          ),
         ],
       ),
     );
@@ -455,11 +472,13 @@ class _LBusBottomSheetState extends State<LBusBottomSheet> {
             borderRadius: BorderRadius.circular(24),
           ),
         ),
-        onPressed: () {
-          FocusManager.instance.primaryFocus?.unfocus();
-          _saveCurrentBusToManager();
-          widget.onApply();
-        },
+        onPressed: _isValidLBus()
+            ? () {
+                FocusManager.instance.primaryFocus?.unfocus();
+                _saveCurrentBusToManager();
+                widget.onApply();
+              }
+            : null,
         child: Text(
           'Apply',
           style: GoogleFonts.inter(
