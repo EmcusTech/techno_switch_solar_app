@@ -143,6 +143,10 @@ class BleLogController extends GetxController {
     await bleManager.startGeneralModuleSetupApply();
   }
 
+  Future<void> startLiveEventSetup() async {
+    await bleManager.startLiveEventsRetrieval();
+  }
+
   sendNetworkPacket() async {
     await bleManager.sendNetworkPacket();
   }

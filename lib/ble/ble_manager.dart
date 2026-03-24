@@ -37,6 +37,7 @@ enum BleStates {
   REQ_ENCY_KEY,
   SEND_AUTHN_MSG,
   PROCESS_PANEL_EVT_LOG_READ,
+  PROCESS_PANEL_LIVE_EVENTS_READ,
   PROCESS_WAIT_RSP,
   IDLE,
   SEND_START_FIRMWARE_PACKET,
@@ -104,12 +105,14 @@ enum OtaProcessState {
   sendPanelInfoSetupApplyCmdPkt,
   sendGeneralModuleSetupFetchCmdPkt,
   sendGeneralModuleSetupApplyCmdPkt,
+  sendLiveEventsRetrievalFetchCmdPkt,
 }
 
 enum BleOperationMode {
   none, // No active operation
   firmwareUpgrade, // Firmware upgrade in progress
   logRetrieval, // Event log retrieval in progress
+  liveEventsRetrieval, // Live events retrieval in progress
   extOutFetch,
   extOutApply,
   inputSetupFetch,
@@ -700,6 +703,15 @@ class BleManager {
     currentOperationMode = BleOperationMode.logRetrieval;
   }
 
+  void resetLiveEventsRetrievalState() {
+    bleCurrentState = BleStates.REQ_ENCY_KEY;
+    bleStateMachineState = BleStates.REQ_ENCY_KEY;
+    bleAESKey.clear();
+    _pollInFlight = false;
+    receivedPollCount = 0;
+    currentOperationMode = BleOperationMode.logRetrieval;
+  }
+
   void resetExtOutState() {
     bleCurrentState = BleStates.REQ_ENCY_KEY;
     bleStateMachineState = BleStates.REQ_ENCY_KEY;
@@ -845,6 +857,43 @@ class BleManager {
     print("Current state: $bleStateMachineState");
     bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
     Get.find<BleLogController>().sendNetworkPacket();
+  }
+
+  Future<void> startLiveEventsRetrieval() async {
+    if (!isConnected) {
+      throw Exception("Device not connected. Cannot start log retrieval.");
+    }
+
+    if (notifyChar == null || writeChar == null) {
+      throw Exception(
+        "BLE characteristics not initialized. Cannot start log retrieval.",
+      );
+    }
+
+    // Set operation mode to log retrieval
+    currentOperationMode = BleOperationMode.liveEventsRetrieval;
+
+    // Reset protocol state to initial values
+    resetLiveEventsRetrievalState();
+    resetProtocolState();
+
+    // IMPORTANT: Reset process state to clear isOtaCompleted flag
+    // This ensures polls aren't blocked after firmware upgrade
+    bleProcess.resetProcessState();
+
+    // Handshake (encryption + auth) is done at connection time - proceed directly
+    if (_notifySub == null) {
+      throw Exception(
+        "BLE handshake not complete. Please wait for connection to finish.",
+      );
+    }
+    otaProcessState = OtaProcessState.sendLiveEventsRetrievalFetchCmdPkt;
+    print("Proceeding with live events retrieval");
+    bleCurrentState = BleStates.PROCESS_PANEL_LIVE_EVENTS_READ;
+    bleStateMachineState = BleStates.PROCESS_PANEL_LIVE_EVENTS_READ;
+    print("Current state: $bleStateMachineState");
+    bleProcess.startRxTimeout();
+    await sendPollPacket();
   }
 
   Future<void> startExtOutFetch() async {
@@ -2476,6 +2525,13 @@ class BleManager {
             timeout: const Duration(seconds: 5),
           );
           Get.find<BleLogController>().sendNetworkPacket();
+        } else if (currentOperationMode ==
+            BleOperationMode.liveEventsRetrieval) {
+          bleCurrentState = BleStates.PROCESS_PANEL_LIVE_EVENTS_READ;
+          bleStateMachineState = BleStates.PROCESS_PANEL_LIVE_EVENTS_READ;
+          print("Current state: $bleStateMachineState (Live events retrieval)");
+          bleProcess.startRxTimeout();
+          await sendPollPacket();
         }
       } else {
         print("Validation failed");

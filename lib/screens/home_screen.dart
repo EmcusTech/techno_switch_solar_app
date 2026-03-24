@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/screens/scanning_screen.dart';
 import 'package:techno_switch_solar_app/screens/site_screen.dart';
 import 'package:techno_switch_solar_app/services/app_services.dart';
@@ -327,10 +329,14 @@ class _HomeContentState extends State<_HomeContent> {
                 'Open Site',
                 isEnabled: false,
               ),
-              _buildQuickLinkItem(
-                'assets/svgs/maintenance_icon.svg',
-                'Live Events',
-                isEnabled: false,
+              GestureDetector(
+                onTap: () {
+                  Get.find<BleLogController>().startLiveEventSetup();
+                },
+                child: _buildQuickLinkItem(
+                  'assets/svgs/maintenance_icon.svg',
+                  'Live Events',
+                ),
               ),
               GestureDetector(
                 onTap: () {

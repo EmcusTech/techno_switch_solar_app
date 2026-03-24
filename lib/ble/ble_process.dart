@@ -67,6 +67,7 @@ class BleProcess {
   int checkForGeneralModuleSetupFetchRes = 0;
   int checkForGeneralModuleSetupApplyRes = 0;
   int generalModuleSetupApplyCommandStep = 0; // 1, 2, 3
+  int checkForLiveEventsRetrievalRes = 0;
   int validEventLogNum = 0;
   int read1000Logs = 0;
   bool logRetreivalEnded = false;
@@ -737,8 +738,24 @@ class BleProcess {
         checkForGeneralModuleSetupApplyRes = 1;
         break;
 
+      case OtaProcessState.sendLiveEventsRetrievalFetchCmdPkt:
+        print("Sending Live Events Retrieval Fetch Command");
+        checkForLiveEventsRetrievalRes = 1;
+        bleManager.otaProcessState = OtaProcessState.sendContinuousPollPacket;
+        break;
+
       case OtaProcessState.otaWaitRsp:
         break;
+    }
+
+    if (checkForLiveEventsRetrievalRes == 1) {
+      print("Checking Live Events Retrieval Fetch CMD RSP");
+      if (rx.payload[10] == 0x02 && rx.payload[12] == 0x02) {
+        print("We got live events retrieval fetch response");
+      }
+
+      startRxTimeout();
+      await bleManager.sendPollPacket();
     }
 
     // ----- ACCESS KEY RESPONSE -----
@@ -3418,6 +3435,8 @@ class BleProcess {
         case OtaProcessState.sendGeneralModuleSetupFetchCmdPkt:
           break;
         case OtaProcessState.sendGeneralModuleSetupApplyCmdPkt:
+          break;
+        case OtaProcessState.sendLiveEventsRetrievalFetchCmdPkt:
           break;
       }
       startRxTimeout();

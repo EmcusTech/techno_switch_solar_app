@@ -2985,6 +2985,13 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 },
               ),
               _peripheralTile(
+                peripheralName: 'Live Events',
+                iconPath: 'assets/svgs/panel_action_config_log_icon.svg',
+                onTap: () {
+                  Get.find<BleLogController>().startLiveEventSetup();
+                },
+              ),
+              _peripheralTile(
                 peripheralName: 'Config Log',
                 iconPath: 'assets/svgs/panel_action_config_log_icon.svg',
                 isDisabled: true,
