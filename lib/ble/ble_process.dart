@@ -757,7 +757,28 @@ class BleProcess {
     if (checkForLiveEventsRetrievalRes == 1) {
       print("Checking Live Events Retrieval Fetch CMD RSP");
       if (rx.payload[10] == 0x02 && rx.payload[12] == 0x02) {
-        print("We got live events retrieval fetch response");
+        int rxLastEvtLogNum =
+            rx.payload[19] |
+            (rx.payload[18] << 8) |
+            (rx.payload[17] << 16) |
+            (rx.payload[16] << 24);
+        try {
+          LogModel? parsedLog = _parseEventLogFromPayload(
+            rx.payload,
+            rxLastEvtLogNum,
+          );
+          if (parsedLog != null) {
+            print(
+              "Valid Log Packet ${rx.payload.map((b) => b.toRadixString(16).padLeft(2, '0')).join(" ")}",
+            );
+            isValidLogRecieved.value = true;
+            final currentLogs = List<LogModel>.from(validEventLogs.value);
+            currentLogs.add(parsedLog);
+            validEventLogs.value = currentLogs;
+          }
+        } catch (e) {
+          print("Error parsing event log: $e");
+        }
       }
 
       await Future.delayed(Duration(milliseconds: 300));

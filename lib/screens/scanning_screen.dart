@@ -1709,6 +1709,7 @@ class _ScanningScreenState extends State<ScanningScreen>
                             logDataList: [],
                             panelVersionNo: device.id,
                             panelName: device.name,
+                            isLiveEventLogs: widget.isLiveEventLogs,
                           ),
                     ),
                   );

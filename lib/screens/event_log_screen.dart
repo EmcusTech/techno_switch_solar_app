@@ -2,9 +2,11 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
+import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/models/log_model.dart';
 import 'package:techno_switch_solar_app/screens/home_screen.dart';
 import 'package:techno_switch_solar_app/services/navigation_service.dart';
@@ -60,6 +62,7 @@ class _EventLogScreenState extends State<EventLogScreen> {
         isHistoryView: widget.isHistoryView,
         connectedDevice: widget.connectedDevice,
         siteId: widget.siteId,
+        isLiveEventLogs: widget.isLiveEventLogs,
       ),
     );
   }
@@ -74,6 +77,7 @@ class _EventLogContent extends StatefulWidget {
   final bool isHistoryView;
   final DiscoveredDevice? connectedDevice;
   final int? siteId;
+  final bool? isLiveEventLogs;
   const _EventLogContent({
     required this.logDataList,
     required this.panelName,
@@ -83,6 +87,7 @@ class _EventLogContent extends StatefulWidget {
     this.isHistoryView = false,
     this.connectedDevice,
     this.siteId,
+    this.isLiveEventLogs = false,
   });
 
   @override
@@ -173,6 +178,9 @@ class _EventLogContentState extends State<_EventLogContent> {
   @override
   void initState() {
     super.initState();
+    if (widget.isLiveEventLogs == true) {
+      Get.find<BleLogController>().startLiveEventSetup();
+    }
     _useProvidedLogs = widget.logDataList.isNotEmpty;
     // Initialize filtered logs with whichever source we have on load
     final initialLogs =
@@ -245,6 +253,14 @@ class _EventLogContentState extends State<_EventLogContent> {
   // }
 
   Future<void> _handleBackNavigation() async {
+    if (widget.isLiveEventLogs == true) {
+      Get.find<BleLogController>().stopLiveEventSetup();
+      if (ble.isConnected) {
+        await ble.disconnectConnectedDevice();
+      }
+      await NavigationService.navigateBackToScanning(context);
+      return;
+    }
     if (_isHandlingBack) return;
     _isHandlingBack = true;
     try {

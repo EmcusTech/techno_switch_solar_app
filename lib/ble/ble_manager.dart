@@ -896,6 +896,14 @@ class BleManager {
     Get.find<BleLogController>().sendNetworkPacket();
   }
 
+  Future<void> stopLiveEventsRetrieval() async {
+    otaProcessState = OtaProcessState.notInUse;
+    bleProcess.cancelRxTimeout();
+    bleProcess.processDesc.value = "";
+    bleCurrentState = BleStates.IDLE;
+    bleStateMachineState = BleStates.IDLE;
+  }
+
   Future<void> startExtOutFetch() async {
     if (!isConnected) {
       throw Exception("Device not connected. Cannot start log retrieval.");
