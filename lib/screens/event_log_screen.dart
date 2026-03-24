@@ -2133,11 +2133,12 @@ class _LogTableViewState extends State<_LogTableView>
       controller: _scrollController,
       // thumbVisibility: true,
       trackVisibility: true,
+      interactive: true,
       thickness: 12,
       radius: const Radius.circular(10),
       child: ListView.separated(
         controller: _scrollController,
-        shrinkWrap: true,
+        // shrinkWrap: true,
         // physics: NeverScrollableScrollPhysics(),
         itemCount: widget.displayLogs.length,
         separatorBuilder: (context, index) => SizedBox(height: 10),

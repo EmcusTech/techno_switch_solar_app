@@ -564,6 +564,12 @@ class BleProcess {
       "Rx pkt count: $bleManager.u8RxPktCnt (STATE: ${bleManager.otaProcessState.name}",
     );
 
+    if (rx.payload[3] == 0x01) {
+      print(
+        "the received packet: ${rx.payload.map((e) => e.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+      );
+    }
+
     // ----- OTA STATE MACHINE -----
     switch (bleManager.otaProcessState) {
       case OtaProcessState.sendNetworkPacket:
@@ -753,6 +759,8 @@ class BleProcess {
       if (rx.payload[10] == 0x02 && rx.payload[12] == 0x02) {
         print("We got live events retrieval fetch response");
       }
+
+      await Future.delayed(Duration(seconds: 2));
 
       startRxTimeout();
       await bleManager.sendPollPacket();

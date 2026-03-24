@@ -892,8 +892,8 @@ class BleManager {
     bleCurrentState = BleStates.PROCESS_PANEL_LIVE_EVENTS_READ;
     bleStateMachineState = BleStates.PROCESS_PANEL_LIVE_EVENTS_READ;
     print("Current state: $bleStateMachineState");
-    bleProcess.startRxTimeout();
-    await sendPollPacket();
+    bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
+    Get.find<BleLogController>().sendNetworkPacket();
   }
 
   Future<void> startExtOutFetch() async {
@@ -2530,8 +2530,10 @@ class BleManager {
           bleCurrentState = BleStates.PROCESS_PANEL_LIVE_EVENTS_READ;
           bleStateMachineState = BleStates.PROCESS_PANEL_LIVE_EVENTS_READ;
           print("Current state: $bleStateMachineState (Live events retrieval)");
-          bleProcess.startRxTimeout();
-          await sendPollPacket();
+          bleProcess.startOtherPacketsRxTimeout(
+            timeout: const Duration(seconds: 5),
+          );
+          Get.find<BleLogController>().sendNetworkPacket();
         }
       } else {
         print("Validation failed");
