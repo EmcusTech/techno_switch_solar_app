@@ -331,7 +331,12 @@ class _HomeContentState extends State<_HomeContent> {
               ),
               GestureDetector(
                 onTap: () {
-                  Get.find<BleLogController>().startLiveEventSetup();
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder:
+                          (context) => ScanningScreen(isLiveEventLogs: true),
+                    ),
+                  );
                 },
                 child: _buildQuickLinkItem(
                   'assets/svgs/maintenance_icon.svg',

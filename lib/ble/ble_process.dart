@@ -760,7 +760,7 @@ class BleProcess {
         print("We got live events retrieval fetch response");
       }
 
-      await Future.delayed(Duration(seconds: 2));
+      await Future.delayed(Duration(milliseconds: 300));
 
       startRxTimeout();
       await bleManager.sendPollPacket();

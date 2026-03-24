@@ -28,6 +28,7 @@ class EventLogScreen extends StatefulWidget {
   final DiscoveredDevice?
   connectedDevice; // True when accessed from project dashboard
   final int? siteId;
+  final bool? isLiveEventLogs;
   const EventLogScreen({
     super.key,
     required this.logDataList,
@@ -38,6 +39,7 @@ class EventLogScreen extends StatefulWidget {
     this.isHistoryView = false,
     this.connectedDevice,
     this.siteId,
+    this.isLiveEventLogs = false,
   });
 
   @override
