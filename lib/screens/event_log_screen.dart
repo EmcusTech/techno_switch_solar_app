@@ -95,8 +95,8 @@ class _EventLogContent extends StatefulWidget {
 }
 
 class _EventLogContentState extends State<_EventLogContent> {
-  bool _isListSelected = false;
-  int _selectedViewIndex = 1;
+  bool _isListSelected = true;
+  int _selectedViewIndex = 0;
   bool _useProvidedLogs = false;
 
   // Filter state
@@ -115,6 +115,19 @@ class _EventLogContentState extends State<_EventLogContent> {
 
   final PanelService _panelService = PanelService();
   final SiteService _siteService = SiteService();
+
+  List<LogModel> _applyLiveSortingIfNeeded(List<LogModel> logs) {
+    if (widget.isLiveEventLogs == true) {
+      final sorted = List<LogModel>.from(logs);
+      sorted.sort((a, b) {
+        final aId = int.tryParse(a.eventId ?? '0') ?? 0;
+        final bId = int.tryParse(b.eventId ?? '0') ?? 0;
+        return bId.compareTo(aId); // DESC (latest first)
+      });
+      return sorted;
+    }
+    return logs;
+  }
 
   // Resolve panel name using the provided value to ensure consistency
   String _resolvedPanelName() {
@@ -1377,6 +1390,7 @@ class _EventLogContentState extends State<_EventLogContent> {
   }
 
   Widget _buildLogStatus(List<LogModel> logsToDisplay) {
+    final processedLogs = _applyLiveSortingIfNeeded(logsToDisplay);
     return Padding(
       padding: const EdgeInsets.only(left: 20, right: 20, top: 20),
       child: Column(
@@ -1602,8 +1616,8 @@ class _EventLogContentState extends State<_EventLogContent> {
             child: IndexedStack(
               index: _selectedViewIndex,
               children: [
-                _LogListView(displayLogs: logsToDisplay),
-                _LogTableView(displayLogs: logsToDisplay),
+                _LogListView(displayLogs: processedLogs),
+                _LogTableView(displayLogs: processedLogs),
               ],
             ),
           ),
