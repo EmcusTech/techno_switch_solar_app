@@ -22,6 +22,10 @@ class BleProcess {
   final BleManager bleManager;
   Timer? _rxTimeoutTimer;
   Timer? _otherPacketsRxTimeoutTimer;
+  Timer? _operationDeadlineTimer;
+
+  /// Wall-clock limit per setup step / phase (independent of short RX silence retries).
+  static const Duration bleOperationDeadlineDuration = Duration(seconds: 10);
 
   int checkForCtrlCmdRsp = 0;
   int checkForExtCmdFetchRes = 0;
@@ -600,10 +604,12 @@ class BleProcess {
 
       case OtaProcessState.sendControlCmdPacket:
         print("Control cmd received → Next continuous poll");
-        bleManager.otaProcessState =
-            logRetreivalEnded
-                ? OtaProcessState.notInUse
-                : OtaProcessState.sendContinuousPollPacket;
+        if (logRetreivalEnded) {
+          bleManager.otaProcessState = OtaProcessState.notInUse;
+          cancelOperationDeadline();
+        } else {
+          bleManager.otaProcessState = OtaProcessState.sendContinuousPollPacket;
+        }
         checkForCtrlCmdRsp = 1;
         //the poll for the control cmd will be send down in the if else condition's
         break;
@@ -987,7 +993,7 @@ class BleProcess {
         return;
       } else {
         print("ACCESS KEY not found, polling again");
-        startRxTimeout();
+        startRxTimeout(bumpOperationDeadline: false);
         await bleManager.sendPollPacket();
       }
     }
@@ -997,6 +1003,7 @@ class BleProcess {
       if (rx.payload[12] == 0x1C) {
         print("We got dip fetch response");
         bleManager.otaProcessState = OtaProcessState.notInUse;
+        cancelOperationDeadline();
         checkDipSetCmdRsp == 0;
         print(rx.payload[14]);
         if (rx.payload[14] == 0x00) {
@@ -1052,6 +1059,7 @@ class BleProcess {
           "General Module Fault Latching: ${generalModuleFaultLatching.value}",
         );
         bleManager.otaProcessState = OtaProcessState.notInUse;
+        cancelOperationDeadline();
         checkForGeneralModuleSetupFetchRes = 0;
         isGeneralModuleSetupFetchCommandActive.value = false;
         isAccessKeyValid.value = true;
@@ -1094,6 +1102,7 @@ class BleProcess {
           generalModuleSetupApplyCommandStep == 5) {
         print("We got general module setup apply response");
         bleManager.otaProcessState = OtaProcessState.notInUse;
+        cancelOperationDeadline();
         checkForGeneralModuleSetupApplyRes = 0;
         isGeneralModuleSetupApplyCommandActive.value = false;
         isGeneralModuleSetupApplyDone.value = true;
@@ -1133,6 +1142,7 @@ class BleProcess {
             (rx.payload[15] << 8) | rx.payload[16];
         print("We got the response for panel info event reminder delay fetch");
         bleManager.otaProcessState = OtaProcessState.notInUse;
+        cancelOperationDeadline();
         checkForPanelInfoSetupFetchRes = 0;
         isPanelInfoSetupFetchCommandActive.value = false;
         isAccessKeyValid.value = true;
@@ -1159,6 +1169,7 @@ class BleProcess {
           panelInfoSetupApplyCommandStep == 3) {
         print("We got panel info setup apply response");
         bleManager.otaProcessState = OtaProcessState.notInUse;
+        cancelOperationDeadline();
         checkForPanelInfoSetupApplyRes = 0;
         isPanelInfoSetupApplyCommandActive.value = false;
         isPanelInfoSetupApplyDone.value = true;
@@ -1198,6 +1209,7 @@ class BleProcess {
           );
         } else {
           bleManager.otaProcessState = OtaProcessState.notInUse;
+          cancelOperationDeadline();
           checkForAccessCodeSetupFetchRes = 0;
           isAccessCodeSetupFetchCommandActive.value = false;
           isAccessKeyValid.value = true;
@@ -1229,6 +1241,7 @@ class BleProcess {
           );
         } else {
           bleManager.otaProcessState = OtaProcessState.notInUse;
+          cancelOperationDeadline();
           checkForAccessCodeSetupApplyRes = 0;
           isAccessCodeSetupApplyCommandActive.value = false;
           isAccessCodeSetupApplyDone.value = true;
@@ -1262,6 +1275,7 @@ class BleProcess {
         );
         serviceDueReminder.value = rx.payload[19];
         bleManager.otaProcessState = OtaProcessState.notInUse;
+        cancelOperationDeadline();
         checkForServiceDueFetchRes = 0;
         isServiceDueFetchCommandActive.value = false;
         isAccessKeyValid.value = true;
@@ -1279,6 +1293,7 @@ class BleProcess {
       if (rx.payload[12] == 0x02 && rx.payload[10] == 0x83) {
         print("We got service due apply response");
         bleManager.otaProcessState = OtaProcessState.notInUse;
+        cancelOperationDeadline();
         checkForServiceDueApplyRes = 0;
         isServiceDueApplyCommandActive.value = false;
         isServiceDueApplyDone.value = true;
@@ -1526,6 +1541,7 @@ class BleProcess {
             );
           } else {
             bleManager.otaProcessState = OtaProcessState.notInUse;
+            cancelOperationDeadline();
             checkForSounderSetupFetchRes = 0;
             isSounderSetupFetchCommandActive.value = false;
             isAccessKeyValid.value = true;
@@ -1534,6 +1550,7 @@ class BleProcess {
           }
         } else {
           bleManager.otaProcessState = OtaProcessState.notInUse;
+          cancelOperationDeadline();
           checkForSounderSetupFetchRes = 0;
           isSounderSetupFetchCommandActive.value = false;
           isAccessKeyValid.value = true;
@@ -1625,6 +1642,7 @@ class BleProcess {
           } else {
             print("Ext Out apply phase complete");
             bleManager.otaProcessState = OtaProcessState.notInUse;
+            cancelOperationDeadline();
             checkForSounderSetupApplyRes = 0;
             isSounderSetupApplyCommandActive.value = false;
             isSounderSetupApplyDone.value = true;
@@ -1655,6 +1673,7 @@ class BleProcess {
           await bleManager.sendLBusSetupApplyCmdPkt(lBusNo: nextBusNo);
         } else {
           bleManager.otaProcessState = OtaProcessState.notInUse;
+          cancelOperationDeadline();
           checkForLBusSetupApplyRes = 0;
           isLBusSetupApplyCommandActive.value = false;
           isLBusSetupApplyDone.value = true;
@@ -1708,6 +1727,7 @@ class BleProcess {
             );
           } else {
             bleManager.otaProcessState = OtaProcessState.notInUse;
+            cancelOperationDeadline();
             checkForLBusSetupFetchRes = 0;
             isLBusSetupFetchCommandActive.value = false;
             isAccessKeyValid.value = true;
@@ -1751,6 +1771,7 @@ class BleProcess {
         } else {
           // All enabled bus data fetched – complete
           bleManager.otaProcessState = OtaProcessState.notInUse;
+          cancelOperationDeadline();
           checkForLBusSetupFetchRes = 0;
           isLBusSetupFetchCommandActive.value = false;
           isAccessKeyValid.value = true;
@@ -1771,6 +1792,7 @@ class BleProcess {
       );
       if (rx.payload[12] == 0x01) {
         bleManager.otaProcessState = OtaProcessState.notInUse;
+        cancelOperationDeadline();
         checkForModuleSetupFetchRes = 0;
         moduleNo.value = rx.payload[13];
         moduleEnabled.value = true;
@@ -1816,6 +1838,7 @@ class BleProcess {
       );
       if (rx.payload[12] == 0x1D) {
         bleManager.otaProcessState = OtaProcessState.notInUse;
+        cancelOperationDeadline();
         checkForRadioSetupFetchRes = 0;
         isRadioSetupEnabled.value = rx.payload[13] == 0x01;
         radioSetupModule.value = rx.payload[14];
@@ -1851,6 +1874,7 @@ class BleProcess {
       );
       if (rx.payload[10] == 0x83) {
         bleManager.otaProcessState = OtaProcessState.notInUse;
+        cancelOperationDeadline();
         checkForRadioSetupApplyRes = 0;
         // isRadioSetupApplyCommandActive.value = false;
         isAccessKeyValid.value = true;
@@ -1872,6 +1896,7 @@ class BleProcess {
       );
       if (rx.payload[10] == 0x83) {
         bleManager.otaProcessState = OtaProcessState.notInUse;
+        cancelOperationDeadline();
         print("Found a control message");
         isAccessKeyValid.value = true;
         checkForExtCmdApplyRes = 0;
@@ -1891,6 +1916,7 @@ class BleProcess {
       );
       if (rx.payload[12] == 0x06) {
         bleManager.otaProcessState = OtaProcessState.notInUse;
+        cancelOperationDeadline();
         checkForInputSetupFetchRes = 0;
         isInputSetupFetchCommandActive.value = false;
         isAccessKeyValid.value = true;
@@ -1920,6 +1946,7 @@ class BleProcess {
       if (rx.payload[10] == 0x83) {
         isAccessKeyValid.value = true;
         bleManager.otaProcessState = OtaProcessState.notInUse;
+        cancelOperationDeadline();
         print("Found a control message");
         checkForInputSetupApplyRes = 0;
         isInputSetupApplyActive.value = false;
@@ -1953,6 +1980,7 @@ class BleProcess {
           print("CMD3 Validated -> done");
           isAccessKeyValid.value = true;
           bleManager.otaProcessState = OtaProcessState.notInUse;
+          cancelOperationDeadline();
           checkForRelaySetupApplyRes = 0;
           isRelaySetupCommandApplyActive.value = false;
           isRelaySetupApplyDone.value = true;
@@ -2066,6 +2094,7 @@ class BleProcess {
           relayThreeSetupFunction.value = rx.payload[24];
 
           bleManager.otaProcessState = OtaProcessState.notInUse;
+          cancelOperationDeadline();
           checkForRelaySetupFetchRes = 0;
           isRelaySetupFetchCommandActive.value = false;
           isAccessKeyValid.value = true;
@@ -2096,6 +2125,7 @@ class BleProcess {
         } else if (zoneSetupApplyCommandStep == 3) {
           print("CMD3 Validated -> done");
           bleManager.otaProcessState = OtaProcessState.notInUse;
+          cancelOperationDeadline();
           checkForZoneSetupApplyRes = 0;
           isZoneSetupCommandApplyActive.value = false;
           isZoneSetupApplyDone.value = true;
@@ -2176,6 +2206,7 @@ class BleProcess {
           );
           zoneThreeSetupVerificationTime.value = rx.payload[16].toString();
           bleManager.otaProcessState = OtaProcessState.notInUse;
+          cancelOperationDeadline();
           checkForZoneSetupFetchRes = 0;
           isZoneSetupFetchCommandActive.value = false;
           isAccessKeyValid.value = true;
@@ -2209,6 +2240,7 @@ class BleProcess {
         processNextOtaFrame = false;
 
         bleManager.otaProcessState = OtaProcessState.notInUse;
+        cancelOperationDeadline();
         cancelRxTimeout();
       } else {
         // nackRetryCount = 0;
@@ -2283,6 +2315,7 @@ class BleProcess {
       processNextOtaFrame = false;
 
       bleManager.otaProcessState = OtaProcessState.notInUse;
+      cancelOperationDeadline();
       cancelRxTimeout();
 
       processDesc.value = "";
@@ -2370,6 +2403,8 @@ class BleProcess {
     _otherPacketsRxTimeoutTimer?.cancel();
     _otherPacketsRxTimeoutTimer = null;
 
+    cancelOperationDeadline();
+
     // UI notifiers
     validEventLogCount.value = 0;
     read1000LogsCount.value = 0;
@@ -2432,6 +2467,8 @@ class BleProcess {
     _otherPacketsRxTimeoutTimer?.cancel();
     _otherPacketsRxTimeoutTimer = null;
 
+    cancelOperationDeadline();
+
     // UI notifiers
     // validEventLogCount.value = 0;
     // read1000LogsCount.value = 0;
@@ -2493,6 +2530,8 @@ class BleProcess {
     _otherPacketsRxTimeoutTimer?.cancel();
     _otherPacketsRxTimeoutTimer = null;
 
+    cancelOperationDeadline();
+
     // UI notifiers
     // validEventLogCount.value = 0;
     // read1000LogsCount.value = 0;
@@ -2551,6 +2590,8 @@ class BleProcess {
 
     _otherPacketsRxTimeoutTimer?.cancel();
     _otherPacketsRxTimeoutTimer = null;
+
+    cancelOperationDeadline();
 
     // UI notifiers
     // validEventLogCount.value = 0;
@@ -2611,6 +2652,8 @@ class BleProcess {
     _otherPacketsRxTimeoutTimer?.cancel();
     _otherPacketsRxTimeoutTimer = null;
 
+    cancelOperationDeadline();
+
     // UI notifiers
     // validEventLogCount.value = 0;
     // read1000LogsCount.value = 0;
@@ -2670,6 +2713,8 @@ class BleProcess {
     _otherPacketsRxTimeoutTimer?.cancel();
     _otherPacketsRxTimeoutTimer = null;
 
+    cancelOperationDeadline();
+
     // UI notifiers
     // validEventLogCount.value = 0;
     // read1000LogsCount.value = 0;
@@ -2727,6 +2772,8 @@ class BleProcess {
 
     _otherPacketsRxTimeoutTimer?.cancel();
     _otherPacketsRxTimeoutTimer = null;
+
+    cancelOperationDeadline();
 
     // UI notifiers
     // validEventLogCount.value = 0;
@@ -2787,6 +2834,8 @@ class BleProcess {
     _otherPacketsRxTimeoutTimer?.cancel();
     _otherPacketsRxTimeoutTimer = null;
 
+    cancelOperationDeadline();
+
     // UI notifiers
     // validEventLogCount.value = 0;
     // read1000LogsCount.value = 0;
@@ -2845,6 +2894,8 @@ class BleProcess {
 
     _otherPacketsRxTimeoutTimer?.cancel();
     _otherPacketsRxTimeoutTimer = null;
+
+    cancelOperationDeadline();
 
     // UI notifiers
     // validEventLogCount.value = 0;
@@ -2905,6 +2956,8 @@ class BleProcess {
     _otherPacketsRxTimeoutTimer?.cancel();
     _otherPacketsRxTimeoutTimer = null;
 
+    cancelOperationDeadline();
+
     // UI notifiers
     // validEventLogCount.value = 0;
     // read1000LogsCount.value = 0;
@@ -2963,6 +3016,8 @@ class BleProcess {
 
     _otherPacketsRxTimeoutTimer?.cancel();
     _otherPacketsRxTimeoutTimer = null;
+
+    cancelOperationDeadline();
 
     // UI notifiers
     // validEventLogCount.value = 0;
@@ -3023,6 +3078,8 @@ class BleProcess {
     _otherPacketsRxTimeoutTimer?.cancel();
     _otherPacketsRxTimeoutTimer = null;
 
+    cancelOperationDeadline();
+
     // UI notifiers
     // validEventLogCount.value = 0;
     // read1000LogsCount.value = 0;
@@ -3081,6 +3138,8 @@ class BleProcess {
 
     _otherPacketsRxTimeoutTimer?.cancel();
     _otherPacketsRxTimeoutTimer = null;
+
+    cancelOperationDeadline();
 
     // UI notifiers
     // validEventLogCount.value = 0;
@@ -3146,11 +3205,52 @@ class BleProcess {
     bleCurrentState = BleStates.SEND_EXT_OUT_SETUP_CMD_FETCH_PACKET;
   }
 
+  /// Setup / handshake phases only — not while streaming event logs (ctrl rsp phase 2).
+  bool _shouldBumpOperationDeadline() {
+    if (isOtaCompleted) return false;
+    if (checkForCtrlCmdRsp == 2) return false;
+    return true;
+  }
+
+  void cancelOperationDeadline() {
+    _operationDeadlineTimer?.cancel();
+    _operationDeadlineTimer = null;
+    print("Operation deadline timer cancelled");
+  }
+
+  void _restartOperationDeadlineTimer() {
+    if (isOtaCompleted) return;
+    _operationDeadlineTimer?.cancel();
+    _operationDeadlineTimer = Timer(
+      bleOperationDeadlineDuration,
+      _onOperationDeadlineExceeded,
+    );
+    print("Operation deadline timer started");
+  }
+
+  void _onOperationDeadlineExceeded() {
+    _operationDeadlineTimer = null;
+    if (isOtaCompleted) return;
+    if (checkForCtrlCmdRsp == 2) return;
+
+    print(
+      'BLE operation deadline exceeded (${bleOperationDeadlineDuration.inSeconds}s)',
+    );
+    processDesc.value = 'Operation timed out. Restarting network flow.';
+    resetProcessState();
+    bleCurrentState = BleStates.PROCESS_PANEL_EVT_LOG_READ;
+    bleManager.bleCurrentState = BleStates.PROCESS_PANEL_EVT_LOG_READ;
+    bleManager.bleStateMachineState = BleStates.PROCESS_PANEL_EVT_LOG_READ;
+    restartInitialNetworkFlow();
+  }
+
   // Public method to cancel timer
   void cancelRxTimeout() {
     _rxTimeoutTimer?.cancel();
     _otherPacketsRxTimeoutTimer?.cancel();
+    cancelOperationDeadline();
     print("RX timeout cancelled from BleManager");
+    print("Operation deadline timer cancelled");
   }
 
   /// Parse event log data from payload
@@ -3297,6 +3397,7 @@ class BleProcess {
   // Dispose method to clean up resources
   void dispose() {
     _rxTimeoutTimer?.cancel();
+    cancelOperationDeadline();
     validEventLogCount.dispose();
     validEventLogs.dispose();
     read1000LogsCount.dispose();
@@ -3304,9 +3405,17 @@ class BleProcess {
   }
 
   // Call this after every TX
-  void startRxTimeout() {
+  void startRxTimeout({bool bumpOperationDeadline = true}) {
     maxOtherPacketsRetriesReached.value = false;
     if (isOtaCompleted) return;
+
+    if (_shouldBumpOperationDeadline()) {
+      if (bumpOperationDeadline) {
+        _restartOperationDeadlineTimer();
+      }
+    } else {
+      cancelOperationDeadline();
+    }
 
     _rxTimeoutTimer?.cancel();
 

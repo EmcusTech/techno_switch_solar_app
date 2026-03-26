@@ -1243,7 +1243,9 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
       accessKeyValidationTimer = null;
     }
 
-    final TextEditingController _controller = TextEditingController();
+    final TextEditingController _controller = TextEditingController(
+      text: "1974",
+    );
     final FocusNode _focusNode = FocusNode();
     final ValueNotifier<String?> errorText = ValueNotifier(null);
     final accessKey = bleProcess.accessKey;

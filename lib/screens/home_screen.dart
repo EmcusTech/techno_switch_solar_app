@@ -330,13 +330,17 @@ class _HomeContentState extends State<_HomeContent> {
                 isEnabled: false,
               ),
               GestureDetector(
-                onTap: () {
+                onTap: () async {
                   Navigator.of(context).push(
                     MaterialPageRoute(
                       builder:
                           (context) => ScanningScreen(isLiveEventLogs: true),
                     ),
                   );
+
+                  if (mounted) {
+                    await _refreshSites();
+                  }
                 },
                 child: _buildQuickLinkItem(
                   'assets/svgs/maintenance_icon.svg',

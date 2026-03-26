@@ -8,6 +8,7 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
+import 'package:techno_switch_solar_app/screens/event_log_screen.dart';
 import 'package:techno_switch_solar_app/screens/log_retrieval_loading_screen.dart';
 import 'package:techno_switch_solar_app/screens/project_dashboard.dart';
 import 'package:techno_switch_solar_app/screens/scanning_screen.dart';
@@ -25,12 +26,14 @@ class ScannedScreen extends StatefulWidget {
   discoveredDevices; // Can hold both UsbDevice and ScanResult
   final ScanType scanType;
   final bool? isLiveEvent;
+  final bool? isLiveEventLogs;
 
   const ScannedScreen({
     super.key,
     this.discoveredDevices = const [],
     required this.scanType,
     this.isLiveEvent = false,
+    this.isLiveEventLogs = false,
   });
 
   @override
@@ -772,20 +775,35 @@ class _ScannedScreenState extends State<ScannedScreen> {
 
                   if (!screenContext.mounted) return;
 
-                  Navigator.of(
-                    screenContext,
-                    rootNavigator: true,
-                  ).pushReplacement(
-                    MaterialPageRoute(
-                      builder:
-                          (_) => ProjectDashboardScreen(
-                            selectedDevice: device,
-                            panelVersionNo: device.id,
-                            panelName: device.name,
-                            siteId: siteId,
-                          ),
-                    ),
-                  );
+                  if (widget.isLiveEventLogs == true) {
+                    Navigator.of(context, rootNavigator: true).pushReplacement(
+                      MaterialPageRoute(
+                        builder:
+                            (_) => EventLogScreen(
+                              connectedDevice: device,
+                              logDataList: [],
+                              panelVersionNo: device.id,
+                              panelName: device.name,
+                              isLiveEventLogs: widget.isLiveEventLogs,
+                            ),
+                      ),
+                    );
+                  } else {
+                    Navigator.of(
+                      screenContext,
+                      rootNavigator: true,
+                    ).pushReplacement(
+                      MaterialPageRoute(
+                        builder:
+                            (_) => ProjectDashboardScreen(
+                              selectedDevice: device,
+                              panelVersionNo: device.id,
+                              panelName: device.name,
+                              siteId: siteId,
+                            ),
+                      ),
+                    );
+                  }
                 }
               });
             }

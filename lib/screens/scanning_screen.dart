@@ -1000,6 +1000,7 @@ class _ScanningScreenState extends State<ScanningScreen>
                 discoveredDevices: _discoveredDevices,
                 scanType: _selectedScanType!,
                 isLiveEvent: widget.isLiveEvent,
+                isLiveEventLogs: widget.isLiveEventLogs,
               ),
         ),
       );
