@@ -897,11 +897,7 @@ class BleManager {
   }
 
   Future<void> stopLiveEventsRetrieval() async {
-    otaProcessState = OtaProcessState.notInUse;
-    bleProcess.cancelRxTimeout();
-    bleProcess.processDesc.value = "";
-    bleCurrentState = BleStates.IDLE;
-    bleStateMachineState = BleStates.IDLE;
+    bleProcess.stopLiveEventSetup();
   }
 
   Future<void> startExtOutFetch() async {

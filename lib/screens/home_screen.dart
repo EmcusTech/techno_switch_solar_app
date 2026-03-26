@@ -331,7 +331,7 @@ class _HomeContentState extends State<_HomeContent> {
               ),
               GestureDetector(
                 onTap: () async {
-                  Navigator.of(context).push(
+                  await Navigator.of(context).push(
                     MaterialPageRoute(
                       builder:
                           (context) => ScanningScreen(isLiveEventLogs: true),

@@ -2334,6 +2334,15 @@ class BleProcess {
     );
   }
 
+  void stopLiveEventSetup() {
+    isOtaCompleted = true;
+    processNextOtaFrame = false;
+    bleManager.otaProcessState = OtaProcessState.notInUse;
+    cancelOperationDeadline();
+    cancelRxTimeout();
+    processDesc.value = "";
+  }
+
   String extractStringFromPayload(List<int> payload, {int startIndex = 25}) {
     // Length is at index startIndex
     final int length = payload[startIndex];
