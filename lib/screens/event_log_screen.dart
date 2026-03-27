@@ -30,6 +30,7 @@ class EventLogScreen extends StatefulWidget {
   final DiscoveredDevice?
   connectedDevice; // True when accessed from project dashboard
   final int? siteId;
+  final bool? isDirectLogRet;
   final bool? isLiveEventLogs;
   const EventLogScreen({
     super.key,
@@ -42,6 +43,7 @@ class EventLogScreen extends StatefulWidget {
     this.connectedDevice,
     this.siteId,
     this.isLiveEventLogs = false,
+    this.isDirectLogRet = false,
   });
 
   @override
@@ -63,6 +65,7 @@ class _EventLogScreenState extends State<EventLogScreen> {
         connectedDevice: widget.connectedDevice,
         siteId: widget.siteId,
         isLiveEventLogs: widget.isLiveEventLogs,
+        isDirectLogRet: widget.isDirectLogRet,
       ),
     );
   }
@@ -78,6 +81,7 @@ class _EventLogContent extends StatefulWidget {
   final DiscoveredDevice? connectedDevice;
   final int? siteId;
   final bool? isLiveEventLogs;
+  final bool? isDirectLogRet;
   const _EventLogContent({
     required this.logDataList,
     required this.panelName,
@@ -88,6 +92,7 @@ class _EventLogContent extends StatefulWidget {
     this.connectedDevice,
     this.siteId,
     this.isLiveEventLogs = false,
+    this.isDirectLogRet = false,
   });
 
   @override
@@ -434,6 +439,9 @@ class _EventLogContentState extends State<_EventLogContent> {
 
             if (mounted) {
               await NavigationService.navigateBackToScanning(context);
+              if (widget.isDirectLogRet == true && mounted) {
+                Navigator.of(context).pop(true);
+              }
             }
 
             return;

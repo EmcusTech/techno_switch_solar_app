@@ -459,6 +459,7 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
               panelId: _capturedPanelId ?? '',
               panelName: _getDeviceName(),
               connectedDevice: widget.connectedDevice,
+              isDirectLogRet: widget.isLiveEvent,
             ),
       ),
     );

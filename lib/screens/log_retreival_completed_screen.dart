@@ -19,12 +19,14 @@ class LogRetrievalCompletedScreen extends StatefulWidget {
   final String panelId;
   final String panelName;
   final DiscoveredDevice? connectedDevice;
+  final bool? isDirectLogRet;
   const LogRetrievalCompletedScreen({
     super.key,
     required this.logs,
     required this.panelId,
     required this.panelName,
     this.connectedDevice,
+    this.isDirectLogRet = false,
   });
 
   @override
@@ -299,6 +301,7 @@ class _LogRetrievalCompletedScreenState
                                   isStandalone: true,
                                   panelId: widget.panelId,
                                   connectedDevice: widget.connectedDevice,
+                                  isDirectLogRet: widget.isDirectLogRet,
                                 ),
                           ),
                         );

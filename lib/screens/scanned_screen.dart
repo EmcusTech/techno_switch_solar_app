@@ -981,7 +981,7 @@ class _ScannedScreenState extends State<ScannedScreen> {
 
                 // Title
                 Text(
-                  'Enter 4-Digit Password',
+                  'Enter Access Code',
                   style: GoogleFonts.inter(
                     fontSize: 20,
                     fontWeight: FontWeight.w700,
@@ -990,19 +990,18 @@ class _ScannedScreenState extends State<ScannedScreen> {
                   textAlign: TextAlign.center,
                 ),
 
-                SizedBox(height: 8),
+                // SizedBox(height: 8),
 
-                // Subtitle
-                Text(
-                  'Please enter the password to continue',
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w400,
-                    color: Color(0xFF918F8F),
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-
+                // // Subtitle
+                // Text(
+                //   'Please enter the password to continue',
+                //   style: GoogleFonts.inter(
+                //     fontSize: 14,
+                //     fontWeight: FontWeight.w400,
+                //     color: Color(0xFF918F8F),
+                //   ),
+                //   textAlign: TextAlign.center,
+                // ),
                 SizedBox(height: 24),
 
                 // Password Input Field + CTA
@@ -1043,7 +1042,7 @@ class _ScannedScreenState extends State<ScannedScreen> {
                           focusNode: _focusNode,
                           keyboardType: TextInputType.number,
                           obscureText: true,
-                          maxLength: 4,
+                          maxLength: 8,
                           textAlign: TextAlign.center,
                           style: GoogleFonts.inter(
                             fontSize: 24,
@@ -1053,51 +1052,54 @@ class _ScannedScreenState extends State<ScannedScreen> {
                           ),
                           inputFormatters: [
                             FilteringTextInputFormatter.digitsOnly,
-                            LengthLimitingTextInputFormatter(4),
                           ],
                           onChanged: (val) {
                             accessKey.value = val;
-                            if (val.length == 4) {
-                              errorText.value = null;
-                              // // reset validation state for new attempt
-                              // cancelAccessKeyTimer();
-                              // accessKeyValidationTimer = Timer(
-                              //   const Duration(seconds: 10),
-                              //   () {
-                              //     if (!mounted) return;
-                              //     if (isAccessKeyValid.value == null) {
-                              //       final navigator = Navigator.maybeOf(
-                              //         dialogContext,
-                              //         rootNavigator: true,
-                              //       );
-                              //       navigator?.maybePop();
 
-                              //       WidgetsBinding.instance.addPostFrameCallback((
-                              //         _,
-                              //       ) {
-                              //         if (!mounted) return;
-                              //         Navigator.of(dialogContext).push(
-                              //           MaterialPageRoute(
-                              //             builder:
-                              //                 (_) =>
-                              //                     const LogRetrievalFailedScreen(),
-                              //           ),
-                              //         );
-                              //       });
-                              //     }
-                              //   },
-                              // );
-                              bleProcess.isAccessKeyValid.value = null;
-                              // Dismiss keyboard and start validation
-                              FocusScope.of(dialogContext).unfocus();
-                              // Provide immediate feedback while validating
-                              bleProcess.processDesc.value =
-                                  "Validating access key...3";
-                              onCall();
-                            }
+                            //reset state
+                            errorText.value = null;
+                            bleProcess.isAccessKeyValid.value = null;
+                            // if (val.length == 4) {
+                            //   errorText.value = null;
+                            //   // // reset validation state for new attempt
+                            //   // cancelAccessKeyTimer();
+                            //   // accessKeyValidationTimer = Timer(
+                            //   //   const Duration(seconds: 10),
+                            //   //   () {
+                            //   //     if (!mounted) return;
+                            //   //     if (isAccessKeyValid.value == null) {
+                            //   //       final navigator = Navigator.maybeOf(
+                            //   //         dialogContext,
+                            //   //         rootNavigator: true,
+                            //   //       );
+                            //   //       navigator?.maybePop();
+
+                            //   //       WidgetsBinding.instance.addPostFrameCallback((
+                            //   //         _,
+                            //   //       ) {
+                            //   //         if (!mounted) return;
+                            //   //         Navigator.of(dialogContext).push(
+                            //   //           MaterialPageRoute(
+                            //   //             builder:
+                            //   //                 (_) =>
+                            //   //                     const LogRetrievalFailedScreen(),
+                            //   //           ),
+                            //   //         );
+                            //   //       });
+                            //   //     }
+                            //   //   },
+                            //   // );
+                            //   bleProcess.isAccessKeyValid.value = null;
+                            //   // Dismiss keyboard and start validation
+                            //   FocusScope.of(dialogContext).unfocus();
+                            //   // Provide immediate feedback while validating
+                            //   bleProcess.processDesc.value =
+                            //       "Validating access key...3";
+                            //   onCall();
+                            // }
                           },
                           decoration: InputDecoration(
-                            hintText: '••••',
+                            hintText: '••••••••',
                             hintStyle: GoogleFonts.inter(
                               fontSize: 24,
                               fontWeight: FontWeight.w600,
@@ -1169,9 +1171,9 @@ class _ScannedScreenState extends State<ScannedScreen> {
                         Builder(
                           builder: (_) {
                             String? status;
-                            if (_controller.text.length == 4 &&
+                            if (_controller.text.isNotEmpty &&
                                 isAccessKeyValidValue == null) {
-                              status = "Validating access key...4";
+                              status = "Validating access key...";
                             } else if (isAccessKeyValidValue == true) {
                               status = "Success";
                             }
@@ -1202,39 +1204,139 @@ class _ScannedScreenState extends State<ScannedScreen> {
 
                         SizedBox(height: 16),
 
-                        // Cancel Button only when not validating or already successful
-                        if (!(_controller.text.length == 4 &&
-                                isAccessKeyValidValue == null) &&
-                            isAccessKeyValidValue != true)
-                          SizedBox(
-                            width: double.infinity,
-                            child: GestureDetector(
-                              onTap: () async {
-                                cancelAccessKeyTimer();
-                                if (widget.isLiveEvent == true) {
-                                  await _bleManager.disconnectConnectedDevice();
-                                }
-                                Navigator.of(dialogContext).pop();
-                              },
-                              child: Container(
-                                height: 48,
-                                decoration: BoxDecoration(
-                                  color: Color(0xFFEC1D24),
-                                  borderRadius: BorderRadius.circular(24),
-                                ),
-                                child: Center(
-                                  child: Text(
-                                    'Cancel',
-                                    style: GoogleFonts.inter(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.white,
+                        ValueListenableBuilder<String>(
+                          valueListenable: bleProcess.processDesc,
+                          builder: (_, processDescValue, __) {
+                            return processDescValue.isEmpty
+                                ? Row(
+                                  children: [
+                                    // if (!(_controller.text.length == 4 &&
+                                    //         isAccessKeyValidValue == null) &&
+                                    //     isAccessKeyValidValue != true)
+                                    Expanded(
+                                      child: SizedBox(
+                                        height: 48,
+                                        child: OutlinedButton(
+                                          style: OutlinedButton.styleFrom(
+                                            foregroundColor: const Color(
+                                              0xFFEC1D24,
+                                            ),
+                                            side: const BorderSide(
+                                              color: Color(0xFFEC1D24),
+                                            ),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(24),
+                                            ),
+                                          ),
+                                          onPressed: () {
+                                            cancelAccessKeyTimer();
+                                            Navigator.of(dialogContext).pop();
+                                          },
+                                          child: Text(
+                                            'Cancel',
+                                            style: GoogleFonts.inter(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
                                     ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
+                                    SizedBox(width: 12),
+                                    Expanded(
+                                      child: SizedBox(
+                                        height: 48,
+                                        child: ListenableBuilder(
+                                          listenable: _controller,
+                                          builder: (context, _) {
+                                            final canVerify =
+                                                _controller.text
+                                                    .trim()
+                                                    .isNotEmpty;
+                                            return ElevatedButton(
+                                              style: ElevatedButton.styleFrom(
+                                                backgroundColor: const Color(
+                                                  0xFFEC1D24,
+                                                ),
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(24),
+                                                ),
+                                              ),
+                                              onPressed:
+                                                  canVerify
+                                                      ? () {
+                                                        FocusScope.of(
+                                                          dialogContext,
+                                                        ).unfocus();
+
+                                                        bleProcess
+                                                            .isAccessKeyValid
+                                                            .value = null;
+                                                        bleProcess
+                                                                .processDesc
+                                                                .value =
+                                                            "Validating";
+
+                                                        accessKey.value =
+                                                            _controller.text;
+
+                                                        onCall(); // 🔥 only trigger here
+                                                      }
+                                                      : null,
+                                              child: Text(
+                                                'Verify',
+                                                style: GoogleFonts.inter(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: Colors.white,
+                                                ),
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                )
+                                : const SizedBox.shrink();
+                          },
+                        ),
+
+                        // // Cancel Button only when not validating or already successful
+                        // if (!(_controller.text.length == 4 &&
+                        //         isAccessKeyValidValue == null) &&
+                        //     isAccessKeyValidValue != true)
+                        //   SizedBox(
+                        //     width: double.infinity,
+                        //     child: GestureDetector(
+                        //       onTap: () async {
+                        //         cancelAccessKeyTimer();
+                        //         if (widget.isLiveEvent == true) {
+                        //           await _bleManager.disconnectConnectedDevice();
+                        //         }
+                        //         Navigator.of(dialogContext).pop();
+                        //       },
+                        //       child: Container(
+                        //         height: 48,
+                        //         decoration: BoxDecoration(
+                        //           color: Color(0xFFEC1D24),
+                        //           borderRadius: BorderRadius.circular(24),
+                        //         ),
+                        //         child: Center(
+                        //           child: Text(
+                        //             'Cancel',
+                        //             style: GoogleFonts.inter(
+                        //               fontSize: 16,
+                        //               fontWeight: FontWeight.w600,
+                        //               color: Colors.white,
+                        //             ),
+                        //           ),
+                        //         ),
+                        //       ),
+                        //     ),
+                        //   ),
                       ],
                     );
                   },

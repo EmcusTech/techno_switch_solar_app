@@ -154,6 +154,7 @@ class _HomeContentState extends State<_HomeContent> {
   bool _isLoading = true;
   Map<int, int> _lastRetrievalCounts = {};
   Map<int, DateTime?> _lastRetrievalDates = {};
+  final ble = Get.find<BleLogController>().bleManager;
 
   @override
   void initState() {
@@ -242,7 +243,12 @@ class _HomeContentState extends State<_HomeContent> {
                   child: InkWell(
                     onTap: () async {
                       // await testPasskeyFrameGeneration('1974');
-                      await Navigator.of(context).push(
+
+                      if (ble.isConnected) {
+                        print("Disconnecting device...");
+                        await ble.disconnectConnectedDevice();
+                      }
+                      await await Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (context) => ScanningScreen(),
                         ),

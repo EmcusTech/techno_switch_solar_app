@@ -1854,6 +1854,7 @@ class _ScanningScreenState extends State<ScanningScreen>
 
     final TextEditingController _controller = TextEditingController();
     final FocusNode _focusNode = FocusNode();
+    final ValueNotifier<String?> errorText = ValueNotifier(null);
     final accessKey = bleProcess.accessKey;
     final ValueNotifier<bool?> isAccessKeyValid = bleProcess.isAccessKeyValid;
 
@@ -1895,7 +1896,7 @@ class _ScanningScreenState extends State<ScanningScreen>
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Enter 4-Digit Password',
+                  'Enter Access Code',
                   style: GoogleFonts.inter(
                     fontSize: 20,
                     fontWeight: FontWeight.w700,
@@ -1903,16 +1904,16 @@ class _ScanningScreenState extends State<ScanningScreen>
                   ),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  'Please enter the password to continue',
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w400,
-                    color: const Color(0xFF918F8F),
-                  ),
-                  textAlign: TextAlign.center,
-                ),
+                // const SizedBox(height: 8),
+                // Text(
+                //   'Please enter the password to continue',
+                //   style: GoogleFonts.inter(
+                //     fontSize: 14,
+                //     fontWeight: FontWeight.w400,
+                //     color: const Color(0xFF918F8F),
+                //   ),
+                //   textAlign: TextAlign.center,
+                // ),
                 const SizedBox(height: 24),
                 ValueListenableBuilder<bool?>(
                   valueListenable: isAccessKeyValid,
@@ -1948,7 +1949,7 @@ class _ScanningScreenState extends State<ScanningScreen>
                           focusNode: _focusNode,
                           keyboardType: TextInputType.number,
                           obscureText: true,
-                          maxLength: 4,
+                          maxLength: 8,
                           textAlign: TextAlign.center,
                           style: GoogleFonts.inter(
                             fontSize: 24,
@@ -1958,51 +1959,54 @@ class _ScanningScreenState extends State<ScanningScreen>
                           ),
                           inputFormatters: [
                             FilteringTextInputFormatter.digitsOnly,
-                            LengthLimitingTextInputFormatter(4),
                           ],
                           onChanged: (val) {
                             accessKey.value = val;
-                            if (val.length == 4) {
-                              bleProcess.isAccessKeyValid.value = null;
-                              // cancelAccessKeyTimer();
-                              // accessKeyValidationTimer = Timer(
-                              //   const Duration(seconds: 10),
-                              //   () {
-                              //     if (!mounted) return;
-                              //     if (isAccessKeyValid.value == null) {
-                              //       final navigator = Navigator.maybeOf(
-                              //         dialogContext,
-                              //         rootNavigator: true,
-                              //       );
-                              //       navigator?.maybePop();
-                              //       WidgetsBinding.instance.addPostFrameCallback((
-                              //         _,
-                              //       ) {
-                              //         if (!mounted) return;
-                              //         Navigator.of(dialogContext).push(
-                              //           MaterialPageRoute(
-                              //             builder:
-                              //                 (_) =>
-                              //                     const LogRetrievalFailedScreen(),
-                              //           ),
-                              //         );
-                              //       });
-                              //     }
-                              //   },
-                              // );
-                              FocusScope.of(dialogContext).unfocus();
-                              bleProcess.processDesc.value =
-                                  "Validating access key...5";
-                              onCall();
-                            }
+
+                            //reset state
+                            errorText.value = null;
+                            bleProcess.isAccessKeyValid.value = null;
+                            // if (val.length == 4) {
+                            //   bleProcess.isAccessKeyValid.value = null;
+                            //   // cancelAccessKeyTimer();
+                            //   // accessKeyValidationTimer = Timer(
+                            //   //   const Duration(seconds: 10),
+                            //   //   () {
+                            //   //     if (!mounted) return;
+                            //   //     if (isAccessKeyValid.value == null) {
+                            //   //       final navigator = Navigator.maybeOf(
+                            //   //         dialogContext,
+                            //   //         rootNavigator: true,
+                            //   //       );
+                            //   //       navigator?.maybePop();
+                            //   //       WidgetsBinding.instance.addPostFrameCallback((
+                            //   //         _,
+                            //   //       ) {
+                            //   //         if (!mounted) return;
+                            //   //         Navigator.of(dialogContext).push(
+                            //   //           MaterialPageRoute(
+                            //   //             builder:
+                            //   //                 (_) =>
+                            //   //                     const LogRetrievalFailedScreen(),
+                            //   //           ),
+                            //   //         );
+                            //   //       });
+                            //   //     }
+                            //   //   },
+                            //   // );
+                            //   FocusScope.of(dialogContext).unfocus();
+                            //   bleProcess.processDesc.value =
+                            //       "Validating access key...5";
+                            //   onCall();
+                            // }
                           },
                           decoration: InputDecoration(
-                            hintText: '••••',
+                            hintText: '••••••••',
                             hintStyle: GoogleFonts.inter(
                               fontSize: 24,
                               fontWeight: FontWeight.w600,
                               letterSpacing: 8,
-                              color: const Color(0xFFD0D0D0),
+                              color: Color(0xFFD0D0D0),
                             ),
                             errorText:
                                 isAccessKeyValidValue == false
@@ -2011,18 +2015,18 @@ class _ScanningScreenState extends State<ScanningScreen>
                             errorStyle: GoogleFonts.inter(
                               fontSize: 12,
                               fontWeight: FontWeight.w400,
-                              color: const Color(0xFFEC1D24),
+                              color: Color(0xFFEC1D24),
                             ),
                             counterText: '',
                             filled: true,
-                            fillColor: const Color(0xFFF8F8F8),
+                            fillColor: Color(0xFFF8F8F8),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                               borderSide: BorderSide(
                                 color:
                                     isAccessKeyValidValue == false
-                                        ? const Color(0xFFEC1D24)
-                                        : const Color(0xFFD0D0D0),
+                                        ? Color(0xFFEC1D24)
+                                        : Color(0xFFD0D0D0),
                                 width: 1,
                               ),
                             ),
@@ -2031,33 +2035,33 @@ class _ScanningScreenState extends State<ScanningScreen>
                               borderSide: BorderSide(
                                 color:
                                     isAccessKeyValidValue == false
-                                        ? const Color(0xFFEC1D24)
-                                        : const Color(0xFFD0D0D0),
+                                        ? Color(0xFFEC1D24)
+                                        : Color(0xFFD0D0D0),
                                 width: 1,
                               ),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(
+                              borderSide: BorderSide(
                                 color: Color(0xFFEC1D24),
                                 width: 2,
                               ),
                             ),
                             errorBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(
+                              borderSide: BorderSide(
                                 color: Color(0xFFEC1D24),
                                 width: 1,
                               ),
                             ),
                             focusedErrorBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(
+                              borderSide: BorderSide(
                                 color: Color(0xFFEC1D24),
                                 width: 2,
                               ),
                             ),
-                            contentPadding: const EdgeInsets.symmetric(
+                            contentPadding: EdgeInsets.symmetric(
                               horizontal: 16,
                               vertical: 16,
                             ),
@@ -2067,9 +2071,9 @@ class _ScanningScreenState extends State<ScanningScreen>
                         Builder(
                           builder: (_) {
                             String? status;
-                            if (_controller.text.length == 4 &&
+                            if (_controller.text.isNotEmpty &&
                                 isAccessKeyValidValue == null) {
-                              status = "Validating access key...6";
+                              status = "Validating access key...";
                             } else if (isAccessKeyValidValue == true) {
                               status = "Success";
                             }
@@ -2096,39 +2100,139 @@ class _ScanningScreenState extends State<ScanningScreen>
                           },
                         ),
                         const SizedBox(height: 16),
-                        // Cancel Button only when not validating or already successful
-                        if (!(_controller.text.length == 4 &&
-                                isAccessKeyValidValue == null) &&
-                            isAccessKeyValidValue != true)
-                          SizedBox(
-                            width: double.infinity,
-                            child: GestureDetector(
-                              onTap: () async {
-                                cancelAccessKeyTimer();
-                                if (widget.isLiveEvent == true) {
-                                  await _bleManager.disconnectConnectedDevice();
-                                }
-                                Navigator.of(dialogContext).pop();
-                              },
-                              child: Container(
-                                height: 48,
-                                decoration: BoxDecoration(
-                                  color: Color(0xFFEC1D24),
-                                  borderRadius: BorderRadius.circular(24),
-                                ),
-                                child: Center(
-                                  child: Text(
-                                    'Cancel',
-                                    style: GoogleFonts.inter(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.white,
+
+                        ValueListenableBuilder<String>(
+                          valueListenable: bleProcess.processDesc,
+                          builder: (_, processDescValue, __) {
+                            return processDescValue.isEmpty
+                                ? Row(
+                                  children: [
+                                    // if (!(_controller.text.length == 4 &&
+                                    //         isAccessKeyValidValue == null) &&
+                                    //     isAccessKeyValidValue != true)
+                                    Expanded(
+                                      child: SizedBox(
+                                        height: 48,
+                                        child: OutlinedButton(
+                                          style: OutlinedButton.styleFrom(
+                                            foregroundColor: const Color(
+                                              0xFFEC1D24,
+                                            ),
+                                            side: const BorderSide(
+                                              color: Color(0xFFEC1D24),
+                                            ),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(24),
+                                            ),
+                                          ),
+                                          onPressed: () {
+                                            cancelAccessKeyTimer();
+                                            Navigator.of(dialogContext).pop();
+                                          },
+                                          child: Text(
+                                            'Cancel',
+                                            style: GoogleFonts.inter(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
                                     ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
+                                    SizedBox(width: 12),
+                                    Expanded(
+                                      child: SizedBox(
+                                        height: 48,
+                                        child: ListenableBuilder(
+                                          listenable: _controller,
+                                          builder: (context, _) {
+                                            final canVerify =
+                                                _controller.text
+                                                    .trim()
+                                                    .isNotEmpty;
+                                            return ElevatedButton(
+                                              style: ElevatedButton.styleFrom(
+                                                backgroundColor: const Color(
+                                                  0xFFEC1D24,
+                                                ),
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(24),
+                                                ),
+                                              ),
+                                              onPressed:
+                                                  canVerify
+                                                      ? () {
+                                                        FocusScope.of(
+                                                          dialogContext,
+                                                        ).unfocus();
+
+                                                        bleProcess
+                                                            .isAccessKeyValid
+                                                            .value = null;
+                                                        bleProcess
+                                                                .processDesc
+                                                                .value =
+                                                            "Validating";
+
+                                                        accessKey.value =
+                                                            _controller.text;
+
+                                                        onCall(); // 🔥 only trigger here
+                                                      }
+                                                      : null,
+                                              child: Text(
+                                                'Verify',
+                                                style: GoogleFonts.inter(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: Colors.white,
+                                                ),
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                )
+                                : const SizedBox.shrink();
+                          },
+                        ),
+                        // // Cancel Button only when not validating or already successful
+                        // if (!(_controller.text.length == 4 &&
+                        //         isAccessKeyValidValue == null) &&
+                        //     isAccessKeyValidValue != true)
+                        //   SizedBox(
+                        //     width: double.infinity,
+                        //     child: GestureDetector(
+                        //       onTap: () async {
+                        //         cancelAccessKeyTimer();
+                        //         if (widget.isLiveEvent == true) {
+                        //           await _bleManager.disconnectConnectedDevice();
+                        //         }
+                        //         Navigator.of(dialogContext).pop();
+                        //       },
+                        //       child: Container(
+                        //         height: 48,
+                        //         decoration: BoxDecoration(
+                        //           color: Color(0xFFEC1D24),
+                        //           borderRadius: BorderRadius.circular(24),
+                        //         ),
+                        //         child: Center(
+                        //           child: Text(
+                        //             'Cancel',
+                        //             style: GoogleFonts.inter(
+                        //               fontSize: 16,
+                        //               fontWeight: FontWeight.w600,
+                        //               color: Colors.white,
+                        //             ),
+                        //           ),
+                        //         ),
+                        //       ),
+                        //     ),
+                        //   ),
                       ],
                     );
                   },
