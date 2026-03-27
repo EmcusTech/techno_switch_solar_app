@@ -1236,6 +1236,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     final bleProcess = ble.bleProcess;
     bleProcess.isAccessKeyValid.value = null;
     bleProcess.accessKey.value = "";
+    bleProcess.processDesc.value = "";
 
     Timer? accessKeyValidationTimer;
     void cancelAccessKeyTimer() {
@@ -1573,6 +1574,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                                 isAccessKeyValidValue == null) {
                               status = processDescValue;
                             } else if (isAccessKeyValidValue == true) {
+                              bleProcess.processDesc.value = "Success";
                               status = "Success";
                             }
                             // If invalid, re-focus the field to show keyboard
@@ -1646,38 +1648,54 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                                     Expanded(
                                       child: SizedBox(
                                         height: 48,
-                                        child: ElevatedButton(
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor: const Color(
-                                              0xFFEC1D24,
-                                            ),
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(24),
-                                            ),
-                                          ),
-                                          onPressed: () {
-                                            FocusScope.of(
-                                              dialogContext,
-                                            ).unfocus();
+                                        child: ListenableBuilder(
+                                          listenable: _controller,
+                                          builder: (context, _) {
+                                            final canVerify =
+                                                _controller.text
+                                                    .trim()
+                                                    .isNotEmpty;
+                                            return ElevatedButton(
+                                              style: ElevatedButton.styleFrom(
+                                                backgroundColor: const Color(
+                                                  0xFFEC1D24,
+                                                ),
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(24),
+                                                ),
+                                              ),
+                                              onPressed:
+                                                  canVerify
+                                                      ? () {
+                                                        FocusScope.of(
+                                                          dialogContext,
+                                                        ).unfocus();
 
-                                            bleProcess.isAccessKeyValid.value =
-                                                null;
-                                            bleProcess.processDesc.value =
-                                                "Validating access key...";
+                                                        bleProcess
+                                                            .isAccessKeyValid
+                                                            .value = null;
+                                                        bleProcess
+                                                                .processDesc
+                                                                .value =
+                                                            "Validating";
 
-                                            accessKey.value = _controller.text;
+                                                        accessKey.value =
+                                                            _controller.text;
 
-                                            onCall(); // 🔥 only trigger here
+                                                        onCall(); // 🔥 only trigger here
+                                                      }
+                                                      : null,
+                                              child: Text(
+                                                'Verify',
+                                                style: GoogleFonts.inter(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: Colors.white,
+                                                ),
+                                              ),
+                                            );
                                           },
-                                          child: Text(
-                                            'Verify',
-                                            style: GoogleFonts.inter(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.w600,
-                                              color: Colors.white,
-                                            ),
-                                          ),
                                         ),
                                       ),
                                     ),
