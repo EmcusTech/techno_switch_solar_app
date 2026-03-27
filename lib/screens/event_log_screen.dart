@@ -890,7 +890,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                         const Spacer(),
                         if (widget.isLiveEventLogs == true)
                           Padding(
-                            padding: const EdgeInsets.only(right: 8.0),
+                            padding: const EdgeInsets.only(right: 18.0),
                             child: GestureDetector(
                               behavior: HitTestBehavior.opaque,
                               onTap:
@@ -900,9 +900,9 @@ class _EventLogContentState extends State<_EventLogContent> {
                               child: Opacity(
                                 opacity: _canClearLogs ? 1.0 : 0,
                                 child: SvgPicture.asset(
-                                  'assets/svgs/delete_icon.svg',
-                                  // height: 22,
-                                  // width: 22,
+                                  'assets/svgs/clear_icon.svg',
+                                  height: 28,
+                                  width: 28,
                                   // colorFilter: const ColorFilter.mode(
                                   //   Color(0xFFFF6467),
                                   //   BlendMode.srcIn,
