@@ -285,7 +285,7 @@ class LogReportPdfUtil {
         child: pw.Row(
           crossAxisAlignment: pw.CrossAxisAlignment.start,
           children: [
-            cell(i.toString(), width: 20),
+            cell(_safe(log.eventId), width: 20),
             cell(_formatDate(log.eventDateTime), width: 80),
             cell(_safe(log.eventStatus), width: 55),
             cell(_safe(log.eventClass), width: 60),

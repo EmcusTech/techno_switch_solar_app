@@ -234,11 +234,15 @@ class _EventLogContentState extends State<_EventLogContent> {
                     color: const Color(0xFFFBDEE1),
                     shape: BoxShape.circle,
                   ),
-                  child: const Center(
-                    child: Icon(
-                      Icons.delete_outline,
-                      color: Color(0xFFEC1D24),
-                      size: 32,
+                  child: Center(
+                    child: SvgPicture.asset(
+                      'assets/svgs/clear_icon.svg',
+                      height: 28,
+                      width: 28,
+                      // colorFilter: const ColorFilter.mode(
+                      //   Color(0xFFFF6467),
+                      //   BlendMode.srcIn,
+                      // ),
                     ),
                   ),
                 ),
@@ -1678,7 +1682,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   SizedBox(
-                    width: 88,
+                    width: 98,
                     height: 32,
                     child: TextField(
                       controller: _eventIdFilterController,
@@ -1822,70 +1826,70 @@ class _EventLogContentState extends State<_EventLogContent> {
   }
 }
 
-Widget _buildProgressBar() {
-  return ValueListenableBuilder<int>(
-    valueListenable: ble.bleProcess.read1000LogsCount,
-    builder: (context, readCount, child) {
-      return ValueListenableBuilder<List<LogModel>>(
-        valueListenable: ble.bleProcess.validEventLogs,
-        builder: (context, validLogs, child) {
-          final progress = readCount / 1000.0;
-          return Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: Color(0xFFB9B9B9).withOpacity(0.31),
-                width: 1,
-              ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Progress: $readCount / 1000',
-                      style: GoogleFonts.inter(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF3D3D3D),
-                        fontFeatures: [FontFeature.tabularFigures()],
-                      ),
-                    ),
-                    Text(
-                      'Valid Logs: ${validLogs.length}',
-                      style: GoogleFonts.inter(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFFEC1D24),
-                        fontFeatures: [FontFeature.tabularFigures()],
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 8),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
-                  child: LinearProgressIndicator(
-                    value: progress,
-                    minHeight: 8,
-                    backgroundColor: Color(0xFFE0E0E0),
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      Color(0xFFEC1D24),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
-      );
-    },
-  );
-}
+// Widget _buildProgressBar() {
+//   return ValueListenableBuilder<int>(
+//     valueListenable: ble.bleProcess.read1000LogsCount,
+//     builder: (context, readCount, child) {
+//       return ValueListenableBuilder<List<LogModel>>(
+//         valueListenable: ble.bleProcess.validEventLogs,
+//         builder: (context, validLogs, child) {
+//           final progress = readCount / 1000.0;
+//           return Container(
+//             padding: const EdgeInsets.all(16),
+//             decoration: BoxDecoration(
+//               color: Colors.white,
+//               borderRadius: BorderRadius.circular(12),
+//               border: Border.all(
+//                 color: Color(0xFFB9B9B9).withOpacity(0.31),
+//                 width: 1,
+//               ),
+//             ),
+//             child: Column(
+//               crossAxisAlignment: CrossAxisAlignment.start,
+//               children: [
+//                 Row(
+//                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//                   children: [
+//                     Text(
+//                       'Progress: $readCount / 1000',
+//                       style: GoogleFonts.inter(
+//                         fontSize: 14,
+//                         fontWeight: FontWeight.w600,
+//                         color: Color(0xFF3D3D3D),
+//                         fontFeatures: [FontFeature.tabularFigures()],
+//                       ),
+//                     ),
+//                     Text(
+//                       'Valid Logs: ${validLogs.length}',
+//                       style: GoogleFonts.inter(
+//                         fontSize: 14,
+//                         fontWeight: FontWeight.w600,
+//                         color: Color(0xFFEC1D24),
+//                         fontFeatures: [FontFeature.tabularFigures()],
+//                       ),
+//                     ),
+//                   ],
+//                 ),
+//                 SizedBox(height: 8),
+//                 ClipRRect(
+//                   borderRadius: BorderRadius.circular(4),
+//                   child: LinearProgressIndicator(
+//                     value: progress,
+//                     minHeight: 8,
+//                     backgroundColor: Color(0xFFE0E0E0),
+//                     valueColor: AlwaysStoppedAnimation<Color>(
+//                       Color(0xFFEC1D24),
+//                     ),
+//                   ),
+//                 ),
+//               ],
+//             ),
+//           );
+//         },
+//       );
+//     },
+//   );
+// }
 
 enum DataType {
   id,
