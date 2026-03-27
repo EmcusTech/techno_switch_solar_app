@@ -860,24 +860,28 @@ class BleProcess {
           bleManager.otaProcessState = OtaProcessState.sendZoneSetupApplyCmdPkt;
           checkForAccessKeyCmdRsp = 0;
           zoneSetupApplyCommandStep = 1;
+          processDesc.value = "Applying Zone 1/3";
           startRxTimeout();
           await bleManager.sendZoneSetupApplyFirstCmdPkt();
         } else if (isRadioSetupFetchCommandActive.value) {
           bleManager.otaProcessState =
               OtaProcessState.sendRadioSetupFetchCmdPkt;
           checkForAccessKeyCmdRsp = 0;
+          processDesc.value = "Downloading Radio";
           startRxTimeout();
           await bleManager.sendRadioSetupFetchCmdPkt();
         } else if (isRadioSetupCommandApplyActive.value) {
           bleManager.otaProcessState =
               OtaProcessState.sendRadioSetupApplyCmdPkt;
           checkForAccessKeyCmdRsp = 0;
+          processDesc.value = "Applying Radio";
           startRxTimeout();
           await bleManager.sendRadioSetupApplyCmdPkt();
         } else if (isModuleSetupFetchCommandActive.value) {
           bleManager.otaProcessState =
               OtaProcessState.sendModuleSetupFetchCmdPkt;
           checkForAccessKeyCmdRsp = 0;
+          processDesc.value = "Downloading Module";
           startRxTimeout();
           await bleManager.sendModuleSetupFetchCmdPkt();
         } else if (isLBusSetupFetchCommandActive.value) {
@@ -2260,7 +2264,7 @@ class BleProcess {
           (rx.payload[17] << 16) |
           (rx.payload[16] << 24);
 
-      processDesc.value = " ";
+      processDesc.value = "";
 
       if (rxLastEvtLogNum != 0) {
         validEventLogNum++;
@@ -2391,6 +2395,8 @@ class BleProcess {
     checkForPanelInfoSetupApplyRes = 0;
     checkForGeneralModuleSetupFetchRes = 0;
     checkForGeneralModuleSetupApplyRes = 0;
+    checkForLiveEventsRetrievalRes = 0;
+    processDesc.value = "";
     // Counters
     checkForCtrlCmdRsp = 0;
     checkForAccessKeyCmdRsp = 0;
@@ -2462,6 +2468,8 @@ class BleProcess {
     checkForPanelInfoSetupApplyRes = 0;
     checkForGeneralModuleSetupFetchRes = 0;
     checkForGeneralModuleSetupApplyRes = 0;
+    checkForLiveEventsRetrievalRes = 0;
+    processDesc.value = "";
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -2525,6 +2533,8 @@ class BleProcess {
     checkForPanelInfoSetupApplyRes = 0;
     checkForGeneralModuleSetupFetchRes = 0;
     checkForGeneralModuleSetupApplyRes = 0;
+    checkForLiveEventsRetrievalRes = 0;
+    processDesc.value = "";
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -2586,6 +2596,8 @@ class BleProcess {
     checkForPanelInfoSetupApplyRes = 0;
     checkForGeneralModuleSetupFetchRes = 0;
     checkForGeneralModuleSetupApplyRes = 0;
+    checkForLiveEventsRetrievalRes = 0;
+    processDesc.value = "";
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -2647,6 +2659,8 @@ class BleProcess {
     checkForPanelInfoSetupApplyRes = 0;
     checkForGeneralModuleSetupFetchRes = 0;
     checkForGeneralModuleSetupApplyRes = 0;
+    checkForLiveEventsRetrievalRes = 0;
+    processDesc.value = "";
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -2708,6 +2722,8 @@ class BleProcess {
     checkForPanelInfoSetupApplyRes = 0;
     checkForGeneralModuleSetupFetchRes = 0;
     checkForGeneralModuleSetupApplyRes = 0;
+    checkForLiveEventsRetrievalRes = 0;
+    processDesc.value = "";
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -2768,6 +2784,8 @@ class BleProcess {
     checkForPanelInfoSetupApplyRes = 0;
     checkForGeneralModuleSetupFetchRes = 0;
     checkForGeneralModuleSetupApplyRes = 0;
+    checkForLiveEventsRetrievalRes = 0;
+    processDesc.value = "";
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -2829,6 +2847,8 @@ class BleProcess {
     checkForPanelInfoSetupApplyRes = 0;
     checkForGeneralModuleSetupFetchRes = 0;
     checkForGeneralModuleSetupApplyRes = 0;
+    checkForLiveEventsRetrievalRes = 0;
+    processDesc.value = "";
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -2890,6 +2910,8 @@ class BleProcess {
     checkForPanelInfoSetupApplyRes = 0;
     checkForGeneralModuleSetupFetchRes = 0;
     checkForGeneralModuleSetupApplyRes = 0;
+    checkForLiveEventsRetrievalRes = 0;
+    processDesc.value = "";
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -2951,6 +2973,8 @@ class BleProcess {
     checkForPanelInfoSetupApplyRes = 0;
     checkForGeneralModuleSetupFetchRes = 0;
     checkForGeneralModuleSetupApplyRes = 0;
+    checkForLiveEventsRetrievalRes = 0;
+    processDesc.value = "";
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -3012,6 +3036,8 @@ class BleProcess {
     checkForPanelInfoSetupApplyRes = 0;
     checkForGeneralModuleSetupFetchRes = 0;
     checkForGeneralModuleSetupApplyRes = 0;
+    checkForLiveEventsRetrievalRes = 0;
+    processDesc.value = "";
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -3073,6 +3099,8 @@ class BleProcess {
     checkForPanelInfoSetupApplyRes = 0;
     checkForGeneralModuleSetupFetchRes = 0;
     checkForGeneralModuleSetupApplyRes = 0;
+    checkForLiveEventsRetrievalRes = 0;
+    processDesc.value = "";
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -3134,6 +3162,8 @@ class BleProcess {
     checkForPanelInfoSetupApplyRes = 0;
     checkForGeneralModuleSetupFetchRes = 0;
     checkForGeneralModuleSetupApplyRes = 0;
+    checkForLiveEventsRetrievalRes = 0;
+    processDesc.value = "";
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -3193,14 +3223,14 @@ class BleProcess {
 
   requestENCKey() async {
     print("Send encry req frame");
-    processDesc.value = "Send Encryption Key Request";
+    // processDesc.value = "Send Encryption Key Request";
     await bleManager.sendAesKeyReq();
     bleManager.bleStateMachineState = BleStates.PROCESS_WAIT_RSP;
     bleCurrentState = BleStates.REQ_ENCY_KEY;
   }
 
   sendAuthPacket() async {
-    processDesc.value = "Sending Auth Packet";
+    // processDesc.value = "Sending Auth Packet";
     await bleManager.sendAuthnMsg();
     bleManager.bleStateMachineState = BleStates.PROCESS_WAIT_RSP;
     bleCurrentState = BleStates.SEND_AUTHN_MSG;

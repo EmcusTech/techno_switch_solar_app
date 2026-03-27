@@ -1984,7 +1984,7 @@ class BleManager {
                 connectedCompleter.completeError(
                   Exception("Disconnected during connection"),
                 );
-                processDesc.value = "Disconnected during connection";
+                // processDesc.value = "Disconnected during connection";
               }
             }
           },

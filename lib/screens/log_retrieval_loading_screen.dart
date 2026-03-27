@@ -1124,8 +1124,7 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
               child: ValueListenableBuilder<String>(
                 valueListenable: ble.processDesc,
                 builder: (context, value, _) {
-                  final statusText =
-                      value.isNotEmpty ? value : _connectionStatus;
+                  final statusText = value;
                   return Text(
                     statusText,
                     style: GoogleFonts.inter(

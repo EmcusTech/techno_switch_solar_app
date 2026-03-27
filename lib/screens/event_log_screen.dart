@@ -110,6 +110,10 @@ class _EventLogContentState extends State<_EventLogContent> {
   int _textFieldResetKey = 0;
   bool _isHandlingBack = false;
 
+  /// When non-null, replaces [widget.logDataList] so the user can clear the
+  /// on-screen list without mutating the parent.
+  List<LogModel>? _providedLogsOverride;
+
   final TextEditingController _eventIdFilterController =
       TextEditingController();
 
@@ -158,12 +162,110 @@ class _EventLogContentState extends State<_EventLogContent> {
     return sorted;
   }
 
+  List<LogModel> _providedSourceLogs() {
+    return _providedLogsOverride ?? widget.logDataList;
+  }
+
   List<LogModel> _getBaseLogs() {
     final sourceLogs =
         _useProvidedLogs
-            ? widget.logDataList
+            ? _providedSourceLogs()
             : ble.bleProcess.validEventLogs.value;
     return _sortLogsByEventId(sourceLogs);
+  }
+
+  bool get _canClearLogs => widget.isLiveEventLogs == true;
+
+  void _performClearLogs() {
+    if (_useProvidedLogs) {
+      setState(() {
+        _providedLogsOverride = <LogModel>[];
+        _filteredLogs = [];
+        _filtersApplied = false;
+        _fromDate = null;
+        _toDate = null;
+        _selectedStatuses.clear();
+        _selectedEventClasses.clear();
+        _alarmCount = null;
+        _eventIdFilterController.clear();
+      });
+    } else {
+      ble.bleProcess.validEventLogs.value = <LogModel>[];
+      setState(() {
+        _filteredLogs = [];
+        _filtersApplied = false;
+        _fromDate = null;
+        _toDate = null;
+        _selectedStatuses.clear();
+        _selectedEventClasses.clear();
+        _alarmCount = null;
+        _eventIdFilterController.clear();
+      });
+    }
+  }
+
+  Future<void> _confirmClearLogs() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      barrierDismissible: true,
+      builder: (BuildContext ctx) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Text(
+            'Clear logs?',
+            style: GoogleFonts.inter(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF3A3A3A),
+            ),
+          ),
+          content: Text(
+            'This will remove all entries from the list. This cannot be undone.',
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              fontWeight: FontWeight.w400,
+              color: Color(0xFF666666),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: Text(
+                'Cancel',
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF666666),
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(ctx).pop(true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Color(0xFFEC1D24),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                elevation: 0,
+              ),
+              child: Text(
+                'Clear',
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+    if (confirmed == true && mounted) {
+      _performClearLogs();
+    }
   }
 
   List<LogModel> _getDisplayLogs() {
@@ -207,6 +309,7 @@ class _EventLogContentState extends State<_EventLogContent> {
   void didUpdateWidget(_EventLogContent oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (!listEquals(widget.logDataList, oldWidget.logDataList)) {
+      _providedLogsOverride = null;
       _useProvidedLogs = widget.logDataList.isNotEmpty;
       _filteredLogs = _sortLogsByEventId(
         widget.logDataList.isNotEmpty
@@ -785,7 +888,29 @@ class _EventLogContentState extends State<_EventLogContent> {
                           ),
                         ),
                         const Spacer(),
-
+                        if (widget.isLiveEventLogs == true)
+                          Padding(
+                            padding: const EdgeInsets.only(right: 8.0),
+                            child: GestureDetector(
+                              behavior: HitTestBehavior.opaque,
+                              onTap:
+                                  _canClearLogs
+                                      ? () => _confirmClearLogs()
+                                      : null,
+                              child: Opacity(
+                                opacity: _canClearLogs ? 1.0 : 0,
+                                child: SvgPicture.asset(
+                                  'assets/svgs/delete_icon.svg',
+                                  // height: 22,
+                                  // width: 22,
+                                  // colorFilter: const ColorFilter.mode(
+                                  //   Color(0xFFFF6467),
+                                  //   BlendMode.srcIn,
+                                  // ),
+                                ),
+                              ),
+                            ),
+                          ),
                         GestureDetector(
                           onTap: () => _showExportBottomSheet(context),
                           child: Padding(

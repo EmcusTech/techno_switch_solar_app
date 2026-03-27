@@ -1992,7 +1992,7 @@ class _ScanningScreenState extends State<ScanningScreen>
                               // );
                               FocusScope.of(dialogContext).unfocus();
                               bleProcess.processDesc.value =
-                                  "Validating access key...";
+                                  "Validating access key...5";
                               onCall();
                             }
                           },
@@ -2069,7 +2069,7 @@ class _ScanningScreenState extends State<ScanningScreen>
                             String? status;
                             if (_controller.text.length == 4 &&
                                 isAccessKeyValidValue == null) {
-                              status = "Validating access key...";
+                              status = "Validating access key...6";
                             } else if (isAccessKeyValidValue == true) {
                               status = "Success";
                             }

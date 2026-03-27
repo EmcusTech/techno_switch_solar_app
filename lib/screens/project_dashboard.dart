@@ -1233,7 +1233,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     _navigatingToDeviceConnecting = false;
 
     // Reset previous access-key validation state
-    final bleProcess = Get.find<BleLogController>().bleProcess;
+    final bleProcess = ble.bleProcess;
     bleProcess.isAccessKeyValid.value = null;
     bleProcess.accessKey.value = "";
 
@@ -1243,9 +1243,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
       accessKeyValidationTimer = null;
     }
 
-    final TextEditingController _controller = TextEditingController(
-      text: "1974",
-    );
+    final TextEditingController _controller = TextEditingController();
     final FocusNode _focusNode = FocusNode();
     final ValueNotifier<String?> errorText = ValueNotifier(null);
     final accessKey = bleProcess.accessKey;
@@ -1573,10 +1571,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                             String? status;
                             if (_controller.text.isNotEmpty &&
                                 isAccessKeyValidValue == null) {
-                              status =
-                                  processDescValue.isNotEmpty
-                                      ? processDescValue
-                                      : "Validating access key...";
+                              status = processDescValue;
                             } else if (isAccessKeyValidValue == true) {
                               status = "Success";
                             }
@@ -1601,77 +1596,95 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                                     fontWeight: FontWeight.w600,
                                     color: const Color(0xFF3D3D3D),
                                   ),
+                                  textAlign: TextAlign.center,
                                 );
                           },
                         ),
 
                         const SizedBox(height: 12),
-                        Row(
-                          children: [
-                            // if (!(_controller.text.length == 4 &&
-                            //         isAccessKeyValidValue == null) &&
-                            //     isAccessKeyValidValue != true)
-                            Expanded(
-                              child: SizedBox(
-                                height: 48,
-                                child: OutlinedButton(
-                                  style: OutlinedButton.styleFrom(
-                                    foregroundColor: const Color(0xFFEC1D24),
-                                    side: const BorderSide(
-                                      color: Color(0xFFEC1D24),
-                                    ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(24),
-                                    ),
-                                  ),
-                                  onPressed: () {
-                                    cancelAccessKeyTimer();
-                                    Navigator.of(dialogContext).pop();
-                                  },
-                                  child: Text(
-                                    'Cancel',
-                                    style: GoogleFonts.inter(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            SizedBox(width: 12),
-                            Expanded(
-                              child: SizedBox(
-                                height: 48,
-                                child: ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFFEC1D24),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(24),
-                                    ),
-                                  ),
-                                  onPressed: () {
-                                    FocusScope.of(dialogContext).unfocus();
 
-                                    bleProcess.isAccessKeyValid.value = null;
-                                    bleProcess.processDesc.value =
-                                        "Validating access key...";
-
-                                    accessKey.value = _controller.text;
-
-                                    onCall(); // 🔥 only trigger here
-                                  },
-                                  child: Text(
-                                    'Verify',
-                                    style: GoogleFonts.inter(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.white,
+                        ValueListenableBuilder<String>(
+                          valueListenable: bleProcess.processDesc,
+                          builder: (_, processDescValue, __) {
+                            return processDescValue.isEmpty
+                                ? Row(
+                                  children: [
+                                    // if (!(_controller.text.length == 4 &&
+                                    //         isAccessKeyValidValue == null) &&
+                                    //     isAccessKeyValidValue != true)
+                                    Expanded(
+                                      child: SizedBox(
+                                        height: 48,
+                                        child: OutlinedButton(
+                                          style: OutlinedButton.styleFrom(
+                                            foregroundColor: const Color(
+                                              0xFFEC1D24,
+                                            ),
+                                            side: const BorderSide(
+                                              color: Color(0xFFEC1D24),
+                                            ),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(24),
+                                            ),
+                                          ),
+                                          onPressed: () {
+                                            cancelAccessKeyTimer();
+                                            Navigator.of(dialogContext).pop();
+                                          },
+                                          child: Text(
+                                            'Cancel',
+                                            style: GoogleFonts.inter(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
                                     ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
+                                    SizedBox(width: 12),
+                                    Expanded(
+                                      child: SizedBox(
+                                        height: 48,
+                                        child: ElevatedButton(
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: const Color(
+                                              0xFFEC1D24,
+                                            ),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(24),
+                                            ),
+                                          ),
+                                          onPressed: () {
+                                            FocusScope.of(
+                                              dialogContext,
+                                            ).unfocus();
+
+                                            bleProcess.isAccessKeyValid.value =
+                                                null;
+                                            bleProcess.processDesc.value =
+                                                "Validating access key...";
+
+                                            accessKey.value = _controller.text;
+
+                                            onCall(); // 🔥 only trigger here
+                                          },
+                                          child: Text(
+                                            'Verify',
+                                            style: GoogleFonts.inter(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w600,
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                )
+                                : const SizedBox.shrink();
+                          },
                         ),
                       ],
                     );
@@ -2709,6 +2722,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
         if (!bleController.isConnected) {
           await showBluetootohOffDialog(context: context);
         } else {
+          ble.bleProcess.processDesc.value = "";
           onTap?.call();
         }
       },
@@ -2984,13 +2998,6 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                     },
                     refreshTrigger: _generalModuleRefreshTrigger,
                   );
-                },
-              ),
-              _peripheralTile(
-                peripheralName: 'Live Events',
-                iconPath: 'assets/svgs/panel_action_config_log_icon.svg',
-                onTap: () {
-                  Get.find<BleLogController>().startLiveEventSetup();
                 },
               ),
               _peripheralTile(
