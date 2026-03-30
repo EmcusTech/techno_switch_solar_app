@@ -33,7 +33,7 @@ class _PanelInfoBottomSheetState extends State<PanelInfoBottomSheet> {
 
   final PanelInfoConfig config = PanelInfoConfig();
 
-  bool useMobileTime = false;
+  bool useMobileTime = true;
   Timer? _timer;
 
   @override
@@ -83,7 +83,7 @@ class _PanelInfoBottomSheetState extends State<PanelInfoBottomSheet> {
     config.minuteController.text = (data['minute'] as num?)?.toString() ?? '0';
     config.secondController.text = (data['second'] as num?)?.toString() ?? '0';
     config.delayController.text = (data['delay'] as num?)?.toString() ?? '0';
-    useMobileTime = (data['useMobileTime'] as bool?) ?? false;
+    useMobileTime = (data['useMobileTime'] as bool?) ?? true;
     if (useMobileTime) {
       _startLiveTime();
     }
@@ -324,6 +324,31 @@ class _PanelInfoBottomSheetState extends State<PanelInfoBottomSheet> {
             controller: controller,
             keyboardType: isNumeric ? TextInputType.number : TextInputType.text,
             maxLength: maxLength,
+            buildCounter:
+                maxLength == null
+                    ? null
+                    : (
+                      BuildContext context, {
+                      required int currentLength,
+                      required bool isFocused,
+                      required int? maxLength,
+                    }) {
+                      if (!isFocused) return null;
+                      final max = maxLength ?? 0;
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Text(
+                          '$currentLength / $max',
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            color:
+                                currentLength == max
+                                    ? const Color(0xFFEC1D24)
+                                    : Colors.grey,
+                          ),
+                        ),
+                      );
+                    },
             inputFormatters: [
               if (isNumeric) FilteringTextInputFormatter.digitsOnly,
               if (maxLength != null)

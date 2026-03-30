@@ -236,6 +236,26 @@ class _ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
 
   // ───────────────── TEXT FIELD ─────────────────
 
+  Widget? _relayStyleCounter(
+    BuildContext context, {
+    required int currentLength,
+    required bool isFocused,
+    required int? maxLength,
+  }) {
+    if (!isFocused) return null;
+    final max = maxLength ?? 0;
+    return Padding(
+      padding: const EdgeInsets.only(top: 4),
+      child: Text(
+        '$currentLength / $max',
+        style: GoogleFonts.inter(
+          fontSize: 12,
+          color: currentLength == max ? const Color(0xFFEC1D24) : Colors.grey,
+        ),
+      ),
+    );
+  }
+
   Widget _contactField({
     required String label,
     required TextEditingController controller,
@@ -251,6 +271,8 @@ class _ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
             controller: controller,
             keyboardType: TextInputType.phone,
             maxLength: 13,
+            buildCounter: _relayStyleCounter,
+            inputFormatters: [LengthLimitingTextInputFormatter(13)],
             onChanged: (_) => setState(() {}),
             decoration: _inputDecoration(),
           ),
@@ -273,6 +295,8 @@ class _ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
           TextField(
             controller: controller,
             maxLength: 13,
+            buildCounter: _relayStyleCounter,
+            inputFormatters: [LengthLimitingTextInputFormatter(13)],
             onChanged: (_) => setState(() {}),
             decoration: _inputDecoration(),
           ),

@@ -323,6 +323,31 @@ class _AccessCodesBottomSheetState extends State<AccessCodesBottomSheet> {
             enabled: enabled,
             keyboardType: isNumeric ? TextInputType.number : TextInputType.text,
             maxLength: maxLength,
+            buildCounter:
+                maxLength == null
+                    ? null
+                    : (
+                      BuildContext context, {
+                      required int currentLength,
+                      required bool isFocused,
+                      required int? maxLength,
+                    }) {
+                      if (!isFocused) return null;
+                      final max = maxLength ?? 0;
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Text(
+                          '$currentLength / $max',
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            color:
+                                currentLength == max
+                                    ? const Color(0xFFEC1D24)
+                                    : Colors.grey,
+                          ),
+                        ),
+                      );
+                    },
             inputFormatters: [
               if (isNumeric) FilteringTextInputFormatter.digitsOnly,
               if (maxLength != null)
@@ -418,13 +443,14 @@ class _AccessCodesBottomSheetState extends State<AccessCodesBottomSheet> {
             borderRadius: BorderRadius.circular(24),
           ),
         ),
-        onPressed: _isValidAccessCode()
-            ? () {
-                FocusManager.instance.primaryFocus?.unfocus();
-                _saveCurrentToManager();
-                widget.onApply();
-              }
-            : null,
+        onPressed:
+            _isValidAccessCode()
+                ? () {
+                  FocusManager.instance.primaryFocus?.unfocus();
+                  _saveCurrentToManager();
+                  widget.onApply();
+                }
+                : null,
         child: Text(
           'Apply',
           style: GoogleFonts.inter(

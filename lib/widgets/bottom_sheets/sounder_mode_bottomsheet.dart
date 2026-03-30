@@ -874,8 +874,37 @@ class _SounderModeBottomSheetState extends State<SounderModeBottomSheet>
             controller: controller,
             enabled: enabled,
             maxLength: maxLength,
+            buildCounter:
+                maxLength == null
+                    ? null
+                    : (
+                      BuildContext context, {
+                      required int currentLength,
+                      required bool isFocused,
+                      required int? maxLength,
+                    }) {
+                      if (!isFocused) return null;
+                      final max = maxLength ?? 0;
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Text(
+                          '$currentLength / $max',
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            color:
+                                currentLength == max
+                                    ? const Color(0xFFEC1D24)
+                                    : Colors.grey,
+                          ),
+                        ),
+                      );
+                    },
             keyboardType: keyboardType,
-            inputFormatters: inputFormatters,
+            inputFormatters: [
+              ...?inputFormatters,
+              if (maxLength != null)
+                LengthLimitingTextInputFormatter(maxLength),
+            ],
             decoration: decoration ?? _inputDecoration(),
             onChanged: onChanged,
           ),
