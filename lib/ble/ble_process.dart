@@ -17,6 +17,8 @@ import 'ble_frame.dart';
 import '../models/log_model.dart';
 import '../models/l_bus_setup_data_model.dart';
 import '../utils/event_constants.dart';
+import '../utils/adc_parser.dart';
+import '../utils/storage/peripheral_setup_cache.dart';
 import '../utils/timestamp_converter.dart';
 
 class BleProcess {
@@ -1059,8 +1061,16 @@ class BleProcess {
         bleManager.otaProcessState = OtaProcessState.notInUse;
         cancelOperationDeadline();
         checkForAdcSetupFetchRes = 0;
+        isAdcSetupFetchCommandActive.value = false;
         isAccessKeyValid.value = true;
         processDesc.value = "Adc Setup Fetch Completed";
+        try {
+          final parsed = AdcParser.parse(rx.payload);
+          final adc = AdcValues.fromList(parsed);
+          updateNotifiers(adc);
+        } catch (e, st) {
+          print("ADC parse/update failed: $e\n$st");
+        }
       } else {
         print("Adc Setup Fetch Cmd Response not found, polling again");
         startRxTimeout();
@@ -2403,6 +2413,27 @@ class BleProcess {
     setIfChanged(zone2AdcValue, adc.zone2);
     setIfChanged(zone3AdcValue, adc.zone3);
     setIfChanged(earthAdcValue, adc.earth);
+    _persistDiagnosticCache(adc);
+  }
+
+  void _persistDiagnosticCache(AdcValues adc) {
+    final id =
+        bleManager.selectedDevice?.id ?? bleManager.connectedDeviceId.value;
+    if (id.isEmpty) return;
+    PeripheralSetupCache.saveDiagnosticSetup(id, {
+      'sounder1': adc.sounder1,
+      'sounder2': adc.sounder2,
+      'sounder3': adc.sounder3,
+      'discharge': adc.discharge,
+      'vaux': adc.vaux,
+      'vin': adc.vin,
+      'progInput': adc.progInput,
+      'holdInput': adc.holdInput,
+      'zone1': adc.zone1,
+      'zone2': adc.zone2,
+      'zone3': adc.zone3,
+      'earth': adc.earth,
+    });
   }
 
   void stopLiveEventSetup() {

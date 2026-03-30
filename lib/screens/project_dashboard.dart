@@ -1578,8 +1578,10 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                                 isAccessKeyValidValue == null) {
                               status = processDescValue;
                             } else if (isAccessKeyValidValue == true) {
-                              bleProcess.processDesc.value = "Success";
                               status = "Success";
+                              if (mounted) {
+                                bleProcess.processDesc.value = "Success";
+                              }
                             }
                             // If invalid, re-focus the field to show keyboard
                             if (isAccessKeyValidValue == false) {

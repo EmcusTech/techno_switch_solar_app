@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
+import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
 
 class DiagnosticInfoBottomSheet extends StatefulWidget {
   final String deviceId;
@@ -28,6 +29,40 @@ class _DiagnosticInfoBottomSheetState extends State<DiagnosticInfoBottomSheet> {
     if (Get.isRegistered<BleLogController>()) {
       manager = Get.find<BleLogController>().bleManager;
     }
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    if (manager == null) return;
+    final cached = await PeripheralSetupCache.loadDiagnosticSetup(
+      widget.deviceId,
+    );
+    if (cached != null) {
+      _applyCachedData(cached);
+    }
+  }
+
+  void _applyCachedData(Map<String, dynamic> data) {
+    if (manager == null) return;
+    final process = manager!.bleProcess;
+    process.sounderOneAdcValue.value =
+        (data['sounder1'] as num?)?.toDouble() ?? 0;
+    process.sounderTwoAdcValue.value =
+        (data['sounder2'] as num?)?.toDouble() ?? 0;
+    process.sounderThreeAdcValue.value =
+        (data['sounder3'] as num?)?.toDouble() ?? 0;
+    process.dischargeAdcValue.value =
+        (data['discharge'] as num?)?.toDouble() ?? 0;
+    process.vauxAdcValue.value = (data['vaux'] as num?)?.toDouble() ?? 0;
+    process.vinAdcValue.value = (data['vin'] as num?)?.toDouble() ?? 0;
+    process.progInputAdcValue.value =
+        (data['progInput'] as num?)?.toDouble() ?? 0;
+    process.holdInputAdcValue.value =
+        (data['holdInput'] as num?)?.toDouble() ?? 0;
+    process.zone1AdcValue.value = (data['zone1'] as num?)?.toDouble() ?? 0;
+    process.zone2AdcValue.value = (data['zone2'] as num?)?.toDouble() ?? 0;
+    process.zone3AdcValue.value = (data['zone3'] as num?)?.toDouble() ?? 0;
+    process.earthAdcValue.value = (data['earth'] as num?)?.toDouble() ?? 0;
   }
 
   @override
@@ -211,52 +246,6 @@ class _DiagnosticInfoBottomSheetState extends State<DiagnosticInfoBottomSheet> {
               childAspectRatio: 2.2,
             ),
             itemBuilder: (_, i) => items[i],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _voltTile(String label, ValueNotifier<double> notifier) {
-    return ValueListenableBuilder<double>(
-      valueListenable: notifier,
-      builder: (_, volts, __) {
-        return _infoTile(label, '${volts.toStringAsFixed(2)} V');
-      },
-    );
-  }
-
-  Widget _infoTile(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: GoogleFonts.inter(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: const Color(0xFF3D3D3D),
-            ),
-          ),
-          const SizedBox(height: 6),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF8F8F8),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFD0D0D0)),
-            ),
-            child: Text(
-              value.isEmpty ? '-' : value,
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: const Color(0xFF3D3D3D),
-              ),
-            ),
           ),
         ],
       ),

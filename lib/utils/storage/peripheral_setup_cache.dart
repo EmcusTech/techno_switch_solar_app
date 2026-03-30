@@ -25,6 +25,8 @@ class PeripheralSetupCache {
       '$_keyPrefix${deviceId}_panel_info';
   static String _generalModuleKey(String deviceId) =>
       '$_keyPrefix${deviceId}_general_module';
+  static String _diagnosticKey(String deviceId) =>
+      '$_keyPrefix${deviceId}_diagnostic';
 
   // ───────────────── Sounder ─────────────────
 
@@ -289,6 +291,29 @@ class PeripheralSetupCache {
   ) async {
     final prefs = await SharedPreferences.getInstance();
     final raw = prefs.getString(_generalModuleKey(deviceId));
+    if (raw == null) return null;
+    try {
+      return Map<String, dynamic>.from(jsonDecode(raw) as Map);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  // ───────────────── Diagnostic (ADC) ─────────────────
+
+  static Future<void> saveDiagnosticSetup(
+    String deviceId,
+    Map<String, dynamic> data,
+  ) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_diagnosticKey(deviceId), jsonEncode(data));
+  }
+
+  static Future<Map<String, dynamic>?> loadDiagnosticSetup(
+    String deviceId,
+  ) async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(_diagnosticKey(deviceId));
     if (raw == null) return null;
     try {
       return Map<String, dynamic>.from(jsonDecode(raw) as Map);
