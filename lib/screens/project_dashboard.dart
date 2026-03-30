@@ -1172,12 +1172,23 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 ),
                 Text(
                   ble.bleProcess.isLbusFetchHasErrors.value
-                      ? 'There was an error downloading\nL-Bus ${ble.bleProcess.lbusFetchErrors.value.join(", ")} - Comms Fault'
+                      ? 'There was an error downloading'
                       : '',
                   style: GoogleFonts.inter(
                     fontSize: 14,
                     fontWeight: FontWeight.w400,
                     color: Color(0xFF918F8F),
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                Text(
+                  ble.bleProcess.isLbusFetchHasErrors.value
+                      ? 'L-Bus ${ble.bleProcess.lbusFetchErrors.value.join(", ")} - Comms Fault'
+                      : '',
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w400,
+                    color: Color(0xFFEC1D24),
                   ),
                   textAlign: TextAlign.center,
                 ),
