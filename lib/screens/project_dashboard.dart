@@ -1280,25 +1280,48 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Lock Icon
-                Container(
-                  width: 64,
-                  height: 64,
-                  decoration: BoxDecoration(
-                    color: Color(0xFFFBDEE1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Center(
-                    child: SvgPicture.asset(
-                      'assets/svgs/lock_icon.svg',
-                      height: 32,
-                      width: 32,
-                      colorFilter: ColorFilter.mode(
-                        Color(0xFFEC1D24),
-                        BlendMode.srcIn,
-                      ),
-                    ),
-                  ),
+                // Lock icon — red while entering code; green when field hidden (verifying / granted)
+                ValueListenableBuilder<bool?>(
+                  valueListenable: isAccessKeyValid,
+                  builder: (_, isAccessKeyValidValue, __) {
+                    return ValueListenableBuilder<String>(
+                      valueListenable: bleProcess.processDesc,
+                      builder: (_, processDescValue, __) {
+                        final bool hideInput =
+                            processDescValue.isNotEmpty ||
+                            isAccessKeyValidValue == true;
+                        final Color iconColor =
+                            hideInput
+                                ? const Color(0xFF2E7D32)
+                                : const Color(0xFFEC1D24);
+                        final Color circleColor =
+                            hideInput
+                                ? const Color(0xFFE8F5E9)
+                                : const Color(0xFFFBDEE1);
+                        return AnimatedContainer(
+                          duration: const Duration(milliseconds: 280),
+                          curve: Curves.easeInOutCubic,
+                          width: 64,
+                          height: 64,
+                          decoration: BoxDecoration(
+                            color: circleColor,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Center(
+                            child: SvgPicture.asset(
+                              'assets/svgs/lock_icon.svg',
+                              height: 32,
+                              width: 32,
+                              colorFilter: ColorFilter.mode(
+                                iconColor,
+                                BlendMode.srcIn,
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    );
+                  },
                 ),
 
                 SizedBox(height: 16),
