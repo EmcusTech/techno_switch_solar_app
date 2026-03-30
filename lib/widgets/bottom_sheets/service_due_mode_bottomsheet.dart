@@ -251,7 +251,6 @@ class _ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
             controller: controller,
             keyboardType: TextInputType.phone,
             maxLength: 13,
-            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
             onChanged: (_) => setState(() {}),
             decoration: _inputDecoration(),
           ),
