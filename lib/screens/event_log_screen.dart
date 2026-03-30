@@ -8,7 +8,6 @@ import 'package:intl/intl.dart';
 import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/models/log_model.dart';
-import 'package:techno_switch_solar_app/screens/home_screen.dart';
 import 'package:techno_switch_solar_app/services/navigation_service.dart';
 import 'package:techno_switch_solar_app/services/panel_service.dart';
 import 'package:techno_switch_solar_app/services/site_service.dart';
@@ -444,7 +443,7 @@ class _EventLogContentState extends State<_EventLogContent> {
       if (ble.isConnected) {
         await ble.disconnectConnectedDevice();
       }
-      await NavigationService.navigateBackToScanning(context);
+      await NavigationService.navigateBackToHome(context);
       return;
     }
     if (_isHandlingBack) return;

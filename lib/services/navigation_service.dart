@@ -2,6 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:techno_switch_solar_app/services/app_services.dart';
 import 'package:techno_switch_solar_app/services/app_state.dart';
 
+/// Observes route changes for [RouteAware] widgets (e.g. refresh home when a
+/// pushed route is popped).
+final RouteObserver<ModalRoute<void>> appRouteObserver =
+    RouteObserver<ModalRoute<void>>();
+
 /// Service to handle navigation with proper Bluetooth cleanup
 class NavigationService {
   /// Navigate back to home screen with Bluetooth disconnection
@@ -14,8 +19,9 @@ class NavigationService {
     // Reset app state
     AppState.reset();
 
-    // Navigate back to home (pop all screens until home)
-    Navigator.of(context).popUntil((route) => route.isFirst);
+    if (!context.mounted) return;
+    // Match routes pushed with [rootNavigator: true] (e.g. from scanning).
+    Navigator.of(context, rootNavigator: true).popUntil((route) => route.isFirst);
   }
 
   /// Navigate back to scanning screen with Bluetooth disconnection
@@ -28,8 +34,11 @@ class NavigationService {
     // Reset app state
     AppState.reset();
 
-    // Pop back to previous screen (usually scanning)
-    Navigator.of(context).pop();
+    if (!context.mounted) return;
+    final nav = Navigator.of(context, rootNavigator: true);
+    if (nav.canPop()) {
+      nav.pop();
+    }
   }
 
   /// Pop current screen with optional Bluetooth disconnection
@@ -46,7 +55,11 @@ class NavigationService {
       AppState.reset();
     }
 
-    Navigator.of(context).pop();
+    if (!context.mounted) return;
+    final nav = Navigator.of(context, rootNavigator: true);
+    if (nav.canPop()) {
+      nav.pop();
+    }
   }
 
   /// Check if should auto-disconnect based on navigation context
@@ -76,8 +89,10 @@ class NavigationService {
 
     // Navigate back to scanning - we'll handle the import in the calling screen
     // to avoid circular dependencies
-    if (context.mounted) {
-      Navigator.of(context).pop();
+    if (!context.mounted) return;
+    final nav = Navigator.of(context, rootNavigator: true);
+    if (nav.canPop()) {
+      nav.pop();
     }
   }
 }
@@ -107,7 +122,10 @@ mixin BluetoothNavigationMixin<T extends StatefulWidget> on State<T> {
   Future<void> handleBackNavigation() async {
     await onNavigationCleanup();
     if (mounted) {
-      Navigator.of(context).pop();
+      final nav = Navigator.of(context, rootNavigator: true);
+      if (nav.canPop()) {
+        nav.pop();
+      }
     }
   }
 

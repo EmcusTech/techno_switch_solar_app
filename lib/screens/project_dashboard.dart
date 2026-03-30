@@ -1172,7 +1172,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 ),
                 Text(
                   ble.bleProcess.isLbusFetchHasErrors.value
-                      ? 'There was an error downloading\nL-Bus ${ble.bleProcess.lbusFetchErrors.value.join(", ")}'
+                      ? 'There was an error downloading\nL-Bus ${ble.bleProcess.lbusFetchErrors.value.join(", ")} - Comms Fault'
                       : '',
                   style: GoogleFonts.inter(
                     fontSize: 14,

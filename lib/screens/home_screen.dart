@@ -9,6 +9,7 @@ import 'package:techno_switch_solar_app/services/app_services.dart';
 import 'package:techno_switch_solar_app/services/app_state.dart';
 import 'package:techno_switch_solar_app/services/site_service.dart';
 import 'package:techno_switch_solar_app/services/log_retrieval_service.dart';
+import 'package:techno_switch_solar_app/services/navigation_service.dart';
 import 'package:intl/intl.dart';
 import 'settings_screen.dart';
 import 'help_screen.dart';
@@ -147,7 +148,7 @@ class _HomeContent extends StatefulWidget {
   State<_HomeContent> createState() => _HomeContentState();
 }
 
-class _HomeContentState extends State<_HomeContent> {
+class _HomeContentState extends State<_HomeContent> with RouteAware {
   final SiteService _siteService = SiteService();
   final LogRetrievalService _logRetrievalService = LogRetrievalService();
   List<SiteWithLogCount> _sites = [];
@@ -155,6 +156,38 @@ class _HomeContentState extends State<_HomeContent> {
   Map<int, int> _lastRetrievalCounts = {};
   Map<int, DateTime?> _lastRetrievalDates = {};
   final ble = Get.find<BleLogController>().bleManager;
+  bool _routeSubscriptionRegistered = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_routeSubscriptionRegistered) {
+      final route = ModalRoute.of(context);
+      if (route is PageRoute) {
+        appRouteObserver.subscribe(this, route);
+        _routeSubscriptionRegistered = true;
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    if (_routeSubscriptionRegistered) {
+      appRouteObserver.unsubscribe(this);
+      _routeSubscriptionRegistered = false;
+    }
+    super.dispose();
+  }
+
+  /// When a route pushed above Home is popped (scanning, dashboard, event log,
+  /// site detail, etc.), reload sites so the list matches DB on all devices.
+  @override
+  void didPopNext() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _refreshSites();
+    });
+  }
 
   @override
   void initState() {
@@ -248,14 +281,11 @@ class _HomeContentState extends State<_HomeContent> {
                         print("Disconnecting device...");
                         await ble.disconnectConnectedDevice();
                       }
-                      await await Navigator.of(context).push(
+                      await Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (context) => ScanningScreen(),
                         ),
                       );
-                      if (mounted) {
-                        await _refreshSites();
-                      }
                     },
                     child: Container(
                       width: 106,
@@ -343,10 +373,6 @@ class _HomeContentState extends State<_HomeContent> {
                           (context) => ScanningScreen(isLiveEventLogs: true),
                     ),
                   );
-
-                  if (mounted) {
-                    await _refreshSites();
-                  }
                 },
                 child: _buildQuickLinkItem(
                   'assets/svgs/maintenance_icon.svg',
