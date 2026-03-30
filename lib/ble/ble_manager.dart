@@ -67,6 +67,7 @@ enum BleStates {
   SEND_PANEL_INFO_SETUP_CMD_APPLY_PACKET,
   SEND_GENERAL_MODULE_SETUP_CMD_FETCH_PACKET,
   SEND_GENERAL_MODULE_SETUP_CMD_APPLY_PACKET,
+  SEND_ADC_SETUP_CMD_FETCH_PACKET,
   // add other states
 }
 
@@ -106,6 +107,7 @@ enum OtaProcessState {
   sendGeneralModuleSetupFetchCmdPkt,
   sendGeneralModuleSetupApplyCmdPkt,
   sendLiveEventsRetrievalFetchCmdPkt,
+  sendAdcSetupFetchCmdPkt,
 }
 
 enum BleOperationMode {
@@ -136,6 +138,7 @@ enum BleOperationMode {
   panelInfoSetupApply,
   generalModuleSetupFetch,
   generalModuleSetupApply,
+  adcSetupFetch,
 }
 
 const String BLE_AUTHN_MSG = "TECHNOSWITCH-AUTH-APP";
@@ -680,6 +683,19 @@ class BleManager {
     otaProcessState = OtaProcessState.sendNetworkPacket;
   }
 
+  void resetProtocolAdcSetupState() {
+    // Packet counters
+    u8TxPktCnt = 0;
+    u8RxPktCnt = 0;
+    receivedPollCount = 0;
+
+    // Poll guards
+    _pollInFlight = false;
+
+    // OTA state
+    otaProcessState = OtaProcessState.sendNetworkPacket;
+  }
+
   void resetFirmwareState() {
     bleCurrentState = BleStates.SEND_START_FIRMWARE_PACKET;
     bleStateMachineState = BleStates.SEND_START_FIRMWARE_PACKET;
@@ -818,6 +834,15 @@ class BleManager {
     _pollInFlight = false;
     receivedPollCount = 0;
     currentOperationMode = BleOperationMode.generalModuleSetupFetch;
+  }
+
+  void resetAdcSetupState() {
+    bleCurrentState = BleStates.REQ_ENCY_KEY;
+    bleStateMachineState = BleStates.REQ_ENCY_KEY;
+    bleAESKey.clear();
+    _pollInFlight = false;
+    receivedPollCount = 0;
+    currentOperationMode = BleOperationMode.adcSetupFetch;
   }
 
   /// Initialize and start log retrieval process
@@ -1704,6 +1729,41 @@ class BleManager {
     bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
     Get.find<BleLogController>().sendNetworkPacket();
   }
+
+  Future<void> startAdcSetupFetch() async {
+    if (!isConnected) {
+      throw Exception("Device not connected. Cannot start log retrieval.");
+    }
+
+    if (notifyChar == null || writeChar == null) {
+      throw Exception(
+        "BLE characteristics not initialized. Cannot start log retrieval.",
+      );
+    }
+
+    // Set operation mode to log retrieval
+    currentOperationMode = BleOperationMode.adcSetupFetch;
+
+    // Reset protocol state to initial values
+    resetAdcSetupState();
+    resetProtocolAdcSetupState();
+
+    // IMPORTANT: Reset process state to clear isOtaCompleted flag
+    // This ensures polls aren't blocked after firmware upgrade
+    bleProcess.resetProcessAdcSetupState();
+
+    if (_notifySub == null) {
+      throw Exception(
+        "BLE handshake not complete. Please wait for connection to finish.",
+      );
+    }
+    print("Proceeding with Adc setup fetch");
+    bleCurrentState = BleStates.SEND_ADC_SETUP_CMD_FETCH_PACKET;
+    bleStateMachineState = BleStates.SEND_ADC_SETUP_CMD_FETCH_PACKET;
+    print("Current state: $bleStateMachineState");
+    bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
+    Get.find<BleLogController>().sendNetworkPacket();
+  }
   // Future<void> startExtOut() async {
   //   if (!isConnected) {
   //     throw Exception("Device not connected. Cannot start log retrieval.");
@@ -2534,6 +2594,15 @@ class BleManager {
           bleCurrentState = BleStates.PROCESS_PANEL_LIVE_EVENTS_READ;
           bleStateMachineState = BleStates.PROCESS_PANEL_LIVE_EVENTS_READ;
           print("Current state: $bleStateMachineState (Live events retrieval)");
+          bleProcess.startOtherPacketsRxTimeout(
+            timeout: const Duration(seconds: 5),
+          );
+          Get.find<BleLogController>().sendNetworkPacket();
+        } else if (currentOperationMode == BleOperationMode.adcSetupFetch) {
+          bleCurrentState = BleStates.SEND_ADC_SETUP_CMD_FETCH_PACKET;
+          bleStateMachineState = BleStates.SEND_ADC_SETUP_CMD_FETCH_PACKET;
+          print("Current state: $bleStateMachineState (Adc setup fetch)");
+          // Send Network Packet for Adc setup fetch
           bleProcess.startOtherPacketsRxTimeout(
             timeout: const Duration(seconds: 5),
           );

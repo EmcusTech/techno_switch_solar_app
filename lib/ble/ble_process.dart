@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/models/access_code_mode_model.dart';
+import 'package:techno_switch_solar_app/models/adc_domain_values_model.dart';
 import 'package:techno_switch_solar_app/utils/ext_out_equipment_mode_util.dart';
 import 'package:techno_switch_solar_app/utils/general_quipment_mode_util.dart';
 import 'package:techno_switch_solar_app/utils/input_mode_util.dart';
@@ -72,6 +73,7 @@ class BleProcess {
   int checkForGeneralModuleSetupApplyRes = 0;
   int generalModuleSetupApplyCommandStep = 0; // 1, 2, 3
   int checkForLiveEventsRetrievalRes = 0;
+  int checkForAdcSetupFetchRes = 0;
   int validEventLogNum = 0;
   int read1000Logs = 0;
   bool logRetreivalEnded = false;
@@ -543,6 +545,23 @@ class BleProcess {
   final ValueNotifier<int> generalModuleResetLvl = ValueNotifier<int>(0);
   final ValueNotifier<int> generalModuleFaultLatching = ValueNotifier<int>(0);
 
+  // ADC Variables
+  final ValueNotifier<bool> isAdcSetupFetchCommandActive = ValueNotifier<bool>(
+    false,
+  );
+  final ValueNotifier<double> sounderOneAdcValue = ValueNotifier<double>(0);
+  final ValueNotifier<double> sounderTwoAdcValue = ValueNotifier<double>(0);
+  final ValueNotifier<double> sounderThreeAdcValue = ValueNotifier<double>(0);
+  final ValueNotifier<double> dischargeAdcValue = ValueNotifier<double>(0);
+  final ValueNotifier<double> vauxAdcValue = ValueNotifier<double>(0);
+  final ValueNotifier<double> vinAdcValue = ValueNotifier<double>(0);
+  final ValueNotifier<double> progInputAdcValue = ValueNotifier<double>(0);
+  final ValueNotifier<double> holdInputAdcValue = ValueNotifier<double>(0);
+  final ValueNotifier<double> zone1AdcValue = ValueNotifier<double>(0);
+  final ValueNotifier<double> zone2AdcValue = ValueNotifier<double>(0);
+  final ValueNotifier<double> zone3AdcValue = ValueNotifier<double>(0);
+  final ValueNotifier<double> earthAdcValue = ValueNotifier<double>(0);
+
   // BleStates bleStateMachineState = BleStates.IDLE;
   BleStates bleCurrentState = BleStates.IDLE;
   DeviceConnectState deviceConnectState = DeviceConnectState.notConnected;
@@ -754,6 +773,11 @@ class BleProcess {
         print("Sending Live Events Retrieval Fetch Command");
         checkForLiveEventsRetrievalRes = 1;
         bleManager.otaProcessState = OtaProcessState.sendContinuousPollPacket;
+        break;
+
+      case OtaProcessState.sendAdcSetupFetchCmdPkt:
+        print("Sending Adc Setup Fetch Command");
+        checkForAdcSetupFetchRes = 1;
         break;
 
       case OtaProcessState.otaWaitRsp:
@@ -980,6 +1004,12 @@ class BleProcess {
           processDesc.value = "Applying General Module Level Time-out";
           startRxTimeout();
           await bleManager.sendGeneralModuleLvlTimeOutApplyCmdPkt();
+        } else if (isAdcSetupFetchCommandActive.value) {
+          bleManager.otaProcessState = OtaProcessState.sendAdcSetupFetchCmdPkt;
+          checkForAccessKeyCmdRsp = 0;
+          processDesc.value = "Downloading Adc Setup";
+          startRxTimeout();
+          await bleManager.sendDiagnosticsSetupFetchCmdPkt();
         } else {
           bleManager.otaProcessState = OtaProcessState.sendStopCntrlCmdPkt;
           checkForAccessKeyCmdRsp = 0;
@@ -1020,6 +1050,22 @@ class BleProcess {
         await bleManager.sendPollPacket();
       }
       // checkDipSetCmdRsp = 0;
+    }
+
+    if (checkForAdcSetupFetchRes == 1) {
+      print("Checking Adc Setup Fetch CMD RSP");
+      if (rx.payload[12] == 0x09) {
+        print("We got adc setup fetch response");
+        bleManager.otaProcessState = OtaProcessState.notInUse;
+        cancelOperationDeadline();
+        checkForAdcSetupFetchRes = 0;
+        isAccessKeyValid.value = true;
+        processDesc.value = "Adc Setup Fetch Completed";
+      } else {
+        print("Adc Setup Fetch Cmd Response not found, polling again");
+        startRxTimeout();
+        await bleManager.sendPollPacket();
+      }
     }
 
     if (checkForGeneralModuleSetupFetchRes == 1) {
@@ -2338,6 +2384,27 @@ class BleProcess {
     );
   }
 
+  void setIfChanged(ValueNotifier<double> notifier, double newValue) {
+    if (notifier.value != newValue) {
+      notifier.value = newValue;
+    }
+  }
+
+  void updateNotifiers(AdcValues adc) {
+    setIfChanged(sounderOneAdcValue, adc.sounder1);
+    setIfChanged(sounderTwoAdcValue, adc.sounder2);
+    setIfChanged(sounderThreeAdcValue, adc.sounder3);
+    setIfChanged(dischargeAdcValue, adc.discharge);
+    setIfChanged(vauxAdcValue, adc.vaux);
+    setIfChanged(vinAdcValue, adc.vin);
+    setIfChanged(progInputAdcValue, adc.progInput);
+    setIfChanged(holdInputAdcValue, adc.holdInput);
+    setIfChanged(zone1AdcValue, adc.zone1);
+    setIfChanged(zone2AdcValue, adc.zone2);
+    setIfChanged(zone3AdcValue, adc.zone3);
+    setIfChanged(earthAdcValue, adc.earth);
+  }
+
   void stopLiveEventSetup() {
     isOtaCompleted = true;
     processNextOtaFrame = false;
@@ -3188,6 +3255,69 @@ class BleProcess {
     // panelName.value = "";
   }
 
+  void resetProcessAdcSetupState() {
+    // Terminal guards
+    isOtaCompleted = false;
+    processNextOtaFrame = true;
+    logRetreivalEnded = false;
+
+    // Counters
+    checkForCtrlCmdRsp = 0;
+    checkForAccessKeyCmdRsp = 0;
+    checkDipSetCmdRsp = 0;
+    checkForExtCmdFetchRes = 0;
+    checkForInputSetupFetchRes = 0;
+    checkForRelaySetupApplyRes = 0;
+    validEventLogNum = 0;
+    read1000Logs = 0;
+    receivedPollCount = 0;
+    checkForRadioSetupFetchRes = 0;
+    isExtOutApplyButtonActive.value = false;
+    relaySetupFetchCommandStep = 0;
+    checkForRelaySetupFetchRes = 0;
+    checkForRadioSetupApplyRes = 0;
+    checkForLBusSetupFetchRes = 0;
+    lBusSetupFetchCommandStep = 0;
+    checkForLBusSetupApplyRes = 0;
+    checkForSounderSetupFetchRes = 0;
+    checkForSounderSetupApplyRes = 0;
+    checkForServiceDueFetchRes = 0;
+    checkForAccessCodeSetupFetchRes = 0;
+    accessCodeSetupFetchCommandStep = 0;
+    checkForAccessCodeSetupApplyRes = 0;
+    accessCodeSetupApplyCommandStep = 0;
+    isLbusFetchHasErrors.value = false;
+    lbusFetchErrors.value.clear();
+    checkForPanelInfoSetupFetchRes = 0;
+    checkForPanelInfoSetupApplyRes = 0;
+    checkForGeneralModuleSetupFetchRes = 0;
+    checkForGeneralModuleSetupApplyRes = 0;
+    checkForLiveEventsRetrievalRes = 0;
+    processDesc.value = "";
+    // Time tracking
+    // logStartingTime = null;
+    // logEndTime = null;
+
+    // OTA state
+    bleManager.otaProcessState = OtaProcessState.sendNetworkPacket;
+
+    // RX timeout
+    _rxTimeoutTimer?.cancel();
+    _rxTimeoutTimer = null;
+
+    _otherPacketsRxTimeoutTimer?.cancel();
+    _otherPacketsRxTimeoutTimer = null;
+
+    cancelOperationDeadline();
+
+    // UI notifiers
+    // validEventLogCount.value = 0;
+    // read1000LogsCount.value = 0;
+    // validEventLogs.value = [];
+    // isValidLogRecieved.value = false;
+    // panelName.value = "";
+  }
+
   String formatDuration(Duration d) {
     final m = d.inMinutes;
     final s = d.inSeconds.remainder(60);
@@ -3614,6 +3744,8 @@ class BleProcess {
         case OtaProcessState.sendGeneralModuleSetupApplyCmdPkt:
           break;
         case OtaProcessState.sendLiveEventsRetrievalFetchCmdPkt:
+          break;
+        case OtaProcessState.sendAdcSetupFetchCmdPkt:
           break;
       }
       startRxTimeout();

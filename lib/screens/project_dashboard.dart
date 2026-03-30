@@ -20,6 +20,7 @@ import 'package:techno_switch_solar_app/screens/test_mode_screen.dart';
 import 'package:techno_switch_solar_app/utils/bluetooth_service.dart';
 import 'package:techno_switch_solar_app/utils/ble_name_utils.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/access_code_mode_bottomsheet.dart';
+import 'package:techno_switch_solar_app/widgets/bottom_sheets/diagnostic_mode_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/general_mode_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/input_mode_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/l_bus_mode_bottomsheet.dart';
@@ -1225,6 +1226,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     bool? isAccessCodeSetup = false,
     bool? isPanelInfoSetup = false,
     bool? isGeneralModuleSetup = false,
+    bool? isAdcSetup = false,
     String? mode,
     Future<void> Function()? onDownloadComplete,
     String? downloadSuccessMessage,
@@ -1353,6 +1355,8 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                                     ? 'Panel Info'
                                     : isGeneralModuleSetup == true
                                     ? 'General Module'
+                                    : isAdcSetup == true
+                                    ? 'Diagnostics'
                                     : 'Configuration');
                             showDownloadSuccessDialog(context, message);
                           }
@@ -2327,6 +2331,46 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     );
   }
 
+  void showAdcDiagnosticsSetupBottomSheet({
+    required BuildContext context,
+    required String deviceId,
+    required VoidCallback onDownload,
+  }) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withOpacity(0.4),
+      builder:
+          (_) => DiagnosticInfoBottomSheet(
+            deviceId: deviceId,
+            onDownload: onDownload,
+          ),
+    );
+  }
+
+  // showAdcDiagnosticsSetupBottomSheet({
+  //   required BuildContext context,
+  //   required String deviceId,
+  //   required VoidCallback onDownload,
+  //   required VoidCallback onApply,
+  //   required ValueNotifier<int> refreshTrigger,
+  // }) {
+  //   showModalBottomSheet(
+  //     context: context,
+  //     isScrollControlled: true,
+  //     backgroundColor: Colors.transparent,
+  //     barrierColor: Colors.black.withOpacity(0.4),
+  //     builder:
+  //         (_) => GeneralModuleBottomSheet(
+  //           deviceId: deviceId,
+  //           onDownload: onDownload,
+  //           onApply: onApply,
+  //           refreshTrigger: refreshTrigger,
+  //         ),
+  //   );
+  // }
+
   void showModuleSetupBottomSheet({
     required BuildContext context,
     required String deviceId,
@@ -3016,6 +3060,39 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                     },
                     refreshTrigger: _generalModuleRefreshTrigger,
                   );
+                },
+              ),
+              _peripheralTile(
+                peripheralName: 'Diagnostics',
+                iconPath: 'assets/svgs/diagnostic_icon.svg',
+                onTap: () {
+                  if (_selectedDevice.manufacturerData.isNotEmpty &&
+                      _selectedDevice.manufacturerData.last == 1) {
+                    showBootloaderModeDialog(context: context);
+                    return;
+                  }
+                  showAdcDiagnosticsSetupBottomSheet(
+                    context: context,
+                    deviceId: _selectedDevice.id,
+                    onDownload: () {
+                      showPasswordPopup(
+                        onCall: () {
+                          ble.bleProcess.isAdcSetupFetchCommandActive.value =
+                              true;
+                          bleController.startAdcSetupFetch();
+                        },
+                        mode: 'bottomsheet_download',
+                        onDownloadComplete: _saveModuleCacheAndNotifyRefresh,
+                        downloadSuccessMessage: 'Diagnostics',
+                      );
+                    },
+                  );
+                  // showPasswordPopup(
+                  //   onCall: () {
+                  //     ble.bleProcess.isAdcSetupFetchCommandActive.value = true;
+                  //     bleController.startAdcSetupFetch();
+                  //   },
+                  // );
                 },
               ),
               _peripheralTile(
