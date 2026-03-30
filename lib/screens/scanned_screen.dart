@@ -749,6 +749,7 @@ class _ScannedScreenState extends State<ScannedScreen> {
                 if (!screenContext.mounted) return;
 
                 if (widget.isLiveEvent == true) {
+                  ble.bleProcess.processDesc.value = "";
                   showPasswordPopup(
                     device: device,
                     onCall: () {
