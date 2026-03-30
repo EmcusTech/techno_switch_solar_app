@@ -799,7 +799,7 @@ class BleProcess {
             rx.payload,
             rxLastEvtLogNum,
           );
-          if (parsedLog != null) {
+          if (parsedLog != null && parsedLog.eventId != "0") {
             print(
               "Valid Log Packet ${rx.payload.map((b) => b.toRadixString(16).padLeft(2, '0')).join(" ")}",
             );
@@ -2333,7 +2333,7 @@ class BleProcess {
             rx.payload,
             rxLastEvtLogNum,
           );
-          if (parsedLog != null) {
+          if (parsedLog != null && parsedLog.eventId != "0") {
             print(
               "Valid Log Packet ${rx.payload.map((b) => b.toRadixString(16).padLeft(2, '0')).join(" ")}",
             );

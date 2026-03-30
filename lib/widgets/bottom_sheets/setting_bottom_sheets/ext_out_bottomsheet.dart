@@ -81,12 +81,18 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
   late TextEditingController manCtrl;
   late TextEditingController releaseCtrl;
   late TextEditingController resetDelayCtrl;
+
+  final FocusNode autoFocusNode = FocusNode();
+  final FocusNode manFocusNode = FocusNode();
+  final FocusNode releaseFocusNode = FocusNode();
+  final FocusNode resetDelayFocusNode = FocusNode();
+
   BleManager? manager;
 
-  String? _autoError;
-  String? _manError;
-  String? _releaseError;
-  String? _resetDelayError;
+  final String _autoError = "Countdown Auto must be between 0 and 60";
+  final String _manError = "Countdown Man must be between 0 and 60";
+  final String _releaseError = "Release Time must be between 10 and 300";
+  final String _resetDelayError = "Reset Delay must be between 0 and 1800";
 
   bool _computeIsValid() {
     final auto = int.tryParse(autoCtrl.text);
@@ -101,35 +107,43 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
     return true;
   }
 
-  void _updateValidationErrors() {
-    final auto = int.tryParse(autoCtrl.text);
-    final man = int.tryParse(manCtrl.text);
-    final release = int.tryParse(releaseCtrl.text);
-    final resetDelay = int.tryParse(resetDelayCtrl.text);
+  // void _updateValidationErrors() {
+  //   final auto = int.tryParse(autoCtrl.text);
+  //   final man = int.tryParse(manCtrl.text);
+  //   final release = int.tryParse(releaseCtrl.text);
+  //   final resetDelay = int.tryParse(resetDelayCtrl.text);
 
-    _autoError =
-        (auto == null || auto < 0 || auto > 60)
-            ? 'Countdown Auto must be between 0 and 60'
-            : null;
-    _manError =
-        (man == null || man < 0 || man > 60)
-            ? 'Countdown Man must be between 0 and 60'
-            : null;
-    _releaseError =
-        (release == null || release < 10 || release > 300)
-            ? 'Release Time must be between 10 and 300'
-            : null;
-    _resetDelayError =
-        (resetDelay == null || resetDelay < 0 || resetDelay > 1800)
-            ? 'Reset Delay must be between 0 and 1800'
-            : null;
-  }
+  //   _autoError =
+  //       (auto == null || auto < 0 || auto > 60)
+  //           ? 'Countdown Auto must be between 0 and 60'
+  //           : null;
+  //   _manError =
+  //       (man == null || man < 0 || man > 60)
+  //           ? 'Countdown Man must be between 0 and 60'
+  //           : null;
+  //   _releaseError =
+  //       (release == null || release < 10 || release > 300)
+  //           ? 'Release Time must be between 10 and 300'
+  //           : null;
+  //   _resetDelayError =
+  //       (resetDelay == null || resetDelay < 0 || resetDelay > 1800)
+  //           ? 'Reset Delay must be between 0 and 1800'
+  //           : null;
+  // }
 
   final bleController = Get.find<BleLogController>();
 
   @override
   void dispose() {
     widget.refreshTrigger.removeListener(_onRefreshTriggered);
+    autoCtrl.dispose();
+    manCtrl.dispose();
+    releaseCtrl.dispose();
+    resetDelayCtrl.dispose();
+    autoFocusNode.dispose();
+    manFocusNode.dispose();
+    releaseFocusNode.dispose();
+    resetDelayFocusNode.dispose();
     autoCtrl.dispose();
     manCtrl.dispose();
     releaseCtrl.dispose();
@@ -150,6 +164,34 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
     resetInCount = resetInCountOptions[0];
     holdCount = holdCountOptions[0];
     action = actionOptions[0];
+    autoFocusNode.addListener(() {
+      if (autoFocusNode.hasFocus) {
+        debugPrint("Auto field is focused");
+      } else {
+        debugPrint("Auto field lost focus");
+      }
+    });
+    manFocusNode.addListener(() {
+      if (manFocusNode.hasFocus) {
+        debugPrint("Man field is focused");
+      } else {
+        debugPrint("Man field lost focus");
+      }
+    });
+    releaseFocusNode.addListener(() {
+      if (releaseFocusNode.hasFocus) {
+        debugPrint("Release field is focused");
+      } else {
+        debugPrint("Release field lost focus");
+      }
+    });
+    resetDelayFocusNode.addListener(() {
+      if (resetDelayFocusNode.hasFocus) {
+        debugPrint("Reset Delay field is focused");
+      } else {
+        debugPrint("Reset Delay field lost focus");
+      }
+    });
     _loadData();
     widget.refreshTrigger.addListener(_onRefreshTriggered);
   }
@@ -265,7 +307,7 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
   @override
   Widget build(BuildContext context) {
     final maxHeight = MediaQuery.of(context).size.height * 0.8;
-    _updateValidationErrors();
+    // _updateValidationErrors();
     final formValid = _computeIsValid();
 
     return SafeArea(
@@ -342,23 +384,27 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
                           label: 'Countdown Auto (s)',
                           controller: autoCtrl,
                           errorMsg: _autoError,
+                          focusNode: autoFocusNode,
                         ),
+
                         _numberFieldWithValidation(
                           label: 'Countdown Man (s)',
                           controller: manCtrl,
                           errorMsg: _manError,
+                          focusNode: manFocusNode,
                         ),
                         _numberFieldWithValidation(
                           label: 'Release Time (s)',
                           controller: releaseCtrl,
                           errorMsg: _releaseError,
+                          focusNode: releaseFocusNode,
                         ),
                         _numberFieldWithValidation(
                           label: 'Reset Delay (s)',
                           controller: resetDelayCtrl,
                           errorMsg: _resetDelayError,
+                          focusNode: resetDelayFocusNode,
                         ),
-
                         DropdownWidget(
                           label: 'Reset in Count',
                           value: resetInCount,
@@ -742,7 +788,8 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
   Widget _numberFieldWithValidation({
     required String label,
     required TextEditingController controller,
-    required String? errorMsg,
+    required String errorMsg,
+    required FocusNode focusNode,
   }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
@@ -753,19 +800,20 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
           const SizedBox(height: 6),
           TextField(
             controller: controller,
+            focusNode: focusNode,
             onChanged: (_) => setState(() {}),
             keyboardType: TextInputType.number,
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-            decoration: _inputDecoration(hasError: errorMsg != null),
+            decoration: _inputDecoration(),
           ),
-          if (errorMsg != null) ...[
+          if (focusNode.hasFocus) ...[
             const SizedBox(height: 4),
             Text(
               errorMsg,
               style: GoogleFonts.inter(
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
-                color: const Color(0xFFEC1D24),
+                color: Colors.orange,
               ),
             ),
           ],

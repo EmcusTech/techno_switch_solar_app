@@ -32,6 +32,8 @@ class _GeneralModuleBottomSheetState extends State<GeneralModuleBottomSheet> {
 
   final TextEditingController lvlTimeoutController = TextEditingController();
 
+  final FocusNode lvlTimeoutFocusNode = FocusNode();
+
   String silenceBuzzerLevel = "Access Level 1";
   String silenceSoundersLevel = "Access Level 2";
   String resetLevel = "Access Level 2";
@@ -49,6 +51,14 @@ class _GeneralModuleBottomSheetState extends State<GeneralModuleBottomSheet> {
   void initState() {
     super.initState();
 
+    lvlTimeoutFocusNode.addListener(() {
+      if (lvlTimeoutFocusNode.hasFocus) {
+        debugPrint("LVL Time-out field is focused");
+      } else {
+        debugPrint("LVL Time-out field lost focus");
+      }
+    });
+
     if (Get.isRegistered<BleLogController>()) {
       manager = Get.find<BleLogController>().bleManager;
     }
@@ -61,6 +71,7 @@ class _GeneralModuleBottomSheetState extends State<GeneralModuleBottomSheet> {
   void dispose() {
     widget.refreshTrigger.removeListener(_onRefreshTriggered);
     lvlTimeoutController.dispose();
+    lvlTimeoutFocusNode.dispose();
     super.dispose();
   }
 
@@ -190,6 +201,7 @@ class _GeneralModuleBottomSheetState extends State<GeneralModuleBottomSheet> {
                           "LVL Time-out (s)",
                           lvlTimeoutController,
                           maxLength: 3,
+                          focusNode: lvlTimeoutFocusNode,
                         ),
 
                         DropdownWidget(
@@ -249,6 +261,7 @@ class _GeneralModuleBottomSheetState extends State<GeneralModuleBottomSheet> {
     String label,
     TextEditingController controller, {
     int? maxLength,
+    required FocusNode focusNode,
   }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
@@ -259,6 +272,7 @@ class _GeneralModuleBottomSheetState extends State<GeneralModuleBottomSheet> {
           const SizedBox(height: 6),
           TextField(
             controller: controller,
+            focusNode: focusNode,
             keyboardType: TextInputType.number,
             inputFormatters: [
               FilteringTextInputFormatter.digitsOnly,
@@ -268,6 +282,18 @@ class _GeneralModuleBottomSheetState extends State<GeneralModuleBottomSheet> {
             onChanged: (_) => setState(() {}),
             decoration: _inputDecoration(),
           ),
+
+          if (focusNode.hasFocus)
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Text(
+                  "LVL Time-out must be between 30 and 300 seconds",
+                  style: GoogleFonts.inter(fontSize: 12, color: Colors.orange),
+                ),
+              ),
+            ),
         ],
       ),
     );

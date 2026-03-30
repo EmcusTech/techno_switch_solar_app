@@ -74,28 +74,38 @@ class _SounderModeBottomSheetState extends State<SounderModeBottomSheet>
     text: '0',
   );
 
+  final FocusNode delayFocusNode = FocusNode();
+
   String delayed = 'No';
 
-  String? _delayError;
+  final String _delayError = "Delay must be between 0 and 600 seconds";
 
   bool _isDelayValid() {
     final val = int.tryParse(delayController.text);
     return val != null && val >= 0 && val <= 600;
   }
 
-  void _updateDelayError() {
-    final val = int.tryParse(delayController.text);
+  // void _updateDelayError() {
+  //   final val = int.tryParse(delayController.text);
 
-    if (val == null || val < 0 || val > 600) {
-      _delayError = 'Delay must be between 0 and 600 seconds';
-    } else {
-      _delayError = null;
-    }
-  }
+  //   if (val == null || val < 0 || val > 600) {
+  //     _delayError = 'Delay must be between 0 and 600 seconds';
+  //   } else {
+  //     _delayError = null;
+  //   }
+  // }
 
   @override
   void initState() {
     super.initState();
+
+    delayFocusNode.addListener(() {
+      if (delayFocusNode.hasFocus) {
+        debugPrint("Delay field is focused");
+      } else {
+        debugPrint("Delay field lost focus");
+      }
+    });
 
     _tabController = TabController(length: 4, vsync: this);
 
@@ -124,6 +134,8 @@ class _SounderModeBottomSheetState extends State<SounderModeBottomSheet>
   void dispose() {
     widget.refreshTrigger.removeListener(_onRefreshTriggered);
     _tabController.dispose();
+    delayFocusNode.dispose();
+    delayController.dispose();
     super.dispose();
   }
 
@@ -760,7 +772,7 @@ class _SounderModeBottomSheetState extends State<SounderModeBottomSheet>
   }
 
   Widget _delayTab() {
-    _updateDelayError();
+    // _updateDelayError();
 
     return Column(
       children: [
@@ -772,15 +784,15 @@ class _SounderModeBottomSheetState extends State<SounderModeBottomSheet>
             FilteringTextInputFormatter.digitsOnly,
             LengthLimitingTextInputFormatter(3),
           ],
-          decoration: _inputDecoration(hasError: _delayError != null),
-          onChanged: (value) => setState(() => _updateDelayError()),
+          decoration: _inputDecoration(),
+          focusNode: delayFocusNode,
         ),
-        if (_delayError != null)
+        if (delayFocusNode.hasFocus)
           Align(
             alignment: Alignment.centerLeft,
             child: Text(
-              _delayError!,
-              style: GoogleFonts.inter(fontSize: 12, color: Color(0xFFEC1D24)),
+              _delayError,
+              style: GoogleFonts.inter(fontSize: 12, color: Colors.orange),
             ),
           ),
         const SizedBox(height: 14),
@@ -862,9 +874,10 @@ class _SounderModeBottomSheetState extends State<SounderModeBottomSheet>
     List<TextInputFormatter>? inputFormatters,
     InputDecoration? decoration,
     Function(String)? onChanged,
+    FocusNode? focusNode,
   }) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
+      padding: const EdgeInsets.only(bottom: 4),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -872,6 +885,7 @@ class _SounderModeBottomSheetState extends State<SounderModeBottomSheet>
           const SizedBox(height: 6),
           TextField(
             controller: controller,
+            focusNode: focusNode,
             enabled: enabled,
             maxLength: maxLength,
             buildCounter:
