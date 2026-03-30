@@ -2495,6 +2495,7 @@ class BleProcess {
     checkForGeneralModuleSetupApplyRes = 0;
     checkForLiveEventsRetrievalRes = 0;
     processDesc.value = "";
+    checkForAdcSetupFetchRes = 0;
     // Counters
     checkForCtrlCmdRsp = 0;
     checkForAccessKeyCmdRsp = 0;
@@ -2568,6 +2569,7 @@ class BleProcess {
     checkForGeneralModuleSetupApplyRes = 0;
     checkForLiveEventsRetrievalRes = 0;
     processDesc.value = "";
+    checkForAdcSetupFetchRes = 0;
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -2633,6 +2635,7 @@ class BleProcess {
     checkForGeneralModuleSetupApplyRes = 0;
     checkForLiveEventsRetrievalRes = 0;
     processDesc.value = "";
+    checkForAdcSetupFetchRes = 0;
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -2696,6 +2699,7 @@ class BleProcess {
     checkForGeneralModuleSetupApplyRes = 0;
     checkForLiveEventsRetrievalRes = 0;
     processDesc.value = "";
+    checkForAdcSetupFetchRes = 0;
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -2759,6 +2763,7 @@ class BleProcess {
     checkForGeneralModuleSetupApplyRes = 0;
     checkForLiveEventsRetrievalRes = 0;
     processDesc.value = "";
+    checkForAdcSetupFetchRes = 0;
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -2822,6 +2827,7 @@ class BleProcess {
     checkForGeneralModuleSetupApplyRes = 0;
     checkForLiveEventsRetrievalRes = 0;
     processDesc.value = "";
+    checkForAdcSetupFetchRes = 0;
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -2884,6 +2890,7 @@ class BleProcess {
     checkForGeneralModuleSetupApplyRes = 0;
     checkForLiveEventsRetrievalRes = 0;
     processDesc.value = "";
+    checkForAdcSetupFetchRes = 0;
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -2947,6 +2954,7 @@ class BleProcess {
     checkForGeneralModuleSetupApplyRes = 0;
     checkForLiveEventsRetrievalRes = 0;
     processDesc.value = "";
+    checkForAdcSetupFetchRes = 0;
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -3010,6 +3018,7 @@ class BleProcess {
     checkForGeneralModuleSetupApplyRes = 0;
     checkForLiveEventsRetrievalRes = 0;
     processDesc.value = "";
+    checkForAdcSetupFetchRes = 0;
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -3073,6 +3082,7 @@ class BleProcess {
     checkForGeneralModuleSetupApplyRes = 0;
     checkForLiveEventsRetrievalRes = 0;
     processDesc.value = "";
+    checkForAdcSetupFetchRes = 0;
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -3136,6 +3146,7 @@ class BleProcess {
     checkForGeneralModuleSetupApplyRes = 0;
     checkForLiveEventsRetrievalRes = 0;
     processDesc.value = "";
+    checkForAdcSetupFetchRes = 0;
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -3199,6 +3210,7 @@ class BleProcess {
     checkForGeneralModuleSetupApplyRes = 0;
     checkForLiveEventsRetrievalRes = 0;
     processDesc.value = "";
+    checkForAdcSetupFetchRes = 0;
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -3262,6 +3274,7 @@ class BleProcess {
     checkForGeneralModuleSetupApplyRes = 0;
     checkForLiveEventsRetrievalRes = 0;
     processDesc.value = "";
+    checkForAdcSetupFetchRes = 0;
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
@@ -3325,6 +3338,7 @@ class BleProcess {
     checkForGeneralModuleSetupApplyRes = 0;
     checkForLiveEventsRetrievalRes = 0;
     processDesc.value = "";
+    checkForAdcSetupFetchRes = 0;
     // Time tracking
     // logStartingTime = null;
     // logEndTime = null;
