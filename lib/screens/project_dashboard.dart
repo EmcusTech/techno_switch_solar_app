@@ -1303,32 +1303,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
 
                 SizedBox(height: 16),
 
-                // Title
-                Text(
-                  'Enter Access Code',
-                  style: GoogleFonts.inter(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF3D3D3D),
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-
-                // SizedBox(height: 8),
-
-                // // Subtitle
-                // Text(
-                //   'Please enter the password to continue',
-                //   style: GoogleFonts.inter(
-                //     fontSize: 14,
-                //     fontWeight: FontWeight.w400,
-                //     color: Color(0xFF918F8F),
-                //   ),
-                //   textAlign: TextAlign.center,
-                // ),
-                SizedBox(height: 24),
-
-                // Password input (collapses when validating / success) + status + CTA
+                // Password input (title below animates: Enter → Verifying / Access granted)
                 ValueListenableBuilder<bool?>(
                   valueListenable: isAccessKeyValid,
                   builder: (_, isAccessKeyValidValue, __) {
@@ -1466,9 +1441,53 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                           milliseconds: 280,
                         );
 
+                        final String dialogTitle =
+                            !hideInput
+                                ? 'Enter Access Code'
+                                : (isAccessKeyValidValue == true
+                                    ? 'Processed!'
+                                    : 'Processing...');
+
                         return Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
+                            SizedBox(
+                              width: double.infinity,
+                              child: AnimatedSwitcher(
+                                duration: animDuration,
+                                switchInCurve: Curves.easeOutCubic,
+                                switchOutCurve: Curves.easeInCubic,
+                                transitionBuilder: (child, animation) {
+                                  final offsetAnimation = Tween<Offset>(
+                                    begin: const Offset(0, 0.08),
+                                    end: Offset.zero,
+                                  ).animate(
+                                    CurvedAnimation(
+                                      parent: animation,
+                                      curve: Curves.easeOutCubic,
+                                    ),
+                                  );
+                                  return FadeTransition(
+                                    opacity: animation,
+                                    child: SlideTransition(
+                                      position: offsetAnimation,
+                                      child: child,
+                                    ),
+                                  );
+                                },
+                                child: Text(
+                                  dialogTitle,
+                                  key: ValueKey<String>(dialogTitle),
+                                  style: GoogleFonts.inter(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.w700,
+                                    color: Color(0xFF3D3D3D),
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 24),
                             AnimatedSize(
                               duration: animDuration,
                               curve: Curves.easeInOutCubic,
