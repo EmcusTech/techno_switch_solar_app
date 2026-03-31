@@ -163,7 +163,7 @@ class _GeneralModuleBottomSheetState extends State<GeneralModuleBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final maxHeight = MediaQuery.of(context).size.height * 0.8;
+    final maxHeight = MediaQuery.of(context).size.height * 0.75;
 
     return SafeArea(
       child: ConstrainedBox(
