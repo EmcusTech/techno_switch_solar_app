@@ -1170,27 +1170,29 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                     textAlign: TextAlign.center,
                   ),
                 ),
-                Text(
-                  ble.bleProcess.isLbusFetchHasErrors.value
-                      ? 'There was an error downloading'
-                      : '',
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w400,
-                    color: Color(0xFF918F8F),
+                Visibility(
+                  visible: ble.bleProcess.isLbusFetchHasErrors.value,
+                  child: Text(
+                    'There was an error downloading',
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
+                      color: Color(0xFF918F8F),
+                    ),
+                    textAlign: TextAlign.center,
                   ),
-                  textAlign: TextAlign.center,
                 ),
-                Text(
-                  ble.bleProcess.isLbusFetchHasErrors.value
-                      ? 'L-Bus ${ble.bleProcess.lbusFetchErrors.value.join(", ")} - Comms Fault'
-                      : '',
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w400,
-                    color: Color(0xFFEC1D24),
+                Visibility(
+                  visible: ble.bleProcess.isLbusFetchHasErrors.value,
+                  child: Text(
+                    'L-Bus ${ble.bleProcess.lbusFetchErrors.value.join(", ")} - Comms Fault',
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
+                      color: Color(0xFFEC1D24),
+                    ),
+                    textAlign: TextAlign.center,
                   ),
-                  textAlign: TextAlign.center,
                 ),
                 SizedBox(height: 24),
                 SizedBox(
