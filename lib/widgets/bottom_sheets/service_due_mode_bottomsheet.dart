@@ -444,7 +444,7 @@ class _ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
           if (errorMessage != null && focusNode?.hasFocus == true)
             Text(
               errorMessage,
-              style: GoogleFonts.inter(fontSize: 12, color: Colors.red),
+              style: GoogleFonts.inter(fontSize: 12, color: Colors.orange),
             ),
         ],
       ),
