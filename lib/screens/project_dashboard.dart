@@ -1468,8 +1468,16 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                             !hideInput
                                 ? 'Enter Access Code'
                                 : (isAccessKeyValidValue == true
-                                    ? 'Processed!'
-                                    : 'Processing...');
+                                    ? mode == "bottomsheet_download"
+                                        ? 'Downloading...'
+                                        : mode == "bottomsheet_apply"
+                                        ? "Applying..."
+                                        : "Validated"
+                                    : mode == "bottomsheet_download"
+                                    ? 'Downloading...'
+                                    : mode == "bottomsheet_apply"
+                                    ? "Applying..."
+                                    : "Validated");
 
                         return Column(
                           mainAxisSize: MainAxisSize.min,
@@ -1640,8 +1648,10 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                                 } else if (isAccessKeyValidValue == true) {
                                   status =
                                       mode == "bottomsheet_download"
-                                          ? "Downloaded Successfully"
-                                          : "Applied Successfully";
+                                          ? "Processing..."
+                                          : mode == "bottomsheet_apply"
+                                          ? "Processing..."
+                                          : "Fetching...";
                                   if (mounted) {
                                     bleProcess.processDesc.value = "Success";
                                   }
