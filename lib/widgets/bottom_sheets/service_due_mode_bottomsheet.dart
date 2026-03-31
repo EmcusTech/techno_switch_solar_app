@@ -30,12 +30,48 @@ class _ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
 
   final ServiceDueConfig config = ServiceDueConfig();
 
+  final FocusNode yearFocusNode = FocusNode();
+  final FocusNode monthFocusNode = FocusNode();
+  final FocusNode dayFocusNode = FocusNode();
+  final FocusNode hourFocusNode = FocusNode();
+  final FocusNode minuteFocusNode = FocusNode();
+
   final List<String> reminderOptions = ['Off', 'On'];
 
   @override
   void initState() {
     super.initState();
 
+    yearFocusNode.addListener(() {
+      if (yearFocusNode.hasFocus) {
+        debugPrint("Year field is focused");
+      } else {
+        debugPrint("Year field lost focus");
+      }
+    });
+    monthFocusNode.addListener(() {
+      if (monthFocusNode.hasFocus) {
+        debugPrint("Month field is focused");
+      } else {
+        debugPrint("Month field lost focus");
+      }
+    });
+    dayFocusNode.addListener(() {
+      hourFocusNode.addListener(() {
+        if (hourFocusNode.hasFocus) {
+          debugPrint("Hour field is focused");
+        } else {
+          debugPrint("Hour field lost focus");
+        }
+      });
+      minuteFocusNode.addListener(() {
+        if (minuteFocusNode.hasFocus) {
+          debugPrint("Minute field is focused");
+        } else {
+          debugPrint("Minute field lost focus");
+        }
+      });
+    });
     if (Get.isRegistered<BleLogController>()) {
       manager = Get.find<BleLogController>().bleManager;
     }
@@ -117,6 +153,8 @@ class _ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
                 child: SingleChildScrollView(
                   physics: const BouncingScrollPhysics(),
                   padding: const EdgeInsets.only(top: 16),
+                  keyboardDismissBehavior:
+                      ScrollViewKeyboardDismissBehavior.onDrag,
                   child: Column(
                     children: [
                       _numberField(
@@ -124,6 +162,8 @@ class _ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
                         controller: config.yearController,
                         min: 0,
                         max: 9999,
+                        errorMessage: "Year must be between 2010 and 9999",
+                        focusNode: yearFocusNode,
                       ),
 
                       _numberField(
@@ -131,6 +171,8 @@ class _ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
                         controller: config.monthController,
                         min: 1,
                         max: 12,
+                        errorMessage: "Month must be between 1 and 12",
+                        focusNode: monthFocusNode,
                       ),
 
                       _numberField(
@@ -138,6 +180,8 @@ class _ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
                         controller: config.dayController,
                         min: 1,
                         max: 31,
+                        errorMessage: "Day must be between 1 and 31",
+                        focusNode: dayFocusNode,
                       ),
 
                       _numberField(
@@ -145,6 +189,8 @@ class _ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
                         controller: config.hourController,
                         min: 0,
                         max: 23,
+                        errorMessage: "Hour must be between 0 and 23",
+                        focusNode: hourFocusNode,
                       ),
 
                       _numberField(
@@ -152,6 +198,8 @@ class _ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
                         controller: config.minuteController,
                         min: 0,
                         max: 59,
+                        errorMessage: "Minute must be between 0 and 59",
+                        focusNode: minuteFocusNode,
                       ),
 
                       _textField(
@@ -370,6 +418,8 @@ class _ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
     required TextEditingController controller,
     required int min,
     required int max,
+    String? errorMessage,
+    FocusNode? focusNode,
   }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
@@ -380,6 +430,7 @@ class _ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
           const SizedBox(height: 6),
           TextField(
             controller: controller,
+            focusNode: focusNode,
             keyboardType: TextInputType.number,
             inputFormatters: [
               FilteringTextInputFormatter.digitsOnly,
@@ -389,6 +440,12 @@ class _ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
             onChanged: (_) => setState(() {}),
             decoration: _inputDecoration(),
           ),
+          const SizedBox(height: 4),
+          if (errorMessage != null && focusNode?.hasFocus == true)
+            Text(
+              errorMessage,
+              style: GoogleFonts.inter(fontSize: 12, color: Colors.red),
+            ),
         ],
       ),
     );

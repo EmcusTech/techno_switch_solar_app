@@ -170,6 +170,8 @@ class _AccessCodesBottomSheetState extends State<AccessCodesBottomSheet> {
               Expanded(
                 child: SingleChildScrollView(
                   physics: const BouncingScrollPhysics(),
+                  keyboardDismissBehavior:
+                      ScrollViewKeyboardDismissBehavior.onDrag,
                   child: Column(
                     children: [
                       _selector(),

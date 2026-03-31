@@ -185,6 +185,8 @@ class _LBusBottomSheetState extends State<LBusBottomSheet> {
               Expanded(
                 child: SingleChildScrollView(
                   physics: const BouncingScrollPhysics(),
+                  keyboardDismissBehavior:
+                      ScrollViewKeyboardDismissBehavior.onDrag,
                   child: Column(
                     children: [
                       _deviceSelector(),
