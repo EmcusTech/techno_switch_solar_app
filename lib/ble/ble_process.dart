@@ -589,6 +589,16 @@ class BleProcess {
       "Rx pkt count: $bleManager.u8RxPktCnt (STATE: ${bleManager.otaProcessState.name}",
     );
 
+    if (rx.payload[3] == 0x03) {
+      print("the received packet is a nack packet");
+      isOtaCompleted = true;
+      processNextOtaFrame = false;
+      bleManager.otaProcessState = OtaProcessState.notInUse;
+      cancelOperationDeadline();
+      cancelRxTimeout();
+      return;
+    }
+
     if (rx.payload[3] == 0x01) {
       print(
         "the received packet: ${rx.payload.map((e) => e.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",

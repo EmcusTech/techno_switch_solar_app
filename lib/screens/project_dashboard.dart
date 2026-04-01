@@ -3180,6 +3180,10 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 },
               ),
               _peripheralTile(
+                peripheralName: 'Walk Test',
+                iconPath: 'assets/svgs/walk_test_icon.svg',
+              ),
+              _peripheralTile(
                 peripheralName: 'Config Log',
                 iconPath: 'assets/svgs/panel_action_config_log_icon.svg',
                 isDisabled: true,
