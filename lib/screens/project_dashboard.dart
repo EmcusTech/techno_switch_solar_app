@@ -1493,7 +1493,9 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                                         processDescValue.toLowerCase().contains(
                                           'validat',
                                         ))
-                                    ? 'Verifying access'
+                                    ? (bleProcess.sessionAccessCodeReady.value
+                                        ? 'Initiating'
+                                        : 'Verifying access')
                                     : (mode == "bottomsheet_download"
                                         ? 'Downloading...'
                                         : mode == "bottomsheet_apply"
@@ -1581,7 +1583,8 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                                               }
                                             },
                                             onChanged: (val) {
-                                              final wasWrong = bleProcess
+                                              final wasWrong =
+                                                  bleProcess
                                                       .isAccessKeyValid
                                                       .value ==
                                                   false;
@@ -1679,9 +1682,19 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                                 } else if (isAccessKeyValidValue == null &&
                                     (processDescValue.isNotEmpty ||
                                         _controller.text.isNotEmpty)) {
+                                  final bool validatingLike =
+                                      processDescValue == 'Validating' ||
+                                      processDescValue.toLowerCase().contains(
+                                        'validat',
+                                      );
                                   status =
                                       processDescValue.isNotEmpty
-                                          ? processDescValue
+                                          ? (bleProcess
+                                                      .sessionAccessCodeReady
+                                                      .value &&
+                                                  validatingLike
+                                              ? ''
+                                              : processDescValue)
                                           : 'Validating...';
                                 } else if (isAccessKeyValidValue == true) {
                                   status =
@@ -1715,9 +1728,10 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                                         style: GoogleFonts.inter(
                                           fontSize: 14,
                                           fontWeight: FontWeight.w600,
-                                          color: isAccessKeyValidValue == false
-                                              ? const Color(0xFFEC1D24)
-                                              : const Color(0xFF3D3D3D),
+                                          color:
+                                              isAccessKeyValidValue == false
+                                                  ? const Color(0xFFEC1D24)
+                                                  : const Color(0xFF3D3D3D),
                                         ),
                                         textAlign: TextAlign.center,
                                       ),
