@@ -32,6 +32,7 @@ import 'package:techno_switch_solar_app/widgets/bottom_sheets/service_due_mode_b
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/setting_bottom_sheets/ext_out_bottomsheet.dart';
 import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/sounder_mode_bottomsheet.dart';
+import 'package:techno_switch_solar_app/widgets/bottom_sheets/walk_test_zone_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/zone_mode_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/firmware_upgrade_bottom_sheet.dart';
 
@@ -2559,6 +2560,28 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     );
   }
 
+  void showWalkTestZoneBottomSheet({
+    required BuildContext context,
+    required String deviceId,
+    required VoidCallback onDownload,
+    required VoidCallback onApply,
+    required ValueNotifier<int> refreshTrigger,
+  }) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withOpacity(0.4),
+      builder:
+          (_) => WalkTestZoneBottomSheet(
+            deviceId: deviceId,
+            onDownload: onDownload,
+            onApply: onApply,
+            refreshTrigger: refreshTrigger,
+          ),
+    );
+  }
+
   void showRadioSetupBottomSheet({
     required BuildContext context,
     required String deviceId,
@@ -3182,6 +3205,41 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
               _peripheralTile(
                 peripheralName: 'Walk Test',
                 iconPath: 'assets/svgs/walk_test_icon.svg',
+                onTap: () {
+                  if (_selectedDevice.manufacturerData.isNotEmpty &&
+                      _selectedDevice.manufacturerData.last == 1) {
+                    showBootloaderModeDialog(context: context);
+                    return;
+                  }
+                  showWalkTestZoneBottomSheet(
+                    context: context,
+                    deviceId: _selectedDevice.id,
+                    onDownload: () {
+                      showPasswordPopup(
+                        onCall: () {
+                          ble.bleProcess.isZoneSetupFetchCommandActive.value =
+                              true;
+                          bleController.startZoneSetupFetch();
+                        },
+                        isZoneSetup: true,
+                        mode: 'bottomsheet_download',
+                        onDownloadComplete: _saveZoneCacheAndNotifyRefresh,
+                      );
+                    },
+                    onApply: () {
+                      showPasswordPopup(
+                        onCall: () {
+                          ble.bleProcess.isZoneSetupCommandApplyActive.value =
+                              true;
+                          bleController.startZoneSetupApply();
+                        },
+                        isZoneSetup: true,
+                        mode: 'bottomsheet_apply',
+                      );
+                    },
+                    refreshTrigger: _zoneRefreshTrigger,
+                  );
+                },
               ),
               _peripheralTile(
                 peripheralName: 'Config Log',
