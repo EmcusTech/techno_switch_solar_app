@@ -1246,21 +1246,22 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     String? downloadSuccessMessage,
   }) {
     final bleProcess = ble.bleProcess;
-    if (bleProcess.sessionAccessCodeReady.value &&
-        bleProcess.accessKey.value.isNotEmpty) {
-      bleProcess.isAccessKeyValid.value = null;
-      bleProcess.processDesc.value = "Validating";
-      onCall();
-      return;
-    }
+    final bool useCachedSessionAccess =
+        bleProcess.sessionAccessCodeReady.value &&
+        bleProcess.accessKey.value.isNotEmpty;
 
     // Reset navigation guard each time the dialog opens
     _navigatingToDeviceConnecting = false;
 
-    // Reset previous access-key validation state
+    // Reset previous access-key validation state (keep cached access key when reusing session)
     bleProcess.isAccessKeyValid.value = null;
-    bleProcess.accessKey.value = "";
-    bleProcess.processDesc.value = "";
+    if (useCachedSessionAccess) {
+      // Start in the same UI state as after tapping Verify: verifying, no field, no buttons.
+      bleProcess.processDesc.value = "Validating";
+    } else {
+      bleProcess.accessKey.value = "";
+      bleProcess.processDesc.value = "";
+    }
 
     Timer? accessKeyValidationTimer;
     void cancelAccessKeyTimer() {
@@ -1270,7 +1271,6 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
 
     final TextEditingController _controller = TextEditingController();
     final FocusNode _focusNode = FocusNode();
-    final ValueNotifier<String?> errorText = ValueNotifier(null);
     final accessKey = bleProcess.accessKey;
     final ValueNotifier<bool?> isAccessKeyValid = bleProcess.isAccessKeyValid;
 
@@ -1299,7 +1299,8 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                       valueListenable: bleProcess.processDesc,
                       builder: (_, processDescValue, __) {
                         final bool hideInput =
-                            processDescValue.isNotEmpty ||
+                            (processDescValue.isNotEmpty &&
+                                isAccessKeyValidValue != false) ||
                             isAccessKeyValidValue == true;
                         final Color iconColor =
                             hideInput
@@ -1347,7 +1348,9 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                     if (isAccessKeyValidValue == true &&
                         !_navigatingToDeviceConnecting) {
                       _navigatingToDeviceConnecting = true;
-                      bleProcess.setSessionAccessCode(bleProcess.accessKey.value);
+                      bleProcess.setSessionAccessCode(
+                        bleProcess.accessKey.value,
+                      );
                       WidgetsBinding.instance.addPostFrameCallback((_) async {
                         if (!mounted) return;
                         await Future.delayed(const Duration(seconds: 1));
@@ -1462,7 +1465,8 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                       valueListenable: bleProcess.processDesc,
                       builder: (_, processDescValue, __) {
                         final bool hideInput =
-                            processDescValue.isNotEmpty ||
+                            (processDescValue.isNotEmpty &&
+                                isAccessKeyValidValue != false) ||
                             isAccessKeyValidValue == true;
                         if (hideInput) {
                           WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -1485,11 +1489,16 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                                         : mode == "bottomsheet_apply"
                                         ? "Applying..."
                                         : "Validated"
-                                    : mode == "bottomsheet_download"
-                                    ? 'Downloading...'
-                                    : mode == "bottomsheet_apply"
-                                    ? "Applying..."
-                                    : "Validated");
+                                    : (processDescValue == 'Validating' ||
+                                        processDescValue.toLowerCase().contains(
+                                          'validat',
+                                        ))
+                                    ? 'Verifying access'
+                                    : (mode == "bottomsheet_download"
+                                        ? 'Downloading...'
+                                        : mode == "bottomsheet_apply"
+                                        ? "Applying..."
+                                        : "Validated"));
 
                         return Column(
                           mainAxisSize: MainAxisSize.min,
@@ -1559,14 +1568,31 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                                               FilteringTextInputFormatter
                                                   .digitsOnly,
                                             ],
+                                            onTap: () {
+                                              if (bleProcess
+                                                      .isAccessKeyValid
+                                                      .value ==
+                                                  false) {
+                                                bleProcess.processDesc.value =
+                                                    '';
+                                                bleProcess
+                                                    .isAccessKeyValid
+                                                    .value = null;
+                                              }
+                                            },
                                             onChanged: (val) {
+                                              final wasWrong = bleProcess
+                                                      .isAccessKeyValid
+                                                      .value ==
+                                                  false;
                                               accessKey.value = val;
-
-                                              //reset state
-                                              errorText.value = null;
                                               bleProcess
                                                   .isAccessKeyValid
                                                   .value = null;
+                                              if (wasWrong) {
+                                                bleProcess.processDesc.value =
+                                                    '';
+                                              }
                                             },
                                             decoration: InputDecoration(
                                               hintText: '••••••••',
@@ -1575,15 +1601,6 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                                                 fontWeight: FontWeight.w600,
                                                 letterSpacing: 8,
                                                 color: Color(0xFFD0D0D0),
-                                              ),
-                                              errorText:
-                                                  isAccessKeyValidValue == false
-                                                      ? "Invalid access key. Try again."
-                                                      : null,
-                                              errorStyle: GoogleFonts.inter(
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.w400,
-                                                color: Color(0xFFEC1D24),
                                               ),
                                               counterText: '',
                                               filled: true,
@@ -1654,9 +1671,18 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                             Builder(
                               builder: (context) {
                                 String? status;
-                                if (_controller.text.isNotEmpty &&
-                                    isAccessKeyValidValue == null) {
-                                  status = processDescValue;
+                                if (isAccessKeyValidValue == false) {
+                                  status =
+                                      processDescValue.isNotEmpty
+                                          ? processDescValue
+                                          : 'Wrong password. Try again.';
+                                } else if (isAccessKeyValidValue == null &&
+                                    (processDescValue.isNotEmpty ||
+                                        _controller.text.isNotEmpty)) {
+                                  status =
+                                      processDescValue.isNotEmpty
+                                          ? processDescValue
+                                          : 'Validating...';
                                 } else if (isAccessKeyValidValue == true) {
                                   status =
                                       mode == "bottomsheet_download"
@@ -1689,7 +1715,9 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                                         style: GoogleFonts.inter(
                                           fontSize: 14,
                                           fontWeight: FontWeight.w600,
-                                          color: const Color(0xFF3D3D3D),
+                                          color: isAccessKeyValidValue == false
+                                              ? const Color(0xFFEC1D24)
+                                              : const Color(0xFF3D3D3D),
                                         ),
                                         textAlign: TextAlign.center,
                                       ),
@@ -1702,7 +1730,12 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                             ValueListenableBuilder<String>(
                               valueListenable: bleProcess.processDesc,
                               builder: (_, processDescForButtons, __) {
-                                return processDescForButtons.isEmpty
+                                // Show only before verify, or after wrong key. Never when success.
+                                final bool showButtons =
+                                    isAccessKeyValidValue != true &&
+                                    (processDescForButtons.isEmpty ||
+                                        isAccessKeyValidValue == false);
+                                return showButtons
                                     ? Row(
                                       children: [
                                         Expanded(
@@ -1812,6 +1845,17 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
         );
       },
     );
+    if (useCachedSessionAccess) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        onCall();
+        // startExtOutFetch / etc. call resetProcessExtOutState which clears processDesc.
+        // Keep verifying UI until the protocol sets progress (e.g. "Downloading …").
+        if (bleProcess.processDesc.value.isEmpty) {
+          bleProcess.processDesc.value = "Validating";
+        }
+      });
+    }
   }
 
   Widget _buildDashboardContainer() {

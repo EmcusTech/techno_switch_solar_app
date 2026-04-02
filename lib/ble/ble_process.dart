@@ -627,11 +627,11 @@ class BleProcess {
     if (rx.payload[10] == 0x83 &&
         rx.payload[12] == 0x02 &&
         rx.payload[13] == 0x0A) {
-      isAccessKeyValid.value = false;
       print("Wrong password. Try again.");
-      processDesc.value = "Wrong password. Try again.";
       clearSessionAccessCode();
       resetProcessState();
+      processDesc.value = "Wrong password. Try again.";
+      isAccessKeyValid.value = false;
       return;
     }
 
@@ -1063,10 +1063,10 @@ class BleProcess {
                 rx.payload.sublist(14, 14 + accessKeyLength.value),
               ) ==
               accessKey.value) {
-        isAccessKeyValid.value = false;
-        processDesc.value = "Wrong password. Try again.";
         clearSessionAccessCode();
         resetProcessState();
+        processDesc.value = "Wrong password. Try again.";
+        isAccessKeyValid.value = false;
         return;
       } else {
         print("ACCESS KEY not found, polling again");
