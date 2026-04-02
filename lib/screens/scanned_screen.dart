@@ -18,6 +18,7 @@ import 'package:techno_switch_solar_app/services/site_service.dart';
 import 'package:techno_switch_solar_app/models/site_model.dart';
 import 'package:techno_switch_solar_app/screens/simple_site_creation_screen.dart';
 import 'package:techno_switch_solar_app/utils/ble_name_utils.dart';
+import 'package:techno_switch_solar_app/widgets/panel_access_code_dialog.dart';
 import 'package:usb_serial/usb_serial.dart';
 // import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
@@ -749,13 +750,30 @@ class _ScannedScreenState extends State<ScannedScreen> {
                 if (!screenContext.mounted) return;
 
                 if (widget.isLiveEvent == true) {
-                  ble.bleProcess.processDesc.value = "";
-                  showPasswordPopup(
-                    device: device,
-                    onCall: () {
-                      bleController.startLogRetrieval();
-                    },
-                  );
+                  bleController.bleProcess.processDesc.value = "";
+                  if (bleController.bleProcess.sessionAccessCodeReady.value &&
+                      bleController.bleProcess.accessKey.value.isNotEmpty) {
+                    await bleController.startLogRetrieval();
+                    await Future.delayed(const Duration(seconds: 1));
+                    if (!screenContext.mounted) return;
+                    Navigator.of(screenContext).push(
+                      MaterialPageRoute(
+                        builder:
+                            (context) => LogRetrievalLoadingScreen(
+                              scanType: ScanType.bluetooth,
+                              selectedDevice: device,
+                              isLiveEvent: widget.isLiveEvent,
+                            ),
+                      ),
+                    );
+                  } else {
+                    showPasswordPopup(
+                      device: device,
+                      onCall: () {
+                        bleController.startLogRetrieval();
+                      },
+                    );
+                  }
                 } else {
                   final siteId = await _ensureConnectedPanelHasSite(
                     device: device,
@@ -790,6 +808,13 @@ class _ScannedScreenState extends State<ScannedScreen> {
                       ),
                     );
                   } else {
+                    final ok = await showPanelAccessCodeGatewayDialog(
+                      context: screenContext,
+                      onStartValidation: () =>
+                          bleController.startSessionAccessCodeValidation(),
+                    );
+                    if (!ok || !screenContext.mounted) return;
+
                     Navigator.of(
                       screenContext,
                       rootNavigator: true,

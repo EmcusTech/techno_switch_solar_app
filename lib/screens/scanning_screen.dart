@@ -24,6 +24,7 @@ import 'package:techno_switch_solar_app/services/site_service.dart';
 import 'package:techno_switch_solar_app/models/site_model.dart';
 import 'package:techno_switch_solar_app/screens/simple_site_creation_screen.dart';
 import 'package:techno_switch_solar_app/utils/ble_name_utils.dart';
+import 'package:techno_switch_solar_app/widgets/panel_access_code_dialog.dart';
 
 enum ScanType { usb, bluetooth }
 
@@ -149,7 +150,7 @@ class _ScanningScreenState extends State<ScanningScreen>
                           ),
                           onPressed: () {
                             Navigator.of(dialogContext).pop(false);
-                            ble.disconnectConnectedDevice();
+                            _bleManager.disconnectConnectedDevice();
                           },
                           child: Text(
                             'Cancel',
@@ -418,7 +419,7 @@ class _ScanningScreenState extends State<ScanningScreen>
                               child: TextButton(
                                 onPressed: () {
                                   Navigator.of(dialogContext).pop('cancel');
-                                  ble.disconnectConnectedDevice();
+                                  _bleManager.disconnectConnectedDevice();
                                 },
                                 child: Text(
                                   'Cancel',
@@ -1672,13 +1673,30 @@ class _ScanningScreenState extends State<ScanningScreen>
                 if (!context.mounted) return;
 
                 if (widget.isLiveEvent == true) {
-                  ble.bleProcess.processDesc.value = "";
-                  showPasswordPopup(
-                    device: device,
-                    onCall: () {
-                      bleController.startLogRetrieval();
-                    },
-                  );
+                  bleController.bleProcess.processDesc.value = "";
+                  if (bleController.bleProcess.sessionAccessCodeReady.value &&
+                      bleController.bleProcess.accessKey.value.isNotEmpty) {
+                    await bleController.startLogRetrieval();
+                    await Future.delayed(const Duration(seconds: 1));
+                    if (!context.mounted) return;
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder:
+                            (ctx) => LogRetrievalLoadingScreen(
+                              scanType: ScanType.bluetooth,
+                              selectedDevice: device,
+                              isLiveEvent: widget.isLiveEvent,
+                            ),
+                      ),
+                    );
+                  } else {
+                    showPasswordPopup(
+                      device: device,
+                      onCall: () {
+                        bleController.startLogRetrieval();
+                      },
+                    );
+                  }
                   return;
                 }
 
@@ -1716,6 +1734,13 @@ class _ScanningScreenState extends State<ScanningScreen>
                     ),
                   );
                 } else {
+                  final ok = await showPanelAccessCodeGatewayDialog(
+                    context: context,
+                    onStartValidation: () =>
+                        bleController.startSessionAccessCodeValidation(),
+                  );
+                  if (!ok || !context.mounted) return;
+
                   Navigator.of(context, rootNavigator: true).pushReplacement(
                     MaterialPageRoute(
                       builder:

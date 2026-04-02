@@ -127,6 +127,25 @@ class BleProcess {
 
   final ValueNotifier<int> accessKeyLength = ValueNotifier<int>(0);
 
+  /// Panel access code validated this BLE session; cleared on disconnect / wrong code.
+  final ValueNotifier<bool> sessionAccessCodeReady = ValueNotifier<bool>(false);
+
+  /// True while running [BleManager.startSessionAccessCodeValidation] (access-only, no setup fetch).
+  bool isSessionAccessCodeValidationOnly = false;
+
+  void clearSessionAccessCode() {
+    sessionAccessCodeReady.value = false;
+    accessKey.value = "";
+    accessKeyLength.value = 0;
+    isAccessKeyValid.value = null;
+  }
+
+  /// Call after the panel has accepted the access code for this session.
+  void setSessionAccessCode(String code) {
+    accessKey.value = code;
+    sessionAccessCodeReady.value = true;
+  }
+
   final ValueNotifier<int> bleManufacturerData = ValueNotifier<int>(0);
 
   // Ext Out Variables
@@ -611,6 +630,7 @@ class BleProcess {
       isAccessKeyValid.value = false;
       print("Wrong password. Try again.");
       processDesc.value = "Wrong password. Try again.";
+      clearSessionAccessCode();
       resetProcessState();
       return;
     }
@@ -1045,6 +1065,7 @@ class BleProcess {
               accessKey.value) {
         isAccessKeyValid.value = false;
         processDesc.value = "Wrong password. Try again.";
+        clearSessionAccessCode();
         resetProcessState();
         return;
       } else {
@@ -2310,11 +2331,20 @@ class BleProcess {
         isAccessKeyValid.value = true;
         // nackRetryCount = 0;
         print("CONTROL CMD RESPONSE RECEIVED");
-        checkForCtrlCmdRsp = 2;
-        logStartingTime = DateTime.now();
-        // Continue with normal polling now that we got the response
-        startRxTimeout();
-        await bleManager.sendPollPacket();
+        if (isSessionAccessCodeValidationOnly) {
+          isSessionAccessCodeValidationOnly = false;
+          bleManager.otaProcessState = OtaProcessState.notInUse;
+          cancelOperationDeadline();
+          checkForCtrlCmdRsp = 0;
+          cancelRxTimeout();
+          processDesc.value = "";
+        } else {
+          checkForCtrlCmdRsp = 2;
+          logStartingTime = DateTime.now();
+          // Continue with normal polling now that we got the response
+          startRxTimeout();
+          await bleManager.sendPollPacket();
+        }
       } else if (nackRetryCount == 3) {
         isOtaCompleted = true;
         processNextOtaFrame = false;
@@ -2481,6 +2511,7 @@ class BleProcess {
   }
 
   void resetProcessState() {
+    isSessionAccessCodeValidationOnly = false;
     // Terminal guards
     isOtaCompleted = false;
     processNextOtaFrame = true;

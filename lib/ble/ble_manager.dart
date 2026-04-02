@@ -884,6 +884,34 @@ class BleManager {
     Get.find<BleLogController>().sendNetworkPacket();
   }
 
+  /// Validates panel access code only (no setup fetch). On success, [BleProcess.isAccessKeyValid] is set.
+  Future<void> startSessionAccessCodeValidation() async {
+    if (!isConnected) {
+      throw Exception("Device not connected.");
+    }
+
+    if (notifyChar == null || writeChar == null) {
+      throw Exception(
+        "BLE characteristics not initialized. Cannot validate access code.",
+      );
+    }
+
+    if (_notifySub == null) {
+      throw Exception(
+        "BLE handshake not complete. Please wait for connection to finish.",
+      );
+    }
+
+    resetProtocolState();
+    bleProcess.resetProcessState();
+    bleProcess.isSessionAccessCodeValidationOnly = true;
+
+    bleCurrentState = BleStates.SEND_EXT_OUT_SETUP_CMD_FETCH_PACKET;
+    bleStateMachineState = BleStates.SEND_EXT_OUT_SETUP_CMD_FETCH_PACKET;
+    bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
+    await Get.find<BleLogController>().sendNetworkPacket();
+  }
+
   Future<void> startLiveEventsRetrieval() async {
     if (!isConnected) {
       throw Exception("Device not connected. Cannot start log retrieval.");
@@ -2025,6 +2053,8 @@ class BleManager {
               _isGattConnected = false;
               _connectedOnce = false;
 
+              bleProcess.clearSessionAccessCode();
+
               await _notifySub?.cancel();
               _notifySub = null;
 
@@ -2187,6 +2217,7 @@ class BleManager {
     _isConnectedNotifier.value = false;
     handshakeCompleteNotifier.value = false;
     bleFirmwareVersion.value = '';
+    bleProcess.clearSessionAccessCode();
   }
 
   /// SHUTDOWN
@@ -2208,6 +2239,7 @@ class BleManager {
     // Reset all state
     resetProtocolState();
     bleProcess.resetProcessState();
+    bleProcess.clearSessionAccessCode();
 
     // Reset BLE state machine
     bleCurrentState = BleStates.REQ_ENCY_KEY;

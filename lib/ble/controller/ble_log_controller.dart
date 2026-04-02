@@ -51,6 +51,10 @@ class BleLogController extends GetxController {
     await bleManager.startLogRetrieval();
   }
 
+  Future<void> startSessionAccessCodeValidation() async {
+    await bleManager.startSessionAccessCodeValidation();
+  }
+
   Future<void> startExtOutFetch() async {
     await bleManager.startExtOutFetch();
   }

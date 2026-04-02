@@ -1245,11 +1245,19 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     Future<void> Function()? onDownloadComplete,
     String? downloadSuccessMessage,
   }) {
+    final bleProcess = ble.bleProcess;
+    if (bleProcess.sessionAccessCodeReady.value &&
+        bleProcess.accessKey.value.isNotEmpty) {
+      bleProcess.isAccessKeyValid.value = null;
+      bleProcess.processDesc.value = "Validating";
+      onCall();
+      return;
+    }
+
     // Reset navigation guard each time the dialog opens
     _navigatingToDeviceConnecting = false;
 
     // Reset previous access-key validation state
-    final bleProcess = ble.bleProcess;
     bleProcess.isAccessKeyValid.value = null;
     bleProcess.accessKey.value = "";
     bleProcess.processDesc.value = "";
@@ -1339,6 +1347,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                     if (isAccessKeyValidValue == true &&
                         !_navigatingToDeviceConnecting) {
                       _navigatingToDeviceConnecting = true;
+                      bleProcess.setSessionAccessCode(bleProcess.accessKey.value);
                       WidgetsBinding.instance.addPostFrameCallback((_) async {
                         if (!mounted) return;
                         await Future.delayed(const Duration(seconds: 1));
