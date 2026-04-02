@@ -605,6 +605,16 @@ class BleProcess {
       );
     }
 
+    if (rx.payload[10] == 0x83 &&
+        rx.payload[12] == 0x02 &&
+        rx.payload[13] == 0x0A) {
+      isAccessKeyValid.value = false;
+      print("Wrong password. Try again.");
+      processDesc.value = "Wrong password. Try again.";
+      resetProcessState();
+      return;
+    }
+
     // ----- OTA STATE MACHINE -----
     switch (bleManager.otaProcessState) {
       case OtaProcessState.sendNetworkPacket:
