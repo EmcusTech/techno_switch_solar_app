@@ -15,8 +15,8 @@ Future<bool> showPanelAccessCodeGatewayDialog({
   final bleController = Get.find<BleLogController>();
   final bleProcess = bleController.bleProcess;
 
-  bleProcess.isAccessKeyValid.value = null;
-  bleProcess.accessKey.value = "";
+  // Full session reset so stale sessionAccessCodeReady cannot skip tile prompts.
+  bleProcess.clearSessionAccessCode();
   bleProcess.processDesc.value = "";
 
   final result = await showDialog<bool>(

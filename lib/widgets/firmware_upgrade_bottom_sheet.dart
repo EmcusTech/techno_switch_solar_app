@@ -1529,6 +1529,9 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
     final expectedCrc = result?.expectedHex ?? '—';
     final calculatedCrc = result?.calculatedHex ?? '—';
 
+    print('expectedCrc: $expectedCrc');
+    print('calculatedCrc: $calculatedCrc');
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [

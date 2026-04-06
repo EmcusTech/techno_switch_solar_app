@@ -35,6 +35,7 @@ import 'package:techno_switch_solar_app/widgets/bottom_sheets/sounder_mode_botto
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/walk_test_zone_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/zone_mode_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/firmware_upgrade_bottom_sheet.dart';
+import 'package:techno_switch_solar_app/widgets/panel_access_code_dialog.dart';
 
 class ProjectDashboardScreen extends StatefulWidget {
   final String panelVersionNo;
@@ -603,20 +604,27 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
       final bleController = Get.find<BleLogController>();
       await bleController.connectToDevice(device: device);
 
-      setState(() {
-        _selectedDevice = device;
-      });
-
-      widget.onDeviceReconnected?.call(device);
-
-      // The dialog will automatically close when connection is established
-      // via the ListenableBuilder listening to connectionNotifier
-
       if (mounted) {
         setState(() {
+          _selectedDevice = device;
           _isConnecting = false;
         });
       }
+
+      widget.onDeviceReconnected?.call(device);
+
+      // The connecting dialog closes when handshake completes (~500ms delay).
+      // Match the home/scanned flow: require access-code validation after reconnect
+      // (e.g. idle disconnect) so session state and tiles behave like a fresh entry.
+      await Future.delayed(const Duration(milliseconds: 600));
+      if (!mounted) return;
+
+      bleController.bleProcess.clearSessionAccessCode();
+      await showPanelAccessCodeGatewayDialog(
+        context: context,
+        onStartValidation: () =>
+            bleController.startSessionAccessCodeValidation(),
+      );
     } catch (e) {
       if (mounted) {
         setState(() {
