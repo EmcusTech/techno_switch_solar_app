@@ -583,6 +583,9 @@ class BleProcess {
   final ValueNotifier<double> zone3AdcValue = ValueNotifier<double>(0);
   final ValueNotifier<double> earthAdcValue = ValueNotifier<double>(0);
 
+  // Network Variables
+  final ValueNotifier<bool> isNetworkPacketProcess = ValueNotifier<bool>(true);
+
   // BleStates bleStateMachineState = BleStates.IDLE;
   BleStates bleCurrentState = BleStates.IDLE;
   DeviceConnectState deviceConnectState = DeviceConnectState.notConnected;
@@ -626,7 +629,8 @@ class BleProcess {
 
     if (rx.payload[10] == 0x83 &&
         rx.payload[12] == 0x02 &&
-        rx.payload[13] == 0x0A) {
+        rx.payload[13] == 0x0A &&
+        isNetworkPacketProcess.value) {
       print("Wrong password. Try again.");
       clearSessionAccessCode();
       resetProcessState();
@@ -641,6 +645,7 @@ class BleProcess {
         print("NEXT: POLL PACKET");
         // await Future.delayed(Duration(seconds: 1));
         bleManager.otaProcessState = OtaProcessState.sendPollPacket;
+        isNetworkPacketProcess.value = false;
         startRxTimeout();
         await bleManager.sendPollPacket();
         break;

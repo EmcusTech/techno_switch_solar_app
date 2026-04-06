@@ -2173,6 +2173,7 @@ class BleManager {
   /// DISCONNECT
   Future<void> disconnectConnectedDevice() async {
     if (!isConnected) {
+      print("Device not connected, returning");
       return;
     }
 
@@ -2186,6 +2187,9 @@ class BleManager {
       if (device != null) {
         print("Disconnecting device using fbp: $device");
         await device.disconnect();
+      } else {
+        print("Device not found, returning");
+        return;
       }
     } catch (e) {
       print("Error disconnecting device: $e");

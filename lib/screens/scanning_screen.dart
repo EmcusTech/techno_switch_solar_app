@@ -1736,10 +1736,13 @@ class _ScanningScreenState extends State<ScanningScreen>
                 } else {
                   final ok = await showPanelAccessCodeGatewayDialog(
                     context: context,
-                    onStartValidation: () =>
-                        bleController.startSessionAccessCodeValidation(),
+                    onStartValidation:
+                        () => bleController.startSessionAccessCodeValidation(),
                   );
-                  if (!ok || !context.mounted) return;
+                  if (!ok || !context.mounted) {
+                    bleController.bleManager.disconnectConnectedDevice();
+                    return;
+                  }
 
                   Navigator.of(context, rootNavigator: true).pushReplacement(
                     MaterialPageRoute(
