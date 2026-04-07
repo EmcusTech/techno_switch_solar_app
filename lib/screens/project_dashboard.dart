@@ -620,11 +620,16 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
       if (!mounted) return;
 
       bleController.bleProcess.clearSessionAccessCode();
-      await showPanelAccessCodeGatewayDialog(
+      final ok = await showPanelAccessCodeGatewayDialog(
         context: context,
-        onStartValidation: () =>
-            bleController.startSessionAccessCodeValidation(),
+        onStartValidation:
+            () => bleController.startSessionAccessCodeValidation(),
       );
+
+      if (!ok || !context.mounted) {
+        bleController.bleManager.disconnectConnectedDevice();
+        return;
+      }
     } catch (e) {
       if (mounted) {
         setState(() {
