@@ -68,6 +68,7 @@ enum BleStates {
   SEND_GENERAL_MODULE_SETUP_CMD_FETCH_PACKET,
   SEND_GENERAL_MODULE_SETUP_CMD_APPLY_PACKET,
   SEND_ADC_SETUP_CMD_FETCH_PACKET,
+  SEND_PROG_INPUT_TEST_MODE_FETCH_PACKET,
   // add other states
 }
 
@@ -139,6 +140,7 @@ enum BleOperationMode {
   generalModuleSetupFetch,
   generalModuleSetupApply,
   adcSetupFetch,
+  progInputTestModeFetch,
 }
 
 const String BLE_AUTHN_MSG = "TECHNOSWITCH-AUTH-APP";
@@ -696,6 +698,19 @@ class BleManager {
     otaProcessState = OtaProcessState.sendNetworkPacket;
   }
 
+  void resetProtocolProgInputTestModeState() {
+    // Packet counters
+    u8TxPktCnt = 0;
+    u8RxPktCnt = 0;
+    receivedPollCount = 0;
+
+    // Poll guards
+    _pollInFlight = false;
+
+    // OTA state
+    otaProcessState = OtaProcessState.sendNetworkPacket;
+  }
+
   void resetFirmwareState() {
     bleCurrentState = BleStates.SEND_START_FIRMWARE_PACKET;
     bleStateMachineState = BleStates.SEND_START_FIRMWARE_PACKET;
@@ -843,6 +858,15 @@ class BleManager {
     _pollInFlight = false;
     receivedPollCount = 0;
     currentOperationMode = BleOperationMode.adcSetupFetch;
+  }
+
+  void resetProgInputTestModeState() {
+    bleCurrentState = BleStates.REQ_ENCY_KEY;
+    bleStateMachineState = BleStates.REQ_ENCY_KEY;
+    bleAESKey.clear();
+    _pollInFlight = false;
+    receivedPollCount = 0;
+    currentOperationMode = BleOperationMode.progInputTestModeFetch;
   }
 
   /// Initialize and start log retrieval process
@@ -1792,6 +1816,41 @@ class BleManager {
     bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
     Get.find<BleLogController>().sendNetworkPacket();
   }
+
+  Future<void> startProgInputTestModeFetch() async {
+    if (!isConnected) {
+      throw Exception("Device not connected. Cannot start log retrieval.");
+    }
+
+    if (notifyChar == null || writeChar == null) {
+      throw Exception(
+        "BLE characteristics not initialized. Cannot start log retrieval.",
+      );
+    }
+
+    // Set operation mode to log retrieval
+    currentOperationMode = BleOperationMode.progInputTestModeFetch;
+
+    // Reset protocol state to initial values
+    resetProgInputTestModeState();
+    resetProtocolProgInputTestModeState();
+
+    // IMPORTANT: Reset process state to clear isOtaCompleted flag
+    // This ensures polls aren't blocked after firmware upgrade
+    bleProcess.resetProcessProgInputTestModeState();
+
+    if (_notifySub == null) {
+      throw Exception(
+        "BLE handshake not complete. Please wait for connection to finish.",
+      );
+    }
+    print("Proceeding with Prog input test mode fetch");
+    bleCurrentState = BleStates.SEND_PROG_INPUT_TEST_MODE_FETCH_PACKET;
+    bleStateMachineState = BleStates.SEND_PROG_INPUT_TEST_MODE_FETCH_PACKET;
+    print("Current state: $bleStateMachineState");
+    bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
+    Get.find<BleLogController>().sendNetworkPacket();
+  }
   // Future<void> startExtOut() async {
   //   if (!isConnected) {
   //     throw Exception("Device not connected. Cannot start log retrieval.");
@@ -2639,6 +2698,19 @@ class BleManager {
           bleStateMachineState = BleStates.SEND_ADC_SETUP_CMD_FETCH_PACKET;
           print("Current state: $bleStateMachineState (Adc setup fetch)");
           // Send Network Packet for Adc setup fetch
+          bleProcess.startOtherPacketsRxTimeout(
+            timeout: const Duration(seconds: 5),
+          );
+          Get.find<BleLogController>().sendNetworkPacket();
+        } else if (currentOperationMode ==
+            BleOperationMode.progInputTestModeFetch) {
+          bleCurrentState = BleStates.SEND_PROG_INPUT_TEST_MODE_FETCH_PACKET;
+          bleStateMachineState =
+              BleStates.SEND_PROG_INPUT_TEST_MODE_FETCH_PACKET;
+          print(
+            "Current state: $bleStateMachineState (Prog input test mode fetch)",
+          );
+          // Send Network Packet for Prog input test mode fetch
           bleProcess.startOtherPacketsRxTimeout(
             timeout: const Duration(seconds: 5),
           );
@@ -5545,6 +5617,107 @@ class BleManager {
 
     print(
       "TX/RX: TRANSMIT: Diagnostics Setup Fetch Command time: ${DateTime.now().toIso8601String()}, packet: ${u8_pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+    );
+
+    await sendSmallDataFrame(0x1000, 216, u8_pkt);
+  }
+
+  Future<void> sendStartEmulationCmdPkt() async {
+    // Create 216-byte buffer
+    Uint8List u8_pkt = Uint8List(216);
+
+    // Update global counters
+    u8TxPktCnt += 1;
+
+    u8_pkt[0] = 0xFE;
+    u8_pkt[1] = 0x01;
+    u8_pkt[2] = 0x00;
+
+    u8_pkt[3] = 0x01; // pkt type
+    u8_pkt[4] = u8TxPktCnt & 0xFF; // tx pkt num
+    u8_pkt[5] = u8RxPktCnt & 0xFF; // rx pkt num
+    u8_pkt[6] = 0x00; // network number
+    u8_pkt[10] = 0x83; // mode
+    u8_pkt[11] = 0x01; // socket number
+    u8_pkt[12] = 0x03; // command
+
+    // Compute checksum on first 213 bytes
+    int checksum = toolsFletcherChecksum(u8_pkt.sublist(0, 213));
+
+    u8_pkt[213] = (checksum >> 8) & 0xFF;
+    u8_pkt[214] = checksum & 0xFF;
+    u8_pkt[215] = 0xFD;
+
+    print(
+      "TX/RX: TRANSMIT: Start Emulation Command time: ${DateTime.now().toIso8601String()}, packet: ${u8_pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+    );
+
+    await sendSmallDataFrame(0x1000, 216, u8_pkt);
+  }
+
+  Future<void> sendStopEmulationCmdPkt() async {
+    // Create 216-byte buffer
+    Uint8List u8_pkt = Uint8List(216);
+
+    // Update global counters
+    u8TxPktCnt += 1;
+
+    u8_pkt[0] = 0xFE;
+    u8_pkt[1] = 0x01;
+    u8_pkt[2] = 0x00;
+
+    u8_pkt[3] = 0x01; // pkt type
+    u8_pkt[4] = u8TxPktCnt & 0xFF; // tx pkt num
+    u8_pkt[5] = u8RxPktCnt & 0xFF; // rx pkt num
+    u8_pkt[6] = 0x00; // network number
+    u8_pkt[10] = 0x83; // mode
+    u8_pkt[11] = 0x01; // socket number
+    u8_pkt[12] = 0x03; // command
+    u8_pkt[15] = 0x01; // stop emulation
+
+    // Compute checksum on first 213 bytes
+    int checksum = toolsFletcherChecksum(u8_pkt.sublist(0, 213));
+
+    u8_pkt[213] = (checksum >> 8) & 0xFF;
+    u8_pkt[214] = checksum & 0xFF;
+    u8_pkt[215] = 0xFD;
+
+    print(
+      "TX/RX: TRANSMIT: Stop Emulation Command time: ${DateTime.now().toIso8601String()}, packet: ${u8_pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+    );
+
+    await sendSmallDataFrame(0x1000, 216, u8_pkt);
+  }
+
+  Future<void> sendStartTestModeCmdPkt() async {
+    // Create 216-byte buffer
+    Uint8List u8_pkt = Uint8List(216);
+
+    // Update global counters
+    u8TxPktCnt += 1;
+
+    u8_pkt[0] = 0xFE;
+    u8_pkt[1] = 0x01;
+    u8_pkt[2] = 0x00;
+
+    u8_pkt[3] = 0x01; // pkt type
+    u8_pkt[4] = u8TxPktCnt & 0xFF; // tx pkt num
+    u8_pkt[5] = u8RxPktCnt & 0xFF; // rx pkt num
+    u8_pkt[6] = 0x00; // network number
+    u8_pkt[10] = 0x83; // mode
+    u8_pkt[11] = 0x01; // socket number
+    u8_pkt[12] = 0x03; // command
+    u8_pkt[15] = 0x01; // stop emulation
+
+    // Compute checksum on first 213 bytes
+    int checksum = toolsFletcherChecksum(u8_pkt.sublist(0, 213));
+
+    u8_pkt[213] = (checksum >> 8) & 0xFF;
+    u8_pkt[214] = checksum & 0xFF;
+    u8_pkt[215] = 0xFD;
+
+    print(
+      "TX/RX: TRANSMIT: Start Test Mode Command time: ${DateTime.now().toIso8601String()}, packet: ${u8_pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
     );
 
     await sendSmallDataFrame(0x1000, 216, u8_pkt);

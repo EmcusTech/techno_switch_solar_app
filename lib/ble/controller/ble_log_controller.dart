@@ -159,6 +159,10 @@ class BleLogController extends GetxController {
     await bleManager.startAdcSetupFetch();
   }
 
+  Future<void> startProgInputTestModeFetch() async {
+    await bleManager.startProgInputTestModeFetch();
+  }
+
   sendNetworkPacket() async {
     await bleManager.sendNetworkPacket();
   }

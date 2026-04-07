@@ -3322,13 +3322,13 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 },
               ),
               _peripheralTile(
-                peripheralName: 'Config Log',
-                iconPath: 'assets/svgs/panel_action_config_log_icon.svg',
+                peripheralName: 'Test Mode',
+                iconPath: 'assets/svgs/peripheral_prog_hold_icon.svg',
                 isDisabled: true,
               ),
               _peripheralTile(
-                peripheralName: 'Test Mode',
-                iconPath: 'assets/svgs/peripheral_prog_hold_icon.svg',
+                peripheralName: 'Config Log',
+                iconPath: 'assets/svgs/panel_action_config_log_icon.svg',
                 isDisabled: true,
               ),
             ],
