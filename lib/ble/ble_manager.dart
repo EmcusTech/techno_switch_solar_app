@@ -109,6 +109,7 @@ enum OtaProcessState {
   sendGeneralModuleSetupApplyCmdPkt,
   sendLiveEventsRetrievalFetchCmdPkt,
   sendAdcSetupFetchCmdPkt,
+  sendProgInputTestModeFetchCmdPkt,
 }
 
 enum BleOperationMode {

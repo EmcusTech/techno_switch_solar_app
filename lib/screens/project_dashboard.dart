@@ -32,6 +32,7 @@ import 'package:techno_switch_solar_app/widgets/bottom_sheets/service_due_mode_b
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/setting_bottom_sheets/ext_out_bottomsheet.dart';
 import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/sounder_mode_bottomsheet.dart';
+import 'package:techno_switch_solar_app/widgets/bottom_sheets/test_mode_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/walk_test_zone_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/zone_mode_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/firmware_upgrade_bottom_sheet.dart';
@@ -2514,6 +2515,16 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     );
   }
 
+  void showtestModeSetupBottomSheet({required BuildContext context}) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withOpacity(0.4),
+      builder: (_) => TestModeBottomSheet(),
+    );
+  }
+
   // showAdcDiagnosticsSetupBottomSheet({
   //   required BuildContext context,
   //   required String deviceId,
@@ -3324,7 +3335,17 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
               _peripheralTile(
                 peripheralName: 'Test Mode',
                 iconPath: 'assets/svgs/peripheral_prog_hold_icon.svg',
-                isDisabled: true,
+                onTap: () {
+                  if (_selectedDevice.manufacturerData.isNotEmpty &&
+                      _selectedDevice.manufacturerData.last == 1) {
+                    showBootloaderModeDialog(context: context);
+                    return;
+                  }
+                  ble.bleProcess.isProgInputTestModeFetchCommandActive.value =
+                      true;
+                  bleController.startProgInputTestModeFetch();
+                  showtestModeSetupBottomSheet(context: context);
+                },
               ),
               _peripheralTile(
                 peripheralName: 'Config Log',

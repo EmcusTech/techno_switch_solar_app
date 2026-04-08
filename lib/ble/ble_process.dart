@@ -76,6 +76,7 @@ class BleProcess {
   int generalModuleSetupApplyCommandStep = 0; // 1, 2, 3
   int checkForLiveEventsRetrievalRes = 0;
   int checkForAdcSetupFetchRes = 0;
+  int checkForProgInputTestModeFetchRes = 0;
   int validEventLogNum = 0;
   int read1000Logs = 0;
   bool logRetreivalEnded = false;
@@ -586,6 +587,13 @@ class BleProcess {
   // Network Variables
   final ValueNotifier<bool> isNetworkPacketProcess = ValueNotifier<bool>(true);
 
+  // Prog Input Test Mode Variables
+  final ValueNotifier<bool> isProgInputTestModeFetchCommandActive =
+      ValueNotifier<bool>(false);
+  final ValueNotifier<String> progInputTestModeStatus = ValueNotifier<String>(
+    "",
+  );
+
   // BleStates bleStateMachineState = BleStates.IDLE;
   BleStates bleCurrentState = BleStates.IDLE;
   DeviceConnectState deviceConnectState = DeviceConnectState.notConnected;
@@ -653,9 +661,17 @@ class BleProcess {
       case OtaProcessState.sendPollPacket:
         print("NEXT: ACCESS PACKET");
         // await Future.delayed(Duration(seconds: 1));
-        bleManager.otaProcessState = OtaProcessState.sendAccessKeyPacket;
-        startRxTimeout();
-        await bleManager.sendAccessKeyPkt();
+        if (isProgInputTestModeFetchCommandActive.value) {
+          bleManager.otaProcessState =
+              OtaProcessState.sendProgInputTestModeFetchCmdPkt;
+          startRxTimeout();
+          await bleManager.sendStartEmulationCmdPkt();
+        } else {
+          bleManager.otaProcessState = OtaProcessState.sendAccessKeyPacket;
+          startRxTimeout();
+          await bleManager.sendAccessKeyPkt();
+        }
+
         break;
 
       case OtaProcessState.sendAccessKeyPacket:
@@ -827,9 +843,60 @@ class BleProcess {
         checkForAdcSetupFetchRes = 1;
         break;
 
+      case OtaProcessState.sendProgInputTestModeFetchCmdPkt:
+        print("Sending Prog Input Test Mode Fetch Command");
+        checkForProgInputTestModeFetchRes = 1;
+        break;
+
       case OtaProcessState.otaWaitRsp:
         break;
     }
+
+    if (checkForProgInputTestModeFetchRes == 1) {
+      print("Checking Prog Input Test Mode Fetch CMD RSP");
+      if (rx.payload[10] == 0x83 &&
+          rx.payload[11] == 0x01 &&
+          rx.payload[12] == 0x02) {
+        print("Prog Input Test Mode Fetch CMD RSP received");
+        await Future.delayed(Duration(milliseconds: 100));
+        startRxTimeout();
+        await bleManager.sendPollPacket();
+      } else if (rx.payload[10] == 0x83 && rx.payload[12] == 0x03) {
+        print("Test 1");
+        bleManager.otaProcessState = OtaProcessState.notInUse;
+        cancelOperationDeadline();
+        checkForProgInputTestModeFetchRes = 0;
+        isProgInputTestModeFetchCommandActive.value = false;
+      } else {
+        print("Prog Input Test Mode Fetch CMD RSP not received, polling again");
+        await Future.delayed(Duration(milliseconds: 100));
+        startRxTimeout();
+        await bleManager.sendPollPacket();
+      }
+    }
+
+    // if (checkForProgInputTestModeFetchRes == 1) {
+    //   print("Checking Prog Input Test Mode Fetch CMD RSP");
+    //   if (rx.payload[10] == 0x83 &&
+    //       rx.payload[11] == 0x01 &&
+    //       rx.payload[12] == 0x02) {
+    //     print("Prog Input Test Mode Fetch CMD RSP received");
+    //     startRxTimeout();
+    //     await bleManager.sendStartTestModeCmdPkt();
+    //   } else if (rx.payload[10] == 0x02 && rx.payload[12] == 0x02) {
+    //     print("Test Mode data received");
+    //     bleManager.otaProcessState = OtaProcessState.notInUse;
+    //     cancelOperationDeadline();
+    //     checkForProgInputTestModeFetchRes = 0;
+    //     isProgInputTestModeFetchCommandActive.value = false;
+    //     // startRxTimeout();
+    //     // await bleManager.sendPollPacket();
+    //   } else {
+    //     print("Prog Input Test Mode Fetch CMD RSP not received, polling again");
+    //     startRxTimeout();
+    //     await bleManager.sendPollPacket();
+    //   }
+    // }
 
     if (checkForLiveEventsRetrievalRes == 1) {
       print("Checking Live Events Retrieval Fetch CMD RSP");
@@ -1057,7 +1124,15 @@ class BleProcess {
           processDesc.value = "Downloading Adc Setup";
           startRxTimeout();
           await bleManager.sendDiagnosticsSetupFetchCmdPkt();
-        } else {
+        }
+        // else if (isProgInputTestModeFetchCommandActive.value) {
+        //   bleManager.otaProcessState =
+        //       OtaProcessState.sendProgInputTestModeFetchCmdPkt;
+        //   checkForAccessKeyCmdRsp = 0;
+        //   startRxTimeout();
+        //   await bleManager.sendStartEmulationCmdPkt();
+        // }
+        else {
           bleManager.otaProcessState = OtaProcessState.sendStopCntrlCmdPkt;
           checkForAccessKeyCmdRsp = 0;
           startRxTimeout();
@@ -2337,12 +2412,19 @@ class BleProcess {
         // nackRetryCount = 0;
         print("CONTROL CMD RESPONSE RECEIVED");
         if (isSessionAccessCodeValidationOnly) {
+          isOtaCompleted = true;
+          processNextOtaFrame = false;
+          cancelRxTimeout();
+
+          processDesc.value = "";
+
           isSessionAccessCodeValidationOnly = false;
           bleManager.otaProcessState = OtaProcessState.notInUse;
           cancelOperationDeadline();
           checkForCtrlCmdRsp = 0;
           cancelRxTimeout();
           processDesc.value = "";
+          await bleManager.sendStopCntrlCmdPkt();
         } else {
           checkForCtrlCmdRsp = 2;
           logStartingTime = DateTime.now();
@@ -3911,6 +3993,8 @@ class BleProcess {
         case OtaProcessState.sendLiveEventsRetrievalFetchCmdPkt:
           break;
         case OtaProcessState.sendAdcSetupFetchCmdPkt:
+          break;
+        case OtaProcessState.sendProgInputTestModeFetchCmdPkt:
           break;
       }
       startRxTimeout();
