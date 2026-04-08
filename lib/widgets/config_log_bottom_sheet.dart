@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/utils/config_log_ble_runner.dart';
+import 'package:techno_switch_solar_app/utils/config_diff_display_labels.dart';
 import 'package:techno_switch_solar_app/utils/config_map_diff.dart';
 import 'package:techno_switch_solar_app/utils/peripheral_config_bundle.dart';
 import 'package:techno_switch_solar_app/utils/peripheral_hydrate_from_bundle.dart';
@@ -57,12 +58,41 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet> {
         widget.deviceId,
       );
       final sections = <_SectionDiff>[
-        _SectionDiff('Relays', diffConfigValues(baseline.relays, panel.relays)),
-        _SectionDiff('Inputs', diffConfigValues(baseline.inputs, panel.inputs)),
-        _SectionDiff('Zones', diffConfigValues(baseline.zones, panel.zones)),
+        _SectionDiff(
+          'Relays',
+          labelSectionDiffs(
+            'Relays',
+            diffConfigValues(baseline.relays, panel.relays),
+            baseline,
+            panel,
+          ),
+        ),
+        _SectionDiff(
+          'Inputs',
+          labelSectionDiffs(
+            'Inputs',
+            diffConfigValues(baseline.inputs, panel.inputs),
+            baseline,
+            panel,
+          ),
+        ),
+        _SectionDiff(
+          'Zones',
+          labelSectionDiffs(
+            'Zones',
+            diffConfigValues(baseline.zones, panel.zones),
+            baseline,
+            panel,
+          ),
+        ),
         _SectionDiff(
           'Sounders',
-          diffConfigValues(baseline.sounders, panel.sounders),
+          labelSectionDiffs(
+            'Sounders',
+            diffConfigValues(baseline.sounders, panel.sounders),
+            baseline,
+            panel,
+          ),
         ),
         _SectionDiff(
           'Module Info',
@@ -74,15 +104,30 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet> {
         ),
         _SectionDiff(
           'Ext Out',
-          diffConfigValues(baseline.extOut, panel.extOut),
+          labelSectionDiffs(
+            'Ext Out',
+            diffConfigValues(baseline.extOut, panel.extOut),
+            baseline,
+            panel,
+          ),
         ),
         _SectionDiff(
           'Service Due',
-          diffConfigValues(baseline.serviceDue, panel.serviceDue),
+          labelSectionDiffs(
+            'Service Due',
+            diffConfigValues(baseline.serviceDue, panel.serviceDue),
+            baseline,
+            panel,
+          ),
         ),
         _SectionDiff(
           'Access Code',
-          diffConfigValues(baseline.accessCodes, panel.accessCodes),
+          labelSectionDiffs(
+            'Access Code',
+            diffConfigValues(baseline.accessCodes, panel.accessCodes),
+            baseline,
+            panel,
+          ),
         ),
         _SectionDiff(
           'Panel Info',
@@ -102,7 +147,12 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet> {
         ),
         _SectionDiff(
           'Walk Test',
-          diffConfigValues(baseline.walkTest, panel.walkTest),
+          labelSectionDiffs(
+            'Walk Test',
+            diffConfigValues(baseline.walkTest, panel.walkTest),
+            baseline,
+            panel,
+          ),
         ),
       ];
       if (!mounted) return;
