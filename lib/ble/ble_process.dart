@@ -652,6 +652,11 @@ class BleProcess {
       cancelOperationDeadline();
       cancelRxTimeout();
 
+      clearPeripheralCommandActiveFlags();
+      if (!accessKeyPhase && !firmwareMode) {
+        processDesc.value = "Command rejected by panel (NACK).";
+      }
+
       if (!firmwareMode && accessKeyPhase) {
         unawaited(Get.find<BleLogController>().onNackSessionAccessKeyFailure());
       }
@@ -2562,6 +2567,35 @@ class BleProcess {
     final List<int> stringBytes = payload.sublist(startIndex + 1, endIndex);
 
     return utf8.decode(stringBytes);
+  }
+
+  /// Resets fetch/apply command flags when the panel NACKs mid-operation.
+  /// Without this, UI flows that await these flags (e.g. full config download) hang forever.
+  void clearPeripheralCommandActiveFlags() {
+    isExtOutCommandFetchActive.value = false;
+    isExtOutCommandApplyActive.value = false;
+    isInputSetupFetchCommandActive.value = false;
+    isInputSetupApplyActive.value = false;
+    isRelaySetupFetchCommandActive.value = false;
+    isRelaySetupCommandApplyActive.value = false;
+    isZoneSetupFetchCommandActive.value = false;
+    isZoneSetupCommandApplyActive.value = false;
+    isRadioSetupFetchCommandActive.value = false;
+    isRadioSetupCommandApplyActive.value = false;
+    isModuleSetupFetchCommandActive.value = false;
+    isLBusSetupFetchCommandActive.value = false;
+    isLBusSetupApplyCommandActive.value = false;
+    isSounderSetupFetchCommandActive.value = false;
+    isSounderSetupApplyCommandActive.value = false;
+    isServiceDueFetchCommandActive.value = false;
+    isServiceDueApplyCommandActive.value = false;
+    isAccessCodeSetupFetchCommandActive.value = false;
+    isAccessCodeSetupApplyCommandActive.value = false;
+    isPanelInfoSetupFetchCommandActive.value = false;
+    isPanelInfoSetupApplyCommandActive.value = false;
+    isGeneralModuleSetupFetchCommandActive.value = false;
+    isGeneralModuleSetupApplyCommandActive.value = false;
+    isAdcSetupFetchCommandActive.value = false;
   }
 
   void resetProcessState() {

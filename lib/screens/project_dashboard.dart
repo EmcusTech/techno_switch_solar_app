@@ -35,6 +35,7 @@ import 'package:techno_switch_solar_app/widgets/bottom_sheets/sounder_mode_botto
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/walk_test_zone_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/zone_mode_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/firmware_upgrade_bottom_sheet.dart';
+import 'package:techno_switch_solar_app/widgets/config_log_bottom_sheet.dart';
 import 'package:techno_switch_solar_app/widgets/panel_access_code_dialog.dart';
 
 class ProjectDashboardScreen extends StatefulWidget {
@@ -3343,7 +3344,31 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
               _peripheralTile(
                 peripheralName: 'Config Log',
                 iconPath: 'assets/svgs/panel_action_config_log_icon.svg',
-                isDisabled: true,
+                onTap: () async {
+                  if (_selectedDevice.manufacturerData.isNotEmpty &&
+                      _selectedDevice.manufacturerData.last == 1) {
+                    showBootloaderModeDialog(context: context);
+                    return;
+                  }
+                  final bp = bleController.bleProcess;
+                  if (!(bp.sessionAccessCodeReady.value &&
+                      bp.accessKey.value.isNotEmpty)) {
+                    final ok = await showPanelAccessCodeGatewayDialog(
+                      context: context,
+                      onStartValidation: () =>
+                          bleController.startSessionAccessCodeValidation(),
+                    );
+                    if (!ok || !context.mounted) return;
+                  }
+                  if (!context.mounted) return;
+                  showModalBottomSheet<void>(
+                    context: context,
+                    isScrollControlled: true,
+                    backgroundColor: Colors.transparent,
+                    builder:
+                        (_) => ConfigLogBottomSheet(deviceId: _selectedDevice.id),
+                  );
+                },
               ),
               _peripheralTile(
                 peripheralName: 'Test Mode',
