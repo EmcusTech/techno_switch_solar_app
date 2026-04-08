@@ -637,11 +637,24 @@ class BleProcess {
 
     if (rx.payload[3] == 0x03) {
       print("the received packet is a nack packet");
+      final OtaProcessState otaStateBeforeNack = bleManager.otaProcessState;
+      final bool accessKeyPhase =
+          isSessionAccessCodeValidationOnly ||
+          otaStateBeforeNack == OtaProcessState.sendAccessKeyPacket ||
+          (otaStateBeforeNack == OtaProcessState.sendContinuousPollPacket &&
+              checkForAccessKeyCmdRsp == 1);
+      final bool firmwareMode =
+          bleManager.currentOperationMode == BleOperationMode.firmwareUpgrade;
+
       isOtaCompleted = true;
       processNextOtaFrame = false;
       bleManager.otaProcessState = OtaProcessState.notInUse;
       cancelOperationDeadline();
       cancelRxTimeout();
+
+      if (!firmwareMode && accessKeyPhase) {
+        unawaited(Get.find<BleLogController>().onNackSessionAccessKeyFailure());
+      }
       return;
     }
 

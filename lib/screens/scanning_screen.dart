@@ -1169,15 +1169,30 @@ class _ScanningScreenState extends State<ScanningScreen>
     return Stack(
       alignment: Alignment.center,
       children: [
-        Column(
-          children: [
-            SvgPicture.asset('assets/svgs/background_1.svg'),
-            const Spacer(),
-            Transform.rotate(
-              angle: 3.14159,
-              child: SvgPicture.asset('assets/svgs/background_1.svg'),
-            ),
-          ],
+        Positioned.fill(
+          child: Column(
+            children: [
+              Expanded(
+                child: Center(
+                  child: SvgPicture.asset(
+                    'assets/svgs/background_1.svg',
+                    fit: BoxFit.contain,
+                  ),
+                ),
+              ),
+              Expanded(
+                child: Center(
+                  child: Transform.rotate(
+                    angle: 3.14159,
+                    child: SvgPicture.asset(
+                      'assets/svgs/background_1.svg',
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
         // Center(
         //   child: SizedBox(

@@ -6,7 +6,8 @@ import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/screens/splash_screen.dart';
 import 'package:techno_switch_solar_app/services/app_services.dart';
-import 'package:techno_switch_solar_app/services/navigation_service.dart';
+import 'package:techno_switch_solar_app/services/navigation_service.dart'
+    show appRouteObserver, appRootNavigatorKey;
 import 'package:techno_switch_solar_app/widgets/ble_session_idle_timeout.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -103,6 +104,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     return SafeArea(
       child: BleSessionIdleTimeout(
         child: MaterialApp(
+          navigatorKey: appRootNavigatorKey,
           debugShowCheckedModeBanner: false,
           navigatorObservers: <NavigatorObserver>[appRouteObserver],
           title: 'Techno Switch Solar',

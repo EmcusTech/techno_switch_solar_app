@@ -2,6 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:techno_switch_solar_app/services/app_services.dart';
 import 'package:techno_switch_solar_app/services/app_state.dart';
 
+/// Root [Navigator] key for [MaterialApp]. Use for dialogs when GetX overlay
+/// is unavailable (app is not wrapped with [GetMaterialApp]).
+final GlobalKey<NavigatorState> appRootNavigatorKey =
+    GlobalKey<NavigatorState>();
+
 /// Observes route changes for [RouteAware] widgets (e.g. refresh home when a
 /// pushed route is popped).
 final RouteObserver<ModalRoute<void>> appRouteObserver =

@@ -1,7 +1,11 @@
-import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/ble/ble_process.dart';
+import 'package:techno_switch_solar_app/services/navigation_service.dart';
 
 class BleLogController extends GetxController {
   final BleManager bleManager = Get.find<BleManager>();
@@ -52,6 +56,11 @@ class BleLogController extends GetxController {
   }
 
   Future<void> startSessionAccessCodeValidation() async {
+    if (!bleManager.isConnected) {
+      bleProcess.processDesc.value =
+          'Device disconnected. Please connect again.';
+      return;
+    }
     await bleManager.startSessionAccessCodeValidation();
   }
 
@@ -192,6 +201,118 @@ class BleLogController extends GetxController {
     await Future.delayed(Duration(seconds: 7));
     bleManager.postConnectNetworkDone = false;
     sendNetworkPacket();
+  }
+
+  /// Panel NACK during access-key / session validation (e.g. link timed out). Disconnects and shows a dialog.
+  Future<void> onNackSessionAccessKeyFailure() async {
+    bleProcess.cancelRxTimeout();
+    bleProcess.cancelOtherPacketsRxTimeout();
+    bleProcess.isSessionAccessCodeValidationOnly = false;
+    bleProcess.isAccessKeyValid.value = false;
+    bleProcess.processDesc.value =
+        'Something went wrong. Please try connecting again.';
+    bleProcess.resetProcessState();
+    bleManager.resetProtocolState();
+    await bleManager.disconnectConnectedDevice();
+
+    // MaterialApp has no GetX overlay — use root Navigator. Pop access-code
+    // dialog first so scanning flow can treat result as cancelled.
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      _showNackSessionAccessKeyFailureDialog();
+    });
+  }
+
+  void _showNackSessionAccessKeyFailureDialog() {
+    final nav = appRootNavigatorKey.currentState;
+    if (nav != null && nav.canPop()) {
+      nav.pop(false);
+    }
+
+    final ctx = appRootNavigatorKey.currentContext;
+    if (ctx == null || !ctx.mounted) return;
+
+    showDialog<void>(
+      context: ctx,
+      barrierDismissible: false,
+      useRootNavigator: true,
+      builder: (dialogContext) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 64,
+                  height: 64,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFFBDEE1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Center(
+                    child: Icon(
+                      Icons.error_outline,
+                      size: 32,
+                      color: Color(0xFFEC1D24),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Something went wrong',
+                  style: GoogleFonts.inter(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF3D3D3D),
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Please try connecting again.',
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w400,
+                    color: const Color(0xFF918F8F),
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFEC1D24),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(24.5),
+                      ),
+                    ),
+                    onPressed: () {
+                      Navigator.of(dialogContext, rootNavigator: true).pop();
+                    },
+                    child: Text(
+                      'OK',
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   //FATAL BLE ERROR ENTRY POINT
