@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -5,6 +7,7 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/ble/ble_process.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
+import 'package:techno_switch_solar_app/services/navigation_service.dart';
 
 /// Shared "Enter Access Code" dialog. On successful panel validation, calls
 /// [BleProcess.setSessionAccessCode] and pops `true`.
@@ -22,6 +25,7 @@ Future<bool> showPanelAccessCodeGatewayDialog({
   final result = await showDialog<bool>(
     context: context,
     barrierDismissible: false,
+    useRootNavigator: true,
     builder: (dialogContext) {
       return _PanelAccessCodeGatewayBody(
         onStartValidation: onStartValidation,
@@ -56,9 +60,174 @@ class _PanelAccessCodeGatewayBodyState
   bool _closing = false;
 
   static const Duration _animDuration = Duration(milliseconds: 280);
+  static const int _verifyDeadlineSeconds = 15;
+
+  Timer? _verifyDeadlineTimer;
+  int _remainingSeconds = _verifyDeadlineSeconds;
+
+  /// True after the user taps **Verify** (validation started).
+  bool _userTappedVerify = false;
+  bool _timeoutCleanupStarted = false;
+
+  String _formatTimeRemaining(int totalSeconds) {
+    final s = totalSeconds.clamp(0, 999);
+    final m = s ~/ 60;
+    final sec = s % 60;
+    return '${m.toString().padLeft(2, '0')}:${sec.toString().padLeft(2, '0')}';
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _remainingSeconds = _verifyDeadlineSeconds;
+    _verifyDeadlineTimer = Timer.periodic(
+      const Duration(seconds: 1),
+      _onVerifyCountdownTick,
+    );
+  }
+
+  void _cancelVerifyDeadlineTimer() {
+    _verifyDeadlineTimer?.cancel();
+    _verifyDeadlineTimer = null;
+  }
+
+  void _onVerifyCountdownTick(Timer timer) {
+    if (!mounted || _userTappedVerify) {
+      timer.cancel();
+      _verifyDeadlineTimer = null;
+      return;
+    }
+    setState(() {
+      _remainingSeconds--;
+    });
+    if (_remainingSeconds <= 0) {
+      timer.cancel();
+      _verifyDeadlineTimer = null;
+      unawaited(_handleAccessCodeDeadlineExpired());
+    }
+  }
+
+  Future<void> _handleAccessCodeDeadlineExpired() async {
+    if (_timeoutCleanupStarted || !mounted || _userTappedVerify) return;
+    _timeoutCleanupStarted = true;
+    _cancelVerifyDeadlineTimer();
+
+    final bleController = Get.find<BleLogController>();
+    final bleProcess = bleController.bleProcess;
+    final bleManager = bleController.bleManager;
+
+    bleProcess.cancelRxTimeout();
+    bleProcess.cancelOtherPacketsRxTimeout();
+    bleProcess.isSessionAccessCodeValidationOnly = false;
+    bleProcess.isAccessKeyValid.value = false;
+    bleProcess.processDesc.value = '';
+    bleProcess.resetProcessState();
+    bleManager.resetProtocolState();
+
+    await bleManager.disconnectConnectedDevice();
+    await bleManager.shutdown();
+
+    if (!mounted) return;
+    if (widget.dialogContext.mounted) {
+      Navigator.of(widget.dialogContext, rootNavigator: true).pop(false);
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _showAccessCodeTimeoutDialog();
+    });
+  }
+
+  void _showAccessCodeTimeoutDialog() {
+    final ctx = appRootNavigatorKey.currentContext;
+    if (ctx == null || !ctx.mounted) return;
+
+    showDialog<void>(
+      context: ctx,
+      barrierDismissible: false,
+      useRootNavigator: true,
+      builder: (dialogContext) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 64,
+                  height: 64,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFFBDEE1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Center(
+                    child: Icon(
+                      Icons.timer_off_outlined,
+                      size: 32,
+                      color: Color(0xFFEC1D24),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Session timed out',
+                  style: GoogleFonts.inter(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF3D3D3D),
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  "You didn't confirm in time. Please connect again and try once more.",
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w400,
+                    color: const Color(0xFF918F8F),
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFEC1D24),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(24.5),
+                      ),
+                    ),
+                    onPressed: () {
+                      Navigator.of(dialogContext, rootNavigator: true).pop();
+                    },
+                    child: Text(
+                      'OK',
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
 
   @override
   void dispose() {
+    _cancelVerifyDeadlineTimer();
     _controller.dispose();
     _focusNode.dispose();
     super.dispose();
@@ -203,6 +372,21 @@ class _PanelAccessCodeGatewayBodyState
                                 textAlign: TextAlign.center,
                               ),
                             ),
+                            if (!hideInput) ...[
+                              const SizedBox(height: 8),
+                              Text(
+                                'Time remaining: ${_formatTimeRemaining(_remainingSeconds)}',
+                                style: GoogleFonts.inter(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color:
+                                      _remainingSeconds <= 5
+                                          ? const Color(0xFFEC1D24)
+                                          : const Color(0xFF918F8F),
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
                             const SizedBox(height: 24),
                             AnimatedSize(
                               duration: _animDuration,
@@ -401,8 +585,10 @@ class _PanelAccessCodeGatewayBodyState
                                                 ),
                                               ),
                                               onPressed: () {
+                                                _cancelVerifyDeadlineTimer();
                                                 Navigator.of(
                                                   widget.dialogContext,
+                                                  rootNavigator: true,
                                                 ).pop(false);
                                               },
                                               child: Text(
@@ -440,6 +626,9 @@ class _PanelAccessCodeGatewayBodyState
                                                   onPressed:
                                                       canVerify
                                                           ? () async {
+                                                            _cancelVerifyDeadlineTimer();
+                                                            _userTappedVerify =
+                                                                true;
                                                             FocusScope.of(
                                                               widget
                                                                   .dialogContext,
