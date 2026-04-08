@@ -76,6 +76,8 @@ enum DeviceConnectState { notConnected, registerNotifyHandler, running }
 enum OtaProcessState {
   sendNetworkPacket,
   sendPollPacket,
+  /// Paused after post-connect poll; user must submit access code (session or tile flow).
+  awaitingAccessKeyInput,
   sendAccessKeyPacket,
   sendControlCmdPacket,
   sendStopCntrlCmdPkt,
@@ -212,6 +214,12 @@ class BleManager {
   final ValueNotifier<String> bleFirmwareVersion = ValueNotifier<String>('');
 
   Completer<void>? _handshakeCompleter;
+
+  /// Completes when post-connect network + first poll have finished and we are paused before access-key TX.
+  Completer<void>? _postConnectPrimeCompleter;
+
+  /// True after [beginPostConnectNetworkPriming] reaches [OtaProcessState.awaitingAccessKeyInput] on this connection.
+  bool postConnectNetworkDone = false;
 
   bool get isConnected => _isConnectedNotifier.value;
 
@@ -514,6 +522,49 @@ class BleManager {
   ValueNotifier<int> get generalModuleFaultLatching =>
       bleProcess.generalModuleFaultLatching;
 
+  /// Initial OTA phase after counter resets: network first, or poll if this connection was already primed.
+  void applyInitialOtaStateAfterReset() {
+    otaProcessState =
+        postConnectNetworkDone
+            ? OtaProcessState.sendPollPacket
+            : OtaProcessState.sendNetworkPacket;
+  }
+
+  /// After protocol/process resets: send poll if [postConnectNetworkDone], else network packet.
+  void kickLinkLayerPacketAfterReset() {
+    bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
+    if (postConnectNetworkDone) {
+      sendPollPacket();
+    } else {
+      Get.find<BleLogController>().sendNetworkPacket();
+    }
+  }
+
+  void beginPostConnectNetworkPriming() {
+    if (_postConnectPrimeCompleter == null ||
+        _postConnectPrimeCompleter!.isCompleted) {
+      return;
+    }
+    bleProcess.awaitingAccessKeyAfterPostConnect = true;
+    resetProtocolState();
+    bleProcess.resetProcessState();
+    kickLinkLayerPacketAfterReset();
+  }
+
+  void completePostConnectPrimeIfNeeded() {
+    if (_postConnectPrimeCompleter != null &&
+        !_postConnectPrimeCompleter!.isCompleted) {
+      _postConnectPrimeCompleter!.complete();
+    }
+  }
+
+  void failPostConnectPrimeIfPending(Object error) {
+    if (_postConnectPrimeCompleter != null &&
+        !_postConnectPrimeCompleter!.isCompleted) {
+      _postConnectPrimeCompleter!.completeError(error);
+    }
+  }
+
   void resetProtocolState() {
     // Packet counters
     u8TxPktCnt = 0;
@@ -523,8 +574,7 @@ class BleManager {
     // Poll guards
     _pollInFlight = false;
 
-    // OTA state
-    otaProcessState = OtaProcessState.sendNetworkPacket;
+    applyInitialOtaStateAfterReset();
   }
 
   void resetProtocolExtOutState() {
@@ -537,7 +587,7 @@ class BleManager {
     _pollInFlight = false;
 
     // OTA state
-    otaProcessState = OtaProcessState.sendNetworkPacket;
+    applyInitialOtaStateAfterReset();
   }
 
   void resetProtocolInputSetupState() {
@@ -550,7 +600,7 @@ class BleManager {
     _pollInFlight = false;
 
     // OTA state
-    otaProcessState = OtaProcessState.sendNetworkPacket;
+    applyInitialOtaStateAfterReset();
   }
 
   void resetProtocolRelaySetupState() {
@@ -563,7 +613,7 @@ class BleManager {
     _pollInFlight = false;
 
     // OTA state
-    otaProcessState = OtaProcessState.sendNetworkPacket;
+    applyInitialOtaStateAfterReset();
   }
 
   void resetProtocolZoneSetupState() {
@@ -576,7 +626,7 @@ class BleManager {
     _pollInFlight = false;
 
     // OTA state
-    otaProcessState = OtaProcessState.sendNetworkPacket;
+    applyInitialOtaStateAfterReset();
   }
 
   void resetProtocolRadioSetupState() {
@@ -589,7 +639,7 @@ class BleManager {
     _pollInFlight = false;
 
     // OTA state
-    otaProcessState = OtaProcessState.sendNetworkPacket;
+    applyInitialOtaStateAfterReset();
   }
 
   void resetProtocolModuleSetupState() {
@@ -602,7 +652,7 @@ class BleManager {
     _pollInFlight = false;
 
     // OTA state
-    otaProcessState = OtaProcessState.sendNetworkPacket;
+    applyInitialOtaStateAfterReset();
   }
 
   void resetProtocolLBusSetupState() {
@@ -615,7 +665,7 @@ class BleManager {
     _pollInFlight = false;
 
     // OTA state
-    otaProcessState = OtaProcessState.sendNetworkPacket;
+    applyInitialOtaStateAfterReset();
   }
 
   void resetProtocolSounderSetupState() {
@@ -628,7 +678,7 @@ class BleManager {
     _pollInFlight = false;
 
     // OTA state
-    otaProcessState = OtaProcessState.sendNetworkPacket;
+    applyInitialOtaStateAfterReset();
   }
 
   void resetProtocolServiceDueState() {
@@ -641,7 +691,7 @@ class BleManager {
     _pollInFlight = false;
 
     // OTA state
-    otaProcessState = OtaProcessState.sendNetworkPacket;
+    applyInitialOtaStateAfterReset();
   }
 
   void resetProtocolAccessCodeSetupState() {
@@ -654,7 +704,7 @@ class BleManager {
     _pollInFlight = false;
 
     // OTA state
-    otaProcessState = OtaProcessState.sendNetworkPacket;
+    applyInitialOtaStateAfterReset();
   }
 
   void resetProtocolPanelInfoSetupState() {
@@ -667,7 +717,7 @@ class BleManager {
     _pollInFlight = false;
 
     // OTA state
-    otaProcessState = OtaProcessState.sendNetworkPacket;
+    applyInitialOtaStateAfterReset();
   }
 
   void resetProtocolGeneralModuleSetupState() {
@@ -680,7 +730,7 @@ class BleManager {
     _pollInFlight = false;
 
     // OTA state
-    otaProcessState = OtaProcessState.sendNetworkPacket;
+    applyInitialOtaStateAfterReset();
   }
 
   void resetProtocolAdcSetupState() {
@@ -693,7 +743,7 @@ class BleManager {
     _pollInFlight = false;
 
     // OTA state
-    otaProcessState = OtaProcessState.sendNetworkPacket;
+    applyInitialOtaStateAfterReset();
   }
 
   void resetFirmwareState() {
@@ -880,8 +930,7 @@ class BleManager {
     bleCurrentState = BleStates.PROCESS_PANEL_EVT_LOG_READ;
     bleStateMachineState = BleStates.PROCESS_PANEL_EVT_LOG_READ;
     print("Current state: $bleStateMachineState");
-    bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
-    Get.find<BleLogController>().sendNetworkPacket();
+    kickLinkLayerPacketAfterReset();
   }
 
   /// Validates panel access code only (no setup fetch). On success, [BleProcess.isAccessKeyValid] is set.
@@ -902,14 +951,25 @@ class BleManager {
       );
     }
 
+    bleProcess.isSessionAccessCodeValidationOnly = true;
+
+    if (postConnectNetworkDone &&
+        otaProcessState == OtaProcessState.awaitingAccessKeyInput) {
+      bleCurrentState = BleStates.SEND_EXT_OUT_SETUP_CMD_FETCH_PACKET;
+      bleStateMachineState = BleStates.SEND_EXT_OUT_SETUP_CMD_FETCH_PACKET;
+      bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
+      otaProcessState = OtaProcessState.sendAccessKeyPacket;
+      bleProcess.startRxTimeout();
+      await sendAccessKeyPkt();
+      return;
+    }
+
     resetProtocolState();
     bleProcess.resetProcessState();
-    bleProcess.isSessionAccessCodeValidationOnly = true;
 
     bleCurrentState = BleStates.SEND_EXT_OUT_SETUP_CMD_FETCH_PACKET;
     bleStateMachineState = BleStates.SEND_EXT_OUT_SETUP_CMD_FETCH_PACKET;
-    bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
-    await Get.find<BleLogController>().sendNetworkPacket();
+    kickLinkLayerPacketAfterReset();
   }
 
   Future<void> startLiveEventsRetrieval() async {
@@ -945,8 +1005,7 @@ class BleManager {
     bleCurrentState = BleStates.PROCESS_PANEL_LIVE_EVENTS_READ;
     bleStateMachineState = BleStates.PROCESS_PANEL_LIVE_EVENTS_READ;
     print("Current state: $bleStateMachineState");
-    bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
-    Get.find<BleLogController>().sendNetworkPacket();
+    kickLinkLayerPacketAfterReset();
   }
 
   Future<void> stopLiveEventsRetrieval() async {
@@ -984,8 +1043,7 @@ class BleManager {
     bleCurrentState = BleStates.SEND_EXT_OUT_SETUP_CMD_FETCH_PACKET;
     bleStateMachineState = BleStates.SEND_EXT_OUT_SETUP_CMD_FETCH_PACKET;
     print("Current state: $bleStateMachineState");
-    bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
-    Get.find<BleLogController>().sendNetworkPacket();
+    kickLinkLayerPacketAfterReset();
   }
 
   Future<void> startExtOutApply() async {
@@ -1019,8 +1077,7 @@ class BleManager {
     bleCurrentState = BleStates.SEND_EXT_OUT_SETUP_CMD_APPLY_PACKET;
     bleStateMachineState = BleStates.SEND_EXT_OUT_SETUP_CMD_APPLY_PACKET;
     print("Current state: $bleStateMachineState");
-    bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
-    Get.find<BleLogController>().sendNetworkPacket();
+    kickLinkLayerPacketAfterReset();
   }
 
   Future<void> startInputSetupFetch() async {
@@ -1054,8 +1111,7 @@ class BleManager {
     bleCurrentState = BleStates.SEND_INPUT_SETUP_CMD_FETCH_PACKET;
     bleStateMachineState = BleStates.SEND_INPUT_SETUP_CMD_FETCH_PACKET;
     print("Current state: $bleStateMachineState");
-    bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
-    Get.find<BleLogController>().sendNetworkPacket();
+    kickLinkLayerPacketAfterReset();
   }
 
   Future<void> startInputSetupApply() async {
@@ -1089,8 +1145,7 @@ class BleManager {
     bleCurrentState = BleStates.SEND_INPUT_SETUP_CMD_APPLY_PACKET;
     bleStateMachineState = BleStates.SEND_INPUT_SETUP_CMD_APPLY_PACKET;
     print("Current state: $bleStateMachineState");
-    bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
-    Get.find<BleLogController>().sendNetworkPacket();
+    kickLinkLayerPacketAfterReset();
   }
 
   Future<void> startRelaySetupFetch() async {
@@ -1124,8 +1179,7 @@ class BleManager {
     bleCurrentState = BleStates.SEND_RELAY_SETUP_CMD_FETCH_PACKET;
     bleStateMachineState = BleStates.SEND_RELAY_SETUP_CMD_FETCH_PACKET;
     print("Current state: $bleStateMachineState");
-    bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
-    Get.find<BleLogController>().sendNetworkPacket();
+    kickLinkLayerPacketAfterReset();
   }
 
   Future<void> startRelaySetupApply() async {
@@ -1159,8 +1213,7 @@ class BleManager {
     bleCurrentState = BleStates.SEND_RELAY_SETUP_CMD_APPLY_PACKET;
     bleStateMachineState = BleStates.SEND_RELAY_SETUP_CMD_APPLY_PACKET;
     print("Current state: $bleStateMachineState");
-    bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
-    Get.find<BleLogController>().sendNetworkPacket();
+    kickLinkLayerPacketAfterReset();
   }
 
   Future<void> startZoneSetupFetch() async {
@@ -1194,8 +1247,7 @@ class BleManager {
     bleCurrentState = BleStates.SEND_ZONE_SETUP_CMD_FETCH_PACKET;
     bleStateMachineState = BleStates.SEND_ZONE_SETUP_CMD_FETCH_PACKET;
     print("Current state: $bleStateMachineState");
-    bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
-    Get.find<BleLogController>().sendNetworkPacket();
+    kickLinkLayerPacketAfterReset();
   }
 
   Future<void> startZoneSetupApply() async {
@@ -1229,8 +1281,7 @@ class BleManager {
     bleCurrentState = BleStates.SEND_ZONE_SETUP_CMD_APPLY_PACKET;
     bleStateMachineState = BleStates.SEND_ZONE_SETUP_CMD_APPLY_PACKET;
     print("Current state: $bleStateMachineState");
-    bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
-    Get.find<BleLogController>().sendNetworkPacket();
+    kickLinkLayerPacketAfterReset();
   }
 
   Future<void> startRadioSetupFetch() async {
@@ -1264,8 +1315,7 @@ class BleManager {
     bleCurrentState = BleStates.SEND_RADIO_SETUP_CMD_FETCH_PACKET;
     bleStateMachineState = BleStates.SEND_RADIO_SETUP_CMD_FETCH_PACKET;
     print("Current state: $bleStateMachineState");
-    bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
-    Get.find<BleLogController>().sendNetworkPacket();
+    kickLinkLayerPacketAfterReset();
   }
 
   Future<void> startRadioSetupApply() async {
@@ -1299,8 +1349,7 @@ class BleManager {
     bleCurrentState = BleStates.SEND_RADIO_SETUP_CMD_APPLY_PACKET;
     bleStateMachineState = BleStates.SEND_RADIO_SETUP_CMD_APPLY_PACKET;
     print("Current state: $bleStateMachineState");
-    bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
-    Get.find<BleLogController>().sendNetworkPacket();
+    kickLinkLayerPacketAfterReset();
   }
 
   Future<void> startModuleSetupFetch() async {
@@ -1334,8 +1383,7 @@ class BleManager {
     bleCurrentState = BleStates.SEND_MODULE_SETUP_CMD_FETCH_PACKET;
     bleStateMachineState = BleStates.SEND_MODULE_SETUP_CMD_FETCH_PACKET;
     print("Current state: $bleStateMachineState");
-    bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
-    Get.find<BleLogController>().sendNetworkPacket();
+    kickLinkLayerPacketAfterReset();
   }
 
   Future<void> startLBusSetupFetch() async {
@@ -1369,8 +1417,7 @@ class BleManager {
     bleCurrentState = BleStates.SEND_L_BUS_SETUP_CMD_FETCH_PACKET;
     bleStateMachineState = BleStates.SEND_L_BUS_SETUP_CMD_FETCH_PACKET;
     print("Current state: $bleStateMachineState");
-    bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
-    Get.find<BleLogController>().sendNetworkPacket();
+    kickLinkLayerPacketAfterReset();
   }
 
   Future<void> startLBusSetupApply() async {
@@ -1404,8 +1451,7 @@ class BleManager {
     bleCurrentState = BleStates.SEND_L_BUS_SETUP_CMD_APPLY_PACKET;
     bleStateMachineState = BleStates.SEND_L_BUS_SETUP_CMD_APPLY_PACKET;
     print("Current state: $bleStateMachineState");
-    bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
-    Get.find<BleLogController>().sendNetworkPacket();
+    kickLinkLayerPacketAfterReset();
   }
 
   Future<void> startSounderSetupFetch() async {
@@ -1439,8 +1485,7 @@ class BleManager {
     bleCurrentState = BleStates.SEND_SOUNDER_SETUP_CMD_FETCH_PACKET;
     bleStateMachineState = BleStates.SEND_SOUNDER_SETUP_CMD_FETCH_PACKET;
     print("Current state: $bleStateMachineState");
-    bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
-    Get.find<BleLogController>().sendNetworkPacket();
+    kickLinkLayerPacketAfterReset();
   }
 
   Future<void> startSounderSetupApply() async {
@@ -1474,8 +1519,7 @@ class BleManager {
     bleCurrentState = BleStates.SEND_SOUNDER_SETUP_CMD_APPLY_PACKET;
     bleStateMachineState = BleStates.SEND_SOUNDER_SETUP_CMD_APPLY_PACKET;
     print("Current state: $bleStateMachineState");
-    bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
-    Get.find<BleLogController>().sendNetworkPacket();
+    kickLinkLayerPacketAfterReset();
   }
 
   Future<void> startServiceDueFetch() async {
@@ -1509,8 +1553,7 @@ class BleManager {
     bleCurrentState = BleStates.SEND_SERVICE_DUE_SETUP_CMD_FETCH_PACKET;
     bleStateMachineState = BleStates.SEND_SERVICE_DUE_SETUP_CMD_FETCH_PACKET;
     print("Current state: $bleStateMachineState");
-    bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
-    Get.find<BleLogController>().sendNetworkPacket();
+    kickLinkLayerPacketAfterReset();
   }
 
   Future<void> startServiceDueApply() async {
@@ -1544,8 +1587,7 @@ class BleManager {
     bleCurrentState = BleStates.SEND_SERVICE_DUE_SETUP_CMD_APPLY_PACKET;
     bleStateMachineState = BleStates.SEND_SERVICE_DUE_SETUP_CMD_APPLY_PACKET;
     print("Current state: $bleStateMachineState");
-    bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
-    Get.find<BleLogController>().sendNetworkPacket();
+    kickLinkLayerPacketAfterReset();
   }
 
   Future<void> startAccessCodeSetupFetch() async {
@@ -1579,8 +1621,7 @@ class BleManager {
     bleCurrentState = BleStates.SEND_ACCESS_CODE_SETUP_CMD_FETCH_PACKET;
     bleStateMachineState = BleStates.SEND_ACCESS_CODE_SETUP_CMD_FETCH_PACKET;
     print("Current state: $bleStateMachineState");
-    bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
-    Get.find<BleLogController>().sendNetworkPacket();
+    kickLinkLayerPacketAfterReset();
   }
 
   Future<void> startAccessCodeSetupApply() async {
@@ -1614,8 +1655,7 @@ class BleManager {
     bleCurrentState = BleStates.SEND_ACCESS_CODE_SETUP_CMD_APPLY_PACKET;
     bleStateMachineState = BleStates.SEND_ACCESS_CODE_SETUP_CMD_APPLY_PACKET;
     print("Current state: $bleStateMachineState");
-    bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
-    Get.find<BleLogController>().sendNetworkPacket();
+    kickLinkLayerPacketAfterReset();
   }
 
   Future<void> startPanelInfoSetupFetch() async {
@@ -1649,8 +1689,7 @@ class BleManager {
     bleCurrentState = BleStates.SEND_PANEL_INFO_SETUP_CMD_FETCH_PACKET;
     bleStateMachineState = BleStates.SEND_PANEL_INFO_SETUP_CMD_FETCH_PACKET;
     print("Current state: $bleStateMachineState");
-    bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
-    Get.find<BleLogController>().sendNetworkPacket();
+    kickLinkLayerPacketAfterReset();
   }
 
   Future<void> startPanelInfoSetupApply() async {
@@ -1684,8 +1723,7 @@ class BleManager {
     bleCurrentState = BleStates.SEND_PANEL_INFO_SETUP_CMD_APPLY_PACKET;
     bleStateMachineState = BleStates.SEND_PANEL_INFO_SETUP_CMD_APPLY_PACKET;
     print("Current state: $bleStateMachineState");
-    bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
-    Get.find<BleLogController>().sendNetworkPacket();
+    kickLinkLayerPacketAfterReset();
   }
 
   Future<void> startGeneralModuleSetupFetch() async {
@@ -1719,8 +1757,7 @@ class BleManager {
     bleCurrentState = BleStates.SEND_GENERAL_MODULE_SETUP_CMD_FETCH_PACKET;
     bleStateMachineState = BleStates.SEND_GENERAL_MODULE_SETUP_CMD_FETCH_PACKET;
     print("Current state: $bleStateMachineState");
-    bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
-    Get.find<BleLogController>().sendNetworkPacket();
+    kickLinkLayerPacketAfterReset();
   }
 
   Future<void> startGeneralModuleSetupApply() async {
@@ -1754,8 +1791,7 @@ class BleManager {
     bleCurrentState = BleStates.SEND_GENERAL_MODULE_SETUP_CMD_APPLY_PACKET;
     bleStateMachineState = BleStates.SEND_GENERAL_MODULE_SETUP_CMD_APPLY_PACKET;
     print("Current state: $bleStateMachineState");
-    bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
-    Get.find<BleLogController>().sendNetworkPacket();
+    kickLinkLayerPacketAfterReset();
   }
 
   Future<void> startAdcSetupFetch() async {
@@ -1789,8 +1825,7 @@ class BleManager {
     bleCurrentState = BleStates.SEND_ADC_SETUP_CMD_FETCH_PACKET;
     bleStateMachineState = BleStates.SEND_ADC_SETUP_CMD_FETCH_PACKET;
     print("Current state: $bleStateMachineState");
-    bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
-    Get.find<BleLogController>().sendNetworkPacket();
+    kickLinkLayerPacketAfterReset();
   }
   // Future<void> startExtOut() async {
   //   if (!isConnected) {
@@ -2054,6 +2089,8 @@ class BleManager {
               _connectedOnce = false;
 
               bleProcess.clearSessionAccessCode();
+              postConnectNetworkDone = false;
+              bleProcess.awaitingAccessKeyAfterPostConnect = false;
 
               await _notifySub?.cancel();
               _notifySub = null;
@@ -2068,6 +2105,14 @@ class BleManager {
                   Exception("Disconnected during handshake"),
                 );
                 _handshakeCompleter = null;
+              }
+
+              if (_postConnectPrimeCompleter != null &&
+                  !_postConnectPrimeCompleter!.isCompleted) {
+                _postConnectPrimeCompleter!.completeError(
+                  Exception("Disconnected during link setup"),
+                );
+                _postConnectPrimeCompleter = null;
               }
 
               if (!connectedCompleter.isCompleted) {
@@ -2091,13 +2136,16 @@ class BleManager {
     if (!skipConnectionHandshake && !isBootLoaderMode) {
       handshakeCompleteNotifier.value = false;
       _handshakeCompleter = Completer<void>();
+      _postConnectPrimeCompleter = Completer<void>();
       currentOperationMode = BleOperationMode.none;
       await registerNotifyHandler();
       try {
         await _handshakeCompleter!.future;
+        await _postConnectPrimeCompleter!.future;
         handshakeCompleteNotifier.value = true;
       } finally {
         _handshakeCompleter = null;
+        _postConnectPrimeCompleter = null;
       }
     } else if (isBootLoaderMode) {
       handshakeCompleteNotifier.value = true;
@@ -2222,6 +2270,8 @@ class BleManager {
     handshakeCompleteNotifier.value = false;
     bleFirmwareVersion.value = '';
     bleProcess.clearSessionAccessCode();
+    postConnectNetworkDone = false;
+    bleProcess.awaitingAccessKeyAfterPostConnect = false;
   }
 
   /// SHUTDOWN
@@ -2239,6 +2289,12 @@ class BleManager {
 
     // Cancel any pending timeouts in BleProcess
     bleProcess.cancelRxTimeout();
+    bleProcess.cancelOtherPacketsRxTimeout();
+
+    postConnectNetworkDone = false;
+    bleProcess.awaitingAccessKeyAfterPostConnect = false;
+    failPostConnectPrimeIfPending(Exception("BLE shutdown"));
+    _postConnectPrimeCompleter = null;
 
     // Reset all state
     resetProtocolState();
@@ -2374,6 +2430,7 @@ class BleManager {
               !_handshakeCompleter!.isCompleted) {
             _handshakeCompleter!.complete();
           }
+          beginPostConnectNetworkPriming();
         } else if (currentOperationMode == BleOperationMode.firmwareUpgrade) {
           // Firmware upgrade path
           bleCurrentState = BleStates.SEND_START_FIRMWARE_PACKET;
@@ -2386,165 +2443,111 @@ class BleManager {
           print("Current state: $bleStateMachineState (Log Retrieval)");
 
           // Send Network Packet for log retrieval
-          bleProcess.startOtherPacketsRxTimeout(
-            timeout: const Duration(seconds: 5),
-          );
-          Get.find<BleLogController>().sendNetworkPacket();
+          kickLinkLayerPacketAfterReset();
         } else if (currentOperationMode == BleOperationMode.extOutFetch) {
           bleCurrentState = BleStates.SEND_EXT_OUT_SETUP_CMD_FETCH_PACKET;
           bleStateMachineState = BleStates.SEND_EXT_OUT_SETUP_CMD_FETCH_PACKET;
           print("Current state: $bleStateMachineState (Ext Out Fetch)");
           // Send Network Packet for Ext Out Fetch
-          bleProcess.startOtherPacketsRxTimeout(
-            timeout: const Duration(seconds: 5),
-          );
-          Get.find<BleLogController>().sendNetworkPacket();
+          kickLinkLayerPacketAfterReset();
         } else if (currentOperationMode == BleOperationMode.extOutApply) {
           bleCurrentState = BleStates.SEND_EXT_OUT_SETUP_CMD_APPLY_PACKET;
           bleStateMachineState = BleStates.SEND_EXT_OUT_SETUP_CMD_APPLY_PACKET;
           print("Current state : $bleStateMachineState (Ext Out Apply)");
           // Send Network Packet for Ext Out Apply
-          bleProcess.startOtherPacketsRxTimeout(
-            timeout: const Duration(seconds: 5),
-          );
-          Get.find<BleLogController>().sendNetworkPacket();
+          kickLinkLayerPacketAfterReset();
         } else if (currentOperationMode == BleOperationMode.inputSetupFetch) {
           bleCurrentState = BleStates.SEND_INPUT_SETUP_CMD_FETCH_PACKET;
           bleStateMachineState = BleStates.SEND_INPUT_SETUP_CMD_FETCH_PACKET;
           print("Current state: $bleStateMachineState (Input Setup Fetch)");
           // Send Network Packet for Input Setup Fetch
-          bleProcess.startOtherPacketsRxTimeout(
-            timeout: const Duration(seconds: 5),
-          );
-          Get.find<BleLogController>().sendNetworkPacket();
+          kickLinkLayerPacketAfterReset();
         } else if (currentOperationMode == BleOperationMode.inputSetupApply) {
           bleCurrentState = BleStates.SEND_INPUT_SETUP_CMD_APPLY_PACKET;
           bleStateMachineState = BleStates.SEND_INPUT_SETUP_CMD_APPLY_PACKET;
           print("Current state: $bleStateMachineState (Input Setup Apply)");
           // Send Network Packet for Input Setup Fetch
-          bleProcess.startOtherPacketsRxTimeout(
-            timeout: const Duration(seconds: 5),
-          );
-          Get.find<BleLogController>().sendNetworkPacket();
+          kickLinkLayerPacketAfterReset();
         } else if (currentOperationMode == BleOperationMode.relaySetupFetch) {
           bleCurrentState = BleStates.SEND_RELAY_SETUP_CMD_FETCH_PACKET;
           bleStateMachineState = BleStates.SEND_RELAY_SETUP_CMD_FETCH_PACKET;
           print("Current state: $bleStateMachineState (Relay Setup Fetch)");
           // Send Network Packet for Input Setup Fetch
-          bleProcess.startOtherPacketsRxTimeout(
-            timeout: const Duration(seconds: 5),
-          );
-          Get.find<BleLogController>().sendNetworkPacket();
+          kickLinkLayerPacketAfterReset();
         } else if (currentOperationMode == BleOperationMode.relaySetupApply) {
           bleCurrentState = BleStates.SEND_RELAY_SETUP_CMD_APPLY_PACKET;
           bleStateMachineState = BleStates.SEND_RELAY_SETUP_CMD_APPLY_PACKET;
           print("Current state: $bleStateMachineState (Relay Setup Apply)");
           // Send Network Packet for Relay Setup Apply
-          bleProcess.startOtherPacketsRxTimeout(
-            timeout: const Duration(seconds: 5),
-          );
-          Get.find<BleLogController>().sendNetworkPacket();
+          kickLinkLayerPacketAfterReset();
         } else if (currentOperationMode == BleOperationMode.zoneSetupFetch) {
           bleCurrentState = BleStates.SEND_ZONE_SETUP_CMD_FETCH_PACKET;
           bleStateMachineState = BleStates.SEND_ZONE_SETUP_CMD_FETCH_PACKET;
           print("Current state: $bleStateMachineState (Zone Setup Fetch)");
           // Send Network Packet for Zone Setup Fetch
-          bleProcess.startOtherPacketsRxTimeout(
-            timeout: const Duration(seconds: 5),
-          );
-          Get.find<BleLogController>().sendNetworkPacket();
+          kickLinkLayerPacketAfterReset();
         } else if (currentOperationMode == BleOperationMode.zoneSetupApply) {
           bleCurrentState = BleStates.SEND_ZONE_SETUP_CMD_APPLY_PACKET;
           bleStateMachineState = BleStates.SEND_ZONE_SETUP_CMD_APPLY_PACKET;
           print("Current state: $bleStateMachineState (Zone Setup Apply)");
           // Send Network Packet for Zone Setup Apply
-          bleProcess.startOtherPacketsRxTimeout(
-            timeout: const Duration(seconds: 5),
-          );
-          Get.find<BleLogController>().sendNetworkPacket();
+          kickLinkLayerPacketAfterReset();
         } else if (currentOperationMode == BleOperationMode.radioSetupFetch) {
           bleCurrentState = BleStates.SEND_RADIO_SETUP_CMD_FETCH_PACKET;
           bleStateMachineState = BleStates.SEND_RADIO_SETUP_CMD_FETCH_PACKET;
           print("Current state: $bleStateMachineState (Radio Setup Fetch)");
           // Send Network Packet for Radio Setup Fetch
-          bleProcess.startOtherPacketsRxTimeout(
-            timeout: const Duration(seconds: 5),
-          );
-          Get.find<BleLogController>().sendNetworkPacket();
+          kickLinkLayerPacketAfterReset();
         } else if (currentOperationMode == BleOperationMode.radioSetupApply) {
           bleCurrentState = BleStates.SEND_RADIO_SETUP_CMD_APPLY_PACKET;
           bleStateMachineState = BleStates.SEND_RADIO_SETUP_CMD_APPLY_PACKET;
           print("Current state: $bleStateMachineState (Radio Setup Apply)");
           // Send Network Packet for Radio Setup Apply
-          bleProcess.startOtherPacketsRxTimeout(
-            timeout: const Duration(seconds: 5),
-          );
-          Get.find<BleLogController>().sendNetworkPacket();
+          kickLinkLayerPacketAfterReset();
         } else if (currentOperationMode == BleOperationMode.moduleSetupFetch) {
           bleCurrentState = BleStates.SEND_MODULE_SETUP_CMD_FETCH_PACKET;
           bleStateMachineState = BleStates.SEND_MODULE_SETUP_CMD_FETCH_PACKET;
           print("Current state: $bleStateMachineState (Module Setup Fetch)");
           // Send Network Packet for Module Setup Fetch
-          bleProcess.startOtherPacketsRxTimeout(
-            timeout: const Duration(seconds: 5),
-          );
-          Get.find<BleLogController>().sendNetworkPacket();
+          kickLinkLayerPacketAfterReset();
         } else if (currentOperationMode == BleOperationMode.lBusSetupFetch) {
           bleCurrentState = BleStates.SEND_L_BUS_SETUP_CMD_FETCH_PACKET;
           bleStateMachineState = BleStates.SEND_L_BUS_SETUP_CMD_FETCH_PACKET;
           print("Current state: $bleStateMachineState (L-Bus Setup Fetch)");
           // Send Network Packet for L-Bus Setup Fetch
-          bleProcess.startOtherPacketsRxTimeout(
-            timeout: const Duration(seconds: 5),
-          );
-          Get.find<BleLogController>().sendNetworkPacket();
+          kickLinkLayerPacketAfterReset();
         } else if (currentOperationMode == BleOperationMode.lBusSetupApply) {
           bleCurrentState = BleStates.SEND_L_BUS_SETUP_CMD_APPLY_PACKET;
           bleStateMachineState = BleStates.SEND_L_BUS_SETUP_CMD_APPLY_PACKET;
           print("Current state: $bleStateMachineState (L-Bus Setup Apply)");
           // Send Network Packet for L-Bus Setup Apply
-          bleProcess.startOtherPacketsRxTimeout(
-            timeout: const Duration(seconds: 5),
-          );
-          Get.find<BleLogController>().sendNetworkPacket();
+          kickLinkLayerPacketAfterReset();
         } else if (currentOperationMode == BleOperationMode.sounderSetupFetch) {
           bleCurrentState = BleStates.SEND_SOUNDER_SETUP_CMD_FETCH_PACKET;
           bleStateMachineState = BleStates.SEND_SOUNDER_SETUP_CMD_FETCH_PACKET;
           print("Current state: $bleStateMachineState (Sounder Setup Fetch)");
           // Send Network Packet for Sounder Setup Fetch
-          bleProcess.startOtherPacketsRxTimeout(
-            timeout: const Duration(seconds: 5),
-          );
-          Get.find<BleLogController>().sendNetworkPacket();
+          kickLinkLayerPacketAfterReset();
         } else if (currentOperationMode == BleOperationMode.sounderSetupApply) {
           bleCurrentState = BleStates.SEND_SOUNDER_SETUP_CMD_APPLY_PACKET;
           bleStateMachineState = BleStates.SEND_SOUNDER_SETUP_CMD_APPLY_PACKET;
           print("Current state: $bleStateMachineState (Sounder Setup Apply)");
           // Send Network Packet for Sounder Setup Apply
-          bleProcess.startOtherPacketsRxTimeout(
-            timeout: const Duration(seconds: 5),
-          );
-          Get.find<BleLogController>().sendNetworkPacket();
+          kickLinkLayerPacketAfterReset();
         } else if (currentOperationMode == BleOperationMode.serviceDueFetch) {
           bleCurrentState = BleStates.SEND_SERVICE_DUE_SETUP_CMD_FETCH_PACKET;
           bleStateMachineState =
               BleStates.SEND_SERVICE_DUE_SETUP_CMD_FETCH_PACKET;
           print("Current state: $bleStateMachineState (Service due fetch)");
           // Send Network Packet for Service due fetch
-          bleProcess.startOtherPacketsRxTimeout(
-            timeout: const Duration(seconds: 5),
-          );
-          Get.find<BleLogController>().sendNetworkPacket();
+          kickLinkLayerPacketAfterReset();
         } else if (currentOperationMode == BleOperationMode.serviceDueApply) {
           bleCurrentState = BleStates.SEND_SERVICE_DUE_SETUP_CMD_APPLY_PACKET;
           bleStateMachineState =
               BleStates.SEND_SERVICE_DUE_SETUP_CMD_APPLY_PACKET;
           print("Current state: $bleStateMachineState (Service due apply)");
           // Send Network Packet for Service due apply
-          bleProcess.startOtherPacketsRxTimeout(
-            timeout: const Duration(seconds: 5),
-          );
-          Get.find<BleLogController>().sendNetworkPacket();
+          kickLinkLayerPacketAfterReset();
         } else if (currentOperationMode ==
             BleOperationMode.accessCodeSetupFetch) {
           bleCurrentState = BleStates.SEND_ACCESS_CODE_SETUP_CMD_FETCH_PACKET;
@@ -2554,10 +2557,7 @@ class BleManager {
             "Current state: $bleStateMachineState (Access code setup fetch)",
           );
           // Send Network Packet for Access code setup fetch
-          bleProcess.startOtherPacketsRxTimeout(
-            timeout: const Duration(seconds: 5),
-          );
-          Get.find<BleLogController>().sendNetworkPacket();
+          kickLinkLayerPacketAfterReset();
         } else if (currentOperationMode ==
             BleOperationMode.accessCodeSetupApply) {
           bleCurrentState = BleStates.SEND_ACCESS_CODE_SETUP_CMD_APPLY_PACKET;
@@ -2567,10 +2567,7 @@ class BleManager {
             "Current state: $bleStateMachineState (Access code setup apply)",
           );
           // Send Network Packet for Access code setup apply
-          bleProcess.startOtherPacketsRxTimeout(
-            timeout: const Duration(seconds: 5),
-          );
-          Get.find<BleLogController>().sendNetworkPacket();
+          kickLinkLayerPacketAfterReset();
         } else if (currentOperationMode ==
             BleOperationMode.panelInfoSetupFetch) {
           bleCurrentState = BleStates.SEND_PANEL_INFO_SETUP_CMD_FETCH_PACKET;
@@ -2580,10 +2577,7 @@ class BleManager {
             "Current state: $bleStateMachineState (Panel info setup fetch)",
           );
           // Send Network Packet for Panel info setup fetch
-          bleProcess.startOtherPacketsRxTimeout(
-            timeout: const Duration(seconds: 5),
-          );
-          Get.find<BleLogController>().sendNetworkPacket();
+          kickLinkLayerPacketAfterReset();
         } else if (currentOperationMode ==
             BleOperationMode.panelInfoSetupApply) {
           bleCurrentState = BleStates.SEND_PANEL_INFO_SETUP_CMD_APPLY_PACKET;
@@ -2593,10 +2587,7 @@ class BleManager {
             "Current state: $bleStateMachineState (Panel info setup apply)",
           );
           // Send Network Packet for Panel info setup apply
-          bleProcess.startOtherPacketsRxTimeout(
-            timeout: const Duration(seconds: 5),
-          );
-          Get.find<BleLogController>().sendNetworkPacket();
+          kickLinkLayerPacketAfterReset();
         } else if (currentOperationMode ==
             BleOperationMode.generalModuleSetupFetch) {
           bleCurrentState =
@@ -2607,10 +2598,7 @@ class BleManager {
             "Current state: $bleStateMachineState (General module setup fetch)",
           );
           // Send Network Packet for General module setup fetch
-          bleProcess.startOtherPacketsRxTimeout(
-            timeout: const Duration(seconds: 5),
-          );
-          Get.find<BleLogController>().sendNetworkPacket();
+          kickLinkLayerPacketAfterReset();
         } else if (currentOperationMode ==
             BleOperationMode.generalModuleSetupApply) {
           bleCurrentState =
@@ -2621,28 +2609,19 @@ class BleManager {
             "Current state: $bleStateMachineState (General module setup apply)",
           );
           // Send Network Packet for General module setup apply
-          bleProcess.startOtherPacketsRxTimeout(
-            timeout: const Duration(seconds: 5),
-          );
-          Get.find<BleLogController>().sendNetworkPacket();
+          kickLinkLayerPacketAfterReset();
         } else if (currentOperationMode ==
             BleOperationMode.liveEventsRetrieval) {
           bleCurrentState = BleStates.PROCESS_PANEL_LIVE_EVENTS_READ;
           bleStateMachineState = BleStates.PROCESS_PANEL_LIVE_EVENTS_READ;
           print("Current state: $bleStateMachineState (Live events retrieval)");
-          bleProcess.startOtherPacketsRxTimeout(
-            timeout: const Duration(seconds: 5),
-          );
-          Get.find<BleLogController>().sendNetworkPacket();
+          kickLinkLayerPacketAfterReset();
         } else if (currentOperationMode == BleOperationMode.adcSetupFetch) {
           bleCurrentState = BleStates.SEND_ADC_SETUP_CMD_FETCH_PACKET;
           bleStateMachineState = BleStates.SEND_ADC_SETUP_CMD_FETCH_PACKET;
           print("Current state: $bleStateMachineState (Adc setup fetch)");
           // Send Network Packet for Adc setup fetch
-          bleProcess.startOtherPacketsRxTimeout(
-            timeout: const Duration(seconds: 5),
-          );
-          Get.find<BleLogController>().sendNetworkPacket();
+          kickLinkLayerPacketAfterReset();
         }
       } else {
         print("Validation failed");

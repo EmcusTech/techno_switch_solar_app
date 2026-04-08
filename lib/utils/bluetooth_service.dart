@@ -62,6 +62,8 @@ class BluetoothService {
     bool disconnectIfConnected = true,
     Duration postDisconnectDelay = const Duration(seconds: 2),
   }) async {
+    ble.bleProcess.retreivedPanelName.value = "";
+    ble.bleProcess.isNetworkPacketProcess.value = true;
     print("The scanning initial status is: ${ble.isConnected}");
     if (disconnectIfConnected && ble.isConnected) {
       final deviceId = ble.connectedDeviceId.value;
@@ -97,7 +99,10 @@ class BluetoothService {
 
             final existing = _scanResults[index];
             final manufacturerChanged =
-                !_listEquals(existing.manufacturerData, device.manufacturerData);
+                !_listEquals(
+                  existing.manufacturerData,
+                  device.manufacturerData,
+                );
             final nameChanged = existing.name != device.name;
             final rssiChanged = existing.rssi != device.rssi;
 

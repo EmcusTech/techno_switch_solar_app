@@ -190,6 +190,7 @@ class BleLogController extends GetxController {
       "------------------------Restarting the network FLow-------------------------------",
     );
     await Future.delayed(Duration(seconds: 7));
+    bleManager.postConnectNetworkDone = false;
     sendNetworkPacket();
   }
 
@@ -221,10 +222,11 @@ class BleLogController extends GetxController {
 
     print("🔄 Restarting BLE log retrieval");
 
+    bleManager.postConnectNetworkDone = false;
     bleProcess.resetProcessState();
     bleManager.resetProtocolState();
 
-    // Kick off again
+    // Kick off again (full network cycle after recovery)
     await bleManager.sendNetworkPacket();
     bleProcess.runStateMachine();
   }

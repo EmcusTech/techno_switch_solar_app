@@ -133,6 +133,9 @@ class BleProcess {
   /// True while running [BleManager.startSessionAccessCodeValidation] (access-only, no setup fetch).
   bool isSessionAccessCodeValidationOnly = false;
 
+  /// During post-connect priming: after first poll RX, pause before access-key TX until UI submits code.
+  bool awaitingAccessKeyAfterPostConnect = false;
+
   void clearSessionAccessCode() {
     sessionAccessCodeReady.value = false;
     accessKey.value = "";
@@ -586,6 +589,9 @@ class BleProcess {
   // Network Variables
   final ValueNotifier<bool> isNetworkPacketProcess = ValueNotifier<bool>(true);
 
+  // Panel name variable
+  final ValueNotifier<String> retreivedPanelName = ValueNotifier<String>("");
+
   // BleStates bleStateMachineState = BleStates.IDLE;
   BleStates bleCurrentState = BleStates.IDLE;
   DeviceConnectState deviceConnectState = DeviceConnectState.notConnected;
@@ -606,6 +612,24 @@ class BleProcess {
     nackRetryCount = 0;
 
     bleManager.u8RxPktCnt = rx.payload[4];
+
+    if (isNetworkPacketProcess.value) {
+      print("NETWORK PACKET PROCESS: the received packet is a network packet");
+      print(
+        "NETWORK PACKET PROCESS: the received network packet: ${rx.payload.map((e) => e.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+      );
+      retreivedPanelName.value = extractStringFromPayload(
+        rx.payload,
+        startIndex: 16,
+      );
+      print(
+        "NETWORK PACKET PROCESS: the retrieved panel name is: ${retreivedPanelName.value}",
+      );
+    } else {
+      print(
+        "NETWORK PACKET PROCESS: the received packet is not a network packet",
+      );
+    }
 
     print(
       "Rx pkt count: $bleManager.u8RxPktCnt (STATE: ${bleManager.otaProcessState.name}",
@@ -651,11 +675,23 @@ class BleProcess {
         break;
 
       case OtaProcessState.sendPollPacket:
+        if (awaitingAccessKeyAfterPostConnect) {
+          awaitingAccessKeyAfterPostConnect = false;
+          bleManager.otaProcessState = OtaProcessState.awaitingAccessKeyInput;
+          bleManager.postConnectNetworkDone = true;
+          cancelRxTimeout();
+          cancelOtherPacketsRxTimeout();
+          bleManager.completePostConnectPrimeIfNeeded();
+          break;
+        }
         print("NEXT: ACCESS PACKET");
         // await Future.delayed(Duration(seconds: 1));
         bleManager.otaProcessState = OtaProcessState.sendAccessKeyPacket;
         startRxTimeout();
         await bleManager.sendAccessKeyPkt();
+        break;
+
+      case OtaProcessState.awaitingAccessKeyInput:
         break;
 
       case OtaProcessState.sendAccessKeyPacket:
@@ -2564,7 +2600,7 @@ class BleProcess {
     logEndTime = null;
 
     // OTA state
-    bleManager.otaProcessState = OtaProcessState.sendNetworkPacket;
+    bleManager.applyInitialOtaStateAfterReset();
 
     // RX timeout
     _rxTimeoutTimer?.cancel();
@@ -2631,7 +2667,7 @@ class BleProcess {
     // logEndTime = null;
 
     // OTA state
-    bleManager.otaProcessState = OtaProcessState.sendNetworkPacket;
+    bleManager.applyInitialOtaStateAfterReset();
 
     // RX timeout
     _rxTimeoutTimer?.cancel();
@@ -2697,7 +2733,7 @@ class BleProcess {
     // logEndTime = null;
 
     // OTA state
-    bleManager.otaProcessState = OtaProcessState.sendNetworkPacket;
+    bleManager.applyInitialOtaStateAfterReset();
 
     // RX timeout
     _rxTimeoutTimer?.cancel();
@@ -2761,7 +2797,7 @@ class BleProcess {
     // logEndTime = null;
 
     // OTA state
-    bleManager.otaProcessState = OtaProcessState.sendNetworkPacket;
+    bleManager.applyInitialOtaStateAfterReset();
 
     // RX timeout
     _rxTimeoutTimer?.cancel();
@@ -2825,7 +2861,7 @@ class BleProcess {
     // logEndTime = null;
 
     // OTA state
-    bleManager.otaProcessState = OtaProcessState.sendNetworkPacket;
+    bleManager.applyInitialOtaStateAfterReset();
 
     // RX timeout
     _rxTimeoutTimer?.cancel();
@@ -2889,7 +2925,7 @@ class BleProcess {
     // logEndTime = null;
 
     // OTA state
-    bleManager.otaProcessState = OtaProcessState.sendNetworkPacket;
+    bleManager.applyInitialOtaStateAfterReset();
 
     // RX timeout
     _rxTimeoutTimer?.cancel();
@@ -2952,7 +2988,7 @@ class BleProcess {
     // logEndTime = null;
 
     // OTA state
-    bleManager.otaProcessState = OtaProcessState.sendNetworkPacket;
+    bleManager.applyInitialOtaStateAfterReset();
 
     // RX timeout
     _rxTimeoutTimer?.cancel();
@@ -3016,7 +3052,7 @@ class BleProcess {
     // logEndTime = null;
 
     // OTA state
-    bleManager.otaProcessState = OtaProcessState.sendNetworkPacket;
+    bleManager.applyInitialOtaStateAfterReset();
 
     // RX timeout
     _rxTimeoutTimer?.cancel();
@@ -3080,7 +3116,7 @@ class BleProcess {
     // logEndTime = null;
 
     // OTA state
-    bleManager.otaProcessState = OtaProcessState.sendNetworkPacket;
+    bleManager.applyInitialOtaStateAfterReset();
 
     // RX timeout
     _rxTimeoutTimer?.cancel();
@@ -3144,7 +3180,7 @@ class BleProcess {
     // logEndTime = null;
 
     // OTA state
-    bleManager.otaProcessState = OtaProcessState.sendNetworkPacket;
+    bleManager.applyInitialOtaStateAfterReset();
 
     // RX timeout
     _rxTimeoutTimer?.cancel();
@@ -3208,7 +3244,7 @@ class BleProcess {
     // logEndTime = null;
 
     // OTA state
-    bleManager.otaProcessState = OtaProcessState.sendNetworkPacket;
+    bleManager.applyInitialOtaStateAfterReset();
 
     // RX timeout
     _rxTimeoutTimer?.cancel();
@@ -3272,7 +3308,7 @@ class BleProcess {
     // logEndTime = null;
 
     // OTA state
-    bleManager.otaProcessState = OtaProcessState.sendNetworkPacket;
+    bleManager.applyInitialOtaStateAfterReset();
 
     // RX timeout
     _rxTimeoutTimer?.cancel();
@@ -3336,7 +3372,7 @@ class BleProcess {
     // logEndTime = null;
 
     // OTA state
-    bleManager.otaProcessState = OtaProcessState.sendNetworkPacket;
+    bleManager.applyInitialOtaStateAfterReset();
 
     // RX timeout
     _rxTimeoutTimer?.cancel();
@@ -3400,7 +3436,7 @@ class BleProcess {
     // logEndTime = null;
 
     // OTA state
-    bleManager.otaProcessState = OtaProcessState.sendNetworkPacket;
+    bleManager.applyInitialOtaStateAfterReset();
 
     // RX timeout
     _rxTimeoutTimer?.cancel();
@@ -3737,8 +3773,14 @@ class BleProcess {
     Get.find<BleLogController>().restartNetworkFlow();
   }
 
+  void cancelOtherPacketsRxTimeout() {
+    _otherPacketsRxTimeoutTimer?.cancel();
+    _otherPacketsRxTimeoutTimer = null;
+  }
+
   void startOtherPacketsRxTimeout({Duration? timeout}) {
     cancelRxTimeout();
+    cancelOtherPacketsRxTimeout();
 
     print("Other Packets: Starting other packets RX timeout");
 
@@ -3751,6 +3793,9 @@ class BleProcess {
         );
         processDesc.value =
             "No response from device, please scan and connect again";
+        bleManager.failPostConnectPrimeIfPending(
+          Exception("No response from device during link setup"),
+        );
         restartInitialNetworkFlow();
         // bleManager.shutdown();
       },
@@ -3778,6 +3823,8 @@ class BleProcess {
           break;
         case OtaProcessState.sendPollPacket:
           await bleManager.sendPollPacket();
+          break;
+        case OtaProcessState.awaitingAccessKeyInput:
           break;
         case OtaProcessState.sendAccessKeyPacket:
           await bleManager.sendAccessKeyPkt();
