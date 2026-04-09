@@ -253,6 +253,11 @@ String _yesNo(bool? v) {
   return v ? 'Yes' : 'No';
 }
 
+String _yesNoIsSolar(bool? v) {
+  if (v == null) return 'null';
+  return v ? 'No' : 'Yes';
+}
+
 ConfigMapDiff _labelInput(
   ConfigMapDiff diff,
   Map<String, dynamic> b,
@@ -372,7 +377,10 @@ ConfigMapDiff _labelSounders(
       remote: _idx(_SounderOpts.zoneActions, _parseNum(diff.remote)),
     );
   }
-  if (key.startsWith('e') && (field == 'countdownAction' || field == 'holdAction' || field == 'releaseAction')) {
+  if (key.startsWith('e') &&
+      (field == 'countdownAction' ||
+          field == 'holdAction' ||
+          field == 'releaseAction')) {
     return ConfigMapDiff(
       path: diff.path,
       local: _idx(_SounderOpts.extOutActions, _parseNum(diff.local)),
@@ -441,7 +449,7 @@ ConfigMapDiff _labelExtOut(ConfigMapDiff diff) {
       return ConfigMapDiff(
         path: diff.path,
         local: _yesNo(_parseBool(diff.local)),
-        remote: _yesNo(_parseBool(diff.remote)),
+        remote: _yesNoIsSolar(_parseBool(diff.remote)),
       );
     default:
       return diff;
@@ -468,7 +476,11 @@ ConfigMapDiff _labelAccessCodes(ConfigMapDiff diff) {
     return s;
   }
 
-  return ConfigMapDiff(path: diff.path, local: label(diff.local), remote: label(diff.remote));
+  return ConfigMapDiff(
+    path: diff.path,
+    local: label(diff.local),
+    remote: label(diff.remote),
+  );
 }
 
 ConfigMapDiff _labelWalkTest(ConfigMapDiff diff) {
@@ -502,12 +514,7 @@ List<ConfigMapDiff> labelSectionDiffs(
 ) {
   return diffs
       .map(
-        (d) => applyDisplayLabelsForSection(
-          d,
-          sectionTitle,
-          baseline,
-          panel,
-        ),
+        (d) => applyDisplayLabelsForSection(d, sectionTitle, baseline, panel),
       )
       .toList();
 }

@@ -760,10 +760,12 @@ class BleProcess {
       case OtaProcessState.sendExtOutSetupApplyCmdPkt:
         print("Sending Ext Out Setup Apply Command");
         checkForExtCmdApplyRes = 1;
+        break;
 
       case OtaProcessState.sendDipSettingFetchCmd:
         print("Sending Dip setting fetch cmd");
         checkDipSetCmdRsp = 1;
+        break;
 
       case OtaProcessState.sendInputSetupFetchCmdPkt:
         print("Sending Input Setup Fetch Command");
@@ -3670,7 +3672,7 @@ class BleProcess {
                   : payload[42] == 4
                   ? "Server No. ${payload[43]}"
                   : payload[42] == 5
-                  ? "Arcnet No. 0"
+                  ? "Bluetooth"
                   : "";
         } else if (payload[22] == EventConstants.evtTypeAccess) {
           panelSource =
@@ -3683,7 +3685,7 @@ class BleProcess {
                   : payload[42] == 3
                   ? "Server"
                   : payload[42] == 4
-                  ? "Arcnet No. 0"
+                  ? "Bluetooth"
                   : "";
         } else {
           panelSource = "Panel No. 1";
