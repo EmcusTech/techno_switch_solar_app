@@ -8,11 +8,13 @@ import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dar
 class DiagnosticInfoBottomSheet extends StatefulWidget {
   final String deviceId;
   final VoidCallback onDownload;
+  final VoidCallback onStop;
 
   const DiagnosticInfoBottomSheet({
     super.key,
     required this.deviceId,
     required this.onDownload,
+    required this.onStop,
   });
 
   @override
@@ -148,26 +150,33 @@ class _DiagnosticInfoBottomSheetState extends State<DiagnosticInfoBottomSheet> {
                 ),
               ),
               const SizedBox(height: 12),
-              SizedBox(
-                height: 48,
-                width: double.infinity,
-                child: OutlinedButton(
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: const Color(0xFFEC1D24),
-                    side: const BorderSide(color: Color(0xFFEC1D24)),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(24),
+              ValueListenableBuilder<bool>(
+                valueListenable: p.isAdcSetupFetchCommandActive,
+                builder: (context, isFetchActive, _) {
+                  return SizedBox(
+                    height: 48,
+                    width: double.infinity,
+                    child: OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: const Color(0xFFEC1D24),
+                        side: const BorderSide(color: Color(0xFFEC1D24)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                      ),
+                      onPressed: isFetchActive
+                          ? widget.onStop
+                          : widget.onDownload,
+                      child: Text(
+                        isFetchActive ? 'Stop' : 'Start',
+                        style: GoogleFonts.inter(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
-                  ),
-                  onPressed: widget.onDownload,
-                  child: Text(
-                    'Download',
-                    style: GoogleFonts.inter(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
+                  );
+                },
               ),
             ],
           ),

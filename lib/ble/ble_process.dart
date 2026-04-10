@@ -1104,18 +1104,28 @@ class BleProcess {
       print("Checking Adc Setup Fetch CMD RSP");
       if (rx.payload[12] == 0x09) {
         print("We got adc setup fetch response");
-        bleManager.otaProcessState = OtaProcessState.notInUse;
-        cancelOperationDeadline();
-        checkForAdcSetupFetchRes = 0;
-        isAdcSetupFetchCommandActive.value = false;
+        // bleManager.otaProcessState = OtaProcessState.notInUse;
+        // cancelOperationDeadline();
+        // checkForAdcSetupFetchRes = 0;
+        // isAdcSetupFetchCommandActive.value = false;
         isAccessKeyValid.value = true;
-        processDesc.value = "Adc Setup Fetch Completed";
+        // processDesc.value = "Adc Setup Fetch Completed";
         try {
           final parsed = AdcParser.parse(rx.payload);
           final adc = AdcValues.fromList(parsed);
           updateNotifiers(adc);
         } catch (e, st) {
           print("ADC parse/update failed: $e\n$st");
+        }
+
+        if (!isAdcSetupFetchCommandActive.value) {
+          bleManager.otaProcessState = OtaProcessState.notInUse;
+          cancelOperationDeadline();
+          checkForAdcSetupFetchRes = 0;
+          processDesc.value = "Adc Setup Fetch Completed";
+        } else {
+          startRxTimeout();
+          await bleManager.sendDiagnosticsSetupFetchCmdPkt();
         }
       } else {
         print("Adc Setup Fetch Cmd Response not found, polling again");

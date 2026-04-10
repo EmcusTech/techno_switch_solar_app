@@ -1163,7 +1163,9 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 ),
                 SizedBox(height: 16),
                 Text(
-                  "$message Downloaded",
+                  message == "Diagnostics"
+                      ? "Live Diagnostics Active"
+                      : "$message Downloaded",
                   style: GoogleFonts.inter(
                     fontSize: 20,
                     fontWeight: FontWeight.w700,
@@ -1175,7 +1177,9 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 Visibility(
                   visible: !ble.bleProcess.isLbusFetchHasErrors.value,
                   child: Text(
-                    'The $message has been successfully downloaded from the device.',
+                    message == "Diagnostics"
+                        ? 'Live data is being streamed from the device in real time.'
+                        : 'The $message has been successfully downloaded from the device.',
                     style: GoogleFonts.inter(
                       fontSize: 14,
                       fontWeight: FontWeight.w400,
@@ -1208,32 +1212,35 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                     textAlign: TextAlign.center,
                   ),
                 ),
-                SizedBox(height: 24),
-                SizedBox(
-                  width: double.infinity,
-                  child: GestureDetector(
-                    onTap: () {
-                      Navigator.of(dialogContext, rootNavigator: true).pop();
-                    },
-                    child: Container(
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: Color(0xFFEC1D24),
-                        borderRadius: BorderRadius.circular(24),
-                      ),
-                      child: Center(
-                        child: Text(
-                          'OK',
-                          style: GoogleFonts.inter(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
+                // SizedBox(height: 24),
+                // Visibility(
+                //   visible: message != "Diagnostics",
+                //   child: SizedBox(
+                //     width: double.infinity,
+                //     child: GestureDetector(
+                //       onTap: () {
+                //         Navigator.of(dialogContext, rootNavigator: true).pop();
+                //       },
+                //       child: Container(
+                //         height: 48,
+                //         decoration: BoxDecoration(
+                //           color: Color(0xFFEC1D24),
+                //           borderRadius: BorderRadius.circular(24),
+                //         ),
+                //         child: Center(
+                //           child: Text(
+                //             'OK',
+                //             style: GoogleFonts.inter(
+                //               fontSize: 16,
+                //               fontWeight: FontWeight.w600,
+                //               color: Colors.white,
+                //             ),
+                //           ),
+                //         ),
+                //       ),
+                //     ),
+                //   ),
+                // ),
               ],
             ),
           ),
@@ -1395,7 +1402,17 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                                     : isAdcSetup == true
                                     ? 'Diagnostics'
                                     : 'Configuration');
+                            // if (downloadSuccessMessage == "Diagnostics") {
+                            //   null;
+                            // } else {
+                            //   showDownloadSuccessDialog(context, message);
+                            // }
                             showDownloadSuccessDialog(context, message);
+                            Future.delayed(const Duration(seconds: 2), () {
+                              if (mounted) {
+                                Navigator.of(context).pop();
+                              }
+                            });
                           }
                         } else if (ble.bleProcess.isExtOutApplyDone.value) {
                           ble.bleProcess.isExtOutApplyButtonActive.value = true;
@@ -1554,7 +1571,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                                 ),
                               ),
                             ),
-                            const SizedBox(height: 24),
+
                             AnimatedSize(
                               duration: animDuration,
                               curve: Curves.easeInOutCubic,
@@ -1566,6 +1583,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                                       : Column(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
+                                          const SizedBox(height: 24),
                                           TextField(
                                             controller: _controller,
                                             focusNode: _focusNode,
@@ -1732,10 +1750,13 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                                     }
                                   });
                                 }
-                                return status == null
-                                    ? const SizedBox.shrink()
+                                return status == null || status.isEmpty
+                                    ? const SizedBox(height: 8)
                                     : Padding(
-                                      padding: const EdgeInsets.only(bottom: 4),
+                                      padding: const EdgeInsets.only(
+                                        bottom: 4,
+                                        top: 12,
+                                      ),
                                       child: Text(
                                         status,
                                         style: GoogleFonts.inter(
@@ -1752,8 +1773,6 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                               },
                             ),
 
-                            const SizedBox(height: 12),
-
                             ValueListenableBuilder<String>(
                               valueListenable: bleProcess.processDesc,
                               builder: (_, processDescForButtons, __) {
@@ -1763,55 +1782,21 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                                     (processDescForButtons.isEmpty ||
                                         isAccessKeyValidValue == false);
                                 return showButtons
-                                    ? Row(
+                                    ? Column(
                                       children: [
-                                        Expanded(
-                                          child: SizedBox(
-                                            height: 48,
-                                            child: OutlinedButton(
-                                              style: OutlinedButton.styleFrom(
-                                                foregroundColor: const Color(
-                                                  0xFFEC1D24,
-                                                ),
-                                                side: const BorderSide(
-                                                  color: Color(0xFFEC1D24),
-                                                ),
-                                                shape: RoundedRectangleBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(24),
-                                                ),
-                                              ),
-                                              onPressed: () {
-                                                cancelAccessKeyTimer();
-                                                Navigator.of(
-                                                  dialogContext,
-                                                ).pop();
-                                              },
-                                              child: Text(
-                                                'Cancel',
-                                                style: GoogleFonts.inter(
-                                                  fontSize: 16,
-                                                  fontWeight: FontWeight.w600,
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                        SizedBox(width: 12),
-                                        Expanded(
-                                          child: SizedBox(
-                                            height: 48,
-                                            child: ListenableBuilder(
-                                              listenable: _controller,
-                                              builder: (context, _) {
-                                                final canVerify =
-                                                    _controller.text
-                                                        .trim()
-                                                        .isNotEmpty;
-                                                return ElevatedButton(
-                                                  style: ElevatedButton.styleFrom(
-                                                    backgroundColor:
+                                        const SizedBox(height: 12),
+                                        Row(
+                                          children: [
+                                            Expanded(
+                                              child: SizedBox(
+                                                height: 48,
+                                                child: OutlinedButton(
+                                                  style: OutlinedButton.styleFrom(
+                                                    foregroundColor:
                                                         const Color(0xFFEC1D24),
+                                                    side: const BorderSide(
+                                                      color: Color(0xFFEC1D24),
+                                                    ),
                                                     shape: RoundedRectangleBorder(
                                                       borderRadius:
                                                           BorderRadius.circular(
@@ -1819,41 +1804,88 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                                                           ),
                                                     ),
                                                   ),
-                                                  onPressed:
-                                                      canVerify
-                                                          ? () {
-                                                            FocusScope.of(
-                                                              dialogContext,
-                                                            ).unfocus();
-
-                                                            bleProcess
-                                                                .isAccessKeyValid
-                                                                .value = null;
-                                                            bleProcess
-                                                                    .processDesc
-                                                                    .value =
-                                                                "Validating";
-
-                                                            accessKey.value =
-                                                                _controller
-                                                                    .text;
-
-                                                            onCall();
-                                                          }
-                                                          : null,
+                                                  onPressed: () {
+                                                    cancelAccessKeyTimer();
+                                                    Navigator.of(
+                                                      dialogContext,
+                                                    ).pop();
+                                                  },
                                                   child: Text(
-                                                    'Verify',
+                                                    'Cancel',
                                                     style: GoogleFonts.inter(
                                                       fontSize: 16,
                                                       fontWeight:
                                                           FontWeight.w600,
-                                                      color: Colors.white,
                                                     ),
                                                   ),
-                                                );
-                                              },
+                                                ),
+                                              ),
                                             ),
-                                          ),
+                                            SizedBox(width: 12),
+                                            Expanded(
+                                              child: SizedBox(
+                                                height: 48,
+                                                child: ListenableBuilder(
+                                                  listenable: _controller,
+                                                  builder: (context, _) {
+                                                    final canVerify =
+                                                        _controller.text
+                                                            .trim()
+                                                            .isNotEmpty;
+                                                    return ElevatedButton(
+                                                      style: ElevatedButton.styleFrom(
+                                                        backgroundColor:
+                                                            const Color(
+                                                              0xFFEC1D24,
+                                                            ),
+                                                        shape: RoundedRectangleBorder(
+                                                          borderRadius:
+                                                              BorderRadius.circular(
+                                                                24,
+                                                              ),
+                                                        ),
+                                                      ),
+                                                      onPressed:
+                                                          canVerify
+                                                              ? () {
+                                                                FocusScope.of(
+                                                                  dialogContext,
+                                                                ).unfocus();
+
+                                                                bleProcess
+                                                                    .isAccessKeyValid
+                                                                    .value = null;
+                                                                bleProcess
+                                                                        .processDesc
+                                                                        .value =
+                                                                    "Validating";
+
+                                                                accessKey
+                                                                        .value =
+                                                                    _controller
+                                                                        .text;
+
+                                                                onCall();
+                                                              }
+                                                              : null,
+                                                      child: Text(
+                                                        'Verify',
+                                                        style:
+                                                            GoogleFonts.inter(
+                                                              fontSize: 16,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w600,
+                                                              color:
+                                                                  Colors.white,
+                                                            ),
+                                                      ),
+                                                    );
+                                                  },
+                                                ),
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                       ],
                                     )
@@ -2500,6 +2532,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     required BuildContext context,
     required String deviceId,
     required VoidCallback onDownload,
+    required VoidCallback onStop,
   }) {
     showModalBottomSheet(
       context: context,
@@ -2510,6 +2543,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
           (_) => DiagnosticInfoBottomSheet(
             deviceId: deviceId,
             onDownload: onDownload,
+            onStop: onStop,
           ),
     );
   }
@@ -3272,6 +3306,9 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                         onDownloadComplete: _saveModuleCacheAndNotifyRefresh,
                         downloadSuccessMessage: 'Diagnostics',
                       );
+                    },
+                    onStop: () {
+                      ble.bleProcess.isAdcSetupFetchCommandActive.value = false;
                     },
                   );
                   // showPasswordPopup(
