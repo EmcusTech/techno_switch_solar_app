@@ -585,6 +585,7 @@ class BleProcess {
 
   // Network Variables
   final ValueNotifier<bool> isNetworkPacketProcess = ValueNotifier<bool>(true);
+  final ValueNotifier<String> receivedPanelName = ValueNotifier<String>("");
 
   // BleStates bleStateMachineState = BleStates.IDLE;
   BleStates bleCurrentState = BleStates.IDLE;
@@ -643,6 +644,16 @@ class BleProcess {
     switch (bleManager.otaProcessState) {
       case OtaProcessState.sendNetworkPacket:
         print("NEXT: POLL PACKET");
+        print("This is network packet called");
+        print(
+          "The network packet is: ${rx.payload.map((e) => e.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+        );
+        receivedPanelName.value = extractStringFromPayload(
+          rx.payload,
+          startIndex: 16,
+        );
+
+        print("The received panel name is: ${receivedPanelName.value}");
         // await Future.delayed(Duration(seconds: 1));
         bleManager.otaProcessState = OtaProcessState.sendPollPacket;
         isNetworkPacketProcess.value = false;

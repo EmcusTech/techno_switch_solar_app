@@ -1930,7 +1930,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
             // Fixed header - Panel Information Row (out of scroll region)
             Padding(
               padding: const EdgeInsets.all(20),
-              child: Column(children: [_buildPanelInfoHeader()]),
+              child: _buildPanelInfoHeader(),
             ),
             // Scrollable content
             Expanded(
@@ -1972,7 +1972,9 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 overflow: TextOverflow.ellipsis,
               ),
               Text(
-                BleNameUtils.getDisplayIdFromBleName(widget.panelName),
+                ble.bleProcess.receivedPanelName.value.isEmpty
+                    ? BleNameUtils.getDisplayIdFromBleName(widget.panelName)
+                    : "${ble.bleProcess.receivedPanelName.value}~${BleNameUtils.getDisplayIdFromBleName(widget.panelName)}",
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
