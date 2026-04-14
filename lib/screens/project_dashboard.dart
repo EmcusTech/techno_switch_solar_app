@@ -263,6 +263,123 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
   final BleManager _bleManager = Get.find<BleManager>();
   late DiscoveredDevice _selectedDevice;
 
+  /// Tracks prior connection so we only react to real disconnects (not initial "never connected").
+  bool _hadBleConnection = false;
+
+  /// When the user explicitly disconnects (e.g. back + confirm), skip the unexpected-loss dialog.
+  bool _suppressUnexpectedBleDisconnectUi = false;
+
+  void _closeModalOverlaysAboveDashboard() {
+    if (!mounted) return;
+    final route = ModalRoute.of(context);
+    if (route == null) return;
+    Navigator.of(context).popUntil((r) => r == route);
+  }
+
+  void _showUnexpectedBleDisconnectDialog() {
+    if (!mounted) return;
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 64,
+                  height: 64,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFBDEE1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Center(
+                    child: Icon(
+                      Icons.bluetooth_disabled,
+                      color: Color(0xFFEC1D24),
+                      size: 32,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Bluetooth disconnected',
+                  style: GoogleFonts.inter(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF3D3D3D),
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'The connection to the device was lost. Any open panels were closed. Use Connect when you are ready to reconnect.',
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w400,
+                    color: const Color(0xFF666666),
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  child: GestureDetector(
+                    onTap: () => Navigator.of(dialogContext).pop(),
+                    child: Container(
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFEC1D24),
+                        borderRadius: BorderRadius.circular(24),
+                      ),
+                      child: Center(
+                        child: Text(
+                          'OK',
+                          style: GoogleFonts.inter(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _onBleConnectivityChanged() {
+    if (!mounted) return;
+    final connected = _bleManager.isConnectedNotifier.value;
+    final lostConnection = _hadBleConnection && !connected;
+    if (lostConnection) {
+      _closeModalOverlaysAboveDashboard();
+      if (_suppressUnexpectedBleDisconnectUi) {
+        _suppressUnexpectedBleDisconnectUi = false;
+      } else {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          _showUnexpectedBleDisconnectDialog();
+        });
+      }
+    }
+    _hadBleConnection = connected;
+  }
+
   Future<bool> _confirmAndDisconnect() async {
     final shouldDisconnect = await showDialog<bool>(
       context: context,
@@ -386,6 +503,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
 
     if (shouldDisconnect == true) {
       if (_bleManager.isConnected) {
+        _suppressUnexpectedBleDisconnectUi = true;
         await _bleManager.disconnectConnectedDevice();
       }
       return true;
@@ -395,6 +513,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
 
   @override
   void dispose() {
+    _bleManager.isConnectedNotifier.removeListener(_onBleConnectivityChanged);
     _scanSubscription?.cancel();
     _bluetoothService.stopScanning();
     _configLogCompareResult.dispose();
@@ -666,6 +785,8 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
   initState() {
     super.initState();
     _selectedDevice = widget.selectedDevice;
+    _hadBleConnection = _bleManager.isConnectedNotifier.value;
+    _bleManager.isConnectedNotifier.addListener(_onBleConnectivityChanged);
   }
 
   @override
