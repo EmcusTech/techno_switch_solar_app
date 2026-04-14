@@ -30,7 +30,9 @@ import 'package:techno_switch_solar_app/widgets/bottom_sheets/radio_mode_bottoms
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/relay_mode_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/service_due_mode_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/setting_bottom_sheets/ext_out_bottomsheet.dart';
+import 'package:techno_switch_solar_app/utils/peripheral_config_snapshot.dart';
 import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
+import 'package:techno_switch_solar_app/widgets/bottom_sheets/config_log_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/sounder_mode_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/walk_test_zone_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/zone_mode_bottomsheet.dart';
@@ -249,6 +251,9 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
   final ValueNotifier<int> _accessCodeRefreshTrigger = ValueNotifier(0);
   final ValueNotifier<int> _panelInfoRefreshTrigger = ValueNotifier(0);
   final ValueNotifier<int> _generalModuleRefreshTrigger = ValueNotifier(0);
+  final ValueNotifier<ConfigCompareResult?> _configLogCompareResult =
+      ValueNotifier(null);
+  final ValueNotifier<bool> _configLogWorking = ValueNotifier(false);
 
   // Connection state
   bool _isConnecting = false;
@@ -392,6 +397,8 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
   void dispose() {
     _scanSubscription?.cancel();
     _bluetoothService.stopScanning();
+    _configLogCompareResult.dispose();
+    _configLogWorking.dispose();
     super.dispose();
   }
 
@@ -1249,6 +1256,293 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     );
   }
 
+  Future<void> _waitUntilNotifierQuiet(ValueNotifier<bool> busy) async {
+    final deadline = DateTime.now().add(const Duration(seconds: 120));
+    var sawBusy = busy.value;
+    while (DateTime.now().isBefore(deadline)) {
+      if (busy.value) sawBusy = true;
+      if (sawBusy && !busy.value) {
+        await Future<void>.delayed(const Duration(milliseconds: 150));
+        return;
+      }
+      await Future<void>.delayed(const Duration(milliseconds: 40));
+    }
+    throw TimeoutException(
+      'Bluetooth operation timed out',
+      const Duration(seconds: 120),
+    );
+  }
+
+  ValueNotifier<bool> _fetchBusyFor(PeripheralConfigSection s) {
+    final bp = ble.bleProcess;
+    switch (s) {
+      case PeripheralConfigSection.module:
+        return bp.isModuleSetupFetchCommandActive;
+      case PeripheralConfigSection.panelInfo:
+        return bp.isPanelInfoSetupFetchCommandActive;
+      case PeripheralConfigSection.generalModule:
+        return bp.isGeneralModuleSetupFetchCommandActive;
+      case PeripheralConfigSection.accessCode:
+        return bp.isAccessCodeSetupFetchCommandActive;
+      case PeripheralConfigSection.serviceDue:
+        return bp.isServiceDueFetchCommandActive;
+      case PeripheralConfigSection.input:
+        return bp.isInputSetupFetchCommandActive;
+      case PeripheralConfigSection.relay:
+        return bp.isRelaySetupFetchCommandActive;
+      case PeripheralConfigSection.zone:
+        return bp.isZoneSetupFetchCommandActive;
+      case PeripheralConfigSection.sounder:
+        return bp.isSounderSetupFetchCommandActive;
+      case PeripheralConfigSection.radio:
+        return bp.isRadioSetupFetchCommandActive;
+      case PeripheralConfigSection.lBus:
+        return bp.isLBusSetupFetchCommandActive;
+      case PeripheralConfigSection.extOut:
+        return bp.isExtOutCommandFetchActive;
+    }
+  }
+
+  void _startFetchSection(PeripheralConfigSection s) {
+    final bp = ble.bleProcess;
+    switch (s) {
+      case PeripheralConfigSection.module:
+        bp.isModuleSetupFetchCommandActive.value = true;
+        bleController.startModuleSetupFetch();
+        break;
+      case PeripheralConfigSection.panelInfo:
+        bp.isPanelInfoSetupFetchCommandActive.value = true;
+        bleController.startPanelInfoSetupFetch();
+        break;
+      case PeripheralConfigSection.generalModule:
+        bp.isGeneralModuleSetupFetchCommandActive.value = true;
+        bleController.startGeneralModuleSetupFetch();
+        break;
+      case PeripheralConfigSection.accessCode:
+        bp.isAccessCodeSetupFetchCommandActive.value = true;
+        bleController.startAccessCodeSetupFetch();
+        break;
+      case PeripheralConfigSection.serviceDue:
+        bp.isServiceDueFetchCommandActive.value = true;
+        bleController.startServiceDueFetch();
+        break;
+      case PeripheralConfigSection.input:
+        bp.isInputSetupFetchCommandActive.value = true;
+        bleController.startInputSetupFetch();
+        break;
+      case PeripheralConfigSection.relay:
+        bp.isRelaySetupFetchCommandActive.value = true;
+        bleController.startRelaySetupFetch();
+        break;
+      case PeripheralConfigSection.zone:
+        bp.isZoneSetupFetchCommandActive.value = true;
+        bleController.startZoneSetupFetch();
+        break;
+      case PeripheralConfigSection.sounder:
+        bp.isSounderSetupFetchCommandActive.value = true;
+        bleController.startSounderSetupFetch();
+        break;
+      case PeripheralConfigSection.radio:
+        bp.isRadioSetupFetchCommandActive.value = true;
+        bleController.startRadioSetupFetch();
+        break;
+      case PeripheralConfigSection.lBus:
+        bp.isLBusSetupFetchCommandActive.value = true;
+        bleController.startLBusSetupFetch();
+        break;
+      case PeripheralConfigSection.extOut:
+        bp.isExtOutCommandFetchActive.value = true;
+        bleController.startExtOutFetch();
+        break;
+    }
+  }
+
+  Future<void> _runConfigLogFetchRemaining() async {
+    for (final s in kPeripheralConfigFetchOrder.skip(1)) {
+      _startFetchSection(s);
+      await _waitUntilNotifierQuiet(_fetchBusyFor(s));
+      if (s == PeripheralConfigSection.lBus &&
+          ble.bleProcess.isLbusFetchHasErrors.value) {
+        final errs = ble.bleProcess.lbusFetchErrors.value.join(', ');
+        throw StateError('L-Bus download failed: $errs');
+      }
+    }
+  }
+
+  ValueNotifier<bool> _applyBusyFor(PeripheralConfigSection s) {
+    final bp = ble.bleProcess;
+    switch (s) {
+      case PeripheralConfigSection.module:
+        return bp.isModuleSetupFetchCommandActive;
+      case PeripheralConfigSection.panelInfo:
+        return bp.isPanelInfoSetupApplyCommandActive;
+      case PeripheralConfigSection.generalModule:
+        return bp.isGeneralModuleSetupApplyCommandActive;
+      case PeripheralConfigSection.accessCode:
+        return bp.isAccessCodeSetupApplyCommandActive;
+      case PeripheralConfigSection.serviceDue:
+        return bp.isServiceDueApplyCommandActive;
+      case PeripheralConfigSection.input:
+        return bp.isInputSetupApplyActive;
+      case PeripheralConfigSection.relay:
+        return bp.isRelaySetupCommandApplyActive;
+      case PeripheralConfigSection.zone:
+        return bp.isZoneSetupCommandApplyActive;
+      case PeripheralConfigSection.sounder:
+        return bp.isSounderSetupApplyCommandActive;
+      case PeripheralConfigSection.radio:
+        return bp.isRadioSetupCommandApplyActive;
+      case PeripheralConfigSection.lBus:
+        return bp.isLBusSetupApplyCommandActive;
+      case PeripheralConfigSection.extOut:
+        return bp.isExtOutCommandApplyActive;
+    }
+  }
+
+  void _startApplySection(PeripheralConfigSection s) {
+    final bp = ble.bleProcess;
+    switch (s) {
+      case PeripheralConfigSection.module:
+        break;
+      case PeripheralConfigSection.panelInfo:
+        bp.isPanelInfoSetupApplyCommandActive.value = true;
+        bleController.startPanelInfoSetupApply();
+        break;
+      case PeripheralConfigSection.generalModule:
+        bp.isGeneralModuleSetupApplyCommandActive.value = true;
+        bleController.startGeneralModuleSetupApply();
+        break;
+      case PeripheralConfigSection.accessCode:
+        bp.isAccessCodeSetupApplyCommandActive.value = true;
+        bleController.startAccessCodeSetupApply();
+        break;
+      case PeripheralConfigSection.serviceDue:
+        bp.isServiceDueApplyCommandActive.value = true;
+        bleController.startServiceDueApply();
+        break;
+      case PeripheralConfigSection.input:
+        bp.isInputSetupApplyActive.value = true;
+        bleController.startInputSetupApply();
+        break;
+      case PeripheralConfigSection.relay:
+        bp.isRelaySetupCommandApplyActive.value = true;
+        bleController.startRelaySetupApply();
+        break;
+      case PeripheralConfigSection.zone:
+        bp.isZoneSetupCommandApplyActive.value = true;
+        bleController.startZoneSetupApply();
+        break;
+      case PeripheralConfigSection.sounder:
+        bp.isSounderSetupApplyCommandActive.value = true;
+        bleController.startSounderSetupApply();
+        break;
+      case PeripheralConfigSection.radio:
+        bp.isRadioSetupCommandApplyActive.value = true;
+        bleController.startRadioSetupApply();
+        break;
+      case PeripheralConfigSection.lBus:
+        bp.isLBusSetupApplyCommandActive.value = true;
+        bleController.startLBusSetupApply();
+        break;
+      case PeripheralConfigSection.extOut:
+        bp.isExtOutCommandApplyActive.value = true;
+        bleController.startExtOutApply();
+        break;
+    }
+  }
+
+  Future<void> _runConfigLogApplyRemaining() async {
+    for (final s in kPeripheralConfigApplyOrder.skip(1)) {
+      _startApplySection(s);
+      await _waitUntilNotifierQuiet(_applyBusyFor(s));
+    }
+  }
+
+  Future<void> _saveAllPeripheralCachesFromBle() async {
+    await _saveRelayCacheAndNotifyRefresh();
+    await _saveInputCacheAndNotifyRefresh();
+    await _saveZoneCacheAndNotifyRefresh();
+    await _saveExtOutCacheAndNotifyRefresh();
+    await _saveSounderCacheAndNotifyRefresh();
+    await _saveServiceDueCacheAndNotifyRefresh();
+    await _saveModuleCacheAndNotifyRefresh();
+    await _saveLBusCacheAndNotifyRefresh();
+    await _saveAccessCodeCacheAndNotifyRefresh();
+    await _savePanelInfoCacheAndNotifyRefresh();
+    await _saveGeneralModuleCacheAndNotifyRefresh();
+  }
+
+  void _onConfigLogDownloadAndCompare() {
+    _configLogCompareResult.value = null;
+    showPasswordPopup(
+      onCall: () {
+        ble.bleProcess.isModuleSetupFetchCommandActive.value = true;
+        bleController.startModuleSetupFetch();
+      },
+      mode: 'bottomsheet_download',
+      isConfigLogBulk: true,
+      downloadSuccessMessage: 'Configuration',
+      onDownloadComplete: () async {
+        try {
+          await _runConfigLogFetchRemaining();
+          _configLogCompareResult.value = PeripheralConfigSnapshot.compare(
+            panelBySection: PeripheralConfigSnapshot.fromBleManager(_bleManager),
+            localBySection: await PeripheralConfigSnapshot.fromCache(
+              _selectedDevice.id,
+            ),
+          );
+        } catch (e, st) {
+          debugPrint('$e\n$st');
+          _configLogCompareResult.value = ConfigCompareResult.withError(
+            e is TimeoutException
+                ? 'Operation timed out. Stay close to the device and try again.'
+                : e.toString(),
+          );
+        }
+      },
+    );
+  }
+
+  Future<void> _onConfigLogUsePanelDataInApp() async {
+    await _saveAllPeripheralCachesFromBle();
+    _configLogCompareResult.value = PeripheralConfigSnapshot.compare(
+      panelBySection: PeripheralConfigSnapshot.fromBleManager(_bleManager),
+      localBySection: await PeripheralConfigSnapshot.fromCache(
+        _selectedDevice.id,
+      ),
+    );
+  }
+
+  void _onConfigLogApplyLocalToPanel() {
+    showPasswordPopup(
+      onCall: () {
+        ble.bleProcess.isPanelInfoSetupApplyCommandActive.value = true;
+        bleController.startPanelInfoSetupApply();
+      },
+      isPanelInfoSetup: true,
+      mode: 'bottomsheet_apply',
+      isConfigLogBulkApply: true,
+    );
+  }
+
+  void showConfigLogBottomSheet({required BuildContext context}) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withOpacity(0.4),
+      builder:
+          (_) => ConfigLogBottomSheet(
+            deviceId: _selectedDevice.id,
+            compareResult: _configLogCompareResult,
+            isWorking: _configLogWorking,
+            onDownloadAndCompare: _onConfigLogDownloadAndCompare,
+            onUsePanelDataInApp: _onConfigLogUsePanelDataInApp,
+            onApplyLocalToPanel: _onConfigLogApplyLocalToPanel,
+          ),
+    );
+  }
+
   void showPasswordPopup({
     required Function() onCall,
     bool? isExtOut = false,
@@ -1261,6 +1555,8 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     bool? isPanelInfoSetup = false,
     bool? isGeneralModuleSetup = false,
     bool? isAdcSetup = false,
+    bool isConfigLogBulk = false,
+    bool isConfigLogBulkApply = false,
     String? mode,
     Future<void> Function()? onDownloadComplete,
     String? downloadSuccessMessage,
@@ -1376,43 +1672,85 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                         await Future.delayed(const Duration(seconds: 1));
                         if (!mounted) return;
                         Navigator.of(dialogContext, rootNavigator: true).pop();
-                        if (mode == 'bottomsheet_download') {
-                          await onDownloadComplete?.call();
-                          if (mounted) {
-                            final message =
-                                downloadSuccessMessage ??
-                                (isExtOut == true
-                                    ? 'Extinguishing Output'
-                                    : isInputSetup == true
-                                    ? 'Inputs'
-                                    : isRelaySetup == true
-                                    ? 'Relays'
-                                    : isZoneSetup == true
-                                    ? 'Zones'
-                                    : isSounderSetup == true
-                                    ? 'Sounders'
-                                    : isServiceDueSetup == true
-                                    ? 'Service Due'
-                                    : isAccessCodeSetup == true
-                                    ? 'Access Code'
-                                    : isPanelInfoSetup == true
-                                    ? 'Panel Info'
-                                    : isGeneralModuleSetup == true
-                                    ? 'General Module'
-                                    : isAdcSetup == true
-                                    ? 'Diagnostics'
-                                    : 'Configuration');
-                            // if (downloadSuccessMessage == "Diagnostics") {
-                            //   null;
-                            // } else {
-                            //   showDownloadSuccessDialog(context, message);
-                            // }
-                            showDownloadSuccessDialog(context, message);
-                            Future.delayed(const Duration(seconds: 2), () {
+                        if (isConfigLogBulkApply &&
+                            mode == 'bottomsheet_apply') {
+                          _configLogWorking.value = true;
+                          try {
+                            await _runConfigLogApplyRemaining();
+                            await _saveAllPeripheralCachesFromBle();
+                            if (mounted) {
+                              showApplySuccessDialog(
+                                context,
+                                'Configuration',
+                              );
+                            }
+                          } catch (e, st) {
+                            debugPrint('$e\n$st');
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    'Could not apply configuration: $e',
+                                  ),
+                                ),
+                              );
+                            }
+                          } finally {
+                            _configLogWorking.value = false;
+                            _navigatingToDeviceConnecting = false;
+                          }
+                        } else if (mode == 'bottomsheet_download') {
+                          if (isConfigLogBulk) {
+                            _configLogWorking.value = true;
+                            try {
+                              await onDownloadComplete?.call();
                               if (mounted) {
-                                Navigator.of(context).pop();
+                                final message =
+                                    downloadSuccessMessage ?? 'Configuration';
+                                showDownloadSuccessDialog(context, message);
+                                Future.delayed(const Duration(seconds: 2), () {
+                                  if (mounted) {
+                                    Navigator.of(context).pop();
+                                  }
+                                });
                               }
-                            });
+                            } finally {
+                              _configLogWorking.value = false;
+                              _navigatingToDeviceConnecting = false;
+                            }
+                          } else {
+                            await onDownloadComplete?.call();
+                            if (mounted) {
+                              final message =
+                                  downloadSuccessMessage ??
+                                  (isExtOut == true
+                                      ? 'Extinguishing Output'
+                                      : isInputSetup == true
+                                      ? 'Inputs'
+                                      : isRelaySetup == true
+                                      ? 'Relays'
+                                      : isZoneSetup == true
+                                      ? 'Zones'
+                                      : isSounderSetup == true
+                                      ? 'Sounders'
+                                      : isServiceDueSetup == true
+                                      ? 'Service Due'
+                                      : isAccessCodeSetup == true
+                                      ? 'Access Code'
+                                      : isPanelInfoSetup == true
+                                      ? 'Panel Info'
+                                      : isGeneralModuleSetup == true
+                                      ? 'General Module'
+                                      : isAdcSetup == true
+                                      ? 'Diagnostics'
+                                      : 'Configuration');
+                              showDownloadSuccessDialog(context, message);
+                              Future.delayed(const Duration(seconds: 2), () {
+                                if (mounted) {
+                                  Navigator.of(context).pop();
+                                }
+                              });
+                            }
                           }
                         } else if (ble.bleProcess.isExtOutApplyDone.value) {
                           ble.bleProcess.isExtOutApplyButtonActive.value = true;
@@ -2722,276 +3060,109 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
 
   Future<void> _saveRelayCacheAndNotifyRefresh() async {
     final m = _bleManager;
-    await PeripheralSetupCache.saveRelaySetup(_selectedDevice.id, {
-      'r1': {
-        'enabled': m.isRelayOneSetupEnabled.value,
-        'test': m.isRelayOneSetupTest.value,
-        'group': m.relayOneSetupGroup.value,
-        'function': m.relayOneSetupFunction.value,
-        'outputText': m.relayOneSetupOutputText.value,
-        'dynamicText': m.relayOneSetupDynamicText.value,
-      },
-      'r2': {
-        'enabled': m.isRelayTwoSetupEnabled.value,
-        'test': m.isRelayTwoSetupTest.value,
-        'group': m.relayTwoSetupGroup.value,
-        'function': m.relayTwoSetupFunction.value,
-        'outputText': m.relayTwoSetupOutputText.value,
-        'dynamicText': m.relayTwoSetupDynamicText.value,
-      },
-      'r3': {
-        'enabled': m.isRelayThreeSetupEnabled.value,
-        'test': m.isRelayThreeSetupTest.value,
-        'group': m.relayThreeSetupGroup.value,
-        'function': m.relayThreeSetupFunction.value,
-        'outputText': m.relayThreeSetupOutputText.value,
-        'dynamicText': m.relayThreeSetupDynamicText.value,
-      },
-    });
+    await PeripheralSetupCache.saveRelaySetup(
+      _selectedDevice.id,
+      PeripheralConfigSnapshot.relayMap(m),
+    );
     _relayRefreshTrigger.value++;
   }
 
   Future<void> _saveInputCacheAndNotifyRefresh() async {
     final m = _bleManager;
-    await PeripheralSetupCache.saveInputSetup(_selectedDevice.id, {
-      'group': m.inputSetupGroup.value,
-      'function': m.inputSetupFunction.value,
-      'enabled': m.isInputSetupEnabled.value,
-      'test': m.isInputSetupTest.value,
-      'inverted': m.isInputSetupInverted.value,
-      'text': m.inputSetupText.value,
-    });
+    await PeripheralSetupCache.saveInputSetup(
+      _selectedDevice.id,
+      PeripheralConfigSnapshot.inputMap(m),
+    );
     _inputRefreshTrigger.value++;
   }
 
   Future<void> _saveZoneCacheAndNotifyRefresh() async {
     final m = _bleManager;
-    await PeripheralSetupCache.saveZoneSetup(_selectedDevice.id, {
-      'z1': {
-        'enabled': m.isZoneOneSetupEnabled.value,
-        'test': m.isZoneOneSetupTest.value,
-        'type': m.zoneOneSetupType.value,
-        'detectionMode': m.zoneOneSetupDetectionMode.value,
-        'verificationTime': m.zoneOneSetupVerificationTime.value,
-        'text': m.zoneOneSetupText.value,
-      },
-      'z2': {
-        'enabled': m.isZoneTwoSetupEnabled.value,
-        'test': m.isZoneTwoSetupTest.value,
-        'type': m.zoneTwoSetupType.value,
-        'detectionMode': m.zoneTwoSetupDetectionMode.value,
-        'verificationTime': m.zoneTwoSetupVerificationTime.value,
-        'text': m.zoneTwoSetupText.value,
-      },
-      'z3': {
-        'enabled': m.isZoneThreeSetupEnabled.value,
-        'test': m.isZoneThreeSetupTest.value,
-        'type': m.zoneThreeSetupType.value,
-        'detectionMode': m.zoneThreeSetupDetectionMode.value,
-        'verificationTime': m.zoneThreeSetupVerificationTime.value,
-        'text': m.zoneThreeSetupText.value,
-      },
-    });
+    await PeripheralSetupCache.saveZoneSetup(
+      _selectedDevice.id,
+      PeripheralConfigSnapshot.zoneMap(m),
+    );
     _zoneRefreshTrigger.value++;
   }
 
   Future<void> _saveExtOutCacheAndNotifyRefresh() async {
     final m = _bleManager;
-    await PeripheralSetupCache.saveExtOutSetup(_selectedDevice.id, {
-      'enabled': m.isExtZoneEnabled.value,
-      'actuatorType': m.extZoneActuatorType.value,
-      'function': m.extZoneFunction.value,
-      'resetAllowed': m.isResetAllowed.value,
-      'holdMode': m.extZoneHoldMode.value,
-      'action': m.extZoneAction.value,
-      'countdownAuto': m.extZoneCountdownAuto.value,
-      'countdownMan': m.extZoneCountdownMan.value,
-      'releaseTime': m.extZoneReleaseTime.value,
-      'resetDelay': m.extZoneResetDelay.value,
-      'text': m.extZoneText.value,
-      'isSolar': m.bleProcess.isExtOutApplyButtonActive.value,
-    });
+    await PeripheralSetupCache.saveExtOutSetup(
+      _selectedDevice.id,
+      PeripheralConfigSnapshot.extOutMap(m),
+    );
     _extOutRefreshTrigger.value++;
   }
 
   Future<void> _saveSounderCacheAndNotifyRefresh() async {
     final m = _bleManager;
-    await PeripheralSetupCache.saveSounderSetup(_selectedDevice.id, {
-      's1': {
-        'enabled': m.isSounderOneEnabled.value,
-        'test': m.isSounderOneTest.value,
-        'normal': m.isSounderOneNormal.value,
-        'outputText': m.sounderOneOutputText.value,
-        'group': m.sounderOneRelayFunctionGroup.value,
-        'function': m.sounderOneRelayFunction.value,
-        'functionNo': m.sounderOneFunctionNo.value,
-      },
-      's2': {
-        'enabled': m.isSounderTwoEnabled.value,
-        'test': m.isSounderTwoTest.value,
-        'normal': m.isSounderTwoNormal.value,
-        'outputText': m.sounderTwoOutputText.value,
-        'group': m.sounderTwoRelayFunctionGroup.value,
-        'function': m.sounderTwoRelayFunction.value,
-        'functionNo': m.sounderTwoFunctionNo.value,
-      },
-      's3': {
-        'enabled': m.isSounderThreeEnabled.value,
-        'test': m.isSounderThreeTest.value,
-        'normal': m.isSounderThreeNormal.value,
-        'outputText': m.sounderThreeOutputText.value,
-        'group': m.sounderThreeRelayFunctionGroup.value,
-        'function': m.sounderThreeRelayFunction.value,
-        'functionNo': m.sounderThreeFunctionNo.value,
-      },
-      'z1': {
-        'enabled': m.isZoneOneEnabled.value,
-        'test': m.isZoneOneTest.value,
-        'action': m.zoneOneAction.value,
-      },
-      'z2': {
-        'enabled': m.isZoneTwoEnabled.value,
-        'test': m.isZoneTwoTest.value,
-        'action': m.zoneTwoAction.value,
-      },
-      'z3': {
-        'enabled': m.isZoneThreeEnabled.value,
-        'test': m.isZoneThreeTest.value,
-        'action': m.zoneThreeAction.value,
-      },
-      'e1': {
-        'enabled': m.isExtOutOneEnabled.value,
-        'test': m.isExtOutOneTest.value,
-        'countdownAction': m.extoutOneCountdownAction.value,
-        'holdAction': m.extoutOneHoldAction.value,
-        'releaseAction': m.extoutOneReleaseAction.value,
-      },
-      'e2': {
-        'enabled': m.isExtOutTwoEnabled.value,
-        'test': m.isExtOutTwoTest.value,
-        'countdownAction': m.extoutTwoCountdownAction.value,
-        'holdAction': m.extoutTwoHoldAction.value,
-        'releaseAction': m.extoutTwoReleaseAction.value,
-      },
-      'e3': {
-        'enabled': m.isExtOutThreeEnabled.value,
-        'test': m.isExtOutThreeTest.value,
-        'countdownAction': m.extoutThreeCountdownAction.value,
-        'holdAction': m.extoutThreeHoldAction.value,
-        'releaseAction': m.extoutThreeReleaseAction.value,
-      },
-      'general': {
-        'enabled': m.isSounderGeneralEnabled.value,
-        'test': m.isSounderGeneralTest.value,
-        'action': m.sounderGeneralAction.value,
-        'delay': m.sounderGeneralDelay.value,
-        'delayed': m.isSounderGeneralDelay.value,
-      },
-    });
+    await PeripheralSetupCache.saveSounderSetup(
+      _selectedDevice.id,
+      PeripheralConfigSnapshot.sounderMap(m),
+    );
     _sounderRefreshTrigger.value++;
   }
 
   Future<void> _saveServiceDueCacheAndNotifyRefresh() async {
     final m = _bleManager;
-    await PeripheralSetupCache.saveServiceDueSetup(_selectedDevice.id, {
-      'year': m.serviceDueYear.value,
-      'month': m.serviceDueMonth.value,
-      'day': m.serviceDueDay.value,
-      'hour': m.serviceDueHour.value,
-      'minute': m.serviceDueMinute.value,
-      'company': m.serviceDueCompany.value,
-      'contact': m.serviceDueContact.value,
-      'reminder': m.serviceDueReminder.value,
-    });
+    await PeripheralSetupCache.saveServiceDueSetup(
+      _selectedDevice.id,
+      PeripheralConfigSnapshot.serviceDueMap(m),
+    );
     _serviceDueRefreshTrigger.value++;
   }
 
   Future<void> _saveRadioCacheAndNotifyRefresh() async {
     final m = _bleManager;
-    await PeripheralSetupCache.saveRadioSetup(_selectedDevice.id, {
-      'enabled': m.isRadioSetupEnabled.value,
-      'module': m.radioSetupModule.value,
-      'name': m.radioSetupName.value,
-      'number': m.radioSetupNo.value,
-      'advertise': m.isRadioSetupAdvertised.value,
-      'connection': m.isRadioSetupConnected.value,
-      'service': m.isRadioSetupServiced.value,
-      'programming': m.isRadioSetupProgrammed.value,
-      'boot': m.isRadioSetupBooted.value,
-    });
+    await PeripheralSetupCache.saveRadioSetup(
+      _selectedDevice.id,
+      PeripheralConfigSnapshot.radioMap(m),
+    );
     _zoneRefreshTrigger.value++;
   }
 
   Future<void> _saveModuleCacheAndNotifyRefresh() async {
     final m = _bleManager;
-    await PeripheralSetupCache.saveModuleSetup(_selectedDevice.id, {
-      'moduleNo': m.moduleNo.value,
-      'enabled': m.moduleEnabled.value,
-      'product': m.moduleProduct.value,
-      'id': m.moduleId.value,
-      'revision': m.moduleRevision.value,
-      'hardware': m.moduleHardware.value,
-      'firmware': m.moduleFirmware.value,
-      'date': m.moduleDate.value,
-      'protocol': m.moduleProtocol.value,
-    });
+    await PeripheralSetupCache.saveModuleSetup(
+      _selectedDevice.id,
+      PeripheralConfigSnapshot.moduleMap(m),
+    );
   }
 
   Future<void> _saveLBusCacheAndNotifyRefresh() async {
     final m = _bleManager;
-    final buses = m.lBusSetupDataList.value.map((e) => e.toJson()).toList();
-    await PeripheralSetupCache.saveLBusSetup(_selectedDevice.id, buses);
+    await PeripheralSetupCache.saveLBusSetup(
+      _selectedDevice.id,
+      PeripheralConfigSnapshot.lBusList(m),
+    );
     _zoneRefreshTrigger.value++;
   }
 
   Future<void> _saveAccessCodeCacheAndNotifyRefresh() async {
     final m = _bleManager;
-    final codes =
-        m.accessCodeSetupDataList.value.map((e) => e.toJson()).toList();
-    await PeripheralSetupCache.saveAccessCodeSetup(_selectedDevice.id, codes);
+    await PeripheralSetupCache.saveAccessCodeSetup(
+      _selectedDevice.id,
+      PeripheralConfigSnapshot.accessCodeList(m),
+    );
     _accessCodeRefreshTrigger.value++;
   }
 
   Future<void> _savePanelInfoCacheAndNotifyRefresh() async {
     final m = _bleManager;
-    await PeripheralSetupCache.savePanelInfoSetup(_selectedDevice.id, {
-      'panelId': m.panelInfoPanelNo.value,
-      'panelName': m.panelInfoPanelName.value,
-      'year': m.panelInfoYear.value,
-      'month': m.panelInfoMonth.value,
-      'day': m.panelInfoDay.value,
-      'hour': m.panelInfoHour.value,
-      'minute': m.panelInfoMinute.value,
-      'second': m.panelInfoSecond.value,
-      'delay': m.panelInfoEventReminderDelay.value,
-    });
+    await PeripheralSetupCache.savePanelInfoSetup(
+      _selectedDevice.id,
+      PeripheralConfigSnapshot.panelInfoMap(m),
+    );
     _panelInfoRefreshTrigger.value++;
   }
 
   Future<void> _saveGeneralModuleCacheAndNotifyRefresh() async {
-    final bp = _bleManager.bleProcess;
-    await PeripheralSetupCache.saveGeneralModuleSetup(_selectedDevice.id, {
-      'lvlTimeout': bp.generalModuleLvlTimeOut.value,
-      'silenceBuzzerLevel': _generalModuleLevelToLabel(
-        bp.generalModuleSilenceBuzzerLvl.value,
-        ['Access Level 1', 'Access Level 2'],
-      ),
-      'silenceSoundersLevel': _generalModuleLevelToLabel(
-        bp.generalModuleSilenceSounderLvl.value,
-        ['Access Level 2', 'Access Level 3'],
-      ),
-      'resetLevel': _generalModuleLevelToLabel(bp.generalModuleResetLvl.value, [
-        'Access Level 2',
-        'Access Level 3',
-      ]),
-      'faultLatching': bp.generalModuleFaultLatching.value == 0 ? 'No' : 'Yes',
-    });
+    final m = _bleManager;
+    await PeripheralSetupCache.saveGeneralModuleSetup(
+      _selectedDevice.id,
+      PeripheralConfigSnapshot.generalModuleMap(m),
+    );
     _generalModuleRefreshTrigger.value++;
-  }
-
-  String _generalModuleLevelToLabel(int index, List<String> options) {
-    if (index >= 0 && index < options.length) return options[index];
-    return options.first;
   }
 
   Widget _peripheralTile({
@@ -3363,7 +3534,14 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
               _peripheralTile(
                 peripheralName: 'Config Log',
                 iconPath: 'assets/svgs/panel_action_config_log_icon.svg',
-                isDisabled: true,
+                onTap: () {
+                  if (_selectedDevice.manufacturerData.isNotEmpty &&
+                      _selectedDevice.manufacturerData.last == 1) {
+                    showBootloaderModeDialog(context: context);
+                    return;
+                  }
+                  showConfigLogBottomSheet(context: context);
+                },
               ),
               _peripheralTile(
                 peripheralName: 'Test Mode',

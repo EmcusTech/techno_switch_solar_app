@@ -12,6 +12,7 @@ import 'ble_process.dart';
 import 'dart:typed_data';
 import 'package:techno_switch_solar_app/models/access_code_mode_model.dart';
 import 'package:techno_switch_solar_app/models/l_bus_setup_data_model.dart';
+import 'package:techno_switch_solar_app/utils/input_mode_util.dart';
 import 'package:techno_switch_solar_app/utils/l_bus_payload_config.dart';
 
 const int BLE_FAILED = 0;
@@ -2888,6 +2889,7 @@ class BleManager {
   }
 
   Future<void> sendNetworkPacket() async {
+    bleProcess.isNetworkPacketProcess.value = true;
     u8TxPktCnt = 0;
 
     List<int> u8Pkt = List.filled(216, 0);
@@ -3449,7 +3451,28 @@ class BleManager {
     u8_pkt[12] = 0x06; // command byte 1
     u8_pkt[13] = 0x00; // max inputs byte 1
     u8_pkt[14] = 0x01; // max inputs byte 1
-    u8_pkt[15] = int.parse(inputMode.value, radix: 16); // input mode
+    int inputModeByte;
+    try {
+      final raw = inputMode.value.trim();
+      if (raw.isEmpty) throw FormatException('empty inputMode');
+      inputModeByte = int.parse(raw, radix: 16);
+    } catch (_) {
+      final cfg = InputModeConfig(
+        inputEnable:
+            isInputSetupEnabled.value
+                ? InputEnable.enabled
+                : InputEnable.disabled,
+        inputMode: isInputSetupTest.value ? InputMode.test : InputMode.normal,
+        latchMode: LatchMode.nonLatched,
+        invertMode:
+            isInputSetupInverted.value
+                ? InvertMode.inverted
+                : InvertMode.notInverted,
+      );
+      inputModeByte = InputModeCodec.encode(cfg);
+      bleProcess.inputMode.value = InputModeCodec.encodeHex(cfg);
+    }
+    u8_pkt[15] = inputModeByte & 0xFF;
     u8_pkt[16] = 0x02;
     u8_pkt[17] = 0x00;
     u8_pkt[18] = 0x00;
@@ -4628,7 +4651,9 @@ class BleManager {
     u8_pkt[13] = 0x00;
     u8_pkt[14] = int.parse(sounderGeneralMode.value, radix: 16); // general mode
     u8_pkt[15] = sounderGeneralAction.value; // general action
-    u8_pkt[19] = sounderGeneralDelay.value; // general delay
+    u8_pkt[18] =
+        (sounderGeneralDelay.value >> 8) & 0xFF; // general delay byte 1
+    u8_pkt[19] = sounderGeneralDelay.value & 0xFF; // general delay byte 2
 
     // Compute checksum on first 213 bytes
     int checksum = toolsFletcherChecksum(u8_pkt.sublist(0, 213));
@@ -4681,7 +4706,9 @@ class BleManager {
     u8_pkt[14] = 0x00;
     u8_pkt[15] = int.parse(zoneMode, radix: 16); // zone mode
     u8_pkt[16] = zoneAction;
-    u8_pkt[20] = sounderGeneralDelay.value;
+    u8_pkt[19] =
+        (sounderGeneralDelay.value >> 8) & 0xFF; // general delay byte 1
+    u8_pkt[20] = sounderGeneralDelay.value & 0xFF; // general delay byte 2
     // Compute checksum on first 213 bytes
     int checksum = toolsFletcherChecksum(u8_pkt.sublist(0, 213));
 

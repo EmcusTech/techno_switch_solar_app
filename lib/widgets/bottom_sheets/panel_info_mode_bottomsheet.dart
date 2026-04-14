@@ -236,6 +236,8 @@ class _PanelInfoBottomSheetState extends State<PanelInfoBottomSheet> {
     );
   }
 
+  /// Clock fields are still edited and applied here; bulk Config Log compare omits
+  /// them so routine time drift does not mark Panel Info as mismatched.
   Widget _dateTimeTile() {
     return _tileWrapper(
       title: "Date & Time",

@@ -1543,7 +1543,7 @@ class BleProcess {
         isSounderGeneralTest.value = equipmentMode;
         isSounderGeneralDelay.value = sounderDelay;
         sounderGeneralAction.value = rx.payload[15];
-        sounderGeneralDelay.value = rx.payload[19];
+        sounderGeneralDelay.value = rx.payload[18] << 8 | rx.payload[19];
         processDesc.value = "Downloading Sounder (Zones) 1/3";
         startRxTimeout();
         await bleManager.sendSounderSetupZoneFetchCmdPkt(zoneMaxZone: 1);
@@ -2058,6 +2058,7 @@ class BleProcess {
         isInputSetupEnabled.value = config.inputEnable == InputEnable.enabled;
         isInputSetupTest.value = config.inputMode == InputMode.test;
         isInputSetupInverted.value = config.invertMode == InvertMode.inverted;
+        inputMode.value = InputModeCodec.encodeHex(config);
         inputSetupText.value = extractStringFromPayload(rx.payload);
       } else {
         print("Input Setup Fetch Cmd Response not found, polling again");
@@ -2522,18 +2523,33 @@ class BleProcess {
   }
 
   String extractStringFromPayload(List<int> payload, {int startIndex = 25}) {
-    // Length is at index startIndex
-    final int length = payload[startIndex];
-
-    print("Length: $length");
-
-    // String starts at index 26
-    // final int startIndex = startIndex + 1;
-    final int endIndex = startIndex + length + 1;
-
-    final List<int> stringBytes = payload.sublist(startIndex + 1, endIndex);
-
-    return utf8.decode(stringBytes);
+    if (startIndex < 0 || startIndex >= payload.length) {
+      debugPrint(
+        'extractStringFromPayload: startIndex $startIndex out of range (len ${payload.length})',
+      );
+      return '';
+    }
+    final int declared = payload[startIndex];
+    final int stringStart = startIndex + 1;
+    final int endExclusive = stringStart + declared;
+    if (declared < 0 || endExclusive > payload.length) {
+      debugPrint(
+        'extractStringFromPayload: invalid length $declared at $startIndex '
+        '(need end $endExclusive, payload len ${payload.length})',
+      );
+      return '';
+    }
+    if (declared == 0) {
+      return '';
+    }
+    print('Length: $declared');
+    final List<int> stringBytes = payload.sublist(stringStart, endExclusive);
+    try {
+      return utf8.decode(stringBytes);
+    } catch (e) {
+      debugPrint('extractStringFromPayload: utf8 decode failed: $e');
+      return '';
+    }
   }
 
   void resetProcessState() {
@@ -2586,6 +2602,7 @@ class BleProcess {
 
     // OTA state
     bleManager.otaProcessState = OtaProcessState.sendNetworkPacket;
+    isNetworkPacketProcess.value = true;
 
     // RX timeout
     _rxTimeoutTimer?.cancel();
@@ -2653,6 +2670,7 @@ class BleProcess {
 
     // OTA state
     bleManager.otaProcessState = OtaProcessState.sendNetworkPacket;
+    isNetworkPacketProcess.value = true;
 
     // RX timeout
     _rxTimeoutTimer?.cancel();
@@ -2719,6 +2737,7 @@ class BleProcess {
 
     // OTA state
     bleManager.otaProcessState = OtaProcessState.sendNetworkPacket;
+    isNetworkPacketProcess.value = true;
 
     // RX timeout
     _rxTimeoutTimer?.cancel();
@@ -2783,6 +2802,7 @@ class BleProcess {
 
     // OTA state
     bleManager.otaProcessState = OtaProcessState.sendNetworkPacket;
+    isNetworkPacketProcess.value = true;
 
     // RX timeout
     _rxTimeoutTimer?.cancel();
@@ -2847,6 +2867,7 @@ class BleProcess {
 
     // OTA state
     bleManager.otaProcessState = OtaProcessState.sendNetworkPacket;
+    isNetworkPacketProcess.value = true;
 
     // RX timeout
     _rxTimeoutTimer?.cancel();
@@ -2911,6 +2932,7 @@ class BleProcess {
 
     // OTA state
     bleManager.otaProcessState = OtaProcessState.sendNetworkPacket;
+    isNetworkPacketProcess.value = true;
 
     // RX timeout
     _rxTimeoutTimer?.cancel();
@@ -2974,6 +2996,7 @@ class BleProcess {
 
     // OTA state
     bleManager.otaProcessState = OtaProcessState.sendNetworkPacket;
+    isNetworkPacketProcess.value = true;
 
     // RX timeout
     _rxTimeoutTimer?.cancel();
@@ -3038,6 +3061,7 @@ class BleProcess {
 
     // OTA state
     bleManager.otaProcessState = OtaProcessState.sendNetworkPacket;
+    isNetworkPacketProcess.value = true;
 
     // RX timeout
     _rxTimeoutTimer?.cancel();
@@ -3102,6 +3126,7 @@ class BleProcess {
 
     // OTA state
     bleManager.otaProcessState = OtaProcessState.sendNetworkPacket;
+    isNetworkPacketProcess.value = true;
 
     // RX timeout
     _rxTimeoutTimer?.cancel();
@@ -3166,6 +3191,7 @@ class BleProcess {
 
     // OTA state
     bleManager.otaProcessState = OtaProcessState.sendNetworkPacket;
+    isNetworkPacketProcess.value = true;
 
     // RX timeout
     _rxTimeoutTimer?.cancel();
@@ -3230,6 +3256,7 @@ class BleProcess {
 
     // OTA state
     bleManager.otaProcessState = OtaProcessState.sendNetworkPacket;
+    isNetworkPacketProcess.value = true;
 
     // RX timeout
     _rxTimeoutTimer?.cancel();
@@ -3294,6 +3321,7 @@ class BleProcess {
 
     // OTA state
     bleManager.otaProcessState = OtaProcessState.sendNetworkPacket;
+    isNetworkPacketProcess.value = true;
 
     // RX timeout
     _rxTimeoutTimer?.cancel();
@@ -3358,6 +3386,7 @@ class BleProcess {
 
     // OTA state
     bleManager.otaProcessState = OtaProcessState.sendNetworkPacket;
+    isNetworkPacketProcess.value = true;
 
     // RX timeout
     _rxTimeoutTimer?.cancel();
@@ -3422,6 +3451,7 @@ class BleProcess {
 
     // OTA state
     bleManager.otaProcessState = OtaProcessState.sendNetworkPacket;
+    isNetworkPacketProcess.value = true;
 
     // RX timeout
     _rxTimeoutTimer?.cancel();
@@ -3608,7 +3638,7 @@ class BleProcess {
                   : payload[42] == 4
                   ? "Server No. ${payload[43]}"
                   : payload[42] == 5
-                  ? "Arcnet No. 0"
+                  ? "Bluetooth"
                   : "";
         } else if (payload[22] == EventConstants.evtTypeAccess) {
           panelSource =
@@ -3621,7 +3651,7 @@ class BleProcess {
                   : payload[42] == 3
                   ? "Server"
                   : payload[42] == 4
-                  ? "Arcnet No. 0"
+                  ? "Bluetooth"
                   : "";
         } else {
           panelSource = "Panel No. 1";
