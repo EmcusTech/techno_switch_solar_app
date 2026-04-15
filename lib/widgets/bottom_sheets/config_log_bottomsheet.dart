@@ -27,9 +27,10 @@ class ConfigLogBottomSheet extends StatefulWidget {
 }
 
 class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   static const Color _textPrimary = Color(0xFF3D3D3D);
   static const Color _textMuted = Color(0xFF918F8F);
+  static const Color _textTabUnselected = Color(0xFF6E6E6E);
   static const Color _brandRed = Color(0xFFEC1D24);
   static const Color _border = Color(0xFFDCDCDC);
   static const Color _surfaceMuted = Color(0xFFF8F8F8);
@@ -41,6 +42,8 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
     super.initState();
     widget.compareResult.addListener(_onResultChanged);
     widget.isWorking.addListener(_onWorkingChanged);
+    // Notifier does not fire on attach; align TabController before first build.
+    _syncTabControllerFromResult(widget.compareResult.value);
   }
 
   @override
@@ -51,21 +54,48 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
     super.dispose();
   }
 
-  void _onResultChanged() {
-    final result = widget.compareResult.value;
-
-    if (result != null && result.hasMismatch) {
+  void _syncTabControllerFromResult(ConfigCompareResult? result) {
+    if (result != null &&
+        result.errorMessage == null &&
+        result.hasMismatch &&
+        result.mismatchedSections.isNotEmpty) {
       _tabController?.dispose();
       _tabController = TabController(
         length: result.mismatchedSections.length,
         vsync: this,
       );
+    } else {
+      _tabController?.dispose();
+      _tabController = null;
     }
+  }
+
+  void _onResultChanged() {
+    _syncTabControllerFromResult(widget.compareResult.value);
     if (mounted) setState(() {});
   }
 
   void _onWorkingChanged() {
     if (mounted) setState(() {});
+  }
+
+  bool _tabControllerMatchesResult(ConfigCompareResult? result) {
+    if (!_showMismatchTabs(result)) return _tabController == null;
+    final r = result!;
+    final c = _tabController;
+    return c != null && c.length == r.mismatchedSections.length;
+  }
+
+  /// Re-align when [ValueNotifier] skips notification (`value ==` old) or ordering leaves us stale.
+  /// Runs after this frame so we are not mutating [TabController] during build.
+  void _ensureTabControllerAligned(ConfigCompareResult? result) {
+    if (_tabControllerMatchesResult(result)) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (_tabControllerMatchesResult(widget.compareResult.value)) return;
+      _syncTabControllerFromResult(widget.compareResult.value);
+      if (mounted) setState(() {});
+    });
   }
 
   Widget _dragHandle() {
@@ -105,23 +135,31 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
     );
   }
 
-  /// Bordered block matching relay / panel info tiles.
+  /// Bordered block matching sounder / relay section containers.
+  Widget _sectionContainer({required Widget child}) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: _border),
+      ),
+      child: child,
+    );
+  }
+
   Widget _tileShell({required String title, required List<Widget> children}) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: _border),
-        ),
-        padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _sectionLabel(title),
-            const SizedBox(height: 10),
-            ...children,
-          ],
+      child: _sectionContainer(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _sectionLabel(title),
+              const SizedBox(height: 10),
+              ...children,
+            ],
+          ),
         ),
       ),
     );
@@ -236,6 +274,166 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
     );
   }
 
+  Widget _diffDetailCard(
+    ConfigCompareResult result,
+    PeripheralConfigSection s,
+  ) {
+    final diffLines = result.diffLinesFor(s);
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: _surfaceMuted,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: _border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.difference_outlined,
+                color: Colors.grey.shade700,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  s.displayLabel,
+                  style: GoogleFonts.inter(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: _textPrimary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            diffLines.isEmpty
+                ? 'Panel data differs from app cache.'
+                : '${diffLines.length} change(s) vs saved app data',
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: _textMuted,
+            ),
+          ),
+          const SizedBox(height: 12),
+          SelectableText(
+            diffLines.isEmpty
+                ? 'No field-level detail available.'
+                : diffLines.join('\n'),
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              height: 1.45,
+              color: const Color(0xFF444444),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _mismatchTabsSection(ConfigCompareResult result) {
+    final c = _tabController;
+    if (c == null || c.length != result.mismatchedSections.length) {
+      // One-frame gap while post-frame realign runs; avoid a spinner that can appear stuck.
+      return const SizedBox.shrink();
+    }
+
+    final sections = result.mismatchedSections;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const SizedBox(height: 8),
+        const Divider(thickness: 1.2),
+        const SizedBox(height: 16),
+        Text(
+          'Sections that differ',
+          style: GoogleFonts.inter(
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+            color: _textPrimary,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          'Swipe or tap a tab to review panel vs app differences.',
+          style: GoogleFonts.inter(
+            fontSize: 13,
+            fontWeight: FontWeight.w400,
+            color: _textMuted,
+            height: 1.35,
+          ),
+        ),
+        const SizedBox(height: 16),
+        Container(
+          height: 48,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            color: _surfaceMuted,
+          ),
+          child: TabBar(
+            controller: c,
+            isScrollable: true,
+            tabAlignment: TabAlignment.start,
+            indicatorSize: TabBarIndicatorSize.tab,
+            indicator: const UnderlineTabIndicator(
+              borderSide: BorderSide(width: 2.5, color: _brandRed),
+            ),
+            labelColor: _brandRed,
+            unselectedLabelColor: _textTabUnselected,
+            labelStyle: GoogleFonts.inter(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+            ),
+            unselectedLabelStyle: GoogleFonts.inter(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+            ),
+            labelPadding: const EdgeInsets.symmetric(horizontal: 14),
+            tabs:
+                sections
+                    .map(
+                      (s) => Tab(
+                        height: 46,
+                        child: Align(
+                          alignment: Alignment.center,
+                          child: Text(
+                            s.displayLabel,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ),
+                    )
+                    .toList(),
+          ),
+        ),
+        const SizedBox(height: 16),
+        SizedBox(
+          height: MediaQuery.of(context).size.height * 0.25,
+          child: TabBarView(
+            controller: c,
+            children:
+                sections
+                    .map(
+                      (s) => SingleChildScrollView(
+                        physics: const BouncingScrollPhysics(),
+                        child: _diffDetailCard(result, s),
+                      ),
+                    )
+                    .toList(),
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _resultBlock(ConfigCompareResult result) {
     if (result.errorMessage != null) {
       return _tileShell(
@@ -297,85 +495,24 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
       );
     }
 
-    return _tileShell(
-      title: 'Sections that differ',
-      children: [
-        Text(
-          'Expand a section to see field-level differences (panel vs app).',
-          style: GoogleFonts.inter(
-            fontSize: 13,
-            fontWeight: FontWeight.w400,
-            color: _textMuted,
-            height: 1.35,
+    if (result.mismatchedSections.isEmpty) {
+      return _tileShell(
+        title: 'Result',
+        children: [
+          Text(
+            'Configuration differs from saved app data, but no section detail is available.',
+            style: GoogleFonts.inter(
+              fontSize: 13,
+              fontWeight: FontWeight.w400,
+              color: _textMuted,
+              height: 1.35,
+            ),
           ),
-        ),
-        const SizedBox(height: 8),
-        Theme(
-          data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-          child: Column(
-            children: List.generate(result.mismatchedSections.length, (i) {
-              final s = result.mismatchedSections[i];
-              final diffLines = result.diffLinesFor(s);
-              return Material(
-                color: Colors.transparent,
-                child: ExpansionTile(
-                  tilePadding: EdgeInsets.zero,
-                  childrenPadding: const EdgeInsets.only(bottom: 8),
-                  initiallyExpanded: i == 0,
-                  leading: Icon(
-                    Icons.difference_outlined,
-                    color: Colors.grey.shade700,
-                    size: 22,
-                  ),
-                  title: Text(
-                    s.displayLabel,
-                    style: GoogleFonts.inter(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: _textPrimary,
-                    ),
-                  ),
-                  subtitle: Padding(
-                    padding: const EdgeInsets.only(top: 4),
-                    child: Text(
-                      diffLines.isEmpty
-                          ? 'Panel data differs from app cache'
-                          : '${diffLines.length} change(s)',
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w400,
-                        color: _textMuted,
-                      ),
-                    ),
-                  ),
-                  children: [
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: _surfaceMuted,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: _border),
-                      ),
-                      child: SelectableText(
-                        diffLines.isEmpty
-                            ? 'No field-level detail available.'
-                            : diffLines.join('\n'),
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
-                          height: 1.45,
-                          color: const Color(0xFF444444),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }),
-          ),
-        ),
-      ],
-    );
+        ],
+      );
+    }
+
+    return _mismatchTabsSection(result);
   }
 
   Widget _bottomActions(ConfigCompareResult? result, bool working) {
@@ -404,12 +541,13 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
                       working
                           ? null
                           : () async {
+                            FocusManager.instance.primaryFocus?.unfocus();
                             await widget.onUsePanelDataInApp();
                             if (!mounted) return;
                             Navigator.of(context).pop();
                           },
                   child: Text(
-                    'Use panel data in app',
+                    'Update App',
                     style: GoogleFonts.inter(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
@@ -433,9 +571,15 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
                       borderRadius: BorderRadius.circular(24),
                     ),
                   ),
-                  onPressed: working ? null : _confirmApplyLocal,
+                  onPressed:
+                      working
+                          ? null
+                          : () {
+                            FocusManager.instance.primaryFocus?.unfocus();
+                            _confirmApplyLocal();
+                          },
                   child: Text(
-                    'Apply saved to panel',
+                    'Update Panel',
                     style: GoogleFonts.inter(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
@@ -453,74 +597,134 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
     );
   }
 
+  bool _showMismatchTabs(ConfigCompareResult? result) {
+    return result != null &&
+        result.errorMessage == null &&
+        result.hasMismatch &&
+        result.mismatchedSections.isNotEmpty;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final maxHeight =
-        widget.compareResult.value != null
-            ? widget.compareResult.value!.hasMismatch
-                ? MediaQuery.of(context).size.height * 0.85
-                : MediaQuery.of(context).size.height * 0.54
-            : MediaQuery.of(context).size.height * 0.35;
     final result = widget.compareResult.value;
     final working = widget.isWorking.value;
+    _ensureTabControllerAligned(result);
+
+    final maxHeight =
+        result != null
+            ? _showMismatchTabs(result)
+                ? MediaQuery.of(context).size.height * 0.75
+                : result.hasMismatch
+                ? MediaQuery.of(context).size.height * 0.58
+                : MediaQuery.of(context).size.height * 0.54
+            : MediaQuery.of(context).size.height * 0.35;
 
     return SafeArea(
-      child: ConstrainedBox(
-        constraints: BoxConstraints(maxHeight: maxHeight),
-        child: Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-          ),
-          padding: EdgeInsets.only(
-            left: 24,
-            right: 24,
-            top: 16,
-            bottom: MediaQuery.of(context).viewInsets.bottom + 16,
-          ),
-          child: Column(
-            // crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _dragHandle(),
-              _title('Config Log'),
-              Expanded(
-                child: NotificationListener<UserScrollNotification>(
-                  onNotification: (notification) {
-                    if (notification.direction != ScrollDirection.idle) {
-                      FocusScope.of(context).unfocus();
-                    }
-                    return false;
-                  },
-                  child: SingleChildScrollView(
-                    physics: const BouncingScrollPhysics(),
-                    padding: const EdgeInsets.only(top: 0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        _tileShell(
-                          title: 'Compare with saved setup',
-                          children: [
-                            Text(
-                              'Download the full configuration from the panel and compare it with data stored in this app for this device.',
-                              style: GoogleFonts.inter(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w400,
-                                color: _textMuted,
-                                height: 1.4,
+      child: AnimatedSize(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeInOut,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxHeight: maxHeight),
+          child: Container(
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+            ),
+            padding: EdgeInsets.only(
+              left: 24,
+              right: 24,
+              top: 16,
+              bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+            ),
+            child: Column(
+              children: [
+                _dragHandle(),
+                _title('Config Log'),
+                Expanded(
+                  child: NotificationListener<UserScrollNotification>(
+                    onNotification: (notification) {
+                      if (notification.direction != ScrollDirection.idle) {
+                        FocusScope.of(context).unfocus();
+                      }
+                      return false;
+                    },
+                    child:
+                        _showMismatchTabs(result)
+                            ? Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                result == null
+                                    ? Flexible(
+                                      flex: 0,
+                                      fit: FlexFit.loose,
+                                      child: SingleChildScrollView(
+                                        physics: const BouncingScrollPhysics(),
+                                        child: _tileShell(
+                                          title: 'Compare with saved setup',
+                                          children: [
+                                            Text(
+                                              'Download the full configuration from the panel and compare it with data stored in this app for this device.',
+                                              style: GoogleFonts.inter(
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.w400,
+                                                color: _textMuted,
+                                                height: 1.4,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 14),
+                                            _downloadCompareButton(working),
+                                          ],
+                                        ),
+                                      ),
+                                    )
+                                    : Align(
+                                      alignment: Alignment.centerRight,
+                                      child: GestureDetector(
+                                        onTap: () {
+                                          if (working) return;
+                                          widget.onDownloadAndCompare();
+                                        },
+                                        child: Icon(
+                                          Icons.refresh_rounded,
+                                          color: _brandRed,
+                                          size: 24,
+                                        ),
+                                      ),
+                                    ),
+                                if (result != null)
+                                  Expanded(child: _resultBlock(result)),
+                              ],
+                            )
+                            : SingleChildScrollView(
+                              physics: const BouncingScrollPhysics(),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  _tileShell(
+                                    title: 'Compare with saved setup',
+                                    children: [
+                                      Text(
+                                        'Download the full configuration from the panel and compare it with data stored in this app for this device.',
+                                        style: GoogleFonts.inter(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w400,
+                                          color: _textMuted,
+                                          height: 1.4,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 14),
+                                      _downloadCompareButton(working),
+                                    ],
+                                  ),
+                                  if (result != null) _resultBlock(result),
+                                ],
                               ),
                             ),
-                            const SizedBox(height: 14),
-                            _downloadCompareButton(working),
-                          ],
-                        ),
-                        if (result != null) _resultBlock(result),
-                      ],
-                    ),
                   ),
                 ),
-              ),
-              _bottomActions(result, working),
-            ],
+                _bottomActions(result, working),
+              ],
+            ),
           ),
         ),
       ),

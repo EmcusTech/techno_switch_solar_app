@@ -1607,7 +1607,9 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
         try {
           await _runConfigLogFetchRemaining();
           _configLogCompareResult.value = PeripheralConfigSnapshot.compare(
-            panelBySection: PeripheralConfigSnapshot.fromBleManager(_bleManager),
+            panelBySection: PeripheralConfigSnapshot.fromBleManager(
+              _bleManager,
+            ),
             localBySection: await PeripheralConfigSnapshot.fromCache(
               _selectedDevice.id,
             ),
@@ -1661,7 +1663,11 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
             onUsePanelDataInApp: _onConfigLogUsePanelDataInApp,
             onApplyLocalToPanel: _onConfigLogApplyLocalToPanel,
           ),
-    );
+    ).whenComplete(() {
+      if (!mounted) return;
+      _configLogCompareResult.value = null;
+      _configLogWorking.value = false;
+    });
   }
 
   void showPasswordPopup({
@@ -1800,10 +1806,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                             await _runConfigLogApplyRemaining();
                             await _saveAllPeripheralCachesFromBle();
                             if (mounted) {
-                              showApplySuccessDialog(
-                                context,
-                                'Configuration',
-                              );
+                              showApplySuccessDialog(context, 'Configuration');
                             }
                           } catch (e, st) {
                             debugPrint('$e\n$st');
