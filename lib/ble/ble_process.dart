@@ -1712,7 +1712,6 @@ class BleProcess {
           sounderSetupApplyRelayCommandStep = nextRelayNo;
           if (sounderSetupApplyRelayCommandStep <= 3) {
             startRxTimeout();
-            print("sdifbasbdh $nextRelayNo");
             processDesc.value = "Applying Sounder (Relays) $nextRelayNo/3";
             await bleManager.sendSounderSetupRelayApplyCmdPkt(
               outputMaxZone: nextRelayNo,
