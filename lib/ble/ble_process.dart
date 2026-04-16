@@ -895,24 +895,28 @@ class BleProcess {
           bleManager.otaProcessState =
               OtaProcessState.sendInputSetupFetchCmdPkt;
           checkForAccessKeyCmdRsp = 0;
+          processDesc.value = "Downloading Input Setup";
           startRxTimeout();
           await bleManager.sendInputSetupFetchCmdPkt();
         } else if (isExtOutCommandFetchActive.value) {
           bleManager.otaProcessState =
               OtaProcessState.sendExtOutSetupFetchCmdPkt;
           checkForAccessKeyCmdRsp = 0;
+          processDesc.value = "Downloading Ext Out Setup";
           startRxTimeout();
           await bleManager.sendExtOutSetupFetchCmdPkt();
         } else if (isExtOutCommandApplyActive.value) {
           bleManager.otaProcessState =
               OtaProcessState.sendExtOutSetupApplyCmdPkt;
           checkForAccessKeyCmdRsp = 0;
+          processDesc.value = "Applying Ext Out Setup";
           startRxTimeout();
           await bleManager.sendExtOutSetupApplyCmdPkt();
         } else if (isInputSetupApplyActive.value) {
           bleManager.otaProcessState =
               OtaProcessState.sendInputSetupApplyCmdPkt;
           checkForAccessKeyCmdRsp = 0;
+          processDesc.value = "Applying Input Setup";
           startRxTimeout();
           await bleManager.sendInputSetupApplyCmdPkt();
         } else if (isRelaySetupFetchCommandActive.value) {
@@ -2242,11 +2246,13 @@ class BleProcess {
       if (rx.payload[10] == 0x83) {
         if (zoneSetupApplyCommandStep == 1) {
           print("CMD 1 Validated -> send CMD2, keep polling");
+          processDesc.value = "Applying Zone 2/3";
           zoneSetupApplyCommandStep = 2;
           startRxTimeout();
           await bleManager.sendZoneSetupApplySecondCmdPkt();
         } else if (zoneSetupApplyCommandStep == 2) {
           print("CMD 2 Validated -> send CMD3, keep polling");
+          processDesc.value = "Applying Zone 3/3";
           zoneSetupApplyCommandStep = 3;
           startRxTimeout();
           await bleManager.sendZoneSetupApplyThirdCmdPkt();
