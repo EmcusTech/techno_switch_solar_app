@@ -153,7 +153,7 @@ class _InputModeBottomSheetState extends State<InputModeBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final maxHeight = MediaQuery.of(context).size.height * 0.8;
+    final maxHeight = MediaQuery.of(context).size.height * 0.75;
     _updateValidationErrors();
     final isValid = _computeIsValid();
 

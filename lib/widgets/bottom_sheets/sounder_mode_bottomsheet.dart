@@ -403,7 +403,7 @@ class _SounderModeBottomSheetState extends State<SounderModeBottomSheet>
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
-    final maxHeight = screenHeight * 0.80;
+    final maxHeight = screenHeight * 0.75;
 
     return SafeArea(
       child: AnimatedSize(
@@ -626,7 +626,7 @@ class _SounderModeBottomSheetState extends State<SounderModeBottomSheet>
         ),
         const SizedBox(height: 20),
         SizedBox(
-          height: 420,
+          height: 360,
           child: TabBarView(
             controller: _tabController,
             children: [_generalTab(), _zoneTab(), _extOutTab(), _delayTab()],

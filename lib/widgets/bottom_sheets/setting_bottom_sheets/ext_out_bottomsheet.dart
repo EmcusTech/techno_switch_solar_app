@@ -306,7 +306,7 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final maxHeight = MediaQuery.of(context).size.height * 0.8;
+    final maxHeight = MediaQuery.of(context).size.height * 0.75;
     // _updateValidationErrors();
     final formValid = _computeIsValid();
 

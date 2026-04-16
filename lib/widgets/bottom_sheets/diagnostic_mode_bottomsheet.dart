@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
+import 'package:techno_switch_solar_app/widgets/bottom_sheets/widgets/diagnostic_voltage_tile.dart';
 
 class DiagnosticInfoBottomSheet extends StatefulWidget {
   final String deviceId;
@@ -23,6 +24,10 @@ class DiagnosticInfoBottomSheet extends StatefulWidget {
 }
 
 class _DiagnosticInfoBottomSheetState extends State<DiagnosticInfoBottomSheet> {
+  static const Color _textPrimary = Color(0xFF3D3D3D);
+  static const Color _brandRed = Color(0xFFEC1D24);
+  static const Color _border = Color(0xFFDCDCDC);
+  final ScrollController scrollController = ScrollController();
   BleManager? manager;
 
   @override
@@ -69,112 +74,187 @@ class _DiagnosticInfoBottomSheetState extends State<DiagnosticInfoBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final maxHeight = MediaQuery.of(context).size.height * 0.8;
-
+    final screenHeight = MediaQuery.of(context).size.height;
+    final maxHeight = screenHeight * 0.75;
     if (manager == null) {
       return const SizedBox.shrink();
     }
 
     final p = manager!.bleProcess;
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
     return SafeArea(
-      child: ConstrainedBox(
-        constraints: BoxConstraints(maxHeight: maxHeight),
-        child: Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-          ),
-          padding: EdgeInsets.only(
-            left: 24,
-            right: 24,
-            top: 16,
-            bottom: MediaQuery.of(context).viewInsets.bottom + 16,
-          ),
-          child: Column(
-            children: [
-              Container(
-                width: 40,
-                height: 4,
-                margin: const EdgeInsets.only(bottom: 12),
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade300,
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 16),
-                child: Text(
-                  'Diagnostics',
-                  style: GoogleFonts.inter(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF3D3D3D),
+      child: AnimatedSize(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeInOut,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxHeight: maxHeight),
+          child: Container(
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+            ),
+            padding: EdgeInsets.only(
+              left: 24,
+              right: 24,
+              top: 16,
+              bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+            ),
+            child: Column(
+              children: [
+                _dragHandle(),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      'Diagnostics',
+                      style: GoogleFonts.inter(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: _textPrimary,
+                      ),
+                    ),
                   ),
                 ),
-              ),
-              Expanded(
-                child: SingleChildScrollView(
-                  physics: const BouncingScrollPhysics(),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                Expanded(
+                  child: ListView(
+                    controller: scrollController,
+                    physics: const BouncingScrollPhysics(
+                      parent: AlwaysScrollableScrollPhysics(),
+                    ),
                     children: [
-                      _section("Sounders", [
-                        _voltCard("Sounder 1", p.sounderOneAdcValue),
-                        _voltCard("Sounder 2", p.sounderTwoAdcValue),
-                        _voltCard("Sounder 3", p.sounderThreeAdcValue),
-                      ]),
-
-                      _section("Power", [
-                        _voltCard("Vaux", p.vauxAdcValue),
-                        _voltCard("Vin", p.vinAdcValue),
-                        _voltCard("Discharge", p.dischargeAdcValue),
-                      ]),
-
-                      _section("Inputs", [
-                        _voltCard("Prog Input", p.progInputAdcValue),
-                        _voltCard("Hold Input", p.holdInputAdcValue),
-                      ]),
-
-                      _section("Zones", [
-                        _voltCard("Zone 1", p.zone1AdcValue),
-                        _voltCard("Zone 2", p.zone2AdcValue),
-                        _voltCard("Zone 3", p.zone3AdcValue),
-                      ]),
-
-                      _section("Other", [
-                        _voltCard("Earth Detection", p.earthAdcValue),
-                      ]),
+                      _section(
+                        title: 'Sounders',
+                        items: [
+                          _VoltRef('Sounder 1', p.sounderOneAdcValue),
+                          _VoltRef('Sounder 2', p.sounderTwoAdcValue),
+                          _VoltRef('Sounder 3', p.sounderThreeAdcValue),
+                        ],
+                      ),
+                      _section(
+                        title: 'Power',
+                        items: [
+                          _VoltRef('Vaux', p.vauxAdcValue),
+                          _VoltRef('Vin', p.vinAdcValue),
+                          _VoltRef('Discharge', p.dischargeAdcValue),
+                        ],
+                      ),
+                      _section(
+                        title: 'Inputs',
+                        items: [
+                          _VoltRef('Prog Input', p.progInputAdcValue),
+                          _VoltRef('Hold Input', p.holdInputAdcValue),
+                        ],
+                      ),
+                      _section(
+                        title: 'Zones',
+                        items: [
+                          _VoltRef('Zone 1', p.zone1AdcValue),
+                          _VoltRef('Zone 2', p.zone2AdcValue),
+                          _VoltRef('Zone 3', p.zone3AdcValue),
+                        ],
+                      ),
+                      _section(
+                        title: 'Other',
+                        items: [_VoltRef('Earth Detection', p.earthAdcValue)],
+                      ),
                     ],
                   ),
                 ),
+                ValueListenableBuilder<bool>(
+                  valueListenable: p.isAdcSetupFetchCommandActive,
+                  builder: (context, isFetchActive, _) {
+                    return SizedBox(
+                      height: 44,
+                      width: double.infinity,
+                      child: OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: _brandRed,
+                          side: const BorderSide(color: _brandRed),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(22),
+                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                        ),
+                        onPressed:
+                            isFetchActive ? widget.onStop : widget.onDownload,
+                        child: Text(
+                          isFetchActive ? 'Stop' : 'Start',
+                          style: GoogleFonts.inter(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _dragHandle() {
+    return Center(
+      child: Container(
+        width: 40,
+        height: 4,
+        margin: const EdgeInsets.only(bottom: 10),
+        decoration: BoxDecoration(
+          color: Colors.grey.shade300,
+          borderRadius: BorderRadius.circular(4),
+        ),
+      ),
+    );
+  }
+
+  Widget _section({required String title, required List<_VoltRef> items}) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: _border),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: _textPrimary,
+                ),
               ),
-              const SizedBox(height: 12),
-              ValueListenableBuilder<bool>(
-                valueListenable: p.isAdcSetupFetchCommandActive,
-                builder: (context, isFetchActive, _) {
-                  return SizedBox(
-                    height: 48,
-                    width: double.infinity,
-                    child: OutlinedButton(
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: const Color(0xFFEC1D24),
-                        side: const BorderSide(color: Color(0xFFEC1D24)),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(24),
+              const SizedBox(height: 8),
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final maxW = constraints.maxWidth;
+                  final columns = 3;
+                  final spacing = 8.0;
+                  final tileW = (maxW - spacing * (columns - 1)) / columns;
+
+                  return Wrap(
+                    spacing: spacing,
+                    runSpacing: spacing,
+                    children: [
+                      for (final item in items)
+                        SizedBox(
+                          width: tileW,
+                          child: DiagnosticVoltageTile(
+                            label: item.label,
+                            notifier: item.notifier,
+                            unit: 'V',
+                          ),
                         ),
-                      ),
-                      onPressed: isFetchActive
-                          ? widget.onStop
-                          : widget.onDownload,
-                      child: Text(
-                        isFetchActive ? 'Stop' : 'Start',
-                        style: GoogleFonts.inter(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
+                    ],
                   );
                 },
               ),
@@ -184,80 +264,11 @@ class _DiagnosticInfoBottomSheetState extends State<DiagnosticInfoBottomSheet> {
       ),
     );
   }
+}
 
-  Widget _voltCard(String label, ValueNotifier<double> notifier) {
-    return ValueListenableBuilder<double>(
-      valueListenable: notifier,
-      builder: (_, value, __) {
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          decoration: BoxDecoration(
-            color: const Color(0xFFF8F8F8),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: const Color(0xFFE0E0E0)),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                label,
-                style: GoogleFonts.inter(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.grey[600],
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                "${value.toStringAsFixed(2)} V",
-                style: GoogleFonts.inter(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: _getVoltageColor(value),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
+class _VoltRef {
+  const _VoltRef(this.label, this.notifier);
 
-  Color _getVoltageColor(double v) {
-    return const Color(0xFFEC1D24);
-  }
-
-  Widget _section(String title, List<Widget> items) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: GoogleFonts.inter(
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-              color: const Color(0xFF3D3D3D),
-            ),
-          ),
-          const SizedBox(height: 12),
-
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: items.length,
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              mainAxisSpacing: 12,
-              crossAxisSpacing: 12,
-              childAspectRatio: 2.2,
-            ),
-            itemBuilder: (_, i) => items[i],
-          ),
-        ],
-      ),
-    );
-  }
+  final String label;
+  final ValueNotifier<double> notifier;
 }
