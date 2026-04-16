@@ -622,11 +622,11 @@ class BleProcess {
       return;
     }
 
-    if (rx.payload[3] == 0x01) {
-      print(
-        "the received packet: ${rx.payload.map((e) => e.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
-      );
-    }
+    // if (rx.payload[3] == 0x01) {
+    //   print(
+    //     "the received packet: ${rx.payload.map((e) => e.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+    //   );
+    // }
 
     if (rx.payload[10] == 0x83 &&
         rx.payload[12] == 0x02 &&
@@ -1206,30 +1206,36 @@ class BleProcess {
 
     if (checkForGeneralModuleSetupApplyRes == 1) {
       print("Checking General Module Setup Apply CMD RSP");
-      if (rx.payload[12] == 0x02 && generalModuleSetupApplyCommandStep == 1) {
+      if (rx.payload[10] == 0x83 &&
+          rx.payload[12] == 0x02 &&
+          generalModuleSetupApplyCommandStep == 1) {
         generalModuleSetupApplyCommandStep = 2;
         processDesc.value = "Applying General Module Silence Buzzer LVL";
         startRxTimeout();
         await bleManager.sendGeneralModuleSilenceBuzzerLvlApplyCmdPkt();
-      } else if (rx.payload[12] == 0x02 &&
+      } else if (rx.payload[10] == 0x83 &&
+          rx.payload[12] == 0x02 &&
           generalModuleSetupApplyCommandStep == 2) {
         generalModuleSetupApplyCommandStep = 3;
         processDesc.value = "Applying General Module Silence Sounder LVL";
         startRxTimeout();
         await bleManager.sendGeneralModuleSilenceSounderLvlApplyCmdPkt();
-      } else if (rx.payload[12] == 0x02 &&
+      } else if (rx.payload[10] == 0x83 &&
+          rx.payload[12] == 0x02 &&
           generalModuleSetupApplyCommandStep == 3) {
         generalModuleSetupApplyCommandStep = 4;
         processDesc.value = "Applying General Module Reset LVL";
         startRxTimeout();
         await bleManager.sendGeneralModuleResetLvlApplyCmdPkt();
-      } else if (rx.payload[12] == 0x02 &&
+      } else if (rx.payload[10] == 0x83 &&
+          rx.payload[12] == 0x02 &&
           generalModuleSetupApplyCommandStep == 4) {
         generalModuleSetupApplyCommandStep = 5;
         processDesc.value = "Applying General Module Fault Latching";
         startRxTimeout();
         await bleManager.sendGeneralModuleFaultLatchingApplyCmdPkt();
-      } else if (rx.payload[12] == 0x02 &&
+      } else if (rx.payload[10] == 0x83 &&
+          rx.payload[12] == 0x02 &&
           generalModuleSetupApplyCommandStep == 5) {
         print("We got general module setup apply response");
         bleManager.otaProcessState = OtaProcessState.notInUse;
@@ -1287,16 +1293,20 @@ class BleProcess {
 
     if (checkForPanelInfoSetupApplyRes == 1) {
       print("Checking Panel Info Setup Apply CMD RSP");
-      if (rx.payload[12] == 0x02 && panelInfoSetupApplyCommandStep == 1) {
+      if (rx.payload[10] == 0x83 &&
+          rx.payload[12] == 0x02 &&
+          panelInfoSetupApplyCommandStep == 1) {
         panelInfoSetupApplyCommandStep = 2;
         startRxTimeout();
         await bleManager.sendPanelInfoDateTimeApplyCmdPkt();
-      } else if (rx.payload[12] == 0x02 &&
+      } else if (rx.payload[10] == 0x83 &&
+          rx.payload[12] == 0x02 &&
           panelInfoSetupApplyCommandStep == 2) {
         panelInfoSetupApplyCommandStep = 3;
         startRxTimeout();
         await bleManager.sendPanelInfoEventReminderDelayApplyCmdPkt();
-      } else if (rx.payload[12] == 0x02 &&
+      } else if (rx.payload[10] == 0x83 &&
+          rx.payload[12] == 0x02 &&
           panelInfoSetupApplyCommandStep == 3) {
         print("We got panel info setup apply response");
         bleManager.otaProcessState = OtaProcessState.notInUse;
@@ -1421,7 +1431,7 @@ class BleProcess {
 
     if (checkForServiceDueApplyRes == 1) {
       print("Checking Service Due Apply CMD RSP");
-      if (rx.payload[12] == 0x02 && rx.payload[10] == 0x83) {
+      if (rx.payload[10] == 0x83 && rx.payload[12] == 0x02) {
         print("We got service due apply response");
         bleManager.otaProcessState = OtaProcessState.notInUse;
         cancelOperationDeadline();
@@ -1795,7 +1805,7 @@ class BleProcess {
       print(
         "Checking L-Bus Setup Apply CMD RSP Value ${rx.payload[12]}:::::${rx.payload[12] == 0x02} ",
       );
-      if (rx.payload[12] == 0x02) {
+      if (rx.payload[10] == 0x83 && rx.payload[12] == 0x02) {
         if (lBusSetupApplyCommandStep >= 1 && lBusSetupApplyCommandStep < 31) {
           final nextBusNo = lBusSetupApplyCommandStep + 1;
           processDesc.value = "Applying L-Bus $nextBusNo/31";
@@ -3545,7 +3555,6 @@ class BleProcess {
   void cancelOperationDeadline() {
     _operationDeadlineTimer?.cancel();
     _operationDeadlineTimer = null;
-    print("Operation deadline timer cancelled");
   }
 
   void _restartOperationDeadlineTimer() {
@@ -3579,8 +3588,6 @@ class BleProcess {
     _rxTimeoutTimer?.cancel();
     _otherPacketsRxTimeoutTimer?.cancel();
     cancelOperationDeadline();
-    print("RX timeout cancelled from BleManager");
-    print("Operation deadline timer cancelled");
   }
 
   /// Parse event log data from payload
@@ -3799,8 +3806,6 @@ class BleProcess {
 
   void startOtherPacketsRxTimeout({Duration? timeout}) {
     cancelRxTimeout();
-
-    print("Other Packets: Starting other packets RX timeout");
 
     _otherPacketsRxTimeoutTimer = Timer(
       timeout ?? const Duration(seconds: 12),

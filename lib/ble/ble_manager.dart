@@ -2289,10 +2289,6 @@ class BleManager {
       return;
     }
 
-    print(
-      "TX/RX: --------notify received----- RX TIME:${DateTime.now().toIso8601String()}",
-    );
-
     txData = 1;
     bleProcess.cancelRxTimeout();
     _pollInFlight = false;
@@ -2837,7 +2833,7 @@ class BleManager {
       //   );
       // }
 
-      print("::::::Data Written:::::");
+      // print("::::::Data Written:::::");
       await flutterReactiveBle.writeCharacteristicWithResponse(
         writeChar!,
         value: frameBytes,
@@ -5113,7 +5109,7 @@ class BleManager {
     u8_pkt[215] = 0xFD;
 
     print(
-      "TX/RX: TRANSMIT: Panel info fetch Panel ID Command time: ${DateTime.now().toIso8601String()}, packet: ${u8_pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+      "TX/RX: TRANSMIT: Panel info Apply Panel ID Command time: ${DateTime.now().toIso8601String()}, packet: ${u8_pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
     );
 
     await sendSmallDataFrame(0x1000, 216, u8_pkt);
