@@ -170,7 +170,9 @@ class _DiagnosticInfoBottomSheetState extends State<DiagnosticInfoBottomSheet> {
                       width: double.infinity,
                       child: OutlinedButton(
                         style: OutlinedButton.styleFrom(
-                          foregroundColor: _brandRed,
+                          foregroundColor:
+                              isFetchActive ? Colors.white : _brandRed,
+                          backgroundColor: isFetchActive ? _brandRed : null,
                           side: const BorderSide(color: _brandRed),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(22),
