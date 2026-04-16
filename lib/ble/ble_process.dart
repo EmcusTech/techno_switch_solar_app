@@ -1699,19 +1699,21 @@ class BleProcess {
       print(
         "Checking Sounder Setup Apply CMD RSP Value ${rx.payload[12]}:::::${rx.payload[12] == 0x02} ",
       );
-      if (rx.payload[12] == 0x02) {
+      if (rx.payload[10] == 0x83 && rx.payload[12] == 0x02) {
         if (sounderSetupApplyRelayCommandStep >= 1 &&
             sounderSetupApplyRelayCommandStep <= 3) {
           final nextRelayNo = sounderSetupApplyRelayCommandStep + 1;
-          if (nextRelayNo >= 3) {
-            processDesc.value = "Applying Sounder (Relays) $nextRelayNo/3";
-          }
+          // if (nextRelayNo >= 3) {
+          //   processDesc.value = "Applying Sounder (Relays) $nextRelayNo/3";
+          // }
           print(
             "CMD $sounderSetupApplyRelayCommandStep Validated -> send CMD$nextRelayNo, keep polling",
           );
           sounderSetupApplyRelayCommandStep = nextRelayNo;
           if (sounderSetupApplyRelayCommandStep <= 3) {
             startRxTimeout();
+            print("sdifbasbdh $nextRelayNo");
+            processDesc.value = "Applying Sounder (Relays) $nextRelayNo/3";
             await bleManager.sendSounderSetupRelayApplyCmdPkt(
               outputMaxZone: nextRelayNo,
             );
@@ -1732,14 +1734,15 @@ class BleProcess {
         } else if (sounderSetupApplyZoneCommandStep >= 1 &&
             sounderSetupApplyZoneCommandStep <= 3) {
           final nextZoneNo = sounderSetupApplyZoneCommandStep + 1;
-          if (nextZoneNo >= 3) {
-            processDesc.value = "Applying Sounder (Zones) $nextZoneNo/3";
-          }
+          // if (nextZoneNo >= 3) {
+          //   processDesc.value = "Applying Sounder (Zones) $nextZoneNo/3";
+          // }
           print(
             "CMD $sounderSetupApplyZoneCommandStep Validated -> send Zone $nextZoneNo, keep polling",
           );
           sounderSetupApplyZoneCommandStep = nextZoneNo;
           if (sounderSetupApplyZoneCommandStep <= 3) {
+            processDesc.value = "Applying Sounder (Zones) $nextZoneNo/3";
             startRxTimeout();
             await bleManager.sendSounderSetupZoneApplyCmdPkt(
               zoneMaxZone: nextZoneNo,
@@ -1758,14 +1761,15 @@ class BleProcess {
         } else if (sounderSetupApplyExtOutCommandStep >= 1 &&
             sounderSetupApplyExtOutCommandStep <= 3) {
           final nextExtOutNo = sounderSetupApplyExtOutCommandStep + 1;
-          if (nextExtOutNo >= 3) {
-            processDesc.value = "Applying Sounder (Ext Out) $nextExtOutNo/3";
-          }
+          // if (nextExtOutNo >= 3) {
+          //   processDesc.value = "Applying Sounder (Ext Out) $nextExtOutNo/3";
+          // }
           print(
             "CMD $sounderSetupApplyExtOutCommandStep Validated -> send Ext Out $nextExtOutNo, keep polling",
           );
           sounderSetupApplyExtOutCommandStep = nextExtOutNo;
           if (sounderSetupApplyExtOutCommandStep <= 3) {
+            processDesc.value = "Applying Sounder (Ext Out) $nextExtOutNo/3";
             startRxTimeout();
             await bleManager.sendSounderSetupExtOutApplyCmdPkt(
               extMaxZone: nextExtOutNo,
