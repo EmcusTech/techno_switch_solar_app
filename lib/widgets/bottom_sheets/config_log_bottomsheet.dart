@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:techno_switch_solar_app/screens/device_connecting_screen.dart';
 import 'package:techno_switch_solar_app/utils/peripheral_config_snapshot.dart';
 
 /// Bottom sheet for bulk config sync: compare panel vs cached setup, then resolve mismatches.
@@ -617,6 +618,8 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
                 : result.hasMismatch
                 ? MediaQuery.of(context).size.height * 0.58
                 : MediaQuery.of(context).size.height * 0.54
+            : working
+            ? MediaQuery.of(context).size.height * 0.40
             : MediaQuery.of(context).size.height * 0.35;
 
     return SafeArea(
@@ -713,6 +716,31 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
                                         ),
                                       ),
                                       const SizedBox(height: 14),
+                                      Visibility(
+                                        visible: working,
+                                        child: ValueListenableBuilder<String>(
+                                          valueListenable: ble.processDesc,
+                                          builder: (context, value, _) {
+                                            return Column(
+                                              children: [
+                                                Text(
+                                                  value,
+                                                  textAlign: TextAlign.center,
+                                                  style: GoogleFonts.inter(
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.w600,
+                                                    color: const Color(
+                                                      0xFF3D3D3D,
+                                                    ),
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 14),
+                                              ],
+                                            );
+                                          },
+                                        ),
+                                      ),
+
                                       _downloadCompareButton(working),
                                     ],
                                   ),
