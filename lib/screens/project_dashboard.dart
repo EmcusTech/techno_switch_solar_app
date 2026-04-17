@@ -1157,6 +1157,24 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
         final String resolvedSubtitle =
             subtitle ??
             'The $message has been successfully applied to the device.';
+
+        Future.delayed(const Duration(seconds: 2), () {
+          if (mounted) {
+            Navigator.of(dialogContext, rootNavigator: true).pop();
+            ble.bleProcess.isExtOutApplyDone.value = false;
+            ble.bleProcess.isInputSetupApplyDone.value = false;
+            ble.bleProcess.isRelaySetupApplyDone.value = false;
+            ble.bleProcess.isZoneSetupApplyDone.value = false;
+            ble.bleProcess.isLBusSetupApplyDone.value = false;
+            ble.bleProcess.isRadioSetupApplyDone.value = false;
+            ble.bleProcess.isLBusSetupApplyDone.value = false;
+            ble.bleProcess.isSounderSetupApplyDone.value = false;
+            ble.bleProcess.isServiceDueApplyDone.value = false;
+            ble.bleProcess.isAccessCodeSetupApplyDone.value = false;
+            ble.bleProcess.isPanelInfoSetupApplyDone.value = false;
+            ble.bleProcess.isGeneralModuleSetupApplyDone.value = false;
+          }
+        });
         return Dialog(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
@@ -1214,47 +1232,47 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                   textAlign: TextAlign.center,
                 ),
 
-                SizedBox(height: 24),
+                // SizedBox(height: 24),
 
-                // Dismiss Button
-                SizedBox(
-                  width: double.infinity,
-                  child: GestureDetector(
-                    onTap: () {
-                      Navigator.of(dialogContext, rootNavigator: true).pop();
-                      ble.bleProcess.isExtOutApplyDone.value = false;
-                      ble.bleProcess.isInputSetupApplyDone.value = false;
-                      ble.bleProcess.isRelaySetupApplyDone.value = false;
-                      ble.bleProcess.isZoneSetupApplyDone.value = false;
-                      ble.bleProcess.isLBusSetupApplyDone.value = false;
-                      ble.bleProcess.isRadioSetupApplyDone.value = false;
-                      ble.bleProcess.isLBusSetupApplyDone.value = false;
-                      ble.bleProcess.isSounderSetupApplyDone.value = false;
-                      ble.bleProcess.isServiceDueApplyDone.value = false;
-                      ble.bleProcess.isAccessCodeSetupApplyDone.value = false;
-                      ble.bleProcess.isPanelInfoSetupApplyDone.value = false;
-                      ble.bleProcess.isGeneralModuleSetupApplyDone.value =
-                          false;
-                    },
-                    child: Container(
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: Color(0xFFEC1D24),
-                        borderRadius: BorderRadius.circular(24),
-                      ),
-                      child: Center(
-                        child: Text(
-                          'OK',
-                          style: GoogleFonts.inter(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
+                // // Dismiss Button
+                // SizedBox(
+                //   width: double.infinity,
+                //   child: GestureDetector(
+                //     onTap: () {
+                //       Navigator.of(dialogContext, rootNavigator: true).pop();
+                //       ble.bleProcess.isExtOutApplyDone.value = false;
+                //       ble.bleProcess.isInputSetupApplyDone.value = false;
+                //       ble.bleProcess.isRelaySetupApplyDone.value = false;
+                //       ble.bleProcess.isZoneSetupApplyDone.value = false;
+                //       ble.bleProcess.isLBusSetupApplyDone.value = false;
+                //       ble.bleProcess.isRadioSetupApplyDone.value = false;
+                //       ble.bleProcess.isLBusSetupApplyDone.value = false;
+                //       ble.bleProcess.isSounderSetupApplyDone.value = false;
+                //       ble.bleProcess.isServiceDueApplyDone.value = false;
+                //       ble.bleProcess.isAccessCodeSetupApplyDone.value = false;
+                //       ble.bleProcess.isPanelInfoSetupApplyDone.value = false;
+                //       ble.bleProcess.isGeneralModuleSetupApplyDone.value =
+                //           false;
+                //     },
+                //     child: Container(
+                //       height: 48,
+                //       decoration: BoxDecoration(
+                //         color: Color(0xFFEC1D24),
+                //         borderRadius: BorderRadius.circular(24),
+                //       ),
+                //       child: Center(
+                //         child: Text(
+                //           'OK',
+                //           style: GoogleFonts.inter(
+                //             fontSize: 16,
+                //             fontWeight: FontWeight.w600,
+                //             color: Colors.white,
+                //           ),
+                //         ),
+                //       ),
+                //     ),
+                //   ),
+                // ),
               ],
             ),
           ),
@@ -1814,16 +1832,16 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                             await _runConfigLogApplyRemaining();
                             await _saveAllPeripheralCachesFromBle();
                             if (mounted) {
-                              _configLogCompareResult.value =
-                                  PeripheralConfigSnapshot.compare(
+                              _configLogCompareResult
+                                  .value = PeripheralConfigSnapshot.compare(
                                 panelBySection:
                                     PeripheralConfigSnapshot.fromBleManager(
-                                  _bleManager,
-                                ),
+                                      _bleManager,
+                                    ),
                                 localBySection:
                                     await PeripheralConfigSnapshot.fromCache(
-                                  _selectedDevice.id,
-                                ),
+                                      _selectedDevice.id,
+                                    ),
                               );
                             }
                             if (mounted) {
@@ -2356,8 +2374,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                                                                 if (isConfigLogBulkApply &&
                                                                     mode ==
                                                                         'bottomsheet_apply') {
-                                                                  await PeripheralCacheToBle
-                                                                      .applyToBleManager(
+                                                                  await PeripheralCacheToBle.applyToBleManager(
                                                                     _bleManager,
                                                                     _selectedDevice
                                                                         .id,
