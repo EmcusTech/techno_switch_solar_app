@@ -30,6 +30,7 @@ import 'package:techno_switch_solar_app/widgets/bottom_sheets/radio_mode_bottoms
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/relay_mode_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/service_due_mode_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/setting_bottom_sheets/ext_out_bottomsheet.dart';
+import 'package:techno_switch_solar_app/utils/peripheral_cache_to_ble.dart';
 import 'package:techno_switch_solar_app/utils/peripheral_config_snapshot.dart';
 import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/config_log_bottomsheet.dart';
@@ -2309,7 +2310,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                                                       ),
                                                       onPressed:
                                                           canVerify
-                                                              ? () {
+                                                              ? () async {
                                                                 FocusScope.of(
                                                                   dialogContext,
                                                                 ).unfocus();
@@ -2326,6 +2327,17 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                                                                         .value =
                                                                     _controller
                                                                         .text;
+
+                                                                if (isConfigLogBulkApply &&
+                                                                    mode ==
+                                                                        'bottomsheet_apply') {
+                                                                  await PeripheralCacheToBle
+                                                                      .applyToBleManager(
+                                                                    _bleManager,
+                                                                    _selectedDevice
+                                                                        .id,
+                                                                  );
+                                                                }
 
                                                                 onCall();
                                                               }
@@ -2367,7 +2379,14 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
       },
     );
     if (useCachedSessionAccess) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        if (!mounted) return;
+        if (isConfigLogBulkApply && mode == 'bottomsheet_apply') {
+          await PeripheralCacheToBle.applyToBleManager(
+            _bleManager,
+            _selectedDevice.id,
+          );
+        }
         if (!mounted) return;
         onCall();
         // startExtOutFetch / etc. call resetProcessExtOutState which clears processDesc.
