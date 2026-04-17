@@ -1099,6 +1099,9 @@ class BleProcess {
       print("Checking Dip Setting cmd resp");
       if (rx.payload[12] == 0x1C) {
         print("We got dip fetch response");
+        print(
+          "The Dip Setting Response: ${rx.payload.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+        );
         bleManager.otaProcessState = OtaProcessState.notInUse;
         cancelOperationDeadline();
         checkDipSetCmdRsp == 0;
@@ -3860,11 +3863,8 @@ class BleProcess {
       timeout ?? const Duration(seconds: 12),
       () async {
         maxOtherPacketsRetriesReached.value = true;
-        print(
-          "Other Packets: No response from device, please scan and connect again",
-        );
-        processDesc.value =
-            "No response from device, please scan and connect again";
+        print("Other Packets: No response from device, retrying");
+        processDesc.value = "No response from device, retrying";
         restartInitialNetworkFlow();
         // bleManager.shutdown();
       },
