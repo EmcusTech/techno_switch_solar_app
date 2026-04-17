@@ -13,6 +13,10 @@ import 'dart:typed_data';
 import 'package:techno_switch_solar_app/models/access_code_mode_model.dart';
 import 'package:techno_switch_solar_app/models/l_bus_setup_data_model.dart';
 import 'package:techno_switch_solar_app/utils/input_mode_util.dart';
+import 'package:techno_switch_solar_app/utils/relay_mode_util.dart';
+import 'package:techno_switch_solar_app/utils/general_quipment_mode_util.dart';
+import 'package:techno_switch_solar_app/utils/zone_equipment_mode_util.dart';
+import 'package:techno_switch_solar_app/utils/ext_out_equipment_mode_util.dart';
 import 'package:techno_switch_solar_app/utils/l_bus_payload_config.dart';
 
 const int BLE_FAILED = 0;
@@ -3614,6 +3618,164 @@ class BleManager {
     await sendSmallDataFrame(0x1000, 216, u8_pkt);
   }
 
+  /// Hex mode string used by relay apply; falls back from enable/test flags if unset/invalid.
+  int _relayOutputModeByteForApply({
+    required ValueNotifier<String> modeHex,
+    required bool enabled,
+    required bool test,
+  }) {
+    try {
+      final raw = modeHex.value.trim();
+      if (raw.isEmpty) throw FormatException('empty relay mode');
+      return int.parse(raw, radix: 16) & 0xFF;
+    } catch (_) {
+      final cfg = OutputModeConfig(
+        outputEnable:
+            enabled ? OutputEnable.enabled : OutputEnable.disabled,
+        outputMode: test ? OutputMode.test : OutputMode.normal,
+        supervisionMode: SupervisionMode.normal,
+      );
+      final b = OutputModeCodec.encode(cfg);
+      modeHex.value = OutputModeCodec.encodeHex(cfg);
+      return b;
+    }
+  }
+
+  int _parseRelayDynamicFieldByte(String raw) {
+    final t = raw.trim();
+    if (t.isEmpty) return 0;
+    try {
+      return int.parse(t, radix: 16) & 0xFF;
+    } catch (_) {
+      return 0;
+    }
+  }
+
+  int _sounderRelayOutputModeByteForApply({required int outputMaxZone}) {
+    switch (outputMaxZone) {
+      case 1:
+        return _relayOutputModeByteForApply(
+          modeHex: sounderOneRelayOutputMode,
+          enabled: isSounderOneEnabled.value,
+          test: isSounderOneTest.value,
+        );
+      case 2:
+        return _relayOutputModeByteForApply(
+          modeHex: sounderTwoRelayOutputMode,
+          enabled: isSounderTwoEnabled.value,
+          test: isSounderTwoTest.value,
+        );
+      default:
+        return _relayOutputModeByteForApply(
+          modeHex: sounderThreeRelayOutputMode,
+          enabled: isSounderThreeEnabled.value,
+          test: isSounderThreeTest.value,
+        );
+    }
+  }
+
+  int _sounderGeneralEquipmentModeByteForApply() {
+    try {
+      final raw = sounderGeneralMode.value.trim();
+      if (raw.isEmpty) throw FormatException('empty sounder general mode');
+      return int.parse(raw, radix: 16) & 0xFF;
+    } catch (_) {
+      final cfg = GeneralEquipmentModeConfig(
+        equipmentEnable:
+            isSounderGeneralEnabled.value
+                ? EquipmentEnable.enabled
+                : EquipmentEnable.disabled,
+        equipmentMode:
+            isSounderGeneralTest.value
+                ? EquipmentMode.test
+                : EquipmentMode.normal,
+        sounderDelay:
+            isSounderGeneralDelay.value
+                ? SounderDelay.enabled
+                : SounderDelay.disabled,
+      );
+      final b = GeneralEquipmentModeCodec.encode(cfg);
+      sounderGeneralMode.value = GeneralEquipmentModeCodec.encodeHex(cfg);
+      return b;
+    }
+  }
+
+  int _sounderZoneModeByteForApply({required int zoneMaxZone}) {
+    late final ValueNotifier<String> modeHex;
+    late final bool enabled;
+    late final bool test;
+    switch (zoneMaxZone) {
+      case 1:
+        modeHex = sounderZoneOneMode;
+        enabled = isZoneOneEnabled.value;
+        test = isZoneOneTest.value;
+        break;
+      case 2:
+        modeHex = sounderZoneTwoMode;
+        enabled = isZoneTwoEnabled.value;
+        test = isZoneTwoTest.value;
+        break;
+      default:
+        modeHex = sounderZoneThreeMode;
+        enabled = isZoneThreeEnabled.value;
+        test = isZoneThreeTest.value;
+    }
+    try {
+      final raw = modeHex.value.trim();
+      if (raw.isEmpty) throw FormatException('empty zone mode');
+      return int.parse(raw, radix: 16) & 0xFF;
+    } catch (_) {
+      final cfg = ZoneEquipmentModeConfig(
+        zoneEnable:
+            enabled ? ZoneEquipmentEnable.enabled : ZoneEquipmentEnable.disabled,
+        zoneMode: test ? ZoneEquipmentMode.test : ZoneEquipmentMode.normal,
+        sounderDelay: ZoneSounderDelay.disabled,
+      );
+      final b = ZoneEquipmentModeCodec.encode(cfg);
+      modeHex.value = ZoneEquipmentModeCodec.encodeHex(cfg);
+      return b;
+    }
+  }
+
+  int _sounderExtOutModeByteForApply({required int extMaxZone}) {
+    late final ValueNotifier<String> modeHex;
+    late final bool enabled;
+    late final bool test;
+    switch (extMaxZone) {
+      case 1:
+        modeHex = sounderExtOutOneMode;
+        enabled = isExtOutOneEnabled.value;
+        test = isExtOutOneTest.value;
+        break;
+      case 2:
+        modeHex = sounderExtOutTwoMode;
+        enabled = isExtOutTwoEnabled.value;
+        test = isExtOutTwoTest.value;
+        break;
+      default:
+        modeHex = sounderExtOutThreeMode;
+        enabled = isExtOutThreeEnabled.value;
+        test = isExtOutThreeTest.value;
+    }
+    try {
+      final raw = modeHex.value.trim();
+      if (raw.isEmpty) throw FormatException('empty ext out mode');
+      return int.parse(raw, radix: 16) & 0xFF;
+    } catch (_) {
+      final cfg = ExtZoneEquipmentModeConfig(
+        zoneEnable:
+            enabled
+                ? ExtZoneEquipmentEnable.enabled
+                : ExtZoneEquipmentEnable.disabled,
+        zoneMode:
+            test ? ExtZoneEquipmentMode.test : ExtZoneEquipmentMode.normal,
+      );
+      final h = ExtZoneEquipmentModeCodec.encodeHex(cfg);
+      modeHex.value = h;
+      return int.parse(h, radix: 16) & 0xFF;
+    }
+  }
+
   Future<void> sendRelaySetupApplyFirstCmdPkt() async {
     // Create 216-byte buffer
     Uint8List u8_pkt = Uint8List(216);
@@ -3643,17 +3805,20 @@ class BleManager {
     u8_pkt[12] = 0x07; // command byte 1
     u8_pkt[13] = 0x00; // output max zone byte 1
     u8_pkt[14] = 0x04; // output max zone byte 2
-    u8_pkt[15] = int.parse(relayOneMode.value, radix: 16);
+    u8_pkt[15] = _relayOutputModeByteForApply(
+      modeHex: relayOneMode,
+      enabled: isRelayOneSetupEnabled.value,
+      test: isRelayOneSetupTest.value,
+    );
     u8_pkt[16] = 0x01;
     u8_pkt[17] = 0x00;
     u8_pkt[18] = 0x00;
     u8_pkt[19] = 0x00;
     u8_pkt[20] = 0x03;
     u8_pkt[21] = 0x00;
-    u8_pkt[22] =
-        relayOneSetupDynamicText.value.isNotEmpty
-            ? int.parse(relayOneSetupDynamicText.value, radix: 16)
-            : 0x00;
+    u8_pkt[22] = relayOneSetupDynamicText.value.isNotEmpty
+        ? _parseRelayDynamicFieldByte(relayOneSetupDynamicText.value)
+        : 0x00;
     u8_pkt[23] = relayOneSetupGroup.value;
     u8_pkt[24] = relayOneSetupFunction.value;
     u8_pkt[25] = outputTextLength & 0xFF;
@@ -3706,17 +3871,20 @@ class BleManager {
     u8_pkt[12] = 0x07; // command byte 1
     u8_pkt[13] = 0x00; // output max zone byte 1
     u8_pkt[14] = 0x05; // output max zone byte 2
-    u8_pkt[15] = int.parse(relayTwoMode.value, radix: 16);
+    u8_pkt[15] = _relayOutputModeByteForApply(
+      modeHex: relayTwoMode,
+      enabled: isRelayTwoSetupEnabled.value,
+      test: isRelayTwoSetupTest.value,
+    );
     u8_pkt[16] = 0x01;
     u8_pkt[17] = 0x00;
     u8_pkt[18] = 0x00;
     u8_pkt[19] = 0x00;
     u8_pkt[20] = 0x04;
     u8_pkt[21] = 0x00;
-    u8_pkt[22] =
-        relayTwoSetupDynamicText.value.isNotEmpty
-            ? int.parse(relayTwoSetupDynamicText.value, radix: 16)
-            : 0x00;
+    u8_pkt[22] = relayTwoSetupDynamicText.value.isNotEmpty
+        ? _parseRelayDynamicFieldByte(relayTwoSetupDynamicText.value)
+        : 0x00;
     u8_pkt[23] = relayTwoSetupGroup.value;
     u8_pkt[24] = relayTwoSetupFunction.value;
     u8_pkt[25] = outputTextLength & 0xFF;
@@ -3769,17 +3937,20 @@ class BleManager {
     u8_pkt[12] = 0x07; // command byte 1
     u8_pkt[13] = 0x00; // output max zone byte 1
     u8_pkt[14] = 0x06; // output max zone byte 2
-    u8_pkt[15] = int.parse(relayThreeMode.value, radix: 16);
+    u8_pkt[15] = _relayOutputModeByteForApply(
+      modeHex: relayThreeMode,
+      enabled: isRelayThreeSetupEnabled.value,
+      test: isRelayThreeSetupTest.value,
+    );
     u8_pkt[16] = 0x01;
     u8_pkt[17] = 0x00;
     u8_pkt[18] = 0x00;
     u8_pkt[19] = 0x00;
     u8_pkt[20] = 0x05;
     u8_pkt[21] = 0x00;
-    u8_pkt[22] =
-        relayThreeSetupDynamicText.value.isNotEmpty
-            ? int.parse(relayThreeSetupDynamicText.value, radix: 16)
-            : 0x00;
+    u8_pkt[22] = relayThreeSetupDynamicText.value.isNotEmpty
+        ? _parseRelayDynamicFieldByte(relayThreeSetupDynamicText.value)
+        : 0x00;
     u8_pkt[23] = relayThreeSetupGroup.value;
     u8_pkt[24] = relayThreeSetupFunction.value;
     u8_pkt[25] = outputTextLength & 0xFF;
@@ -4556,7 +4727,6 @@ class BleManager {
 
     String outputText = "";
     int outputNo = 0;
-    String outputMode = "";
     int function = 0;
     int group = 0;
     if (outputMaxZone == 1) {
@@ -4565,19 +4735,16 @@ class BleManager {
       function = sounderOneRelayFunction.value;
       group = sounderOneRelayFunctionGroup.value;
       print("Sounder One Function No: $outputNo");
-      outputMode = sounderOneRelayOutputMode.value;
     } else if (outputMaxZone == 2) {
       outputText = sounderTwoOutputText.value;
       outputNo = sounderTwoFunctionNo.value;
       function = sounderTwoRelayFunction.value;
       group = sounderTwoRelayFunctionGroup.value;
-      outputMode = sounderTwoRelayOutputMode.value;
     } else if (outputMaxZone == 3) {
       outputText = sounderThreeOutputText.value;
       outputNo = sounderThreeFunctionNo.value;
       function = sounderThreeRelayFunction.value;
       group = sounderThreeRelayFunctionGroup.value;
-      outputMode = sounderThreeRelayOutputMode.value;
     }
     final List<int> outputTextBytes = outputText.codeUnits;
     final outputTextLength = outputTextBytes.length;
@@ -4603,7 +4770,9 @@ class BleManager {
     u8_pkt[12] = 0x07; // command
     u8_pkt[13] = 0x00; // output max zone byte 1
     u8_pkt[14] = outputMaxZone; // output max zone byte 2
-    u8_pkt[15] = int.parse(outputMode, radix: 16);
+    u8_pkt[15] = _sounderRelayOutputModeByteForApply(
+      outputMaxZone: outputMaxZone,
+    );
     u8_pkt[16] = 0x02;
     u8_pkt[20] = outputMaxZone;
     u8_pkt[21] = 0x01;
@@ -4645,7 +4814,7 @@ class BleManager {
     u8_pkt[11] = 0x00; // socket number
     u8_pkt[12] = 0x14; // command
     u8_pkt[13] = 0x00;
-    u8_pkt[14] = int.parse(sounderGeneralMode.value, radix: 16); // general mode
+    u8_pkt[14] = _sounderGeneralEquipmentModeByteForApply(); // general mode
     u8_pkt[15] = sounderGeneralAction.value; // general action
     u8_pkt[18] =
         (sounderGeneralDelay.value >> 8) & 0xFF; // general delay byte 1
@@ -4671,16 +4840,12 @@ class BleManager {
     // Create 216-byte buffer
     Uint8List u8_pkt = Uint8List(216);
 
-    String zoneMode = "";
     int zoneAction = 0;
     if (zoneMaxZone == 1) {
-      zoneMode = sounderZoneOneMode.value;
       zoneAction = zoneOneAction.value;
     } else if (zoneMaxZone == 2) {
-      zoneMode = sounderZoneTwoMode.value;
       zoneAction = zoneTwoAction.value;
     } else if (zoneMaxZone == 3) {
-      zoneMode = sounderZoneThreeMode.value;
       zoneAction = zoneThreeAction.value;
     }
 
@@ -4700,7 +4865,7 @@ class BleManager {
     u8_pkt[12] = 0x19; // command
     u8_pkt[13] = zoneMaxZone; // ext max zone
     u8_pkt[14] = 0x00;
-    u8_pkt[15] = int.parse(zoneMode, radix: 16); // zone mode
+    u8_pkt[15] = _sounderZoneModeByteForApply(zoneMaxZone: zoneMaxZone);
     u8_pkt[16] = zoneAction;
     u8_pkt[19] =
         (sounderGeneralDelay.value >> 8) & 0xFF; // general delay byte 1
@@ -4725,22 +4890,18 @@ class BleManager {
     // Create 216-byte buffer
     Uint8List u8_pkt = Uint8List(216);
 
-    String extOutMode = "";
     int extOutCountdownAction = 0;
     int extOutHoldAction = 0;
     int extOutReleaseAction = 0;
     if (extMaxZone == 1) {
-      extOutMode = sounderExtOutOneMode.value;
       extOutCountdownAction = extoutOneCountdownAction.value;
       extOutHoldAction = extoutOneHoldAction.value;
       extOutReleaseAction = extoutOneReleaseAction.value;
     } else if (extMaxZone == 2) {
-      extOutMode = sounderExtOutTwoMode.value;
       extOutCountdownAction = extoutTwoCountdownAction.value;
       extOutHoldAction = extoutTwoHoldAction.value;
       extOutReleaseAction = extoutTwoReleaseAction.value;
     } else if (extMaxZone == 3) {
-      extOutMode = sounderExtOutThreeMode.value;
       extOutCountdownAction = extoutThreeCountdownAction.value;
       extOutHoldAction = extoutThreeHoldAction.value;
       extOutReleaseAction = extoutThreeReleaseAction.value;
@@ -4762,7 +4923,7 @@ class BleManager {
     u8_pkt[12] = 0x1B; // command
     u8_pkt[13] = 0x01;
     u8_pkt[14] = extMaxZone; // ext max zone
-    u8_pkt[15] = int.parse(extOutMode, radix: 16); // ext out mode
+    u8_pkt[15] = _sounderExtOutModeByteForApply(extMaxZone: extMaxZone);
     u8_pkt[16] = extOutCountdownAction;
     u8_pkt[17] = extOutHoldAction;
     u8_pkt[18] = extOutReleaseAction;

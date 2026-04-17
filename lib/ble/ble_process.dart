@@ -1472,7 +1472,10 @@ class BleProcess {
             isSounderOneEnabled.value = outputEnabled;
             isSounderOneTest.value = outputMode;
             isSounderOneNormal.value = supervisionMode;
-            // sounderOneRelayoutputMode.value = rx.payload[15];
+            sounderOneRelayOutputMode.value = rx.payload[15]
+                .toRadixString(16)
+                .toUpperCase()
+                .padLeft(2, '0');
             sounderOneRelayFunctionGroup.value = rx.payload[23];
             sounderOneRelayFunction.value = rx.payload[24];
             sounderOneFunctionNo.value = rx.payload[22];
@@ -1495,7 +1498,10 @@ class BleProcess {
             isSounderTwoEnabled.value = outputEnabled;
             isSounderTwoTest.value = outputMode;
             isSounderTwoNormal.value = supervisionMode;
-            // sounderTwoRelayoutputMode.value = rx.payload[15];
+            sounderTwoRelayOutputMode.value = rx.payload[15]
+                .toRadixString(16)
+                .toUpperCase()
+                .padLeft(2, '0');
             sounderTwoRelayFunctionGroup.value = rx.payload[23];
             print(
               "Sounder Two Relay Function Group: ${sounderTwoRelayFunctionGroup.value}",
@@ -1518,7 +1524,10 @@ class BleProcess {
             isSounderThreeEnabled.value = outputEnabled;
             isSounderThreeTest.value = outputMode;
             isSounderThreeNormal.value = supervisionMode;
-            // sounderThreeRelayoutputMode.value = rx.payload[15];
+            sounderThreeRelayOutputMode.value = rx.payload[15]
+                .toRadixString(16)
+                .toUpperCase()
+                .padLeft(2, '0');
             sounderThreeRelayFunctionGroup.value = rx.payload[23];
             print(
               "Sounder Three Relay Function Group: ${sounderThreeRelayFunctionGroup.value}",
@@ -1556,6 +1565,10 @@ class BleProcess {
         isSounderGeneralEnabled.value = equipmentEnabled;
         isSounderGeneralTest.value = equipmentMode;
         isSounderGeneralDelay.value = sounderDelay;
+        sounderGeneralMode.value = rx.payload[14]
+            .toRadixString(16)
+            .toUpperCase()
+            .padLeft(2, '0');
         sounderGeneralAction.value = rx.payload[15];
         sounderGeneralDelay.value = rx.payload[18] << 8 | rx.payload[19];
         processDesc.value = "Downloading Sounder (Zones) 1/3";
@@ -1583,6 +1596,10 @@ class BleProcess {
 
             isZoneOneEnabled.value = zoneEnabled;
             isZoneOneTest.value = zoneMode;
+            sounderZoneOneMode.value = rx.payload[15]
+                .toRadixString(16)
+                .toUpperCase()
+                .padLeft(2, '0');
             zoneOneAction.value = rx.payload[16];
             print("zone one action: ${zoneOneAction.value}");
           } else if (sounderSetupFetchZoneCommandStep == 2) {
@@ -1597,6 +1614,10 @@ class BleProcess {
                 config.sounderDelay == ZoneSounderDelay.enabled;
             isZoneTwoEnabled.value = zoneEnabled;
             isZoneTwoTest.value = zoneMode;
+            sounderZoneTwoMode.value = rx.payload[15]
+                .toRadixString(16)
+                .toUpperCase()
+                .padLeft(2, '0');
             zoneTwoAction.value = rx.payload[16];
           } else if (sounderSetupFetchZoneCommandStep == 3) {
             final ZoneEquipmentModeConfig config =
@@ -1610,6 +1631,10 @@ class BleProcess {
                 config.sounderDelay == ZoneSounderDelay.enabled;
             isZoneThreeEnabled.value = zoneEnabled;
             isZoneThreeTest.value = zoneMode;
+            sounderZoneThreeMode.value = rx.payload[15]
+                .toRadixString(16)
+                .toUpperCase()
+                .padLeft(2, '0');
             zoneThreeAction.value = rx.payload[16];
           }
           sounderSetupFetchZoneCommandStep = nextZoneNo;
@@ -1644,6 +1669,10 @@ class BleProcess {
 
             isExtOutOneEnabled.value = zoneEnabled;
             isExtOutOneTest.value = zoneMode;
+            sounderExtOutOneMode.value = rx.payload[15]
+                .toRadixString(16)
+                .toUpperCase()
+                .padLeft(2, '0');
             extoutOneCountdownAction.value = rx.payload[16];
             extoutOneHoldAction.value = rx.payload[17];
             extoutOneReleaseAction.value = rx.payload[18];
@@ -1657,6 +1686,10 @@ class BleProcess {
             final bool zoneMode = config.zoneMode == ExtZoneEquipmentMode.test;
             isExtOutTwoEnabled.value = zoneEnabled;
             isExtOutTwoTest.value = zoneMode;
+            sounderExtOutTwoMode.value = rx.payload[15]
+                .toRadixString(16)
+                .toUpperCase()
+                .padLeft(2, '0');
             extoutTwoCountdownAction.value = rx.payload[16];
             extoutTwoHoldAction.value = rx.payload[17];
             extoutTwoReleaseAction.value = rx.payload[18];
@@ -1670,6 +1703,10 @@ class BleProcess {
             final bool zoneMode = config.zoneMode == ExtZoneEquipmentMode.test;
             isExtOutThreeEnabled.value = zoneEnabled;
             isExtOutThreeTest.value = zoneMode;
+            sounderExtOutThreeMode.value = rx.payload[15]
+                .toRadixString(16)
+                .toUpperCase()
+                .padLeft(2, '0');
             extoutThreeCountdownAction.value = rx.payload[16];
             extoutThreeHoldAction.value = rx.payload[17];
             extoutThreeReleaseAction.value = rx.payload[18];
@@ -2192,6 +2229,10 @@ class BleProcess {
           final bool outputMode = config.outputMode == OutputMode.test;
           isRelayOneSetupEnabled.value = outputEnabled;
           isRelayOneSetupTest.value = outputMode;
+          relayOneMode.value = rx.payload[15]
+              .toRadixString(16)
+              .toUpperCase()
+              .padLeft(2, '0');
           relayOneSetupOutputText.value = extractStringFromPayload(rx.payload);
           relayOneSetupDynamicText.value = rx.payload[22].toRadixString(16);
           relayOneSetupGroup.value = rx.payload[23];
@@ -2212,6 +2253,10 @@ class BleProcess {
           final bool outputMode = config.outputMode == OutputMode.test;
           isRelayTwoSetupEnabled.value = outputEnabled;
           isRelayTwoSetupTest.value = outputMode;
+          relayTwoMode.value = rx.payload[15]
+              .toRadixString(16)
+              .toUpperCase()
+              .padLeft(2, '0');
           relayTwoSetupOutputText.value = extractStringFromPayload(rx.payload);
           relayTwoSetupDynamicText.value = rx.payload[22].toRadixString(16);
           relayTwoSetupGroup.value = rx.payload[23];
@@ -2231,6 +2276,10 @@ class BleProcess {
           final bool outputMode = config.outputMode == OutputMode.test;
           isRelayThreeSetupEnabled.value = outputEnabled;
           isRelayThreeSetupTest.value = outputMode;
+          relayThreeMode.value = rx.payload[15]
+              .toRadixString(16)
+              .toUpperCase()
+              .padLeft(2, '0');
           relayThreeSetupOutputText.value = extractStringFromPayload(
             rx.payload,
           );
