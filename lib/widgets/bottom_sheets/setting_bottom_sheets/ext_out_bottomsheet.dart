@@ -232,9 +232,9 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
     manCtrl.text = (data['countdownMan'] as int?)?.toString() ?? '15';
     releaseCtrl.text = (data['releaseTime'] as int?)?.toString() ?? '10';
     resetDelayCtrl.text = (data['resetDelay'] as int?)?.toString() ?? '5';
-    final isSolar = (data['isSolar'] as bool?) ?? false;
-    if (manager != null) {
-      manager!.bleProcess.isExtOutApplyButtonActive.value = isSolar;
+    final solarRaw = data['isSolar'];
+    if (manager != null && solarRaw is bool) {
+      manager!.bleProcess.isExtOutApplyButtonActive.value = solarRaw;
     }
   }
 
@@ -266,41 +266,45 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
 
   Widget _modeBadge() {
     if (manager == null) return const SizedBox.shrink();
-    final isSolar = manager!.bleProcess.isExtOutApplyButtonActive.value;
+    return ValueListenableBuilder<bool>(
+      valueListenable: manager!.bleProcess.isExtOutApplyButtonActive,
+      builder: (context, isSolar, _) {
+        final bgColor =
+            isSolar ? const Color(0xFFE8F5E9) : const Color(0xFFFFEBEE);
 
-    final bgColor = isSolar ? const Color(0xFFE8F5E9) : const Color(0xFFFFEBEE);
+        final textColor =
+            isSolar ? const Color(0xFF2E7D32) : const Color(0xFFC62828);
 
-    final textColor =
-        isSolar ? const Color(0xFF2E7D32) : const Color(0xFFC62828);
+        final icon =
+            isSolar
+                ? Icons.wb_sunny_rounded
+                : Icons.settings_input_component_rounded;
 
-    final icon =
-        isSolar
-            ? Icons.wb_sunny_rounded
-            : Icons.settings_input_component_rounded;
+        final label = isSolar ? "Solar Mode" : "DIP Mode";
 
-    final label = isSolar ? "Solar Mode" : "DIP Mode";
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 16, color: textColor),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: GoogleFonts.inter(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: textColor,
-            ),
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: bgColor,
+            borderRadius: BorderRadius.circular(20),
           ),
-        ],
-      ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 16, color: textColor),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: textColor,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 

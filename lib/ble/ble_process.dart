@@ -1104,18 +1104,19 @@ class BleProcess {
         );
         bleManager.otaProcessState = OtaProcessState.notInUse;
         cancelOperationDeadline();
-        checkDipSetCmdRsp == 0;
+        checkDipSetCmdRsp = 0;
         print(rx.payload[14]);
         if (rx.payload[14] == 0x00) {
           print("The setup source is solar");
           isExtOutApplyButtonActive.value = true;
+        } else {
+          isExtOutApplyButtonActive.value = false;
         }
       } else {
         print("Dip setting Cmd Response not found, polling again");
         startRxTimeout();
         await bleManager.sendPollPacket();
       }
-      // checkDipSetCmdRsp = 0;
     }
 
     if (checkForAdcSetupFetchRes == 1) {
@@ -2716,7 +2717,8 @@ class BleProcess {
     validEventLogNum = 0;
     read1000Logs = 0;
     receivedPollCount = 0;
-    isExtOutApplyButtonActive.value = false;
+    // Keep isExtOutApplyButtonActive (Solar vs DIP): ext-out apply does not
+    // re-run dip fetch; clearing here made bulk apply persist wrong isSolar.
     checkForLBusSetupFetchRes = 0;
     checkForLBusSetupApplyRes = 0;
     checkForSounderSetupFetchRes = 0;
@@ -2783,7 +2785,6 @@ class BleProcess {
     validEventLogNum = 0;
     read1000Logs = 0;
     receivedPollCount = 0;
-    isExtOutApplyButtonActive.value = false;
     checkForLBusSetupFetchRes = 0;
     checkForLBusSetupApplyRes = 0;
     checkForSounderSetupFetchRes = 0;
@@ -2844,7 +2845,6 @@ class BleProcess {
     validEventLogNum = 0;
     read1000Logs = 0;
     receivedPollCount = 0;
-    isExtOutApplyButtonActive.value = false;
     relaySetupFetchCommandStep = 0;
     checkForRelaySetupFetchRes = 0;
     checkForRadioSetupApplyRes = 0;
@@ -2909,7 +2909,6 @@ class BleProcess {
     validEventLogNum = 0;
     read1000Logs = 0;
     receivedPollCount = 0;
-    isExtOutApplyButtonActive.value = false;
     relaySetupFetchCommandStep = 0;
     checkForRelaySetupFetchRes = 0;
     checkForRadioSetupApplyRes = 0;
@@ -2974,7 +2973,6 @@ class BleProcess {
     read1000Logs = 0;
     receivedPollCount = 0;
     checkForRadioSetupFetchRes = 0;
-    isExtOutApplyButtonActive.value = false;
     relaySetupFetchCommandStep = 0;
     checkForRelaySetupFetchRes = 0;
     checkForRadioSetupApplyRes = 0;
@@ -3039,7 +3037,6 @@ class BleProcess {
     read1000Logs = 0;
     receivedPollCount = 0;
     checkForRadioSetupFetchRes = 0;
-    isExtOutApplyButtonActive.value = false;
     relaySetupFetchCommandStep = 0;
     checkForRelaySetupFetchRes = 0;
     checkForRadioSetupApplyRes = 0;
@@ -3103,7 +3100,6 @@ class BleProcess {
     read1000Logs = 0;
     receivedPollCount = 0;
     checkForRadioSetupFetchRes = 0;
-    isExtOutApplyButtonActive.value = false;
     relaySetupFetchCommandStep = 0;
     checkForRelaySetupFetchRes = 0;
     checkForRadioSetupApplyRes = 0;
@@ -3168,7 +3164,6 @@ class BleProcess {
     read1000Logs = 0;
     receivedPollCount = 0;
     checkForRadioSetupFetchRes = 0;
-    isExtOutApplyButtonActive.value = false;
     relaySetupFetchCommandStep = 0;
     checkForRelaySetupFetchRes = 0;
     checkForRadioSetupApplyRes = 0;
@@ -3233,7 +3228,6 @@ class BleProcess {
     read1000Logs = 0;
     receivedPollCount = 0;
     checkForRadioSetupFetchRes = 0;
-    isExtOutApplyButtonActive.value = false;
     relaySetupFetchCommandStep = 0;
     checkForRelaySetupFetchRes = 0;
     checkForRadioSetupApplyRes = 0;
@@ -3298,7 +3292,6 @@ class BleProcess {
     read1000Logs = 0;
     receivedPollCount = 0;
     checkForRadioSetupFetchRes = 0;
-    isExtOutApplyButtonActive.value = false;
     relaySetupFetchCommandStep = 0;
     checkForRelaySetupFetchRes = 0;
     checkForRadioSetupApplyRes = 0;
@@ -3363,7 +3356,6 @@ class BleProcess {
     read1000Logs = 0;
     receivedPollCount = 0;
     checkForRadioSetupFetchRes = 0;
-    isExtOutApplyButtonActive.value = false;
     relaySetupFetchCommandStep = 0;
     checkForRelaySetupFetchRes = 0;
     checkForRadioSetupApplyRes = 0;
@@ -3428,7 +3420,6 @@ class BleProcess {
     read1000Logs = 0;
     receivedPollCount = 0;
     checkForRadioSetupFetchRes = 0;
-    isExtOutApplyButtonActive.value = false;
     relaySetupFetchCommandStep = 0;
     checkForRelaySetupFetchRes = 0;
     checkForRadioSetupApplyRes = 0;
@@ -3493,7 +3484,6 @@ class BleProcess {
     read1000Logs = 0;
     receivedPollCount = 0;
     checkForRadioSetupFetchRes = 0;
-    isExtOutApplyButtonActive.value = false;
     relaySetupFetchCommandStep = 0;
     checkForRelaySetupFetchRes = 0;
     checkForRadioSetupApplyRes = 0;
