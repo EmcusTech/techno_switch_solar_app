@@ -1145,11 +1145,18 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     );
   }
 
-  void showApplySuccessDialog(BuildContext context, String message) {
+  void showApplySuccessDialog(
+    BuildContext context,
+    String message, {
+    String? subtitle,
+  }) {
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) {
+        final String resolvedSubtitle =
+            subtitle ??
+            'The $message has been successfully applied to the device.';
         return Dialog(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
@@ -1198,7 +1205,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
 
                 // Subtitle
                 Text(
-                  'The $message has been successfully applied to the device.',
+                  resolvedSubtitle,
                   style: GoogleFonts.inter(
                     fontSize: 14,
                     fontWeight: FontWeight.w400,
@@ -1807,7 +1814,25 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                             await _runConfigLogApplyRemaining();
                             await _saveAllPeripheralCachesFromBle();
                             if (mounted) {
-                              showApplySuccessDialog(context, 'Configuration');
+                              _configLogCompareResult.value =
+                                  PeripheralConfigSnapshot.compare(
+                                panelBySection:
+                                    PeripheralConfigSnapshot.fromBleManager(
+                                  _bleManager,
+                                ),
+                                localBySection:
+                                    await PeripheralConfigSnapshot.fromCache(
+                                  _selectedDevice.id,
+                                ),
+                              );
+                            }
+                            if (mounted) {
+                              showApplySuccessDialog(
+                                context,
+                                'Configuration',
+                                subtitle:
+                                    'Your saved setup has been applied to the panel.',
+                              );
                             }
                           } catch (e, st) {
                             debugPrint('$e\n$st');

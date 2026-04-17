@@ -166,6 +166,55 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
     );
   }
 
+  /// Matches download/compare progress: live [ble.processDesc] from the BLE stack.
+  Widget _operationProgressBanner(bool working) {
+    if (!working) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(top: 8, bottom: 4),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: _surfaceMuted,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: _border),
+        ),
+        child: ValueListenableBuilder<String>(
+          valueListenable: ble.processDesc,
+          builder: (context, value, _) {
+            final text = value.trim();
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: _brandRed.withValues(alpha: 0.9),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    text.isEmpty ? 'Comparing…' : text,
+                    maxLines: 1,
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: _textPrimary,
+                      height: 1.35,
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+
   Future<void> _confirmApplyLocal() async {
     final ok = await showDialog<bool>(
       context: context,
@@ -175,56 +224,98 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          child: Padding(
+          child: Container(
             padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+            ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                Container(
+                  width: 64,
+                  height: 64,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFFBDEE1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Center(
+                    child: Icon(
+                      Icons.cloud_upload_rounded,
+                      color: Color(0xFFEC1D24),
+                      size: 32,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
                 Text(
-                  'Apply saved configuration to the panel?',
+                  'Apply to panel?',
                   style: GoogleFonts.inter(
-                    fontSize: 18,
+                    fontSize: 20,
                     fontWeight: FontWeight.w700,
                     color: _textPrimary,
                   ),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 8),
                 Text(
-                  'This will overwrite panel settings with the data stored in this app for this device.',
+                  'This will overwrite panel settings with the configuration '
+                  'saved in this app for this device.',
                   style: GoogleFonts.inter(
                     fontSize: 14,
                     fontWeight: FontWeight.w400,
-                    color: const Color(0xFF666666),
+                    color: _textMuted,
+                    height: 1.4,
                   ),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 24),
                 Row(
                   children: [
                     Expanded(
-                      child: OutlinedButton(
-                        onPressed: () => Navigator.of(ctx).pop(false),
-                        child: Text(
-                          'Cancel',
-                          style: GoogleFonts.inter(
-                            fontWeight: FontWeight.w600,
-                            color: const Color(0xFF666666),
+                      child: SizedBox(
+                        height: 48,
+                        child: OutlinedButton(
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: _brandRed,
+                            side: const BorderSide(color: _brandRed),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(24),
+                            ),
+                          ),
+                          onPressed: () => Navigator.of(ctx).pop(false),
+                          child: Text(
+                            'Cancel',
+                            style: GoogleFonts.inter(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
                       ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: _brandRed,
-                          foregroundColor: Colors.white,
-                        ),
-                        onPressed: () => Navigator.of(ctx).pop(true),
-                        child: Text(
-                          'Apply',
-                          style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+                      child: SizedBox(
+                        height: 48,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: _brandRed,
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(24),
+                            ),
+                          ),
+                          onPressed: () => Navigator.of(ctx).pop(true),
+                          child: Text(
+                            'Apply',
+                            style: GoogleFonts.inter(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                         ),
                       ),
                     ),
@@ -254,23 +345,10 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
           ),
         ),
         onPressed: working ? null : widget.onDownloadAndCompare,
-        child:
-            working
-                ? SizedBox(
-                  width: 22,
-                  height: 22,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Colors.white.withValues(alpha: 0.9),
-                  ),
-                )
-                : Text(
-                  'Download & compare',
-                  style: GoogleFonts.inter(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+        child: Text(
+          'Download & compare',
+          style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600),
+        ),
       ),
     );
   }
@@ -619,7 +697,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
                 ? MediaQuery.of(context).size.height * 0.58
                 : MediaQuery.of(context).size.height * 0.54
             : working
-            ? MediaQuery.of(context).size.height * 0.40
+            ? MediaQuery.of(context).size.height * 0.42
             : MediaQuery.of(context).size.height * 0.35;
 
     return SafeArea(
@@ -716,31 +794,6 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
                                         ),
                                       ),
                                       const SizedBox(height: 14),
-                                      Visibility(
-                                        visible: working,
-                                        child: ValueListenableBuilder<String>(
-                                          valueListenable: ble.processDesc,
-                                          builder: (context, value, _) {
-                                            return Column(
-                                              children: [
-                                                Text(
-                                                  value,
-                                                  textAlign: TextAlign.center,
-                                                  style: GoogleFonts.inter(
-                                                    fontSize: 12,
-                                                    fontWeight: FontWeight.w600,
-                                                    color: const Color(
-                                                      0xFF3D3D3D,
-                                                    ),
-                                                  ),
-                                                ),
-                                                const SizedBox(height: 14),
-                                              ],
-                                            );
-                                          },
-                                        ),
-                                      ),
-
                                       _downloadCompareButton(working),
                                     ],
                                   ),
@@ -750,6 +803,8 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
                             ),
                   ),
                 ),
+                SizedBox(height: 8),
+                _operationProgressBanner(working),
                 _bottomActions(result, working),
               ],
             ),
