@@ -1159,7 +1159,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
             'The $message has been successfully applied to the device.';
 
         Future.delayed(const Duration(seconds: 2), () {
-          if (mounted) {
+          if (dialogContext.mounted) {
             Navigator.of(dialogContext, rootNavigator: true).pop();
             ble.bleProcess.isExtOutApplyDone.value = false;
             ble.bleProcess.isInputSetupApplyDone.value = false;

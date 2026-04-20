@@ -30,6 +30,7 @@ class BleProcess {
   /// Wall-clock limit per setup step / phase (independent of short RX silence retries).
   static const Duration bleOperationDeadlineDuration = Duration(seconds: 10);
 
+  int checkForNetworkPacketRsp = 0;
   int checkForCtrlCmdRsp = 0;
   int checkForExtCmdFetchRes = 0;
   int checkForExtCmdApplyRes = 0;
@@ -631,7 +632,7 @@ class BleProcess {
     if (rx.payload[10] == 0x83 &&
         rx.payload[12] == 0x02 &&
         rx.payload[13] == 0x0A &&
-        isNetworkPacketProcess.value) {
+        !isNetworkPacketProcess.value) {
       print("Wrong password. Try again.");
       clearSessionAccessCode();
       resetProcessState();
@@ -643,23 +644,24 @@ class BleProcess {
     // ----- OTA STATE MACHINE -----
     switch (bleManager.otaProcessState) {
       case OtaProcessState.sendNetworkPacket:
-        print("NEXT: POLL PACKET");
-        print("This is network packet called");
-        print(
-          "The network packet is: ${rx.payload.map((e) => e.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
-        );
-        receivedPanelName.value = extractStringFromPayload(
-          rx.payload,
-          startIndex: 16,
-        );
+        checkForNetworkPacketRsp = 1;
+      // print("NEXT: POLL PACKET");
+      // print("This is network packet called");
+      // print(
+      //   "The network packet is: ${rx.payload.map((e) => e.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+      // );
+      // receivedPanelName.value = extractStringFromPayload(
+      //   rx.payload,
+      //   startIndex: 16,
+      // );
 
-        print("The received panel name is: ${receivedPanelName.value}");
-        // await Future.delayed(Duration(seconds: 1));
-        bleManager.otaProcessState = OtaProcessState.sendPollPacket;
-        isNetworkPacketProcess.value = false;
-        startRxTimeout();
-        await bleManager.sendPollPacket();
-        break;
+      // print("The received panel name is: ${receivedPanelName.value}");
+      // // await Future.delayed(Duration(seconds: 1));
+      // bleManager.otaProcessState = OtaProcessState.sendPollPacket;
+      // isNetworkPacketProcess.value = false;
+      // startRxTimeout();
+      // await bleManager.sendPollPacket();
+      // break;
 
       case OtaProcessState.sendPollPacket:
         print("NEXT: ACCESS PACKET");
@@ -840,6 +842,39 @@ class BleProcess {
 
       case OtaProcessState.otaWaitRsp:
         break;
+    }
+
+    if (checkForNetworkPacketRsp == 1) {
+      if (rx.payload[13] == 0x22 &&
+          rx.payload[14] == 0x03 &&
+          receivedPanelName.value.isEmpty) {
+        print(
+          "The network packet is: ${rx.payload.map((e) => e.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+        );
+        receivedPanelName.value = extractStringFromPayload(
+          rx.payload,
+          startIndex: 16,
+        );
+
+        print("The received panel name is: ${receivedPanelName.value}");
+        // await Future.delayed(Duration(seconds: 1));
+        bleManager.otaProcessState = OtaProcessState.sendPollPacket;
+        isNetworkPacketProcess.value = false;
+        checkForNetworkPacketRsp = 0;
+        startRxTimeout();
+        await bleManager.sendPollPacket();
+      } else if (receivedPanelName.value.isNotEmpty) {
+        print("Panel name received, sending poll packet");
+        bleManager.otaProcessState = OtaProcessState.sendPollPacket;
+        isNetworkPacketProcess.value = false;
+        checkForNetworkPacketRsp = 0;
+        startRxTimeout();
+        await bleManager.sendPollPacket();
+      } else {
+        print("Network Packet Response not found, polling again");
+        startRxTimeout();
+        await bleManager.sendPollPacket();
+      }
     }
 
     if (checkForLiveEventsRetrievalRes == 1) {

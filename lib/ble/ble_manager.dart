@@ -519,6 +519,8 @@ class BleManager {
   ValueNotifier<int> get generalModuleFaultLatching =>
       bleProcess.generalModuleFaultLatching;
 
+  ValueNotifier<String> get receivedPanelName => bleProcess.receivedPanelName;
+
   void resetProtocolState() {
     // Packet counters
     u8TxPktCnt = 0;
@@ -2177,6 +2179,7 @@ class BleManager {
 
   /// DISCONNECT
   Future<void> disconnectConnectedDevice() async {
+    receivedPanelName.value = "";
     if (!isConnected) {
       print("Device not connected, returning");
       return;
@@ -3630,8 +3633,7 @@ class BleManager {
       return int.parse(raw, radix: 16) & 0xFF;
     } catch (_) {
       final cfg = OutputModeConfig(
-        outputEnable:
-            enabled ? OutputEnable.enabled : OutputEnable.disabled,
+        outputEnable: enabled ? OutputEnable.enabled : OutputEnable.disabled,
         outputMode: test ? OutputMode.test : OutputMode.normal,
         supervisionMode: SupervisionMode.normal,
       );
@@ -3727,7 +3729,9 @@ class BleManager {
     } catch (_) {
       final cfg = ZoneEquipmentModeConfig(
         zoneEnable:
-            enabled ? ZoneEquipmentEnable.enabled : ZoneEquipmentEnable.disabled,
+            enabled
+                ? ZoneEquipmentEnable.enabled
+                : ZoneEquipmentEnable.disabled,
         zoneMode: test ? ZoneEquipmentMode.test : ZoneEquipmentMode.normal,
         sounderDelay: ZoneSounderDelay.disabled,
       );
@@ -3816,9 +3820,10 @@ class BleManager {
     u8_pkt[19] = 0x00;
     u8_pkt[20] = 0x03;
     u8_pkt[21] = 0x00;
-    u8_pkt[22] = relayOneSetupDynamicText.value.isNotEmpty
-        ? _parseRelayDynamicFieldByte(relayOneSetupDynamicText.value)
-        : 0x00;
+    u8_pkt[22] =
+        relayOneSetupDynamicText.value.isNotEmpty
+            ? _parseRelayDynamicFieldByte(relayOneSetupDynamicText.value)
+            : 0x00;
     u8_pkt[23] = relayOneSetupGroup.value;
     u8_pkt[24] = relayOneSetupFunction.value;
     u8_pkt[25] = outputTextLength & 0xFF;
@@ -3882,9 +3887,10 @@ class BleManager {
     u8_pkt[19] = 0x00;
     u8_pkt[20] = 0x04;
     u8_pkt[21] = 0x00;
-    u8_pkt[22] = relayTwoSetupDynamicText.value.isNotEmpty
-        ? _parseRelayDynamicFieldByte(relayTwoSetupDynamicText.value)
-        : 0x00;
+    u8_pkt[22] =
+        relayTwoSetupDynamicText.value.isNotEmpty
+            ? _parseRelayDynamicFieldByte(relayTwoSetupDynamicText.value)
+            : 0x00;
     u8_pkt[23] = relayTwoSetupGroup.value;
     u8_pkt[24] = relayTwoSetupFunction.value;
     u8_pkt[25] = outputTextLength & 0xFF;
@@ -3948,9 +3954,10 @@ class BleManager {
     u8_pkt[19] = 0x00;
     u8_pkt[20] = 0x05;
     u8_pkt[21] = 0x00;
-    u8_pkt[22] = relayThreeSetupDynamicText.value.isNotEmpty
-        ? _parseRelayDynamicFieldByte(relayThreeSetupDynamicText.value)
-        : 0x00;
+    u8_pkt[22] =
+        relayThreeSetupDynamicText.value.isNotEmpty
+            ? _parseRelayDynamicFieldByte(relayThreeSetupDynamicText.value)
+            : 0x00;
     u8_pkt[23] = relayThreeSetupGroup.value;
     u8_pkt[24] = relayThreeSetupFunction.value;
     u8_pkt[25] = outputTextLength & 0xFF;
