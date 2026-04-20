@@ -3,6 +3,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
+import 'package:techno_switch_solar_app/screens/create_project/create_project_screen_refactored.dart';
 import 'package:techno_switch_solar_app/screens/scanning_screen.dart';
 import 'package:techno_switch_solar_app/screens/site_screen.dart';
 import 'package:techno_switch_solar_app/services/app_services.dart';
@@ -348,16 +349,15 @@ class _HomeContentState extends State<_HomeContent> with RouteAware {
             children: [
               GestureDetector(
                 onTap: () {
-                  // Navigator.of(context).push(
-                  //   MaterialPageRoute(
-                  //     builder: (context) => CreateSiteScreenRefactored(),
-                  //   ),
-                  // );
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => CreateSiteScreenRefactored(),
+                    ),
+                  );
                 },
                 child: _buildQuickLinkItem(
                   'assets/svgs/new_project_icon.svg',
                   'New Site',
-                  isEnabled: false,
                 ),
               ),
               _buildQuickLinkItem(

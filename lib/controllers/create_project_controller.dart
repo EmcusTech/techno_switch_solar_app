@@ -42,6 +42,15 @@ class CreateProjectController extends ChangeNotifier {
   // Validation errors
   Map<String, String> validationErrors = {};
 
+  /// True after create-site flow has connected to a panel whose model matches
+  /// [panelData.selectedPanelType] (verified via BLE `receivedPanelName`).
+  bool createProjectPanelBleVerified = false;
+
+  void setCreateProjectPanelBleVerified(bool value) {
+    createProjectPanelBleVerified = value;
+    notifyListeners();
+  }
+
   CreateProjectController() {
     _initializeControllerListeners();
   }
