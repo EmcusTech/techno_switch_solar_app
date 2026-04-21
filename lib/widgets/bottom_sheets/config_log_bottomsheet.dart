@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/screens/device_connecting_screen.dart';
+import 'package:techno_switch_solar_app/utils/peripheral_config_diff_labels.dart';
 import 'package:techno_switch_solar_app/utils/peripheral_config_snapshot.dart';
 
 /// Bottom sheet for bulk config sync: compare panel vs cached setup, then resolve mismatches.
@@ -332,6 +333,191 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
     }
   }
 
+  Widget _diffValueSideRow(String sideLabel, String value) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 48,
+          child: Text(
+            sideLabel,
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: _textMuted,
+              height: 1.4,
+            ),
+          ),
+        ),
+        Expanded(
+          child: SelectableText(
+            value,
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              fontWeight: FontWeight.w400,
+              height: 1.4,
+              color: const Color(0xFF444444),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _diffFieldTitle(String title) {
+    return Text(
+      title,
+      style: GoogleFonts.inter(
+        fontSize: 13,
+        fontWeight: FontWeight.w600,
+        color: _textPrimary,
+        height: 1.35,
+      ),
+    );
+  }
+
+  Widget _diffLineWidget(String sectionKey, String line) {
+    const panelPrefix = ': panel ';
+    const appSep = ' · app ';
+    final panelIdx = line.indexOf(panelPrefix);
+    if (panelIdx != -1) {
+      final path = line.substring(0, panelIdx);
+      final tail = line.substring(panelIdx + panelPrefix.length);
+      final appIdx = tail.lastIndexOf(appSep);
+      if (appIdx != -1) {
+        final panelVal = tail.substring(0, appIdx);
+        final appVal = tail.substring(appIdx + appSep.length);
+        final title = PeripheralConfigDiffLabels.humanizeFieldPath(
+          sectionKey,
+          path,
+        );
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _diffFieldTitle(title),
+            const SizedBox(height: 6),
+            _diffValueSideRow('Panel', panelVal),
+            const SizedBox(height: 4),
+            _diffValueSideRow('App', appVal),
+          ],
+        );
+      }
+    }
+
+    final listLen = RegExp(
+      r'^(.*?): list length (\d+) \(panel\) vs (\d+) \(app\)$',
+    ).firstMatch(line);
+    if (listLen != null) {
+      final path = listLen.group(1)!;
+      final panelN = listLen.group(2)!;
+      final appN = listLen.group(3)!;
+      final title = PeripheralConfigDiffLabels.humanizeFieldPath(
+        sectionKey,
+        path,
+      );
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _diffFieldTitle(title),
+          const SizedBox(height: 6),
+          Text(
+            'List length differs',
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: _textMuted,
+              height: 1.35,
+            ),
+          ),
+          const SizedBox(height: 4),
+          _diffValueSideRow('Panel', '$panelN entries'),
+          _diffValueSideRow('App', '$appN entries'),
+        ],
+      );
+    }
+
+    final onlyPanel = RegExp(r'^(.*?): only on panel · (.+)$').firstMatch(line);
+    if (onlyPanel != null) {
+      final path = onlyPanel.group(1)!;
+      final val = onlyPanel.group(2)!;
+      final title = PeripheralConfigDiffLabels.humanizeFieldPath(
+        sectionKey,
+        path,
+      );
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _diffFieldTitle(title),
+          const SizedBox(height: 6),
+          Text(
+            'Only on panel',
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: _textMuted,
+              height: 1.35,
+            ),
+          ),
+          const SizedBox(height: 4),
+          SelectableText(
+            val,
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              fontWeight: FontWeight.w400,
+              height: 1.4,
+              color: const Color(0xFF444444),
+            ),
+          ),
+        ],
+      );
+    }
+
+    final onlyApp = RegExp(r'^(.*?): only in app · (.+)$').firstMatch(line);
+    if (onlyApp != null) {
+      final path = onlyApp.group(1)!;
+      final val = onlyApp.group(2)!;
+      final title = PeripheralConfigDiffLabels.humanizeFieldPath(
+        sectionKey,
+        path,
+      );
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _diffFieldTitle(title),
+          const SizedBox(height: 6),
+          Text(
+            'Only in app',
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: _textMuted,
+              height: 1.35,
+            ),
+          ),
+          const SizedBox(height: 4),
+          SelectableText(
+            val,
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              fontWeight: FontWeight.w400,
+              height: 1.4,
+              color: const Color(0xFF444444),
+            ),
+          ),
+        ],
+      );
+    }
+
+    return SelectableText(
+      line,
+      style: GoogleFonts.inter(
+        fontSize: 12,
+        height: 1.45,
+        color: const Color(0xFF444444),
+      ),
+    );
+  }
+
   Widget _downloadCompareButton(bool working) {
     return SizedBox(
       height: 48,
@@ -358,6 +544,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
     PeripheralConfigSection s,
   ) {
     final diffLines = result.diffLinesFor(s);
+    final sectionKey = s.key;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(14),
@@ -369,27 +556,27 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Icon(
-                Icons.difference_outlined,
-                color: Colors.grey.shade700,
-                size: 20,
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  s.displayLabel,
-                  style: GoogleFonts.inter(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    color: _textPrimary,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
+          // Row(
+          //   children: [
+          //     Icon(
+          //       Icons.difference_outlined,
+          //       color: Colors.grey.shade700,
+          //       size: 20,
+          //     ),
+          //     const SizedBox(width: 8),
+          //     Expanded(
+          //       child: Text(
+          //         s.displayLabel,
+          //         style: GoogleFonts.inter(
+          //           fontSize: 15,
+          //           fontWeight: FontWeight.w600,
+          //           color: _textPrimary,
+          //         ),
+          //       ),
+          //     ),
+          //   ],
+          // ),
+          // const SizedBox(height: 6),
           Text(
             diffLines.isEmpty
                 ? 'Panel data differs from app cache.'
@@ -401,16 +588,27 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
             ),
           ),
           const SizedBox(height: 12),
-          SelectableText(
-            diffLines.isEmpty
-                ? 'No field-level detail available.'
-                : diffLines.join('\n'),
-            style: GoogleFonts.inter(
-              fontSize: 12,
-              height: 1.45,
-              color: const Color(0xFF444444),
+          if (diffLines.isEmpty)
+            Text(
+              'No field-level detail available.',
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                height: 1.45,
+                color: const Color(0xFF444444),
+              ),
+            )
+          else
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                for (var i = 0; i < diffLines.length; i++) ...[
+                  if (i > 0) ...[
+                    Divider(height: 20, thickness: 1, color: _border),
+                  ],
+                  _diffLineWidget(sectionKey, diffLines[i]),
+                ],
+              ],
             ),
-          ),
         ],
       ),
     );
@@ -495,7 +693,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
         ),
         const SizedBox(height: 16),
         SizedBox(
-          height: MediaQuery.of(context).size.height * 0.25,
+          height: MediaQuery.of(context).size.height * 0.3,
           child: TabBarView(
             controller: c,
             children:

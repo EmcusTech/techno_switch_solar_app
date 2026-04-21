@@ -669,6 +669,8 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
   }
 
   Future<void> _connectToDeviceByName() async {
+    ble.receivedPanelName.value = "";
+
     if (_isConnecting) return;
 
     setState(() {
@@ -2494,16 +2496,25 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 ),
                 overflow: TextOverflow.ellipsis,
               ),
-              Text(
-                ble.bleProcess.receivedPanelName.value.isEmpty
-                    ? BleNameUtils.getDisplayIdFromBleName(widget.panelName)
-                    : "${ble.bleProcess.receivedPanelName.value}~${BleNameUtils.getDisplayIdFromBleName(widget.panelName)}",
-                style: GoogleFonts.inter(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: Color(0xFF979797),
-                ),
-                overflow: TextOverflow.ellipsis,
+              ValueListenableBuilder<String>(
+                valueListenable: ble.bleProcess.receivedPanelName,
+                builder: (context, receivedName, _) {
+                  final subtitle =
+                      receivedName.isEmpty
+                          ? BleNameUtils.getDisplayIdFromBleName(
+                            widget.panelName,
+                          )
+                          : '$receivedName~${BleNameUtils.getDisplayIdFromBleName(widget.panelName)}';
+                  return Text(
+                    subtitle,
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: Color(0xFF979797),
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  );
+                },
               ),
               ValueListenableBuilder(
                 valueListenable: ble.isConnectedNotifier,

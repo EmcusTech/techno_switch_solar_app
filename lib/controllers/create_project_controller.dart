@@ -13,11 +13,14 @@ import 'package:techno_switch_solar_app/models/panel_type_config.dart';
 /// This follows the Single Responsibility Principle and separation of concerns
 class CreateProjectController extends ChangeNotifier {
   // Controllers for text inputs
-  final TextEditingController siteNameController = TextEditingController();
+  final TextEditingController siteNameController = TextEditingController(
+    text: 'Site Name',
+  );
   final TextEditingController installerNameController = TextEditingController();
   final TextEditingController companyNameController = TextEditingController();
-  final TextEditingController saqccRegNumberController =
-      TextEditingController();
+  final TextEditingController saqccRegNumberController = TextEditingController(
+    text: '1234567',
+  );
   final TextEditingController buildingNameController = TextEditingController();
   final TextEditingController installerContactNumberController =
       TextEditingController();
@@ -25,7 +28,9 @@ class CreateProjectController extends ChangeNotifier {
       TextEditingController();
   final TextEditingController siteDescriptionController =
       TextEditingController();
-  final TextEditingController panelNameController = TextEditingController();
+  final TextEditingController panelNameController = TextEditingController(
+    text: 'Panel Name',
+  );
 
   // Data models
   SiteFormData siteData = SiteFormData();

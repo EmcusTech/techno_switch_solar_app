@@ -190,6 +190,132 @@ class PeripheralConfigDiffLabels {
     return p;
   }
 
+  /// List index prefix like `[3].foo` → human title for that row (1-based).
+  static String? _listIndexPrefix(String sectionKey, String path) {
+    final m = RegExp(r'^\[(\d+)\]\.').firstMatch(path);
+    if (m == null) return null;
+    final n = int.parse(m.group(1)!) + 1;
+    switch (sectionKey) {
+      case 'access_code':
+        return 'Access code $n';
+      case 'l_bus':
+        return 'L-Bus device $n';
+      default:
+        return 'Item $n';
+    }
+  }
+
+  static String _wordsFromKey(String key) {
+    if (key.isEmpty) return key;
+    if (key.contains('_')) {
+      return key
+          .split('_')
+          .where((s) => s.isNotEmpty)
+          .map(
+            (s) =>
+                '${s[0].toUpperCase()}${s.length > 1 ? s.substring(1).toLowerCase() : ''}',
+          )
+          .join(' ');
+    }
+    final buf = StringBuffer();
+    for (var i = 0; i < key.length; i++) {
+      final c = key.codeUnitAt(i);
+      final ch = key[i];
+      final isUpper = c >= 65 && c <= 90;
+      if (i > 0 && isUpper) {
+        buf.write(' ');
+      }
+      buf.write(i == 0 ? ch.toUpperCase() : ch);
+    }
+    return buf.toString();
+  }
+
+  static const Map<String, String> _generalModuleFieldLabels = {
+    'lvlTimeout': 'Level timeout',
+    'silenceBuzzerLevel': 'Silence buzzer level',
+    'silenceSoundersLevel': 'Silence sounders level',
+    'resetLevel': 'Reset level',
+    'faultLatching': 'Fault latching',
+  };
+
+  static String _humanizeSegment(String sectionKey, String segment) {
+    switch (sectionKey) {
+      case 'relay':
+        final rm = RegExp(r'^r([123])$').firstMatch(segment);
+        if (rm != null) return 'Relay ${rm.group(1)}';
+        break;
+      case 'zone':
+        final zm = RegExp(r'^z([123])$').firstMatch(segment);
+        if (zm != null) return 'Zone ${zm.group(1)}';
+        break;
+      case 'sounder':
+        final sm = RegExp(r'^s([123])$').firstMatch(segment);
+        if (sm != null) return 'Sounder ${sm.group(1)}';
+        final zm = RegExp(r'^z([123])$').firstMatch(segment);
+        if (zm != null) return 'Zone ${zm.group(1)}';
+        final em = RegExp(r'^e([123])$').firstMatch(segment);
+        if (em != null) return 'Ext. out ${em.group(1)}';
+        if (segment == 'general') return 'General';
+        break;
+      default:
+        break;
+    }
+
+    if (sectionKey == 'general_module') {
+      final friendly = _generalModuleFieldLabels[segment];
+      if (friendly != null) return friendly;
+    }
+
+    return _wordsFromKey(segment);
+  }
+
+  /// Turns internal diff paths into short titles, e.g. `r1.group` → `Relay 1 Group`.
+  static String humanizeFieldPath(String sectionKey, String path) {
+    if (path.isEmpty || path == '(section root)') {
+      return 'This section';
+    }
+
+    final onlyBracket = RegExp(r'^\[(\d+)\]$').firstMatch(path);
+    if (onlyBracket != null) {
+      final idx = int.parse(onlyBracket.group(1)!) + 1;
+      return switch (sectionKey) {
+        'access_code' => 'Access code $idx',
+        'l_bus' => 'L-Bus device $idx',
+        _ => 'Row $idx',
+      };
+    }
+
+    final bracketSuffix = RegExp(r'^(.+)\[(\d+)\]$').firstMatch(path);
+    if (bracketSuffix != null) {
+      final base = bracketSuffix.group(1)!;
+      final idx = int.parse(bracketSuffix.group(2)!) + 1;
+      if (base.isEmpty) {
+        return switch (sectionKey) {
+          'access_code' => 'Access code $idx',
+          'l_bus' => 'L-Bus device $idx',
+          _ => 'Row $idx',
+        };
+      }
+      return '${humanizeFieldPath(sectionKey, base)} · Row $idx';
+    }
+
+    final parts = <String>[];
+    var listPrefix = _listIndexPrefix(sectionKey, path);
+    var rest = path;
+    while (listPrefix != null) {
+      parts.add(listPrefix);
+      rest = rest.substring(RegExp(r'^\[(\d+)\]\.').firstMatch(rest)!.end);
+      listPrefix = _listIndexPrefix(sectionKey, rest);
+    }
+
+    final dotted = rest.split('.').where((s) => s.isNotEmpty).toList();
+    for (final seg in dotted) {
+      parts.add(_humanizeSegment(sectionKey, seg));
+    }
+
+    return parts.join(' ');
+  }
+
   static String formatScalar(
     String sectionKey,
     String path,
