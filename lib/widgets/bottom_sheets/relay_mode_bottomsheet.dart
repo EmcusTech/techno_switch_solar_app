@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/utils/relay_mode_util.dart';
+import 'package:techno_switch_solar_app/panel_config/panel_config_cache_sync.dart';
 import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/widgets/dropdown.dart';
 
@@ -14,6 +15,7 @@ class RelayModeBottomSheet extends StatefulWidget {
   final VoidCallback onDownload;
   final VoidCallback onApply;
   final ValueNotifier<int> refreshTrigger;
+  final bool embedInCreateFlow;
 
   const RelayModeBottomSheet({
     super.key,
@@ -21,13 +23,14 @@ class RelayModeBottomSheet extends StatefulWidget {
     required this.onDownload,
     required this.onApply,
     required this.refreshTrigger,
+    this.embedInCreateFlow = false,
   });
 
   @override
-  State<RelayModeBottomSheet> createState() => _RelayModeBottomSheetState();
+  State<RelayModeBottomSheet> createState() => RelayModeBottomSheetState();
 }
 
-class _RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
+class RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
   BleManager? manager;
 
   int _expandedTileCount = 0;
@@ -203,6 +206,81 @@ class _RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
     if (mounted) setState(() {});
   }
 
+  void _pushRelaysToManager() {
+    for (int i = 0; i < 3; i++) {
+      final relay = relays[i];
+
+      final isEnabled = relay.enabled == 'Yes';
+      final isTest = relay.test == 'Yes';
+
+      final config = OutputModeConfig(
+        outputEnable:
+            isEnabled ? OutputEnable.enabled : OutputEnable.disabled,
+        outputMode: isTest ? OutputMode.test : OutputMode.normal,
+        supervisionMode: SupervisionMode.normal,
+      );
+
+      final String hexValue = OutputModeCodec.encodeHex(config);
+
+      final groupIndex = returnIndex(relay.group, groupOptions);
+      final functionIndex = returnIndex(
+        relay.function,
+        functionOptionsMap[relay.group]!,
+      );
+
+      switch (i) {
+        case 0:
+          manager!.relayOneMode.value = hexValue;
+          manager!.relayOneSetupGroup.value = groupIndex;
+          manager!.relayOneSetupFunction.value = functionIndex;
+          manager!.isRelayOneSetupEnabled.value = isEnabled;
+          manager!.isRelayOneSetupTest.value = isTest;
+          manager!.relayOneSetupOutputText.value =
+              relay.outputTextController.text;
+          manager!.relayOneSetupDynamicText.value =
+              relay.dynamicController.text;
+          break;
+
+        case 1:
+          manager!.relayTwoMode.value = hexValue;
+          manager!.relayTwoSetupGroup.value = groupIndex;
+          manager!.relayTwoSetupFunction.value = functionIndex;
+          manager!.isRelayTwoSetupEnabled.value = isEnabled;
+          manager!.isRelayTwoSetupTest.value = isTest;
+          manager!.relayTwoSetupOutputText.value =
+              relay.outputTextController.text;
+          manager!.relayTwoSetupDynamicText.value =
+              relay.dynamicController.text;
+          break;
+
+        case 2:
+          manager!.relayThreeMode.value = hexValue;
+          manager!.relayThreeSetupGroup.value = groupIndex;
+          manager!.relayThreeSetupFunction.value = functionIndex;
+          manager!.isRelayThreeSetupEnabled.value = isEnabled;
+          manager!.isRelayThreeSetupTest.value = isTest;
+          manager!.relayThreeSetupOutputText.value =
+              relay.outputTextController.text;
+          manager!.relayThreeSetupDynamicText.value =
+              relay.dynamicController.text;
+          break;
+      }
+    }
+  }
+
+  Future<bool> commitLocal() async {
+    _updateValidationErrors();
+    if (!_computeIsValid() || manager == null) return false;
+    FocusManager.instance.primaryFocus?.unfocus();
+    _pushRelaysToManager();
+    await PanelConfigCacheSync.saveRelay(
+      manager!,
+      widget.deviceId,
+      widget.refreshTrigger,
+    );
+    return true;
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
@@ -210,6 +288,40 @@ class _RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
         _expandedTileCount > 0 ? screenHeight * 0.8 : screenHeight * 0.5;
     _updateValidationErrors();
     final isValid = _computeIsValid();
+
+    if (widget.embedInCreateFlow) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            'Relay Mode Configuration',
+            style: GoogleFonts.inter(
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFF3D3D3D),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Expanded(
+            child: NotificationListener<UserScrollNotification>(
+              onNotification: (notification) {
+                if (notification.direction != ScrollDirection.idle) {
+                  FocusScope.of(context).unfocus();
+                }
+                return false;
+              },
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.only(top: 8),
+                child: Column(
+                  children: List.generate(3, (i) => _relayTile(i)),
+                ),
+              ),
+            ),
+          ),
+        ],
+      );
+    }
 
     return SafeArea(
       child: AnimatedSize(
@@ -628,70 +740,10 @@ class _RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
         ),
         onPressed:
             isValid && manager != null
-                ? () {
-                  FocusManager.instance.primaryFocus?.unfocus();
-                  for (int i = 0; i < 3; i++) {
-                    final relay = relays[i];
-
-                    bool isEnabled = relay.enabled == 'Yes';
-                    bool isTest = relay.test == 'Yes';
-
-                    final config = OutputModeConfig(
-                      outputEnable:
-                          isEnabled
-                              ? OutputEnable.enabled
-                              : OutputEnable.disabled,
-                      outputMode: isTest ? OutputMode.test : OutputMode.normal,
-                      supervisionMode: SupervisionMode.normal,
-                    );
-
-                    final String hexValue = OutputModeCodec.encodeHex(config);
-
-                    int groupIndex = returnIndex(relay.group, groupOptions);
-                    int functionIndex = returnIndex(
-                      relay.function,
-                      functionOptionsMap[relay.group]!,
-                    );
-
-                    switch (i) {
-                      case 0:
-                        manager!.relayOneMode.value = hexValue;
-                        manager!.relayOneSetupGroup.value = groupIndex;
-                        manager!.relayOneSetupFunction.value = functionIndex;
-                        manager!.isRelayOneSetupEnabled.value = isEnabled;
-                        manager!.isRelayOneSetupTest.value = isTest;
-                        manager!.relayOneSetupOutputText.value =
-                            relay.outputTextController.text;
-                        manager!.relayOneSetupDynamicText.value =
-                            relay.dynamicController.text;
-                        break;
-
-                      case 1:
-                        manager!.relayTwoMode.value = hexValue;
-                        manager!.relayTwoSetupGroup.value = groupIndex;
-                        manager!.relayTwoSetupFunction.value = functionIndex;
-                        manager!.isRelayTwoSetupEnabled.value = isEnabled;
-                        manager!.isRelayTwoSetupTest.value = isTest;
-                        manager!.relayTwoSetupOutputText.value =
-                            relay.outputTextController.text;
-                        manager!.relayTwoSetupDynamicText.value =
-                            relay.dynamicController.text;
-                        break;
-
-                      case 2:
-                        manager!.relayThreeMode.value = hexValue;
-                        manager!.relayThreeSetupGroup.value = groupIndex;
-                        manager!.relayThreeSetupFunction.value = functionIndex;
-                        manager!.isRelayThreeSetupEnabled.value = isEnabled;
-                        manager!.isRelayThreeSetupTest.value = isTest;
-                        manager!.relayThreeSetupOutputText.value =
-                            relay.outputTextController.text;
-                        manager!.relayThreeSetupDynamicText.value =
-                            relay.dynamicController.text;
-                        break;
-                    }
+                ? () async {
+                  if (await commitLocal()) {
+                    widget.onApply();
                   }
-                  widget.onApply();
                 }
                 : null,
         child: Text(

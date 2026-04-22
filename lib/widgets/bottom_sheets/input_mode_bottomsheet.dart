@@ -7,6 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/utils/input_mode_util.dart';
+import 'package:techno_switch_solar_app/panel_config/panel_config_cache_sync.dart';
 import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/widgets/dropdown.dart';
 
@@ -15,6 +16,7 @@ class InputModeBottomSheet extends StatefulWidget {
   final VoidCallback onDownload;
   final VoidCallback onApply;
   final ValueNotifier<int> refreshTrigger;
+  final bool embedInCreateFlow;
 
   const InputModeBottomSheet({
     super.key,
@@ -22,13 +24,14 @@ class InputModeBottomSheet extends StatefulWidget {
     required this.onDownload,
     required this.onApply,
     required this.refreshTrigger,
+    this.embedInCreateFlow = false,
   });
 
   @override
-  State<InputModeBottomSheet> createState() => _InputModeBottomSheetState();
+  State<InputModeBottomSheet> createState() => InputModeBottomSheetState();
 }
 
-class _InputModeBottomSheetState extends State<InputModeBottomSheet> {
+class InputModeBottomSheetState extends State<InputModeBottomSheet> {
   // ───────────── Dropdown Options ─────────────
 
   final List<String> groupOptions = ['None', 'General', 'Ext. Out'];
@@ -151,11 +154,126 @@ class _InputModeBottomSheetState extends State<InputModeBottomSheet> {
     return list.indexOf(value);
   }
 
+  void _pushInputToManager() {
+    final groupIndex = returnIndex(group, groupOptions);
+    final functionIndex = returnIndex(function, functionOptionsMap[group]!);
+    final isEnabled = enabled == 'Yes';
+    final isTest = test == 'Yes';
+    final isInverted = inverted == 'Yes';
+
+    final config = InputModeConfig(
+      inputEnable: InputEnable.values[isEnabled ? 1 : 0],
+      inputMode: InputMode.values[isTest ? 1 : 0],
+      latchMode: LatchMode.nonLatched,
+      invertMode: InvertMode.values[isInverted ? 1 : 0],
+    );
+
+    final String hexValue = InputModeCodec.encodeHex(config);
+
+    manager!.inputMode.value = hexValue;
+    manager!.inputSetupGroup.value = groupIndex;
+    manager!.inputSetupFunction.value = functionIndex;
+    manager!.isInputSetupEnabled.value = isEnabled;
+    manager!.isInputSetupTest.value = isTest;
+    manager!.isInputSetupInverted.value = isInverted;
+    manager!.inputSetupText.value = inputTextCtrl.text;
+  }
+
+  Future<bool> commitLocal() async {
+    _updateValidationErrors();
+    if (!_computeIsValid() || manager == null) return false;
+    FocusManager.instance.primaryFocus?.unfocus();
+    _pushInputToManager();
+    await PanelConfigCacheSync.saveInput(
+      manager!,
+      widget.deviceId,
+      widget.refreshTrigger,
+    );
+    return true;
+  }
+
+  Widget _formColumn() {
+    return Column(
+      children: [
+        if (widget.embedInCreateFlow) _title('Input Mode Configuration'),
+        _readOnlyField('Input', 'PROG IN 1'),
+        _inputTextField(),
+        DropdownWidget(
+          label: 'Group',
+          value: group,
+          items: groupOptions,
+          onChanged: (v) {
+            setState(() {
+              group = v;
+              function = functionOptionsMap[group]!.first;
+            });
+          },
+        ),
+        DropdownWidget(
+          label: 'Function',
+          value: function,
+          items: functionOptionsMap[group]!,
+          onChanged: (v) => setState(() => function = v),
+        ),
+        DropdownWidget(
+          label: 'Enabled',
+          value: enabled,
+          items: yesNoOptions,
+          onChanged: (v) {
+            setState(() {
+              enabled = v;
+              if (enabled == 'No') {
+                test = 'No';
+              }
+            });
+          },
+        ),
+        DropdownWidget(
+          label: 'Test',
+          value: test,
+          items: yesNoOptions,
+          onChanged: (v) {
+            setState(() {
+              test = v;
+              if (test == 'Yes') {
+                enabled = 'Yes';
+              }
+            });
+          },
+        ),
+        DropdownWidget(
+          label: 'Inverted',
+          value: inverted,
+          items: yesNoOptions,
+          onChanged: (v) => setState(() => inverted = v),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final maxHeight = MediaQuery.of(context).size.height * 0.75;
     _updateValidationErrors();
     final isValid = _computeIsValid();
+
+    final scroll = NotificationListener<UserScrollNotification>(
+      onNotification: (notification) {
+        if (notification.direction != ScrollDirection.idle) {
+          FocusScope.of(context).unfocus();
+        }
+        return false;
+      },
+      child: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
+        padding: EdgeInsets.only(top: widget.embedInCreateFlow ? 0 : 16),
+        child: _formColumn(),
+      ),
+    );
+
+    if (widget.embedInCreateFlow) {
+      return scroll;
+    }
 
     return SafeArea(
       child: ConstrainedBox(
@@ -175,89 +293,7 @@ class _InputModeBottomSheetState extends State<InputModeBottomSheet> {
             children: [
               _dragHandle(),
               _title('Input Mode Configuration'),
-
-              Expanded(
-                child: NotificationListener<UserScrollNotification>(
-                  onNotification: (notification) {
-                    if (notification.direction != ScrollDirection.idle) {
-                      FocusScope.of(context).unfocus();
-                    }
-                    return false;
-                  },
-                  child: SingleChildScrollView(
-                    physics: const BouncingScrollPhysics(),
-                    padding: const EdgeInsets.only(top: 16),
-                    child: Column(
-                      children: [
-                        _readOnlyField('Input', 'PROG IN 1'),
-
-                        _inputTextField(),
-
-                        DropdownWidget(
-                          label: 'Group',
-                          value: group,
-                          items: groupOptions,
-                          onChanged: (v) {
-                            setState(() {
-                              group = v;
-                              function =
-                                  functionOptionsMap[group]!
-                                      .first; // reset function
-                            });
-                          },
-                        ),
-
-                        DropdownWidget(
-                          label: 'Function',
-                          value: function,
-                          items: functionOptionsMap[group]!,
-                          onChanged: (v) => setState(() => function = v),
-                        ),
-
-                        DropdownWidget(
-                          label: 'Enabled',
-                          value: enabled,
-                          items: yesNoOptions,
-                          onChanged: (v) {
-                            setState(() {
-                              enabled = v;
-
-                              // RULE: If Enabled = No → Test must be No
-                              if (enabled == 'No') {
-                                test = 'No';
-                              }
-                            });
-                          },
-                        ),
-
-                        DropdownWidget(
-                          label: 'Test',
-                          value: test,
-                          items: yesNoOptions,
-                          onChanged: (v) {
-                            setState(() {
-                              test = v;
-
-                              // RULE: If Test = Yes → Enabled must be Yes
-                              if (test == 'Yes') {
-                                enabled = 'Yes';
-                              }
-                            });
-                          },
-                        ),
-
-                        DropdownWidget(
-                          label: 'Inverted',
-                          value: inverted,
-                          items: yesNoOptions,
-                          onChanged: (v) => setState(() => inverted = v),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-
+              Expanded(child: scroll),
               const SizedBox(height: 12),
               Row(
                 children: [
@@ -571,35 +607,10 @@ class _InputModeBottomSheetState extends State<InputModeBottomSheet> {
         ),
         onPressed:
             isValid && manager != null
-                ? () {
-                  FocusManager.instance.primaryFocus?.unfocus();
-                  int groupIndex = returnIndex(group, groupOptions);
-                  int functionIndex = returnIndex(
-                    function,
-                    functionOptionsMap[group]!,
-                  );
-                  bool isEnabled = enabled == 'Yes';
-                  bool isTest = test == 'Yes';
-                  bool isInverted = inverted == 'Yes';
-
-                  final config = InputModeConfig(
-                    inputEnable: InputEnable.values[isEnabled ? 1 : 0],
-                    inputMode: InputMode.values[isTest ? 1 : 0],
-                    latchMode: LatchMode.nonLatched,
-                    invertMode: InvertMode.values[isInverted ? 1 : 0],
-                  );
-
-                  final String hexValue = InputModeCodec.encodeHex(config);
-
-                  manager!.inputMode.value = hexValue;
-                  manager!.inputSetupGroup.value = groupIndex;
-                  manager!.inputSetupFunction.value = functionIndex;
-                  manager!.isInputSetupEnabled.value = isEnabled;
-                  manager!.isInputSetupTest.value = isTest;
-                  manager!.isInputSetupInverted.value = isInverted;
-                  manager!.inputSetupText.value = inputTextCtrl.text;
-
-                  widget.onApply();
+                ? () async {
+                  if (await commitLocal()) {
+                    widget.onApply();
+                  }
                 }
                 : null,
         child: Text(

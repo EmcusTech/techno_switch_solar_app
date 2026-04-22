@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
+import 'package:techno_switch_solar_app/panel_config/panel_config_cache_sync.dart';
 import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/widgets/dropdown.dart';
 
@@ -12,6 +13,7 @@ class ServiceDueBottomSheet extends StatefulWidget {
   final VoidCallback onDownload;
   final VoidCallback onApply;
   final ValueNotifier<int> refreshTrigger;
+  final bool embedInCreateFlow;
 
   const ServiceDueBottomSheet({
     super.key,
@@ -19,13 +21,14 @@ class ServiceDueBottomSheet extends StatefulWidget {
     required this.onDownload,
     required this.onApply,
     required this.refreshTrigger,
+    this.embedInCreateFlow = false,
   });
 
   @override
-  State<ServiceDueBottomSheet> createState() => _ServiceDueBottomSheetState();
+  State<ServiceDueBottomSheet> createState() => ServiceDueBottomSheetState();
 }
 
-class _ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
+class ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
   BleManager? manager;
 
   final ServiceDueConfig config = ServiceDueConfig();
@@ -128,6 +131,21 @@ class _ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final scroll = SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
+      padding: EdgeInsets.only(
+        left: widget.embedInCreateFlow ? 0 : 0,
+        top: widget.embedInCreateFlow ? 0 : 16,
+        bottom: 16,
+      ),
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+      child: _formColumn(),
+    );
+
+    if (widget.embedInCreateFlow) {
+      return scroll;
+    }
+
     final maxHeight = MediaQuery.of(context).size.height * 0.80;
 
     return SafeArea(
@@ -147,88 +165,9 @@ class _ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
           child: Column(
             children: [
               _dragHandle(),
-              _title("Service Due Configuration"),
-
-              Expanded(
-                child: SingleChildScrollView(
-                  physics: const BouncingScrollPhysics(),
-                  padding: const EdgeInsets.only(top: 16),
-                  keyboardDismissBehavior:
-                      ScrollViewKeyboardDismissBehavior.onDrag,
-                  child: Column(
-                    children: [
-                      _numberField(
-                        label: "Year",
-                        controller: config.yearController,
-                        min: 0,
-                        max: 9999,
-                        errorMessage: "Year must be between 2010 and 9999",
-                        focusNode: yearFocusNode,
-                      ),
-
-                      _numberField(
-                        label: "Month",
-                        controller: config.monthController,
-                        min: 1,
-                        max: 12,
-                        errorMessage: "Month must be between 1 and 12",
-                        focusNode: monthFocusNode,
-                      ),
-
-                      _numberField(
-                        label: "Day",
-                        controller: config.dayController,
-                        min: 1,
-                        max: 31,
-                        errorMessage: "Day must be between 1 and 31",
-                        focusNode: dayFocusNode,
-                      ),
-
-                      _numberField(
-                        label: "Hour",
-                        controller: config.hourController,
-                        min: 0,
-                        max: 23,
-                        errorMessage: "Hour must be between 0 and 23",
-                        focusNode: hourFocusNode,
-                      ),
-
-                      _numberField(
-                        label: "Minute",
-                        controller: config.minuteController,
-                        min: 0,
-                        max: 59,
-                        errorMessage: "Minute must be between 0 and 59",
-                        focusNode: minuteFocusNode,
-                      ),
-
-                      _textField(
-                        label: "Company",
-                        controller: config.companyController,
-                      ),
-
-                      _contactField(
-                        label: "Contact",
-                        controller: config.contactController,
-                      ),
-
-                      DropdownWidget(
-                        label: 'Reminder',
-                        value: config.reminder,
-                        items: reminderOptions,
-                        onChanged: (v) {
-                          setState(() {
-                            config.reminder = v;
-                          });
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
+              _title('Service Due Configuration'),
+              Expanded(child: scroll),
               const SizedBox(height: 12),
-
               Row(
                 children: [
                   Expanded(child: _downloadButton()),
@@ -350,6 +289,104 @@ class _ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
           ),
         ],
       ),
+    );
+  }
+
+  void _pushServiceDueToManager() {
+    final m = manager!;
+    m.serviceDueYear.value = int.parse(config.yearController.text);
+    m.serviceDueMonth.value = int.parse(config.monthController.text);
+    m.serviceDueDay.value = int.parse(config.dayController.text);
+    m.serviceDueHour.value = int.parse(config.hourController.text);
+    m.serviceDueMinute.value = int.parse(config.minuteController.text);
+    m.serviceDueCompany.value = config.companyController.text;
+    m.serviceDueContact.value = config.contactController.text;
+    m.serviceDueReminder.value = config.reminder == 'On' ? 1 : 0;
+  }
+
+  Future<bool> commitLocal() async {
+    if (!_isValidDateTime() || manager == null) return false;
+    FocusManager.instance.primaryFocus?.unfocus();
+    _pushServiceDueToManager();
+    await PanelConfigCacheSync.saveServiceDue(
+      manager!,
+      widget.deviceId,
+      widget.refreshTrigger,
+    );
+    return true;
+  }
+
+  Widget _formColumn() {
+    return Column(
+      children: [
+        if (widget.embedInCreateFlow)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'Service Due Configuration',
+                style: GoogleFonts.inter(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF3D3D3D),
+                ),
+              ),
+            ),
+          ),
+        _numberField(
+          label: 'Year',
+          controller: config.yearController,
+          min: 0,
+          max: 9999,
+          errorMessage: 'Year must be between 2010 and 9999',
+          focusNode: yearFocusNode,
+        ),
+        _numberField(
+          label: 'Month',
+          controller: config.monthController,
+          min: 1,
+          max: 12,
+          errorMessage: 'Month must be between 1 and 12',
+          focusNode: monthFocusNode,
+        ),
+        _numberField(
+          label: 'Day',
+          controller: config.dayController,
+          min: 1,
+          max: 31,
+          errorMessage: 'Day must be between 1 and 31',
+          focusNode: dayFocusNode,
+        ),
+        _numberField(
+          label: 'Hour',
+          controller: config.hourController,
+          min: 0,
+          max: 23,
+          errorMessage: 'Hour must be between 0 and 23',
+          focusNode: hourFocusNode,
+        ),
+        _numberField(
+          label: 'Minute',
+          controller: config.minuteController,
+          min: 0,
+          max: 59,
+          errorMessage: 'Minute must be between 0 and 59',
+          focusNode: minuteFocusNode,
+        ),
+        _textField(label: 'Company', controller: config.companyController),
+        _contactField(label: 'Contact', controller: config.contactController),
+        DropdownWidget(
+          label: 'Reminder',
+          value: config.reminder,
+          items: reminderOptions,
+          onChanged: (v) {
+            setState(() {
+              config.reminder = v;
+            });
+          },
+        ),
+      ],
     );
   }
 
@@ -511,33 +548,10 @@ class _ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
         onPressed:
             (!_isValidDateTime())
                 ? null
-                : () {
-                  if (manager == null) return;
-                  FocusManager.instance.primaryFocus?.unfocus();
-
-                  manager!.serviceDueYear.value = int.parse(
-                    config.yearController.text,
-                  );
-                  manager!.serviceDueMonth.value = int.parse(
-                    config.monthController.text,
-                  );
-                  manager!.serviceDueDay.value = int.parse(
-                    config.dayController.text,
-                  );
-                  manager!.serviceDueHour.value = int.parse(
-                    config.hourController.text,
-                  );
-                  manager!.serviceDueMinute.value = int.parse(
-                    config.minuteController.text,
-                  );
-                  manager!.serviceDueCompany.value =
-                      config.companyController.text;
-                  manager!.serviceDueContact.value =
-                      config.contactController.text;
-                  manager!.serviceDueReminder.value =
-                      config.reminder == 'On' ? 1 : 0;
-
-                  widget.onApply();
+                : () async {
+                  if (await commitLocal()) {
+                    widget.onApply();
+                  }
                 },
         child: Text(
           'Apply',

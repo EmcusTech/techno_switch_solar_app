@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/models/l_bus_setup_data_model.dart';
+import 'package:techno_switch_solar_app/panel_config/panel_config_cache_sync.dart';
 import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/widgets/dropdown.dart';
 
@@ -13,6 +14,7 @@ class LBusBottomSheet extends StatefulWidget {
   final VoidCallback onDownload;
   final VoidCallback onApply;
   final ValueNotifier<int> refreshTrigger;
+  final bool embedInCreateFlow;
 
   const LBusBottomSheet({
     super.key,
@@ -20,13 +22,14 @@ class LBusBottomSheet extends StatefulWidget {
     required this.onDownload,
     required this.onApply,
     required this.refreshTrigger,
+    this.embedInCreateFlow = false,
   });
 
   @override
-  State<LBusBottomSheet> createState() => _LBusBottomSheetState();
+  State<LBusBottomSheet> createState() => LBusBottomSheetState();
 }
 
-class _LBusBottomSheetState extends State<LBusBottomSheet> {
+class LBusBottomSheetState extends State<LBusBottomSheet> {
   BleManager? manager;
   int selectedBus = 1;
 
@@ -160,9 +163,93 @@ class _LBusBottomSheetState extends State<LBusBottomSheet> {
     manager!.lBusSetupDataList.value = list;
   }
 
+  Future<bool> commitLocal() async {
+    if (manager == null || !_isValidLBus()) return false;
+    FocusManager.instance.primaryFocus?.unfocus();
+    _saveCurrentBusToManager();
+    await PanelConfigCacheSync.saveLBus(
+      manager!,
+      widget.deviceId,
+      widget.refreshTrigger,
+    );
+    return true;
+  }
+
+  Widget _scrollBody() {
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (widget.embedInCreateFlow) _title('L-Bus Configuration'),
+          _deviceSelector(),
+          const SizedBox(height: 16),
+          _sectionContainer(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              child: Column(
+                children: [
+                  _disabledField('L-Bus No', selectedBus.toString()),
+                  DropdownWidget(
+                    label: 'Enabled',
+                    value: enabled,
+                    items: yesNoOptions,
+                    onChanged: (v) => setState(() => enabled = v),
+                  ),
+                  DropdownWidget(
+                    label: 'ID LED',
+                    value: idLed,
+                    items: yesNoOptions,
+                    onChanged: (v) => setState(() => idLed = v),
+                  ),
+                  DropdownWidget(
+                    label: 'Product',
+                    value: product,
+                    items: productOptions,
+                    onChanged: (v) => setState(() => product = v),
+                  ),
+                  _textField(
+                    label: 'L-Bus Device Text',
+                    controller: deviceTextController,
+                    maxLength: 21,
+                    onChanged: () => setState(() {}),
+                  ),
+                  _numericField(label: 'ID', controller: idController),
+                  _numericField(
+                    label: 'Revision',
+                    controller: revisionController,
+                  ),
+                  _textField(
+                    label: 'Product Rev.',
+                    controller: productRevController,
+                  ),
+                  _readOnlyField('Hardware', hardwareController),
+                  _readOnlyField('Firmware', firmwareController),
+                  _textField(label: 'Date', controller: dateController),
+                  _numericField(
+                    label: 'Protocol',
+                    controller: protocolController,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
+
+    if (widget.embedInCreateFlow) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [Expanded(child: _scrollBody())],
+      );
+    }
 
     return SafeArea(
       child: ConstrainedBox(
@@ -182,81 +269,7 @@ class _LBusBottomSheetState extends State<LBusBottomSheet> {
             children: [
               _dragHandle(),
               _title('L-Bus Configuration'),
-              Expanded(
-                child: SingleChildScrollView(
-                  physics: const BouncingScrollPhysics(),
-                  keyboardDismissBehavior:
-                      ScrollViewKeyboardDismissBehavior.onDrag,
-                  child: Column(
-                    children: [
-                      _deviceSelector(),
-                      const SizedBox(height: 16),
-                      _sectionContainer(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 16,
-                          ),
-                          child: Column(
-                            children: [
-                              _disabledField(
-                                'L-Bus No',
-                                selectedBus.toString(),
-                              ),
-                              DropdownWidget(
-                                label: 'Enabled',
-                                value: enabled,
-                                items: yesNoOptions,
-                                onChanged: (v) => setState(() => enabled = v),
-                              ),
-                              DropdownWidget(
-                                label: 'ID LED',
-                                value: idLed,
-                                items: yesNoOptions,
-                                onChanged: (v) => setState(() => idLed = v),
-                              ),
-                              DropdownWidget(
-                                label: 'Product',
-                                value: product,
-                                items: productOptions,
-                                onChanged: (v) => setState(() => product = v),
-                              ),
-                              _textField(
-                                label: 'L-Bus Device Text',
-                                controller: deviceTextController,
-                                maxLength: 21,
-                                onChanged: () => setState(() {}),
-                              ),
-                              _numericField(
-                                label: 'ID',
-                                controller: idController,
-                              ),
-                              _numericField(
-                                label: 'Revision',
-                                controller: revisionController,
-                              ),
-                              _textField(
-                                label: 'Product Rev.',
-                                controller: productRevController,
-                              ),
-                              _readOnlyField('Hardware', hardwareController),
-                              _readOnlyField('Firmware', firmwareController),
-                              _textField(
-                                label: 'Date',
-                                controller: dateController,
-                              ),
-                              _numericField(
-                                label: 'Protocol',
-                                controller: protocolController,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+              Expanded(child: _scrollBody()),
               const SizedBox(height: 12),
               Row(
                 children: [
@@ -501,10 +514,10 @@ class _LBusBottomSheetState extends State<LBusBottomSheet> {
         ),
         onPressed:
             _isValidLBus()
-                ? () {
-                  FocusManager.instance.primaryFocus?.unfocus();
-                  _saveCurrentBusToManager();
-                  widget.onApply();
+                ? () async {
+                  if (await commitLocal()) {
+                    widget.onApply();
+                  }
                 }
                 : null,
         child: Text(

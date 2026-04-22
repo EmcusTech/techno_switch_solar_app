@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
 import 'package:techno_switch_solar_app/models/create_project/site_form_data.dart';
 import 'package:techno_switch_solar_app/models/create_project/panel_form_data.dart';
 import 'package:techno_switch_solar_app/models/create_project/general_settings_data.dart';
@@ -51,8 +52,16 @@ class CreateProjectController extends ChangeNotifier {
   /// [panelData.selectedPanelType] (verified via BLE `receivedPanelName`).
   bool createProjectPanelBleVerified = false;
 
+  /// Set after a successful connect step; used for embedded peripheral sheets.
+  DiscoveredDevice? connectedDevice;
+
   void setCreateProjectPanelBleVerified(bool value) {
     createProjectPanelBleVerified = value;
+    notifyListeners();
+  }
+
+  void setConnectedDevice(DiscoveredDevice? device) {
+    connectedDevice = device;
     notifyListeners();
   }
 

@@ -1,4 +1,3 @@
-import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -7,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/utils/ext_zone_mode_util.dart';
+import 'package:techno_switch_solar_app/panel_config/panel_config_cache_sync.dart';
 import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/widgets/dropdown.dart';
 
@@ -15,6 +15,7 @@ class ExtOutBottomSheet extends StatefulWidget {
   final VoidCallback onDownload;
   final VoidCallback onApply;
   final ValueNotifier<int> refreshTrigger;
+  final bool embedInCreateFlow;
 
   const ExtOutBottomSheet({
     super.key,
@@ -22,6 +23,7 @@ class ExtOutBottomSheet extends StatefulWidget {
     required this.onDownload,
     required this.onApply,
     required this.refreshTrigger,
+    this.embedInCreateFlow = false,
   });
 
   @override
@@ -308,11 +310,166 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
     );
   }
 
+  Widget _headerRow() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        _title('Ext Out Config'),
+        Padding(
+          padding: const EdgeInsets.only(bottom: 12.0),
+          child: _modeBadge(),
+        ),
+      ],
+    );
+  }
+
+  Widget _formFields() {
+    return Column(
+      children: [
+        DropdownWidget(
+          label: 'Enabled',
+          value: enabled,
+          items: enabledOptions,
+          onChanged: (v) => setState(() => enabled = v),
+        ),
+        DropdownWidget(
+          label: 'Actuator Type',
+          value: actuatorType,
+          items: actuatorTypeOptions,
+          onChanged: (v) => setState(() => actuatorType = v),
+        ),
+        DropdownWidget(
+          label: 'Function',
+          value: function,
+          items: functionOptions,
+          onChanged: (v) => setState(() => function = v),
+        ),
+        _numberFieldWithValidation(
+          label: 'Countdown Auto (s)',
+          controller: autoCtrl,
+          errorMsg: _autoError,
+          focusNode: autoFocusNode,
+        ),
+        _numberFieldWithValidation(
+          label: 'Countdown Man (s)',
+          controller: manCtrl,
+          errorMsg: _manError,
+          focusNode: manFocusNode,
+        ),
+        _numberFieldWithValidation(
+          label: 'Release Time (s)',
+          controller: releaseCtrl,
+          errorMsg: _releaseError,
+          focusNode: releaseFocusNode,
+        ),
+        _numberFieldWithValidation(
+          label: 'Reset Delay (s)',
+          controller: resetDelayCtrl,
+          errorMsg: _resetDelayError,
+          focusNode: resetDelayFocusNode,
+        ),
+        DropdownWidget(
+          label: 'Reset in Count',
+          value: resetInCount,
+          items: resetInCountOptions,
+          onChanged: (v) => setState(() => resetInCount = v),
+        ),
+        DropdownWidget(
+          label: 'Hold / Count',
+          value: holdCount,
+          items: holdCountOptions,
+          onChanged: (v) => setState(() => holdCount = v),
+        ),
+        DropdownWidget(
+          label: 'Action',
+          value: action,
+          items: actionOptions,
+          onChanged: (v) => setState(() => action = v),
+        ),
+      ],
+    );
+  }
+
+  void _pushExtOutToManager() {
+    final m = manager!;
+    int zoneEnable = returnIndex(enabled, enabledOptions);
+    int holdRestart = returnIndex(holdCount, holdCountOptions);
+    int resetAllowedInt = returnIndex(resetInCount, resetInCountOptions);
+    int functionInt = returnIndex(function, functionOptions);
+    int actuaturTypeInt = returnIndex(actuatorType, actuatorTypeOptions);
+    bool resetAllowed = resetAllowedInt == 0;
+
+    final config = ExtZoneModeConfig(
+      extZoneEnable: ExtZoneEnable.values[zoneEnable],
+      extZoneMode: ExtZoneMode.normal,
+      holdMode: HoldMode.values[holdRestart],
+      resetAllowed: resetAllowed,
+      flowDetectionUsed: false,
+    );
+
+    final String hexValue = ExtZoneModeCodec.encodeHex(config);
+
+    m.isExtZoneEnabled.value = zoneEnable;
+    m.extZoneMode.value = hexValue;
+    m.extZoneCountdownAuto.value = int.parse(
+      autoCtrl.text.isEmpty ? '0' : autoCtrl.text,
+    );
+    m.extZoneCountdownMan.value = int.parse(manCtrl.text);
+    m.extZoneReleaseTime.value = int.parse(releaseCtrl.text);
+    m.extZoneResetDelay.value = int.parse(resetDelayCtrl.text);
+    m.extZoneAction.value = returnIndex(action, actionOptions);
+    m.extZoneFunction.value = functionInt;
+    m.extZoneActuatorType.value = actuaturTypeInt;
+  }
+
+  Future<bool> commitLocal() async {
+    if (manager == null) return false;
+    final formValid = _computeIsValid();
+    if (!formValid) return false;
+    final canApply = manager!.bleProcess.isExtOutApplyButtonActive.value;
+    if (!widget.embedInCreateFlow && !canApply) return false;
+
+    FocusManager.instance.primaryFocus?.unfocus();
+    _pushExtOutToManager();
+    await PanelConfigCacheSync.saveExtOut(
+      manager!,
+      widget.deviceId,
+      widget.refreshTrigger,
+    );
+    return true;
+  }
+
   @override
   Widget build(BuildContext context) {
     final maxHeight = MediaQuery.of(context).size.height * 0.75;
-    // _updateValidationErrors();
     final formValid = _computeIsValid();
+
+    final scroll = NotificationListener<UserScrollNotification>(
+      onNotification: (notification) {
+        if (notification.direction != ScrollDirection.idle) {
+          FocusScope.of(context).unfocus();
+        }
+        return false;
+      },
+      child: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.only(top: 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (widget.embedInCreateFlow) _headerRow(),
+            _formFields(),
+          ],
+        ),
+      ),
+    );
+
+    if (widget.embedInCreateFlow) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [Expanded(child: scroll)],
+      );
+    }
 
     return SafeArea(
       child: ConstrainedBox(
@@ -330,112 +487,9 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
           ),
           child: Column(
             children: [
-              // ───────────── Fixed Header ─────────────
               _dragHandle(),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  _title('Ext Out Config'),
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 12.0),
-                    child: _modeBadge(),
-                  ),
-                ],
-              ),
-
-              // ───────────── Scrollable Content ─────────────
-              Expanded(
-                child: NotificationListener<UserScrollNotification>(
-                  onNotification: (notification) {
-                    if (notification.direction != ScrollDirection.idle) {
-                      FocusScope.of(context).unfocus();
-                    }
-                    return false;
-                  },
-                  child: SingleChildScrollView(
-                    physics: const BouncingScrollPhysics(),
-                    padding: const EdgeInsets.only(top: 16),
-                    child: Column(
-                      children: [
-                        DropdownWidget(
-                          label: 'Enabled',
-                          value: enabled,
-                          items: enabledOptions,
-                          onChanged: (v) => setState(() => enabled = v),
-                        ),
-
-                        // _selectorField(
-                        //   label: 'Enabled',
-                        //   value: enabled,
-                        //   options: ['Yes', 'No'],
-                        //   onSelected: (v) => setState(() => enabled = v),
-                        // ),
-                        DropdownWidget(
-                          label: 'Actuator Type',
-                          value: actuatorType,
-                          items: actuatorTypeOptions,
-                          onChanged: (v) => setState(() => actuatorType = v),
-                        ),
-
-                        DropdownWidget(
-                          label: 'Function',
-                          value: function,
-                          items: functionOptions,
-                          onChanged: (v) => setState(() => function = v),
-                        ),
-
-                        _numberFieldWithValidation(
-                          label: 'Countdown Auto (s)',
-                          controller: autoCtrl,
-                          errorMsg: _autoError,
-                          focusNode: autoFocusNode,
-                        ),
-
-                        _numberFieldWithValidation(
-                          label: 'Countdown Man (s)',
-                          controller: manCtrl,
-                          errorMsg: _manError,
-                          focusNode: manFocusNode,
-                        ),
-                        _numberFieldWithValidation(
-                          label: 'Release Time (s)',
-                          controller: releaseCtrl,
-                          errorMsg: _releaseError,
-                          focusNode: releaseFocusNode,
-                        ),
-                        _numberFieldWithValidation(
-                          label: 'Reset Delay (s)',
-                          controller: resetDelayCtrl,
-                          errorMsg: _resetDelayError,
-                          focusNode: resetDelayFocusNode,
-                        ),
-                        DropdownWidget(
-                          label: 'Reset in Count',
-                          value: resetInCount,
-                          items: resetInCountOptions,
-                          onChanged: (v) => setState(() => resetInCount = v),
-                        ),
-
-                        DropdownWidget(
-                          label: 'Hold / Count',
-                          value: holdCount,
-                          items: holdCountOptions,
-                          onChanged: (v) => setState(() => holdCount = v),
-                        ),
-
-                        DropdownWidget(
-                          label: 'Action',
-                          value: action,
-                          items: actionOptions,
-                          onChanged: (v) => setState(() => action = v),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-
-              // ───────────── Fixed Footer ─────────────
+              _headerRow(),
+              Expanded(child: scroll),
               const SizedBox(height: 12),
               Row(
                 children: [
@@ -898,52 +952,10 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
         ),
         onPressed:
             (canApply && formValid && manager != null)
-                ? () {
-                  FocusManager.instance.primaryFocus?.unfocus();
-                  int zoneEnable = returnIndex(enabled, enabledOptions);
-                  int holdRestart = returnIndex(holdCount, holdCountOptions);
-                  int resetAllowedInt = returnIndex(
-                    resetInCount,
-                    resetInCountOptions,
-                  );
-                  int functionInt = returnIndex(function, functionOptions);
-                  int actuaturTypeInt = returnIndex(
-                    actuatorType,
-                    actuatorTypeOptions,
-                  );
-                  bool resetAllowed = resetAllowedInt == 0;
-
-                  final config = ExtZoneModeConfig(
-                    extZoneEnable: ExtZoneEnable.values[zoneEnable],
-                    extZoneMode: ExtZoneMode.normal,
-                    holdMode: HoldMode.values[holdRestart],
-                    resetAllowed: resetAllowed,
-                    flowDetectionUsed: false,
-                  );
-
-                  final String hexValue = ExtZoneModeCodec.encodeHex(config);
-
-                  manager!.isExtZoneEnabled.value = zoneEnable;
-
-                  manager!.extZoneMode.value = hexValue;
-                  manager!.extZoneCountdownAuto.value = int.parse(
-                    autoCtrl.text.isEmpty ? '0' : autoCtrl.text,
-                  );
-                  manager!.extZoneCountdownMan.value = int.parse(manCtrl.text);
-                  manager!.extZoneReleaseTime.value = int.parse(
-                    releaseCtrl.text,
-                  );
-                  manager!.extZoneResetDelay.value = int.parse(
-                    resetDelayCtrl.text,
-                  );
-                  manager!.extZoneAction.value = returnIndex(
-                    action,
-                    actionOptions,
-                  );
-                  manager!.extZoneFunction.value = functionInt;
-                  manager!.extZoneActuatorType.value = actuaturTypeInt;
-
-                  widget.onApply();
+                ? () async {
+                  if (await commitLocal()) {
+                    widget.onApply();
+                  }
                 }
                 : null,
         child: Text(

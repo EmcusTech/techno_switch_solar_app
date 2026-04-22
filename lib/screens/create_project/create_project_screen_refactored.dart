@@ -5,25 +5,27 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/controllers/create_project_controller.dart';
-import 'package:techno_switch_solar_app/screens/create_project/pages/site_creation_page.dart';
+import 'package:techno_switch_solar_app/panel_config/panel_config_cache_sync.dart';
+import 'package:techno_switch_solar_app/panel_config/panel_configuration_coordinator.dart';
 import 'package:techno_switch_solar_app/screens/create_project/pages/panel_selection_page.dart';
-import 'package:techno_switch_solar_app/screens/create_project/pages/general_settings_page.dart';
-import 'package:techno_switch_solar_app/screens/create_project/pages/zone_settings_page.dart';
-import 'package:techno_switch_solar_app/screens/create_project/pages/sounder_page.dart';
-import 'package:techno_switch_solar_app/screens/create_project/pages/sounder_settings_page.dart';
-import 'package:techno_switch_solar_app/screens/create_project/pages/input_page.dart';
-import 'package:techno_switch_solar_app/screens/create_project/pages/relay_page.dart';
-import 'package:techno_switch_solar_app/screens/create_project/pages/devices_page.dart';
-import 'package:techno_switch_solar_app/screens/create_project/pages/project_summary_page.dart';
-import 'package:techno_switch_solar_app/screens/home_screen.dart';
+import 'package:techno_switch_solar_app/screens/create_project/pages/site_creation_page.dart';
+import 'package:techno_switch_solar_app/screens/project_dashboard.dart';
 import 'package:techno_switch_solar_app/screens/scanning_screen.dart';
+import 'package:techno_switch_solar_app/services/panel_service.dart';
 import 'package:techno_switch_solar_app/services/site_service.dart';
+import 'package:techno_switch_solar_app/widgets/bottom_sheets/general_mode_bottomsheet.dart';
+import 'package:techno_switch_solar_app/widgets/bottom_sheets/input_mode_bottomsheet.dart';
+import 'package:techno_switch_solar_app/widgets/bottom_sheets/l_bus_mode_bottomsheet.dart';
+import 'package:techno_switch_solar_app/widgets/bottom_sheets/panel_info_mode_bottomsheet.dart';
+import 'package:techno_switch_solar_app/widgets/bottom_sheets/relay_mode_bottomsheet.dart';
+import 'package:techno_switch_solar_app/widgets/bottom_sheets/service_due_mode_bottomsheet.dart';
+import 'package:techno_switch_solar_app/widgets/bottom_sheets/setting_bottom_sheets/ext_out_bottomsheet.dart';
+import 'package:techno_switch_solar_app/widgets/bottom_sheets/sounder_mode_bottomsheet.dart';
+import 'package:techno_switch_solar_app/widgets/bottom_sheets/zone_mode_bottomsheet.dart';
+import 'package:techno_switch_solar_app/widgets/app_styled_dialogs.dart';
 
-/// Refactored CreateSiteScreen with clean architecture
-/// - Uses a dedicated controller for state management
-/// - Reduced complexity and code duplication
-/// - Better separation of concerns
-/// - Maintains same UI and functionality
+/// Create-site wizard: site → panel → BLE connect → nine dashboard-equivalent
+/// configuration steps → create site, assign panel, bulk apply, open dashboard.
 class CreateSiteScreenRefactored extends StatefulWidget {
   const CreateSiteScreenRefactored({super.key});
 
@@ -37,11 +39,53 @@ class _CreateSiteScreenRefactoredState
   late CreateProjectController _controller;
   late PageController _pageController;
   final SiteService _siteService = SiteService();
+  final PanelService _panelService = PanelService();
   final BleLogController _bleController = Get.find<BleLogController>();
   final BleManager _bleManager = Get.find<BleManager>();
 
   int _currentStep = 1;
-  static const int _totalSteps = 10;
+  static const int _totalSteps = 11;
+
+  final ValueNotifier<int> _relayRefresh = ValueNotifier(0);
+  final ValueNotifier<int> _inputRefresh = ValueNotifier(0);
+  final ValueNotifier<int> _zoneRefresh = ValueNotifier(0);
+  final ValueNotifier<int> _extOutRefresh = ValueNotifier(0);
+  final ValueNotifier<int> _sounderRefresh = ValueNotifier(0);
+  final ValueNotifier<int> _serviceDueRefresh = ValueNotifier(0);
+  final ValueNotifier<int> _accessCodeRefresh = ValueNotifier(0);
+  final ValueNotifier<int> _panelInfoRefresh = ValueNotifier(0);
+  final ValueNotifier<int> _generalModuleRefresh = ValueNotifier(0);
+  final ValueNotifier<bool> _navigatingToDeviceConnecting = ValueNotifier(
+    false,
+  );
+
+  late final PanelConfigRefreshNotifiers _panelRefreshNotifiers;
+
+  final GlobalKey<GeneralModuleBottomSheetState> _generalSheetKey =
+      GlobalKey<GeneralModuleBottomSheetState>();
+  final GlobalKey<ServiceDueBottomSheetState> _serviceDueSheetKey =
+      GlobalKey<ServiceDueBottomSheetState>();
+  final GlobalKey<ZoneBottomSheetState> _zoneSheetKey =
+      GlobalKey<ZoneBottomSheetState>();
+  final GlobalKey<SounderModeBottomSheetState> _sounderSheetKey =
+      GlobalKey<SounderModeBottomSheetState>();
+  final GlobalKey<InputModeBottomSheetState> _inputSheetKey =
+      GlobalKey<InputModeBottomSheetState>();
+  final GlobalKey<RelayModeBottomSheetState> _relaySheetKey =
+      GlobalKey<RelayModeBottomSheetState>();
+  final GlobalKey<ExtOutBottomSheetState> _extOutSheetKey =
+      GlobalKey<ExtOutBottomSheetState>();
+  final GlobalKey<LBusBottomSheetState> _lBusSheetKey =
+      GlobalKey<LBusBottomSheetState>();
+  final GlobalKey<PanelInfoBottomSheetState> _panelInfoSheetKey =
+      GlobalKey<PanelInfoBottomSheetState>();
+
+  bool _offeredBulkDownload = false;
+
+  /// BLE device id for peripheral caches; set only after a successful connect.
+  String _wizardDeviceId = '';
+
+  void _noop() {}
 
   @override
   void initState() {
@@ -49,6 +93,17 @@ class _CreateSiteScreenRefactoredState
     _controller = CreateProjectController();
     _pageController = PageController();
     _controller.addListener(_onControllerUpdate);
+    _panelRefreshNotifiers = PanelConfigRefreshNotifiers(
+      relay: _relayRefresh,
+      input: _inputRefresh,
+      zone: _zoneRefresh,
+      extOut: _extOutRefresh,
+      sounder: _sounderRefresh,
+      serviceDue: _serviceDueRefresh,
+      accessCode: _accessCodeRefresh,
+      panelInfo: _panelInfoRefresh,
+      generalModule: _generalModuleRefresh,
+    );
   }
 
   void _onControllerUpdate() {
@@ -62,52 +117,17 @@ class _CreateSiteScreenRefactoredState
     _controller.removeListener(_onControllerUpdate);
     _controller.dispose();
     _pageController.dispose();
+    _relayRefresh.dispose();
+    _inputRefresh.dispose();
+    _zoneRefresh.dispose();
+    _extOutRefresh.dispose();
+    _sounderRefresh.dispose();
+    _serviceDueRefresh.dispose();
+    _accessCodeRefresh.dispose();
+    _panelInfoRefresh.dispose();
+    _generalModuleRefresh.dispose();
+    _navigatingToDeviceConnecting.dispose();
     super.dispose();
-  }
-
-  Future<void> _createSite() async {
-    try {
-      final errors = _siteService.validateSiteData(
-        siteName: _controller.siteNameController.text,
-        installerName: _controller.installerNameController.text,
-        companyName: _controller.companyNameController.text,
-        saqccRegNumber: _controller.saqccRegNumberController.text,
-        buildingName: _controller.buildingNameController.text,
-        installerContactNumber:
-            _controller.installerContactNumberController.text,
-        installerEmail: _controller.installerEmailController.text,
-        siteDescription: _controller.siteDescriptionController.text,
-      );
-
-      if (errors.isNotEmpty) {
-        print('errors: $errors');
-        _showSnackBar('Please fix the errors in the form', isError: true);
-        return;
-      }
-
-      final site = await _siteService.createSite(
-        siteName: _controller.siteNameController.text,
-        installerName: _controller.installerNameController.text,
-        companyName: _controller.companyNameController.text,
-        saqccRegNumber: _controller.saqccRegNumberController.text,
-        buildingName: _controller.buildingNameController.text,
-        installerContactNumber:
-            _controller.installerContactNumberController.text,
-        installerEmail: _controller.installerEmailController.text,
-        siteDescription: _controller.siteDescriptionController.text,
-      );
-
-      _showSnackBar('Site created successfully!', isError: false);
-
-      if (mounted) {
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => HomeScreen()),
-          (route) => false,
-        );
-      }
-    } catch (error) {
-      _showSnackBar('Error creating site: $error', isError: true);
-    }
   }
 
   /// Same flow as [ProjectDashboardScreen] / `_ProjectDashboardContentState`.
@@ -237,6 +257,8 @@ class _CreateSiteScreenRefactoredState
         await _bleManager.disconnectConnectedDevice();
       }
       _controller.setCreateProjectPanelBleVerified(false);
+      _controller.setConnectedDevice(null);
+      _wizardDeviceId = '';
       return true;
     }
     return false;
@@ -259,16 +281,219 @@ class _CreateSiteScreenRefactoredState
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: isError ? Color(0xFFEC1D24) : Color(0xFF00A706),
-        duration: Duration(seconds: 2),
+        backgroundColor:
+            isError ? const Color(0xFFEC1D24) : const Color(0xFF00A706),
+        duration: const Duration(seconds: 2),
       ),
     );
   }
 
-  Future<void> _goToNextStep() async {
-    if (_currentStep >= _totalSteps) return;
+  /// Returns `false` if the user chose to abort the wizard (e.g. skip → Home).
+  Future<bool> _runPostConnectAssignedPanelFlow() async {
+    final device = _controller.connectedDevice;
+    if (device == null) return false;
 
-    if (!_controller.validateStep(_currentStep)) {
+    final bleName = device.name.trim();
+    if (bleName.isEmpty) return true;
+
+    var panel =
+        await _panelService.getPanelByPanelId(bleName) ??
+        await _panelService.getPanelByBleName(bleName);
+    if (panel?.siteId == null) return true;
+
+    if (!mounted) return false;
+    final choice = await showAppStyledTwoActionDialog<String>(
+      context: context,
+      title: 'Panel already on a site',
+      message:
+          'This panel is assigned to another site. Move it to the new site you are creating, or skip and return home.',
+      leadingActionLabel: 'Skip',
+      trailingActionLabel: 'Replace',
+      leadingValue: 'skip',
+      trailingValue: 'move',
+    );
+
+    if (choice == 'skip') {
+      if (_bleManager.isConnected) {
+        await _bleManager.disconnectConnectedDevice();
+      }
+      _controller.setCreateProjectPanelBleVerified(false);
+      _controller.setConnectedDevice(null);
+      _wizardDeviceId = '';
+      if (mounted) {
+        Navigator.of(context).popUntil((route) => route.isFirst);
+      }
+      return false;
+    }
+
+    if (choice == 'move') {
+      await _panelService.unassignPanelFromSite(panel!.panelId);
+    }
+    return true;
+  }
+
+  Future<void> _offerBulkDownloadIfNeeded() async {
+    if (_offeredBulkDownload) return;
+    _offeredBulkDownload = true;
+    if (!mounted) return;
+
+    final download = await showAppStyledTwoActionDialog<bool>(
+      context: context,
+      title: 'Download panel configuration?',
+      message:
+          'Download the full configuration from the panel now? This matches the dashboard “download all” flow and fills local caches before you edit.',
+      leadingActionLabel: 'No',
+      trailingActionLabel: 'Yes',
+      leadingValue: false,
+      trailingValue: true,
+    );
+
+    if (download != true || !mounted) return;
+
+    final device = _controller.connectedDevice;
+    if (device == null) return;
+
+    PanelConfigurationCoordinator(
+      bleManager: _bleManager,
+      bleController: _bleController,
+      device: device,
+      refreshNotifiers: _panelRefreshNotifiers,
+      navigatingToDeviceConnecting: _navigatingToDeviceConnecting,
+      useDialogOnlyBulkProgress: true,
+    ).startBulkDownload(context: context, isMounted: () => mounted);
+  }
+
+  Future<bool> _commitConfigStepForCurrentPage() async {
+    switch (_currentStep) {
+      case 3:
+        return await _generalSheetKey.currentState?.commitLocal() ?? false;
+      case 4:
+        return await _serviceDueSheetKey.currentState?.commitLocal() ?? false;
+      case 5:
+        return await _zoneSheetKey.currentState?.commitLocal() ?? false;
+      case 6:
+        return await _sounderSheetKey.currentState?.commitLocal() ?? false;
+      case 7:
+        return await _inputSheetKey.currentState?.commitLocal() ?? false;
+      case 8:
+        return await _relaySheetKey.currentState?.commitLocal() ?? false;
+      case 9:
+        return await _extOutSheetKey.currentState?.commitLocal() ?? false;
+      case 10:
+        return await _lBusSheetKey.currentState?.commitLocal() ?? false;
+      default:
+        return true;
+    }
+  }
+
+  Future<void> _finishCreateSiteBulkApplyAndOpenDashboard() async {
+    final device = _controller.connectedDevice ?? _bleManager.selectedDevice;
+    if (device == null) {
+      _showSnackBar('No connected panel', isError: true);
+      return;
+    }
+
+    final panelState = _panelInfoSheetKey.currentState;
+    if (panelState == null || !(await panelState.commitLocal())) {
+      _showSnackBar('Fix panel information fields', isError: true);
+      return;
+    }
+
+    final errors = _siteService.validateSiteData(
+      siteName: _controller.siteNameController.text,
+      installerName: _controller.installerNameController.text,
+      companyName: _controller.companyNameController.text,
+      saqccRegNumber: _controller.saqccRegNumberController.text,
+      buildingName: _controller.buildingNameController.text,
+      installerContactNumber: _controller.installerContactNumberController.text,
+      installerEmail: _controller.installerEmailController.text,
+      siteDescription: _controller.siteDescriptionController.text,
+    );
+    if (errors.isNotEmpty) {
+      _showSnackBar('Please fix the site form (step 1)', isError: true);
+      return;
+    }
+
+    try {
+      final site = await _siteService.createSite(
+        siteName: _controller.siteNameController.text,
+        installerName: _controller.installerNameController.text,
+        companyName: _controller.companyNameController.text,
+        saqccRegNumber: _controller.saqccRegNumberController.text,
+        buildingName: _controller.buildingNameController.text,
+        installerContactNumber:
+            _controller.installerContactNumberController.text,
+        installerEmail: _controller.installerEmailController.text,
+        siteDescription: _controller.siteDescriptionController.text,
+      );
+
+      final siteId = site.id;
+      if (siteId == null) {
+        _showSnackBar('Site created but missing id', isError: true);
+        return;
+      }
+
+      final bleName = device.name.trim();
+      final panel =
+          await _panelService.getPanelByPanelId(bleName) ??
+          await _panelService.getPanelByBleName(bleName);
+      final panelIdToUse = panel?.panelId ?? bleName;
+
+      final assigned = await _siteService.assignPanelToSite(
+        panelIdToUse,
+        siteId,
+        panelName: bleName.isNotEmpty ? bleName : null,
+      );
+      if (!assigned) {
+        _showSnackBar('Could not assign panel to site', isError: true);
+        return;
+      }
+
+      if (!mounted) return;
+
+      final coordinator = PanelConfigurationCoordinator(
+        bleManager: _bleManager,
+        bleController: _bleController,
+        device: device,
+        refreshNotifiers: _panelRefreshNotifiers,
+        navigatingToDeviceConnecting: _navigatingToDeviceConnecting,
+      );
+
+      await coordinator.startBulkApply(
+        context: context,
+        isMounted: () => mounted,
+      );
+
+      if (!mounted) return;
+
+      _showSnackBar('Site ready — opening dashboard', isError: false);
+
+      // Match connect flow: replace wizard so back from dashboard returns to the
+      // screen below (e.g. home), not an empty navigator.
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder:
+              (_) => ProjectDashboardScreen(
+                selectedDevice: device,
+                panelName: device.name,
+                panelVersionNo: device.id,
+                siteId: siteId,
+                siteName: site.siteName,
+              ),
+        ),
+      );
+    } catch (e) {
+      _showSnackBar('Error: $e', isError: true);
+    }
+  }
+
+  Future<void> _goToNextStep() async {
+    if (_currentStep == 11) {
+      await _finishCreateSiteBulkApplyAndOpenDashboard();
+      return;
+    }
+
+    if (_currentStep <= 2 && !_controller.validateStep(_currentStep)) {
       _showSnackBar('Please fill in all required fields', isError: true);
       return;
     }
@@ -285,18 +510,45 @@ class _CreateSiteScreenRefactoredState
         ),
       );
       if (!mounted) return;
-      if (verified == true) {
-        _controller.setCreateProjectPanelBleVerified(true);
-        _pageController.nextPage(
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeInOut,
-        );
+      if (verified != true) return;
+
+      final device = _bleManager.selectedDevice;
+      if (device == null) {
+        _showSnackBar('Connection lost — no device', isError: true);
+        return;
       }
+
+      _controller.setCreateProjectPanelBleVerified(true);
+      _controller.setConnectedDevice(device);
+      _wizardDeviceId = device.id;
+
+      final proceed = await _runPostConnectAssignedPanelFlow();
+      if (!proceed || !mounted) return;
+
+      await _offerBulkDownloadIfNeeded();
+      if (!mounted) return;
+
+      _controller.clearValidationErrors();
+      await _pageController.nextPage(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
       return;
     }
 
+    if (_currentStep >= 3 && _currentStep <= 10) {
+      final ok = await _commitConfigStepForCurrentPage();
+      if (!ok) {
+        _showSnackBar(
+          'Fix the fields on this step before continuing',
+          isError: true,
+        );
+        return;
+      }
+    }
+
     _controller.clearValidationErrors();
-    _pageController.nextPage(
+    await _pageController.nextPage(
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeInOut,
     );
@@ -307,6 +559,9 @@ class _CreateSiteScreenRefactoredState
       if (_currentStep == 3) {
         _bleManager.disconnectConnectedDevice();
         _controller.setCreateProjectPanelBleVerified(false);
+        _controller.setConnectedDevice(null);
+        _wizardDeviceId = '';
+        _offeredBulkDownload = false;
       }
       _pageController.previousPage(
         duration: const Duration(milliseconds: 300),
@@ -321,14 +576,23 @@ class _CreateSiteScreenRefactoredState
     });
   }
 
+  Widget _embeddedSheetPadding({required Widget child}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: child,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async {
-        if (_bleController.isConnected) {
-          return _confirmAndDisconnect();
+    return PopScope(
+      canPop: !_bleController.isConnected,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        final disconnect = await _confirmAndDisconnect();
+        if (disconnect && context.mounted) {
+          Navigator.of(context).pop();
         }
-        return true;
       },
       child: Scaffold(
         body: Container(
@@ -348,14 +612,11 @@ class _CreateSiteScreenRefactoredState
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     _buildAppBar(),
-                    SizedBox(height: 18),
+                    const SizedBox(height: 18),
                     Expanded(
                       child: Container(
                         decoration: BoxDecoration(
-                          color:
-                              _currentStep < _totalSteps
-                                  ? Colors.white
-                                  : Colors.transparent,
+                          color: Colors.white,
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: Padding(
@@ -364,9 +625,8 @@ class _CreateSiteScreenRefactoredState
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Expanded(child: _buildPageView()),
-                              SizedBox(height: 20),
-                              if (_currentStep < _totalSteps)
-                                _buildNavigation(),
+                              const SizedBox(height: 20),
+                              _buildNavigation(),
                             ],
                           ),
                         ),
@@ -408,24 +668,24 @@ class _CreateSiteScreenRefactoredState
             ),
           ),
         ),
-        SizedBox(width: 12),
+        const SizedBox(width: 12),
         Text(
           'Create Site',
           style: GoogleFonts.inter(
             fontSize: 20,
             fontWeight: FontWeight.w700,
-            color: Color(0xFF3A3A3A),
+            color: const Color(0xFF3A3A3A),
           ),
         ),
-        Spacer(),
+        const Spacer(),
         Text(
           'Step',
           style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w500),
         ),
-        SizedBox(width: 8),
+        const SizedBox(width: 8),
         Container(
           decoration: BoxDecoration(
-            color: Color(0xFFEC1D24),
+            color: const Color(0xFFEC1D24),
             borderRadius: BorderRadius.circular(4),
           ),
           child: Padding(
@@ -450,6 +710,8 @@ class _CreateSiteScreenRefactoredState
   }
 
   Widget _buildPageView() {
+    final id = _wizardDeviceId;
+
     return PageView.builder(
       controller: _pageController,
       onPageChanged: _onPageChanged,
@@ -478,106 +740,137 @@ class _CreateSiteScreenRefactoredState
               validationErrors: _controller.validationErrors,
             );
           case 2:
-            return GeneralSettingsPage(
-              levelTimeout: _controller.generalSettings.levelTimeout,
-              timerSettings: _controller.generalSettings.timerSettings,
-              faultLatching: _controller.generalSettings.faultLatching,
-              panelDateTime: _controller.generalSettings.panelDateTime,
-              serviceDue: _controller.generalSettings.serviceDue,
-              serviceDueReminder:
-                  _controller.generalSettings.serviceDueReminder,
-              eventReminder: _controller.generalSettings.eventReminder,
-              expandedField: _controller.generalSettings.expandedField,
-              onFieldChanged: _controller.updateGeneralSetting,
-              onSliderChanged: _controller.updateSliderSetting,
-              onExpandedChanged: _controller.setExpandedField,
-            );
           case 3:
-            return ZoneSettingsPage(
-              expandedZone: _controller.zoneSettings.expandedZone,
-              zoneTexts: _controller.zoneSettings.zoneTexts,
-              zoneTypes: _controller.zoneSettings.zoneTypes,
-              zoneStates: _controller.zoneSettings.zoneStates,
-              zoneTests: _controller.zoneSettings.zoneTests,
-              zoneModes: _controller.zoneSettings.zoneModes,
-              zoneVerificationTimes:
-                  _controller.zoneSettings.zoneVerificationTimes,
-              onZoneExpanded: _controller.setExpandedZone,
-              onZoneFieldChanged: _controller.updateZoneField,
-            );
           case 4:
-            return SounderPage(
-              expandedSounder: _controller.sounderData.expandedSounder,
-              sounderTexts: _controller.sounderData.sounderTexts,
-              sounderStates: _controller.sounderData.sounderStates,
-              sounderTests: _controller.sounderData.sounderTests,
-              sounderTypes: _controller.sounderData.sounderTypes,
-              sounderGroups: _controller.sounderData.sounderGroups,
-              sounderFunctions: _controller.sounderData.sounderFunctions,
-              availableZones: _controller.zoneSettings.zoneTexts.keys.toList(),
-              onSounderExpanded: _controller.setExpandedSounder,
-              onSounderFieldChanged: _controller.updateSounderField,
-            );
           case 5:
-            return SounderSettingsPage(
-              fireSoundTone: _controller.sounderSettings.fireSoundTone,
-              fireSounderDelay: _controller.sounderSettings.fireSounderDelay,
-              countDownAction: _controller.sounderSettings.countDownAction,
-              holdAction: _controller.sounderSettings.holdAction,
-              releaseAction: _controller.sounderSettings.releaseAction,
-              extSounderDelay: _controller.sounderSettings.extSounderDelay,
-              onSounderSettingChanged: _controller.updateSounderSetting,
-            );
           case 6:
-            return InputPage(
-              inputText: _controller.inputData.inputText,
-              inverted: _controller.inputData.inverted,
-              test: _controller.inputData.test,
-              input1: _controller.inputData.input1,
-              group: _controller.inputData.group,
-              function: _controller.inputData.function,
-              onInputSettingChanged: _controller.updateInputSetting,
-            );
           case 7:
-            return RelayPage(
-              expandedRelay: _controller.relayData.expandedRelay,
-              relayTexts: _controller.relayData.relayTexts,
-              relayTests: _controller.relayData.relayTests,
-              relayStates: _controller.relayData.relayStates,
-              relayGroups: _controller.relayData.relayGroups,
-              relayFunctions: _controller.relayData.relayFunctions,
-              onRelayExpanded: _controller.setExpandedRelay,
-              onRelayFieldChanged: _controller.updateRelayField,
-            );
           case 8:
-            return LBusDevicesPage(
-              expandedLBus: _controller.lbusData.expandedLBus,
-              lbusInputs: _controller.lbusData.lbusInputs,
-              lbusInputTexts: _controller.lbusData.lbusInputTexts,
-              lbusProducts: _controller.lbusData.lbusProducts,
-              lbusGroups: _controller.lbusData.lbusGroups,
-              lbusFunctions: _controller.lbusData.lbusFunctions,
-              lbusEnabled: _controller.lbusData.lbusEnabled,
-              lbusTests: _controller.lbusData.lbusTests,
-              lbusInverted: _controller.lbusData.lbusInverted,
-              onLBusExpanded: _controller.setExpandedLBus,
-              onLBusFieldChanged: _controller.updateLBusField,
-            );
           case 9:
-            return ProjectSummaryPage(
-              enabled: _controller.extinguishingData.enabled,
-              actuatorType: _controller.extinguishingData.actuatorType,
-              function: _controller.extinguishingData.function,
-              autoCountdown: _controller.extinguishingData.autoCountdown,
-              manualCountdown: _controller.extinguishingData.manualCountdown,
-              releaseTime: _controller.extinguishingData.releaseTime,
-              resetInCount: _controller.extinguishingData.resetInCount,
-              holdCount: _controller.extinguishingData.holdCount,
-              action: _controller.extinguishingData.action,
-              onExtinguishingSettingChanged:
-                  _controller.updateExtinguishingSetting,
-              onUploadToPanel: _createSite,
-            );
+          case 10:
+            if (id.isEmpty) {
+              return Center(
+                child: Text(
+                  'Connect a panel to configure peripherals.',
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    color: const Color(0xFF666666),
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              );
+            }
+            switch (index) {
+              case 2:
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: GeneralModuleBottomSheet(
+                    key: _generalSheetKey,
+                    deviceId: id,
+                    onDownload: _noop,
+                    onApply: _noop,
+                    refreshTrigger: _generalModuleRefresh,
+                    embedInCreateFlow: true,
+                  ),
+                );
+              case 3:
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: ServiceDueBottomSheet(
+                    key: _serviceDueSheetKey,
+                    deviceId: id,
+                    onDownload: _noop,
+                    onApply: _noop,
+                    refreshTrigger: _serviceDueRefresh,
+                    embedInCreateFlow: true,
+                  ),
+                );
+              case 4:
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: ZoneBottomSheet(
+                    key: _zoneSheetKey,
+                    deviceId: id,
+                    onDownload: _noop,
+                    onApply: _noop,
+                    refreshTrigger: _zoneRefresh,
+                    embedInCreateFlow: true,
+                  ),
+                );
+              case 5:
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: SounderModeBottomSheet(
+                    key: _sounderSheetKey,
+                    deviceId: id,
+                    onDownload: _noop,
+                    onApply: _noop,
+                    refreshTrigger: _sounderRefresh,
+                    embedInCreateFlow: true,
+                  ),
+                );
+              case 6:
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: InputModeBottomSheet(
+                    key: _inputSheetKey,
+                    deviceId: id,
+                    onDownload: _noop,
+                    onApply: _noop,
+                    refreshTrigger: _inputRefresh,
+                    embedInCreateFlow: true,
+                  ),
+                );
+              case 7:
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: RelayModeBottomSheet(
+                    key: _relaySheetKey,
+                    deviceId: id,
+                    onDownload: _noop,
+                    onApply: _noop,
+                    refreshTrigger: _relayRefresh,
+                    embedInCreateFlow: true,
+                  ),
+                );
+              case 8:
+                return _embeddedSheetPadding(
+                  child: ExtOutBottomSheet(
+                    key: _extOutSheetKey,
+                    deviceId: id,
+                    onDownload: _noop,
+                    onApply: _noop,
+                    refreshTrigger: _extOutRefresh,
+                    embedInCreateFlow: true,
+                  ),
+                );
+              case 9:
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: LBusBottomSheet(
+                    key: _lBusSheetKey,
+                    deviceId: id,
+                    onDownload: _noop,
+                    onApply: _noop,
+                    refreshTrigger: _zoneRefresh,
+                    embedInCreateFlow: true,
+                  ),
+                );
+              case 10:
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: PanelInfoBottomSheet(
+                    key: _panelInfoSheetKey,
+                    deviceId: id,
+                    onDownload: _noop,
+                    onApply: _noop,
+                    refreshTrigger: _panelInfoRefresh,
+                    embedInCreateFlow: true,
+                  ),
+                );
+              default:
+                return const SizedBox.shrink();
+            }
           default:
             return const SizedBox.shrink();
         }
@@ -586,6 +879,13 @@ class _CreateSiteScreenRefactoredState
   }
 
   Widget _buildNavigation() {
+    final nextLabel =
+        _currentStep == 2
+            ? 'Connect panel'
+            : _currentStep == 11
+            ? 'Finish'
+            : 'Next';
+
     return Row(
       children: [
         Opacity(
@@ -594,7 +894,7 @@ class _CreateSiteScreenRefactoredState
             onTap: _goToPreviousStep,
             child: Container(
               decoration: BoxDecoration(
-                color: Color(0xFFEFEEEE),
+                color: const Color(0xFFEFEEEE),
                 borderRadius: BorderRadius.circular(28.5),
               ),
               child: Padding(
@@ -606,14 +906,14 @@ class _CreateSiteScreenRefactoredState
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.arrow_back, color: Color(0xFF49454F)),
-                    SizedBox(width: 6),
+                    const Icon(Icons.arrow_back, color: Color(0xFF49454F)),
+                    const SizedBox(width: 6),
                     Text(
                       'Back',
                       style: GoogleFonts.inter(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
-                        color: Color(0xFF49454F),
+                        color: const Color(0xFF49454F),
                       ),
                     ),
                   ],
@@ -622,12 +922,12 @@ class _CreateSiteScreenRefactoredState
             ),
           ),
         ),
-        Spacer(),
+        const Spacer(),
         GestureDetector(
           onTap: () => _goToNextStep(),
           child: Container(
             decoration: BoxDecoration(
-              color: Color(0xFFEC1D24),
+              color: const Color(0xFFEC1D24),
               borderRadius: BorderRadius.circular(28.5),
             ),
             child: Padding(
@@ -640,15 +940,15 @@ class _CreateSiteScreenRefactoredState
               child: Row(
                 children: [
                   Text(
-                    _currentStep == 2 ? 'Connect panel' : 'Next',
+                    nextLabel,
                     style: GoogleFonts.inter(
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
                       color: Colors.white,
                     ),
                   ),
-                  SizedBox(width: 6),
-                  Icon(Icons.arrow_forward, color: Colors.white),
+                  const SizedBox(width: 6),
+                  const Icon(Icons.arrow_forward, color: Colors.white),
                 ],
               ),
             ),

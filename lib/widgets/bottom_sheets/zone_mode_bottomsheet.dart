@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
+import 'package:techno_switch_solar_app/panel_config/panel_config_cache_sync.dart';
 import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
 import 'package:techno_switch_solar_app/utils/zone_setup_manager_sync.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/widgets/dropdown.dart';
@@ -14,6 +15,7 @@ class ZoneBottomSheet extends StatefulWidget {
   final VoidCallback onDownload;
   final VoidCallback onApply;
   final ValueNotifier<int> refreshTrigger;
+  final bool embedInCreateFlow;
 
   const ZoneBottomSheet({
     super.key,
@@ -21,13 +23,14 @@ class ZoneBottomSheet extends StatefulWidget {
     required this.onDownload,
     required this.onApply,
     required this.refreshTrigger,
+    this.embedInCreateFlow = false,
   });
 
   @override
-  State<ZoneBottomSheet> createState() => _ZoneBottomSheetState();
+  State<ZoneBottomSheet> createState() => ZoneBottomSheetState();
 }
 
-class _ZoneBottomSheetState extends State<ZoneBottomSheet> {
+class ZoneBottomSheetState extends State<ZoneBottomSheet> {
   BleManager? manager;
 
   int _expandedTileCount = 0;
@@ -196,6 +199,65 @@ class _ZoneBottomSheetState extends State<ZoneBottomSheet> {
     if (mounted) setState(() {});
   }
 
+  void _pushZonesToManager() {
+    final m = manager!;
+    final snapshotTest = [
+      m.isZoneOneSetupTest.value,
+      m.isZoneTwoSetupTest.value,
+      m.isZoneThreeSetupTest.value,
+    ];
+    for (int i = 0; i < 3; i++) {
+      final zone = zones[i];
+      final effectiveTest = zone.enabled == 'Yes' && snapshotTest[i];
+
+      switch (i) {
+        case 0:
+          m.zoneOneSetupText.value = zone.zoneTextController.text;
+          m.zoneOneSetupType.value = typeOptions.indexOf(zone.type);
+          m.isZoneOneSetupEnabled.value = zone.enabled == 'Yes';
+          m.isZoneOneSetupTest.value = effectiveTest;
+          m.zoneOneSetupVerificationTime.value =
+              zone.verificationTimeController.text;
+          m.zoneOneSetupDetectionMode.value = modeOptions.indexOf(zone.mode);
+          break;
+
+        case 1:
+          m.zoneTwoSetupText.value = zone.zoneTextController.text;
+          m.zoneTwoSetupType.value = typeOptions.indexOf(zone.type);
+          m.isZoneTwoSetupEnabled.value = zone.enabled == 'Yes';
+          m.isZoneTwoSetupTest.value = effectiveTest;
+          m.zoneTwoSetupVerificationTime.value =
+              zone.verificationTimeController.text;
+          m.zoneTwoSetupDetectionMode.value = modeOptions.indexOf(zone.mode);
+          break;
+
+        case 2:
+          m.zoneThreeSetupText.value = zone.zoneTextController.text;
+          m.zoneThreeSetupType.value = typeOptions.indexOf(zone.type);
+          m.isZoneThreeSetupEnabled.value = zone.enabled == 'Yes';
+          m.isZoneThreeSetupTest.value = effectiveTest;
+          m.zoneThreeSetupVerificationTime.value =
+              zone.verificationTimeController.text;
+          m.zoneThreeSetupDetectionMode.value = modeOptions.indexOf(zone.mode);
+          break;
+      }
+    }
+    syncZoneModeHexFromBleManager(m);
+  }
+
+  Future<bool> commitLocal() async {
+    _updateValidationErrors();
+    if (!_computeIsValid() || manager == null) return false;
+    FocusManager.instance.primaryFocus?.unfocus();
+    _pushZonesToManager();
+    await PanelConfigCacheSync.saveZone(
+      manager!,
+      widget.deviceId,
+      widget.refreshTrigger,
+    );
+    return true;
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
@@ -203,6 +265,40 @@ class _ZoneBottomSheetState extends State<ZoneBottomSheet> {
         _expandedTileCount > 0 ? screenHeight * 0.8 : screenHeight * 0.5;
     _updateValidationErrors();
     final isValid = _computeIsValid();
+
+    if (widget.embedInCreateFlow) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            'Zone Configuration',
+            style: GoogleFonts.inter(
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFF3D3D3D),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Expanded(
+            child: NotificationListener<UserScrollNotification>(
+              onNotification: (notification) {
+                if (notification.direction != ScrollDirection.idle) {
+                  FocusScope.of(context).unfocus();
+                }
+                return false;
+              },
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.only(top: 8),
+                child: Column(
+                  children: List.generate(3, (i) => _zoneTile(i)),
+                ),
+              ),
+            ),
+          ),
+        ],
+      );
+    }
 
     return SafeArea(
       child: AnimatedSize(
@@ -496,68 +592,10 @@ class _ZoneBottomSheetState extends State<ZoneBottomSheet> {
         ),
         onPressed:
             isValid && manager != null
-                ? () {
-                  FocusManager.instance.primaryFocus?.unfocus();
-                  final m = manager!;
-                  final snapshotTest = [
-                    m.isZoneOneSetupTest.value,
-                    m.isZoneTwoSetupTest.value,
-                    m.isZoneThreeSetupTest.value,
-                  ];
-                  for (int i = 0; i < 3; i++) {
-                    final zone = zones[i];
-                    final effectiveTest =
-                        zone.enabled == 'Yes' && snapshotTest[i];
-
-                    switch (i) {
-                      case 0:
-                        m.zoneOneSetupText.value =
-                            zone.zoneTextController.text;
-                        m.zoneOneSetupType.value = typeOptions.indexOf(
-                          zone.type,
-                        );
-                        m.isZoneOneSetupEnabled.value = zone.enabled == 'Yes';
-                        m.isZoneOneSetupTest.value = effectiveTest;
-                        m.zoneOneSetupVerificationTime.value =
-                            zone.verificationTimeController.text;
-                        m.zoneOneSetupDetectionMode.value = modeOptions.indexOf(
-                          zone.mode,
-                        );
-                        break;
-
-                      case 1:
-                        m.zoneTwoSetupText.value =
-                            zone.zoneTextController.text;
-                        m.zoneTwoSetupType.value = typeOptions.indexOf(
-                          zone.type,
-                        );
-                        m.isZoneTwoSetupEnabled.value = zone.enabled == 'Yes';
-                        m.isZoneTwoSetupTest.value = effectiveTest;
-                        m.zoneTwoSetupVerificationTime.value =
-                            zone.verificationTimeController.text;
-                        m.zoneTwoSetupDetectionMode.value = modeOptions.indexOf(
-                          zone.mode,
-                        );
-                        break;
-
-                      case 2:
-                        m.zoneThreeSetupText.value =
-                            zone.zoneTextController.text;
-                        m.zoneThreeSetupType.value = typeOptions.indexOf(
-                          zone.type,
-                        );
-                        m.isZoneThreeSetupEnabled.value =
-                            zone.enabled == 'Yes';
-                        m.isZoneThreeSetupTest.value = effectiveTest;
-                        m.zoneThreeSetupVerificationTime.value =
-                            zone.verificationTimeController.text;
-                        m.zoneThreeSetupDetectionMode.value = modeOptions
-                            .indexOf(zone.mode);
-                        break;
-                    }
+                ? () async {
+                  if (await commitLocal()) {
+                    widget.onApply();
                   }
-                  syncZoneModeHexFromBleManager(m);
-                  widget.onApply();
                 }
                 : null,
         child: Text(

@@ -13,6 +13,8 @@ class GeneralModuleBottomSheet extends StatefulWidget {
   final VoidCallback onDownload;
   final VoidCallback onApply;
   final ValueNotifier<int> refreshTrigger;
+  /// Full-screen create-site step: no sheet chrome; use [GeneralModuleBottomSheetState.commitLocal] on Next.
+  final bool embedInCreateFlow;
 
   const GeneralModuleBottomSheet({
     super.key,
@@ -20,14 +22,15 @@ class GeneralModuleBottomSheet extends StatefulWidget {
     required this.onDownload,
     required this.onApply,
     required this.refreshTrigger,
+    this.embedInCreateFlow = false,
   });
 
   @override
   State<GeneralModuleBottomSheet> createState() =>
-      _GeneralModuleBottomSheetState();
+      GeneralModuleBottomSheetState();
 }
 
-class _GeneralModuleBottomSheetState extends State<GeneralModuleBottomSheet> {
+class GeneralModuleBottomSheetState extends State<GeneralModuleBottomSheet> {
   BleManager? manager;
 
   final TextEditingController lvlTimeoutController = TextEditingController();
@@ -161,8 +164,77 @@ class _GeneralModuleBottomSheetState extends State<GeneralModuleBottomSheet> {
     });
   }
 
+  /// Create-site Next: push BLE + cache, no password / single-section apply.
+  Future<bool> commitLocal() async {
+    if (!_isValidGeneralModule() || manager == null) return false;
+    FocusManager.instance.primaryFocus?.unfocus();
+    _pushToManager();
+    await _saveToCache();
+    widget.refreshTrigger.value++;
+    return true;
+  }
+
+  Widget _fieldsColumn() {
+    return Column(
+      children: [
+        if (widget.embedInCreateFlow) _title('General Module'),
+        _numberField(
+          'LVL Time-out (s)',
+          lvlTimeoutController,
+          maxLength: 3,
+          focusNode: lvlTimeoutFocusNode,
+        ),
+        DropdownWidget(
+          label: 'Silence Buzzer Level',
+          value: silenceBuzzerLevel,
+          items: buzzerOptions,
+          onChanged: (v) => setState(() => silenceBuzzerLevel = v),
+        ),
+        DropdownWidget(
+          label: 'Silence Sounders Level',
+          value: silenceSoundersLevel,
+          items: sounderOptions,
+          onChanged: (v) => setState(() => silenceSoundersLevel = v),
+        ),
+        DropdownWidget(
+          label: 'Reset Level',
+          value: resetLevel,
+          items: resetOptions,
+          onChanged: (v) => setState(() => resetLevel = v),
+        ),
+        DropdownWidget(
+          label: 'Fault Latching',
+          value: faultLatching,
+          items: yesNoOptions,
+          onChanged: (v) => setState(() => faultLatching = v),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final scroll = NotificationListener<UserScrollNotification>(
+      onNotification: (notification) {
+        if (notification.direction != ScrollDirection.idle) {
+          FocusScope.of(context).unfocus();
+        }
+        return false;
+      },
+      child: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
+        padding: EdgeInsets.only(
+          top: widget.embedInCreateFlow ? 0 : 16,
+          bottom: 16,
+        ),
+        child: _fieldsColumn(),
+      ),
+    );
+
+    if (widget.embedInCreateFlow) {
+      return scroll;
+    }
+
     final maxHeight = MediaQuery.of(context).size.height * 0.75;
 
     return SafeArea(
@@ -182,65 +254,9 @@ class _GeneralModuleBottomSheetState extends State<GeneralModuleBottomSheet> {
           child: Column(
             children: [
               _dragHandle(),
-              _title("General Module"),
-
-              Expanded(
-                child: NotificationListener<UserScrollNotification>(
-                  onNotification: (notification) {
-                    if (notification.direction != ScrollDirection.idle) {
-                      FocusScope.of(context).unfocus();
-                    }
-                    return false;
-                  },
-                  child: SingleChildScrollView(
-                    physics: const BouncingScrollPhysics(),
-                    padding: const EdgeInsets.only(top: 16),
-                    child: Column(
-                      children: [
-                        _numberField(
-                          "LVL Time-out (s)",
-                          lvlTimeoutController,
-                          maxLength: 3,
-                          focusNode: lvlTimeoutFocusNode,
-                        ),
-
-                        DropdownWidget(
-                          label: "Silence Buzzer Level",
-                          value: silenceBuzzerLevel,
-                          items: buzzerOptions,
-                          onChanged:
-                              (v) => setState(() => silenceBuzzerLevel = v),
-                        ),
-
-                        DropdownWidget(
-                          label: "Silence Sounders Level",
-                          value: silenceSoundersLevel,
-                          items: sounderOptions,
-                          onChanged:
-                              (v) => setState(() => silenceSoundersLevel = v),
-                        ),
-
-                        DropdownWidget(
-                          label: "Reset Level",
-                          value: resetLevel,
-                          items: resetOptions,
-                          onChanged: (v) => setState(() => resetLevel = v),
-                        ),
-
-                        DropdownWidget(
-                          label: "Fault Latching",
-                          value: faultLatching,
-                          items: yesNoOptions,
-                          onChanged: (v) => setState(() => faultLatching = v),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-
+              _title('General Module'),
+              Expanded(child: scroll),
               const SizedBox(height: 12),
-
               Row(
                 children: [
                   Expanded(child: _downloadButton()),
@@ -390,12 +406,9 @@ class _GeneralModuleBottomSheetState extends State<GeneralModuleBottomSheet> {
         onPressed:
             _isValidGeneralModule()
                 ? () async {
-                  if (manager == null) return;
-                  FocusManager.instance.primaryFocus?.unfocus();
-                  _pushToManager();
-                  await _saveToCache();
-                  widget.refreshTrigger.value++;
-                  widget.onApply();
+                  if (await commitLocal()) {
+                    widget.onApply();
+                  }
                 }
                 : null,
         child: Text(

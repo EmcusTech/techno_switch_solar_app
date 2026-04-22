@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
+import 'package:techno_switch_solar_app/panel_config/panel_config_cache_sync.dart';
 import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
 
 class PanelInfoBottomSheet extends StatefulWidget {
@@ -13,6 +14,7 @@ class PanelInfoBottomSheet extends StatefulWidget {
   final VoidCallback onDownload;
   final VoidCallback onApply;
   final ValueNotifier<int> refreshTrigger;
+  final bool embedInCreateFlow;
 
   const PanelInfoBottomSheet({
     super.key,
@@ -20,13 +22,14 @@ class PanelInfoBottomSheet extends StatefulWidget {
     required this.onDownload,
     required this.onApply,
     required this.refreshTrigger,
+    this.embedInCreateFlow = false,
   });
 
   @override
-  State<PanelInfoBottomSheet> createState() => _PanelInfoBottomSheetState();
+  State<PanelInfoBottomSheet> createState() => PanelInfoBottomSheetState();
 }
 
-class _PanelInfoBottomSheetState extends State<PanelInfoBottomSheet> {
+class PanelInfoBottomSheetState extends State<PanelInfoBottomSheet> {
   BleManager? manager;
 
   int _expandedTileCount = 0;
@@ -151,9 +154,52 @@ class _PanelInfoBottomSheetState extends State<PanelInfoBottomSheet> {
     });
   }
 
+  Widget _scrollContent() {
+    return NotificationListener<UserScrollNotification>(
+      onNotification: (notification) {
+        if (notification.direction != ScrollDirection.idle) {
+          FocusScope.of(context).unfocus();
+        }
+        return false;
+      },
+      child: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.only(top: 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (widget.embedInCreateFlow) _title("Panel Information"),
+            _panelInfoTile(),
+            _dateTimeTile(),
+            _eventReminderTile(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<bool> commitLocal() async {
+    if (manager == null || !_isValidPanelInfo()) return false;
+    FocusManager.instance.primaryFocus?.unfocus();
+    _pushToManager();
+    await PanelConfigCacheSync.savePanelInfo(
+      manager!,
+      widget.deviceId,
+      widget.refreshTrigger,
+    );
+    return true;
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
+
+    if (widget.embedInCreateFlow) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [Expanded(child: _scrollContent())],
+      );
+    }
 
     final maxHeight =
         _expandedTileCount > 0 ? screenHeight * 0.80 : screenHeight * 0.50;
@@ -179,31 +225,8 @@ class _PanelInfoBottomSheetState extends State<PanelInfoBottomSheet> {
               children: [
                 _dragHandle(),
                 _title("Panel Information"),
-
-                Expanded(
-                  child: NotificationListener<UserScrollNotification>(
-                    onNotification: (notification) {
-                      if (notification.direction != ScrollDirection.idle) {
-                        FocusScope.of(context).unfocus();
-                      }
-                      return false;
-                    },
-                    child: SingleChildScrollView(
-                      physics: const BouncingScrollPhysics(),
-                      padding: const EdgeInsets.only(top: 16),
-                      child: Column(
-                        children: [
-                          _panelInfoTile(),
-                          _dateTimeTile(),
-                          _eventReminderTile(),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-
+                Expanded(child: _scrollContent()),
                 const SizedBox(height: 12),
-
                 Row(
                   children: [
                     Expanded(child: _downloadButton()),
@@ -545,11 +568,10 @@ class _PanelInfoBottomSheetState extends State<PanelInfoBottomSheet> {
         ),
         onPressed:
             _isValidPanelInfo()
-                ? () {
-                  if (manager == null) return;
-                  FocusManager.instance.primaryFocus?.unfocus();
-                  _pushToManager();
-                  widget.onApply();
+                ? () async {
+                  if (await commitLocal()) {
+                    widget.onApply();
+                  }
                 }
                 : null,
         child: Text(

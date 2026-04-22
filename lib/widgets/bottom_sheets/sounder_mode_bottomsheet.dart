@@ -9,6 +9,7 @@ import 'package:techno_switch_solar_app/utils/general_quipment_mode_util.dart';
 import 'package:techno_switch_solar_app/utils/relay_mode_util.dart';
 import 'package:techno_switch_solar_app/utils/ext_out_equipment_mode_util.dart';
 import 'package:techno_switch_solar_app/utils/zone_equipment_mode_util.dart';
+import 'package:techno_switch_solar_app/panel_config/panel_config_cache_sync.dart';
 import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/widgets/dropdown.dart';
 
@@ -17,6 +18,7 @@ class SounderModeBottomSheet extends StatefulWidget {
   final VoidCallback onDownload;
   final VoidCallback onApply;
   final ValueNotifier<int> refreshTrigger;
+  final bool embedInCreateFlow;
 
   const SounderModeBottomSheet({
     super.key,
@@ -24,13 +26,14 @@ class SounderModeBottomSheet extends StatefulWidget {
     required this.onDownload,
     required this.onApply,
     required this.refreshTrigger,
+    this.embedInCreateFlow = false,
   });
 
   @override
-  State<SounderModeBottomSheet> createState() => _SounderModeBottomSheetState();
+  State<SounderModeBottomSheet> createState() => SounderModeBottomSheetState();
 }
 
-class _SounderModeBottomSheetState extends State<SounderModeBottomSheet>
+class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   BleManager? manager;
@@ -400,10 +403,41 @@ class _SounderModeBottomSheetState extends State<SounderModeBottomSheet>
     if (mounted) setState(() {});
   }
 
+  Widget _mainScrollBody() {
+    return NotificationListener<UserScrollNotification>(
+      onNotification: (notification) {
+        if (notification.direction != ScrollDirection.idle) {
+          FocusScope.of(context).unfocus();
+        }
+        return false;
+      },
+      child: SingleChildScrollView(
+        controller: sounderBottomSheetController,
+        physics: const BouncingScrollPhysics(),
+        child: Column(
+          children: [
+            if (widget.embedInCreateFlow) _title('Sounder Mode Configuration'),
+            ...List.generate(3, (i) => _sounderTile(i)),
+            const SizedBox(height: 24),
+            _advancedHeader(),
+            _advancedSection(),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
     final maxHeight = screenHeight * 0.75;
+
+    if (widget.embedInCreateFlow) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [Expanded(child: _mainScrollBody())],
+      );
+    }
 
     return SafeArea(
       child: AnimatedSize(
@@ -426,31 +460,7 @@ class _SounderModeBottomSheetState extends State<SounderModeBottomSheet>
               children: [
                 _dragHandle(),
                 _title('Sounder Mode Configuration'),
-
-                // BODY
-                Expanded(
-                  child: NotificationListener<UserScrollNotification>(
-                    onNotification: (notification) {
-                      if (notification.direction != ScrollDirection.idle) {
-                        FocusScope.of(context).unfocus();
-                      }
-                      return false;
-                    },
-                    child: SingleChildScrollView(
-                      controller: sounderBottomSheetController,
-                      physics: const BouncingScrollPhysics(),
-                      child: Column(
-                        children: [
-                          ...List.generate(3, (i) => _sounderTile(i)),
-                          const SizedBox(height: 24),
-                          _advancedHeader(),
-                          _advancedSection(),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-
+                Expanded(child: _mainScrollBody()),
                 const SizedBox(height: 12),
                 Row(
                   children: [
@@ -965,6 +975,188 @@ class _SounderModeBottomSheetState extends State<SounderModeBottomSheet>
     return list.indexOf(value);
   }
 
+  void _pushSounderSetupToManager() {
+    final m = manager!;
+    for (int i = 0; i < 3; i++) {
+      final sounder = sounders[i];
+
+      bool isEnabled = sounder.enabled == 'Yes';
+      bool isTest = sounder.test == 'Yes';
+      bool isNormal = sounder.type == 'Normal';
+      String outputText = sounder.outputController.text;
+      int functionNo = int.tryParse(sounder.dynamicController.text) ?? 0;
+      int groupIndex = returnIndex(sounder.group, groupOptions);
+      int functionIndex = returnIndex(
+        sounder.function,
+        functionOptionsMap[sounder.group]!,
+      );
+
+      final config = OutputModeConfig(
+        outputEnable:
+            isEnabled ? OutputEnable.enabled : OutputEnable.disabled,
+        outputMode: isTest ? OutputMode.test : OutputMode.normal,
+        supervisionMode:
+            isNormal ? SupervisionMode.normal : SupervisionMode.mtl5525,
+      );
+      final String hexValue = OutputModeCodec.encodeHex(config);
+
+      switch (i) {
+        case 0:
+          m.sounderOneRelayOutputMode.value = hexValue;
+          m.sounderOneRelayFunctionGroup.value = groupIndex;
+          m.sounderOneRelayFunction.value = functionIndex;
+          m.sounderOneFunctionNo.value = functionNo;
+          m.sounderOneOutputText.value = outputText;
+          m.isSounderOneEnabled.value = isEnabled;
+          m.isSounderOneTest.value = isTest;
+          m.isSounderOneNormal.value = isNormal;
+          break;
+        case 1:
+          m.sounderTwoRelayOutputMode.value = hexValue;
+          m.sounderTwoRelayFunctionGroup.value = groupIndex;
+          m.sounderTwoRelayFunction.value = functionIndex;
+          m.sounderTwoFunctionNo.value = functionNo;
+          m.sounderTwoOutputText.value = outputText;
+          m.isSounderTwoEnabled.value = isEnabled;
+          m.isSounderTwoTest.value = isTest;
+          m.isSounderTwoNormal.value = isNormal;
+          break;
+        case 2:
+          m.sounderThreeRelayOutputMode.value = hexValue;
+          m.sounderThreeRelayFunctionGroup.value = groupIndex;
+          m.sounderThreeRelayFunction.value = functionIndex;
+          m.sounderThreeFunctionNo.value = functionNo;
+          m.sounderThreeOutputText.value = outputText;
+          m.isSounderThreeEnabled.value = isEnabled;
+          m.isSounderThreeTest.value = isTest;
+          m.isSounderThreeNormal.value = isNormal;
+          break;
+      }
+    }
+
+    final generalConfig = GeneralEquipmentModeConfig(
+      equipmentEnable:
+          m.isSounderGeneralEnabled.value
+              ? EquipmentEnable.enabled
+              : EquipmentEnable.disabled,
+      equipmentMode:
+          m.isSounderGeneralTest.value
+              ? EquipmentMode.test
+              : EquipmentMode.normal,
+      sounderDelay:
+          m.isSounderGeneralDelay.value
+              ? SounderDelay.enabled
+              : SounderDelay.disabled,
+    );
+    m.sounderGeneralMode.value = GeneralEquipmentModeCodec.encodeHex(
+      generalConfig,
+    );
+    m.sounderGeneralDelay.value = int.tryParse(delayController.text) ?? 0;
+
+    for (int i = 0; i < 3; i++) {
+      final zone = zones[i];
+      bool isEnabled = zone.enabled == 'Yes';
+      bool isTest = zone.test == 'Yes';
+      int actionIndex = returnIndex(zone.action, actionOptions);
+      final zoneConfig = ZoneEquipmentModeConfig(
+        zoneEnable:
+            isEnabled
+                ? ZoneEquipmentEnable.enabled
+                : ZoneEquipmentEnable.disabled,
+        zoneMode:
+            isTest ? ZoneEquipmentMode.test : ZoneEquipmentMode.normal,
+        sounderDelay: ZoneSounderDelay.disabled,
+      );
+      final String zoneHexValue = ZoneEquipmentModeCodec.encodeHex(zoneConfig);
+
+      switch (i) {
+        case 0:
+          m.sounderZoneOneMode.value = zoneHexValue;
+          m.isZoneOneEnabled.value = isEnabled;
+          m.isZoneOneTest.value = isTest;
+          m.zoneOneAction.value = actionIndex;
+          break;
+        case 1:
+          m.sounderZoneTwoMode.value = zoneHexValue;
+          m.isZoneTwoEnabled.value = isEnabled;
+          m.isZoneTwoTest.value = isTest;
+          m.zoneTwoAction.value = actionIndex;
+          break;
+        case 2:
+          m.sounderZoneThreeMode.value = zoneHexValue;
+          m.isZoneThreeEnabled.value = isEnabled;
+          m.isZoneThreeTest.value = isTest;
+          m.zoneThreeAction.value = actionIndex;
+          break;
+      }
+    }
+
+    for (int i = 0; i < 3; i++) {
+      final extOut = extOuts[i];
+      bool isEnabled = extOut.enabled == 'Yes';
+      bool isTest = extOut.test == 'Yes';
+      int countdownIndex = returnIndex(
+        extOut.countdownAction,
+        extOutActionOptions,
+      );
+      int holdIndex = returnIndex(extOut.holdAction, extOutActionOptions);
+      int releaseIndex = returnIndex(
+        extOut.releaseAction,
+        extOutActionOptions,
+      );
+
+      final extOutConfig = ExtZoneEquipmentModeConfig(
+        zoneEnable:
+            isEnabled
+                ? ExtZoneEquipmentEnable.enabled
+                : ExtZoneEquipmentEnable.disabled,
+        zoneMode:
+            isTest ? ExtZoneEquipmentMode.test : ExtZoneEquipmentMode.normal,
+      );
+      final String extOutHexValue =
+          ExtZoneEquipmentModeCodec.encodeHex(extOutConfig);
+
+      switch (i) {
+        case 0:
+          m.sounderExtOutOneMode.value = extOutHexValue;
+          m.isExtOutOneEnabled.value = isEnabled;
+          m.isExtOutOneTest.value = isTest;
+          m.extoutOneCountdownAction.value = countdownIndex;
+          m.extoutOneHoldAction.value = holdIndex;
+          m.extoutOneReleaseAction.value = releaseIndex;
+          break;
+        case 1:
+          m.sounderExtOutTwoMode.value = extOutHexValue;
+          m.isExtOutTwoEnabled.value = isEnabled;
+          m.isExtOutTwoTest.value = isTest;
+          m.extoutTwoCountdownAction.value = countdownIndex;
+          m.extoutTwoHoldAction.value = holdIndex;
+          m.extoutTwoReleaseAction.value = releaseIndex;
+          break;
+        case 2:
+          m.sounderExtOutThreeMode.value = extOutHexValue;
+          m.isExtOutThreeEnabled.value = isEnabled;
+          m.isExtOutThreeTest.value = isTest;
+          m.extoutThreeCountdownAction.value = countdownIndex;
+          m.extoutThreeHoldAction.value = holdIndex;
+          m.extoutThreeReleaseAction.value = releaseIndex;
+          break;
+      }
+    }
+  }
+
+  Future<bool> commitLocal() async {
+    if (manager == null || !_isDelayValid()) return false;
+    FocusManager.instance.primaryFocus?.unfocus();
+    _pushSounderSetupToManager();
+    await PanelConfigCacheSync.saveSounder(
+      manager!,
+      widget.deviceId,
+      widget.refreshTrigger,
+    );
+    return true;
+  }
+
   Widget _downloadButton() {
     return SizedBox(
       height: 48,
@@ -1001,199 +1193,10 @@ class _SounderModeBottomSheetState extends State<SounderModeBottomSheet>
         ),
         onPressed:
             manager != null && isDelayValid
-                ? () {
-                  FocusManager.instance.primaryFocus?.unfocus();
-                  for (int i = 0; i < 3; i++) {
-                    final sounder = sounders[i];
-
-                    bool isEnabled = sounder.enabled == 'Yes';
-                    bool isTest = sounder.test == 'Yes';
-                    bool isNormal = sounder.type == 'Normal';
-                    String outputText = sounder.outputController.text;
-                    int functionNo =
-                        int.tryParse(sounder.dynamicController.text) ?? 0;
-                    int groupIndex = returnIndex(sounder.group, groupOptions);
-                    int functionIndex = returnIndex(
-                      sounder.function,
-                      functionOptionsMap[sounder.group]!,
-                    );
-
-                    final config = OutputModeConfig(
-                      outputEnable:
-                          isEnabled
-                              ? OutputEnable.enabled
-                              : OutputEnable.disabled,
-                      outputMode: isTest ? OutputMode.test : OutputMode.normal,
-                      supervisionMode:
-                          isNormal
-                              ? SupervisionMode.normal
-                              : SupervisionMode.mtl5525,
-                    );
-                    final String hexValue = OutputModeCodec.encodeHex(config);
-
-                    switch (i) {
-                      case 0:
-                        manager!.sounderOneRelayOutputMode.value = hexValue;
-                        manager!.sounderOneRelayFunctionGroup.value =
-                            groupIndex;
-                        manager!.sounderOneRelayFunction.value = functionIndex;
-                        manager!.sounderOneFunctionNo.value = functionNo;
-                        manager!.sounderOneOutputText.value = outputText;
-                        manager!.isSounderOneEnabled.value = isEnabled;
-                        manager!.isSounderOneTest.value = isTest;
-                        manager!.isSounderOneNormal.value = isNormal;
-                        break;
-                      case 1:
-                        manager!.sounderTwoRelayOutputMode.value = hexValue;
-                        manager!.sounderTwoRelayFunctionGroup.value =
-                            groupIndex;
-                        manager!.sounderTwoRelayFunction.value = functionIndex;
-                        manager!.sounderTwoFunctionNo.value = functionNo;
-                        manager!.sounderTwoOutputText.value = outputText;
-                        manager!.isSounderTwoEnabled.value = isEnabled;
-                        manager!.isSounderTwoTest.value = isTest;
-                        manager!.isSounderTwoNormal.value = isNormal;
-                        break;
-                      case 2:
-                        manager!.sounderThreeRelayOutputMode.value = hexValue;
-                        manager!.sounderThreeRelayFunctionGroup.value =
-                            groupIndex;
-                        manager!.sounderThreeRelayFunction.value =
-                            functionIndex;
-                        manager!.sounderThreeFunctionNo.value = functionNo;
-                        manager!.sounderThreeOutputText.value = outputText;
-                        manager!.isSounderThreeEnabled.value = isEnabled;
-                        manager!.isSounderThreeTest.value = isTest;
-                        manager!.isSounderThreeNormal.value = isNormal;
-                        break;
-                    }
+                ? () async {
+                  if (await commitLocal()) {
+                    widget.onApply();
                   }
-
-                  // apply general tab
-                  final generalConfig = GeneralEquipmentModeConfig(
-                    equipmentEnable:
-                        manager!.isSounderGeneralEnabled.value
-                            ? EquipmentEnable.enabled
-                            : EquipmentEnable.disabled,
-                    equipmentMode:
-                        manager!.isSounderGeneralTest.value
-                            ? EquipmentMode.test
-                            : EquipmentMode.normal,
-                    sounderDelay:
-                        manager!.isSounderGeneralDelay.value
-                            ? SounderDelay.enabled
-                            : SounderDelay.disabled,
-                  );
-                  manager!.sounderGeneralMode.value =
-                      GeneralEquipmentModeCodec.encodeHex(generalConfig);
-                  manager!.sounderGeneralDelay.value =
-                      int.tryParse(delayController.text) ?? 0;
-
-                  // apply zone tab
-                  for (int i = 0; i < 3; i++) {
-                    final zone = zones[i];
-                    bool isEnabled = zone.enabled == 'Yes';
-                    bool isTest = zone.test == 'Yes';
-                    int actionIndex = returnIndex(zone.action, actionOptions);
-                    final zoneConfig = ZoneEquipmentModeConfig(
-                      zoneEnable:
-                          isEnabled
-                              ? ZoneEquipmentEnable.enabled
-                              : ZoneEquipmentEnable.disabled,
-                      zoneMode:
-                          isTest
-                              ? ZoneEquipmentMode.test
-                              : ZoneEquipmentMode.normal,
-                      sounderDelay: ZoneSounderDelay.disabled,
-                    );
-                    final String zoneHexValue =
-                        ZoneEquipmentModeCodec.encodeHex(zoneConfig);
-
-                    switch (i) {
-                      case 0:
-                        manager!.sounderZoneOneMode.value = zoneHexValue;
-                        manager!.isZoneOneEnabled.value = isEnabled;
-                        manager!.isZoneOneTest.value = isTest;
-                        manager!.zoneOneAction.value = actionIndex;
-                        break;
-                      case 1:
-                        manager!.sounderZoneTwoMode.value = zoneHexValue;
-                        manager!.isZoneTwoEnabled.value = isEnabled;
-                        manager!.isZoneTwoTest.value = isTest;
-                        manager!.zoneTwoAction.value = actionIndex;
-                        break;
-                      case 2:
-                        manager!.sounderZoneThreeMode.value = zoneHexValue;
-                        manager!.isZoneThreeEnabled.value = isEnabled;
-                        manager!.isZoneThreeTest.value = isTest;
-                        manager!.zoneThreeAction.value = actionIndex;
-                        break;
-                    }
-                  }
-
-                  // apply ext out tab
-                  for (int i = 0; i < 3; i++) {
-                    final extOut = extOuts[i];
-                    bool isEnabled = extOut.enabled == 'Yes';
-                    bool isTest = extOut.test == 'Yes';
-                    int countdownIndex = returnIndex(
-                      extOut.countdownAction,
-                      extOutActionOptions,
-                    );
-                    int holdIndex = returnIndex(
-                      extOut.holdAction,
-                      extOutActionOptions,
-                    );
-                    int releaseIndex = returnIndex(
-                      extOut.releaseAction,
-                      extOutActionOptions,
-                    );
-
-                    final extOutConfig = ExtZoneEquipmentModeConfig(
-                      zoneEnable:
-                          isEnabled
-                              ? ExtZoneEquipmentEnable.enabled
-                              : ExtZoneEquipmentEnable.disabled,
-                      zoneMode:
-                          isTest
-                              ? ExtZoneEquipmentMode.test
-                              : ExtZoneEquipmentMode.normal,
-                    );
-                    final String extOutHexValue =
-                        ExtZoneEquipmentModeCodec.encodeHex(extOutConfig);
-
-                    switch (i) {
-                      case 0:
-                        manager!.sounderExtOutOneMode.value = extOutHexValue;
-                        manager!.isExtOutOneEnabled.value = isEnabled;
-                        manager!.isExtOutOneTest.value = isTest;
-                        manager!.extoutOneCountdownAction.value =
-                            countdownIndex;
-                        manager!.extoutOneHoldAction.value = holdIndex;
-                        manager!.extoutOneReleaseAction.value = releaseIndex;
-                        break;
-                      case 1:
-                        manager!.sounderExtOutTwoMode.value = extOutHexValue;
-                        manager!.isExtOutTwoEnabled.value = isEnabled;
-                        manager!.isExtOutTwoTest.value = isTest;
-                        manager!.extoutTwoCountdownAction.value =
-                            countdownIndex;
-                        manager!.extoutTwoHoldAction.value = holdIndex;
-                        manager!.extoutTwoReleaseAction.value = releaseIndex;
-                        break;
-                      case 2:
-                        manager!.sounderExtOutThreeMode.value = extOutHexValue;
-                        manager!.isExtOutThreeEnabled.value = isEnabled;
-                        manager!.isExtOutThreeTest.value = isTest;
-                        manager!.extoutThreeCountdownAction.value =
-                            countdownIndex;
-                        manager!.extoutThreeHoldAction.value = holdIndex;
-                        manager!.extoutThreeReleaseAction.value = releaseIndex;
-                        break;
-                    }
-                  }
-
-                  widget.onApply();
                 }
                 : null,
         child: Text(

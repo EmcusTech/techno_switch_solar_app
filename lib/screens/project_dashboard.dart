@@ -30,7 +30,10 @@ import 'package:techno_switch_solar_app/widgets/bottom_sheets/radio_mode_bottoms
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/relay_mode_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/service_due_mode_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/setting_bottom_sheets/ext_out_bottomsheet.dart';
-import 'package:techno_switch_solar_app/utils/peripheral_cache_to_ble.dart';
+import 'package:techno_switch_solar_app/panel_config/panel_access_password_popup.dart';
+import 'package:techno_switch_solar_app/panel_config/panel_config_bulk_sync.dart';
+import 'package:techno_switch_solar_app/panel_config/panel_config_cache_sync.dart';
+import 'package:techno_switch_solar_app/panel_config/panel_config_feedback_dialogs.dart';
 import 'package:techno_switch_solar_app/utils/peripheral_config_snapshot.dart';
 import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/config_log_bottomsheet.dart';
@@ -240,7 +243,8 @@ class _ProjectDashboardContent extends StatefulWidget {
 
 class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
   // Prevent multiple navigations while dialog rebuilds
-  bool _navigatingToDeviceConnecting = false;
+  final ValueNotifier<bool> _navigatingToDeviceConnecting =
+      ValueNotifier<bool>(false);
 
   // Refresh triggers for peripheral bottom sheets (increment when download completes)
   final ValueNotifier<int> _relayRefreshTrigger = ValueNotifier(0);
@@ -512,6 +516,19 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     return false;
   }
 
+  PanelConfigRefreshNotifiers get _panelRefreshNotifiers =>
+      PanelConfigRefreshNotifiers(
+        relay: _relayRefreshTrigger,
+        input: _inputRefreshTrigger,
+        zone: _zoneRefreshTrigger,
+        extOut: _extOutRefreshTrigger,
+        sounder: _sounderRefreshTrigger,
+        serviceDue: _serviceDueRefreshTrigger,
+        accessCode: _accessCodeRefreshTrigger,
+        panelInfo: _panelInfoRefreshTrigger,
+        generalModule: _generalModuleRefreshTrigger,
+      );
+
   @override
   void dispose() {
     _bleManager.isConnectedNotifier.removeListener(_onBleConnectivityChanged);
@@ -519,6 +536,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     _bluetoothService.stopScanning();
     _configLogCompareResult.dispose();
     _configLogWorking.dispose();
+    _navigatingToDeviceConnecting.dispose();
     super.dispose();
   }
 
@@ -1152,134 +1170,11 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     String message, {
     String? subtitle,
   }) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (dialogContext) {
-        final String resolvedSubtitle =
-            subtitle ??
-            'The $message has been successfully applied to the device.';
-
-        Future.delayed(const Duration(seconds: 2), () {
-          if (dialogContext.mounted) {
-            Navigator.of(dialogContext, rootNavigator: true).pop();
-            ble.bleProcess.isExtOutApplyDone.value = false;
-            ble.bleProcess.isInputSetupApplyDone.value = false;
-            ble.bleProcess.isRelaySetupApplyDone.value = false;
-            ble.bleProcess.isZoneSetupApplyDone.value = false;
-            ble.bleProcess.isLBusSetupApplyDone.value = false;
-            ble.bleProcess.isRadioSetupApplyDone.value = false;
-            ble.bleProcess.isLBusSetupApplyDone.value = false;
-            ble.bleProcess.isSounderSetupApplyDone.value = false;
-            ble.bleProcess.isServiceDueApplyDone.value = false;
-            ble.bleProcess.isAccessCodeSetupApplyDone.value = false;
-            ble.bleProcess.isPanelInfoSetupApplyDone.value = false;
-            ble.bleProcess.isGeneralModuleSetupApplyDone.value = false;
-          }
-        });
-        return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Success Icon
-                Container(
-                  width: 64,
-                  height: 64,
-                  decoration: BoxDecoration(
-                    color: Color(0xFFE8F5E9), // Light green background
-                    shape: BoxShape.circle,
-                  ),
-                  child: Center(
-                    child: SvgPicture.asset(
-                      'assets/svgs/check_circle_icon.svg',
-                      height: 40,
-                      width: 40,
-                      fit: BoxFit.contain,
-                    ),
-                  ),
-                ),
-
-                SizedBox(height: 16),
-
-                // Title
-                Text(
-                  "$message Applied",
-                  style: GoogleFonts.inter(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF3D3D3D),
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-
-                SizedBox(height: 8),
-
-                // Subtitle
-                Text(
-                  resolvedSubtitle,
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w400,
-                    color: Color(0xFF918F8F),
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-
-                // SizedBox(height: 24),
-
-                // // Dismiss Button
-                // SizedBox(
-                //   width: double.infinity,
-                //   child: GestureDetector(
-                //     onTap: () {
-                //       Navigator.of(dialogContext, rootNavigator: true).pop();
-                //       ble.bleProcess.isExtOutApplyDone.value = false;
-                //       ble.bleProcess.isInputSetupApplyDone.value = false;
-                //       ble.bleProcess.isRelaySetupApplyDone.value = false;
-                //       ble.bleProcess.isZoneSetupApplyDone.value = false;
-                //       ble.bleProcess.isLBusSetupApplyDone.value = false;
-                //       ble.bleProcess.isRadioSetupApplyDone.value = false;
-                //       ble.bleProcess.isLBusSetupApplyDone.value = false;
-                //       ble.bleProcess.isSounderSetupApplyDone.value = false;
-                //       ble.bleProcess.isServiceDueApplyDone.value = false;
-                //       ble.bleProcess.isAccessCodeSetupApplyDone.value = false;
-                //       ble.bleProcess.isPanelInfoSetupApplyDone.value = false;
-                //       ble.bleProcess.isGeneralModuleSetupApplyDone.value =
-                //           false;
-                //     },
-                //     child: Container(
-                //       height: 48,
-                //       decoration: BoxDecoration(
-                //         color: Color(0xFFEC1D24),
-                //         borderRadius: BorderRadius.circular(24),
-                //       ),
-                //       child: Center(
-                //         child: Text(
-                //           'OK',
-                //           style: GoogleFonts.inter(
-                //             fontSize: 16,
-                //             fontWeight: FontWeight.w600,
-                //             color: Colors.white,
-                //           ),
-                //         ),
-                //       ),
-                //     ),
-                //   ),
-                // ),
-              ],
-            ),
-          ),
-        );
-      },
+    showPanelApplySuccessDialog(
+      context,
+      _bleManager.bleProcess,
+      message,
+      subtitle: subtitle,
     );
   }
 
@@ -1405,220 +1300,12 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     );
   }
 
-  Future<void> _waitUntilNotifierQuiet(ValueNotifier<bool> busy) async {
-    final deadline = DateTime.now().add(const Duration(seconds: 120));
-    var sawBusy = busy.value;
-    while (DateTime.now().isBefore(deadline)) {
-      if (busy.value) sawBusy = true;
-      if (sawBusy && !busy.value) {
-        await Future<void>.delayed(const Duration(milliseconds: 150));
-        return;
-      }
-      await Future<void>.delayed(const Duration(milliseconds: 40));
-    }
-    throw TimeoutException(
-      'Bluetooth operation timed out',
-      const Duration(seconds: 120),
-    );
-  }
-
-  ValueNotifier<bool> _fetchBusyFor(PeripheralConfigSection s) {
-    final bp = ble.bleProcess;
-    switch (s) {
-      case PeripheralConfigSection.module:
-        return bp.isModuleSetupFetchCommandActive;
-      case PeripheralConfigSection.panelInfo:
-        return bp.isPanelInfoSetupFetchCommandActive;
-      case PeripheralConfigSection.generalModule:
-        return bp.isGeneralModuleSetupFetchCommandActive;
-      case PeripheralConfigSection.accessCode:
-        return bp.isAccessCodeSetupFetchCommandActive;
-      case PeripheralConfigSection.serviceDue:
-        return bp.isServiceDueFetchCommandActive;
-      case PeripheralConfigSection.input:
-        return bp.isInputSetupFetchCommandActive;
-      case PeripheralConfigSection.relay:
-        return bp.isRelaySetupFetchCommandActive;
-      case PeripheralConfigSection.zone:
-        return bp.isZoneSetupFetchCommandActive;
-      case PeripheralConfigSection.sounder:
-        return bp.isSounderSetupFetchCommandActive;
-      case PeripheralConfigSection.radio:
-        return bp.isRadioSetupFetchCommandActive;
-      case PeripheralConfigSection.lBus:
-        return bp.isLBusSetupFetchCommandActive;
-      case PeripheralConfigSection.extOut:
-        return bp.isExtOutCommandFetchActive;
-    }
-  }
-
-  void _startFetchSection(PeripheralConfigSection s) {
-    final bp = ble.bleProcess;
-    switch (s) {
-      case PeripheralConfigSection.module:
-        bp.isModuleSetupFetchCommandActive.value = true;
-        bleController.startModuleSetupFetch();
-        break;
-      case PeripheralConfigSection.panelInfo:
-        bp.isPanelInfoSetupFetchCommandActive.value = true;
-        bleController.startPanelInfoSetupFetch();
-        break;
-      case PeripheralConfigSection.generalModule:
-        bp.isGeneralModuleSetupFetchCommandActive.value = true;
-        bleController.startGeneralModuleSetupFetch();
-        break;
-      case PeripheralConfigSection.accessCode:
-        bp.isAccessCodeSetupFetchCommandActive.value = true;
-        bleController.startAccessCodeSetupFetch();
-        break;
-      case PeripheralConfigSection.serviceDue:
-        bp.isServiceDueFetchCommandActive.value = true;
-        bleController.startServiceDueFetch();
-        break;
-      case PeripheralConfigSection.input:
-        bp.isInputSetupFetchCommandActive.value = true;
-        bleController.startInputSetupFetch();
-        break;
-      case PeripheralConfigSection.relay:
-        bp.isRelaySetupFetchCommandActive.value = true;
-        bleController.startRelaySetupFetch();
-        break;
-      case PeripheralConfigSection.zone:
-        bp.isZoneSetupFetchCommandActive.value = true;
-        bleController.startZoneSetupFetch();
-        break;
-      case PeripheralConfigSection.sounder:
-        bp.isSounderSetupFetchCommandActive.value = true;
-        bleController.startSounderSetupFetch();
-        break;
-      case PeripheralConfigSection.radio:
-        bp.isRadioSetupFetchCommandActive.value = true;
-        bleController.startRadioSetupFetch();
-        break;
-      case PeripheralConfigSection.lBus:
-        bp.isLBusSetupFetchCommandActive.value = true;
-        bleController.startLBusSetupFetch();
-        break;
-      case PeripheralConfigSection.extOut:
-        bp.isExtOutCommandFetchActive.value = true;
-        bleController.startExtOutFetch();
-        break;
-    }
-  }
-
-  Future<void> _runConfigLogFetchRemaining() async {
-    for (final s in kPeripheralConfigFetchOrder.skip(1)) {
-      _startFetchSection(s);
-      await _waitUntilNotifierQuiet(_fetchBusyFor(s));
-      if (s == PeripheralConfigSection.lBus &&
-          ble.bleProcess.isLbusFetchHasErrors.value) {
-        final errs = ble.bleProcess.lbusFetchErrors.value.join(', ');
-        throw StateError('L-Bus download failed: $errs');
-      }
-    }
-  }
-
-  ValueNotifier<bool> _applyBusyFor(PeripheralConfigSection s) {
-    final bp = ble.bleProcess;
-    switch (s) {
-      case PeripheralConfigSection.module:
-        return bp.isModuleSetupFetchCommandActive;
-      case PeripheralConfigSection.panelInfo:
-        return bp.isPanelInfoSetupApplyCommandActive;
-      case PeripheralConfigSection.generalModule:
-        return bp.isGeneralModuleSetupApplyCommandActive;
-      case PeripheralConfigSection.accessCode:
-        return bp.isAccessCodeSetupApplyCommandActive;
-      case PeripheralConfigSection.serviceDue:
-        return bp.isServiceDueApplyCommandActive;
-      case PeripheralConfigSection.input:
-        return bp.isInputSetupApplyActive;
-      case PeripheralConfigSection.relay:
-        return bp.isRelaySetupCommandApplyActive;
-      case PeripheralConfigSection.zone:
-        return bp.isZoneSetupCommandApplyActive;
-      case PeripheralConfigSection.sounder:
-        return bp.isSounderSetupApplyCommandActive;
-      case PeripheralConfigSection.radio:
-        return bp.isRadioSetupCommandApplyActive;
-      case PeripheralConfigSection.lBus:
-        return bp.isLBusSetupApplyCommandActive;
-      case PeripheralConfigSection.extOut:
-        return bp.isExtOutCommandApplyActive;
-    }
-  }
-
-  void _startApplySection(PeripheralConfigSection s) {
-    final bp = ble.bleProcess;
-    switch (s) {
-      case PeripheralConfigSection.module:
-        break;
-      case PeripheralConfigSection.panelInfo:
-        bp.isPanelInfoSetupApplyCommandActive.value = true;
-        bleController.startPanelInfoSetupApply();
-        break;
-      case PeripheralConfigSection.generalModule:
-        bp.isGeneralModuleSetupApplyCommandActive.value = true;
-        bleController.startGeneralModuleSetupApply();
-        break;
-      case PeripheralConfigSection.accessCode:
-        bp.isAccessCodeSetupApplyCommandActive.value = true;
-        bleController.startAccessCodeSetupApply();
-        break;
-      case PeripheralConfigSection.serviceDue:
-        bp.isServiceDueApplyCommandActive.value = true;
-        bleController.startServiceDueApply();
-        break;
-      case PeripheralConfigSection.input:
-        bp.isInputSetupApplyActive.value = true;
-        bleController.startInputSetupApply();
-        break;
-      case PeripheralConfigSection.relay:
-        bp.isRelaySetupCommandApplyActive.value = true;
-        bleController.startRelaySetupApply();
-        break;
-      case PeripheralConfigSection.zone:
-        bp.isZoneSetupCommandApplyActive.value = true;
-        bleController.startZoneSetupApply();
-        break;
-      case PeripheralConfigSection.sounder:
-        bp.isSounderSetupApplyCommandActive.value = true;
-        bleController.startSounderSetupApply();
-        break;
-      case PeripheralConfigSection.radio:
-        bp.isRadioSetupCommandApplyActive.value = true;
-        bleController.startRadioSetupApply();
-        break;
-      case PeripheralConfigSection.lBus:
-        bp.isLBusSetupApplyCommandActive.value = true;
-        bleController.startLBusSetupApply();
-        break;
-      case PeripheralConfigSection.extOut:
-        bp.isExtOutCommandApplyActive.value = true;
-        bleController.startExtOutApply();
-        break;
-    }
-  }
-
-  Future<void> _runConfigLogApplyRemaining() async {
-    for (final s in kPeripheralConfigApplyOrder.skip(1)) {
-      _startApplySection(s);
-      await _waitUntilNotifierQuiet(_applyBusyFor(s));
-    }
-  }
-
   Future<void> _saveAllPeripheralCachesFromBle() async {
-    await _saveRelayCacheAndNotifyRefresh();
-    await _saveInputCacheAndNotifyRefresh();
-    await _saveZoneCacheAndNotifyRefresh();
-    await _saveExtOutCacheAndNotifyRefresh();
-    await _saveSounderCacheAndNotifyRefresh();
-    await _saveServiceDueCacheAndNotifyRefresh();
-    await _saveModuleCacheAndNotifyRefresh();
-    await _saveLBusCacheAndNotifyRefresh();
-    await _saveAccessCodeCacheAndNotifyRefresh();
-    await _savePanelInfoCacheAndNotifyRefresh();
-    await _saveGeneralModuleCacheAndNotifyRefresh();
+    await PanelConfigCacheSync.saveAllFromBle(
+      _bleManager,
+      _selectedDevice.id,
+      _panelRefreshNotifiers,
+    );
   }
 
   void _onConfigLogDownloadAndCompare() {
@@ -1633,7 +1320,10 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
       downloadSuccessMessage: 'Configuration',
       onDownloadComplete: () async {
         try {
-          await _runConfigLogFetchRemaining();
+          await PanelConfigBulkSync.runConfigLogFetchRemaining(
+            bleController,
+            _bleManager,
+          );
           _configLogCompareResult.value = PeripheralConfigSnapshot.compare(
             panelBySection: PeripheralConfigSnapshot.fromBleManager(
               _bleManager,
@@ -1716,730 +1406,85 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     Future<void> Function()? onDownloadComplete,
     String? downloadSuccessMessage,
   }) {
-    final bleProcess = ble.bleProcess;
-    final bool useCachedSessionAccess =
-        bleProcess.sessionAccessCodeReady.value &&
-        bleProcess.accessKey.value.isNotEmpty;
-
-    // Reset navigation guard each time the dialog opens
-    _navigatingToDeviceConnecting = false;
-
-    // Reset previous access-key validation state (keep cached access key when reusing session)
-    bleProcess.isAccessKeyValid.value = null;
-    if (useCachedSessionAccess) {
-      // Start in the same UI state as after tapping Verify: verifying, no field, no buttons.
-      bleProcess.processDesc.value = "Validating";
-    } else {
-      bleProcess.accessKey.value = "";
-      bleProcess.processDesc.value = "";
-    }
-
-    Timer? accessKeyValidationTimer;
-    void cancelAccessKeyTimer() {
-      accessKeyValidationTimer?.cancel();
-      accessKeyValidationTimer = null;
-    }
-
-    final TextEditingController _controller = TextEditingController();
-    final FocusNode _focusNode = FocusNode();
-    final accessKey = bleProcess.accessKey;
-    final ValueNotifier<bool?> isAccessKeyValid = bleProcess.isAccessKeyValid;
-
-    showDialog(
+    showPanelAccessPasswordPopup(
       context: context,
-      barrierDismissible: false,
-      builder: (dialogContext) {
-        return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
+      isMounted: () => mounted,
+      bleManager: _bleManager,
+      bleController: bleController,
+      selectedDevice: _selectedDevice,
+      navigatingToDeviceConnecting: _navigatingToDeviceConnecting,
+      delegates: PanelAccessPasswordDelegates(
+        saveExtOutCache: _saveExtOutCacheAndNotifyRefresh,
+        saveInputCache: _saveInputCacheAndNotifyRefresh,
+        saveRelayCache: _saveRelayCacheAndNotifyRefresh,
+        saveZoneCache: _saveZoneCacheAndNotifyRefresh,
+        saveRadioCache: _saveRadioCacheAndNotifyRefresh,
+        saveLBusCache: _saveLBusCacheAndNotifyRefresh,
+        saveSounderCache: _saveSounderCacheAndNotifyRefresh,
+        saveServiceDueCache: _saveServiceDueCacheAndNotifyRefresh,
+        saveAccessCodeCache: _saveAccessCodeCacheAndNotifyRefresh,
+        savePanelInfoCache: _savePanelInfoCacheAndNotifyRefresh,
+        saveGeneralModuleCache: _saveGeneralModuleCacheAndNotifyRefresh,
+        showApplySuccess: showApplySuccessDialog,
+        showDownloadSuccess: showDownloadSuccessDialog,
+        openLogRetrievalLoading: (dialogContext) {
+          Navigator.of(dialogContext).push(
+            MaterialPageRoute(
+              builder:
+                  (context) => LogRetrievalLoadingScreen(
+                    scanType: ScanType.bluetooth,
+                    selectedDevice: widget.selectedDevice,
+                    connectedDevice: widget.selectedDevice,
+                  ),
             ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Lock icon — red while entering code; green when field hidden (verifying / granted)
-                ValueListenableBuilder<bool?>(
-                  valueListenable: isAccessKeyValid,
-                  builder: (_, isAccessKeyValidValue, __) {
-                    return ValueListenableBuilder<String>(
-                      valueListenable: bleProcess.processDesc,
-                      builder: (_, processDescValue, __) {
-                        final bool hideInput =
-                            (processDescValue.isNotEmpty &&
-                                isAccessKeyValidValue != false) ||
-                            isAccessKeyValidValue == true;
-                        final Color iconColor =
-                            hideInput
-                                ? const Color(0xFF2E7D32)
-                                : const Color(0xFFEC1D24);
-                        final Color circleColor =
-                            hideInput
-                                ? const Color(0xFFE8F5E9)
-                                : const Color(0xFFFBDEE1);
-                        return AnimatedContainer(
-                          duration: const Duration(milliseconds: 280),
-                          curve: Curves.easeInOutCubic,
-                          width: 64,
-                          height: 64,
-                          decoration: BoxDecoration(
-                            color: circleColor,
-                            shape: BoxShape.circle,
-                          ),
-                          child: Center(
-                            child: SvgPicture.asset(
-                              'assets/svgs/lock_icon.svg',
-                              height: 32,
-                              width: 32,
-                              colorFilter: ColorFilter.mode(
-                                iconColor,
-                                BlendMode.srcIn,
-                              ),
-                            ),
-                          ),
-                        );
-                      },
-                    );
-                  },
-                ),
-
-                SizedBox(height: 16),
-
-                // Password input (title below animates: Enter → Verifying / Access granted)
-                ValueListenableBuilder<bool?>(
-                  valueListenable: isAccessKeyValid,
-                  builder: (_, isAccessKeyValidValue, __) {
-                    if (isAccessKeyValidValue != null) {
-                      cancelAccessKeyTimer();
-                    }
-                    if (isAccessKeyValidValue == true &&
-                        !_navigatingToDeviceConnecting) {
-                      _navigatingToDeviceConnecting = true;
-                      bleProcess.setSessionAccessCode(
-                        bleProcess.accessKey.value,
-                      );
-                      WidgetsBinding.instance.addPostFrameCallback((_) async {
-                        if (!mounted) return;
-                        await Future.delayed(const Duration(seconds: 1));
-                        if (!mounted) return;
-                        Navigator.of(dialogContext, rootNavigator: true).pop();
-                        if (isConfigLogBulkApply &&
-                            mode == 'bottomsheet_apply') {
-                          _configLogWorking.value = true;
-                          try {
-                            await _runConfigLogApplyRemaining();
-                            await _saveAllPeripheralCachesFromBle();
-                            if (mounted) {
-                              _configLogCompareResult
-                                  .value = PeripheralConfigSnapshot.compare(
-                                panelBySection:
-                                    PeripheralConfigSnapshot.fromBleManager(
-                                      _bleManager,
-                                    ),
-                                localBySection:
-                                    await PeripheralConfigSnapshot.fromCache(
-                                      _selectedDevice.id,
-                                    ),
-                              );
-                            }
-                            if (mounted) {
-                              showApplySuccessDialog(
-                                context,
-                                'Configuration',
-                                subtitle:
-                                    'Your saved setup has been applied to the panel.',
-                              );
-                            }
-                          } catch (e, st) {
-                            debugPrint('$e\n$st');
-                            if (mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    'Could not apply configuration: $e',
-                                  ),
-                                ),
-                              );
-                            }
-                          } finally {
-                            _configLogWorking.value = false;
-                            _navigatingToDeviceConnecting = false;
-                          }
-                        } else if (mode == 'bottomsheet_download') {
-                          if (isConfigLogBulk) {
-                            _configLogWorking.value = true;
-                            try {
-                              await onDownloadComplete?.call();
-                              if (mounted) {
-                                final message =
-                                    downloadSuccessMessage ?? 'Configuration';
-                                showDownloadSuccessDialog(context, message);
-                                Future.delayed(const Duration(seconds: 2), () {
-                                  if (mounted) {
-                                    Navigator.of(context).pop();
-                                  }
-                                });
-                              }
-                            } finally {
-                              _configLogWorking.value = false;
-                              _navigatingToDeviceConnecting = false;
-                            }
-                          } else {
-                            await onDownloadComplete?.call();
-                            if (mounted) {
-                              final message =
-                                  downloadSuccessMessage ??
-                                  (isExtOut == true
-                                      ? 'Extinguishing Output'
-                                      : isInputSetup == true
-                                      ? 'Inputs'
-                                      : isRelaySetup == true
-                                      ? 'Relays'
-                                      : isZoneSetup == true
-                                      ? 'Zones'
-                                      : isSounderSetup == true
-                                      ? 'Sounders'
-                                      : isServiceDueSetup == true
-                                      ? 'Service Due'
-                                      : isAccessCodeSetup == true
-                                      ? 'Access Code'
-                                      : isPanelInfoSetup == true
-                                      ? 'Panel Info'
-                                      : isGeneralModuleSetup == true
-                                      ? 'General Module'
-                                      : isAdcSetup == true
-                                      ? 'Diagnostics'
-                                      : 'Configuration');
-                              showDownloadSuccessDialog(context, message);
-                              Future.delayed(const Duration(seconds: 2), () {
-                                if (mounted) {
-                                  Navigator.of(context).pop();
-                                }
-                              });
-                            }
-                          }
-                        } else if (ble.bleProcess.isExtOutApplyDone.value) {
-                          ble.bleProcess.isExtOutApplyButtonActive.value = true;
-                          await _saveExtOutCacheAndNotifyRefresh();
-                          if (mounted) {
-                            showApplySuccessDialog(
-                              context,
-                              'Extinguishing Output',
-                            );
-                          }
-                        } else if (ble.bleProcess.isInputSetupApplyDone.value) {
-                          await _saveInputCacheAndNotifyRefresh();
-                          if (mounted) {
-                            showApplySuccessDialog(context, 'Inputs');
-                          }
-                        } else if (ble.bleProcess.isRelaySetupApplyDone.value &&
-                            mounted) {
-                          await _saveRelayCacheAndNotifyRefresh();
-                          showApplySuccessDialog(context, 'Relays');
-                        } else if (ble.bleProcess.isZoneSetupApplyDone.value &&
-                            mounted) {
-                          await _saveZoneCacheAndNotifyRefresh();
-                          showApplySuccessDialog(context, 'Zones');
-                        } else if (ble.bleProcess.isRadioSetupApplyDone.value &&
-                            mounted) {
-                          await _saveRadioCacheAndNotifyRefresh();
-                          showApplySuccessDialog(context, 'Radio');
-                        } else if (ble.bleProcess.isLBusSetupApplyDone.value &&
-                            mounted) {
-                          await _saveLBusCacheAndNotifyRefresh();
-                          showApplySuccessDialog(context, 'L-Bus');
-                        } else if (ble
-                                .bleProcess
-                                .isSounderSetupApplyDone
-                                .value &&
-                            mounted) {
-                          await _saveSounderCacheAndNotifyRefresh();
-                          showApplySuccessDialog(context, 'Sounders');
-                        } else if (ble.bleProcess.isServiceDueApplyDone.value &&
-                            mounted) {
-                          await _saveServiceDueCacheAndNotifyRefresh();
-                          showApplySuccessDialog(context, 'Service Due');
-                        } else if (ble
-                                .bleProcess
-                                .isAccessCodeSetupApplyDone
-                                .value &&
-                            mounted) {
-                          await _saveAccessCodeCacheAndNotifyRefresh();
-                          showApplySuccessDialog(context, 'Access Code');
-                        } else if (ble
-                                .bleProcess
-                                .isPanelInfoSetupApplyDone
-                                .value &&
-                            mounted) {
-                          await _savePanelInfoCacheAndNotifyRefresh();
-                          showApplySuccessDialog(context, 'Panel Info');
-                        } else if (ble
-                                .bleProcess
-                                .isGeneralModuleSetupApplyDone
-                                .value &&
-                            mounted) {
-                          await _saveGeneralModuleCacheAndNotifyRefresh();
-                          showApplySuccessDialog(context, 'General Module');
-                        } else {
-                          Navigator.of(dialogContext).push(
-                            MaterialPageRoute(
-                              builder:
-                                  (context) => LogRetrievalLoadingScreen(
-                                    scanType: ScanType.bluetooth,
-                                    selectedDevice: widget.selectedDevice,
-                                    connectedDevice: widget.selectedDevice,
-                                  ),
-                            ),
-                          );
-                        }
-                      });
-                    }
-
-                    return ValueListenableBuilder<String>(
-                      valueListenable: bleProcess.processDesc,
-                      builder: (_, processDescValue, __) {
-                        final bool hideInput =
-                            (processDescValue.isNotEmpty &&
-                                isAccessKeyValidValue != false) ||
-                            isAccessKeyValidValue == true;
-                        if (hideInput) {
-                          WidgetsBinding.instance.addPostFrameCallback((_) {
-                            if (_focusNode.hasFocus) {
-                              _focusNode.unfocus();
-                            }
-                          });
-                        }
-
-                        const Duration animDuration = Duration(
-                          milliseconds: 280,
-                        );
-
-                        final String dialogTitle =
-                            !hideInput
-                                ? 'Enter Access Code'
-                                : (isAccessKeyValidValue == true
-                                    ? mode == "bottomsheet_download"
-                                        ? 'Downloading...'
-                                        : mode == "bottomsheet_apply"
-                                        ? "Applying..."
-                                        : "Validated"
-                                    : (processDescValue == 'Validating' ||
-                                        processDescValue.toLowerCase().contains(
-                                          'validat',
-                                        ))
-                                    ? (bleProcess.sessionAccessCodeReady.value
-                                        ? 'Initiating'
-                                        : 'Verifying access')
-                                    : (mode == "bottomsheet_download"
-                                        ? 'Downloading...'
-                                        : mode == "bottomsheet_apply"
-                                        ? "Applying..."
-                                        : "Validated"));
-
-                        return Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            SizedBox(
-                              width: double.infinity,
-                              child: AnimatedSwitcher(
-                                duration: animDuration,
-                                switchInCurve: Curves.easeOutCubic,
-                                switchOutCurve: Curves.easeInCubic,
-                                transitionBuilder: (child, animation) {
-                                  final offsetAnimation = Tween<Offset>(
-                                    begin: const Offset(0, 0.08),
-                                    end: Offset.zero,
-                                  ).animate(
-                                    CurvedAnimation(
-                                      parent: animation,
-                                      curve: Curves.easeOutCubic,
-                                    ),
-                                  );
-                                  return FadeTransition(
-                                    opacity: animation,
-                                    child: SlideTransition(
-                                      position: offsetAnimation,
-                                      child: child,
-                                    ),
-                                  );
-                                },
-                                child: Text(
-                                  dialogTitle,
-                                  key: ValueKey<String>(dialogTitle),
-                                  style: GoogleFonts.inter(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.w700,
-                                    color: Color(0xFF3D3D3D),
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                              ),
-                            ),
-
-                            AnimatedSize(
-                              duration: animDuration,
-                              curve: Curves.easeInOutCubic,
-                              alignment: Alignment.topCenter,
-                              clipBehavior: Clip.hardEdge,
-                              child:
-                                  hideInput
-                                      ? const SizedBox.shrink()
-                                      : Column(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          const SizedBox(height: 24),
-                                          TextField(
-                                            controller: _controller,
-                                            focusNode: _focusNode,
-                                            keyboardType: TextInputType.number,
-                                            obscureText: true,
-                                            maxLength: 8,
-                                            textAlign: TextAlign.center,
-                                            style: GoogleFonts.inter(
-                                              fontSize: 24,
-                                              fontWeight: FontWeight.w600,
-                                              letterSpacing: 8,
-                                              color: Color(0xFF3D3D3D),
-                                            ),
-                                            inputFormatters: [
-                                              FilteringTextInputFormatter
-                                                  .digitsOnly,
-                                            ],
-                                            onTap: () {
-                                              if (bleProcess
-                                                      .isAccessKeyValid
-                                                      .value ==
-                                                  false) {
-                                                bleProcess.processDesc.value =
-                                                    '';
-                                                bleProcess
-                                                    .isAccessKeyValid
-                                                    .value = null;
-                                              }
-                                            },
-                                            onChanged: (val) {
-                                              final wasWrong =
-                                                  bleProcess
-                                                      .isAccessKeyValid
-                                                      .value ==
-                                                  false;
-                                              accessKey.value = val;
-                                              bleProcess
-                                                  .isAccessKeyValid
-                                                  .value = null;
-                                              if (wasWrong) {
-                                                bleProcess.processDesc.value =
-                                                    '';
-                                              }
-                                            },
-                                            decoration: InputDecoration(
-                                              hintText: '••••••••',
-                                              hintStyle: GoogleFonts.inter(
-                                                fontSize: 24,
-                                                fontWeight: FontWeight.w600,
-                                                letterSpacing: 8,
-                                                color: Color(0xFFD0D0D0),
-                                              ),
-                                              counterText: '',
-                                              filled: true,
-                                              fillColor: Color(0xFFF8F8F8),
-                                              border: OutlineInputBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(12),
-                                                borderSide: BorderSide(
-                                                  color:
-                                                      isAccessKeyValidValue ==
-                                                              false
-                                                          ? Color(0xFFEC1D24)
-                                                          : Color(0xFFD0D0D0),
-                                                  width: 1,
-                                                ),
-                                              ),
-                                              enabledBorder: OutlineInputBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(12),
-                                                borderSide: BorderSide(
-                                                  color:
-                                                      isAccessKeyValidValue ==
-                                                              false
-                                                          ? Color(0xFFEC1D24)
-                                                          : Color(0xFFD0D0D0),
-                                                  width: 1,
-                                                ),
-                                              ),
-                                              focusedBorder: OutlineInputBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(12),
-                                                borderSide: BorderSide(
-                                                  color: Color(0xFFEC1D24),
-                                                  width: 2,
-                                                ),
-                                              ),
-                                              errorBorder: OutlineInputBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(12),
-                                                borderSide: BorderSide(
-                                                  color: Color(0xFFEC1D24),
-                                                  width: 1,
-                                                ),
-                                              ),
-                                              focusedErrorBorder:
-                                                  OutlineInputBorder(
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                          12,
-                                                        ),
-                                                    borderSide: BorderSide(
-                                                      color: Color(0xFFEC1D24),
-                                                      width: 2,
-                                                    ),
-                                                  ),
-                                              contentPadding:
-                                                  EdgeInsets.symmetric(
-                                                    horizontal: 16,
-                                                    vertical: 16,
-                                                  ),
-                                            ),
-                                          ),
-                                          const SizedBox(height: 12),
-                                        ],
-                                      ),
-                            ),
-                            // Status text during validation/success
-                            Builder(
-                              builder: (context) {
-                                String? status;
-                                if (isAccessKeyValidValue == false) {
-                                  status =
-                                      processDescValue.isNotEmpty
-                                          ? processDescValue
-                                          : 'Wrong password. Try again.';
-                                } else if (isAccessKeyValidValue == null &&
-                                    (processDescValue.isNotEmpty ||
-                                        _controller.text.isNotEmpty)) {
-                                  final bool validatingLike =
-                                      processDescValue == 'Validating' ||
-                                      processDescValue.toLowerCase().contains(
-                                        'validat',
-                                      );
-                                  status =
-                                      processDescValue.isNotEmpty
-                                          ? (bleProcess
-                                                      .sessionAccessCodeReady
-                                                      .value &&
-                                                  validatingLike
-                                              ? ''
-                                              : processDescValue)
-                                          : 'Validating...';
-                                } else if (isAccessKeyValidValue == true) {
-                                  status =
-                                      mode == "bottomsheet_download"
-                                          ? "Processing..."
-                                          : mode == "bottomsheet_apply"
-                                          ? "Processing..."
-                                          : "Fetching...";
-                                  if (mounted) {
-                                    bleProcess.processDesc.value = "Success";
-                                  }
-                                }
-                                if (isAccessKeyValidValue == false) {
-                                  if (_controller.text.isNotEmpty) {
-                                    _controller.clear();
-                                  }
-                                  WidgetsBinding.instance.addPostFrameCallback((
-                                    _,
-                                  ) {
-                                    if (_focusNode.canRequestFocus) {
-                                      _focusNode.requestFocus();
-                                    }
-                                  });
-                                }
-                                return status == null || status.isEmpty
-                                    ? const SizedBox(height: 8)
-                                    : Padding(
-                                      padding: const EdgeInsets.only(
-                                        bottom: 4,
-                                        top: 12,
-                                      ),
-                                      child: Text(
-                                        status,
-                                        style: GoogleFonts.inter(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w600,
-                                          color:
-                                              isAccessKeyValidValue == false
-                                                  ? const Color(0xFFEC1D24)
-                                                  : const Color(0xFF3D3D3D),
-                                        ),
-                                        textAlign: TextAlign.center,
-                                      ),
-                                    );
-                              },
-                            ),
-
-                            ValueListenableBuilder<String>(
-                              valueListenable: bleProcess.processDesc,
-                              builder: (_, processDescForButtons, __) {
-                                // Show only before verify, or after wrong key. Never when success.
-                                final bool showButtons =
-                                    isAccessKeyValidValue != true &&
-                                    (processDescForButtons.isEmpty ||
-                                        isAccessKeyValidValue == false);
-                                return showButtons
-                                    ? Column(
-                                      children: [
-                                        const SizedBox(height: 12),
-                                        Row(
-                                          children: [
-                                            Expanded(
-                                              child: SizedBox(
-                                                height: 48,
-                                                child: OutlinedButton(
-                                                  style: OutlinedButton.styleFrom(
-                                                    foregroundColor:
-                                                        const Color(0xFFEC1D24),
-                                                    side: const BorderSide(
-                                                      color: Color(0xFFEC1D24),
-                                                    ),
-                                                    shape: RoundedRectangleBorder(
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                            24,
-                                                          ),
-                                                    ),
-                                                  ),
-                                                  onPressed: () {
-                                                    cancelAccessKeyTimer();
-                                                    Navigator.of(
-                                                      dialogContext,
-                                                    ).pop();
-                                                  },
-                                                  child: Text(
-                                                    'Cancel',
-                                                    style: GoogleFonts.inter(
-                                                      fontSize: 16,
-                                                      fontWeight:
-                                                          FontWeight.w600,
-                                                    ),
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                            SizedBox(width: 12),
-                                            Expanded(
-                                              child: SizedBox(
-                                                height: 48,
-                                                child: ListenableBuilder(
-                                                  listenable: _controller,
-                                                  builder: (context, _) {
-                                                    final canVerify =
-                                                        _controller.text
-                                                            .trim()
-                                                            .isNotEmpty;
-                                                    return ElevatedButton(
-                                                      style: ElevatedButton.styleFrom(
-                                                        backgroundColor:
-                                                            const Color(
-                                                              0xFFEC1D24,
-                                                            ),
-                                                        shape: RoundedRectangleBorder(
-                                                          borderRadius:
-                                                              BorderRadius.circular(
-                                                                24,
-                                                              ),
-                                                        ),
-                                                      ),
-                                                      onPressed:
-                                                          canVerify
-                                                              ? () async {
-                                                                FocusScope.of(
-                                                                  dialogContext,
-                                                                ).unfocus();
-
-                                                                bleProcess
-                                                                    .isAccessKeyValid
-                                                                    .value = null;
-                                                                bleProcess
-                                                                        .processDesc
-                                                                        .value =
-                                                                    "Validating";
-
-                                                                accessKey
-                                                                        .value =
-                                                                    _controller
-                                                                        .text;
-
-                                                                if (isConfigLogBulkApply &&
-                                                                    mode ==
-                                                                        'bottomsheet_apply') {
-                                                                  await PeripheralCacheToBle.applyToBleManager(
-                                                                    _bleManager,
-                                                                    _selectedDevice
-                                                                        .id,
-                                                                  );
-                                                                }
-
-                                                                onCall();
-                                                              }
-                                                              : null,
-                                                      child: Text(
-                                                        'Verify',
-                                                        style:
-                                                            GoogleFonts.inter(
-                                                              fontSize: 16,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w600,
-                                                              color:
-                                                                  Colors.white,
-                                                            ),
-                                                      ),
-                                                    );
-                                                  },
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    )
-                                    : const SizedBox.shrink();
-                              },
-                            ),
-                          ],
-                        );
-                      },
-                    );
-                  },
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-    if (useCachedSessionAccess) {
-      WidgetsBinding.instance.addPostFrameCallback((_) async {
-        if (!mounted) return;
-        if (isConfigLogBulkApply && mode == 'bottomsheet_apply') {
-          await PeripheralCacheToBle.applyToBleManager(
-            _bleManager,
-            _selectedDevice.id,
           );
-        }
-        if (!mounted) return;
-        onCall();
-        // startExtOutFetch / etc. call resetProcessExtOutState which clears processDesc.
-        // Keep verifying UI until the protocol sets progress (e.g. "Downloading …").
-        if (bleProcess.processDesc.value.isEmpty) {
-          bleProcess.processDesc.value = "Validating";
-        }
-      });
-    }
+        },
+        afterBulkApplyAccessGranted:
+            (isConfigLogBulkApply && mode == 'bottomsheet_apply')
+                ? () async {
+                  await PanelConfigBulkSync.runConfigLogApplyRemaining(
+                    bleController,
+                    _bleManager,
+                  );
+                  await _saveAllPeripheralCachesFromBle();
+                  if (!mounted) return;
+                  _configLogCompareResult.value =
+                      PeripheralConfigSnapshot.compare(
+                    panelBySection: PeripheralConfigSnapshot.fromBleManager(
+                      _bleManager,
+                    ),
+                    localBySection: await PeripheralConfigSnapshot.fromCache(
+                      _selectedDevice.id,
+                    ),
+                  );
+                  if (!mounted) return;
+                  showApplySuccessDialog(
+                    context,
+                    'Configuration',
+                    subtitle:
+                        'Your saved setup has been applied to the panel.',
+                  );
+                }
+                : null,
+      ),
+      onCall: onCall,
+      isExtOut: isExtOut ?? false,
+      isInputSetup: isInputSetup ?? false,
+      isRelaySetup: isRelaySetup ?? false,
+      isZoneSetup: isZoneSetup ?? false,
+      isSounderSetup: isSounderSetup ?? false,
+      isServiceDueSetup: isServiceDueSetup ?? false,
+      isAccessCodeSetup: isAccessCodeSetup ?? false,
+      isPanelInfoSetup: isPanelInfoSetup ?? false,
+      isGeneralModuleSetup: isGeneralModuleSetup ?? false,
+      isAdcSetup: isAdcSetup ?? false,
+      isConfigLogBulk: isConfigLogBulk,
+      isConfigLogBulkApply: isConfigLogBulkApply,
+      mode: mode,
+      onDownloadComplete: onDownloadComplete,
+      downloadSuccessMessage: downloadSuccessMessage,
+      configLogWorking: _configLogWorking,
+    );
   }
 
   Widget _buildDashboardContainer() {
