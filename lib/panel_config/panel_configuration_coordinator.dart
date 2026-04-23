@@ -189,6 +189,8 @@ class PanelConfigurationCoordinator {
               completer.completeError(e, st);
             }
             rethrow;
+          } finally {
+            bleManager.bleProcess.clearPeripheralApplyDoneFlags();
           }
         },
       ),

@@ -141,6 +141,22 @@ class BleProcess {
     isAccessKeyValid.value = null;
   }
 
+  /// Clears peripheral apply-completion flags (e.g. after bulk apply, or to avoid
+  /// stale flags routing unrelated flows like log retrieval through apply-success UI).
+  void clearPeripheralApplyDoneFlags() {
+    isExtOutApplyDone.value = false;
+    isInputSetupApplyDone.value = false;
+    isRelaySetupApplyDone.value = false;
+    isZoneSetupApplyDone.value = false;
+    isRadioSetupApplyDone.value = false;
+    isLBusSetupApplyDone.value = false;
+    isSounderSetupApplyDone.value = false;
+    isServiceDueApplyDone.value = false;
+    isAccessCodeSetupApplyDone.value = false;
+    isPanelInfoSetupApplyDone.value = false;
+    isGeneralModuleSetupApplyDone.value = false;
+  }
+
   /// Call after the panel has accepted the access code for this session.
   void setSessionAccessCode(String code) {
     accessKey.value = code;

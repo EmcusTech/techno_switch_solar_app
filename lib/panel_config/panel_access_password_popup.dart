@@ -64,6 +64,7 @@ void showPanelAccessPasswordPopup({
   bool isInputSetup = false,
   bool isRelaySetup = false,
   bool isZoneSetup = false,
+  bool isLBusSetup = false,
   bool isSounderSetup = false,
   bool isServiceDueSetup = false,
   bool isAccessCodeSetup = false,
@@ -216,10 +217,8 @@ void showPanelAccessPasswordPopup({
                               }
                             });
                           }
-                        } else if (bleManager
-                            .bleProcess
-                            .isExtOutApplyDone
-                            .value) {
+                        } else if (isExtOut &&
+                            bleManager.bleProcess.isExtOutApplyDone.value) {
                           bleManager.bleProcess.isExtOutApplyButtonActive.value =
                               true;
                           await delegates.saveExtOutCache();
@@ -229,59 +228,63 @@ void showPanelAccessPasswordPopup({
                               'Extinguishing Output',
                             );
                           }
-                        } else if (bleManager.bleProcess.isInputSetupApplyDone
-                            .value) {
+                        } else if (isInputSetup &&
+                            bleManager.bleProcess.isInputSetupApplyDone.value) {
                           await delegates.saveInputCache();
                           if (isMounted()) {
                             delegates.showApplySuccess(context, 'Inputs');
                           }
-                        } else if (bleManager.bleProcess.isRelaySetupApplyDone
-                                .value &&
+                        } else if (isRelaySetup &&
+                            bleManager.bleProcess.isRelaySetupApplyDone.value &&
                             isMounted()) {
                           await delegates.saveRelayCache();
                           delegates.showApplySuccess(context, 'Relays');
-                        } else if (bleManager.bleProcess.isZoneSetupApplyDone
-                                .value &&
-                            isMounted()) {
-                          await delegates.saveZoneCache();
-                          delegates.showApplySuccess(context, 'Zones');
-                        } else if (bleManager.bleProcess.isRadioSetupApplyDone
-                                .value &&
+                        } else if (isZoneSetup &&
+                            bleManager.bleProcess.isRadioSetupApplyDone.value &&
                             isMounted()) {
                           await delegates.saveRadioCache();
                           delegates.showApplySuccess(context, 'Radio');
-                        } else if (bleManager.bleProcess.isLBusSetupApplyDone
-                                .value &&
+                        } else if (isZoneSetup &&
+                            bleManager.bleProcess.isZoneSetupApplyDone.value &&
+                            isMounted()) {
+                          await delegates.saveZoneCache();
+                          delegates.showApplySuccess(context, 'Zones');
+                        } else if (isLBusSetup &&
+                            bleManager.bleProcess.isLBusSetupApplyDone.value &&
                             isMounted()) {
                           await delegates.saveLBusCache();
                           delegates.showApplySuccess(context, 'L-Bus');
-                        } else if (bleManager
+                        } else if (isSounderSetup &&
+                            bleManager
                                 .bleProcess
                                 .isSounderSetupApplyDone
                                 .value &&
                             isMounted()) {
                           await delegates.saveSounderCache();
                           delegates.showApplySuccess(context, 'Sounders');
-                        } else if (bleManager.bleProcess.isServiceDueApplyDone
-                                .value &&
+                        } else if (isServiceDueSetup &&
+                            bleManager.bleProcess.isServiceDueApplyDone.value &&
                             isMounted()) {
                           await delegates.saveServiceDueCache();
                           delegates.showApplySuccess(context, 'Service Due');
-                        } else if (bleManager
+                        } else if (isAccessCodeSetup &&
+                            bleManager
                                 .bleProcess
                                 .isAccessCodeSetupApplyDone
                                 .value &&
                             isMounted()) {
                           await delegates.saveAccessCodeCache();
                           delegates.showApplySuccess(context, 'Access Code');
-                        } else if (bleManager
+                        } else if (isPanelInfoSetup &&
+                            bleManager
                                 .bleProcess
                                 .isPanelInfoSetupApplyDone
                                 .value &&
                             isMounted()) {
                           await delegates.savePanelInfoCache();
                           delegates.showApplySuccess(context, 'Panel Info');
-                        } else if (bleManager
+                        } else if (isGeneralModuleSetup &&
+                            bleManager
                                 .bleProcess
                                 .isGeneralModuleSetupApplyDone
                                 .value &&

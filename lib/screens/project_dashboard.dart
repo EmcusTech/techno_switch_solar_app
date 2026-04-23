@@ -1394,6 +1394,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     bool? isInputSetup = false,
     bool? isRelaySetup = false,
     bool? isZoneSetup = false,
+    bool? isLBusSetup = false,
     bool? isSounderSetup = false,
     bool? isServiceDueSetup = false,
     bool? isAccessCodeSetup = false,
@@ -1442,28 +1443,32 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
         afterBulkApplyAccessGranted:
             (isConfigLogBulkApply && mode == 'bottomsheet_apply')
                 ? () async {
-                  await PanelConfigBulkSync.runConfigLogApplyRemaining(
-                    bleController,
-                    _bleManager,
-                  );
-                  await _saveAllPeripheralCachesFromBle();
-                  if (!mounted) return;
-                  _configLogCompareResult.value =
-                      PeripheralConfigSnapshot.compare(
-                    panelBySection: PeripheralConfigSnapshot.fromBleManager(
+                  try {
+                    await PanelConfigBulkSync.runConfigLogApplyRemaining(
+                      bleController,
                       _bleManager,
-                    ),
-                    localBySection: await PeripheralConfigSnapshot.fromCache(
-                      _selectedDevice.id,
-                    ),
-                  );
-                  if (!mounted) return;
-                  showApplySuccessDialog(
-                    context,
-                    'Configuration',
-                    subtitle:
-                        'Your saved setup has been applied to the panel.',
-                  );
+                    );
+                    await _saveAllPeripheralCachesFromBle();
+                    if (!mounted) return;
+                    _configLogCompareResult.value =
+                        PeripheralConfigSnapshot.compare(
+                      panelBySection: PeripheralConfigSnapshot.fromBleManager(
+                        _bleManager,
+                      ),
+                      localBySection: await PeripheralConfigSnapshot.fromCache(
+                        _selectedDevice.id,
+                      ),
+                    );
+                    if (!mounted) return;
+                    showApplySuccessDialog(
+                      context,
+                      'Configuration',
+                      subtitle:
+                          'Your saved setup has been applied to the panel.',
+                    );
+                  } finally {
+                    _bleManager.bleProcess.clearPeripheralApplyDoneFlags();
+                  }
                 }
                 : null,
       ),
@@ -1472,6 +1477,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
       isInputSetup: isInputSetup ?? false,
       isRelaySetup: isRelaySetup ?? false,
       isZoneSetup: isZoneSetup ?? false,
+      isLBusSetup: isLBusSetup ?? false,
       isSounderSetup: isSounderSetup ?? false,
       isServiceDueSetup: isServiceDueSetup ?? false,
       isAccessCodeSetup: isAccessCodeSetup ?? false,
@@ -1925,6 +1931,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                               true;
                           bleController.startLBusSetupApply();
                         },
+                        isLBusSetup: true,
                         mode: 'bottomsheet_apply',
                         downloadSuccessMessage: 'L-Bus',
                       );

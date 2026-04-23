@@ -762,8 +762,7 @@ class _CreateSiteScreenRefactoredState
             }
             switch (index) {
               case 2:
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                return _embeddedSheetPadding(
                   child: GeneralModuleBottomSheet(
                     key: _generalSheetKey,
                     deviceId: id,
@@ -774,8 +773,7 @@ class _CreateSiteScreenRefactoredState
                   ),
                 );
               case 3:
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                return _embeddedSheetPadding(
                   child: ServiceDueBottomSheet(
                     key: _serviceDueSheetKey,
                     deviceId: id,
@@ -786,8 +784,7 @@ class _CreateSiteScreenRefactoredState
                   ),
                 );
               case 4:
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                return _embeddedSheetPadding(
                   child: ZoneBottomSheet(
                     key: _zoneSheetKey,
                     deviceId: id,
@@ -798,8 +795,7 @@ class _CreateSiteScreenRefactoredState
                   ),
                 );
               case 5:
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                return _embeddedSheetPadding(
                   child: SounderModeBottomSheet(
                     key: _sounderSheetKey,
                     deviceId: id,
@@ -810,8 +806,7 @@ class _CreateSiteScreenRefactoredState
                   ),
                 );
               case 6:
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                return _embeddedSheetPadding(
                   child: InputModeBottomSheet(
                     key: _inputSheetKey,
                     deviceId: id,
@@ -822,8 +817,7 @@ class _CreateSiteScreenRefactoredState
                   ),
                 );
               case 7:
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                return _embeddedSheetPadding(
                   child: RelayModeBottomSheet(
                     key: _relaySheetKey,
                     deviceId: id,
@@ -845,8 +839,7 @@ class _CreateSiteScreenRefactoredState
                   ),
                 );
               case 9:
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                return _embeddedSheetPadding(
                   child: LBusBottomSheet(
                     key: _lBusSheetKey,
                     deviceId: id,
@@ -857,8 +850,7 @@ class _CreateSiteScreenRefactoredState
                   ),
                 );
               case 10:
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                return _embeddedSheetPadding(
                   child: PanelInfoBottomSheet(
                     key: _panelInfoSheetKey,
                     deviceId: id,
