@@ -1163,6 +1163,7 @@ class BleProcess {
         } else {
           isExtOutApplyButtonActive.value = false;
         }
+        isExtOutCommandFetchActive.value = false;
       } else {
         print("Dip setting Cmd Response not found, polling again");
         startRxTimeout();
@@ -2239,7 +2240,9 @@ class BleProcess {
       if (rx.payload[12] == 0x16) {
         bleManager.otaProcessState = OtaProcessState.sendDipSettingFetchCmd;
         checkForExtCmdFetchRes = 0;
-        isExtOutCommandFetchActive.value = false;
+        // Keep isExtOutCommandFetchActive true until DIP response updates
+        // isExtOutApplyButtonActive so bulk config save and waitUntilNotifierQuiet
+        // include the full ext-out + DIP sequence (matches tile download behavior).
         isAccessKeyValid.value = true;
         print("We got the response for ext fetch");
         final ExtZoneModeConfig config = ExtZoneModeCodec.fromHex(
