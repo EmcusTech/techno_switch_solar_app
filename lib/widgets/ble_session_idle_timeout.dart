@@ -2,10 +2,12 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:techno_switch_solar_app/ble/ble_session_idle_policy.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 
-/// Resets a 1-minute idle timer on any pointer down while BLE is connected and
-/// handshake is complete; on expiry calls [BleManager.disconnectConnectedDevice].
+/// Resets a 5-minute idle timer on any pointer down while BLE is connected,
+/// handshake is complete, and [BleSessionIdlePolicy.suppressIdleDisconnect] is false;
+/// on expiry calls [BleManager.disconnectConnectedDevice].
 class BleSessionIdleTimeout extends StatefulWidget {
   const BleSessionIdleTimeout({super.key, required this.child});
 
@@ -31,6 +33,9 @@ class _BleSessionIdleTimeoutState extends State<BleSessionIdleTimeout> {
     _bleController.bleManager.handshakeCompleteNotifier.addListener(
       _onConnectionOrHandshakeChanged,
     );
+    BleSessionIdlePolicy.suppressIdleDisconnect.addListener(
+      _onSuppressPolicyChanged,
+    );
     _syncTimerArmedState();
   }
 
@@ -43,6 +48,9 @@ class _BleSessionIdleTimeoutState extends State<BleSessionIdleTimeout> {
     _bleController.bleManager.handshakeCompleteNotifier.removeListener(
       _onConnectionOrHandshakeChanged,
     );
+    BleSessionIdlePolicy.suppressIdleDisconnect.removeListener(
+      _onSuppressPolicyChanged,
+    );
     super.dispose();
   }
 
@@ -50,9 +58,15 @@ class _BleSessionIdleTimeoutState extends State<BleSessionIdleTimeout> {
     _syncTimerArmedState();
   }
 
+  void _onSuppressPolicyChanged() {
+    _syncTimerArmedState();
+  }
+
   bool get _shouldArm {
     final m = _bleController.bleManager;
-    return m.isConnectedNotifier.value && m.handshakeCompleteNotifier.value;
+    return m.isConnectedNotifier.value &&
+        m.handshakeCompleteNotifier.value &&
+        !BleSessionIdlePolicy.suppressIdleDisconnect.value;
   }
 
   void _syncTimerArmedState() {

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
+import 'package:techno_switch_solar_app/ble/ble_session_idle_policy.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -105,6 +106,7 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
   @override
   void initState() {
     super.initState();
+    BleSessionIdlePolicy.suppressIdleDisconnect.value = false;
     print(
       'DEBUG: ProjectDashboardScreen initState: ${widget.selectedDevice.manufacturerData}',
     );
@@ -1317,6 +1319,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
       },
       mode: 'bottomsheet_download',
       isConfigLogBulk: true,
+      showDetailedConfigLogBulkBleProgressInAccessDialog: false,
       downloadSuccessMessage: 'Configuration',
       onDownloadComplete: () async {
         try {
@@ -1363,6 +1366,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
       isPanelInfoSetup: true,
       mode: 'bottomsheet_apply',
       isConfigLogBulkApply: true,
+      showDetailedConfigLogBulkBleProgressInAccessDialog: false,
     );
   }
 
@@ -1403,6 +1407,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     bool? isAdcSetup = false,
     bool isConfigLogBulk = false,
     bool isConfigLogBulkApply = false,
+    bool showDetailedConfigLogBulkBleProgressInAccessDialog = true,
     String? mode,
     Future<void> Function()? onDownloadComplete,
     String? downloadSuccessMessage,
@@ -1486,6 +1491,8 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
       isAdcSetup: isAdcSetup ?? false,
       isConfigLogBulk: isConfigLogBulk,
       isConfigLogBulkApply: isConfigLogBulkApply,
+      showDetailedConfigLogBulkBleProgressInAccessDialog:
+          showDetailedConfigLogBulkBleProgressInAccessDialog,
       mode: mode,
       onDownloadComplete: onDownloadComplete,
       downloadSuccessMessage: downloadSuccessMessage,

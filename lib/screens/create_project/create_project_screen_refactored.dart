@@ -3,6 +3,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
+import 'package:techno_switch_solar_app/ble/ble_session_idle_policy.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/controllers/create_project_controller.dart';
 import 'package:techno_switch_solar_app/panel_config/panel_config_cache_sync.dart';
@@ -90,6 +91,7 @@ class _CreateSiteScreenRefactoredState
   @override
   void initState() {
     super.initState();
+    BleSessionIdlePolicy.suppressIdleDisconnect.value = true;
     _controller = CreateProjectController();
     _pageController = PageController();
     _controller.addListener(_onControllerUpdate);
@@ -114,6 +116,7 @@ class _CreateSiteScreenRefactoredState
 
   @override
   void dispose() {
+    BleSessionIdlePolicy.suppressIdleDisconnect.value = false;
     _controller.removeListener(_onControllerUpdate);
     _controller.dispose();
     _pageController.dispose();

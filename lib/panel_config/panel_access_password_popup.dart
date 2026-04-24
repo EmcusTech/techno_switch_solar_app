@@ -73,6 +73,9 @@ void showPanelAccessPasswordPopup({
   bool isAdcSetup = false,
   bool isConfigLogBulk = false,
   bool isConfigLogBulkApply = false,
+  /// When false (e.g. dashboard Config tile), bulk config uses generic copy only,
+  /// not live [BleProcess.processDesc] strings in the access dialog.
+  bool showDetailedConfigLogBulkBleProgressInAccessDialog = true,
   String? mode,
   Future<void> Function()? onDownloadComplete,
   String? downloadSuccessMessage,
@@ -627,7 +630,8 @@ void showPanelAccessPasswordPopup({
                               } else if (isAccessKeyValidValue == true) {
                                 final bool bulkOp =
                                     isConfigLogBulk || isConfigLogBulkApply;
-                                if (bulkOp) {
+                                if (bulkOp &&
+                                    showDetailedConfigLogBulkBleProgressInAccessDialog) {
                                   if (processDescValue.isNotEmpty &&
                                       processDescValue != 'Success') {
                                     status = processDescValue;
@@ -637,6 +641,12 @@ void showPanelAccessPasswordPopup({
                                             ? 'Downloading configuration…'
                                             : 'Applying configuration to panel…';
                                   }
+                                } else if (bulkOp &&
+                                    !showDetailedConfigLogBulkBleProgressInAccessDialog) {
+                                  status =
+                                      mode == 'bottomsheet_download'
+                                          ? 'Downloading configuration…'
+                                          : 'Applying configuration to panel…';
                                 } else {
                                   status =
                                       mode == 'bottomsheet_download'
