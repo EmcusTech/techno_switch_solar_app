@@ -18,6 +18,7 @@ import 'package:techno_switch_solar_app/services/site_service.dart';
 import 'package:techno_switch_solar_app/models/site_model.dart';
 import 'package:techno_switch_solar_app/screens/simple_site_creation_screen.dart';
 import 'package:techno_switch_solar_app/utils/ble_name_utils.dart';
+import 'package:techno_switch_solar_app/panel_config/post_connect_bulk_download_offer.dart';
 import 'package:techno_switch_solar_app/widgets/panel_access_code_dialog.dart';
 import 'package:usb_serial/usb_serial.dart';
 // import 'package:flutter_blue_plus/flutter_blue_plus.dart';
@@ -818,6 +819,14 @@ class _ScannedScreenState extends State<ScannedScreen> {
                       bleController.bleManager.disconnectConnectedDevice();
                       return;
                     }
+
+                    await offerOptionalFullConfigDownloadAfterConnect(
+                      context: screenContext,
+                      isMounted: () => screenContext.mounted,
+                      device: device,
+                      awaitDownloadIfAccepted: true,
+                    );
+                    if (!screenContext.mounted) return;
 
                     Navigator.of(
                       screenContext,

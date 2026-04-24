@@ -35,6 +35,7 @@ import 'package:techno_switch_solar_app/panel_config/panel_access_password_popup
 import 'package:techno_switch_solar_app/panel_config/panel_config_bulk_sync.dart';
 import 'package:techno_switch_solar_app/panel_config/panel_config_cache_sync.dart';
 import 'package:techno_switch_solar_app/panel_config/panel_config_feedback_dialogs.dart';
+import 'package:techno_switch_solar_app/panel_config/post_connect_bulk_download_offer.dart';
 import 'package:techno_switch_solar_app/utils/peripheral_config_snapshot.dart';
 import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/config_log_bottomsheet.dart';
@@ -779,6 +780,15 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
         bleController.bleManager.disconnectConnectedDevice();
         return;
       }
+
+      if (!mounted) return;
+      await offerOptionalFullConfigDownloadAfterConnect(
+        context: context,
+        isMounted: () => mounted,
+        device: device,
+        refreshNotifiers: _panelRefreshNotifiers,
+        navigatingToDeviceConnecting: _navigatingToDeviceConnecting,
+      );
     } catch (e) {
       if (mounted) {
         setState(() {

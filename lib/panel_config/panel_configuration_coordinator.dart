@@ -139,19 +139,55 @@ class PanelConfigurationCoordinator {
       mode: 'bottomsheet_download',
       isConfigLogBulk: true,
       downloadSuccessMessage: 'Configuration',
+      onDownloadComplete: _onConfigLogBulkDownloadComplete,
+    );
+  }
+
+  Future<void> _onConfigLogBulkDownloadComplete() async {
+    await PanelConfigBulkSync.runConfigLogFetchRemaining(
+      bleController,
+      bleManager,
+    );
+    await PanelConfigCacheSync.saveAllFromBle(
+      bleManager,
+      device.id,
+      refreshNotifiers,
+    );
+    refreshNotifiers.bumpAll();
+  }
+
+  /// Awaits the access / bulk-download dialog route (same as [startBulkDownload]).
+  /// Call before [Navigator.pushReplacement] so the scanning route is not disposed
+  /// while the progress UI is visible. Adds a short delay after a successful
+  /// download so the success dialog can show before navigation.
+  Future<void> startBulkDownloadAwaitCompletion({
+    required BuildContext context,
+    required bool Function() isMounted,
+  }) async {
+    var configDownloadFinished = false;
+    await showPanelAccessPasswordPopup(
+      context: context,
+      isMounted: isMounted,
+      bleManager: bleManager,
+      bleController: bleController,
+      selectedDevice: device,
+      navigatingToDeviceConnecting: navigatingToDeviceConnecting,
+      delegates: _delegates(),
+      onCall: () {
+        bleManager.bleProcess.isModuleSetupFetchCommandActive.value = true;
+        bleController.startModuleSetupFetch();
+      },
+      mode: 'bottomsheet_download',
+      isConfigLogBulk: true,
+      downloadSuccessMessage: 'Configuration',
       onDownloadComplete: () async {
-        await PanelConfigBulkSync.runConfigLogFetchRemaining(
-          bleController,
-          bleManager,
-        );
-        await PanelConfigCacheSync.saveAllFromBle(
-          bleManager,
-          device.id,
-          refreshNotifiers,
-        );
-        refreshNotifiers.bumpAll();
+        await _onConfigLogBulkDownloadComplete();
+        configDownloadFinished = true;
       },
     );
+    if (configDownloadFinished) {
+      await Future.delayed(const Duration(milliseconds: 2200));
+    }
   }
 
   /// Returns when bulk apply finishes, or throws on error / timeout.

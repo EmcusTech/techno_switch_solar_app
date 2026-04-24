@@ -24,6 +24,7 @@ import 'package:techno_switch_solar_app/services/site_service.dart';
 import 'package:techno_switch_solar_app/models/site_model.dart';
 import 'package:techno_switch_solar_app/screens/simple_site_creation_screen.dart';
 import 'package:techno_switch_solar_app/utils/ble_name_utils.dart';
+import 'package:techno_switch_solar_app/panel_config/post_connect_bulk_download_offer.dart';
 import 'package:techno_switch_solar_app/widgets/panel_access_code_dialog.dart';
 
 enum ScanType { usb, bluetooth }
@@ -1898,6 +1899,14 @@ class _ScanningScreenState extends State<ScanningScreen>
                     bleController.bleManager.disconnectConnectedDevice();
                     return;
                   }
+
+                  await offerOptionalFullConfigDownloadAfterConnect(
+                    context: context,
+                    isMounted: () => context.mounted,
+                    device: device,
+                    awaitDownloadIfAccepted: true,
+                  );
+                  if (!context.mounted) return;
 
                   Navigator.of(context, rootNavigator: true).pushReplacement(
                     MaterialPageRoute(

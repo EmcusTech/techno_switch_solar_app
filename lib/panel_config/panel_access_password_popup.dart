@@ -51,7 +51,7 @@ class PanelAccessPasswordDelegates {
   final Future<void> Function()? afterBulkApplyAccessGranted;
 }
 
-void showPanelAccessPasswordPopup({
+Future<void> showPanelAccessPasswordPopup({
   required BuildContext context,
   required bool Function() isMounted,
   required BleManager bleManager,
@@ -107,7 +107,7 @@ void showPanelAccessPasswordPopup({
   final accessKey = bleProcess.accessKey;
   final ValueNotifier<bool?> isAccessKeyValid = bleProcess.isAccessKeyValid;
 
-  showDialog(
+  final dialogFuture = showDialog<void>(
     context: context,
     barrierDismissible: false,
     builder: (dialogContext) {
@@ -849,4 +849,6 @@ void showPanelAccessPasswordPopup({
       }
     });
   }
+
+  return dialogFuture.then((_) {});
 }
