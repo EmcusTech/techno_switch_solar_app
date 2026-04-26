@@ -21,6 +21,7 @@ class PanelConfigurationCoordinator {
     required this.refreshNotifiers,
     required this.navigatingToDeviceConnecting,
     this.useDialogOnlyBulkProgress = false,
+    this.saveCachesAfterBulkDownload = true,
   });
 
   final BleManager bleManager;
@@ -32,6 +33,10 @@ class PanelConfigurationCoordinator {
   /// When true (e.g. create-site wizard), bulk BLE work stays in the access-code
   /// dialog with [BleProcess.processDesc] instead of pushing [LogRetrievalLoadingScreen].
   final bool useDialogOnlyBulkProgress;
+
+  /// When false, after bulk download completes, BLE state is not written to disk
+  /// (e.g. tap-to-connect shows Config Log compare first).
+  final bool saveCachesAfterBulkDownload;
 
   PanelAccessPasswordDelegates _delegates({
     Future<void> Function()? afterBulkApplyAccessGranted,
@@ -148,12 +153,14 @@ class PanelConfigurationCoordinator {
       bleController,
       bleManager,
     );
-    await PanelConfigCacheSync.saveAllFromBle(
-      bleManager,
-      device.id,
-      refreshNotifiers,
-    );
-    refreshNotifiers.bumpAll();
+    if (saveCachesAfterBulkDownload) {
+      await PanelConfigCacheSync.saveAllFromBle(
+        bleManager,
+        device.id,
+        refreshNotifiers,
+      );
+      refreshNotifiers.bumpAll();
+    }
   }
 
   /// Awaits the access / bulk-download dialog route (same as [startBulkDownload]).

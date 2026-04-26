@@ -1,9 +1,15 @@
+import 'dart:math' show min;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/screens/device_connecting_screen.dart';
 import 'package:techno_switch_solar_app/utils/peripheral_config_diff_labels.dart';
 import 'package:techno_switch_solar_app/utils/peripheral_config_snapshot.dart';
+
+/// [bottomSheet] — rounded top only (e.g. dashboard modal).
+/// [dialog] — same content in a centered [Dialog] (e.g. post connect compare).
+enum ConfigLogPresentationStyle { bottomSheet, dialog }
 
 /// Bottom sheet for bulk config sync: compare panel vs cached setup, then resolve mismatches.
 class ConfigLogBottomSheet extends StatefulWidget {
@@ -14,6 +20,12 @@ class ConfigLogBottomSheet extends StatefulWidget {
   final Future<void> Function() onUsePanelDataInApp;
   final VoidCallback onApplyLocalToPanel;
 
+  /// When false, hides the "Download & compare" intro block (e.g. after a
+  /// pre-filled compare from tap-to-connect).
+  final bool showDownloadAndCompareCta;
+
+  final ConfigLogPresentationStyle presentation;
+
   const ConfigLogBottomSheet({
     super.key,
     required this.deviceId,
@@ -22,6 +34,8 @@ class ConfigLogBottomSheet extends StatefulWidget {
     required this.onDownloadAndCompare,
     required this.onUsePanelDataInApp,
     required this.onApplyLocalToPanel,
+    this.showDownloadAndCompareCta = true,
+    this.presentation = ConfigLogPresentationStyle.bottomSheet,
   });
 
   @override
@@ -874,6 +888,50 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
     );
   }
 
+  /// Shown when panel vs app configuration matches (no mismatch, no error).
+  Widget _matchNextCta(ConfigCompareResult? result, bool working) {
+    if (result == null || result.errorMessage != null || result.hasMismatch) {
+      return const SizedBox.shrink();
+    }
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const SizedBox(height: 12),
+        SizedBox(
+          width: double.infinity,
+          height: 48,
+          child: ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _brandRed,
+              foregroundColor: Colors.white,
+              disabledBackgroundColor: Colors.grey.shade400,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+              ),
+            ),
+            onPressed:
+                working
+                    ? null
+                    : () {
+                      FocusManager.instance.primaryFocus?.unfocus();
+                      Navigator.of(context).pop();
+                    },
+            child: Text(
+              'Next',
+              style: GoogleFonts.inter(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   bool _showMismatchTabs(ConfigCompareResult? result) {
     return result != null &&
         result.errorMessage == null &&
@@ -886,128 +944,172 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
     final result = widget.compareResult.value;
     final working = widget.isWorking.value;
     _ensureTabControllerAligned(result);
+    final showCta = widget.showDownloadAndCompareCta;
+    final isDialog = widget.presentation == ConfigLogPresentationStyle.dialog;
+    final screenH = MediaQuery.sizeOf(context).height;
+    final screenW = MediaQuery.sizeOf(context).width;
 
-    final maxHeight =
+    var maxHeight =
         result != null
             ? _showMismatchTabs(result)
-                ? MediaQuery.of(context).size.height * 0.75
+                ? screenH * 0.75
                 : result.hasMismatch
-                ? MediaQuery.of(context).size.height * 0.58
-                : MediaQuery.of(context).size.height * 0.54
-            : working
-            ? MediaQuery.of(context).size.height * 0.42
-            : MediaQuery.of(context).size.height * 0.35;
+                ? screenH * 0.58
+                : screenH * 0.60
+            : showCta
+            ? (working ? screenH * 0.42 : screenH * 0.35)
+            : screenH * 0.48;
+    if (isDialog) {
+      final isGreenMatch =
+          result != null && result.errorMessage == null && !result.hasMismatch;
+      maxHeight = min(maxHeight, screenH * (isGreenMatch ? 0.37 : 0.57));
+    }
+
+    final card = ConstrainedBox(
+      constraints: BoxConstraints(
+        maxHeight: maxHeight,
+        maxWidth: isDialog ? min(560, screenW - 40) : double.infinity,
+      ),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius:
+              isDialog
+                  ? BorderRadius.circular(16)
+                  : const BorderRadius.vertical(top: Radius.circular(16)),
+        ),
+        padding: EdgeInsets.only(
+          left: 24,
+          right: 24,
+          top: 16,
+          bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+        ),
+        child: Column(
+          children: [
+            _dragHandle(),
+            _title('Config Log'),
+            Expanded(
+              child:
+                  !showCta && result != null
+                      ? NotificationListener<UserScrollNotification>(
+                        onNotification: (notification) {
+                          if (notification.direction != ScrollDirection.idle) {
+                            FocusScope.of(context).unfocus();
+                          }
+                          return false;
+                        },
+                        child: SingleChildScrollView(
+                          physics: const BouncingScrollPhysics(),
+                          child: _resultBlock(result),
+                        ),
+                      )
+                      : NotificationListener<UserScrollNotification>(
+                        onNotification: (notification) {
+                          if (notification.direction != ScrollDirection.idle) {
+                            FocusScope.of(context).unfocus();
+                          }
+                          return false;
+                        },
+                        child:
+                            _showMismatchTabs(result)
+                                ? Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
+                                  children: [
+                                    result == null
+                                        ? Flexible(
+                                          flex: 0,
+                                          fit: FlexFit.loose,
+                                          child: SingleChildScrollView(
+                                            physics:
+                                                const BouncingScrollPhysics(),
+                                            child: _tileShell(
+                                              title: 'Compare with saved setup',
+                                              children: [
+                                                Text(
+                                                  'Download the full configuration from the panel and compare it with data stored in this app for this device.',
+                                                  style: GoogleFonts.inter(
+                                                    fontSize: 13,
+                                                    fontWeight: FontWeight.w400,
+                                                    color: _textMuted,
+                                                    height: 1.4,
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 14),
+                                                _downloadCompareButton(working),
+                                              ],
+                                            ),
+                                          ),
+                                        )
+                                        : Align(
+                                          alignment: Alignment.centerRight,
+                                          child: GestureDetector(
+                                            onTap: () {
+                                              if (working) return;
+                                              widget.onDownloadAndCompare();
+                                            },
+                                            child: Icon(
+                                              Icons.refresh_rounded,
+                                              color: _brandRed,
+                                              size: 24,
+                                            ),
+                                          ),
+                                        ),
+                                    if (result != null)
+                                      Expanded(child: _resultBlock(result)),
+                                  ],
+                                )
+                                : SingleChildScrollView(
+                                  physics: const BouncingScrollPhysics(),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.stretch,
+                                    children: [
+                                      _tileShell(
+                                        title: 'Compare with saved setup',
+                                        children: [
+                                          Text(
+                                            'Download the full configuration from the panel and compare it with data stored in this app for this device.',
+                                            style: GoogleFonts.inter(
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w400,
+                                              color: _textMuted,
+                                              height: 1.4,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 14),
+                                          _downloadCompareButton(working),
+                                        ],
+                                      ),
+                                      if (result != null) _resultBlock(result),
+                                    ],
+                                  ),
+                                ),
+                      ),
+            ),
+            SizedBox(height: 8),
+            _operationProgressBanner(working),
+            _bottomActions(result, working),
+            _matchNextCta(result, working),
+          ],
+        ),
+      ),
+    );
+
+    if (isDialog) {
+      return Dialog(
+        insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        child: card,
+      );
+    }
 
     return SafeArea(
       child: AnimatedSize(
         duration: const Duration(milliseconds: 200),
         curve: Curves.easeInOut,
-        child: ConstrainedBox(
-          constraints: BoxConstraints(maxHeight: maxHeight),
-          child: Container(
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-            ),
-            padding: EdgeInsets.only(
-              left: 24,
-              right: 24,
-              top: 16,
-              bottom: MediaQuery.of(context).viewInsets.bottom + 16,
-            ),
-            child: Column(
-              children: [
-                _dragHandle(),
-                _title('Config Log'),
-                Expanded(
-                  child: NotificationListener<UserScrollNotification>(
-                    onNotification: (notification) {
-                      if (notification.direction != ScrollDirection.idle) {
-                        FocusScope.of(context).unfocus();
-                      }
-                      return false;
-                    },
-                    child:
-                        _showMismatchTabs(result)
-                            ? Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                result == null
-                                    ? Flexible(
-                                      flex: 0,
-                                      fit: FlexFit.loose,
-                                      child: SingleChildScrollView(
-                                        physics: const BouncingScrollPhysics(),
-                                        child: _tileShell(
-                                          title: 'Compare with saved setup',
-                                          children: [
-                                            Text(
-                                              'Download the full configuration from the panel and compare it with data stored in this app for this device.',
-                                              style: GoogleFonts.inter(
-                                                fontSize: 13,
-                                                fontWeight: FontWeight.w400,
-                                                color: _textMuted,
-                                                height: 1.4,
-                                              ),
-                                            ),
-                                            const SizedBox(height: 14),
-                                            _downloadCompareButton(working),
-                                          ],
-                                        ),
-                                      ),
-                                    )
-                                    : Align(
-                                      alignment: Alignment.centerRight,
-                                      child: GestureDetector(
-                                        onTap: () {
-                                          if (working) return;
-                                          widget.onDownloadAndCompare();
-                                        },
-                                        child: Icon(
-                                          Icons.refresh_rounded,
-                                          color: _brandRed,
-                                          size: 24,
-                                        ),
-                                      ),
-                                    ),
-                                if (result != null)
-                                  Expanded(child: _resultBlock(result)),
-                              ],
-                            )
-                            : SingleChildScrollView(
-                              physics: const BouncingScrollPhysics(),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  _tileShell(
-                                    title: 'Compare with saved setup',
-                                    children: [
-                                      Text(
-                                        'Download the full configuration from the panel and compare it with data stored in this app for this device.',
-                                        style: GoogleFonts.inter(
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w400,
-                                          color: _textMuted,
-                                          height: 1.4,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 14),
-                                      _downloadCompareButton(working),
-                                    ],
-                                  ),
-                                  if (result != null) _resultBlock(result),
-                                ],
-                              ),
-                            ),
-                  ),
-                ),
-                SizedBox(height: 8),
-                _operationProgressBanner(working),
-                _bottomActions(result, working),
-              ],
-            ),
-          ),
-        ),
+        child: card,
       ),
     );
   }

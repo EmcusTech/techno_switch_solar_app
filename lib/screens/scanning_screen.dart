@@ -1905,6 +1905,7 @@ class _ScanningScreenState extends State<ScanningScreen>
                     isMounted: () => context.mounted,
                     device: device,
                     awaitDownloadIfAccepted: true,
+                    showConfigLogCompareAfterDownload: true,
                   );
                   if (!context.mounted) return;
 
