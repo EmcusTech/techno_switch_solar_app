@@ -1,10 +1,10 @@
 import 'dart:io';
 import 'dart:typed_data';
+import 'package:techno_switch_solar_app/models/ble/firmware/firmware_bin_format.dart';
 import 'package:techno_switch_solar_app/models/ble/firmware/firmware_packet_model.dart';
 
 class FirmwarePacketService {
   static const int payloadSize = 240;
-  static const int crcSize = 4;
   static const int polynomial = 0x04C11DB7;
 
   /// Main entry point
@@ -14,15 +14,26 @@ class FirmwarePacketService {
   }) async {
     final bytes = await binFile.readAsBytes();
 
-    if (bytes.length <= crcSize) {
-      throw Exception('BIN file too small');
+    if (bytes.length < FirmwareBinFormat.trailerLength) {
+      throw Exception(
+        'BIN file too small (need at least ${FirmwareBinFormat.trailerLength} bytes)',
+      );
     }
 
-    final firmwareData = bytes.sublist(0, bytes.length - crcSize);
-    final crcFromFile = bytes.sublist(bytes.length - crcSize);
+    // CRC covers everything except the last 4 bytes (image + 36 bytes metadata).
+    final crcInput =
+        bytes.sublist(0, bytes.length - FirmwareBinFormat.crcLength);
+    final crcFromFile = bytes.sublist(
+      bytes.length - FirmwareBinFormat.crcLength,
+      bytes.length,
+    );
+
+    // Only the leading part is written to the device (exclude 40-byte trailer).
+    final imageForDevice =
+        bytes.sublist(0, bytes.length - FirmwareBinFormat.trailerLength);
 
     final expectedCrc = _bytesToUint32BE(crcFromFile);
-    final calculatedCrc = _calculateCrc32(firmwareData);
+    final calculatedCrc = _calculateCrc32(crcInput);
 
     if (expectedCrc != calculatedCrc) {
       throw Exception(
@@ -31,7 +42,7 @@ class FirmwarePacketService {
       );
     }
 
-    return _buildPackets(firmwareData, onProgress: onProgress);
+    return _buildPackets(imageForDevice, onProgress: onProgress);
   }
 
   // ================= PACKET BUILD =================

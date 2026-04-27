@@ -41,11 +41,14 @@ class UpdatesController extends GetxController {
     selectedFirmwareFile = file;
   }
 
-  /// STEP 1 — CRC validation only
-  FirmwareValidationResult? validateSelectedFile() {
+  /// STEP 1 — CRC, trailer fields, and optional product ID
+  FirmwareValidationResult? validateSelectedFile({String? requiredProductId}) {
     if (selectedFirmwareFile == null) return null;
 
-    final result = _firmwareService.validateFirmwareFile(selectedFirmwareFile!);
+    final result = _firmwareService.validateFirmwareFile(
+      selectedFirmwareFile!,
+      requiredProductId: requiredProductId,
+    );
 
     validationResult = result;
     isFileCrcMatched.value = result.isValid;

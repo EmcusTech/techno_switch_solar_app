@@ -1553,6 +1553,22 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
               ? 'Main Panel Firmware'
               : 'BLE Chip Firmware',
         ),
+        if (result != null) ...[
+          SizedBox(height: 12),
+          _buildDetailRow(
+            'Firmware version',
+            _emptyToDash(result.firmwareVersion),
+          ),
+          SizedBox(height: 12),
+          _buildDetailRow(
+            'Hardware version',
+            _emptyToDash(result.hardwareVersion),
+          ),
+          SizedBox(height: 12),
+          _buildDetailRow('Build date', _emptyToDash(result.date)),
+          SizedBox(height: 12),
+          _buildDetailRow('Product ID', _emptyToDash(result.productId)),
+        ],
         Visibility(
           visible: !isCrcMatched,
           child: Column(
@@ -1566,7 +1582,7 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
         ),
         SizedBox(height: 12),
         _buildDetailRow(
-          'CRC Status',
+          'Status',
           _isValidating
               ? 'Validating...'
               : isCrcMatched
@@ -1719,6 +1735,8 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
       ],
     );
   }
+
+  String _emptyToDash(String s) => s.isEmpty ? '—' : s;
 
   Widget _buildDetailRow(String label, String value, {Color? valueColor}) {
     return Row(
@@ -1980,7 +1998,9 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
       _errorMessage = null;
     });
 
-    final result = _controller.validateSelectedFile();
+    final result = _controller.validateSelectedFile(
+      requiredProductId: fw.FirmwareUpgradeService.expectedProductId,
+    );
 
     setState(() {
       _validationResult = result;

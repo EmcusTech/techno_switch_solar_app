@@ -3,13 +3,23 @@ import 'dart:typed_data';
 
 import 'package:dio/dio.dart' as dio show Response;
 import 'package:file_picker/file_picker.dart';
+import 'package:techno_switch_solar_app/models/ble/firmware/firmware_bin_format.dart';
 
 /// Result of validating a firmware BIN file.
 class FirmwareValidationResult {
   final bool isValid;
   final int expectedCrc;
   final int calculatedCrc;
+
+  /// Raw image bytes to flash (file content except the 40-byte trailer).
   final Uint8List firmwareData;
+
+  /// Parsed from the 40-byte trailer (see [FirmwareBinFormat]).
+  final String firmwareVersion;
+  final String hardwareVersion;
+  final String date;
+  final String productId;
+
   final String? error;
 
   FirmwareValidationResult({
@@ -17,6 +27,10 @@ class FirmwareValidationResult {
     required this.expectedCrc,
     required this.calculatedCrc,
     required this.firmwareData,
+    this.firmwareVersion = '',
+    this.hardwareVersion = '',
+    this.date = '',
+    this.productId = '',
     this.error,
   });
 
@@ -34,37 +48,93 @@ class FirmwareUpgradeService {
   factory FirmwareUpgradeService() => _instance;
   FirmwareUpgradeService._internal();
 
+  /// Product ID in the 11-byte trailer; file must match for upgrade to proceed.
+  static const String expectedProductId = 'BLUENRGM2SP';
+
   /// Validate a BIN file:
-  /// - Last 4 bytes = CRC32 (big endian) from file.
-  /// - CRC calculated on all preceding bytes.
-  FirmwareValidationResult validateFirmwareFile(PlatformFile file) {
+  /// - Last 40 bytes: 10 FW ver + 7 HW ver + 8 date + 11 product id + 4 CRC (BE).
+  /// - CRC32 is calculated on all bytes before the final 4 CRC bytes (image + metadata).
+  /// - [FirmwareValidationResult.firmwareData] is only the image (excludes the full trailer).
+  /// - [requiredProductId]: if set, parsed product ID (trimmed) must match
+  ///   the given string (e.g. [FirmwareUpgradeService.expectedProductId]).
+  FirmwareValidationResult validateFirmwareFile(
+    PlatformFile file, {
+    String? requiredProductId,
+  }) {
     final Uint8List? bytes = file.bytes ??
         (file.path != null ? File(file.path!).readAsBytesSync() : null);
 
-    if (bytes == null || bytes.length < 4) {
+    if (bytes == null || bytes.length < FirmwareBinFormat.trailerLength) {
       return FirmwareValidationResult(
         isValid: false,
         expectedCrc: 0,
         calculatedCrc: 0,
         firmwareData: Uint8List(0),
-        error: 'Invalid BIN file (too small or unreadable)',
+        error: 'Invalid BIN file (too small, need at least '
+            '${FirmwareBinFormat.trailerLength} bytes for trailer, or unreadable)',
       );
     }
 
-    final Uint8List firmwareData = bytes.sublist(0, bytes.length - 4);
-    final Uint8List crcBytes = bytes.sublist(bytes.length - 4);
+    final Uint8List trailer =
+        bytes.sublist(bytes.length - FirmwareBinFormat.trailerLength);
+    final fields = FirmwareBinTrailer.fromLast40Bytes(trailer);
+
+    final Uint8List crcInput =
+        bytes.sublist(0, bytes.length - FirmwareBinFormat.crcLength);
+    final Uint8List crcBytes =
+        bytes.sublist(bytes.length - FirmwareBinFormat.crcLength, bytes.length);
 
     final int expectedCrc = _bytesToUint32BE(crcBytes);
-    final int calculatedCrc = _calculateCrc32(firmwareData);
+    final int calculatedCrc = _calculateCrc32(crcInput);
 
-    final bool isValid = expectedCrc == calculatedCrc;
+    final bool crcOk = expectedCrc == calculatedCrc;
+
+    final Uint8List firmwareData =
+        bytes.sublist(0, bytes.length - FirmwareBinFormat.trailerLength);
+
+    if (!crcOk) {
+      return FirmwareValidationResult(
+        isValid: false,
+        expectedCrc: expectedCrc,
+        calculatedCrc: calculatedCrc,
+        firmwareData: firmwareData,
+        firmwareVersion: fields.firmwareVersion,
+        hardwareVersion: fields.hardwareVersion,
+        date: fields.date,
+        productId: fields.productId,
+        error: 'CRC mismatch. BIN file may be corrupted.',
+      );
+    }
+
+    if (requiredProductId != null) {
+      final String fileProductId = fields.productId.trim();
+      if (fileProductId != requiredProductId) {
+        return FirmwareValidationResult(
+          isValid: false,
+          expectedCrc: expectedCrc,
+          calculatedCrc: calculatedCrc,
+          firmwareData: firmwareData,
+          firmwareVersion: fields.firmwareVersion,
+          hardwareVersion: fields.hardwareVersion,
+          date: fields.date,
+          productId: fields.productId,
+          error: 'This firmware is not for this product. '
+              'Expected product ID $requiredProductId, '
+              'but file has ${fileProductId.isEmpty ? '(empty)' : fileProductId}.',
+        );
+      }
+    }
 
     return FirmwareValidationResult(
-      isValid: isValid,
+      isValid: true,
       expectedCrc: expectedCrc,
       calculatedCrc: calculatedCrc,
       firmwareData: firmwareData,
-      error: isValid ? null : 'CRC mismatch. BIN file may be corrupted.',
+      firmwareVersion: fields.firmwareVersion,
+      hardwareVersion: fields.hardwareVersion,
+      date: fields.date,
+      productId: fields.productId,
+      error: null,
     );
   }
 
