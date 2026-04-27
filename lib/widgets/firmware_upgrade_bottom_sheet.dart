@@ -12,6 +12,7 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
 import 'package:percent_indicator/percent_indicator.dart';
+import 'package:techno_switch_solar_app/ble/ble_session_idle_policy.dart';
 import 'package:techno_switch_solar_app/models/ble/firmware/firmware_packet_model.dart';
 import 'package:techno_switch_solar_app/widgets/common/common_cta_button.dart';
 import '../ble/ble_manager.dart';
@@ -89,6 +90,16 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
   static const Duration _jumpScanGlobalTimeout = Duration(seconds: 6);
   static const Duration _endScanGlobalTimeout = Duration(seconds: 10);
   static const Duration _scanRetryDelay = Duration(milliseconds: 800);
+
+  void _beginFirmwareSession() {
+    BleSessionIdlePolicy.suppressFirmwareDisconnectUi.value = true;
+    BleSessionIdlePolicy.suppressIdleDisconnect.value = true;
+  }
+
+  void _endFirmwareSession() {
+    BleSessionIdlePolicy.suppressFirmwareDisconnectUi.value = false;
+    BleSessionIdlePolicy.suppressIdleDisconnect.value = false;
+  }
 
   @override
   void initState() {
@@ -210,7 +221,15 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
       throw Exception('No packets prepared');
     }
 
-    // // Basic BLE connection guard unless test mode (handled earlier)
+    _beginFirmwareSession();
+    try {
+      await _sendPacketsOverBleImpl(isChipInBootLoader: isChipInBootLoader);
+    } finally {
+      _endFirmwareSession();
+    }
+  }
+
+  Future<void> _sendPacketsOverBleImpl({bool? isChipInBootLoader = false}) async {
     // if (_bleHandler.currentBleState.value != BleStateMachine.connected) {
     //   throw Exception('Device not connected. Complete BLE handshake first.');
     // }
@@ -793,6 +812,7 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
 
   @override
   void dispose() {
+    _endFirmwareSession();
     _bleResultsSub?.cancel();
     _internalReconnectSub?.cancel();
     _bluetoothService.dispose();

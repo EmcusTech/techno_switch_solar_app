@@ -375,14 +375,22 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     final connected = _bleManager.isConnectedNotifier.value;
     final lostConnection = _hadBleConnection && !connected;
     if (lostConnection) {
-      _closeModalOverlaysAboveDashboard();
-      if (_suppressUnexpectedBleDisconnectUi) {
-        _suppressUnexpectedBleDisconnectUi = false;
+      final suppressForFirmware =
+          BleSessionIdlePolicy.suppressFirmwareDisconnectUi.value;
+      if (!suppressForFirmware) {
+        _closeModalOverlaysAboveDashboard();
+        if (_suppressUnexpectedBleDisconnectUi) {
+          _suppressUnexpectedBleDisconnectUi = false;
+        } else {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!mounted) return;
+            _showUnexpectedBleDisconnectDialog();
+          });
+        }
       } else {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (!mounted) return;
-          _showUnexpectedBleDisconnectDialog();
-        });
+        if (_suppressUnexpectedBleDisconnectUi) {
+          _suppressUnexpectedBleDisconnectUi = false;
+        }
       }
     }
     _hadBleConnection = connected;
@@ -818,6 +826,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
   initState() {
     super.initState();
     _selectedDevice = widget.selectedDevice;
+    BleSessionIdlePolicy.suppressFirmwareDisconnectUi.value = false;
     _hadBleConnection = _bleManager.isConnectedNotifier.value;
     _bleManager.isConnectedNotifier.addListener(_onBleConnectivityChanged);
   }
