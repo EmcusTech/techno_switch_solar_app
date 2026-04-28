@@ -44,6 +44,8 @@ class ProjectReportPdfUtil {
     }
   }
 
+  static String _dash(String v) => v.trim().isEmpty ? '-' : v.trim();
+
   /// Loads cached setup for [deviceId] and opens the print/share PDF dialog.
   static Future<void> generate({
     required String deviceId,
@@ -51,8 +53,12 @@ class ProjectReportPdfUtil {
     required String installerName,
     required String companyName,
     required String saqccNo,
-    required String panelProductName,
-    required String panelProductId,
+    required String receivedPanelName,
+    required String advertisedPanelName,
+    required String hardwareVersion,
+    required String firmwareVersion,
+    required String firmwareDate,
+    required String protocolVersion,
   }) async {
     final zone = await PeripheralSetupCache.loadZoneSetup(deviceId);
     final input = await PeripheralSetupCache.loadInputSetup(deviceId);
@@ -100,9 +106,13 @@ class ProjectReportPdfUtil {
                 saqccNo: saqccNo,
                 serviceDate: serviceDate,
               ),
-              _panelInfoRow(
-                panelProductName: panelProductName,
-                panelProductId: panelProductId,
+              _panelInfoSection(
+                receivedPanelName: receivedPanelName,
+                advertisedPanelName: advertisedPanelName,
+                hardwareVersion: hardwareVersion,
+                firmwareVersion: firmwareVersion,
+                firmwareDate: firmwareDate,
+                protocolVersion: protocolVersion,
               ),
               _sectionHeader('ZONE INFO'),
               _zoneBlock(zone),
@@ -201,6 +211,35 @@ class ProjectReportPdfUtil {
     );
   }
 
+  /// Three equal-width columns so rows line up in a grid (landscape page).
+  static pw.Widget _panelInfoGridRow(
+    String title1,
+    String value1,
+    String title2,
+    String value2,
+    String title3,
+    String value3, {
+    double gutter = 10,
+  }) {
+    pw.Widget cell(String title, String value, {bool trailingGutter = true}) {
+      return pw.Expanded(
+        child: pw.Padding(
+          padding: pw.EdgeInsets.only(right: trailingGutter ? gutter : 0),
+          child: _item(title, _dash(value)),
+        ),
+      );
+    }
+
+    return pw.Row(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        cell(title1, value1),
+        cell(title2, value2),
+        cell(title3, value3, trailingGutter: false),
+      ],
+    );
+  }
+
   static pw.Widget _projectInfoRow({
     required String siteName,
     required String installerName,
@@ -228,20 +267,34 @@ class ProjectReportPdfUtil {
     );
   }
 
-  static pw.Widget _panelInfoRow({
-    required String panelProductName,
-    required String panelProductId,
+  static pw.Widget _panelInfoSection({
+    required String receivedPanelName,
+    required String advertisedPanelName,
+    required String hardwareVersion,
+    required String firmwareVersion,
+    required String firmwareDate,
+    required String protocolVersion,
   }) {
     return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
         _sectionHeader('PANEL INFO'),
-        pw.Row(
-          mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-          children: [
-            _item('Product Name (Panel Name)', panelProductName),
-            _item('Product Id (Panel Id)', panelProductId),
-          ],
+        _panelInfoGridRow(
+          'Product Name',
+          receivedPanelName,
+          'Product Id',
+          advertisedPanelName.split("_").last,
+          'Hardware version',
+          hardwareVersion,
+        ),
+        pw.SizedBox(height: 8),
+        _panelInfoGridRow(
+          'Firmware version',
+          firmwareVersion,
+          'Firmware date',
+          firmwareDate,
+          'Protocol version',
+          protocolVersion,
         ),
         pw.Divider(color: PdfColor.fromInt(0xFFD9D9D9)),
       ],

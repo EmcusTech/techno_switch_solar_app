@@ -881,6 +881,7 @@ class BleProcess {
           rx.payload,
           startIndex: 16,
         );
+        _applyNetworkPacketVersionFields(rx.payload);
 
         print("The received panel name is: ${receivedPanelName.value}");
         // await Future.delayed(Duration(seconds: 1));
@@ -2686,6 +2687,44 @@ class BleProcess {
       debugPrint('extractStringFromPayload: utf8 decode failed: $e');
       return '';
     }
+  }
+
+  /// Parses hardware / firmware (byte-per-component decimals), firmware date (BE year,
+  /// then month/day bytes), and protocol revision (BE u16), after the panel name at
+  /// [startIndex] with UTF-8 length byte. Optionally skips one `0x20` pad after the name.
+  void _applyNetworkPacketVersionFields(List<int> payload) {
+    const int startIndex = 16;
+    if (startIndex >= payload.length) return;
+    final int declared = payload[startIndex];
+    final int nameEnd = startIndex + 1 + declared;
+    if (declared < 0 || nameEnd > payload.length) return;
+    int off = nameEnd;
+    if (off < payload.length && payload[off] == 0x20) {
+      off++;
+    }
+    if (off + 14 > payload.length) {
+      debugPrint(
+        '_applyNetworkPacketVersionFields: need ${off + 14} bytes, '
+        'len ${payload.length}',
+      );
+      return;
+    }
+    receivedHardwareVersion.value =
+        '${payload[off]}.${payload[off + 1]}.${payload[off + 2]}.${payload[off + 3]}';
+    receivedFirmwareVersion.value =
+        '${payload[off + 4]}.${payload[off + 5]}.${payload[off + 6]}.${payload[off + 7]}';
+    final int year = (payload[off + 8] << 8) | payload[off + 9];
+    final int month = payload[off + 10];
+    final int day = payload[off + 11];
+    receivedFirmwareDate.value =
+        '${day.toString().padLeft(2, '0')}-${month.toString().padLeft(2, '0')}-$year';
+    final int proto = (payload[off + 12] << 8) | payload[off + 13];
+    receivedProtocolVersion.value = proto.toString();
+
+    print("The received hardware version is: ${receivedHardwareVersion.value}");
+    print("The received firmware version is: ${receivedFirmwareVersion.value}");
+    print("The received firmware date is: ${receivedFirmwareDate.value}");
+    print("The received protocol version is: ${receivedProtocolVersion.value}");
   }
 
   void resetProcessState() {

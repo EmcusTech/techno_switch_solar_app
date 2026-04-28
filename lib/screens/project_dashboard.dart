@@ -21,7 +21,6 @@ import 'package:techno_switch_solar_app/screens/test_mode_screen.dart';
 import 'package:techno_switch_solar_app/utils/bluetooth_service.dart';
 import 'package:techno_switch_solar_app/utils/ble_name_utils.dart';
 import 'package:techno_switch_solar_app/utils/project_report_pdf_util.dart';
-import 'package:techno_switch_solar_app/services/panel_service.dart';
 import 'package:techno_switch_solar_app/services/site_service.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/access_code_mode_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/diagnostic_mode_bottomsheet.dart';
@@ -859,8 +858,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
       siteName = '-';
     }
 
-    final panel = await PanelService().getPanelByBleName(widget.panelName);
-    final panelId = panel?.panelId ?? '-';
+    final bp = bleController.bleProcess;
 
     if (!mounted) return;
     try {
@@ -870,8 +868,12 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
         installerName: installer,
         companyName: company,
         saqccNo: saqcc,
-        panelProductName: widget.panelName,
-        panelProductId: panelId,
+        receivedPanelName: bp.receivedPanelName.value,
+        advertisedPanelName: widget.panelName,
+        hardwareVersion: bp.receivedHardwareVersion.value,
+        firmwareVersion: bp.receivedFirmwareVersion.value,
+        firmwareDate: bp.receivedFirmwareDate.value,
+        protocolVersion: bp.receivedProtocolVersion.value,
       );
     } catch (e) {
       if (mounted) {
