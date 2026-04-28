@@ -20,6 +20,9 @@ import 'package:techno_switch_solar_app/screens/settings_screen.dart';
 import 'package:techno_switch_solar_app/screens/test_mode_screen.dart';
 import 'package:techno_switch_solar_app/utils/bluetooth_service.dart';
 import 'package:techno_switch_solar_app/utils/ble_name_utils.dart';
+import 'package:techno_switch_solar_app/utils/project_report_pdf_util.dart';
+import 'package:techno_switch_solar_app/services/panel_service.dart';
+import 'package:techno_switch_solar_app/services/site_service.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/access_code_mode_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/diagnostic_mode_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/general_mode_bottomsheet.dart';
@@ -80,6 +83,8 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
     _ProjectDashboardContent(
       panelName: widget.panelName,
       panelVersionNo: widget.panelVersionNo,
+      siteId: widget.siteId,
+      siteName: widget.siteName,
       selectedDevice: _currentDevice ?? widget.selectedDevice,
       onDeviceReconnected: _onDeviceReconnected,
     ),
@@ -229,12 +234,16 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
 class _ProjectDashboardContent extends StatefulWidget {
   final String panelName;
   final String panelVersionNo;
+  final int? siteId;
+  final String? siteName;
   final DiscoveredDevice selectedDevice;
   final void Function(DiscoveredDevice)? onDeviceReconnected;
 
   const _ProjectDashboardContent({
     required this.panelName,
     required this.panelVersionNo,
+    this.siteId,
+    this.siteName,
     required this.selectedDevice,
     this.onDeviceReconnected,
   });
@@ -831,6 +840,48 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     _bleManager.isConnectedNotifier.addListener(_onBleConnectivityChanged);
   }
 
+  Future<void> _exportProjectPdf() async {
+    final siteId = widget.siteId;
+    var siteName = widget.siteName?.trim() ?? '';
+    var installer = '-';
+    var company = '-';
+    var saqcc = '-';
+
+    if (siteId != null) {
+      final site = await SiteService().getSiteById(siteId);
+      if (site != null) {
+        siteName = site.siteName;
+        installer = site.installerName;
+        company = site.companyName;
+        saqcc = site.saqccRegNumber;
+      }
+    } else if (siteName.isEmpty) {
+      siteName = '-';
+    }
+
+    final panel = await PanelService().getPanelByBleName(widget.panelName);
+    final panelId = panel?.panelId ?? '-';
+
+    if (!mounted) return;
+    try {
+      await ProjectReportPdfUtil.generate(
+        deviceId: _selectedDevice.id,
+        siteName: siteName,
+        installerName: installer,
+        companyName: company,
+        saqccNo: saqcc,
+        panelProductName: widget.panelName,
+        panelProductId: panelId,
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not create PDF: $e')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
@@ -896,11 +947,36 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                           ),
                         ),
                         SizedBox(width: 12),
-                        Text(
-                          'Project Dashboard',
-                          style: GoogleFonts.inter(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w700,
+                        Expanded(
+                          child: Text(
+                            'Project Dashboard',
+                            style: GoogleFonts.inter(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: _exportProjectPdf,
+                          child: Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.1),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: const Icon(
+                              Icons.picture_as_pdf_outlined,
+                              color: Color(0xFF3D3D3D),
+                              size: 22,
+                            ),
                           ),
                         ),
                       ],

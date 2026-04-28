@@ -1843,7 +1843,7 @@ class _ScanningScreenState extends State<ScanningScreen>
                       await _showWrongPanelTypeDialog(
                         context: context,
                         expected: expectedPanel,
-                        received: received.isEmpty ? '—' : received,
+                        received: received.isEmpty ? '-' : received,
                       );
                     }
                     return;
@@ -1924,7 +1924,7 @@ class _ScanningScreenState extends State<ScanningScreen>
               });
             }
 
-            // 🔥 UI ONLY BELOW — NO NAVIGATION HERE
+            // 🔥 UI ONLY BELOW - NO NAVIGATION HERE
             return Dialog(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),

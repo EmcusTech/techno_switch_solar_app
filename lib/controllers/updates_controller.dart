@@ -41,7 +41,7 @@ class UpdatesController extends GetxController {
     selectedFirmwareFile = file;
   }
 
-  /// STEP 1 — CRC, trailer fields, and optional product ID
+  /// STEP 1 - CRC, trailer fields, and optional product ID
   FirmwareValidationResult? validateSelectedFile({String? requiredProductId}) {
     if (selectedFirmwareFile == null) return null;
 
@@ -56,7 +56,7 @@ class UpdatesController extends GetxController {
     return result;
   }
 
-  /// STEP 2 — Packet preparation (service-based)
+  /// STEP 2 - Packet preparation (service-based)
   Future<bool> preparePackets() async {
     if (selectedFirmwareFile == null ||
         validationResult == null ||
@@ -77,7 +77,7 @@ class UpdatesController extends GetxController {
     }
   }
 
-  /// STEP 3 — Progress simulation (replace with BLE sender later)
+  /// STEP 3 - Progress simulation (replace with BLE sender later)
   Future<void> simulateUpgradeProgress({
     Duration packetDelay = const Duration(milliseconds: 35),
   }) async {

@@ -23,8 +23,8 @@ class LBusSetupData {
     this.id = 0,
     this.revision = 0,
     this.productRev = '',
-    this.hardware = '—',
-    this.firmware = '—',
+    this.hardware = '-',
+    this.firmware = '-',
     this.date = '',
     this.protocol = 0,
   });
@@ -159,8 +159,8 @@ class LBusSetupData {
     id: json['id'] as int? ?? 0,
     revision: json['revision'] as int? ?? 0,
     productRev: json['productRev'] as String? ?? '',
-    hardware: json['hardware'] as String? ?? '—',
-    firmware: json['firmware'] as String? ?? '—',
+    hardware: json['hardware'] as String? ?? '-',
+    firmware: json['firmware'] as String? ?? '-',
     date: json['date'] as String? ?? '',
     protocol: json['protocol'] as int? ?? 0,
   );

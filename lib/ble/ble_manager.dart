@@ -2110,7 +2110,7 @@ class BleManager {
       // Bootloader (normal app connect): register notify + bootloader auth; without this
       // [_notifySub] stays null and [startSessionAccessCodeValidation] fails.
       // When [skipConnectionHandshake] is true, firmware upgrade registers notify later via
-      // [registerNotifyHandlerForFirmwareUpgrade] — do not register here.
+      // [registerNotifyHandlerForFirmwareUpgrade] - do not register here.
       if (isBootLoaderMode && !skipConnectionHandshake) {
         await registerNotifyHandler(isChipInBootLoader: true);
       }

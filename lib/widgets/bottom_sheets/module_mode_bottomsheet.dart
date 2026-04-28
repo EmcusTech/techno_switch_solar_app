@@ -114,11 +114,11 @@ class _ModuleInfoBottomSheetState extends State<ModuleInfoBottomSheet> {
                             builder:
                                 (_, version, __) => _disabledField(
                                   'BLE Firmware Version',
-                                  version.isEmpty ? '—' : version,
+                                  version.isEmpty ? '-' : version,
                                 ),
                           )
                         else
-                          _disabledField('BLE Firmware Version', '—'),
+                          _disabledField('BLE Firmware Version', '-'),
                         _reactiveTile('Module No', manager!.moduleNo),
                         _reactiveTileBool('Enabled', manager!.moduleEnabled),
                         _reactiveTile('Product', manager!.moduleProduct),

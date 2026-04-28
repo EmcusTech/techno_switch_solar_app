@@ -603,6 +603,16 @@ class BleProcess {
   // Network Variables
   final ValueNotifier<bool> isNetworkPacketProcess = ValueNotifier<bool>(true);
   final ValueNotifier<String> receivedPanelName = ValueNotifier<String>("");
+  final ValueNotifier<String> receivedHardwareVersion = ValueNotifier<String>(
+    "",
+  );
+  final ValueNotifier<String> receivedFirmwareVersion = ValueNotifier<String>(
+    "",
+  );
+  final ValueNotifier<String> receivedFirmwareDate = ValueNotifier<String>("");
+  final ValueNotifier<String> receivedProtocolVersion = ValueNotifier<String>(
+    "",
+  );
 
   // BleStates bleStateMachineState = BleStates.IDLE;
   BleStates bleCurrentState = BleStates.IDLE;
@@ -3641,7 +3651,7 @@ class BleProcess {
     bleCurrentState = BleStates.SEND_EXT_OUT_SETUP_CMD_FETCH_PACKET;
   }
 
-  /// Setup / handshake phases only — not while streaming event logs (ctrl rsp phase 2).
+  /// Setup / handshake phases only - not while streaming event logs (ctrl rsp phase 2).
   bool _shouldBumpOperationDeadline() {
     if (isOtaCompleted) return false;
     if (checkForCtrlCmdRsp == 2) return false;
@@ -3857,7 +3867,7 @@ class BleProcess {
 
       rxTimeoutRetryCount++;
 
-      print("RX timeout [$rxTimeoutRetryCount / $maxRxRetries] — no response");
+      print("RX timeout [$rxTimeoutRetryCount / $maxRxRetries] - no response");
 
       processDesc.value =
           "No response from device (${rxTimeoutRetryCount}/$maxRxRetries)";

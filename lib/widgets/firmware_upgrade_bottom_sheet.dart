@@ -229,7 +229,9 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
     }
   }
 
-  Future<void> _sendPacketsOverBleImpl({bool? isChipInBootLoader = false}) async {
+  Future<void> _sendPacketsOverBleImpl({
+    bool? isChipInBootLoader = false,
+  }) async {
     // if (_bleHandler.currentBleState.value != BleStateMachine.connected) {
     //   throw Exception('Device not connected. Complete BLE handshake first.');
     // }
@@ -1546,8 +1548,8 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
 
     final result = _validationResult;
     final isCrcMatched = _controller.isFileCrcMatched.value;
-    final expectedCrc = result?.expectedHex ?? '—';
-    final calculatedCrc = result?.calculatedHex ?? '—';
+    final expectedCrc = result?.expectedHex ?? '-';
+    final calculatedCrc = result?.calculatedHex ?? '-';
 
     print('expectedCrc: $expectedCrc');
     print('calculatedCrc: $calculatedCrc');
@@ -1756,7 +1758,7 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
     );
   }
 
-  String _emptyToDash(String s) => s.isEmpty ? '—' : s;
+  String _emptyToDash(String s) => s.isEmpty ? '-' : s;
 
   Widget _buildDetailRow(String label, String value, {Color? valueColor}) {
     return Row(

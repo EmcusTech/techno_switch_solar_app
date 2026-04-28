@@ -45,10 +45,10 @@ class LBusBottomSheetState extends State<LBusBottomSheet> {
   final TextEditingController revisionController = TextEditingController();
   final TextEditingController productRevController = TextEditingController();
   final TextEditingController hardwareController = TextEditingController(
-    text: '—',
+    text: '-',
   );
   final TextEditingController firmwareController = TextEditingController(
-    text: '—',
+    text: '-',
   );
   final TextEditingController dateController = TextEditingController();
   final TextEditingController protocolController = TextEditingController();
@@ -126,8 +126,8 @@ class LBusBottomSheetState extends State<LBusBottomSheet> {
         idController.text = data.id.toString();
         revisionController.text = data.revision.toString();
         productRevController.text = data.productRev;
-        hardwareController.text = data.hardware.isEmpty ? '—' : data.hardware;
-        firmwareController.text = data.firmware.isEmpty ? '—' : data.firmware;
+        hardwareController.text = data.hardware.isEmpty ? '-' : data.hardware;
+        firmwareController.text = data.firmware.isEmpty ? '-' : data.firmware;
         dateController.text = data.date;
         protocolController.text = data.protocol.toString();
       });

@@ -469,7 +469,7 @@ class _CreateSiteScreenRefactoredState
 
       if (!mounted) return;
 
-      _showSnackBar('Site ready — opening dashboard', isError: false);
+      _showSnackBar('Site ready - opening dashboard', isError: false);
 
       // Match connect flow: replace wizard so back from dashboard returns to the
       // screen below (e.g. home), not an empty navigator.
@@ -517,7 +517,7 @@ class _CreateSiteScreenRefactoredState
 
       final device = _bleManager.selectedDevice;
       if (device == null) {
-        _showSnackBar('Connection lost — no device', isError: true);
+        _showSnackBar('Connection lost - no device', isError: true);
         return;
       }
 

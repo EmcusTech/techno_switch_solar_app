@@ -7,8 +7,8 @@ import 'package:techno_switch_solar_app/screens/device_connecting_screen.dart';
 import 'package:techno_switch_solar_app/utils/peripheral_config_diff_labels.dart';
 import 'package:techno_switch_solar_app/utils/peripheral_config_snapshot.dart';
 
-/// [bottomSheet] — rounded top only (e.g. dashboard modal).
-/// [dialog] — same content in a centered [Dialog] (e.g. post connect compare).
+/// [bottomSheet] - rounded top only (e.g. dashboard modal).
+/// [dialog] - same content in a centered [Dialog] (e.g. post connect compare).
 enum ConfigLogPresentationStyle { bottomSheet, dialog }
 
 /// Bottom sheet for bulk config sync: compare panel vs cached setup, then resolve mismatches.
