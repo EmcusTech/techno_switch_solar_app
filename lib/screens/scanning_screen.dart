@@ -608,9 +608,9 @@ class _ScanningScreenState extends State<ScanningScreen>
       }
     });
 
-    // _autoStopTimer = Timer(const Duration(seconds: _scanDurationSeconds), () {
-    //   _stopScanning();
-    // });
+    _autoStopTimer = Timer(const Duration(seconds: _scanDurationSeconds), () {
+      _stopScanning(false);
+    });
   }
 
   // small wrapper to get stream subscription with proper casting
@@ -991,7 +991,7 @@ class _ScanningScreenState extends State<ScanningScreen>
     await Get.find<BleLogController>().connectToDevice(device: device);
   }
 
-  void _stopScanning() {
+  void _stopScanning(bool isCtaButton) {
     if (mounted) setState(() => _isScanning = false);
 
     _scanTimer?.cancel();
@@ -1002,21 +1002,23 @@ class _ScanningScreenState extends State<ScanningScreen>
       _bluetoothService.stopScanning();
     }
 
-    Future.delayed(const Duration(milliseconds: 300));
+    if (true) {
+      Future.delayed(const Duration(milliseconds: 300));
 
-    if (mounted) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder:
-              (context) => ScannedScreen(
-                discoveredDevices: _discoveredDevices,
-                scanType: _selectedScanType!,
-                isLiveEvent: widget.isLiveEvent,
-                isLiveEventLogs: widget.isLiveEventLogs,
-              ),
-        ),
-      );
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder:
+                (context) => ScannedScreen(
+                  discoveredDevices: _discoveredDevices,
+                  scanType: _selectedScanType!,
+                  isLiveEvent: widget.isLiveEvent,
+                  isLiveEventLogs: widget.isLiveEventLogs,
+                ),
+          ),
+        );
+      }
     }
   }
 
@@ -1281,7 +1283,9 @@ class _ScanningScreenState extends State<ScanningScreen>
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 28),
               child: GestureDetector(
-                onTap: _stopScanning,
+                onTap: () {
+                  _stopScanning(true);
+                },
                 child: Container(
                   width: double.infinity,
                   decoration: BoxDecoration(

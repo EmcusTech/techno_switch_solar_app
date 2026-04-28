@@ -15,12 +15,12 @@ import 'package:techno_switch_solar_app/models/panel_type_config.dart';
 class CreateProjectController extends ChangeNotifier {
   // Controllers for text inputs
   final TextEditingController siteNameController = TextEditingController(
-    text: 'Site Name',
+    text: '',
   );
   final TextEditingController installerNameController = TextEditingController();
   final TextEditingController companyNameController = TextEditingController();
   final TextEditingController saqccRegNumberController = TextEditingController(
-    text: '1234567',
+    text: '',
   );
   final TextEditingController buildingNameController = TextEditingController();
   final TextEditingController installerContactNumberController =
@@ -30,7 +30,7 @@ class CreateProjectController extends ChangeNotifier {
   final TextEditingController siteDescriptionController =
       TextEditingController();
   final TextEditingController panelNameController = TextEditingController(
-    text: 'Panel Name',
+    text: '',
   );
 
   // Data models

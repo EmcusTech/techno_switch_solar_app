@@ -254,8 +254,9 @@ class _ProjectDashboardContent extends StatefulWidget {
 
 class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
   // Prevent multiple navigations while dialog rebuilds
-  final ValueNotifier<bool> _navigatingToDeviceConnecting =
-      ValueNotifier<bool>(false);
+  final ValueNotifier<bool> _navigatingToDeviceConnecting = ValueNotifier<bool>(
+    false,
+  );
 
   // Refresh triggers for peripheral bottom sheets (increment when download completes)
   final ValueNotifier<int> _relayRefreshTrigger = ValueNotifier(0);
@@ -877,9 +878,9 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
       );
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not create PDF: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Could not create PDF: $e')));
       }
     }
   }
@@ -1552,8 +1553,8 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                     );
                     await _saveAllPeripheralCachesFromBle();
                     if (!mounted) return;
-                    _configLogCompareResult.value =
-                        PeripheralConfigSnapshot.compare(
+                    _configLogCompareResult
+                        .value = PeripheralConfigSnapshot.compare(
                       panelBySection: PeripheralConfigSnapshot.fromBleManager(
                         _bleManager,
                       ),
@@ -1651,42 +1652,25 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 ),
                 overflow: TextOverflow.ellipsis,
               ),
-              ValueListenableBuilder<String>(
-                valueListenable: ble.bleProcess.receivedPanelName,
-                builder: (context, receivedName, _) {
-                  final subtitle =
-                      receivedName.isEmpty
-                          ? BleNameUtils.getDisplayIdFromBleName(
-                            widget.panelName,
-                          )
-                          : '$receivedName~${BleNameUtils.getDisplayIdFromBleName(widget.panelName)}';
-                  return Text(
-                    subtitle,
-                    style: GoogleFonts.inter(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: Color(0xFF979797),
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  );
-                },
+              Text(
+                BleNameUtils.getDisplayIdFromBleName(widget.panelName),
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: Color(0xFF979797),
+                ),
+                overflow: TextOverflow.ellipsis,
               ),
               ValueListenableBuilder(
                 valueListenable: ble.isConnectedNotifier,
                 builder: (context, isConnected, child) {
                   if (isConnected) {
-                    return RichText(
-                      text: TextSpan(
-                        children: [
-                          TextSpan(
-                            text: 'Connected',
-                            style: GoogleFonts.inter(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                              color: Color(0xFF00A706),
-                            ),
-                          ),
-                        ],
+                    return Text(
+                      'Connected',
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF00A706),
                       ),
                     );
                   } else {
@@ -1708,39 +1692,39 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                             ),
                           ),
                         ),
-                        SizedBox(width: 8),
-                        _isConnecting
-                            ? SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  Color(0xFFEC1D24),
-                                ),
-                              ),
-                            )
-                            : GestureDetector(
-                              onTap: _connectToDeviceByName,
-                              child: Container(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 6,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Color(0xFFEC1D24),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Text(
-                                  'Connect',
-                                  style: GoogleFonts.inter(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
-                            ),
+                        // SizedBox(width: 8),
+                        // _isConnecting
+                        //     ? SizedBox(
+                        //       width: 16,
+                        //       height: 16,
+                        //       child: CircularProgressIndicator(
+                        //         strokeWidth: 2,
+                        //         valueColor: AlwaysStoppedAnimation<Color>(
+                        //           Color(0xFFEC1D24),
+                        //         ),
+                        //       ),
+                        //     )
+                        //     : GestureDetector(
+                        //       onTap: _connectToDeviceByName,
+                        //       child: Container(
+                        //         padding: EdgeInsets.symmetric(
+                        //           horizontal: 12,
+                        //           vertical: 6,
+                        //         ),
+                        //         decoration: BoxDecoration(
+                        //           color: Color(0xFFEC1D24),
+                        //           borderRadius: BorderRadius.circular(8),
+                        //         ),
+                        //         child: Text(
+                        //           'Connect',
+                        //           style: GoogleFonts.inter(
+                        //             fontSize: 12,
+                        //             fontWeight: FontWeight.w600,
+                        //             color: Colors.white,
+                        //           ),
+                        //         ),
+                        //       ),
+                        //     ),
                       ],
                     );
                   }
@@ -1748,6 +1732,48 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
               ),
             ],
           ),
+        ),
+
+        ValueListenableBuilder(
+          valueListenable: ble.isConnectedNotifier,
+          builder: (context, isConnected, child) {
+            if (!isConnected) {
+              return _isConnecting
+                  ? SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        Color(0xFFEC1D24),
+                      ),
+                    ),
+                  )
+                  : GestureDetector(
+                    onTap: _connectToDeviceByName,
+                    child: Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Color(0xFFEC1D24),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        'Connect',
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  );
+            } else {
+              return SizedBox.shrink();
+            }
+          },
         ),
       ],
     );

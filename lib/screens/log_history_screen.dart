@@ -378,7 +378,7 @@ class LogHistoryScreenState extends State<LogHistoryScreen> {
                       ],
                     ),
                   ),
-                  SizedBox(height: 19),
+                  SizedBox(height: 23),
                   _buildDashboardContainer(),
                 ],
               ),
@@ -437,29 +437,15 @@ class LogHistoryScreenState extends State<LogHistoryScreen> {
                   ValueListenableBuilder(
                     valueListenable: ble.isConnectedNotifier,
                     builder: (context, isConnected, child) {
-                      return RichText(
-                        text: TextSpan(
-                          children: [
-                            TextSpan(
-                              text: 'Status : ',
-                              style: GoogleFonts.inter(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                                color: Color(0xFF979797),
-                              ),
-                            ),
-                            TextSpan(
-                              text: isConnected ? 'Connected' : 'Disconnected',
-                              style: GoogleFonts.inter(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                                color:
-                                    isConnected
-                                        ? Color(0xFF00A706)
-                                        : Color(0xFFEC1D24),
-                              ),
-                            ),
-                          ],
+                      return Text(
+                        isConnected ? 'Connected' : 'Disconnected',
+                        style: GoogleFonts.inter(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color:
+                              isConnected
+                                  ? Color(0xFF00A706)
+                                  : Color(0xFFEC1D24),
                         ),
                       );
                     },

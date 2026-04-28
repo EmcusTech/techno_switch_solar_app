@@ -114,17 +114,17 @@ class ProjectReportPdfUtil {
                 firmwareDate: firmwareDate,
                 protocolVersion: protocolVersion,
               ),
-              _sectionHeader('ZONE INFO'),
+              _sectionHeader('ZONES'),
               _zoneBlock(zone),
-              _sectionHeader('INPUT INFO'),
+              _sectionHeader('INPUTS'),
               _inputBlock(input),
-              _sectionHeader('RELAY INFO'),
+              _sectionHeader('RELAYS'),
               _relayBlock(relay),
-              _sectionHeader('EXTINGUISHING OUTPUT (EXT OUT)'),
+              _sectionHeader('EXTINGUISHING OUTPUT'),
               _extOutBlock(extOut),
-              _sectionHeader('L-BUS INFO'),
+              _sectionHeader('L-BUS'),
               _lBusBlock(lBus),
-              _sectionHeader('SOUNDER INFO'),
+              _sectionHeader('SOUNDER'),
               _sounderBlock(sounder),
             ],
       ),
@@ -311,45 +311,118 @@ class ProjectReportPdfUtil {
     );
   }
 
+  static String _zoneEnabledStatus(Map<String, Object?> z) {
+    final v = z['enabled'];
+    if (v is bool) return v ? 'Enabled' : 'Disabled';
+    if (v == 1) return 'Enabled';
+    if (v == 0) return 'Disabled';
+    final s = _scalar('zone', 'z1.enabled', v, {'z1': z});
+    if (s == 'Yes') return 'Enabled';
+    if (s == 'No') return 'Disabled';
+    return s;
+  }
+
+  static String _zoneVerifiTime(
+    String key,
+    Map<String, Object?>? z,
+    Object? root,
+  ) {
+    if (z == null) return '-';
+    final s = _scalar(
+      'zone',
+      '$key.verificationTime',
+      z['verificationTime'],
+      root,
+    );
+    if (s == '-' || s == '—' || s.isEmpty) return '-';
+    final t = s.trim();
+    if (t.toLowerCase().endsWith('s')) return t;
+    print("The verification time is: $t");
+    return '${t.replaceAll('"', '')}s';
+  }
+
   static pw.Widget _zoneBlock(Map<String, dynamic>? zone) {
     if (zone == null) {
       return _missing('No cached zone setup for this device.');
     }
-    final children = <pw.Widget>[];
-    for (final key in ['z1', 'z2', 'z3']) {
-      final z = _asMap(zone[key]);
-      if (z == null) continue;
-      final n = key.substring(1);
-      children.add(
-        pw.Padding(
-          padding: const pw.EdgeInsets.only(bottom: 6),
-          child: pw.Column(
-            crossAxisAlignment: pw.CrossAxisAlignment.start,
-            children: [
-              pw.Text(
-                'Zone $n',
-                style: pw.TextStyle(
-                  fontSize: 9,
-                  fontWeight: pw.FontWeight.bold,
-                ),
-              ),
-              pw.Text(
-                'Type: ${_scalar('zone', '$key.type', z['type'], zone)} · '
-                'Enabled: ${_scalar('zone', '$key.enabled', z['enabled'], zone)} · '
-                'Test: ${_scalar('zone', '$key.test', z['test'], zone)} · '
-                'Mode: ${_scalar('zone', '$key.detectionMode', z['detectionMode'], zone)} · '
-                'Verification (s): ${_scalar('zone', '$key.verificationTime', z['verificationTime'], zone)} · '
-                'Text: ${_scalar('zone', '$key.text', z['text'], zone)}',
-                style: const pw.TextStyle(fontSize: 7),
-              ),
-            ],
+
+    /// Five equal-width columns (same approach as panel info grid rows).
+    pw.Widget headerCell(String text) {
+      return pw.Expanded(
+        child: pw.Padding(
+          padding: const pw.EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+          child: pw.Text(
+            text,
+            style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold),
           ),
         ),
       );
     }
+
+    pw.Widget dataCell(String text) {
+      return pw.Expanded(
+        child: pw.Padding(
+          padding: const pw.EdgeInsets.symmetric(vertical: 5, horizontal: 4),
+          child: pw.Text(
+            text.isEmpty ? '-' : text,
+            style: pw.TextStyle(
+              fontSize: 9,
+              color: PdfColor.fromInt(0xFF3A3A3A),
+            ),
+          ),
+        ),
+      );
+    }
+
+    final headerRow = pw.Row(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        headerCell('Zone No'),
+        headerCell('Type'),
+        headerCell('Zone'),
+        headerCell('Mode'),
+        headerCell('Verifi.Time'),
+      ],
+    );
+
+    final dataRows = <pw.Widget>[];
+    for (final key in ['z1', 'z2', 'z3']) {
+      final z = _asMap(zone[key]);
+      final no = key.substring(1);
+      if (z == null) {
+        dataRows.add(
+          pw.Row(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              dataCell(no),
+              dataCell('-'),
+              dataCell('-'),
+              dataCell('-'),
+              dataCell('-'),
+            ],
+          ),
+        );
+        continue;
+      }
+      dataRows.add(
+        pw.Row(
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
+          children: [
+            dataCell(no),
+            dataCell(_scalar('zone', '$key.type', z['type'], zone)),
+            dataCell(_zoneEnabledStatus(z)),
+            dataCell(
+              _scalar('zone', '$key.detectionMode', z['detectionMode'], zone),
+            ),
+            dataCell(_zoneVerifiTime(key, z, zone)),
+          ],
+        ),
+      );
+    }
+
     return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
-      children: children,
+      children: [headerRow, ...dataRows],
     );
   }
 
