@@ -1006,19 +1006,47 @@ class _ScanningScreenState extends State<ScanningScreen>
       Future.delayed(const Duration(milliseconds: 300));
 
       if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder:
-                (context) => ScannedScreen(
-                  discoveredDevices: _discoveredDevices,
-                  scanType: _selectedScanType!,
-                  isLiveEvent: widget.isLiveEvent,
-                  isLiveEventLogs: widget.isLiveEventLogs,
-                ),
-          ),
+        // Create-site wizard awaits [Navigator.push(ScanningScreen)]. If we
+        // [pushReplacement] to [ScannedScreen], [ScanningScreen] is removed and
+        // that future completes with null — panel verify never reaches the wizard.
+        // Push [ScannedScreen] on top and bubble success with [Navigator.pop(true)].
+        final isCreateWizard =
+            widget.createProjectExpectedPanelType?.trim().isNotEmpty ?? false;
+
+        final route = MaterialPageRoute<bool>(
+          builder:
+              (context) => ScannedScreen(
+                discoveredDevices: _discoveredDevices,
+                scanType: _selectedScanType!,
+                isLiveEvent: widget.isLiveEvent,
+                isLiveEventLogs: widget.isLiveEventLogs,
+                createProjectExpectedPanelType:
+                    widget.createProjectExpectedPanelType,
+                onCreateProjectPanelVerified:
+                    widget.onCreateProjectPanelVerified,
+              ),
         );
+
+        if (isCreateWizard) {
+          unawaited(_openScannedForCreateWizard(route));
+        } else {
+          Navigator.pushReplacement(context, route);
+        }
       }
+    }
+  }
+
+  /// Create-site wizard [Navigator.push]es [ScanningScreen] and awaits `true`.
+  /// If we [pushReplacement] to [ScannedScreen], the wizard's future completes
+  /// with null; this pushes [ScannedScreen] on top and [Navigator.pop(true)]s
+  /// [ScanningScreen] when verification succeeds.
+  Future<void> _openScannedForCreateWizard(
+    MaterialPageRoute<bool> route,
+  ) async {
+    final verified = await Navigator.of(context).push<bool>(route);
+    if (!mounted) return;
+    if (verified == true && widget.onCreateProjectPanelVerified == null) {
+      Navigator.of(context).pop(true);
     }
   }
 

@@ -30,12 +30,20 @@ class ScannedScreen extends StatefulWidget {
   final bool? isLiveEvent;
   final bool? isLiveEventLogs;
 
+  /// Mirrors [ScanningScreen]: create-site wizard panel type check (see that screen).
+  final String? createProjectExpectedPanelType;
+
+  /// If non-null, called instead of [Navigator.pop] when create-project verification succeeds.
+  final VoidCallback? onCreateProjectPanelVerified;
+
   const ScannedScreen({
     super.key,
     this.discoveredDevices = const [],
     required this.scanType,
     this.isLiveEvent = false,
     this.isLiveEventLogs = false,
+    this.createProjectExpectedPanelType,
+    this.onCreateProjectPanelVerified,
   });
 
   @override
@@ -705,6 +713,113 @@ class _ScannedScreenState extends State<ScannedScreen> {
     );
   }
 
+  Future<void> _waitForReceivedPanelName(BleLogController bleController) async {
+    const attempts = 80;
+    for (var i = 0; i < attempts; i++) {
+      if (bleController.bleProcess.receivedPanelName.value.trim().isNotEmpty) {
+        return;
+      }
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+    }
+  }
+
+  bool _panelTypeMatchesReceived(
+    String expectedPanelType,
+    String receivedName,
+  ) {
+    final e = expectedPanelType.trim().toUpperCase();
+    final r = receivedName.trim().toUpperCase();
+    if (e.isEmpty || r.isEmpty) return false;
+    return r.contains(e) || e.contains(r);
+  }
+
+  Future<void> _showWrongPanelTypeDialog({
+    required BuildContext context,
+    required String expected,
+    required String received,
+  }) {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 64,
+                  height: 64,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFFBDEE1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Center(
+                    child: Icon(
+                      Icons.error_outline,
+                      size: 32,
+                      color: Color(0xFFEC1D24),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Wrong panel type',
+                  style: GoogleFonts.inter(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF3D3D3D),
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'This device does not match the panel type you selected ($expected). '
+                  'The connected panel reported: $received.',
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w400,
+                    color: const Color(0xFF918F8F),
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFEC1D24),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(24.5),
+                      ),
+                    ),
+                    onPressed: () => Navigator.of(dialogContext).pop(),
+                    child: Text(
+                      'OK',
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   void _showConnectingDialog({
     required DiscoveredDevice device,
     required BuildContext context,
@@ -776,6 +891,46 @@ class _ScannedScreenState extends State<ScannedScreen> {
                     );
                   }
                 } else {
+                  // Create-site flow: verify panel model (matches [ScanningScreen]).
+                  final expectedPanel =
+                      widget.createProjectExpectedPanelType?.trim() ?? '';
+                  if (expectedPanel.isNotEmpty) {
+                    final ok = await showPanelAccessCodeGatewayDialog(
+                      context: screenContext,
+                      onStartValidation:
+                          () =>
+                              bleController.startSessionAccessCodeValidation(),
+                    );
+                    if (!ok || !screenContext.mounted) {
+                      bleController.bleManager.disconnectConnectedDevice();
+                      return;
+                    }
+                    await _waitForReceivedPanelName(bleController);
+                    if (!screenContext.mounted) return;
+                    final received =
+                        bleController.bleProcess.receivedPanelName.value.trim();
+                    if (!_panelTypeMatchesReceived(expectedPanel, received)) {
+                      await bleController.bleManager.disconnectConnectedDevice();
+                      if (screenContext.mounted) {
+                        await _showWrongPanelTypeDialog(
+                          context: screenContext,
+                          expected: expectedPanel,
+                          received: received.isEmpty ? '-' : received,
+                        );
+                      }
+                      return;
+                    }
+                    if (widget.onCreateProjectPanelVerified != null) {
+                      widget.onCreateProjectPanelVerified!();
+                    } else if (screenContext.mounted) {
+                      Navigator.of(
+                        screenContext,
+                        rootNavigator: true,
+                      ).pop(true);
+                    }
+                    return;
+                  }
+
                   final siteId = await _ensureConnectedPanelHasSite(
                     device: device,
                   );
@@ -796,7 +951,7 @@ class _ScannedScreenState extends State<ScannedScreen> {
                   if (!screenContext.mounted) return;
 
                   if (widget.isLiveEventLogs == true) {
-                    Navigator.of(context, rootNavigator: true).pushReplacement(
+                    Navigator.of(screenContext, rootNavigator: true).pushReplacement(
                       MaterialPageRoute(
                         builder:
                             (_) => EventLogScreen(
@@ -815,7 +970,7 @@ class _ScannedScreenState extends State<ScannedScreen> {
                           () =>
                               bleController.startSessionAccessCodeValidation(),
                     );
-                    if (!ok || !context.mounted) {
+                    if (!ok || !screenContext.mounted) {
                       bleController.bleManager.disconnectConnectedDevice();
                       return;
                     }
