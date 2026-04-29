@@ -40,6 +40,9 @@ class _PanelSelectionPageState extends State<PanelSelectionPage> {
           SizedBox(height: 32),
           Expanded(
             child: SingleChildScrollView(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.viewInsetsOf(context).bottom + 24,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -91,6 +94,8 @@ class _PanelSelectionPageState extends State<PanelSelectionPage> {
                     ),
                     child: TextField(
                       controller: widget.panelNameController,
+                      textInputAction: TextInputAction.done,
+                      onSubmitted: (_) => FocusScope.of(context).unfocus(),
                       onTapOutside: (value) {
                         FocusScope.of(context).unfocus();
                       },

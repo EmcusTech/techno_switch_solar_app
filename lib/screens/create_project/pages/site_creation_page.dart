@@ -128,6 +128,9 @@ class _SiteCreationPageState extends State<SiteCreationPage> {
           SizedBox(height: 32),
           Expanded(
             child: SingleChildScrollView(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.viewInsetsOf(context).bottom + 24,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [

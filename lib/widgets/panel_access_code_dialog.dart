@@ -76,7 +76,11 @@ class _PanelAccessCodeGatewayBodyState
         if (isAccessKeyValidValue == true && !_closing) {
           _closing = true;
           WidgetsBinding.instance.addPostFrameCallback((_) async {
-            await Future.delayed(const Duration(seconds: 1));
+            _focusNode.unfocus();
+            await SystemChannels.textInput.invokeMethod<Object>(
+              'TextInput.hide',
+            );
+            await Future.delayed(const Duration(milliseconds: 400));
             if (!mounted) return;
             bleProcess.setSessionAccessCode(accessKey.value);
             if (widget.dialogContext.mounted) {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -87,6 +88,48 @@ class _CreateSiteScreenRefactoredState
   String _wizardDeviceId = '';
 
   void _noop() {}
+
+  /// Hides the soft keyboard and drops focus so step transitions (e.g. Connect
+  /// panel → scan route) do not fight with the Panel Name field.
+  Future<void> _dismissKeyboardFully() async {
+    if (!mounted) return;
+    FocusManager.instance.primaryFocus?.unfocus();
+    await SystemChannels.textInput.invokeMethod<Object>('TextInput.hide');
+    if (!mounted) return;
+    FocusScope.of(context).unfocus();
+    await WidgetsBinding.instance.endOfFrame;
+  }
+
+  /// After scan / access-code routes, keyboard [viewInsets] can still animate.
+  /// Showing [Dialog]s while that happens makes them shift vertically. Tear down
+  /// the IME and wait a beat so the overlay is stable.
+  Future<void> _settleImeBeforeShowingDialog() async {
+    await _dismissKeyboardFully();
+    if (!mounted) return;
+    await Future<void>.delayed(const Duration(milliseconds: 160));
+    if (!mounted) return;
+    await _dismissKeyboardFully();
+    if (!mounted) return;
+    await WidgetsBinding.instance.endOfFrame;
+    await Future<void>.delayed(const Duration(milliseconds: 280));
+  }
+
+  Future<void> _confirmFinishAndApply() async {
+    await _settleImeBeforeShowingDialog();
+    if (!mounted) return;
+    final proceed = await showAppStyledTwoActionDialog<bool>(
+      context: context,
+      title: 'Update panel settings',
+      message:
+          'This will update the panel settings with the values you configured in this setup.',
+      leadingActionLabel: 'Cancel',
+      trailingActionLabel: 'Next',
+      leadingValue: false,
+      trailingValue: true,
+    );
+    if (proceed != true || !mounted) return;
+    await _finishCreateSiteBulkApplyAndOpenDashboard();
+  }
 
   @override
   void initState() {
@@ -305,6 +348,8 @@ class _CreateSiteScreenRefactoredState
     if (panel?.siteId == null) return true;
 
     if (!mounted) return false;
+    await _settleImeBeforeShowingDialog();
+    if (!mounted) return false;
     final choice = await showAppStyledTwoActionDialog<String>(
       context: context,
       title: 'Panel already on a site',
@@ -338,6 +383,9 @@ class _CreateSiteScreenRefactoredState
   Future<void> _offerBulkDownloadIfNeeded() async {
     if (_offeredBulkDownload) return;
     _offeredBulkDownload = true;
+    if (!mounted) return;
+
+    await _settleImeBeforeShowingDialog();
     if (!mounted) return;
 
     final download = await showAppStyledTwoActionDialog<bool>(
@@ -491,9 +539,11 @@ class _CreateSiteScreenRefactoredState
   }
 
   Future<void> _goToNextStep() async {
-    FocusScope.of(context).unfocus();
+    await _dismissKeyboardFully();
+    if (!mounted) return;
+
     if (_currentStep == 11) {
-      await _finishCreateSiteBulkApplyAndOpenDashboard();
+      await _confirmFinishAndApply();
       return;
     }
 
@@ -504,6 +554,11 @@ class _CreateSiteScreenRefactoredState
 
     if (_currentStep == 2) {
       _controller.clearValidationErrors();
+      await _dismissKeyboardFully();
+      if (!mounted) return;
+      // Let the IME fully close before route push to avoid keyboard resize jank.
+      await Future<void>.delayed(const Duration(milliseconds: 120));
+      if (!mounted) return;
       final verified = await Navigator.of(context).push<bool>(
         MaterialPageRoute(
           builder:
@@ -533,6 +588,8 @@ class _CreateSiteScreenRefactoredState
       if (!mounted) return;
 
       _controller.clearValidationErrors();
+      await _dismissKeyboardFully();
+      if (!mounted) return;
       await _pageController.nextPage(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
@@ -552,6 +609,8 @@ class _CreateSiteScreenRefactoredState
     }
 
     _controller.clearValidationErrors();
+    await _dismissKeyboardFully();
+    if (!mounted) return;
     await _pageController.nextPage(
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeInOut,
@@ -599,6 +658,7 @@ class _CreateSiteScreenRefactoredState
         }
       },
       child: Scaffold(
+        resizeToAvoidBottomInset: false,
         body: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
