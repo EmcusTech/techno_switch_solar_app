@@ -491,6 +491,7 @@ class _CreateSiteScreenRefactoredState
   }
 
   Future<void> _goToNextStep() async {
+    FocusScope.of(context).unfocus();
     if (_currentStep == 11) {
       await _finishCreateSiteBulkApplyAndOpenDashboard();
       return;

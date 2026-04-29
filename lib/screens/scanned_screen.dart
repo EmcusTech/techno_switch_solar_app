@@ -931,6 +931,13 @@ class _ScannedScreenState extends State<ScannedScreen> {
                     return;
                   }
 
+                  final bleNameForSiteLookup = device.name.trim();
+                  final preAssocPanel =
+                      await _panelService.getPanelByPanelId(bleNameForSiteLookup) ??
+                      await _panelService.getPanelByBleName(bleNameForSiteLookup);
+                  final panelHadNoSiteBeforeConnect =
+                      preAssocPanel?.siteId == null;
+
                   final siteId = await _ensureConnectedPanelHasSite(
                     device: device,
                   );
@@ -981,6 +988,8 @@ class _ScannedScreenState extends State<ScannedScreen> {
                       device: device,
                       awaitDownloadIfAccepted: true,
                       showConfigLogCompareAfterDownload: true,
+                      panelHadNoSiteBeforeConnect:
+                          panelHadNoSiteBeforeConnect,
                     );
                     if (!screenContext.mounted) return;
 

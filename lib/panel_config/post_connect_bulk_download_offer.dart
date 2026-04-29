@@ -34,6 +34,12 @@ PanelConfigRefreshNotifiers _ephemeralPanelRefreshNotifiers() {
 /// When [showConfigLogCompareAfterDownload] is true (e.g. tap-to-connect with
 /// [awaitDownloadIfAccepted]: true), bulk download skips writing to disk until
 /// the user resolves the Config Log sheet (or dismisses, then we save panel to app).
+///
+/// When [panelHadNoSiteBeforeConnect] is true (no DB row for this panel, or
+/// [site_id] was null before site assignment during this connect flow), bulk
+/// download persists BLE state to disk immediately—same as “Use panel data in
+/// app”—and the Config Log compare dialog is skipped so navigation can go
+/// straight to [ProjectDashboardScreen].
 Future<void> offerOptionalFullConfigDownloadAfterConnect({
   required BuildContext context,
   required bool Function() isMounted,
@@ -42,6 +48,7 @@ Future<void> offerOptionalFullConfigDownloadAfterConnect({
   ValueNotifier<bool>? navigatingToDeviceConnecting,
   bool awaitDownloadIfAccepted = false,
   bool showConfigLogCompareAfterDownload = false,
+  bool panelHadNoSiteBeforeConnect = false,
 }) async {
   final wantDownload = await showAppStyledTwoActionDialog<bool>(
     context: context,
@@ -62,6 +69,11 @@ Future<void> offerOptionalFullConfigDownloadAfterConnect({
   final nav =
       navigatingToDeviceConnecting ?? ValueNotifier<bool>(false);
 
+  final bool deferWritingCachesUntilConfigLogResolution =
+      awaitDownloadIfAccepted &&
+      showConfigLogCompareAfterDownload &&
+      !panelHadNoSiteBeforeConnect;
+
   final coordinator = PanelConfigurationCoordinator(
     bleManager: bleManager,
     bleController: bleController,
@@ -69,8 +81,7 @@ Future<void> offerOptionalFullConfigDownloadAfterConnect({
     refreshNotifiers: notifiers,
     navigatingToDeviceConnecting: nav,
     useDialogOnlyBulkProgress: true,
-    saveCachesAfterBulkDownload:
-        !(showConfigLogCompareAfterDownload && awaitDownloadIfAccepted),
+    saveCachesAfterBulkDownload: !deferWritingCachesUntilConfigLogResolution,
   );
   if (awaitDownloadIfAccepted) {
     try {
@@ -78,7 +89,10 @@ Future<void> offerOptionalFullConfigDownloadAfterConnect({
         context: context,
         isMounted: isMounted,
       );
-      if (showConfigLogCompareAfterDownload && isMounted() && context.mounted) {
+      if (showConfigLogCompareAfterDownload &&
+          !panelHadNoSiteBeforeConnect &&
+          isMounted() &&
+          context.mounted) {
         await presentPostConnectConfigLogCompareAfterDownload(
           context: context,
           isMounted: isMounted,
