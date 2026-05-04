@@ -871,37 +871,22 @@ class BleProcess {
     }
 
     if (checkForNetworkPacketRsp == 1) {
-      if (rx.payload[13] == 0x22 &&
-          rx.payload[14] == 0x03 &&
-          receivedPanelName.value.isEmpty) {
-        print(
-          "The network packet is: ${rx.payload.map((e) => e.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
-        );
-        receivedPanelName.value = extractStringFromPayload(
-          rx.payload,
-          startIndex: 16,
-        );
-        _applyNetworkPacketVersionFields(rx.payload);
+      print(
+        "The network packet is: ${rx.payload.map((e) => e.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+      );
+      receivedPanelName.value = extractStringFromPayload(
+        rx.payload,
+        startIndex: 16,
+      );
+      _applyNetworkPacketVersionFields(rx.payload);
 
-        print("The received panel name is: ${receivedPanelName.value}");
-        // await Future.delayed(Duration(seconds: 1));
-        bleManager.otaProcessState = OtaProcessState.sendPollPacket;
-        isNetworkPacketProcess.value = false;
-        checkForNetworkPacketRsp = 0;
-        startRxTimeout();
-        await bleManager.sendPollPacket();
-      } else if (receivedPanelName.value.isNotEmpty) {
-        print("Panel name received, sending poll packet");
-        bleManager.otaProcessState = OtaProcessState.sendPollPacket;
-        isNetworkPacketProcess.value = false;
-        checkForNetworkPacketRsp = 0;
-        startRxTimeout();
-        await bleManager.sendPollPacket();
-      } else {
-        print("Network Packet Response not found, polling again");
-        startRxTimeout();
-        await bleManager.sendPollPacket();
-      }
+      print("The received panel name is: ${receivedPanelName.value}");
+      // await Future.delayed(Duration(seconds: 1));
+      bleManager.otaProcessState = OtaProcessState.sendPollPacket;
+      isNetworkPacketProcess.value = false;
+      checkForNetworkPacketRsp = 0;
+      startRxTimeout();
+      await bleManager.sendPollPacket();
     }
 
     if (checkForLiveEventsRetrievalRes == 1) {
