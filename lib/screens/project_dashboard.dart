@@ -2263,7 +2263,10 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
             onDownload: onDownload,
             onStop: onStop,
           ),
-    );
+    ).whenComplete(() {
+      if (!mounted) return;
+      ble.bleProcess.isAdcSetupFetchCommandActive.value = false;
+    });
   }
 
   // showAdcDiagnosticsSetupBottomSheet({
