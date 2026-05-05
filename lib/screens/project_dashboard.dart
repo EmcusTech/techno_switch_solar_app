@@ -2632,6 +2632,10 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                   }
                   showPasswordPopup(
                     onCall: () {
+                      ble
+                          .bleProcess
+                          .isEventLogRetrievalFetchCommandActive
+                          .value = true;
                       bleController.startLogRetrieval();
                     },
                   );

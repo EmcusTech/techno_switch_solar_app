@@ -2349,7 +2349,10 @@ class BleManager {
         // Parse BLE firmware version from payload (last 10 bytes: "XX.XX.XXXX")
         final payload = bleRxFrame.payload;
         if (payload.length >= 10) {
-          final versionBytes = payload.sublist(payload.length - 10);
+          final versionBytes = payload.sublist(
+            payload.length - 28,
+            payload.length - 18,
+          );
           final version = String.fromCharCodes(versionBytes);
           bleFirmwareVersion.value = version;
           print("BLE firmware version: $version");

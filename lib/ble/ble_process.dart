@@ -614,6 +614,9 @@ class BleProcess {
     "",
   );
 
+  final ValueNotifier<bool> isEventLogRetrievalFetchCommandActive =
+      ValueNotifier<bool>(false);
+
   // BleStates bleStateMachineState = BleStates.IDLE;
   BleStates bleCurrentState = BleStates.IDLE;
   DeviceConnectState deviceConnectState = DeviceConnectState.notConnected;
@@ -724,6 +727,7 @@ class BleProcess {
         // processDesc.value = "Sending Stop Control Command";
         if (checkForCtrlCmdRsp == 1) {
           logRetreivalEnded = true;
+          isEventLogRetrievalFetchCommandActive.value = false;
           bleManager.otaProcessState = OtaProcessState.sendStopCntrlCmdPkt;
           break;
         } else {
@@ -1119,11 +1123,17 @@ class BleProcess {
           processDesc.value = "Downloading Adc Setup";
           startRxTimeout();
           await bleManager.sendDiagnosticsSetupFetchCmdPkt();
-        } else {
+        } else if (isEventLogRetrievalFetchCommandActive.value) {
           bleManager.otaProcessState = OtaProcessState.sendStopCntrlCmdPkt;
           checkForAccessKeyCmdRsp = 0;
           startRxTimeout();
           await bleManager.sendStopCntrlCmdPkt();
+        } else {
+          bleManager.otaProcessState = OtaProcessState.notInUse;
+          cancelOperationDeadline();
+          checkForAccessKeyCmdRsp = 0;
+          isAccessKeyValid.value = true;
+          // return;
         }
       } else if (rx.payload[13] == 0x0a &&
           String.fromCharCodes(
