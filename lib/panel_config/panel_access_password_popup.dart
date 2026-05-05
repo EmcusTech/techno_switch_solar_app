@@ -51,6 +51,20 @@ class PanelAccessPasswordDelegates {
   final Future<void> Function()? afterBulkApplyAccessGranted;
 }
 
+/// Removes the modal route that contains [routeContext] from its [Navigator].
+///
+/// [Navigator.pop(context)] always pops the **top** route on that navigator.
+/// After bulk apply, delegates may push a success dialog on top; popping would
+/// dismiss that dialog and leave the access ("Applying…") route visible.
+void _removeOverlayRouteFor(BuildContext routeContext) {
+  if (!routeContext.mounted) return;
+  final route = ModalRoute.of(routeContext);
+  final navigator = route?.navigator;
+  if (route != null && navigator != null) {
+    navigator.removeRoute(route);
+  }
+}
+
 Future<void> showPanelAccessPasswordPopup({
   required BuildContext context,
   required bool Function() isMounted,
@@ -101,6 +115,12 @@ Future<void> showPanelAccessPasswordPopup({
     accessKeyValidationTimer?.cancel();
     accessKeyValidationTimer = null;
   }
+
+  /// Prevents scheduling [afterBulkApplyAccessGranted] twice when access stays
+  /// valid but [navigatingToDeviceConnecting] is reset in the bulk `finally`
+  /// (duplicate [ValueListenableBuilder] rebuilds would otherwise enqueue
+  /// another post-frame bulk apply).
+  var configLogBulkApplyChainScheduled = false;
 
   final TextEditingController accessController = TextEditingController();
   final FocusNode focusNode = FocusNode();
@@ -174,8 +194,19 @@ Future<void> showPanelAccessPasswordPopup({
                   if (isAccessKeyValidValue != null) {
                     cancelAccessKeyTimer();
                   }
+                  if (isConfigLogBulkApply && mode == 'bottomsheet_apply') {
+                    if (isAccessKeyValidValue != true) {
+                      configLogBulkApplyChainScheduled = false;
+                    }
+                  }
                   if (isAccessKeyValidValue == true &&
-                      !navigatingToDeviceConnecting.value) {
+                      !navigatingToDeviceConnecting.value &&
+                      !(isConfigLogBulkApply &&
+                          mode == 'bottomsheet_apply' &&
+                          configLogBulkApplyChainScheduled)) {
+                    if (isConfigLogBulkApply && mode == 'bottomsheet_apply') {
+                      configLogBulkApplyChainScheduled = true;
+                    }
                     navigatingToDeviceConnecting.value = true;
                     bleProcess.setSessionAccessCode(bleProcess.accessKey.value);
                     WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -317,13 +348,8 @@ Future<void> showPanelAccessPasswordPopup({
                           }
                         } finally {
                           configLogWorking?.value = false;
+                          _removeOverlayRouteFor(dialogContext);
                           navigatingToDeviceConnecting.value = false;
-                          if (dialogContext.mounted) {
-                            Navigator.of(
-                              dialogContext,
-                              rootNavigator: true,
-                            ).pop();
-                          }
                         }
                         return;
                       }
@@ -334,12 +360,7 @@ Future<void> showPanelAccessPasswordPopup({
                         void closeAccessDialog() {
                           if (accessDialogClosed) return;
                           accessDialogClosed = true;
-                          if (dialogContext.mounted) {
-                            Navigator.of(
-                              dialogContext,
-                              rootNavigator: true,
-                            ).pop();
-                          }
+                          _removeOverlayRouteFor(dialogContext);
                         }
                         try {
                           await onDownloadComplete?.call();
