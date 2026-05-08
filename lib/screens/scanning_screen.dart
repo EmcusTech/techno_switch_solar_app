@@ -1059,6 +1059,7 @@ class _ScanningScreenState extends State<ScanningScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -1891,7 +1892,9 @@ class _ScanningScreenState extends State<ScanningScreen>
                 // Resolve site
                 final bleNameForSiteLookup = device.name.trim();
                 final preAssocPanel =
-                    await _panelService.getPanelByPanelId(bleNameForSiteLookup) ??
+                    await _panelService.getPanelByPanelId(
+                      bleNameForSiteLookup,
+                    ) ??
                     await _panelService.getPanelByBleName(bleNameForSiteLookup);
                 final panelHadNoSiteBeforeConnect =
                     preAssocPanel?.siteId == null;

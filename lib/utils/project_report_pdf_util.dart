@@ -126,7 +126,8 @@ class ProjectReportPdfUtil {
               // _extOutBlock(extOut),
               _newExtOutBlock(extOut),
               _sectionHeader('SOUNDER'),
-              _sounderBlock(sounder),
+              // _sounderBlock(sounder),
+              _newSounderBlock(sounder),
               _sectionHeader('L-BUS'),
               // _lBusBlock(lBus),
               _newLBusBlock(lBus),
@@ -996,6 +997,301 @@ class ProjectReportPdfUtil {
         t.isEmpty ? 'N/A' : t,
         style: const pw.TextStyle(fontSize: 5.5),
       ),
+    );
+  }
+
+  static pw.Widget _newSounderBlock(Map<String, dynamic>? s) {
+    if (s == null) {
+      return _missing('No cached sounder setup for this device.');
+    }
+
+    /// Five equal-width columns (same approach as panel info grid rows).
+    pw.Widget headerCell(String text) {
+      return pw.Expanded(
+        child: pw.Padding(
+          padding: const pw.EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+          child: pw.Text(
+            text,
+            style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold),
+          ),
+        ),
+      );
+    }
+
+    pw.Widget dataCell(String text) {
+      return pw.Expanded(
+        child: pw.Padding(
+          padding: const pw.EdgeInsets.symmetric(vertical: 5, horizontal: 4),
+          child: pw.Text(
+            text.isEmpty ? '-' : text,
+            style: pw.TextStyle(
+              fontSize: 9,
+              color: PdfColor.fromInt(0xFF3A3A3A),
+            ),
+          ),
+        ),
+      );
+    }
+
+    pw.Widget headerTitle(String title) {
+      return pw.Padding(
+        padding: const pw.EdgeInsets.only(bottom: 4),
+        child: pw.Text(
+          title,
+          style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold),
+        ),
+      );
+    }
+
+    final outputHeaderRow = pw.Row(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        headerCell('Sounder No'),
+        headerCell('Enabled'),
+        headerCell('Test'),
+        headerCell('Type'),
+        headerCell('Output Text'),
+        headerCell('Group'),
+        headerCell('Function'),
+        headerCell('Zone/Ext.Out Val'),
+      ],
+    );
+
+    final outputDataRows = <pw.Widget>[];
+    for (final key in ['s1', 's2', 's3']) {
+      final block = _asMap(s[key]);
+      final no = key.substring(1);
+      if (block == null) {
+        outputDataRows.add(
+          pw.Row(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              dataCell(no),
+              dataCell('-'),
+              dataCell('-'),
+              dataCell('-'),
+              dataCell('-'),
+              dataCell('-'),
+              dataCell('-'),
+              dataCell('-'),
+            ],
+          ),
+        );
+        continue;
+      }
+      outputDataRows.add(
+        pw.Row(
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
+          children: [
+            dataCell(no),
+            dataCell(_scalar('sounder', '$key.enabled', block['enabled'], s)),
+            dataCell(_scalar('sounder', '$key.test', block['test'], s)),
+            dataCell(_scalar('sounder', '$key.normal', block['normal'], s)),
+            dataCell(
+              _scalar('sounder', '$key.outputText', block['outputText'], s),
+            ),
+            dataCell(_scalar('sounder', '$key.group', block['group'], s)),
+            dataCell(_scalar('sounder', '$key.function', block['function'], s)),
+            dataCell(
+              _scalar(
+                    'sounder',
+                    '$key.group',
+                    block['group'],
+                    s,
+                  ).contains("Zone")
+                  ? "Zone ${_scalar('sounder', '$key.functionNo', block['functionNo'], s)}"
+                  : _scalar(
+                    'sounder',
+                    '$key.group',
+                    block['group'],
+                    s,
+                  ).contains("Ext. Out")
+                  ? "Ext. Out ${_scalar('sounder', '$key.functionNo', block['functionNo'], s)}"
+                  : "-",
+            ),
+          ],
+        ),
+      );
+    }
+
+    final zoneHeaderRow = pw.Row(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        headerCell('Zone No'),
+        headerCell('Enabled'),
+        headerCell('Test'),
+        headerCell('Action'),
+      ],
+    );
+
+    final zoneDataRows = <pw.Widget>[];
+    for (final key in ['z1', 'z2', 'z3']) {
+      final block = _asMap(s[key]);
+      final no = key.substring(1);
+      if (block == null) {
+        zoneDataRows.add(
+          pw.Row(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              dataCell(no),
+              dataCell('-'),
+              dataCell('-'),
+              dataCell('-'),
+            ],
+          ),
+        );
+        continue;
+      }
+      zoneDataRows.add(
+        pw.Row(
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
+          children: [
+            dataCell(no),
+            dataCell(_scalar('sounder', '$key.enabled', block['enabled'], s)),
+            dataCell(_scalar('sounder', '$key.test', block['test'], s)),
+            dataCell(_scalar('sounder', '$key.action', block['action'], s)),
+          ],
+        ),
+      );
+    }
+
+    // EXT. OUT HEADER ROW
+
+    final extOutHeaderRow = pw.Row(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        headerCell('Ext. Out'),
+        headerCell('Enabled'),
+        headerCell('Test'),
+        headerCell('Countdown'),
+        headerCell('Hold'),
+        headerCell('Release'),
+      ],
+    );
+
+    final extOutDataRows = <pw.Widget>[];
+    for (final key in ['e1', 'e2', 'e3']) {
+      final block = _asMap(s[key]);
+      final no = key.substring(1);
+      if (block == null) {
+        extOutDataRows.add(
+          pw.Row(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              dataCell(
+                no == "1"
+                    ? 'Ext. Snd'
+                    : no == "2"
+                    ? 'Ext. Snd 2'
+                    : 'Man. Release Snd',
+              ),
+              dataCell('-'),
+              dataCell('-'),
+              dataCell('-'),
+              dataCell('-'),
+              dataCell('-'),
+            ],
+          ),
+        );
+        continue;
+      }
+      extOutDataRows.add(
+        pw.Row(
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
+          children: [
+            dataCell(
+              no == "1"
+                  ? 'Ext. Snd'
+                  : no == "2"
+                  ? 'Ext. Snd 2'
+                  : 'Man. Release Snd',
+            ),
+            dataCell(_scalar('sounder', '$key.enabled', block['enabled'], s)),
+            dataCell(_scalar('sounder', '$key.test', block['test'], s)),
+            dataCell(
+              _scalar(
+                'sounder',
+                '$key.countdownAction',
+                block['countdownAction'],
+                s,
+              ),
+            ),
+            dataCell(
+              _scalar('sounder', '$key.holdAction', block['holdAction'], s),
+            ),
+            dataCell(
+              _scalar(
+                'sounder',
+                '$key.releaseAction',
+                block['releaseAction'],
+                s,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // General Delay
+    final generalDelayHeaderRow = pw.Row(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        headerCell('Enabled'),
+        headerCell('Test'),
+        headerCell('Delayed'),
+        headerCell('Action'),
+        headerCell('Delay (s)'),
+      ],
+    );
+
+    final generalDelayDataRow = <pw.Widget>[];
+
+    final g = _asMap(s['general']);
+
+    if (g == null) {
+      generalDelayDataRow.add(
+        pw.Row(
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
+          children: [
+            dataCell('-'),
+            dataCell('-'),
+            dataCell('-'),
+            dataCell('-'),
+            dataCell('-'),
+          ],
+        ),
+      );
+    } else {
+      generalDelayDataRow.add(
+        pw.Row(
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
+          children: [
+            dataCell(_scalar('sounder', 'general.enabled', g['enabled'], s)),
+            dataCell(_scalar('sounder', 'general.test', g['test'], s)),
+            dataCell(_scalar('sounder', 'general.delayed', g['delayed'], s)),
+            dataCell(_scalar('sounder', 'general.action', g['action'], s)),
+            dataCell(_scalar('sounder', 'general.delay', g['delay'], s)),
+          ],
+        ),
+      );
+    }
+
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        headerTitle('Sounder Output'),
+        outputHeaderRow,
+        ...outputDataRows,
+        headerTitle('Sounder Zone'),
+        zoneHeaderRow,
+        ...zoneDataRows,
+        headerTitle('Sounder Ext. Out'),
+        extOutHeaderRow,
+        ...extOutDataRows,
+        headerTitle('Sounder General Delay'),
+        generalDelayHeaderRow,
+        ...generalDelayDataRow,
+      ],
     );
   }
 
