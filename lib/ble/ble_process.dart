@@ -875,14 +875,16 @@ class BleProcess {
     }
 
     if (checkForNetworkPacketRsp == 1) {
-      print(
-        "The network packet is: ${rx.payload.map((e) => e.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
-      );
-      receivedPanelName.value = extractStringFromPayload(
-        rx.payload,
-        startIndex: 16,
-      );
-      _applyNetworkPacketVersionFields(rx.payload);
+      if (receivedPanelName.value.isEmpty) {
+        print(
+          "The network packet is: ${rx.payload.map((e) => e.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+        );
+        receivedPanelName.value = extractStringFromPayload(
+          rx.payload,
+          startIndex: 16,
+        );
+        _applyNetworkPacketVersionFields(rx.payload);
+      }
 
       print("The received panel name is: ${receivedPanelName.value}");
       // await Future.delayed(Duration(seconds: 1));

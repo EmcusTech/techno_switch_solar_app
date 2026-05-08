@@ -28,7 +28,7 @@ class ProjectReportPdfUtil {
       path,
       value,
       sideRoot,
-    );
+    ).replaceAll('"', '');
   }
 
   static String _serviceDateFromDue(Map<String, dynamic>? due) {
@@ -117,15 +117,19 @@ class ProjectReportPdfUtil {
               _sectionHeader('ZONES'),
               _zoneBlock(zone),
               _sectionHeader('INPUTS'),
-              _inputBlock(input),
+              // _inputBlock(input),
+              _newInputBlock(input),
               _sectionHeader('RELAYS'),
-              _relayBlock(relay),
+              // _relayBlock(relay),
+              _newRelayBlock(relay),
               _sectionHeader('EXTINGUISHING OUTPUT'),
-              _extOutBlock(extOut),
-              _sectionHeader('L-BUS'),
-              _lBusBlock(lBus),
+              // _extOutBlock(extOut),
+              _newExtOutBlock(extOut),
               _sectionHeader('SOUNDER'),
               _sounderBlock(sounder),
+              _sectionHeader('L-BUS'),
+              // _lBusBlock(lBus),
+              _newLBusBlock(lBus),
             ],
       ),
     );
@@ -426,6 +430,107 @@ class ProjectReportPdfUtil {
     );
   }
 
+  static pw.Widget _newInputBlock(Map<String, dynamic>? input) {
+    if (input == null) {
+      return _missing('No cached input setup for this device.');
+    }
+
+    /// Five equal-width columns (same approach as panel info grid rows).
+    pw.Widget headerCell(String text) {
+      return pw.Expanded(
+        child: pw.Padding(
+          padding: const pw.EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+          child: pw.Text(
+            text,
+            style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold),
+          ),
+        ),
+      );
+    }
+
+    pw.Widget dataCell(String text) {
+      return pw.Expanded(
+        child: pw.Padding(
+          padding: const pw.EdgeInsets.symmetric(vertical: 5, horizontal: 4),
+          child: pw.Text(
+            text.isEmpty ? '-' : text,
+            style: pw.TextStyle(
+              fontSize: 9,
+              color: PdfColor.fromInt(0xFF3A3A3A),
+            ),
+          ),
+        ),
+      );
+    }
+
+    final headerRow = pw.Row(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        headerCell('Input No'),
+        headerCell('Group'),
+        headerCell('Function'),
+        headerCell('Enabled'),
+        headerCell('Test'),
+        headerCell('Inverted'),
+        headerCell('Text'),
+      ],
+    );
+
+    final dataRows = <pw.Widget>[];
+    dataRows.add(
+      pw.Row(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          dataCell('1'),
+          dataCell(_scalar('input', 'group', input['group'], input)),
+          dataCell(_scalar('input', 'function', input['function'], input)),
+          dataCell(_scalar('input', 'enabled', input['enabled'], input)),
+          dataCell(_scalar('input', 'test', input['test'], input)),
+          dataCell(_scalar('input', 'inverted', input['inverted'], input)),
+          dataCell(_scalar('input', 'text', input['text'], input)),
+        ],
+      ),
+    );
+    // for (final key in ['z1', 'z2', 'z3']) {
+    //   final z = _asMap(zone[key]);
+    //   final no = key.substring(1);
+    //   if (z == null) {
+    //     dataRows.add(
+    //       pw.Row(
+    //         crossAxisAlignment: pw.CrossAxisAlignment.start,
+    //         children: [
+    //           dataCell(no),
+    //           dataCell('-'),
+    //           dataCell('-'),
+    //           dataCell('-'),
+    //           dataCell('-'),
+    //         ],
+    //       ),
+    //     );
+    //     continue;
+    //   }
+    //   dataRows.add(
+    //     pw.Row(
+    //       crossAxisAlignment: pw.CrossAxisAlignment.start,
+    //       children: [
+    //         dataCell(no),
+    //         dataCell(_scalar('zone', '$key.type', z['type'], zone)),
+    //         dataCell(_zoneEnabledStatus(z)),
+    //         dataCell(
+    //           _scalar('zone', '$key.detectionMode', z['detectionMode'], zone),
+    //         ),
+    //         dataCell(_zoneVerifiTime(key, z, zone)),
+    //       ],
+    //     ),
+    //   );
+    // }
+
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [headerRow, ...dataRows],
+    );
+  }
+
   static pw.Widget _inputBlock(Map<String, dynamic>? input) {
     if (input == null) {
       return _missing('No cached input setup for this device.');
@@ -441,6 +546,107 @@ class ProjectReportPdfUtil {
     );
   }
 
+  static pw.Widget _newRelayBlock(Map<String, dynamic>? relay) {
+    if (relay == null) {
+      return _missing('No cached zone setup for this device.');
+    }
+
+    /// Five equal-width columns (same approach as panel info grid rows).
+    pw.Widget headerCell(String text) {
+      return pw.Expanded(
+        child: pw.Padding(
+          padding: const pw.EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+          child: pw.Text(
+            text,
+            style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold),
+          ),
+        ),
+      );
+    }
+
+    pw.Widget dataCell(String text) {
+      return pw.Expanded(
+        child: pw.Padding(
+          padding: const pw.EdgeInsets.symmetric(vertical: 5, horizontal: 4),
+          child: pw.Text(
+            text.isEmpty ? '-' : text,
+            style: pw.TextStyle(
+              fontSize: 9,
+              color: PdfColor.fromInt(0xFF3A3A3A),
+            ),
+          ),
+        ),
+      );
+    }
+
+    final headerRow = pw.Row(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        headerCell('Relay No'),
+        headerCell('Enabled'),
+        headerCell('Test'),
+        headerCell('Group'),
+        headerCell('Function'),
+        headerCell('Output Text'),
+        headerCell('Zone/Ext.Out Val'),
+      ],
+    );
+
+    final dataRows = <pw.Widget>[];
+    for (final key in ['r1', 'r2', 'r3']) {
+      final r = _asMap(relay[key]);
+      final no = key.substring(1);
+      if (r == null) {
+        dataRows.add(
+          pw.Row(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              dataCell(no),
+              dataCell('-'),
+              dataCell('-'),
+              dataCell('-'),
+              dataCell('-'),
+              dataCell('-'),
+            ],
+          ),
+        );
+        continue;
+      }
+      dataRows.add(
+        pw.Row(
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
+          children: [
+            dataCell(no),
+            dataCell(_scalar('relay', '$key.enabled', r['enabled'], relay)),
+            dataCell(_scalar('relay', '$key.test', r['test'], relay)),
+            dataCell(_scalar('relay', '$key.group', r['group'], relay)),
+            dataCell(_scalar('relay', '$key.function', r['function'], relay)),
+            dataCell(
+              _scalar('relay', '$key.outputText', r['outputText'], relay),
+            ),
+            dataCell(
+              _scalar('relay', '$key.group', r['group'], relay).contains("Zone")
+                  ? "Zone ${_scalar('relay', '$key.dynamicText', r['dynamicText'], relay)}"
+                  : _scalar(
+                    'relay',
+                    '$key.group',
+                    r['group'],
+                    relay,
+                  ).contains("Ext. Out")
+                  ? "Ext. Out ${_scalar('relay', '$key.dynamicText', r['dynamicText'], relay)}"
+                  : "-",
+            ),
+          ],
+        ),
+      );
+    }
+
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [headerRow, ...dataRows],
+    );
+  }
+
   static pw.Widget _relayBlock(Map<String, dynamic>? relay) {
     if (relay == null) {
       return _missing('No cached relay setup for this device.');
@@ -450,25 +656,179 @@ class ProjectReportPdfUtil {
       final r = _asMap(relay[key]);
       if (r == null) continue;
       final n = key.substring(1);
+      print(
+        "The dynamic text is: ${_scalar('relay', '$key.dynamicText', r['dynamicText'], relay).contains("0")}",
+      );
       children.add(
         pw.Padding(
           padding: const pw.EdgeInsets.only(bottom: 6),
-          child: pw.Text(
-            'Relay $n - '
-            'Enabled: ${_scalar('relay', '$key.enabled', r['enabled'], relay)} · '
-            'Test: ${_scalar('relay', '$key.test', r['test'], relay)} · '
-            'Group: ${_scalar('relay', '$key.group', r['group'], relay)} · '
-            'Function: ${_scalar('relay', '$key.function', r['function'], relay)} · '
-            'Output text: ${_scalar('relay', '$key.outputText', r['outputText'], relay)} · '
-            'Zone / dynamic: ${_scalar('relay', '$key.dynamicText', r['dynamicText'], relay)}',
-            style: const pw.TextStyle(fontSize: 7),
-          ),
+          child:
+              _scalar(
+                    'relay',
+                    '$key.dynamicText',
+                    r['dynamicText'],
+                    relay,
+                  ).contains("0")
+                  ? pw.Text(
+                    'Relay $n - '
+                    'Enabled: ${_scalar('relay', '$key.enabled', r['enabled'], relay)} · '
+                    'Test: ${_scalar('relay', '$key.test', r['test'], relay)} · '
+                    'Group: ${_scalar('relay', '$key.group', r['group'], relay)} · '
+                    'Function: ${_scalar('relay', '$key.function', r['function'], relay)} · '
+                    'Output text: ${_scalar('relay', '$key.outputText', r['outputText'], relay)} · ',
+                    style: const pw.TextStyle(fontSize: 7),
+                  )
+                  : _scalar(
+                    'relay',
+                    '$key.group',
+                    r['group'],
+                    relay,
+                  ).contains("Zone")
+                  ? pw.Text(
+                    'Relay $n - '
+                    'Enabled: ${_scalar('relay', '$key.enabled', r['enabled'], relay)} · '
+                    'Test: ${_scalar('relay', '$key.test', r['test'], relay)} · '
+                    'Group: ${_scalar('relay', '$key.group', r['group'], relay)} · '
+                    'Function: ${_scalar('relay', '$key.function', r['function'], relay)} · '
+                    'Output text: ${_scalar('relay', '$key.outputText', r['outputText'], relay)} · '
+                    'Zone: ${_scalar('relay', '$key.dynamicText', r['dynamicText'], relay)}',
+                    style: const pw.TextStyle(fontSize: 7),
+                  )
+                  : pw.Text(
+                    'Relay $n - '
+                    'Enabled: ${_scalar('relay', '$key.enabled', r['enabled'], relay)} · '
+                    'Test: ${_scalar('relay', '$key.test', r['test'], relay)} · '
+                    'Group: ${_scalar('relay', '$key.group', r['group'], relay)} · '
+                    'Function: ${_scalar('relay', '$key.function', r['function'], relay)} · '
+                    'Output text: ${_scalar('relay', '$key.outputText', r['outputText'], relay)} · '
+                    'Ext.Out: ${_scalar('relay', '$key.dynamicText', r['dynamicText'], relay)}',
+                    style: const pw.TextStyle(fontSize: 7),
+                  ),
         ),
       );
     }
     return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: children,
+    );
+  }
+
+  static pw.Widget _newExtOutBlock(Map<String, dynamic>? ext) {
+    if (ext == null) {
+      return _missing('No cached extinguishing output setup for this device.');
+    }
+
+    /// Five equal-width columns (same approach as panel info grid rows).
+    pw.Widget headerCell(String text) {
+      return pw.Expanded(
+        child: pw.Padding(
+          padding: const pw.EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+          child: pw.Text(
+            text,
+            style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold),
+          ),
+        ),
+      );
+    }
+
+    pw.Widget dataCell(String text) {
+      return pw.Expanded(
+        child: pw.Padding(
+          padding: const pw.EdgeInsets.symmetric(vertical: 5, horizontal: 4),
+          child: pw.Text(
+            text.isEmpty ? '-' : text,
+            style: pw.TextStyle(
+              fontSize: 9,
+              color: PdfColor.fromInt(0xFF3A3A3A),
+            ),
+          ),
+        ),
+      );
+    }
+
+    final headerRow = pw.Row(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        headerCell('Ext. Out No'),
+        headerCell('Enabled'),
+        headerCell('Actuator'),
+        headerCell('Function'),
+        headerCell('Reset'),
+        headerCell('Hold'),
+        headerCell('Action'),
+        headerCell('CD Auto'),
+        headerCell('CD Man'),
+        headerCell('Rel Time'),
+        headerCell('Reset Delay'),
+        headerCell('Text'),
+      ],
+    );
+
+    final dataRows = <pw.Widget>[];
+    dataRows.add(
+      pw.Row(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          dataCell('1'),
+          dataCell(_scalar('ext_out', 'enabled', ext['enabled'], ext)),
+          dataCell(
+            _scalar('ext_out', 'actuatorType', ext['actuatorType'], ext),
+          ),
+          dataCell(_scalar('ext_out', 'function', ext['function'], ext)),
+          dataCell(
+            _scalar('ext_out', 'resetAllowed', ext['resetAllowed'], ext),
+          ),
+          dataCell(_scalar('ext_out', 'holdMode', ext['holdMode'], ext)),
+          dataCell(_scalar('ext_out', 'action', ext['action'], ext)),
+          dataCell(
+            _scalar('ext_out', 'countdownAuto', ext['countdownAuto'], ext),
+          ),
+          dataCell(
+            _scalar('ext_out', 'countdownMan', ext['countdownMan'], ext),
+          ),
+          dataCell(_scalar('ext_out', 'releaseTime', ext['releaseTime'], ext)),
+          dataCell(_scalar('ext_out', 'resetDelay', ext['resetDelay'], ext)),
+          dataCell(_scalar('ext_out', 'text', ext['text'], ext)),
+        ],
+      ),
+    );
+    // for (final key in ['z1', 'z2', 'z3']) {
+    //   final z = _asMap(zone[key]);
+    //   final no = key.substring(1);
+    //   if (z == null) {
+    //     dataRows.add(
+    //       pw.Row(
+    //         crossAxisAlignment: pw.CrossAxisAlignment.start,
+    //         children: [
+    //           dataCell(no),
+    //           dataCell('-'),
+    //           dataCell('-'),
+    //           dataCell('-'),
+    //           dataCell('-'),
+    //         ],
+    //       ),
+    //     );
+    //     continue;
+    //   }
+    //   dataRows.add(
+    //     pw.Row(
+    //       crossAxisAlignment: pw.CrossAxisAlignment.start,
+    //       children: [
+    //         dataCell(no),
+    //         dataCell(_scalar('zone', '$key.type', z['type'], zone)),
+    //         dataCell(_zoneEnabledStatus(z)),
+    //         dataCell(
+    //           _scalar('zone', '$key.detectionMode', z['detectionMode'], zone),
+    //         ),
+    //         dataCell(_zoneVerifiTime(key, z, zone)),
+    //       ],
+    //     ),
+    //   );
+    // }
+
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [headerRow, ...dataRows],
     );
   }
 
@@ -489,6 +849,85 @@ class ProjectReportPdfUtil {
       'Reset delay: ${_scalar('ext_out', 'resetDelay', ext['resetDelay'], ext)} · '
       'Text: ${_scalar('ext_out', 'text', ext['text'], ext)}',
       style: const pw.TextStyle(fontSize: 7),
+    );
+  }
+
+  static pw.Widget _newLBusBlock(List<Map<String, dynamic>>? buses) {
+    if (buses == null) {
+      return _missing('No cached L-Bus setup for this device.');
+    }
+
+    /// Five equal-width columns (same approach as panel info grid rows).
+    pw.Widget headerCell(String text) {
+      return pw.Expanded(
+        child: pw.Padding(
+          padding: const pw.EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+          child: pw.Text(
+            text,
+            style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold),
+          ),
+        ),
+      );
+    }
+
+    pw.Widget dataCell(String text) {
+      return pw.Expanded(
+        child: pw.Padding(
+          padding: const pw.EdgeInsets.symmetric(vertical: 5, horizontal: 4),
+          child: pw.Text(
+            text.isEmpty ? '-' : text,
+            style: pw.TextStyle(
+              fontSize: 9,
+              color: PdfColor.fromInt(0xFF3A3A3A),
+            ),
+          ),
+        ),
+      );
+    }
+
+    final headerRow = pw.Row(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        headerCell('L-Bus No'),
+        headerCell('Enabled'),
+        headerCell('LED'),
+        headerCell('Product'),
+        headerCell('Text'),
+        headerCell('ID'),
+        headerCell('Revision'),
+        headerCell('HW Version'),
+        headerCell('FW Version'),
+        headerCell('Date'),
+        headerCell('Protocol'),
+      ],
+    );
+
+    final dataRows = <pw.Widget>[];
+    for (var i = 0; i < buses.length; i++) {
+      final d = LBusSetupData.fromJson(buses[i]);
+      dataRows.add(
+        pw.Row(
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
+          children: [
+            dataCell('${i + 1}'),
+            dataCell(d.enabled),
+            dataCell(d.idLed),
+            dataCell(d.product),
+            dataCell(d.deviceText),
+            dataCell('${d.id}'),
+            dataCell('${d.revision}'),
+            dataCell(d.hardware),
+            dataCell(d.firmware),
+            dataCell(d.date),
+            dataCell('${d.protocol}'),
+          ],
+        ),
+      );
+    }
+
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [headerRow, ...dataRows],
     );
   }
 
