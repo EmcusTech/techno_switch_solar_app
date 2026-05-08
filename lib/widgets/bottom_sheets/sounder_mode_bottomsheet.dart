@@ -6,7 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/utils/general_quipment_mode_util.dart';
-import 'package:techno_switch_solar_app/utils/relay_mode_util.dart';
+import 'package:techno_switch_solar_app/utils/peripheral_test_mode_sync.dart';
 import 'package:techno_switch_solar_app/utils/ext_out_equipment_mode_util.dart';
 import 'package:techno_switch_solar_app/utils/zone_equipment_mode_util.dart';
 import 'package:techno_switch_solar_app/panel_config/panel_config_cache_sync.dart';
@@ -172,7 +172,6 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
 
     if (s1 != null) {
       sounders[0].enabled = (s1['enabled'] as bool?) ?? false ? 'Yes' : 'No';
-      sounders[0].test = (s1['test'] as bool?) ?? false ? 'Yes' : 'No';
       sounders[0].type =
           (s1['normal'] as bool?) ?? true ? 'Normal' : 'IS (MTL5525)';
       sounders[0].outputController.text = (s1['outputText'] as String?) ?? '';
@@ -187,7 +186,6 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
     }
     if (s2 != null) {
       sounders[1].enabled = (s2['enabled'] as bool?) ?? false ? 'Yes' : 'No';
-      sounders[1].test = (s2['test'] as bool?) ?? false ? 'Yes' : 'No';
       sounders[1].type =
           (s2['normal'] as bool?) ?? true ? 'Normal' : 'IS (MTL5525)';
       sounders[1].outputController.text = (s2['outputText'] as String?) ?? '';
@@ -204,7 +202,6 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
     }
     if (s3 != null) {
       sounders[2].enabled = (s3['enabled'] as bool?) ?? false ? 'Yes' : 'No';
-      sounders[2].test = (s3['test'] as bool?) ?? false ? 'Yes' : 'No';
       sounders[2].type =
           (s3['normal'] as bool?) ?? true ? 'Normal' : 'IS (MTL5525)';
       sounders[2].outputController.text = (s3['outputText'] as String?) ?? '';
@@ -307,6 +304,9 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
     if (gen != null) {
       delayController.text = (gen['delay'] as int?)?.toString() ?? '0';
     }
+    if (manager != null) {
+      applySounderMainTestFlagsFromCacheMap(manager!, data);
+    }
   }
 
   void _loadFromManager() {
@@ -316,15 +316,12 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
     final sounderThree = sounders[2];
 
     sounderOne.enabled = manager!.isSounderOneEnabled.value ? 'Yes' : 'No';
-    sounderOne.test = manager!.isSounderOneTest.value ? 'Yes' : 'No';
     sounderOne.type =
         manager!.isSounderOneNormal.value ? 'Normal' : 'IS (MTL5525)';
     sounderTwo.enabled = manager!.isSounderTwoEnabled.value ? 'Yes' : 'No';
-    sounderTwo.test = manager!.isSounderTwoTest.value ? 'Yes' : 'No';
     sounderTwo.type =
         manager!.isSounderTwoNormal.value ? 'Normal' : 'IS (MTL5525)';
     sounderThree.enabled = manager!.isSounderThreeEnabled.value ? 'Yes' : 'No';
-    sounderThree.test = manager!.isSounderThreeTest.value ? 'Yes' : 'No';
     sounderThree.type =
         manager!.isSounderThreeNormal.value ? 'Normal' : 'IS (MTL5525)';
     sounderOne.outputController.text = manager!.sounderOneOutputText.value;
@@ -549,15 +546,15 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
                 label: 'Enabled',
                 value: sounder.enabled,
                 items: yesNoOptions,
-                onChanged: (v) => setState(() => sounder.enabled = v),
+                onChanged: (v) {
+                  setState(() {
+                    sounder.enabled = v;
+                    if (v == 'No' && manager != null) {
+                      clearSounderMainTestOnManager(manager!, sounder.index);
+                    }
+                  });
+                },
               ),
-
-            DropdownWidget(
-              label: 'Test',
-              value: sounder.test,
-              items: yesNoOptions,
-              onChanged: (v) => setState(() => sounder.test = v),
-            ),
 
             DropdownWidget(
               label: 'Type',
@@ -977,11 +974,16 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
 
   void _pushSounderSetupToManager() {
     final m = manager!;
+    final snapshotTest = [
+      m.isSounderOneTest.value,
+      m.isSounderTwoTest.value,
+      m.isSounderThreeTest.value,
+    ];
     for (int i = 0; i < 3; i++) {
       final sounder = sounders[i];
 
       bool isEnabled = sounder.enabled == 'Yes';
-      bool isTest = sounder.test == 'Yes';
+      bool isTest = isEnabled && snapshotTest[i];
       bool isNormal = sounder.type == 'Normal';
       String outputText = sounder.outputController.text;
       int functionNo = int.tryParse(sounder.dynamicController.text) ?? 0;
@@ -991,18 +993,8 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
         functionOptionsMap[sounder.group]!,
       );
 
-      final config = OutputModeConfig(
-        outputEnable:
-            isEnabled ? OutputEnable.enabled : OutputEnable.disabled,
-        outputMode: isTest ? OutputMode.test : OutputMode.normal,
-        supervisionMode:
-            isNormal ? SupervisionMode.normal : SupervisionMode.mtl5525,
-      );
-      final String hexValue = OutputModeCodec.encodeHex(config);
-
       switch (i) {
         case 0:
-          m.sounderOneRelayOutputMode.value = hexValue;
           m.sounderOneRelayFunctionGroup.value = groupIndex;
           m.sounderOneRelayFunction.value = functionIndex;
           m.sounderOneFunctionNo.value = functionNo;
@@ -1012,7 +1004,6 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
           m.isSounderOneNormal.value = isNormal;
           break;
         case 1:
-          m.sounderTwoRelayOutputMode.value = hexValue;
           m.sounderTwoRelayFunctionGroup.value = groupIndex;
           m.sounderTwoRelayFunction.value = functionIndex;
           m.sounderTwoFunctionNo.value = functionNo;
@@ -1022,7 +1013,6 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
           m.isSounderTwoNormal.value = isNormal;
           break;
         case 2:
-          m.sounderThreeRelayOutputMode.value = hexValue;
           m.sounderThreeRelayFunctionGroup.value = groupIndex;
           m.sounderThreeRelayFunction.value = functionIndex;
           m.sounderThreeFunctionNo.value = functionNo;
@@ -1033,6 +1023,7 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
           break;
       }
     }
+    syncSounderMainOutputModeHexFromBleManager(m);
 
     final generalConfig = GeneralEquipmentModeConfig(
       equipmentEnable:
@@ -1220,7 +1211,6 @@ class SounderConfig {
   String group = 'None';
   String function = 'None';
   String enabled = 'No';
-  String test = 'No';
   String type = 'Normal';
 
   bool groupLocked = false;

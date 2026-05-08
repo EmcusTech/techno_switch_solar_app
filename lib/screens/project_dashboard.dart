@@ -42,6 +42,9 @@ import 'package:techno_switch_solar_app/utils/peripheral_config_snapshot.dart';
 import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/config_log_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/sounder_mode_bottomsheet.dart';
+import 'package:techno_switch_solar_app/widgets/bottom_sheets/test_mode_choice_bottomsheet.dart';
+import 'package:techno_switch_solar_app/widgets/bottom_sheets/test_mode_relay_bottomsheet.dart';
+import 'package:techno_switch_solar_app/widgets/bottom_sheets/test_mode_sounder_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/walk_test_zone_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/zone_mode_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/firmware_upgrade_bottom_sheet.dart';
@@ -2417,6 +2420,92 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     );
   }
 
+  void showTestModeSounderBottomSheet({
+    required BuildContext context,
+    required String deviceId,
+    required VoidCallback onDownload,
+    required VoidCallback onApply,
+    required ValueNotifier<int> refreshTrigger,
+  }) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withOpacity(0.4),
+      builder:
+          (_) => TestModeSounderBottomSheet(
+            deviceId: deviceId,
+            onDownload: onDownload,
+            onApply: onApply,
+            refreshTrigger: refreshTrigger,
+          ),
+    );
+  }
+
+  void showTestModeRelayBottomSheet({
+    required BuildContext context,
+    required String deviceId,
+    required VoidCallback onDownload,
+    required VoidCallback onApply,
+    required ValueNotifier<int> refreshTrigger,
+  }) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withOpacity(0.4),
+      builder:
+          (_) => TestModeRelayBottomSheet(
+            deviceId: deviceId,
+            onDownload: onDownload,
+            onApply: onApply,
+            refreshTrigger: refreshTrigger,
+          ),
+    );
+  }
+
+  void showTestModeChoiceBottomSheet({
+    required BuildContext context,
+    required String deviceId,
+    required VoidCallback onDownloadRelays,
+    required VoidCallback onDownloadSounders,
+    required VoidCallback onApplyRelays,
+    required VoidCallback onApplySounders,
+    required ValueNotifier<int> relayRefreshTrigger,
+    required ValueNotifier<int> sounderRefreshTrigger,
+  }) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withOpacity(0.4),
+      builder: (sheetContext) {
+        return TestModeChoiceBottomSheet(
+          onSounders: () {
+            Navigator.pop(sheetContext);
+            showTestModeSounderBottomSheet(
+              context: context,
+              deviceId: deviceId,
+              onDownload: onDownloadSounders,
+              onApply: onApplySounders,
+              refreshTrigger: sounderRefreshTrigger,
+            );
+          },
+          onRelays: () {
+            Navigator.pop(sheetContext);
+            showTestModeRelayBottomSheet(
+              context: context,
+              deviceId: deviceId,
+              onDownload: onDownloadRelays,
+              onApply: onApplyRelays,
+              refreshTrigger: relayRefreshTrigger,
+            );
+          },
+        );
+      },
+    );
+  }
+
   void showRadioSetupBottomSheet({
     required BuildContext context,
     required String deviceId,
@@ -2931,7 +3020,70 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
               _peripheralTile(
                 peripheralName: 'Test Mode',
                 iconPath: 'assets/svgs/peripheral_prog_hold_icon.svg',
-                isDisabled: true,
+                onTap: () {
+                  if (_selectedDevice.manufacturerData.isNotEmpty &&
+                      _selectedDevice.manufacturerData.last == 1) {
+                    showBootloaderModeDialog(context: context);
+                    return;
+                  }
+                  showTestModeChoiceBottomSheet(
+                    context: context,
+                    deviceId: _selectedDevice.id,
+                    onDownloadRelays: () {
+                      showPasswordPopup(
+                        onCall: () {
+                          ble.bleProcess.isRelaySetupFetchCommandActive.value =
+                              true;
+                          bleController.startRelaySetupFetch();
+                        },
+                        isRelaySetup: true,
+                        mode: 'bottomsheet_download',
+                        onDownloadComplete: _saveRelayCacheAndNotifyRefresh,
+                      );
+                    },
+                    onDownloadSounders: () {
+                      showPasswordPopup(
+                        onCall: () {
+                          ble
+                              .bleProcess
+                              .isSounderSetupFetchCommandActive
+                              .value = true;
+                          bleController.startSounderSetupFetch();
+                        },
+                        isSounderSetup: true,
+                        mode: 'bottomsheet_download',
+                        onDownloadComplete: _saveSounderCacheAndNotifyRefresh,
+                        downloadSuccessMessage: 'Sounder',
+                      );
+                    },
+                    onApplyRelays: () {
+                      showPasswordPopup(
+                        onCall: () {
+                          ble.bleProcess.isRelaySetupCommandApplyActive.value =
+                              true;
+                          bleController.startRelaySetupApply();
+                        },
+                        isRelaySetup: true,
+                        mode: 'bottomsheet_apply',
+                      );
+                    },
+                    onApplySounders: () {
+                      showPasswordPopup(
+                        onCall: () {
+                          ble
+                              .bleProcess
+                              .isSounderSetupApplyCommandActive
+                              .value = true;
+                          bleController.startSounderSetupApply();
+                        },
+                        isSounderSetup: true,
+                        mode: 'bottomsheet_apply',
+                      );
+                    },
+                    relayRefreshTrigger: _relayRefreshTrigger,
+                    sounderRefreshTrigger: _sounderRefreshTrigger,
+                  );
+                },
               ),
             ],
           ),

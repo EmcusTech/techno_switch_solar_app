@@ -5,7 +5,7 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
-import 'package:techno_switch_solar_app/utils/relay_mode_util.dart';
+import 'package:techno_switch_solar_app/utils/peripheral_test_mode_sync.dart';
 import 'package:techno_switch_solar_app/panel_config/panel_config_cache_sync.dart';
 import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/widgets/dropdown.dart';
@@ -144,7 +144,6 @@ class RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
       final r = data[key] as Map<String, dynamic>?;
       if (r == null) continue;
       relays[i].enabled = (r['enabled'] as bool?) == true ? 'Yes' : 'No';
-      relays[i].test = (r['test'] as bool?) == true ? 'Yes' : 'No';
       final g = (r['group'] as int?) ?? 0;
       relays[i].group = groupOptions[g.clamp(0, groupOptions.length - 1)];
       final f = (r['function'] as int?) ?? 0;
@@ -158,6 +157,9 @@ class RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
         relays[i].dynamicController.text = '1';
       }
     }
+    if (manager != null) {
+      applyRelayTestFlagsFromCacheMap(manager!, data);
+    }
   }
 
   void _loadFromManager() {
@@ -165,7 +167,6 @@ class RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
     manager = Get.find<BleLogController>().bleManager;
 
     relays[0].enabled = manager!.isRelayOneSetupEnabled.value ? 'Yes' : 'No';
-    relays[0].test = manager!.isRelayOneSetupTest.value ? 'Yes' : 'No';
     relays[0].group = groupOptions[manager!.relayOneSetupGroup.value];
     relays[0].function =
         functionOptionsMap[relays[0].group]![manager!
@@ -176,7 +177,6 @@ class RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
     relays[0].dynamicController.text = manager!.relayOneSetupDynamicText.value;
 
     relays[1].enabled = manager!.isRelayTwoSetupEnabled.value ? 'Yes' : 'No';
-    relays[1].test = manager!.isRelayTwoSetupTest.value ? 'Yes' : 'No';
     relays[1].group = groupOptions[manager!.relayTwoSetupGroup.value];
     relays[1].function =
         functionOptionsMap[relays[1].group]![manager!
@@ -187,7 +187,6 @@ class RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
     relays[1].dynamicController.text = manager!.relayTwoSetupDynamicText.value;
 
     relays[2].enabled = manager!.isRelayThreeSetupEnabled.value ? 'Yes' : 'No';
-    relays[2].test = manager!.isRelayThreeSetupTest.value ? 'Yes' : 'No';
     relays[2].group = groupOptions[manager!.relayThreeSetupGroup.value];
     relays[2].function =
         functionOptionsMap[relays[2].group]![manager!
@@ -207,20 +206,17 @@ class RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
   }
 
   void _pushRelaysToManager() {
+    final m = manager!;
+    final snapshotTest = [
+      m.isRelayOneSetupTest.value,
+      m.isRelayTwoSetupTest.value,
+      m.isRelayThreeSetupTest.value,
+    ];
     for (int i = 0; i < 3; i++) {
       final relay = relays[i];
 
       final isEnabled = relay.enabled == 'Yes';
-      final isTest = relay.test == 'Yes';
-
-      final config = OutputModeConfig(
-        outputEnable:
-            isEnabled ? OutputEnable.enabled : OutputEnable.disabled,
-        outputMode: isTest ? OutputMode.test : OutputMode.normal,
-        supervisionMode: SupervisionMode.normal,
-      );
-
-      final String hexValue = OutputModeCodec.encodeHex(config);
+      final isTest = isEnabled && snapshotTest[i];
 
       final groupIndex = returnIndex(relay.group, groupOptions);
       final functionIndex = returnIndex(
@@ -230,7 +226,6 @@ class RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
 
       switch (i) {
         case 0:
-          manager!.relayOneMode.value = hexValue;
           manager!.relayOneSetupGroup.value = groupIndex;
           manager!.relayOneSetupFunction.value = functionIndex;
           manager!.isRelayOneSetupEnabled.value = isEnabled;
@@ -242,7 +237,6 @@ class RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
           break;
 
         case 1:
-          manager!.relayTwoMode.value = hexValue;
           manager!.relayTwoSetupGroup.value = groupIndex;
           manager!.relayTwoSetupFunction.value = functionIndex;
           manager!.isRelayTwoSetupEnabled.value = isEnabled;
@@ -254,7 +248,6 @@ class RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
           break;
 
         case 2:
-          manager!.relayThreeMode.value = hexValue;
           manager!.relayThreeSetupGroup.value = groupIndex;
           manager!.relayThreeSetupFunction.value = functionIndex;
           manager!.isRelayThreeSetupEnabled.value = isEnabled;
@@ -266,6 +259,7 @@ class RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
           break;
       }
     }
+    syncRelayOutputModeHexFromBleManager(m);
   }
 
   Future<bool> commitLocal() async {
@@ -448,22 +442,8 @@ class RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
                 onChanged: (v) {
                   setState(() {
                     relay.enabled = v;
-                    if (v == 'No') {
-                      relay.test = 'No';
-                    }
-                  });
-                },
-              ),
-
-              DropdownWidget(
-                label: 'Test',
-                value: relay.test,
-                items: yesNoOptions,
-                onChanged: (v) {
-                  setState(() {
-                    relay.test = v;
-                    if (v == 'Yes') {
-                      relay.enabled = 'Yes';
+                    if (v == 'No' && manager != null) {
+                      clearRelayTestOnManager(manager!, index);
                     }
                   });
                 },
@@ -765,7 +745,6 @@ class RelayConfig {
   String group = 'None';
   String function = 'None';
   String enabled = 'No';
-  String test = 'No';
 
   TextEditingController outputTextController = TextEditingController();
   TextEditingController dynamicController = TextEditingController();
