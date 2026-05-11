@@ -307,9 +307,7 @@ class RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
                 padding: const EdgeInsets.only(top: 8),
-                child: Column(
-                  children: List.generate(3, (i) => _relayTile(i)),
-                ),
+                child: Column(children: List.generate(3, (i) => _relayTile(i))),
               ),
             ),
           ),
@@ -416,8 +414,6 @@ class RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
                     relay.function = functionOptionsMap[v]!.first;
                     if (v == 'Ext. Out') {
                       relay.dynamicController.text = '1';
-                    } else {
-                      relay.dynamicController.clear();
                     }
                   });
                 },

@@ -52,10 +52,15 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
   static const Color _surfaceMuted = Color(0xFFF8F8F8);
 
   TabController? _tabController;
+  final ScrollController _resultController = ScrollController();
+  final ScrollController _cardController = ScrollController();
 
   @override
   void initState() {
     super.initState();
+
+    _resultController.addListener(_syncOuterScroll);
+
     widget.compareResult.addListener(_onResultChanged);
     widget.isWorking.addListener(_onWorkingChanged);
     // Notifier does not fire on attach; align TabController before first build.
@@ -64,10 +69,40 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
 
   @override
   void dispose() {
+    _resultController.removeListener(_syncOuterScroll);
+
+    _resultController.dispose();
+    _cardController.dispose();
     _tabController?.dispose();
     widget.compareResult.removeListener(_onResultChanged);
     widget.isWorking.removeListener(_onWorkingChanged);
     super.dispose();
+  }
+
+  void _syncOuterScroll() {
+    if (!_resultController.hasClients || !_cardController.hasClients) {
+      return;
+    }
+
+    final delta =
+        _resultController.position.userScrollDirection ==
+                ScrollDirection.reverse
+            ? 8.0
+            : _resultController.position.userScrollDirection ==
+                ScrollDirection.forward
+            ? -8.0
+            : 0.0;
+
+    if (delta == 0) return;
+
+    final target = (_cardController.offset + delta).clamp(
+      _cardController.position.minScrollExtent,
+      _cardController.position.maxScrollExtent,
+    );
+
+    if (target != _cardController.offset) {
+      _cardController.jumpTo(target);
+    }
   }
 
   void _syncTabControllerFromResult(ConfigCompareResult? result) {
@@ -714,6 +749,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
                 sections
                     .map(
                       (s) => SingleChildScrollView(
+                        controller: _resultController,
                         physics: const BouncingScrollPhysics(),
                         child: _diffDetailCard(result, s),
                       ),
@@ -999,6 +1035,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
                           return false;
                         },
                         child: SingleChildScrollView(
+                          controller: _cardController,
                           physics: const BouncingScrollPhysics(),
                           child: _resultBlock(result),
                         ),
