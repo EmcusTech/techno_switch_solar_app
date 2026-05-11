@@ -9,8 +9,7 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
-import 'package:techno_switch_solar_app/controllers/updates_controller.dart'
-    show UpdatesController;
+import 'package:techno_switch_solar_app/controllers/updates_controller.dart';
 import 'package:techno_switch_solar_app/screens/device_connecting_screen.dart';
 import 'package:techno_switch_solar_app/screens/log_history_screen.dart';
 import 'package:techno_switch_solar_app/screens/log_retrieval_loading_screen.dart'
@@ -1624,7 +1623,6 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                   child: Column(
                     children: [
                       _buildPeripheralOverview(),
-                      SizedBox(height: 12),
                       _buildPanelActions(),
                     ],
                   ),
@@ -1796,7 +1794,10 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
         ),
         SizedBox(height: 8),
         SizedBox(
-          height: 223,
+          height:
+              (MediaQuery.of(context).size.height +
+                  MediaQuery.of(context).size.width) *
+              0.2,
           width: double.infinity,
           child: GridView.count(
             crossAxisCount: 4,
@@ -2670,8 +2671,18 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                         : Color(0xFFEC1D24),
                     BlendMode.srcIn,
                   ),
-                  // height: 24,
-                  // width: 24,
+                  height:
+                      iconPath.contains("general_module")
+                          ? 36
+                          : iconPath.contains("peripheral_prog_hold_icon")
+                          ? 24
+                          : null,
+                  width:
+                      iconPath.contains("general_module")
+                          ? 36
+                          : iconPath.contains("peripheral_prog_hold_icon")
+                          ? 24
+                          : null,
                 ),
               ),
             ),
@@ -2704,6 +2715,10 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
         ),
         SizedBox(height: 8),
         SizedBox(
+          height:
+              (MediaQuery.of(context).size.height +
+                  MediaQuery.of(context).size.width) *
+              0.35,
           width: double.infinity,
           child: GridView.count(
             shrinkWrap: true,
