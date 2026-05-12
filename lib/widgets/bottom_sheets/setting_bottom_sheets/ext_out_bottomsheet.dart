@@ -146,10 +146,6 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
     manFocusNode.dispose();
     releaseFocusNode.dispose();
     resetDelayFocusNode.dispose();
-    autoCtrl.dispose();
-    manCtrl.dispose();
-    releaseCtrl.dispose();
-    resetDelayCtrl.dispose();
     super.dispose();
   }
 
