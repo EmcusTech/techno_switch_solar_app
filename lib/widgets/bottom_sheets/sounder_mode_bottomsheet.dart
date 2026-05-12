@@ -952,7 +952,7 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
     return InputDecoration(
       filled: true,
       fillColor: const Color(0xFFF8F8F8),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide(color: borderColor),
@@ -1054,8 +1054,7 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
             isEnabled
                 ? ZoneEquipmentEnable.enabled
                 : ZoneEquipmentEnable.disabled,
-        zoneMode:
-            isTest ? ZoneEquipmentMode.test : ZoneEquipmentMode.normal,
+        zoneMode: isTest ? ZoneEquipmentMode.test : ZoneEquipmentMode.normal,
         sounderDelay: ZoneSounderDelay.disabled,
       );
       final String zoneHexValue = ZoneEquipmentModeCodec.encodeHex(zoneConfig);
@@ -1091,10 +1090,7 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
         extOutActionOptions,
       );
       int holdIndex = returnIndex(extOut.holdAction, extOutActionOptions);
-      int releaseIndex = returnIndex(
-        extOut.releaseAction,
-        extOutActionOptions,
-      );
+      int releaseIndex = returnIndex(extOut.releaseAction, extOutActionOptions);
 
       final extOutConfig = ExtZoneEquipmentModeConfig(
         zoneEnable:
@@ -1104,8 +1100,9 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
         zoneMode:
             isTest ? ExtZoneEquipmentMode.test : ExtZoneEquipmentMode.normal,
       );
-      final String extOutHexValue =
-          ExtZoneEquipmentModeCodec.encodeHex(extOutConfig);
+      final String extOutHexValue = ExtZoneEquipmentModeCodec.encodeHex(
+        extOutConfig,
+      );
 
       switch (i) {
         case 0:

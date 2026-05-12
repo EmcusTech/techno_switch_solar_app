@@ -290,9 +290,7 @@ class ZoneBottomSheetState extends State<ZoneBottomSheet> {
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
                 padding: const EdgeInsets.only(top: 8),
-                child: Column(
-                  children: List.generate(3, (i) => _zoneTile(i)),
-                ),
+                child: Column(children: List.generate(3, (i) => _zoneTile(i))),
               ),
             ),
           ),
@@ -694,7 +692,7 @@ class ZoneBottomSheetState extends State<ZoneBottomSheet> {
       fillColor: const Color(0xFFF8F8F8),
 
       // 🔥 MATCH OTHER SHEETS
-      contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
 
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),

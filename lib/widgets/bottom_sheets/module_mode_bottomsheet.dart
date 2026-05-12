@@ -191,7 +191,7 @@ class _ModuleInfoBottomSheetState extends State<ModuleInfoBottomSheet> {
           const SizedBox(height: 6),
           Container(
             height: 48,
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
             decoration: BoxDecoration(
               color: const Color(0xFFF8F8F8),
               borderRadius: BorderRadius.circular(12),
@@ -255,7 +255,7 @@ class _ModuleInfoBottomSheetState extends State<ModuleInfoBottomSheet> {
           const SizedBox(height: 6),
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
             decoration: BoxDecoration(
               color: const Color(0xFFF8F8F8),
               borderRadius: BorderRadius.circular(12),

@@ -59,7 +59,6 @@ class _DropdownWidgetState extends State<DropdownWidget> {
             child: DropdownButtonFormField2<String>(
               isExpanded: true,
               value: value,
-
               items:
                   items
                       .map(
@@ -91,9 +90,12 @@ class _DropdownWidgetState extends State<DropdownWidget> {
               ),
 
               iconStyleData: const IconStyleData(
-                icon: Icon(
-                  Icons.keyboard_arrow_down_rounded,
-                  color: Color(0xFF3D3D3D),
+                icon: Padding(
+                  padding: EdgeInsets.only(right: 8.0),
+                  child: Icon(
+                    Icons.keyboard_arrow_down_rounded,
+                    color: Color(0xFF3D3D3D),
+                  ),
                 ),
                 iconSize: 22,
               ),
@@ -117,7 +119,7 @@ class _DropdownWidgetState extends State<DropdownWidget> {
                 filled: true,
                 fillColor: const Color(0xFFF8F8F8),
                 contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 14,
+                  horizontal: 0,
                   vertical: 12,
                 ),
 

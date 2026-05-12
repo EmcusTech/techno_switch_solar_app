@@ -657,7 +657,7 @@ class RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
       fillColor: const Color(0xFFF8F8F8),
 
       // 🔥 SAME 24px HORIZONTAL
-      contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
 
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),

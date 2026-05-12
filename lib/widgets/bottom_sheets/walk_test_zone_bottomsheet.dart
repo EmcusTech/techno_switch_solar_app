@@ -23,7 +23,8 @@ class WalkTestZoneBottomSheet extends StatefulWidget {
   });
 
   @override
-  State<WalkTestZoneBottomSheet> createState() => _WalkTestZoneBottomSheetState();
+  State<WalkTestZoneBottomSheet> createState() =>
+      _WalkTestZoneBottomSheetState();
 }
 
 class _WalkTestZoneBottomSheetState extends State<WalkTestZoneBottomSheet> {
@@ -100,48 +101,52 @@ class _WalkTestZoneBottomSheetState extends State<WalkTestZoneBottomSheet> {
                   child: SingleChildScrollView(
                     physics: const BouncingScrollPhysics(),
                     padding: const EdgeInsets.only(top: 16),
-                    child: manager == null
-                        ? const SizedBox.shrink()
-                        : AnimatedBuilder(
-                            animation: Listenable.merge([
-                              manager!.isZoneOneSetupTest,
-                              manager!.isZoneTwoSetupTest,
-                              manager!.isZoneThreeSetupTest,
-                            ]),
-                            builder: (context, _) {
-                              return Column(
-                                children: [
-                                  DropdownWidget(
-                                    label: 'Zone 1 Test',
-                                    value: manager!.isZoneOneSetupTest.value
-                                        ? 'Yes'
-                                        : 'No',
-                                    items: yesNoOptions,
-                                    onChanged: (v) =>
-                                        _onTestChanged(0, v == 'Yes'),
-                                  ),
-                                  DropdownWidget(
-                                    label: 'Zone 2 Test',
-                                    value: manager!.isZoneTwoSetupTest.value
-                                        ? 'Yes'
-                                        : 'No',
-                                    items: yesNoOptions,
-                                    onChanged: (v) =>
-                                        _onTestChanged(1, v == 'Yes'),
-                                  ),
-                                  DropdownWidget(
-                                    label: 'Zone 3 Test',
-                                    value: manager!.isZoneThreeSetupTest.value
-                                        ? 'Yes'
-                                        : 'No',
-                                    items: yesNoOptions,
-                                    onChanged: (v) =>
-                                        _onTestChanged(2, v == 'Yes'),
-                                  ),
-                                ],
-                              );
-                            },
-                          ),
+                    child:
+                        manager == null
+                            ? const SizedBox.shrink()
+                            : AnimatedBuilder(
+                              animation: Listenable.merge([
+                                manager!.isZoneOneSetupTest,
+                                manager!.isZoneTwoSetupTest,
+                                manager!.isZoneThreeSetupTest,
+                              ]),
+                              builder: (context, _) {
+                                return Column(
+                                  children: [
+                                    DropdownWidget(
+                                      label: 'Zone 1 Test',
+                                      value:
+                                          manager!.isZoneOneSetupTest.value
+                                              ? 'Yes'
+                                              : 'No',
+                                      items: yesNoOptions,
+                                      onChanged:
+                                          (v) => _onTestChanged(0, v == 'Yes'),
+                                    ),
+                                    DropdownWidget(
+                                      label: 'Zone 2 Test',
+                                      value:
+                                          manager!.isZoneTwoSetupTest.value
+                                              ? 'Yes'
+                                              : 'No',
+                                      items: yesNoOptions,
+                                      onChanged:
+                                          (v) => _onTestChanged(1, v == 'Yes'),
+                                    ),
+                                    DropdownWidget(
+                                      label: 'Zone 3 Test',
+                                      value:
+                                          manager!.isZoneThreeSetupTest.value
+                                              ? 'Yes'
+                                              : 'No',
+                                      items: yesNoOptions,
+                                      onChanged:
+                                          (v) => _onTestChanged(2, v == 'Yes'),
+                                    ),
+                                  ],
+                                );
+                              },
+                            ),
                   ),
                 ),
               ),
@@ -203,13 +208,14 @@ class _WalkTestZoneBottomSheetState extends State<WalkTestZoneBottomSheet> {
             borderRadius: BorderRadius.circular(24),
           ),
         ),
-        onPressed: manager != null
-            ? () {
-                FocusManager.instance.primaryFocus?.unfocus();
-                syncZoneModeHexFromBleManager(manager!);
-                widget.onApply();
-              }
-            : null,
+        onPressed:
+            manager != null
+                ? () {
+                  FocusManager.instance.primaryFocus?.unfocus();
+                  syncZoneModeHexFromBleManager(manager!);
+                  widget.onApply();
+                }
+                : null,
         child: Text(
           'Apply',
           style: GoogleFonts.inter(

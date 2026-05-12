@@ -456,10 +456,7 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
         padding: const EdgeInsets.only(top: 16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            if (widget.embedInCreateFlow) _headerRow(),
-            _formFields(),
-          ],
+          children: [if (widget.embedInCreateFlow) _headerRow(), _formFields()],
         ),
       ),
     );
@@ -897,7 +894,7 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
     return InputDecoration(
       filled: true,
       fillColor: const Color(0xFFF8F8F8),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+      contentPadding: const EdgeInsets.all(14),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide(color: borderColor),

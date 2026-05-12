@@ -365,15 +365,12 @@ class InputModeBottomSheetState extends State<InputModeBottomSheet> {
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: const Color(0xFFD0D0D0)),
             ),
-            child: Padding(
-              padding: const EdgeInsets.only(left: 14),
-              child: Text(
-                value,
-                style: GoogleFonts.inter(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: const Color(0xFF3D3D3D),
-                ),
+            child: Text(
+              value,
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: const Color(0xFF3D3D3D),
               ),
             ),
           ),
@@ -552,7 +549,7 @@ class InputModeBottomSheetState extends State<InputModeBottomSheet> {
       fillColor: const Color(0xFFF8F8F8),
 
       // 🔥 SAME 24px HORIZONTAL
-      contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
 
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
