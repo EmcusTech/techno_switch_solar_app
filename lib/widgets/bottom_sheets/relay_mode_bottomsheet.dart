@@ -35,7 +35,11 @@ class RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
 
   int _expandedTileCount = 0;
 
+  final ScrollController _scrollController = ScrollController();
+
   final List<String> groupOptions = ['None', 'General', 'Zone', 'Ext. Out'];
+
+  late final List<GlobalKey> _tileKeys;
 
   final Map<String, List<String>> functionOptionsMap = {
     'None': ['None'],
@@ -74,8 +78,8 @@ class RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
 
   late List<RelayConfig> relays;
 
-  Map<int, String?> _outputTextErrors = {};
-  Map<int, String?> _dynamicFieldErrors = {};
+  final Map<int, String?> _outputTextErrors = {};
+  final Map<int, String?> _dynamicFieldErrors = {};
 
   bool _computeIsValid() {
     for (int i = 0; i < 3; i++) {
@@ -110,14 +114,22 @@ class RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
   @override
   void initState() {
     super.initState();
+
+    _tileKeys = List.generate(3, (_) => GlobalKey());
+
     relays = List.generate(3, (_) => RelayConfig());
+
     _loadData();
+
     widget.refreshTrigger.addListener(_onRefreshTriggered);
   }
 
   @override
   void dispose() {
+    _scrollController.dispose();
+
     widget.refreshTrigger.removeListener(_onRefreshTriggered);
+
     super.dispose();
   }
 
@@ -305,6 +317,7 @@ class RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
                 return false;
               },
               child: SingleChildScrollView(
+                controller: _scrollController,
                 physics: const BouncingScrollPhysics(),
                 padding: const EdgeInsets.only(top: 8),
                 child: Column(children: List.generate(3, (i) => _relayTile(i))),
@@ -346,6 +359,7 @@ class RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
                       return false;
                     },
                     child: SingleChildScrollView(
+                      controller: _scrollController,
                       physics: const BouncingScrollPhysics(),
                       padding: const EdgeInsets.only(top: 16),
                       child: Column(
@@ -371,89 +385,104 @@ class RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
     );
   }
 
-  // ───────────────── RELAY SECTION ─────────────────
-
   Widget _relayTile(int index) {
     final relay = relays[index];
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: const Color(0xFFDCDCDC)),
-        ),
-        child: Theme(
-          data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-          child: ExpansionTile(
-            onExpansionChanged: (expanded) {
-              setState(() {
-                _expandedTileCount += expanded ? 1 : -1;
-              });
-            },
-            tilePadding: const EdgeInsets.symmetric(horizontal: 16),
-            childrenPadding: const EdgeInsets.symmetric(horizontal: 16),
-            title: Text(
-              'Relay ${index + 1}',
-              style: GoogleFonts.inter(
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
-                color: const Color(0xFF3D3D3D),
+    return Container(
+      key: _tileKeys[index],
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 16),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: const Color(0xFFDCDCDC)),
+          ),
+          child: Theme(
+            data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+            child: ExpansionTile(
+              onExpansionChanged: (expanded) async {
+                setState(() {
+                  _expandedTileCount += expanded ? 1 : -1;
+                });
+
+                if (expanded) {
+                  await Future.delayed(const Duration(milliseconds: 250));
+
+                  final context = _tileKeys[index].currentContext;
+
+                  if (context != null) {
+                    Scrollable.ensureVisible(
+                      context,
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeInOut,
+                      alignment: 0.0,
+                    );
+                  }
+                }
+              },
+              tilePadding: const EdgeInsets.symmetric(horizontal: 16),
+              childrenPadding: const EdgeInsets.symmetric(horizontal: 16),
+              title: Text(
+                'Relay ${index + 1}',
+                style: GoogleFonts.inter(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF3D3D3D),
+                ),
               ),
+              children: [
+                _outputTextField(relay: relay, relayIndex: index),
+
+                DropdownWidget(
+                  label: 'Group',
+                  value: relay.group,
+                  items: groupOptions,
+                  onChanged: (v) {
+                    setState(() {
+                      relay.group = v;
+                      relay.function = functionOptionsMap[v]!.first;
+                      if (v == 'Ext. Out') {
+                        relay.dynamicController.text = '1';
+                      }
+                    });
+                  },
+                ),
+
+                DropdownWidget(
+                  label: 'Function',
+                  value: relay.function,
+                  items: functionOptionsMap[relay.group]!,
+                  onChanged: (v) => setState(() => relay.function = v),
+                ),
+
+                if (relay.group == 'Zone')
+                  _zoneDynamicField(relay: relay, relayIndex: index),
+
+                if (relay.group == 'Ext. Out')
+                  _extOutDynamicField(relay: relay),
+
+                DropdownWidget(
+                  label: 'Enabled',
+                  value: relay.enabled,
+                  items: yesNoOptions,
+                  onChanged: (v) {
+                    setState(() {
+                      relay.enabled = v;
+                      if (v == 'No' && manager != null) {
+                        clearRelayTestOnManager(manager!, index);
+                      }
+                    });
+                  },
+                ),
+
+                const SizedBox(height: 14),
+              ],
             ),
-            children: [
-              _outputTextField(relay: relay, relayIndex: index),
-
-              DropdownWidget(
-                label: 'Group',
-                value: relay.group,
-                items: groupOptions,
-                onChanged: (v) {
-                  setState(() {
-                    relay.group = v;
-                    relay.function = functionOptionsMap[v]!.first;
-                    if (v == 'Ext. Out') {
-                      relay.dynamicController.text = '1';
-                    }
-                  });
-                },
-              ),
-
-              DropdownWidget(
-                label: 'Function',
-                value: relay.function,
-                items: functionOptionsMap[relay.group]!,
-                onChanged: (v) => setState(() => relay.function = v),
-              ),
-
-              if (relay.group == 'Zone')
-                _zoneDynamicField(relay: relay, relayIndex: index),
-
-              if (relay.group == 'Ext. Out') _extOutDynamicField(relay: relay),
-
-              DropdownWidget(
-                label: 'Enabled',
-                value: relay.enabled,
-                items: yesNoOptions,
-                onChanged: (v) {
-                  setState(() {
-                    relay.enabled = v;
-                    if (v == 'No' && manager != null) {
-                      clearRelayTestOnManager(manager!, index);
-                    }
-                  });
-                },
-              ),
-
-              const SizedBox(height: 14),
-            ],
           ),
         ),
       ),
     );
   }
-
-  // ───────────────── UI HELPERS ─────────────────
 
   Widget _dragHandle() {
     return Container(
@@ -612,42 +641,6 @@ class RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
     );
   }
 
-  // Widget _dropdown(
-  //   String label,
-  //   String value,
-  //   List<String> items,
-  //   ValueChanged<String> onChanged,
-  // ) {
-  //   return Padding(
-  //     padding: const EdgeInsets.only(bottom: 14),
-  //     child: Column(
-  //       crossAxisAlignment: CrossAxisAlignment.start,
-  //       children: [
-  //         _label(label),
-  //         const SizedBox(height: 6),
-  //         SizedBox(
-  //           height: 48,
-  //           child: DropdownButtonFormField<String>(
-  //             value: value,
-  //             isExpanded: true,
-  //             items:
-  //                 items
-  //                     .map(
-  //                       (e) => DropdownMenuItem(
-  //                         value: e,
-  //                         child: Text(e, overflow: TextOverflow.ellipsis),
-  //                       ),
-  //                     )
-  //                     .toList(),
-  //             onChanged: (v) => onChanged(v!),
-  //             decoration: _inputDecoration(),
-  //           ),
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
-
   InputDecoration _inputDecoration({bool hasError = false}) {
     final borderColor =
         hasError ? const Color(0xFFEC1D24) : const Color(0xFFD0D0D0);
@@ -655,10 +648,7 @@ class RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
     return InputDecoration(
       filled: true,
       fillColor: const Color(0xFFF8F8F8),
-
-      // 🔥 SAME 24px HORIZONTAL
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide(color: borderColor),
@@ -734,8 +724,6 @@ class RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
     );
   }
 }
-
-// ───────────────── MODEL ─────────────────
 
 class RelayConfig {
   String group = 'None';
