@@ -46,7 +46,7 @@ class TestModeChoiceBottomSheet extends StatelessWidget {
             Align(
               alignment: Alignment.centerLeft,
               child: Text(
-                'Choose what to configure',
+                'Choose what to test',
                 style: GoogleFonts.inter(
                   fontSize: 13,
                   fontWeight: FontWeight.w500,

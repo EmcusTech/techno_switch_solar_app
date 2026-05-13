@@ -6,6 +6,7 @@ class DropdownWidget extends StatefulWidget {
   final String label;
   final String value;
   final List<String> items;
+  final double? dropdownListHeight;
   final ValueChanged<String> onChanged;
   const DropdownWidget({
     super.key,
@@ -13,6 +14,7 @@ class DropdownWidget extends StatefulWidget {
     required this.value,
     required this.items,
     required this.onChanged,
+    this.dropdownListHeight,
   });
 
   @override
@@ -101,12 +103,13 @@ class _DropdownWidgetState extends State<DropdownWidget> {
               ),
 
               dropdownStyleData: DropdownStyleData(
-                maxHeight: 280,
+                maxHeight: widget.dropdownListHeight ?? 120,
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 elevation: 4,
+                isOverButton: true,
               ),
 
               menuItemStyleData: const MenuItemStyleData(

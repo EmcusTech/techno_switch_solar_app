@@ -257,6 +257,7 @@ class _AccessCodesBottomSheetState extends State<AccessCodesBottomSheet> {
       label: 'Select Access Code',
       value: 'Access Code $selectedCode',
       items: List.generate(8, (i) => 'Access Code ${i + 1}'),
+      dropdownListHeight: 340,
       onChanged: (v) {
         final number = int.parse(v.split(' ').last);
 
