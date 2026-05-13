@@ -290,7 +290,8 @@ class LBusBottomSheetState extends State<LBusBottomSheet> {
       label: 'Select L-Bus',
       value: 'L-Bus $selectedBus',
       items: List.generate(31, (i) => 'L-Bus ${i + 1}'),
-      dropdownListHeight: MediaQuery.sizeOf(context).height * 0.5,
+      dropdownListHeight: MediaQuery.sizeOf(context).height * 0.3,
+      enableSearch: true,
       onChanged: (v) {
         final number = int.parse(v.split(' ').last);
         setState(() {

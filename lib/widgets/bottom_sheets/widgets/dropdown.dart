@@ -7,7 +7,9 @@ class DropdownWidget extends StatefulWidget {
   final String value;
   final List<String> items;
   final double? dropdownListHeight;
+  final bool enableSearch;
   final ValueChanged<String> onChanged;
+
   const DropdownWidget({
     super.key,
     required this.label,
@@ -15,6 +17,7 @@ class DropdownWidget extends StatefulWidget {
     required this.items,
     required this.onChanged,
     this.dropdownListHeight,
+    this.enableSearch = false,
   });
 
   @override
@@ -22,6 +25,14 @@ class DropdownWidget extends StatefulWidget {
 }
 
 class _DropdownWidgetState extends State<DropdownWidget> {
+  final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return _dropdown(
@@ -56,11 +67,14 @@ class _DropdownWidgetState extends State<DropdownWidget> {
         children: [
           _label(label),
           const SizedBox(height: 6),
+
           SizedBox(
             height: 48,
             child: DropdownButtonFormField2<String>(
               isExpanded: true,
+
               value: value,
+
               items:
                   items
                       .map(
@@ -79,9 +93,12 @@ class _DropdownWidgetState extends State<DropdownWidget> {
                       )
                       .toList(),
 
-              onChanged: (v) => onChanged(v!),
+              onChanged: (v) {
+                if (v != null) {
+                  onChanged(v);
+                }
+              },
 
-              // 🔥 REMOVE horizontal padding from buttonStyleData
               buttonStyleData: ButtonStyleData(
                 height: 48,
                 padding: EdgeInsets.zero,
@@ -117,10 +134,75 @@ class _DropdownWidgetState extends State<DropdownWidget> {
                 padding: EdgeInsets.symmetric(horizontal: 14),
               ),
 
-              // 🔥 CONTROL ALL PADDING HERE ONLY
+              dropdownSearchData:
+                  widget.enableSearch
+                      ? DropdownSearchData(
+                        searchController: _searchController,
+
+                        searchInnerWidgetHeight: 60,
+
+                        searchInnerWidget: Container(
+                          height: 60,
+                          padding: const EdgeInsets.all(8),
+                          child: TextField(
+                            controller: _searchController,
+                            decoration: InputDecoration(
+                              isDense: true,
+
+                              hintText: 'Search...',
+
+                              hintStyle: GoogleFonts.inter(
+                                fontSize: 14,
+                                color: Colors.grey,
+                              ),
+
+                              prefixIcon: const Icon(Icons.search, size: 20),
+
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                borderSide: const BorderSide(
+                                  color: Color(0xFFD0D0D0),
+                                ),
+                              ),
+
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                borderSide: const BorderSide(
+                                  color: Color(0xFFEC1D24),
+                                  width: 2,
+                                ),
+                              ),
+
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 12,
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        searchMatchFn: (item, searchValue) {
+                          return item.value.toString().toLowerCase().contains(
+                            searchValue.toLowerCase(),
+                          );
+                        },
+                      )
+                      : null,
+
+              onMenuStateChange: (isOpen) {
+                if (!isOpen) {
+                  _searchController.clear();
+                }
+              },
+
               decoration: InputDecoration(
                 filled: true,
                 fillColor: const Color(0xFFF8F8F8),
+
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: 0,
                   vertical: 12,
