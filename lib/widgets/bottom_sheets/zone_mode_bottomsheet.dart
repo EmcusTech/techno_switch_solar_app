@@ -35,6 +35,10 @@ class ZoneBottomSheetState extends State<ZoneBottomSheet> {
 
   int _expandedTileCount = 0;
 
+  final ScrollController _scrollController = ScrollController();
+
+  late final List<GlobalKey> _tileKeys;
+
   final List<String> typeOptions = ['Normal', 'IS (MTL 5561)'];
   final List<String> yesNoOptions = ['No', 'Yes'];
   final List<String> modeOptions = [
@@ -98,12 +102,14 @@ class ZoneBottomSheetState extends State<ZoneBottomSheet> {
   void initState() {
     super.initState();
     zones = List.generate(3, (i) => ZoneConfig(zoneNumber: i + 1));
+    _tileKeys = List.generate(3, (_) => GlobalKey());
     _loadData();
     widget.refreshTrigger.addListener(_onRefreshTriggered);
   }
 
   @override
   void dispose() {
+    _scrollController.dispose();
     widget.refreshTrigger.removeListener(_onRefreshTriggered);
     super.dispose();
   }
@@ -288,6 +294,7 @@ class ZoneBottomSheetState extends State<ZoneBottomSheet> {
                 return false;
               },
               child: SingleChildScrollView(
+                controller: _scrollController,
                 physics: const BouncingScrollPhysics(),
                 padding: const EdgeInsets.only(top: 8),
                 child: Column(children: List.generate(3, (i) => _zoneTile(i))),
@@ -329,6 +336,7 @@ class ZoneBottomSheetState extends State<ZoneBottomSheet> {
                       return false;
                     },
                     child: SingleChildScrollView(
+                      controller: _scrollController,
                       physics: const BouncingScrollPhysics(),
                       padding: const EdgeInsets.only(top: 16),
                       child: Column(
@@ -359,89 +367,107 @@ class ZoneBottomSheetState extends State<ZoneBottomSheet> {
   Widget _zoneTile(int index) {
     final zone = zones[index];
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: const Color(0xFFDCDCDC)),
-        ),
-        child: Theme(
-          data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-          child: ExpansionTile(
-            onExpansionChanged: (expanded) {
-              setState(() {
-                _expandedTileCount += expanded ? 1 : -1;
-              });
-            },
-            tilePadding: const EdgeInsets.symmetric(horizontal: 16),
-            childrenPadding: EdgeInsets.zero,
+    return Container(
+      key: _tileKeys[index],
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 16),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: const Color(0xFFDCDCDC)),
+          ),
+          child: Theme(
+            data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+            child: ExpansionTile(
+              onExpansionChanged: (expanded) async {
+                setState(() {
+                  _expandedTileCount += expanded ? 1 : -1;
+                });
 
-            // backgroundColor: const Color(0xFFF8F8F8),
-            // collapsedBackgroundColor: Colors.white,
-            title: Text(
-              'Zone ${zone.zoneNumber}',
-              style: GoogleFonts.inter(
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
-                color: const Color(0xFF3D3D3D),
+                if (expanded) {
+                  await Future.delayed(const Duration(milliseconds: 250));
+
+                  final context = _tileKeys[index].currentContext;
+
+                  if (context != null) {
+                    Scrollable.ensureVisible(
+                      context,
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeInOut,
+                      alignment: 0.0,
+                    );
+                  }
+                }
+              },
+              tilePadding: const EdgeInsets.symmetric(horizontal: 16),
+              childrenPadding: EdgeInsets.zero,
+
+              // backgroundColor: const Color(0xFFF8F8F8),
+              // collapsedBackgroundColor: Colors.white,
+              title: Text(
+                'Zone ${zone.zoneNumber}',
+                style: GoogleFonts.inter(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF3D3D3D),
+                ),
               ),
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
+                  // color: const Color(0xFFF8F8F8),
+                  child: Column(
+                    children: [
+                      _zoneTextField(zone: zone, zoneIndex: index),
+
+                      DropdownWidget(
+                        label: 'Type',
+                        value: zone.type,
+                        items: typeOptions,
+                        onChanged: (v) => setState(() => zone.type = v),
+                      ),
+
+                      DropdownWidget(
+                        label: 'Enabled',
+                        value: zone.enabled,
+                        items: yesNoOptions,
+                        onChanged: (v) {
+                          setState(() {
+                            zone.enabled = v;
+                            if (v == 'No' && manager != null) {
+                              clearZoneTestOnManager(manager!, index);
+                            }
+                          });
+                        },
+                      ),
+
+                      DropdownWidget(
+                        label: 'Mode',
+                        value: zone.mode,
+                        items: modeOptions,
+                        onChanged: (v) {
+                          setState(() {
+                            zone.mode = v;
+                            if (v == 'Immediate' || v == 'Normal') {
+                              zone.verificationTimeController.text = '0';
+                            } else if (v == 'Confirmed') {
+                              zone.verificationTimeController.text = '30';
+                            }
+                            _zoneTextErrors.remove(index);
+                            _verificationErrors.remove(index);
+                          });
+                        },
+                      ),
+
+                      _verificationTimeField(zone: zone, zoneIndex: index),
+                    ],
+                  ),
+                ),
+              ],
             ),
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 14,
-                ),
-                // color: const Color(0xFFF8F8F8),
-                child: Column(
-                  children: [
-                    _zoneTextField(zone: zone, zoneIndex: index),
-
-                    DropdownWidget(
-                      label: 'Type',
-                      value: zone.type,
-                      items: typeOptions,
-                      onChanged: (v) => setState(() => zone.type = v),
-                    ),
-
-                    DropdownWidget(
-                      label: 'Enabled',
-                      value: zone.enabled,
-                      items: yesNoOptions,
-                      onChanged: (v) {
-                        setState(() {
-                          zone.enabled = v;
-                          if (v == 'No' && manager != null) {
-                            clearZoneTestOnManager(manager!, index);
-                          }
-                        });
-                      },
-                    ),
-
-                    DropdownWidget(
-                      label: 'Mode',
-                      value: zone.mode,
-                      items: modeOptions,
-                      onChanged: (v) {
-                        setState(() {
-                          zone.mode = v;
-                          if (v == 'Immediate' || v == 'Normal') {
-                            zone.verificationTimeController.text = '0';
-                          } else if (v == 'Confirmed') {
-                            zone.verificationTimeController.text = '30';
-                          }
-                          _zoneTextErrors.remove(index);
-                          _verificationErrors.remove(index);
-                        });
-                      },
-                    ),
-
-                    _verificationTimeField(zone: zone, zoneIndex: index),
-                  ],
-                ),
-              ),
-            ],
           ),
         ),
       ),

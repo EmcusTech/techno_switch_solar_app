@@ -2676,12 +2676,16 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                           ? 36
                           : iconPath.contains("peripheral_prog_hold_icon")
                           ? 24
+                          : iconPath.contains("walk_test_icon")
+                          ? 32
                           : null,
                   width:
                       iconPath.contains("general_module")
                           ? 36
                           : iconPath.contains("peripheral_prog_hold_icon")
                           ? 24
+                          : iconPath.contains("walk_test_icon")
+                          ? 32
                           : null,
                 ),
               ),

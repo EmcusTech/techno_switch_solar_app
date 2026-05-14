@@ -38,6 +38,7 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
   late TabController _tabController;
   BleManager? manager;
   final ScrollController sounderBottomSheetController = ScrollController();
+  late final List<GlobalKey> _tileKeys;
 
   final List<String> groupOptions = ['None', 'General', 'Zone', 'Ext. Out'];
 
@@ -102,6 +103,8 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
   void initState() {
     super.initState();
 
+    _tileKeys = List.generate(3, (_) => GlobalKey());
+
     delayFocusNode.addListener(() {
       if (delayFocusNode.hasFocus) {
         debugPrint("Delay field is focused");
@@ -137,6 +140,7 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
   void dispose() {
     widget.refreshTrigger.removeListener(_onRefreshTriggered);
     _tabController.dispose();
+    sounderBottomSheetController.dispose();
     delayFocusNode.dispose();
     delayController.dispose();
     super.dispose();
@@ -479,92 +483,115 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
   Widget _sounderTile(int index) {
     final sounder = sounders[index];
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: _sectionContainer(
-        child: ExpansionTile(
-          tilePadding: const EdgeInsets.symmetric(horizontal: 16),
-          childrenPadding: const EdgeInsets.symmetric(horizontal: 16),
-          title: Text(
-            'Sounder ${index + 1}',
-            style: GoogleFonts.inter(
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
-              color: const Color(0xFF3D3D3D),
+    return Container(
+      key: _tileKeys[index],
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 16),
+        child: _sectionContainer(
+          child: ExpansionTile(
+            onExpansionChanged: (expanded) async {
+              // setState(() {
+              //   _expandedTileCount += expanded ? 1 : -1;
+              // });
+
+              if (expanded) {
+                await Future.delayed(const Duration(milliseconds: 250));
+
+                final context = _tileKeys[index].currentContext;
+
+                if (context != null) {
+                  Scrollable.ensureVisible(
+                    context,
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeInOut,
+                    alignment: 0.0,
+                  );
+                }
+              }
+            },
+            tilePadding: const EdgeInsets.symmetric(horizontal: 16),
+            childrenPadding: const EdgeInsets.symmetric(horizontal: 16),
+            title: Text(
+              'Sounder ${index + 1}',
+              style: GoogleFonts.inter(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF3D3D3D),
+              ),
             ),
+            children: [
+              _disabledField('Output', 'SNDR ${index + 1}'),
+
+              _textField(
+                label: 'Output Text',
+                controller: sounder.outputController,
+                maxLength: 21,
+              ),
+
+              if (!sounder.groupLocked)
+                DropdownWidget(
+                  label: 'Group',
+                  value: sounder.group,
+                  items: groupOptions,
+                  onChanged: (v) {
+                    setState(() {
+                      sounder.group = v;
+                      sounder.function = functionOptionsMap[v]!.first;
+                    });
+                  },
+                ),
+
+              if (!sounder.functionLocked)
+                DropdownWidget(
+                  label: 'Function',
+                  value: sounder.function,
+                  items: functionOptionsMap[sounder.group]!,
+                  onChanged: (v) => setState(() => sounder.function = v),
+                ),
+
+              if (sounder.group == 'Zone')
+                _textField(
+                  label: 'Zone',
+                  controller: sounder.dynamicController,
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    LengthLimitingTextInputFormatter(1),
+                  ],
+                ),
+
+              if (sounder.group == 'Ext. Out')
+                _textField(
+                  label: 'Ext. Out',
+                  controller: sounder.dynamicController,
+                  enabled: false,
+                ),
+
+              if (sounder.group != 'Ext. Out')
+                DropdownWidget(
+                  label: 'Enabled',
+                  value: sounder.enabled,
+                  items: yesNoOptions,
+                  onChanged: (v) {
+                    setState(() {
+                      sounder.enabled = v;
+                      if (v == 'No' && manager != null) {
+                        clearSounderMainTestOnManager(manager!, sounder.index);
+                      }
+                    });
+                  },
+                ),
+
+              DropdownWidget(
+                label: 'Type',
+                value: sounder.type,
+                items: typeOptions,
+                onChanged: (v) => setState(() => sounder.type = v),
+              ),
+
+              const SizedBox(height: 14),
+            ],
           ),
-          children: [
-            _disabledField('Output', 'SNDR ${index + 1}'),
-
-            _textField(
-              label: 'Output Text',
-              controller: sounder.outputController,
-              maxLength: 21,
-            ),
-
-            if (!sounder.groupLocked)
-              DropdownWidget(
-                label: 'Group',
-                value: sounder.group,
-                items: groupOptions,
-                onChanged: (v) {
-                  setState(() {
-                    sounder.group = v;
-                    sounder.function = functionOptionsMap[v]!.first;
-                  });
-                },
-              ),
-
-            if (!sounder.functionLocked)
-              DropdownWidget(
-                label: 'Function',
-                value: sounder.function,
-                items: functionOptionsMap[sounder.group]!,
-                onChanged: (v) => setState(() => sounder.function = v),
-              ),
-
-            if (sounder.group == 'Zone')
-              _textField(
-                label: 'Zone',
-                controller: sounder.dynamicController,
-                keyboardType: TextInputType.number,
-                inputFormatters: [
-                  FilteringTextInputFormatter.digitsOnly,
-                  LengthLimitingTextInputFormatter(1),
-                ],
-              ),
-
-            if (sounder.group == 'Ext. Out')
-              _textField(
-                label: 'Ext. Out',
-                controller: sounder.dynamicController,
-                enabled: false,
-              ),
-
-            if (sounder.group != 'Ext. Out')
-              DropdownWidget(
-                label: 'Enabled',
-                value: sounder.enabled,
-                items: yesNoOptions,
-                onChanged: (v) {
-                  setState(() {
-                    sounder.enabled = v;
-                    if (v == 'No' && manager != null) {
-                      clearSounderMainTestOnManager(manager!, sounder.index);
-                    }
-                  });
-                },
-              ),
-
-            DropdownWidget(
-              label: 'Type',
-              value: sounder.type,
-              items: typeOptions,
-              onChanged: (v) => setState(() => sounder.type = v),
-            ),
-
-            const SizedBox(height: 14),
-          ],
         ),
       ),
     );
