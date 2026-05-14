@@ -126,7 +126,7 @@ class _DropdownWidgetState extends State<DropdownWidget> {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 elevation: 4,
-                isOverButton: true,
+                isOverButton: false,
               ),
 
               menuItemStyleData: const MenuItemStyleData(
