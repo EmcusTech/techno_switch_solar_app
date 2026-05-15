@@ -1,8 +1,12 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 
 class ScanningAnimation extends StatefulWidget {
-  const ScanningAnimation({super.key});
+  const ScanningAnimation({super.key, this.pausedListenable});
+
+  /// When [value] is true, ripple animation pauses; when false, it resumes.
+  final ValueListenable<bool>? pausedListenable;
 
   @override
   State<ScanningAnimation> createState() => _ScanningAnimationState();
@@ -12,17 +16,41 @@ class _ScanningAnimationState extends State<ScanningAnimation>
     with TickerProviderStateMixin {
   late AnimationController _controller;
 
+  void _syncPausedMotion() {
+    final paused = widget.pausedListenable?.value ?? false;
+    if (paused) {
+      _controller.stop();
+    } else if (!_controller.isAnimating) {
+      _controller.repeat();
+    }
+  }
+
+  void _onPausedListenableChanged() => _syncPausedMotion();
+
   @override
   void initState() {
     super.initState();
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 2),
-    )..repeat();
+    );
+    widget.pausedListenable?.addListener(_onPausedListenableChanged);
+    _syncPausedMotion();
+  }
+
+  @override
+  void didUpdateWidget(covariant ScanningAnimation oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.pausedListenable != widget.pausedListenable) {
+      oldWidget.pausedListenable?.removeListener(_onPausedListenableChanged);
+      widget.pausedListenable?.addListener(_onPausedListenableChanged);
+      _syncPausedMotion();
+    }
   }
 
   @override
   void dispose() {
+    widget.pausedListenable?.removeListener(_onPausedListenableChanged);
     _controller.dispose();
     super.dispose();
   }

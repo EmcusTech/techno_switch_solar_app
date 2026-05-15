@@ -86,6 +86,28 @@ class _ScanningScreenState extends State<ScanningScreen>
   bool _navigatingToDeviceConnecting = false;
   final BleManager _bleManager = Get.find<BleManager>();
 
+  /// Drives [ScanningAnimation] pause; paired with [_sweepController] in
+  /// [_pauseScanAnimations] / [_resumeScanAnimations].
+  final ValueNotifier<bool> _scanAnimationsPaused = ValueNotifier(false);
+
+  /// Ensures we only pause radar/ripples once per connection attempt when BLE
+  /// links ([isConnectedNotifier]).
+  bool _bleConnectPauseApplied = false;
+
+  void _pauseScanAnimations() {
+    _scanAnimationsPaused.value = true;
+    if (_sweepController.isAnimating) {
+      _sweepController.stop();
+    }
+  }
+
+  void _resumeScanAnimations() {
+    _scanAnimationsPaused.value = false;
+    if (!_sweepController.isAnimating) {
+      _sweepController.repeat();
+    }
+  }
+
   Future<int?> _promptUserToPickOrCreateSite({
     required List<SiteModel> sites,
     required String panelId,
@@ -561,6 +583,7 @@ class _ScanningScreenState extends State<ScanningScreen>
     _countdownTimer?.cancel();
     _bleResultsSub?.cancel();
     _bluetoothService.dispose();
+    _scanAnimationsPaused.dispose();
     _sweepController.dispose();
     super.dispose();
   }
@@ -986,6 +1009,7 @@ class _ScanningScreenState extends State<ScanningScreen>
   }
 
   Future<void> _onDeviceSelected(DiscoveredDevice device) async {
+    _bleConnectPauseApplied = false;
     _stopScanningForConnection();
     _showConnectingDialog(device: device, context: context);
     await Get.find<BleLogController>().connectToDevice(device: device);
@@ -1255,7 +1279,10 @@ class _ScanningScreenState extends State<ScanningScreen>
         //     ),
         //   ),
         // ),
-        Align(alignment: Alignment.center, child: ScanningAnimation()),
+        Align(
+          alignment: Alignment.center,
+          child: ScanningAnimation(pausedListenable: _scanAnimationsPaused),
+        ),
         Positioned(
           top: 50,
           left: 20,
@@ -1811,6 +1838,13 @@ class _ScanningScreenState extends State<ScanningScreen>
             final handshakeComplete = handshakeCompleteNotifier.value;
             final maxRetries = maxRetriesNotifier.value;
 
+            if (isConnected && !_bleConnectPauseApplied) {
+              _bleConnectPauseApplied = true;
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (mounted) _pauseScanAnimations();
+              });
+            }
+
             // 🔥 SUCCESS PATH - wait for handshake (encryption + auth) to complete
             if (handshakeComplete && !hasNavigated) {
               hasNavigated = true;
@@ -1864,6 +1898,8 @@ class _ScanningScreenState extends State<ScanningScreen>
                   );
                   if (!ok || !context.mounted) {
                     bleController.bleManager.disconnectConnectedDevice();
+                    _bleConnectPauseApplied = false;
+                    if (mounted) _resumeScanAnimations();
                     return;
                   }
                   await _waitForReceivedPanelName(bleController);
@@ -1872,6 +1908,8 @@ class _ScanningScreenState extends State<ScanningScreen>
                       bleController.bleProcess.receivedPanelName.value.trim();
                   if (!_panelTypeMatchesReceived(expectedPanel, received)) {
                     await bleController.bleManager.disconnectConnectedDevice();
+                    _bleConnectPauseApplied = false;
+                    if (mounted) _resumeScanAnimations();
                     if (context.mounted) {
                       await _showWrongPanelTypeDialog(
                         context: context,
@@ -1939,6 +1977,8 @@ class _ScanningScreenState extends State<ScanningScreen>
                   );
                   if (!ok || !context.mounted) {
                     bleController.bleManager.disconnectConnectedDevice();
+                    _bleConnectPauseApplied = false;
+                    if (mounted) _resumeScanAnimations();
                     return;
                   }
 
@@ -2047,6 +2087,8 @@ class _ScanningScreenState extends State<ScanningScreen>
                             ),
                           ),
                           onPressed: () {
+                            _bleConnectPauseApplied = false;
+                            if (mounted) _resumeScanAnimations();
                             Navigator.of(
                               dialogContext,
                               rootNavigator: true,
@@ -2365,6 +2407,10 @@ class _ScanningScreenState extends State<ScanningScreen>
                                           ),
                                           onPressed: () {
                                             cancelAccessKeyTimer();
+                                            _bleConnectPauseApplied = false;
+                                            if (mounted) {
+                                              _resumeScanAnimations();
+                                            }
                                             Navigator.of(dialogContext).pop();
                                           },
                                           child: Text(
