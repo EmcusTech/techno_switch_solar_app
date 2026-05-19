@@ -215,6 +215,7 @@ class BleManager {
 
   /// BLE firmware version from encryption key response payload (e.g. "00.00.0001")
   final ValueNotifier<String> bleFirmwareVersion = ValueNotifier<String>('');
+  final ValueNotifier<String> bleHardwareVersion = ValueNotifier<String>('');
 
   Completer<void>? _handshakeCompleter;
 
@@ -2349,13 +2350,21 @@ class BleManager {
         // Parse BLE firmware version from payload (last 10 bytes: "XX.XX.XXXX")
         final payload = bleRxFrame.payload;
         if (payload.length >= 10) {
-          final versionBytes = payload.sublist(
+          final firmwareVersionBytes = payload.sublist(
             payload.length - 28,
             payload.length - 18,
           );
-          final version = String.fromCharCodes(versionBytes);
-          bleFirmwareVersion.value = version;
-          print("BLE firmware version: $version");
+          final hardwareVersionBytes = payload.sublist(
+            payload.length - 18,
+            payload.length - 11,
+          );
+          // bleHardwareVersion
+          final hardwareVersion = String.fromCharCodes(hardwareVersionBytes);
+          final bleVersion = String.fromCharCodes(firmwareVersionBytes);
+          bleFirmwareVersion.value = bleVersion;
+          bleHardwareVersion.value = hardwareVersion;
+          print("BLE firmware version: $bleVersion");
+          print("BLE hardware version: $hardwareVersion");
         } else {
           bleFirmwareVersion.value = '';
         }
