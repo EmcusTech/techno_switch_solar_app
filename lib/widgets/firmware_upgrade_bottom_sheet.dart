@@ -2192,6 +2192,17 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
                   ),
                   textAlign: TextAlign.center,
                 ),
+
+                const SizedBox(height: 8),
+                Text(
+                  "Bin File Hardware Version: ${_validationResult?.hardwareVersion}\nBLE Hardware Version: ${ble.bleHardwareVersion.value}",
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w400,
+                    color: const Color(0xFF666666),
+                  ),
+                  textAlign: TextAlign.center,
+                ),
                 const SizedBox(height: 20),
                 GestureDetector(
                   onTap: () => Navigator.of(dialogContext).pop(false),
@@ -2402,9 +2413,9 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
       final shouldUpgrade = await _confirmAndUpgrade(
         message:
             comparedValue == 1
-                ? "Do you want to upgrade?"
+                ? "Do you want to upgrade to $firmwareVersion?"
                 : comparedValue == -1
-                ? "Do you want to downgrade?"
+                ? "Do you want to downgrade to $firmwareVersion?"
                 : "The versions are same, continue?",
       );
 
