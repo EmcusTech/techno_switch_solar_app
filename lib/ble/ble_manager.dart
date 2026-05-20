@@ -1915,6 +1915,13 @@ class BleManager {
           processDesc.value =
               "Max BLE retry attempts reached, please scan again and connect.";
           maxBleConnectionRetriesReached.value = true;
+
+          try {
+            await disconnectConnectedDevice();
+          } catch (_) {
+            // Already disconnected or connect never completed.
+          }
+
           rethrow;
         }
 

@@ -19,6 +19,7 @@ import 'package:techno_switch_solar_app/screens/settings_screen.dart';
 import 'package:techno_switch_solar_app/screens/test_mode_screen.dart';
 import 'package:techno_switch_solar_app/utils/bluetooth_service.dart';
 import 'package:techno_switch_solar_app/utils/ble_name_utils.dart';
+import 'package:techno_switch_solar_app/utils/export_tile.dart';
 import 'package:techno_switch_solar_app/utils/project_report_pdf_util.dart';
 import 'package:techno_switch_solar_app/services/site_service.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/access_code_mode_bottomsheet.dart';
@@ -162,6 +163,7 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
 
     return Scaffold(
       extendBody: true,
+      resizeToAvoidBottomInset: false,
       body: _screens[_selectedIndex],
       bottomNavigationBar: Container(
         height: 80,
@@ -255,6 +257,7 @@ class _ProjectDashboardContent extends StatefulWidget {
 }
 
 class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
+  bool _isUnexpectedDisconnectDialogOpen = false;
   // Prevent multiple navigations while dialog rebuilds
   final ValueNotifier<bool> _navigatingToDeviceConnecting = ValueNotifier<bool>(
     false,
@@ -296,100 +299,129 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
   }
 
   void _showUnexpectedBleDisconnectDialog() {
-    if (!mounted) return;
+    if (!mounted || _isUnexpectedDisconnectDialogOpen) return;
+
+    _isUnexpectedDisconnectDialogOpen = true;
+
     showDialog<void>(
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) {
-        return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: Colors.white,
+        return PopScope(
+          canPop: false,
+          child: Dialog(
+            shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
             ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 64,
-                  height: 64,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFBDEE1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Center(
-                    child: Icon(
-                      Icons.bluetooth_disabled,
-                      color: Color(0xFFEC1D24),
-                      size: 32,
+            child: Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 64,
+                    height: 64,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFFBDEE1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Center(
+                      child: Icon(
+                        Icons.bluetooth_disabled,
+                        color: Color(0xFFEC1D24),
+                        size: 32,
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Bluetooth disconnected',
-                  style: GoogleFonts.inter(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF3D3D3D),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Bluetooth disconnected',
+                    style: GoogleFonts.inter(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF3D3D3D),
+                    ),
+                    textAlign: TextAlign.center,
                   ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'The connection to the device was lost. Any open panels were closed. Use Connect when you are ready to reconnect.',
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w400,
-                    color: const Color(0xFF666666),
+                  const SizedBox(height: 8),
+                  Text(
+                    'The connection to the device was lost. Any open panels were closed. Use Connect when you are ready to reconnect.',
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
+                      color: const Color(0xFF666666),
+                    ),
+                    textAlign: TextAlign.center,
                   ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 20),
-                SizedBox(
-                  width: double.infinity,
-                  child: GestureDetector(
-                    onTap: () => Navigator.of(dialogContext).pop(),
-                    child: Container(
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFEC1D24),
-                        borderRadius: BorderRadius.circular(24),
-                      ),
-                      child: Center(
-                        child: Text(
-                          'OK',
-                          style: GoogleFonts.inter(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
+                  const SizedBox(height: 20),
+                  SizedBox(
+                    width: double.infinity,
+                    child: GestureDetector(
+                      onTap: () {
+                        _isUnexpectedDisconnectDialogOpen = false;
+                        Navigator.of(dialogContext).pop();
+                      },
+                      child: Container(
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFEC1D24),
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                        child: Center(
+                          child: Text(
+                            'OK',
+                            style: GoogleFonts.inter(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         );
       },
-    );
+    ).then((_) {
+      _isUnexpectedDisconnectDialogOpen = false;
+    });
   }
 
   void _onBleConnectivityChanged() {
     if (!mounted) return;
+
     final connected = _bleManager.isConnectedNotifier.value;
+
+    /// CLOSE disconnect dialog immediately if BLE reconnects
+    if (connected && _isUnexpectedDisconnectDialogOpen) {
+      _isUnexpectedDisconnectDialogOpen = false;
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+
+        if (Navigator.of(context, rootNavigator: true).canPop()) {
+          Navigator.of(context, rootNavigator: true).pop();
+        }
+      });
+    }
+
     final lostConnection = _hadBleConnection && !connected;
+
     if (lostConnection) {
       final suppressForFirmware =
           BleSessionIdlePolicy.suppressFirmwareDisconnectUi.value;
+
       if (!suppressForFirmware) {
         _closeModalOverlaysAboveDashboard();
+
         if (_suppressUnexpectedBleDisconnectUi) {
           _suppressUnexpectedBleDisconnectUi = false;
         } else {
@@ -404,6 +436,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
         }
       }
     }
+
     _hadBleConnection = connected;
   }
 
@@ -962,28 +995,37 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                           ),
                         ),
                         GestureDetector(
-                          onTap: _exportProjectPdf,
-                          child: Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.1),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: const Icon(
-                              Icons.picture_as_pdf_outlined,
-                              color: Color(0xFF3D3D3D),
-                              size: 22,
+                          onTap: () => _showExportBottomSheet(context),
+                          child: Padding(
+                            padding: const EdgeInsets.only(right: 12.0),
+                            child: SvgPicture.asset(
+                              "assets/svgs/share_icon.svg",
                             ),
                           ),
                         ),
+                        // GestureDetector(
+                        //   onTap: _exportProjectPdf,
+                        //   child: Container(
+                        //     width: 40,
+                        //     height: 40,
+                        //     decoration: BoxDecoration(
+                        //       color: Colors.white,
+                        //       shape: BoxShape.circle,
+                        //       boxShadow: [
+                        //         BoxShadow(
+                        //           color: Colors.black.withOpacity(0.1),
+                        //           blurRadius: 8,
+                        //           offset: const Offset(0, 2),
+                        //         ),
+                        //       ],
+                        //     ),
+                        //     child: const Icon(
+                        //       Icons.picture_as_pdf_outlined,
+                        //       color: Color(0xFF3D3D3D),
+                        //       size: 22,
+                        //     ),
+                        //   ),
+                        // ),
                       ],
                     ),
                   ),
@@ -995,6 +1037,84 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
           ],
         ),
       ),
+    );
+  }
+
+  void _showExportBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: false,
+      builder: (_) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+          ),
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Drag handle
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+
+              Text(
+                'Export',
+                style: GoogleFonts.inter(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF3A3A3A),
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
+              // ExportTile(
+              //   icon: Icons.table_chart_outlined,
+              //   title: 'Export as Excel',
+              //   onTap: () async {
+              //     Navigator.pop(context);
+              //     final logs = ble.bleProcess.validEventLogs.value;
+              //     if (logs.isEmpty) return;
+
+              //     await EventLogExcelExporter.export(logs);
+              //   },
+              // ),
+
+              // ExportTile(
+              //   icon: Icons.description_outlined,
+              //   title: 'Export as CSV',
+              //   onTap: () async {
+              //     Navigator.pop(context);
+              //     final logs = ble.bleProcess.validEventLogs.value;
+              //     if (logs.isEmpty) return;
+
+              //     await EventLogCsvExporter.export(logs);
+              //   },
+              // ),
+              ExportTile(
+                iconPath: "assets/svgs/share_icon_red.svg",
+                title: 'Export as PDF',
+                onTap: () async {
+                  Navigator.pop(context);
+                  _exportProjectPdf();
+                },
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
