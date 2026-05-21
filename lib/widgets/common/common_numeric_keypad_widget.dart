@@ -3,8 +3,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/ble/ble_process.dart';
+import 'package:techno_switch_solar_app/widgets/common/access_code_success_lottie_widget.dart';
+import 'package:techno_switch_solar_app/widgets/common/access_code_verifying_lottie_widget.dart';
 import 'package:techno_switch_solar_app/widgets/common/common_cta_button.dart';
 import 'package:techno_switch_solar_app/widgets/common/common_numeric_keypad_tile_widget.dart';
+
+enum ValidatingStatus { empty, verifying, success, error }
 
 class CommonNumericKeypadWidget extends StatefulWidget {
   const CommonNumericKeypadWidget({
@@ -144,14 +148,13 @@ class _CommonNumericKeypadWidgetState extends State<CommonNumericKeypadWidget> {
     }
     return _buildSheetContent(
       context: context,
-      title: 'Enter Access Code',
       hideInput: false,
       showKeypad: true,
       showVerify: true,
       status: null,
       isErrorStatus: false,
       fieldBorderIsError: false,
-      lockIsVerifying: false,
+      validatingStatus: ValidatingStatus.empty,
     );
   }
 
@@ -190,12 +193,16 @@ class _CommonNumericKeypadWidgetState extends State<CommonNumericKeypadWidget> {
                     isAccessKeyValidValue != false) ||
                 isAccessKeyValidValue == true;
 
-            final title =
-                !hideInput
-                    ? 'Enter Access Code'
-                    : (isAccessKeyValidValue == true
-                        ? 'Success'
-                        : 'Verifying access');
+            final ValidatingStatus validatingStatus;
+            if (isAccessKeyValidValue == true) {
+              validatingStatus = ValidatingStatus.success;
+            } else if (hideInput) {
+              validatingStatus = ValidatingStatus.verifying;
+            } else if (isAccessKeyValidValue == false) {
+              validatingStatus = ValidatingStatus.error;
+            } else {
+              validatingStatus = ValidatingStatus.empty;
+            }
 
             final showKeypad =
                 !_closing &&
@@ -210,11 +217,7 @@ class _CommonNumericKeypadWidgetState extends State<CommonNumericKeypadWidget> {
                   processDescValue.isNotEmpty
                       ? processDescValue
                       : 'Wrong password. Try again.';
-            } else if (isAccessKeyValidValue == null &&
-                (processDescValue.isNotEmpty || _controller.text.isNotEmpty)) {
-              status = processDescValue.isNotEmpty ? processDescValue : '';
             }
-
             if (isAccessKeyValidValue == false && _controller.text.isNotEmpty) {
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 if (mounted && _controller.text.isNotEmpty) {
@@ -227,14 +230,13 @@ class _CommonNumericKeypadWidgetState extends State<CommonNumericKeypadWidget> {
 
             return _buildSheetContent(
               context: context,
-              title: title,
               hideInput: hideInput,
               showKeypad: showKeypad && !hideInput,
               showVerify: showVerify && !hideInput,
               status: status,
               isErrorStatus: isAccessKeyValidValue == false,
               fieldBorderIsError: isAccessKeyValidValue == false,
-              lockIsVerifying: hideInput,
+              validatingStatus: validatingStatus,
             );
           },
         );
@@ -244,14 +246,13 @@ class _CommonNumericKeypadWidgetState extends State<CommonNumericKeypadWidget> {
 
   Widget _buildSheetContent({
     required BuildContext context,
-    required String title,
     required bool hideInput,
     required bool showKeypad,
     required bool showVerify,
     required String? status,
     required bool isErrorStatus,
     required bool fieldBorderIsError,
-    required bool lockIsVerifying,
+    required ValidatingStatus validatingStatus,
   }) {
     final maxHeight = MediaQuery.of(context).size.height * 0.82;
     final borderColor =
@@ -283,62 +284,11 @@ class _CommonNumericKeypadWidgetState extends State<CommonNumericKeypadWidget> {
                         const SizedBox(height: 16),
                         _dragHandle(),
                         const SizedBox(height: 12),
-                        AnimatedContainer(
+                        AnimatedSwitcher(
                           duration: _animDuration,
-                          curve: Curves.easeInOutCubic,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color:
-                                lockIsVerifying
-                                    ? const Color(0xFFE8F5E9)
-                                    : const Color(0xFFEC1D24),
-                            boxShadow:
-                                lockIsVerifying
-                                    ? null
-                                    : <BoxShadow>[
-                                      BoxShadow(
-                                        color: const Color(
-                                          0xFFEC1D24,
-                                        ).withValues(alpha: 0.4),
-                                        blurRadius: 24,
-                                        spreadRadius: 1,
-                                        blurStyle: BlurStyle.solid,
-                                      ),
-                                    ],
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: SvgPicture.asset(
-                              lockIsVerifying
-                                  ? 'assets/svgs/lock_icon.svg'
-                                  : 'assets/svgs/lock_icon_white_svg.svg',
-                              height: lockIsVerifying ? 32 : null,
-                              width: lockIsVerifying ? 32 : null,
-                              colorFilter:
-                                  lockIsVerifying
-                                      ? const ColorFilter.mode(
-                                        Color(0xFF2E7D32),
-                                        BlendMode.srcIn,
-                                      )
-                                      : null,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 32),
-                        SizedBox(
-                          width: double.infinity,
-                          child: AnimatedSwitcher(
-                            duration: _animDuration,
-                            child: Text(
-                              title,
-                              key: ValueKey<String>(title),
-                              textAlign: TextAlign.center,
-                              style: GoogleFonts.inter(
-                                fontSize: 20,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
+                          switchInCurve: Curves.easeInOutCubic,
+                          switchOutCurve: Curves.easeInOutCubic,
+                          child: _buildLockOrLottieHeader(validatingStatus),
                         ),
                         const SizedBox(height: 26),
                         AnimatedSize(
@@ -593,5 +543,73 @@ class _CommonNumericKeypadWidgetState extends State<CommonNumericKeypadWidget> {
         borderRadius: BorderRadius.circular(4),
       ),
     );
+  }
+
+  Widget _buildLockOrLottieHeader(ValidatingStatus validatingStatus) {
+    switch (validatingStatus) {
+      case ValidatingStatus.verifying:
+        return Column(
+          children: [
+            const AccessCodeVerifyingLottieWidget(key: ValueKey('verifying')),
+            Text(
+              'Verifying access',
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF3D3D3D),
+              ),
+            ),
+          ],
+        );
+      case ValidatingStatus.success:
+        return Column(
+          children: [
+            const AccessCodeSuccessLottieWidget(key: ValueKey('success')),
+            Text(
+              'Access granted',
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF3D3D3D),
+              ),
+            ),
+          ],
+        );
+      case ValidatingStatus.empty:
+      case ValidatingStatus.error:
+        return Column(
+          key: const ValueKey('enter_access_code'),
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: const Color(0xFFEC1D24),
+                boxShadow: <BoxShadow>[
+                  BoxShadow(
+                    color: const Color(0xFFEC1D24).withValues(alpha: 0.4),
+                    blurRadius: 24,
+                    spreadRadius: 1,
+                    blurStyle: BlurStyle.solid,
+                  ),
+                ],
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: SvgPicture.asset('assets/svgs/lock_icon_white_svg.svg'),
+              ),
+            ),
+            const SizedBox(height: 32),
+            Text(
+              'Enter Access Code',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.inter(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        );
+    }
   }
 }

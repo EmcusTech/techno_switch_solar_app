@@ -60,6 +60,7 @@ Future<bool> showPanelAccessCodeGatewayDialog({
     context: context,
     onStartValidation: onStartValidation,
     clearSessionAccessCode: true,
+    successCloseDelay: const Duration(seconds: 2),
   );
 }
 
