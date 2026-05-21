@@ -2250,6 +2250,8 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withOpacity(0.4),
       builder:
           (_) => LBusBottomSheet(
             deviceId: deviceId,

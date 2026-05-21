@@ -2,11 +2,35 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:techno_switch_solar_app/ble/ble_process.dart';
 import 'package:techno_switch_solar_app/widgets/common/common_cta_button.dart';
 import 'package:techno_switch_solar_app/widgets/common/common_numeric_keypad_tile_widget.dart';
 
 class CommonNumericKeypadWidget extends StatefulWidget {
-  const CommonNumericKeypadWidget({super.key});
+  const CommonNumericKeypadWidget({
+    super.key,
+    this.bleProcess,
+    this.onStartValidation,
+    this.sheetContext,
+    this.onAccessGranted,
+    this.successCloseDelay = const Duration(milliseconds: 400),
+    this.persistSessionAccessCode = true,
+  });
+
+  final BleProcess? bleProcess;
+  final Future<void> Function()? onStartValidation;
+  final BuildContext? sheetContext;
+
+  /// When set, runs instead of [BleProcess.setSessionAccessCode] + pop on success.
+  final Future<void> Function()? onAccessGranted;
+
+  final Duration successCloseDelay;
+
+  /// When true (default), calls [BleProcess.setSessionAccessCode] on success.
+  final bool persistSessionAccessCode;
+
+  bool get _isGatewayMode =>
+      bleProcess != null && onStartValidation != null && sheetContext != null;
 
   @override
   State<CommonNumericKeypadWidget> createState() =>
@@ -14,10 +38,225 @@ class CommonNumericKeypadWidget extends StatefulWidget {
 }
 
 class _CommonNumericKeypadWidgetState extends State<CommonNumericKeypadWidget> {
-  TextEditingController accessController = TextEditingController();
+  final TextEditingController _controller = TextEditingController();
+  bool _closing = false;
+
+  static const Duration _animDuration = Duration(milliseconds: 280);
+
+  BleProcess? get _bleProcess => widget.bleProcess;
+  BuildContext? get _sheetContext => widget.sheetContext;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _syncAccessKeyFromController() {
+    final bleProcess = _bleProcess;
+    if (bleProcess == null) return;
+
+    final accessKey = bleProcess.accessKey;
+    final wasWrong = bleProcess.isAccessKeyValid.value == false;
+    accessKey.value = _controller.text;
+    bleProcess.isAccessKeyValid.value = null;
+    if (wasWrong) {
+      bleProcess.processDesc.value = '';
+    }
+  }
+
+  void _clearErrorStateIfNeeded() {
+    final bleProcess = _bleProcess;
+    if (bleProcess == null) return;
+    if (bleProcess.isAccessKeyValid.value == false) {
+      bleProcess.processDesc.value = '';
+      bleProcess.isAccessKeyValid.value = null;
+    }
+  }
+
+  Future<void> _onVerify() async {
+    final bleProcess = _bleProcess;
+    final onStartValidation = widget.onStartValidation;
+    if (bleProcess == null || onStartValidation == null) return;
+    if (_controller.text.trim().isEmpty) return;
+
+    bleProcess.isAccessKeyValid.value = null;
+    bleProcess.processDesc.value = 'Validating';
+    bleProcess.accessKey.value = _controller.text;
+    await onStartValidation();
+    if (bleProcess.processDesc.value.isEmpty) {
+      bleProcess.processDesc.value = 'Validating';
+    }
+  }
+
+  void _onClose() {
+    final sheetContext = _sheetContext;
+    if (sheetContext != null && sheetContext.mounted) {
+      Navigator.of(sheetContext).pop(false);
+      return;
+    }
+    Navigator.of(context).pop();
+  }
+
+  void _updateAccessController({
+    String? value,
+    bool isClear = false,
+    bool isDelete = false,
+  }) {
+    _clearErrorStateIfNeeded();
+
+    if (isClear) {
+      _controller.clear();
+      _syncAccessKeyFromController();
+      setState(() {});
+      return;
+    }
+    if (isDelete) {
+      _deleteLastCharacter();
+      _syncAccessKeyFromController();
+      setState(() {});
+      return;
+    }
+    if (_controller.text.length >= 8) return;
+
+    final newText = _controller.text + (value ?? '');
+    _controller.value = TextEditingValue(
+      text: newText,
+      selection: TextSelection.collapsed(offset: newText.length),
+    );
+    _syncAccessKeyFromController();
+    setState(() {});
+  }
+
+  void _deleteLastCharacter() {
+    if (_controller.text.isEmpty) return;
+    final newText = _controller.text.substring(0, _controller.text.length - 1);
+    _controller.value = TextEditingValue(
+      text: newText,
+      selection: TextSelection.collapsed(offset: newText.length),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (widget._isGatewayMode) {
+      return _buildGatewaySheet(context);
+    }
+    return _buildSheetContent(
+      context: context,
+      title: 'Enter Access Code',
+      hideInput: false,
+      showKeypad: true,
+      showVerify: true,
+      status: null,
+      isErrorStatus: false,
+      fieldBorderIsError: false,
+      lockIsVerifying: false,
+    );
+  }
+
+  Widget _buildGatewaySheet(BuildContext context) {
+    final bleProcess = _bleProcess!;
+    final accessKey = bleProcess.accessKey;
+    final isAccessKeyValid = bleProcess.isAccessKeyValid;
+
+    return ValueListenableBuilder<bool?>(
+      valueListenable: isAccessKeyValid,
+      builder: (context, isAccessKeyValidValue, __) {
+        if (isAccessKeyValidValue == true && !_closing) {
+          _closing = true;
+          WidgetsBinding.instance.addPostFrameCallback((_) async {
+            await Future.delayed(widget.successCloseDelay);
+            if (!mounted) return;
+            if (widget.onAccessGranted != null) {
+              await widget.onAccessGranted!();
+              return;
+            }
+            if (widget.persistSessionAccessCode) {
+              bleProcess.setSessionAccessCode(accessKey.value);
+            }
+            final sheetContext = _sheetContext;
+            if (sheetContext != null && sheetContext.mounted) {
+              Navigator.of(sheetContext, rootNavigator: true).pop(true);
+            }
+          });
+        }
+
+        return ValueListenableBuilder<String>(
+          valueListenable: bleProcess.processDesc,
+          builder: (context, processDescValue, __) {
+            final hideInput =
+                (processDescValue.isNotEmpty &&
+                    isAccessKeyValidValue != false) ||
+                isAccessKeyValidValue == true;
+
+            final title =
+                !hideInput
+                    ? 'Enter Access Code'
+                    : (isAccessKeyValidValue == true
+                        ? 'Success'
+                        : 'Verifying access');
+
+            final showKeypad =
+                !_closing &&
+                isAccessKeyValidValue != true &&
+                (processDescValue.isEmpty || isAccessKeyValidValue == false);
+
+            final showVerify = showKeypad;
+
+            String? status;
+            if (isAccessKeyValidValue == false) {
+              status =
+                  processDescValue.isNotEmpty
+                      ? processDescValue
+                      : 'Wrong password. Try again.';
+            } else if (isAccessKeyValidValue == null &&
+                (processDescValue.isNotEmpty || _controller.text.isNotEmpty)) {
+              status = processDescValue.isNotEmpty ? processDescValue : '';
+            }
+
+            if (isAccessKeyValidValue == false && _controller.text.isNotEmpty) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (mounted && _controller.text.isNotEmpty) {
+                  _controller.clear();
+                  accessKey.value = '';
+                  setState(() {});
+                }
+              });
+            }
+
+            return _buildSheetContent(
+              context: context,
+              title: title,
+              hideInput: hideInput,
+              showKeypad: showKeypad && !hideInput,
+              showVerify: showVerify && !hideInput,
+              status: status,
+              isErrorStatus: isAccessKeyValidValue == false,
+              fieldBorderIsError: isAccessKeyValidValue == false,
+              lockIsVerifying: hideInput,
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildSheetContent({
+    required BuildContext context,
+    required String title,
+    required bool hideInput,
+    required bool showKeypad,
+    required bool showVerify,
+    required String? status,
+    required bool isErrorStatus,
+    required bool fieldBorderIsError,
+    required bool lockIsVerifying,
+  }) {
     final maxHeight = MediaQuery.of(context).size.height * 0.82;
+    final borderColor =
+        fieldBorderIsError ? const Color(0xFFEC1D24) : const Color(0xFFD0D0D0);
+
     return SafeArea(
       child: ConstrainedBox(
         constraints: BoxConstraints(maxHeight: maxHeight),
@@ -34,291 +273,263 @@ class _CommonNumericKeypadWidgetState extends State<CommonNumericKeypadWidget> {
                 color: Colors.white,
                 borderRadius: BorderRadius.vertical(top: Radius.circular(50)),
               ),
-              // padding: EdgeInsets.only(
-              //   top: 16,
-              //   bottom: MediaQuery.of(context).viewInsets.bottom + 16,
-              // ),
               child: Stack(
                 children: [
-                  Column(
-                    children: [
-                      SizedBox(height: 16),
-                      _dragHandle(),
-                      SizedBox(height: 12),
-                      Container(
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Color(0xFFEC1D24),
-                          boxShadow: <BoxShadow>[
-                            BoxShadow(
-                              color: const Color(
-                                0xFFEC1D24,
-                              ).withValues(alpha: 0.4),
-                              blurRadius: 24,
-                              spreadRadius: 1,
-                              blurStyle: BlurStyle.solid,
-                            ),
-                          ],
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: SvgPicture.asset(
-                            "assets/svgs/lock_icon_white_svg.svg",
+                  SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        const SizedBox(height: 16),
+                        _dragHandle(),
+                        const SizedBox(height: 12),
+                        AnimatedContainer(
+                          duration: _animDuration,
+                          curve: Curves.easeInOutCubic,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color:
+                                lockIsVerifying
+                                    ? const Color(0xFFE8F5E9)
+                                    : const Color(0xFFEC1D24),
+                            boxShadow:
+                                lockIsVerifying
+                                    ? null
+                                    : <BoxShadow>[
+                                      BoxShadow(
+                                        color: const Color(
+                                          0xFFEC1D24,
+                                        ).withValues(alpha: 0.4),
+                                        blurRadius: 24,
+                                        spreadRadius: 1,
+                                        blurStyle: BlurStyle.solid,
+                                      ),
+                                    ],
                           ),
-                        ),
-                      ),
-                      SizedBox(height: 32),
-                      Text(
-                        "Enter Access Code",
-                        style: GoogleFonts.inter(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      SizedBox(height: 26),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 26.0),
-                        child: TextField(
-                          controller: accessController,
-                          readOnly: true,
-                          // focusNode: focusNode,
-                          keyboardType: TextInputType.number,
-                          obscureText: true,
-                          maxLength: 8,
-                          textAlign: TextAlign.center,
-                          style: GoogleFonts.inter(
-                            fontSize: 24,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: 8,
-                            color: const Color(0xFF3D3D3D),
-                          ),
-                          inputFormatters: [
-                            FilteringTextInputFormatter.digitsOnly,
-                          ],
-                          // onTap: () {
-                          //   if (bleProcess.isAccessKeyValid.value == false) {
-                          //     bleProcess.processDesc.value = '';
-                          //     bleProcess.isAccessKeyValid.value = null;
-                          //   }
-                          // },
-                          // onChanged: (val) {
-                          //   final wasWrong =
-                          //       bleProcess.isAccessKeyValid.value == false;
-                          //   accessKey.value = val;
-                          //   bleProcess.isAccessKeyValid.value = null;
-                          //   if (wasWrong) {
-                          //     bleProcess.processDesc.value = '';
-                          //   }
-                          // },
-                          decoration: InputDecoration(
-                            hintText: '••••••••',
-                            hintStyle: GoogleFonts.inter(
-                              fontSize: 24,
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: 8,
-                              color: const Color(0xFFD0D0D0),
-                            ),
-                            counterText: '',
-                            filled: true,
-                            fillColor: const Color(0xFFF8F8F8),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(
-                                color: Color(0xFFEC1D24),
-                                width: 2,
-                              ),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(
-                                color: Color(0xFFEC1D24),
-                                width: 2,
-                              ),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(
-                                color: Color(0xFFEC1D24),
-                                width: 2,
-                              ),
-                            ),
-                            errorBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(
-                                color: Color(0xFFEC1D24),
-                                width: 1,
-                              ),
-                            ),
-                            focusedErrorBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(
-                                color: Color(0xFFEC1D24),
-                                width: 2,
-                              ),
-                            ),
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 16,
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: SvgPicture.asset(
+                              lockIsVerifying
+                                  ? 'assets/svgs/lock_icon.svg'
+                                  : 'assets/svgs/lock_icon_white_svg.svg',
+                              height: lockIsVerifying ? 32 : null,
+                              width: lockIsVerifying ? 32 : null,
+                              colorFilter:
+                                  lockIsVerifying
+                                      ? const ColorFilter.mode(
+                                        Color(0xFF2E7D32),
+                                        BlendMode.srcIn,
+                                      )
+                                      : null,
                             ),
                           ),
                         ),
-                      ),
-                      SizedBox(height: 18),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 34),
-                        child: GridView.count(
-                          shrinkWrap: true,
-                          crossAxisCount: 3,
-                          crossAxisSpacing: 16,
-                          mainAxisSpacing: 12,
-                          childAspectRatio: 1.5,
-                          physics: NeverScrollableScrollPhysics(),
-                          children: [
-                            CommonNumericKeypadTileWidget(
-                              numericValue: "1",
-                              onTap: () {
-                                updateAccessController(
-                                  controller: accessController,
-                                  value: "1",
-                                );
-                              },
-                            ),
-                            CommonNumericKeypadTileWidget(
-                              numericValue: "2",
-                              onTap: () {
-                                updateAccessController(
-                                  controller: accessController,
-                                  value: "2",
-                                );
-                              },
-                            ),
-                            CommonNumericKeypadTileWidget(
-                              numericValue: "3",
-                              onTap: () {
-                                updateAccessController(
-                                  controller: accessController,
-                                  value: "3",
-                                );
-                              },
-                            ),
-                            CommonNumericKeypadTileWidget(
-                              numericValue: "4",
-                              onTap: () {
-                                updateAccessController(
-                                  controller: accessController,
-                                  value: "4",
-                                );
-                              },
-                            ),
-                            CommonNumericKeypadTileWidget(
-                              numericValue: "5",
-                              onTap: () {
-                                updateAccessController(
-                                  controller: accessController,
-                                  value: "5",
-                                );
-                              },
-                            ),
-                            CommonNumericKeypadTileWidget(
-                              numericValue: "6",
-                              onTap: () {
-                                updateAccessController(
-                                  controller: accessController,
-                                  value: "6",
-                                );
-                              },
-                            ),
-                            CommonNumericKeypadTileWidget(
-                              numericValue: "7",
-                              onTap: () {
-                                updateAccessController(
-                                  controller: accessController,
-                                  value: "7",
-                                );
-                              },
-                            ),
-                            CommonNumericKeypadTileWidget(
-                              numericValue: "8",
-                              onTap: () {
-                                updateAccessController(
-                                  controller: accessController,
-                                  value: "8",
-                                );
-                              },
-                            ),
-                            CommonNumericKeypadTileWidget(
-                              numericValue: "9",
-                              onTap: () {
-                                updateAccessController(
-                                  controller: accessController,
-                                  value: "9",
-                                );
-                              },
-                            ),
-                            CommonNumericKeypadTileWidget(
-                              isClear: true,
-                              onTap: () {
-                                updateAccessController(
-                                  controller: accessController,
-                                  isClear: true,
-                                );
-                              },
-                            ),
-                            CommonNumericKeypadTileWidget(
-                              numericValue: "0",
-                              onTap: () {
-                                updateAccessController(
-                                  controller: accessController,
-                                  value: "0",
-                                );
-                              },
-                            ),
-                            CommonNumericKeypadTileWidget(
-                              isDelete: true,
-                              fillColor: Color(0xFFFAEFEF),
-                              onTap: () {
-                                updateAccessController(
-                                  controller: accessController,
-                                  isDelete: true,
-                                );
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                      SizedBox(height: 18),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 26.0),
-                        child: CommonCtaButton(
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.verified, color: Colors.white),
-                              SizedBox(width: 8),
-                              Text(
-                                "Verify",
-                                style: GoogleFonts.inter(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
+                        const SizedBox(height: 32),
+                        SizedBox(
+                          width: double.infinity,
+                          child: AnimatedSwitcher(
+                            duration: _animDuration,
+                            child: Text(
+                              title,
+                              key: ValueKey<String>(title),
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.inter(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w600,
                               ),
-                            ],
+                            ),
                           ),
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 26),
+                        AnimatedSize(
+                          duration: _animDuration,
+                          curve: Curves.easeInOutCubic,
+                          alignment: Alignment.topCenter,
+                          clipBehavior: Clip.hardEdge,
+                          child:
+                              hideInput
+                                  ? const SizedBox.shrink()
+                                  : Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 26.0,
+                                    ),
+                                    child: TextField(
+                                      controller: _controller,
+                                      readOnly: true,
+                                      keyboardType: TextInputType.number,
+                                      obscureText: true,
+                                      maxLength: 8,
+                                      textAlign: TextAlign.center,
+                                      style: GoogleFonts.inter(
+                                        fontSize: 24,
+                                        fontWeight: FontWeight.w600,
+                                        letterSpacing: 8,
+                                        color: const Color(0xFF3D3D3D),
+                                      ),
+                                      inputFormatters: [
+                                        FilteringTextInputFormatter.digitsOnly,
+                                      ],
+                                      decoration: InputDecoration(
+                                        hintText: '••••••••',
+                                        hintStyle: GoogleFonts.inter(
+                                          fontSize: 24,
+                                          fontWeight: FontWeight.w600,
+                                          letterSpacing: 8,
+                                          color: const Color(0xFFD0D0D0),
+                                        ),
+                                        counterText: '',
+                                        filled: true,
+                                        fillColor: const Color(0xFFF8F8F8),
+                                        border: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                          borderSide: BorderSide(
+                                            color: borderColor,
+                                            width: fieldBorderIsError ? 1 : 2,
+                                          ),
+                                        ),
+                                        enabledBorder: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                          borderSide: BorderSide(
+                                            color: borderColor,
+                                            width: 1,
+                                          ),
+                                        ),
+                                        focusedBorder: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                          borderSide: const BorderSide(
+                                            color: Color(0xFFEC1D24),
+                                            width: 2,
+                                          ),
+                                        ),
+                                        contentPadding:
+                                            const EdgeInsets.symmetric(
+                                              horizontal: 16,
+                                              vertical: 16,
+                                            ),
+                                      ),
+                                    ),
+                                  ),
+                        ),
+                        if (status != null && status.isNotEmpty) ...[
+                          const SizedBox(height: 8),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 26),
+                            child: Text(
+                              status,
+                              style: GoogleFonts.inter(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color:
+                                    isErrorStatus
+                                        ? const Color(0xFFEC1D24)
+                                        : const Color(0xFF3D3D3D),
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ],
+                        AnimatedSize(
+                          duration: _animDuration,
+                          curve: Curves.easeInOutCubic,
+                          alignment: Alignment.topCenter,
+                          clipBehavior: Clip.hardEdge,
+                          child:
+                              showKeypad
+                                  ? Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const SizedBox(height: 18),
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 34,
+                                        ),
+                                        child: GridView.count(
+                                          shrinkWrap: true,
+                                          crossAxisCount: 3,
+                                          crossAxisSpacing: 16,
+                                          mainAxisSpacing: 12,
+                                          childAspectRatio: 1.5,
+                                          physics:
+                                              const NeverScrollableScrollPhysics(),
+                                          children: _keypadTiles(),
+                                        ),
+                                      ),
+                                    ],
+                                  )
+                                  : const SizedBox.shrink(),
+                        ),
+                        AnimatedSize(
+                          duration: _animDuration,
+                          curve: Curves.easeInOutCubic,
+                          alignment: Alignment.topCenter,
+                          clipBehavior: Clip.hardEdge,
+                          child:
+                              showVerify
+                                  ? Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const SizedBox(height: 18),
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 26.0,
+                                        ),
+                                        child: ListenableBuilder(
+                                          listenable: _controller,
+                                          builder: (context, _) {
+                                            final canVerify =
+                                                _controller.text
+                                                    .trim()
+                                                    .isNotEmpty;
+                                            return CommonCtaButton(
+                                              isDisabled: !canVerify,
+                                              onTap:
+                                                  canVerify ? _onVerify : null,
+                                              child: Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.center,
+                                                children: [
+                                                  const Icon(
+                                                    Icons.verified,
+                                                    color: Colors.white,
+                                                  ),
+                                                  const SizedBox(width: 8),
+                                                  Text(
+                                                    'Verify',
+                                                    style: GoogleFonts.inter(
+                                                      fontSize: 14,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      color: Colors.white,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                      ),
+                                      const SizedBox(height: 16),
+                                    ],
+                                  )
+                                  : const SizedBox(height: 16),
+                        ),
+                      ],
+                    ),
                   ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      SvgPicture.asset("assets/svgs/bottomsheet_logo.svg"),
+                      SvgPicture.asset('assets/svgs/bottomsheet_logo.svg'),
                       Padding(
                         padding: const EdgeInsets.only(right: 32.0),
                         child: GestureDetector(
-                          onTap: () {
-                            Navigator.of(context).pop();
-                          },
+                          onTap: _onClose,
                           child: Container(
                             height: 38,
                             width: 38,
@@ -326,7 +537,7 @@ class _CommonNumericKeypadWidgetState extends State<CommonNumericKeypadWidget> {
                               shape: BoxShape.circle,
                               color: Colors.black.withValues(alpha: 0.06),
                             ),
-                            child: Icon(Icons.close, size: 20),
+                            child: const Icon(Icons.close, size: 20),
                           ),
                         ),
                       ),
@@ -341,39 +552,34 @@ class _CommonNumericKeypadWidgetState extends State<CommonNumericKeypadWidget> {
     );
   }
 
-  void updateAccessController({
-    required TextEditingController controller,
-    String? value = "",
-    bool? isClear = false,
-    bool? isDelete = false,
-  }) {
-    if (isClear == true) {
-      controller.clear();
-      return;
-    }
-    if (isDelete == true) {
-      deleteLastCharacter(controller: controller);
-    }
-    if (controller.text.length >= 8) return;
-
-    final newText = controller.text + (value ?? "");
-
-    controller.value = TextEditingValue(
-      text: newText,
-      selection: TextSelection.collapsed(offset: newText.length),
-    );
-
-    print("Controller text : ${controller.text}");
+  List<Widget> _keypadTiles() {
+    return [
+      _digitTile('1'),
+      _digitTile('2'),
+      _digitTile('3'),
+      _digitTile('4'),
+      _digitTile('5'),
+      _digitTile('6'),
+      _digitTile('7'),
+      _digitTile('8'),
+      _digitTile('9'),
+      CommonNumericKeypadTileWidget(
+        isClear: true,
+        onTap: () => _updateAccessController(isClear: true),
+      ),
+      _digitTile('0'),
+      CommonNumericKeypadTileWidget(
+        isDelete: true,
+        fillColor: const Color(0xFFFAEFEF),
+        onTap: () => _updateAccessController(isDelete: true),
+      ),
+    ];
   }
 
-  void deleteLastCharacter({required TextEditingController controller}) {
-    if (controller.text.isEmpty) return;
-
-    final newText = controller.text.substring(0, controller.text.length - 1);
-
-    controller.value = TextEditingValue(
-      text: newText,
-      selection: TextSelection.collapsed(offset: newText.length),
+  Widget _digitTile(String digit) {
+    return CommonNumericKeypadTileWidget(
+      numericValue: digit,
+      onTap: () => _updateAccessController(value: digit),
     );
   }
 

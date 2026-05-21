@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
@@ -152,100 +153,144 @@ class _AccessCodesBottomSheetState extends State<AccessCodesBottomSheet> {
         constraints: BoxConstraints(maxHeight: screenHeight * 0.80),
         child: Container(
           decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+            color: Color(0xFFE31C23),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(50)),
           ),
-          padding: EdgeInsets.only(
-            left: 24,
-            right: 24,
-            top: 16,
-            bottom: MediaQuery.of(context).viewInsets.bottom + 16,
-          ),
-          child: Column(
-            children: [
-              _dragHandle(),
-
-              _title('Access Codes Configuration'),
-
-              Expanded(
-                child: SingleChildScrollView(
-                  physics: const BouncingScrollPhysics(),
-                  keyboardDismissBehavior:
-                      ScrollViewKeyboardDismissBehavior.onDrag,
-                  child: Column(
+          child: Padding(
+            padding: const EdgeInsets.only(top: 8.0),
+            child: Container(
+              clipBehavior: Clip.hardEdge,
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(50)),
+              ),
+              // padding: EdgeInsets.only(
+              //   left: 24,
+              //   right: 24,
+              //   top: 16,
+              //   bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+              // ),
+              child: Stack(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      _selector(),
-
-                      const SizedBox(height: 16),
-
-                      _sectionContainer(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 16,
-                          ),
-                          child: Column(
-                            children: [
-                              _disabledField(
-                                'Access Code No',
-                                selectedCode.toString(),
-                              ),
-
-                              _textField(
-                                label: 'Access Level',
-                                controller: accessLevelController,
-                                enabled: false,
-                              ),
-
-                              DropdownWidget(
-                                label: 'Access Level Name',
-                                value: accessLevelName,
-                                items: accessLevelNames,
-                                onChanged: (v) {
-                                  setState(() {
-                                    accessLevelName = v;
-
-                                    int index = accessLevelNames.indexOf(v);
-
-                                    accessLevelController.text =
-                                        index.toString();
-
-                                    if (v == accessLevelNames.first) {
-                                      isAccessCodeEnabled = false;
-                                      accessCodeController.clear();
-                                    } else {
-                                      isAccessCodeEnabled = true;
-                                    }
-                                  });
-                                },
-                              ),
-
-                              _textField(
-                                label: 'Access Code',
-                                controller: accessCodeController,
-                                isNumeric: true,
-                                maxLength: 8,
-                                onChanged: () => setState(() {}),
-                              ),
-                            ],
+                      SvgPicture.asset('assets/svgs/bottomsheet_logo.svg'),
+                      Padding(
+                        padding: const EdgeInsets.only(right: 32.0),
+                        child: GestureDetector(
+                          onTap: () => Navigator.pop(context),
+                          child: Container(
+                            height: 38,
+                            width: 38,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.black.withValues(alpha: 0.06),
+                            ),
+                            child: const Icon(Icons.close, size: 20),
                           ),
                         ),
                       ),
                     ],
                   ),
-                ),
-              ),
+                  Padding(
+                    padding: EdgeInsets.only(
+                      left: 24,
+                      right: 24,
+                      top: 16,
+                      bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+                    ),
+                    child: Column(
+                      children: [
+                        _dragHandle(),
 
-              const SizedBox(height: 12),
+                        _title('Access Mode'),
 
-              Row(
-                children: [
-                  Expanded(child: _downloadButton()),
-                  const SizedBox(width: 12),
-                  Expanded(child: _applyButton()),
+                        Expanded(
+                          child: SingleChildScrollView(
+                            physics: const BouncingScrollPhysics(),
+                            keyboardDismissBehavior:
+                                ScrollViewKeyboardDismissBehavior.onDrag,
+                            child: Column(
+                              children: [
+                                _selector(),
+
+                                const SizedBox(height: 16),
+
+                                _sectionContainer(
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 16,
+                                    ),
+                                    child: Column(
+                                      children: [
+                                        _disabledField(
+                                          'Access Code No',
+                                          selectedCode.toString(),
+                                        ),
+
+                                        _textField(
+                                          label: 'Access Level',
+                                          controller: accessLevelController,
+                                          enabled: false,
+                                        ),
+
+                                        DropdownWidget(
+                                          label: 'Access Level Name',
+                                          value: accessLevelName,
+                                          items: accessLevelNames,
+                                          onChanged: (v) {
+                                            setState(() {
+                                              accessLevelName = v;
+
+                                              int index = accessLevelNames
+                                                  .indexOf(v);
+
+                                              accessLevelController.text =
+                                                  index.toString();
+
+                                              if (v == accessLevelNames.first) {
+                                                isAccessCodeEnabled = false;
+                                                accessCodeController.clear();
+                                              } else {
+                                                isAccessCodeEnabled = true;
+                                              }
+                                            });
+                                          },
+                                        ),
+
+                                        _textField(
+                                          label: 'Access Code',
+                                          controller: accessCodeController,
+                                          isNumeric: true,
+                                          maxLength: 8,
+                                          onChanged: () => setState(() {}),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 12),
+
+                        Row(
+                          children: [
+                            Expanded(child: _downloadButton()),
+                            const SizedBox(width: 12),
+                            Expanded(child: _applyButton()),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
-            ],
+            ),
           ),
         ),
       ),

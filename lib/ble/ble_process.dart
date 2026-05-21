@@ -139,6 +139,7 @@ class BleProcess {
     accessKey.value = "";
     accessKeyLength.value = 0;
     isAccessKeyValid.value = null;
+    processDesc.value = "";
   }
 
   /// Clears peripheral apply-completion flags (e.g. after bulk apply, or to avoid

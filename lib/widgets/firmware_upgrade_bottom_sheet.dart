@@ -838,24 +838,34 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
         return true;
       },
       child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+        decoration: const BoxDecoration(
+          color: Color(0xFFE31C23),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(50)),
         ),
-        child: SingleChildScrollView(
-          // controller: scrollController,
-          child: Padding(
-            padding: EdgeInsets.all(24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _buildHeader(),
-                // SizedBox(height: 24),
-                // _buildStepIndicator(),
-                SizedBox(height: 24),
-                _buildStepContent(),
-              ],
+        child: Padding(
+          padding: const EdgeInsets.only(top: 8.0),
+          child: Container(
+            clipBehavior: Clip.hardEdge,
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(50)),
+            ),
+            child: SingleChildScrollView(
+              // controller: scrollController,
+              child: Padding(
+                padding: EdgeInsets.all(24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _buildHeader(),
+                    // SizedBox(height: 24),
+                    // _buildStepIndicator(),
+                    SizedBox(height: 24),
+                    _buildStepContent(),
+                  ],
+                ),
+              ),
             ),
           ),
         ),

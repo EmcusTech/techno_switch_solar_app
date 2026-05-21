@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
@@ -448,29 +449,73 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
           constraints: BoxConstraints(maxHeight: maxHeight),
           child: Container(
             decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+              color: Color(0xFFE31C23),
+              borderRadius: BorderRadius.vertical(top: Radius.circular(50)),
             ),
-            padding: EdgeInsets.only(
-              left: 24,
-              right: 24,
-              top: 16,
-              bottom: MediaQuery.of(context).viewInsets.bottom + 16,
-            ),
-            child: Column(
-              children: [
-                _dragHandle(),
-                _title('Sounder Mode Configuration'),
-                Expanded(child: _mainScrollBody()),
-                const SizedBox(height: 12),
-                Row(
+            child: Padding(
+              padding: const EdgeInsets.only(top: 8.0),
+              child: Container(
+                clipBehavior: Clip.hardEdge,
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(50)),
+                ),
+                // padding: EdgeInsets.only(
+                //   left: 24,
+                //   right: 24,
+                //   top: 16,
+                //   bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+                // ),
+                child: Stack(
                   children: [
-                    Expanded(child: _downloadButton()),
-                    const SizedBox(width: 12),
-                    Expanded(child: _applyButton()),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        SvgPicture.asset('assets/svgs/bottomsheet_logo.svg'),
+                        Padding(
+                          padding: const EdgeInsets.only(right: 32.0),
+                          child: GestureDetector(
+                            onTap: () => Navigator.pop(context),
+                            child: Container(
+                              height: 38,
+                              width: 38,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Colors.black.withValues(alpha: 0.06),
+                              ),
+                              child: const Icon(Icons.close, size: 20),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    Padding(
+                      padding: EdgeInsets.only(
+                        left: 24.0,
+                        right: 24.0,
+                        top: 16.0,
+                        bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+                      ),
+                      child: Column(
+                        children: [
+                          _dragHandle(),
+                          _title('Sounder Mode'),
+                          const SizedBox(height: 12),
+                          Expanded(child: _mainScrollBody()),
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              Expanded(child: _downloadButton()),
+                              const SizedBox(width: 12),
+                              Expanded(child: _applyButton()),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
-              ],
+              ),
             ),
           ),
         ),

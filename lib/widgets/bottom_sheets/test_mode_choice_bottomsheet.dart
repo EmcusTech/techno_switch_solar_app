@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 /// First step: user picks Sounders or Relays for test configuration.
@@ -17,48 +18,91 @@ class TestModeChoiceBottomSheet extends StatelessWidget {
     return SafeArea(
       child: Container(
         decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+          color: Color(0xFFE31C23),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(50)),
         ),
-        padding: EdgeInsets.only(
-          left: 24,
-          right: 24,
-          top: 16,
-          bottom: MediaQuery.of(context).viewInsets.bottom + 16,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          // crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _dragHandle(),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                'Test Mode',
-                style: GoogleFonts.inter(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                  color: const Color(0xFF3D3D3D),
-                ),
-              ),
+        child: Padding(
+          padding: const EdgeInsets.only(top: 8.0),
+          child: Container(
+            clipBehavior: Clip.hardEdge,
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(50)),
             ),
-            const SizedBox(height: 8),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                'Choose what to test',
-                style: GoogleFonts.inter(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                  color: const Color(0xFF6E6E6E),
+            // padding: EdgeInsets.only(
+            //   left: 24,
+            //   right: 24,
+            //   top: 16,
+            //   bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+            // ),
+            child: Stack(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    SvgPicture.asset('assets/svgs/bottomsheet_logo.svg'),
+                    Padding(
+                      padding: const EdgeInsets.only(right: 32.0),
+                      child: GestureDetector(
+                        onTap: () => Navigator.pop(context),
+                        child: Container(
+                          height: 38,
+                          width: 38,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.black.withValues(alpha: 0.06),
+                          ),
+                          child: const Icon(Icons.close, size: 20),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ),
+                Padding(
+                  padding: EdgeInsets.only(
+                    left: 24,
+                    right: 24,
+                    top: 16,
+                    bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    // crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _dragHandle(),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          'Test Mode',
+                          style: GoogleFonts.inter(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFF3D3D3D),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          'Choose what to test',
+                          style: GoogleFonts.inter(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            color: const Color(0xFF6E6E6E),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      _optionTile(title: 'Sounders', onTap: onSounders),
+                      const SizedBox(height: 12),
+                      _optionTile(title: 'Relays', onTap: onRelays),
+                    ],
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 16),
-            _optionTile(title: 'Sounders', onTap: onSounders),
-            const SizedBox(height: 12),
-            _optionTile(title: 'Relays', onTap: onRelays),
-          ],
+          ),
         ),
       ),
     );

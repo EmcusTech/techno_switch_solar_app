@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
@@ -91,111 +92,168 @@ class _DiagnosticInfoBottomSheetState extends State<DiagnosticInfoBottomSheet> {
           constraints: BoxConstraints(maxHeight: maxHeight),
           child: Container(
             decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+              color: Color(0xFFE31C23),
+              borderRadius: BorderRadius.vertical(top: Radius.circular(50)),
             ),
-            padding: EdgeInsets.only(
-              left: 24,
-              right: 24,
-              top: 16,
-              bottom: MediaQuery.of(context).viewInsets.bottom + 16,
-            ),
-            child: Column(
-              children: [
-                _dragHandle(),
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 10),
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      'Diagnostics',
-                      style: GoogleFonts.inter(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                        color: _textPrimary,
-                      ),
-                    ),
-                  ),
+            child: Padding(
+              padding: const EdgeInsets.only(top: 8.0),
+              child: Container(
+                clipBehavior: Clip.hardEdge,
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(50)),
                 ),
-                Expanded(
-                  child: ListView(
-                    controller: scrollController,
-                    physics: const BouncingScrollPhysics(
-                      parent: AlwaysScrollableScrollPhysics(),
-                    ),
-                    children: [
-                      _section(
-                        title: 'Sounders',
-                        items: [
-                          _VoltRef('Sounder 1', p.sounderOneAdcValue),
-                          _VoltRef('Sounder 2', p.sounderTwoAdcValue),
-                          _VoltRef('Sounder 3', p.sounderThreeAdcValue),
-                        ],
-                      ),
-                      _section(
-                        title: 'Power',
-                        items: [
-                          _VoltRef('Vaux', p.vauxAdcValue),
-                          _VoltRef('Vin', p.vinAdcValue),
-                          _VoltRef('Discharge', p.dischargeAdcValue),
-                        ],
-                      ),
-                      _section(
-                        title: 'Inputs',
-                        items: [
-                          _VoltRef('Prog Input', p.progInputAdcValue),
-                          _VoltRef('Hold Input', p.holdInputAdcValue),
-                        ],
-                      ),
-                      _section(
-                        title: 'Zones',
-                        items: [
-                          _VoltRef('Zone 1', p.zone1AdcValue),
-                          _VoltRef('Zone 2', p.zone2AdcValue),
-                          _VoltRef('Zone 3', p.zone3AdcValue),
-                        ],
-                      ),
-                      _section(
-                        title: 'Other',
-                        items: [_VoltRef('Earth Detection', p.earthAdcValue)],
-                      ),
-                    ],
-                  ),
-                ),
-                ValueListenableBuilder<bool>(
-                  valueListenable: p.isAdcSetupFetchCommandActive,
-                  builder: (context, isFetchActive, _) {
-                    return SizedBox(
-                      height: 44,
-                      width: double.infinity,
-                      child: OutlinedButton(
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor:
-                              isFetchActive ? Colors.white : _brandRed,
-                          backgroundColor: isFetchActive ? _brandRed : null,
-                          side: const BorderSide(color: _brandRed),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(22),
-                          ),
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                        ),
-                        onPressed:
-                            isFetchActive ? widget.onStop : widget.onDownload,
-                        child: Text(
-                          isFetchActive ? 'Stop' : 'Start',
-                          style: GoogleFonts.inter(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
+                // padding: EdgeInsets.only(
+                //   left: 24,
+                //   right: 24,
+                //   top: 16,
+                //   bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+                // ),
+                child: Stack(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        SvgPicture.asset('assets/svgs/bottomsheet_logo.svg'),
+                        Padding(
+                          padding: const EdgeInsets.only(right: 32.0),
+                          child: GestureDetector(
+                            onTap: () => Navigator.pop(context),
+                            child: Container(
+                              height: 38,
+                              width: 38,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Colors.black.withValues(alpha: 0.06),
+                              ),
+                              child: const Icon(Icons.close, size: 20),
+                            ),
                           ),
                         ),
+                      ],
+                    ),
+                    Padding(
+                      padding: EdgeInsets.only(
+                        left: 24,
+                        right: 24,
+                        top: 16,
+                        bottom: MediaQuery.of(context).viewInsets.bottom + 16,
                       ),
-                    );
-                  },
+                      child: Column(
+                        children: [
+                          _dragHandle(),
+                          _title('Diagnostics'),
+
+                          const SizedBox(height: 24),
+                          Expanded(
+                            child: ListView(
+                              controller: scrollController,
+                              physics: const BouncingScrollPhysics(
+                                parent: AlwaysScrollableScrollPhysics(),
+                              ),
+                              children: [
+                                _section(
+                                  title: 'Sounders',
+                                  items: [
+                                    _VoltRef('Sounder 1', p.sounderOneAdcValue),
+                                    _VoltRef('Sounder 2', p.sounderTwoAdcValue),
+                                    _VoltRef(
+                                      'Sounder 3',
+                                      p.sounderThreeAdcValue,
+                                    ),
+                                  ],
+                                ),
+                                _section(
+                                  title: 'Power',
+                                  items: [
+                                    _VoltRef('Vaux', p.vauxAdcValue),
+                                    _VoltRef('Vin', p.vinAdcValue),
+                                    _VoltRef('Discharge', p.dischargeAdcValue),
+                                  ],
+                                ),
+                                _section(
+                                  title: 'Inputs',
+                                  items: [
+                                    _VoltRef('Prog Input', p.progInputAdcValue),
+                                    _VoltRef('Hold Input', p.holdInputAdcValue),
+                                  ],
+                                ),
+                                _section(
+                                  title: 'Zones',
+                                  items: [
+                                    _VoltRef('Zone 1', p.zone1AdcValue),
+                                    _VoltRef('Zone 2', p.zone2AdcValue),
+                                    _VoltRef('Zone 3', p.zone3AdcValue),
+                                  ],
+                                ),
+                                _section(
+                                  title: 'Other',
+                                  items: [
+                                    _VoltRef(
+                                      'Earth Detection',
+                                      p.earthAdcValue,
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                          ValueListenableBuilder<bool>(
+                            valueListenable: p.isAdcSetupFetchCommandActive,
+                            builder: (context, isFetchActive, _) {
+                              return SizedBox(
+                                height: 44,
+                                width: double.infinity,
+                                child: OutlinedButton(
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor:
+                                        isFetchActive
+                                            ? Colors.white
+                                            : _brandRed,
+                                    backgroundColor:
+                                        isFetchActive ? _brandRed : null,
+                                    side: const BorderSide(color: _brandRed),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(22),
+                                    ),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                    ),
+                                  ),
+                                  onPressed:
+                                      isFetchActive
+                                          ? widget.onStop
+                                          : widget.onDownload,
+                                  child: Text(
+                                    isFetchActive ? 'Stop' : 'Start',
+                                    style: GoogleFonts.inter(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _title(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Text(
+        text,
+        style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.w700),
       ),
     );
   }

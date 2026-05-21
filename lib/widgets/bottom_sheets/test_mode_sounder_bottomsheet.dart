@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
@@ -27,7 +28,8 @@ class TestModeSounderBottomSheet extends StatefulWidget {
       _TestModeSounderBottomSheetState();
 }
 
-class _TestModeSounderBottomSheetState extends State<TestModeSounderBottomSheet> {
+class _TestModeSounderBottomSheetState
+    extends State<TestModeSounderBottomSheet> {
   BleManager? manager;
 
   final List<String> yesNoOptions = ['No', 'Yes'];
@@ -53,8 +55,7 @@ class _TestModeSounderBottomSheetState extends State<TestModeSounderBottomSheet>
     if (Get.isRegistered<BleLogController>()) {
       manager = Get.find<BleLogController>().bleManager;
     }
-    final cached =
-        await PeripheralSetupCache.loadSounderSetup(widget.deviceId);
+    final cached = await PeripheralSetupCache.loadSounderSetup(widget.deviceId);
     if (cached != null && manager != null) {
       applySounderMainTestFlagsFromCacheMap(manager!, cached);
       if (mounted) setState(() {});
@@ -78,84 +79,147 @@ class _TestModeSounderBottomSheetState extends State<TestModeSounderBottomSheet>
         ),
         child: Container(
           decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+            color: Color(0xFFE31C23),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(50)),
           ),
-          padding: EdgeInsets.only(
-            left: 24,
-            right: 24,
-            top: 16,
-            bottom: MediaQuery.of(context).viewInsets.bottom + 16,
-          ),
-          child: Column(
-            children: [
-              _dragHandle(),
-              _title('Sounder Test'),
-              Expanded(
-                child: NotificationListener<UserScrollNotification>(
-                  onNotification: (notification) {
-                    if (notification.direction != ScrollDirection.idle) {
-                      FocusScope.of(context).unfocus();
-                    }
-                    return false;
-                  },
-                  child: SingleChildScrollView(
-                    physics: const BouncingScrollPhysics(),
-                    padding: const EdgeInsets.only(top: 16),
-                    child: manager == null
-                        ? const SizedBox.shrink()
-                        : AnimatedBuilder(
-                            animation: Listenable.merge([
-                              manager!.isSounderOneTest,
-                              manager!.isSounderTwoTest,
-                              manager!.isSounderThreeTest,
-                            ]),
-                            builder: (context, _) {
-                              return Column(
-                                children: [
-                                  DropdownWidget(
-                                    label: 'Sounder 1 Test',
-                                    value: manager!.isSounderOneTest.value
-                                        ? 'Yes'
-                                        : 'No',
-                                    items: yesNoOptions,
-                                    onChanged: (v) =>
-                                        _onTestChanged(0, v == 'Yes'),
-                                  ),
-                                  DropdownWidget(
-                                    label: 'Sounder 2 Test',
-                                    value: manager!.isSounderTwoTest.value
-                                        ? 'Yes'
-                                        : 'No',
-                                    items: yesNoOptions,
-                                    onChanged: (v) =>
-                                        _onTestChanged(1, v == 'Yes'),
-                                  ),
-                                  DropdownWidget(
-                                    label: 'Sounder 3 Test',
-                                    value: manager!.isSounderThreeTest.value
-                                        ? 'Yes'
-                                        : 'No',
-                                    items: yesNoOptions,
-                                    onChanged: (v) =>
-                                        _onTestChanged(2, v == 'Yes'),
-                                  ),
-                                ],
-                              );
-                            },
-                          ),
-                  ),
-                ),
+          child: Padding(
+            padding: const EdgeInsets.only(top: 8.0),
+            child: Container(
+              clipBehavior: Clip.hardEdge,
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(50)),
               ),
-              const SizedBox(height: 12),
-              Row(
+              // padding: EdgeInsets.only(
+              //   left: 24,
+              //   right: 24,
+              //   top: 16,
+              //   bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+              // ),
+              child: Stack(
                 children: [
-                  Expanded(child: _downloadButton()),
-                  const SizedBox(width: 12),
-                  Expanded(child: _applyButton()),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      SvgPicture.asset('assets/svgs/bottomsheet_logo.svg'),
+                      Padding(
+                        padding: const EdgeInsets.only(right: 32.0),
+                        child: GestureDetector(
+                          onTap: () => Navigator.pop(context),
+                          child: Container(
+                            height: 38,
+                            width: 38,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.black.withValues(alpha: 0.06),
+                            ),
+                            child: const Icon(Icons.close, size: 20),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  Padding(
+                    padding: EdgeInsets.only(
+                      left: 24,
+                      right: 24,
+                      top: 16,
+                      bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+                    ),
+                    child: Column(
+                      children: [
+                        _dragHandle(),
+                        _title('Sounder Test'),
+                        Expanded(
+                          child: NotificationListener<UserScrollNotification>(
+                            onNotification: (notification) {
+                              if (notification.direction !=
+                                  ScrollDirection.idle) {
+                                FocusScope.of(context).unfocus();
+                              }
+                              return false;
+                            },
+                            child: SingleChildScrollView(
+                              physics: const BouncingScrollPhysics(),
+                              padding: const EdgeInsets.only(top: 16),
+                              child:
+                                  manager == null
+                                      ? const SizedBox.shrink()
+                                      : AnimatedBuilder(
+                                        animation: Listenable.merge([
+                                          manager!.isSounderOneTest,
+                                          manager!.isSounderTwoTest,
+                                          manager!.isSounderThreeTest,
+                                        ]),
+                                        builder: (context, _) {
+                                          return Column(
+                                            children: [
+                                              DropdownWidget(
+                                                label: 'Sounder 1 Test',
+                                                value:
+                                                    manager!
+                                                            .isSounderOneTest
+                                                            .value
+                                                        ? 'Yes'
+                                                        : 'No',
+                                                items: yesNoOptions,
+                                                onChanged:
+                                                    (v) => _onTestChanged(
+                                                      0,
+                                                      v == 'Yes',
+                                                    ),
+                                              ),
+                                              DropdownWidget(
+                                                label: 'Sounder 2 Test',
+                                                value:
+                                                    manager!
+                                                            .isSounderTwoTest
+                                                            .value
+                                                        ? 'Yes'
+                                                        : 'No',
+                                                items: yesNoOptions,
+                                                onChanged:
+                                                    (v) => _onTestChanged(
+                                                      1,
+                                                      v == 'Yes',
+                                                    ),
+                                              ),
+                                              DropdownWidget(
+                                                label: 'Sounder 3 Test',
+                                                value:
+                                                    manager!
+                                                            .isSounderThreeTest
+                                                            .value
+                                                        ? 'Yes'
+                                                        : 'No',
+                                                items: yesNoOptions,
+                                                onChanged:
+                                                    (v) => _onTestChanged(
+                                                      2,
+                                                      v == 'Yes',
+                                                    ),
+                                              ),
+                                            ],
+                                          );
+                                        },
+                                      ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Expanded(child: _downloadButton()),
+                            const SizedBox(width: 12),
+                            Expanded(child: _applyButton()),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
-            ],
+            ),
           ),
         ),
       ),
@@ -203,13 +267,14 @@ class _TestModeSounderBottomSheetState extends State<TestModeSounderBottomSheet>
             borderRadius: BorderRadius.circular(24),
           ),
         ),
-        onPressed: manager != null
-            ? () {
-                FocusManager.instance.primaryFocus?.unfocus();
-                syncSounderMainOutputModeHexFromBleManager(manager!);
-                widget.onApply();
-              }
-            : null,
+        onPressed:
+            manager != null
+                ? () {
+                  FocusManager.instance.primaryFocus?.unfocus();
+                  syncSounderMainOutputModeHexFromBleManager(manager!);
+                  widget.onApply();
+                }
+                : null,
         child: Text(
           'Apply',
           style: GoogleFonts.inter(

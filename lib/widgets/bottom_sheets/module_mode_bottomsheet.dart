@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
@@ -65,109 +66,165 @@ class _ModuleInfoBottomSheetState extends State<ModuleInfoBottomSheet> {
         constraints: BoxConstraints(maxHeight: maxHeight),
         child: Container(
           decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+            color: Color(0xFFE31C23),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(50)),
           ),
-          padding: EdgeInsets.only(
-            left: 24,
-            right: 24,
-            top: 16,
-            bottom: MediaQuery.of(context).viewInsets.bottom + 16,
-          ),
-          child: Column(
-            children: [
-              /// Drag Handle
-              Container(
-                width: 40,
-                height: 4,
-                margin: const EdgeInsets.only(bottom: 12),
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade300,
-                  borderRadius: BorderRadius.circular(4),
-                ),
+          child: Padding(
+            padding: const EdgeInsets.only(top: 8.0),
+            child: Container(
+              clipBehavior: Clip.hardEdge,
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(50)),
               ),
-
-              /// Title
-              Padding(
-                padding: const EdgeInsets.only(bottom: 16),
-                child: Text(
-                  'Module Information',
-                  style: GoogleFonts.inter(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF3D3D3D),
+              // padding: EdgeInsets.only(
+              //   left: 24,
+              //   right: 24,
+              //   top: 16,
+              //   bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+              // ),
+              child: Stack(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      SvgPicture.asset('assets/svgs/bottomsheet_logo.svg'),
+                      Padding(
+                        padding: const EdgeInsets.only(right: 32.0),
+                        child: GestureDetector(
+                          onTap: () => Navigator.pop(context),
+                          child: Container(
+                            height: 38,
+                            width: 38,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.black.withValues(alpha: 0.06),
+                            ),
+                            child: const Icon(Icons.close, size: 20),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ),
-
-              /// Scrollable Content
-              Expanded(
-                child: SingleChildScrollView(
-                  physics: const BouncingScrollPhysics(),
-                  child: Padding(
-                    padding: const EdgeInsets.only(top: 16),
+                  Padding(
+                    padding: EdgeInsets.only(
+                      left: 24.0,
+                      right: 24.0,
+                      top: 16.0,
+                      bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+                    ),
                     child: Column(
                       children: [
-                        if (manager != null)
-                          ValueListenableBuilder<String>(
-                            valueListenable: manager!.bleFirmwareVersion,
-                            builder:
-                                (_, version, __) => _disabledField(
-                                  'BLE Firmware Version',
-                                  version.isEmpty ? '-' : version,
-                                ),
-                          )
-                        else
-                          _disabledField('BLE Firmware Version', '-'),
-                        _reactiveTile('Module No', manager!.moduleNo),
-                        _reactiveTileBool('Enabled', manager!.moduleEnabled),
-                        _reactiveTile('Product', manager!.moduleProduct),
-                        _reactiveTile('ID', manager!.moduleId),
-                        _reactiveTile('Revision', manager!.moduleRevision),
-                        _reactiveTile(
-                          'Hardware Version',
-                          manager!.moduleHardware,
+                        /// Drag Handle
+                        Container(
+                          width: 40,
+                          height: 4,
+                          margin: const EdgeInsets.only(bottom: 12),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade300,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
                         ),
-                        _reactiveTile(
-                          'Firmware Version',
-                          manager!.moduleFirmware,
+
+                        /// Title
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 16),
+                          child: Text(
+                            'Module Info',
+                            style: GoogleFonts.inter(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFF3D3D3D),
+                            ),
+                          ),
                         ),
-                        _reactiveTile(
-                          'Manufacturing Date',
-                          manager!.moduleDate,
+
+                        /// Scrollable Content
+                        Expanded(
+                          child: SingleChildScrollView(
+                            physics: const BouncingScrollPhysics(),
+                            child: Padding(
+                              padding: const EdgeInsets.only(top: 16),
+                              child: Column(
+                                children: [
+                                  if (manager != null)
+                                    ValueListenableBuilder<String>(
+                                      valueListenable:
+                                          manager!.bleFirmwareVersion,
+                                      builder:
+                                          (_, version, __) => _disabledField(
+                                            'BLE Firmware Version',
+                                            version.isEmpty ? '-' : version,
+                                          ),
+                                    )
+                                  else
+                                    _disabledField('BLE Firmware Version', '-'),
+                                  _reactiveTile('Module No', manager!.moduleNo),
+                                  _reactiveTileBool(
+                                    'Enabled',
+                                    manager!.moduleEnabled,
+                                  ),
+                                  _reactiveTile(
+                                    'Product',
+                                    manager!.moduleProduct,
+                                  ),
+                                  _reactiveTile('ID', manager!.moduleId),
+                                  _reactiveTile(
+                                    'Revision',
+                                    manager!.moduleRevision,
+                                  ),
+                                  _reactiveTile(
+                                    'Hardware Version',
+                                    manager!.moduleHardware,
+                                  ),
+                                  _reactiveTile(
+                                    'Firmware Version',
+                                    manager!.moduleFirmware,
+                                  ),
+                                  _reactiveTile(
+                                    'Manufacturing Date',
+                                    manager!.moduleDate,
+                                  ),
+                                  _reactiveTile(
+                                    'Protocol No',
+                                    manager!.moduleProtocol,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
                         ),
-                        _reactiveTile('Protocol No', manager!.moduleProtocol),
+
+                        const SizedBox(height: 12),
+
+                        /// Download Button
+                        SizedBox(
+                          height: 48,
+                          width: double.infinity,
+                          child: OutlinedButton(
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: const Color(0xFFEC1D24),
+                              side: const BorderSide(color: Color(0xFFEC1D24)),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(24),
+                              ),
+                            ),
+                            onPressed: widget.onDownload,
+                            child: Text(
+                              'Download',
+                              style: GoogleFonts.inter(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                   ),
-                ),
+                ],
               ),
-
-              const SizedBox(height: 12),
-
-              /// Download Button
-              SizedBox(
-                height: 48,
-                width: double.infinity,
-                child: OutlinedButton(
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: const Color(0xFFEC1D24),
-                    side: const BorderSide(color: Color(0xFFEC1D24)),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(24),
-                    ),
-                  ),
-                  onPressed: widget.onDownload,
-                  child: Text(
-                    'Download',
-                    style: GoogleFonts.inter(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       ),
