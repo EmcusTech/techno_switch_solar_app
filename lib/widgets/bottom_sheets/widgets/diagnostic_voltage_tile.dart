@@ -6,7 +6,7 @@ enum DiagnosticVoltageBand { inactive, nominal, attention }
 
 DiagnosticVoltageBand diagnosticVoltageBandFor(double volts) {
   final a = volts.abs();
-  if (a < 0.08) return DiagnosticVoltageBand.inactive;
+  if (a < 0.6) return DiagnosticVoltageBand.inactive;
   if (a > 42 || volts < -1) return DiagnosticVoltageBand.attention;
   return DiagnosticVoltageBand.nominal;
 }
@@ -110,6 +110,12 @@ class DiagnosticVoltageTile extends StatelessWidget {
   }
 
   Color _accentFor(DiagnosticVoltageBand band) {
+    if (band == DiagnosticVoltageBand.nominal) {
+      return const Color(0xFF2B8073);
+    }
+    if (band == DiagnosticVoltageBand.attention) {
+      return const Color(0xFFEC1D24);
+    }
     return const Color(0xFFEC1D24);
   }
 

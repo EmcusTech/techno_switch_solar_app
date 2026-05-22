@@ -12,8 +12,8 @@ import 'package:techno_switch_solar_app/utils/peripheral_config_snapshot.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/config_log_bottomsheet.dart';
 
 /// After tap-to-connect bulk download (with [saveCachesAfterBulkDownload] false),
-/// compare live BLE to on-disk cache and show [ConfigLogBottomSheet] like the
-/// dashboard Config tile.
+/// Compare live BLE to on-disk cache and show [ConfigLogBottomSheet] as a modal
+/// bottom sheet (same as the dashboard Config tile).
 Future<void> presentPostConnectConfigLogCompareAfterDownload({
   required BuildContext context,
   required bool Function() isMounted,
@@ -217,9 +217,11 @@ Future<void> presentPostConnectConfigLogCompareAfterDownload({
 
   if (!isMounted() || !context.mounted) return;
 
-  await showDialog<void>(
+  await showModalBottomSheet<void>(
     context: context,
-    barrierDismissible: true,
+    isScrollControlled: true,
+    isDismissible: true,
+    backgroundColor: Colors.transparent,
     barrierColor: Colors.black.withValues(alpha: 0.4),
     builder: (_) {
       return ConfigLogBottomSheet(
@@ -230,7 +232,6 @@ Future<void> presentPostConnectConfigLogCompareAfterDownload({
         onUsePanelDataInApp: onUsePanelDataInApp,
         onApplyLocalToPanel: onApplyLocalToPanel,
         showDownloadAndCompareCta: false,
-        presentation: ConfigLogPresentationStyle.dialog,
       );
     },
   ).whenComplete(() async {

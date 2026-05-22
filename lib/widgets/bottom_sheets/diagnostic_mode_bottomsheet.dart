@@ -280,46 +280,58 @@ class _DiagnosticInfoBottomSheetState extends State<DiagnosticInfoBottomSheet> {
           borderRadius: BorderRadius.circular(14),
           border: Border.all(color: _border),
         ),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: GoogleFonts.inter(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: _textPrimary,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              color: Colors.red,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                child: Row(
+                  children: [
+                    Text(
+                      title,
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: _textPrimary,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 8),
-              LayoutBuilder(
-                builder: (context, constraints) {
-                  final maxW = constraints.maxWidth;
-                  final columns = 3;
-                  final spacing = 8.0;
-                  final tileW = (maxW - spacing * (columns - 1)) / columns;
+            ),
+            // const SizedBox(height: 6),
+            Divider(),
+            const SizedBox(height: 8),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final maxW = constraints.maxWidth;
+                final columns = 3;
+                final spacing = 8.0;
+                final tileW = (maxW - spacing * (columns - 1)) / columns;
 
-                  return Wrap(
-                    spacing: spacing,
-                    runSpacing: spacing,
-                    children: [
-                      for (final item in items)
-                        SizedBox(
-                          width: tileW,
-                          child: DiagnosticVoltageTile(
-                            label: item.label,
-                            notifier: item.notifier,
-                            unit: 'V',
-                          ),
+                return Wrap(
+                  spacing: spacing,
+                  runSpacing: spacing,
+                  children: [
+                    for (final item in items)
+                      SizedBox(
+                        width: tileW,
+                        child: DiagnosticVoltageTile(
+                          label: item.label,
+                          notifier: item.notifier,
+                          unit: 'V',
                         ),
-                    ],
-                  );
-                },
-              ),
-            ],
-          ),
+                      ),
+                  ],
+                );
+              },
+            ),
+          ],
         ),
       ),
     );
