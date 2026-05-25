@@ -20,6 +20,7 @@ import 'package:techno_switch_solar_app/utils/general_quipment_mode_util.dart';
 import 'package:techno_switch_solar_app/utils/zone_equipment_mode_util.dart';
 import 'package:techno_switch_solar_app/utils/ext_out_equipment_mode_util.dart';
 import 'package:techno_switch_solar_app/utils/l_bus_payload_config.dart';
+import 'package:techno_switch_solar_app/utils/ble_msd_utils.dart';
 
 const int BLE_FAILED = 0;
 const int BLE_SUCCESS = 1;
@@ -1975,16 +1976,16 @@ class BleManager {
         selectedDevice!.id == device.id) {
       md = selectedDevice!.manufacturerData;
       print(
-        "DEBUG CONNECTION: Using manufacturer data from selectedDevice - Full array: $md, Length: ${md.length}, Last byte: ${md.isNotEmpty ? md.last : 0}",
+        "DEBUG CONNECTION: Using manufacturer data from selectedDevice - Full array: $md, Length: ${md.length}, Status byte: ${BleMsdUtils.statusByte(md)}",
       );
     } else if (md.isEmpty) {
       print(
         "DEBUG CONNECTION: WARNING - Manufacturer data is empty for device ${device.id}, will use default 0",
       );
     }
-    final lastByte = md.isNotEmpty ? md.last : 0;
+    final statusByte = manufacturerDataOverride ?? BleMsdUtils.statusByte(md);
     print(
-      "DEBUG CONNECTION: Final manufacturer data array: $md, Last byte: $lastByte",
+      "DEBUG CONNECTION: Final manufacturer data array: $md, Status byte: $statusByte",
     );
 
     _connectionSub = flutterReactiveBle
@@ -1996,9 +1997,9 @@ class BleManager {
             if (update.connectionState == DeviceConnectionState.connected) {
               // Use the manufacturer data we preserved from scan result
               print(
-                "DEBUG CONNECTION: Setting bleManufacturerData - Full array: $md, Last byte: $lastByte",
+                "DEBUG CONNECTION: Setting bleManufacturerData - Full array: $md, Status byte: $statusByte",
               );
-              bleManufacturerData.value = lastByte;
+              bleManufacturerData.value = statusByte;
               print(
                 "DEBUG CONNECTION: bleManufacturerData.value is now: ${bleManufacturerData.value}",
               );
@@ -2093,7 +2094,7 @@ class BleManager {
 
     await connectedCompleter.future;
 
-    final isBootLoaderMode = lastByte == 1;
+    final isBootLoaderMode = statusByte == BleMsdUtils.statusBootloader;
     if (!skipConnectionHandshake && !isBootLoaderMode) {
       handshakeCompleteNotifier.value = false;
       _handshakeCompleter = Completer<void>();
@@ -2299,10 +2300,39 @@ class BleManager {
     return key is List<int> && key.length >= kBleEncryKeyByteSize;
   }
 
+  /// True when MSD status indicates bootloader (no encrypt/decrypt on firmware path).
+  bool _isBootloaderMode() {
+    return bleManufacturerData.value == BleMsdUtils.statusBootloader;
+  }
+
+  bool _shouldEncryptOutgoing({required bool encryptParam}) {
+    if (!encryptParam || _isBootloaderMode() || !_hasEncryptionKey()) {
+      return false;
+    }
+    return BleCrypto.shouldTransform(
+      encryptParam: true,
+      pastEncryptionKeyExchange:
+          handshakeCompleteNotifier.value ||
+          bleCurrentState.index > BleStates.REQ_ENCY_KEY.index,
+    );
+  }
+
+  Uint8List _transformOutgoingFrame(Uint8List frame, {bool encrypt = true}) {
+    if (!_shouldEncryptOutgoing(encryptParam: encrypt)) {
+      return frame;
+    }
+    final List<int> key = bleAESKey['AES_KEY'] as List<int>;
+    return BleCrypto.transformTx(frame, key);
+  }
+
   bool _shouldDecryptIncomingFrame() {
+    if (_isBootloaderMode()) {
+      return false;
+    }
     return BleCrypto.shouldTransform(
           encryptParam: true,
           pastEncryptionKeyExchange:
+              handshakeCompleteNotifier.value ||
               bleCurrentState.index > BleStates.REQ_ENCY_KEY.index,
         ) &&
         _hasEncryptionKey();
@@ -2819,20 +2849,20 @@ class BleManager {
     return frameBuff;
   }
 
-  Future<void> sendData(Uint8List frame, {bool encrypt = true}) async {
+  Future<void> sendData(
+    Uint8List frame, {
+    bool encrypt = true,
+    bool withoutResponse = false,
+  }) async {
     if (!isConnected || writeChar == null) return;
 
     try {
-      Uint8List dataToSend = frame;
+      final Uint8List dataToSend = _transformOutgoingFrame(
+        frame,
+        encrypt: encrypt,
+      );
 
-      if (BleCrypto.shouldTransform(
-            encryptParam: encrypt,
-            pastEncryptionKeyExchange:
-                bleCurrentState.index > BleStates.REQ_ENCY_KEY.index,
-          ) &&
-          _hasEncryptionKey()) {
-        final List<int> key = bleAESKey['AES_KEY'] as List<int>;
-        dataToSend = BleCrypto.transformTx(frame, key);
+      if (_shouldEncryptOutgoing(encryptParam: encrypt)) {
         print(
           'Sending encrypted data (${kBleEncryptionAlgorithm.name}): length ${dataToSend.length}',
         );
@@ -2843,10 +2873,17 @@ class BleManager {
       print(
         "::::::Data Written:::${dataToSend.map((e) => e.toRadixString(16).padLeft(2, '0')).join(' ')}::TX Time${DateTime.now().toIso8601String()}}",
       );
-      await flutterReactiveBle.writeCharacteristicWithResponse(
-        writeChar!,
-        value: dataToSend,
-      );
+      if (withoutResponse) {
+        await flutterReactiveBle.writeCharacteristicWithoutResponse(
+          writeChar!,
+          value: dataToSend,
+        );
+      } else {
+        await flutterReactiveBle.writeCharacteristicWithResponse(
+          writeChar!,
+          value: dataToSend,
+        );
+      }
     } catch (e) {
       print("Send data failed: $e");
     }
@@ -3133,27 +3170,44 @@ class BleManager {
   }
 
   /// Sends a jump firmware packet with Technoswitch framing.
-  /// Uses write without response by default to avoid waiting on a rebooting device.
+  /// Encrypted in application mode; uses write without response by default.
   Future<void> sendJumpFirmwarePacket({bool withoutResponse = true}) async {
     if (!isConnected || writeChar == null) {
       throw Exception("BLE not connected or write characteristic missing");
     }
+    // if (!_shouldEncryptOutgoing(encryptParam: true)) {
+    //   throw Exception(
+    //     'Encryption key not available. Cannot send jump in application mode.',
+    //   );
+    // }
 
-    List<int> jumpFrame = bleFrameFormat(0x1002, 0x02, 1, [0x00]);
+    final Uint8List jumpFrame = aes.convertToBytes(
+      bleFrameFormat(0x1002, 0x02, 1, [0x00]),
+    );
+    final Uint8List dataToSend = _transformOutgoingFrame(
+      jumpFrame,
+      encrypt: true,
+    );
     try {
+      print(
+        'Sending encrypted jump firmware packet (${kBleEncryptionAlgorithm.name}): length ${dataToSend.length}',
+      );
+      print(
+        "::::::Data Written:::${dataToSend.map((e) => e.toRadixString(16).padLeft(2, '0')).join(' ')}::TX Time${DateTime.now().toIso8601String()}}",
+      );
       if (withoutResponse) {
         await flutterReactiveBle.writeCharacteristicWithoutResponse(
           writeChar!,
-          value: jumpFrame,
+          value: dataToSend,
         );
       } else {
         await flutterReactiveBle.writeCharacteristicWithResponse(
           writeChar!,
-          value: jumpFrame,
+          value: dataToSend,
         );
       }
       print(
-        "TX/RX: TRANSMIT: Jump Firmware Packet time: ${DateTime.now().toIso8601String()}, packet: ${jumpFrame.map((e) => e.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+        "TX/RX: TRANSMIT: Jump Firmware Packet time: ${DateTime.now().toIso8601String()}",
       );
     } catch (e) {
       print("Send Jump firmware packet failed: $e");

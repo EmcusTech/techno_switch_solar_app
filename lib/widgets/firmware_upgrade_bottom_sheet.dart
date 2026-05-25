@@ -25,6 +25,7 @@ import '../utils/bluetooth/ble_notify_data_handler.dart';
 import 'package:techno_switch_solar_app/utils/bluetooth_service.dart'
     as app_bluetooth;
 import 'package:techno_switch_solar_app/utils/ble_name_utils.dart';
+import 'package:techno_switch_solar_app/utils/ble_msd_utils.dart';
 import 'package:techno_switch_solar_app/utils/logger.dart' as logger;
 
 enum FirmwareType { mainPanel, bleChip }
@@ -261,23 +262,28 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
         );
         // Store manufacturer data before jump command
         final md = _selectedDevice!.manufacturerData;
-        _originalManufacturerData = md.isNotEmpty ? md.last : null;
+        _originalManufacturerData = BleMsdUtils.statusByte(md);
         logger.Logger(
-          'Stored device info before jump - name: $_originalDeviceName, manufacturer data array: $md, last byte: $_originalManufacturerData',
+          'Stored device info before jump - name: $_originalDeviceName, manufacturer data array: $md, status byte: $_originalManufacturerData',
         );
         print(
-          'DEBUG: Before jump - Full manufacturer data: $md, Length: ${md.length}, Last byte: ${md.isNotEmpty ? md.last : "N/A"}',
+          'DEBUG: Before jump - Full manufacturer data: $md, Length: ${md.length}, Status byte: $_originalManufacturerData',
         );
       }
 
       if (isChipInBootLoader != true) {
-        manager.setFirmwareState(BleStates.REQ_ENCY_KEY);
-        manager.registerNotifyHandlerForFirmwareUpgrade(
-          isChipInBootLoader: false,
-        );
-        await Future.delayed(_bleShortDelay);
+        if (!manager.isConnected) {
+          throw Exception('Device not connected. Cannot send jump command.');
+        }
+        if (!manager.handshakeCompleteNotifier.value) {
+          throw Exception(
+            'BLE handshake not complete. Cannot start firmware upgrade.',
+          );
+        }
 
-        // Send jump command - expect it to fail when device disconnects
+        // Jump uses plaintext framing on the existing session; no enc-key re-request.
+        manager.setFirmwareState(BleStates.SEND_JUMP_FIRMWARE_PACKET);
+
         try {
           await manager.sendJumpFirmwarePacket(withoutResponse: true);
         } catch (e) {
@@ -286,7 +292,6 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
         }
 
         await Future.delayed(const Duration(milliseconds: 300));
-        manager.setFirmwareState(BleStates.SEND_JUMP_FIRMWARE_PACKET);
 
         // Start internal reconnect after jump command
         setState(() {
@@ -456,23 +461,22 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
           );
 
           final manufacturerData = result.manufacturerData;
-          final lastByte =
-              manufacturerData.isNotEmpty ? manufacturerData.last : null;
+          final statusByte = BleMsdUtils.statusByte(manufacturerData);
           final stableId = BleNameUtils.getDisplayIdFromBleName(result.name);
 
           if (isJumpCommand) {
-            // For jump: prioritize device with [0,1] (bootloader) and matching stable ID
+            // For jump: prioritize device with bootloader status and matching stable ID
             // Handles name change: P_87654321 -> TECHNOSWITCH_87654321 (both have "87654321")
             final matchesStableId =
                 _originalStableDeviceId != null &&
                 stableId.isNotEmpty &&
                 stableId == _originalStableDeviceId;
-            final isBootloader = lastByte == 1;
+            final isBootloader = BleMsdUtils.isBootloader(manufacturerData);
 
             if (matchesStableId && isBootloader) {
               device = result;
-              scanLastByte = lastByte;
-              manufacturerDataFromScan = lastByte;
+              scanLastByte = statusByte;
+              manufacturerDataFromScan = statusByte;
               logger.Logger(
                 'Found bootloader device ${result.name} (stable ID match) with manufacturer data: $manufacturerData',
               );
@@ -484,8 +488,8 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
             // Fallback: exact name match with bootloader (old firmware where name doesn't change)
             if (result.name == _originalDeviceName && isBootloader) {
               device = result;
-              scanLastByte = lastByte;
-              manufacturerDataFromScan = lastByte;
+              scanLastByte = statusByte;
+              manufacturerDataFromScan = statusByte;
               logger.Logger(
                 'Found bootloader device ${result.name} (name match) with manufacturer data: $manufacturerData',
               );
@@ -499,13 +503,13 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
             if (result.name == _originalDeviceName) {
               device = result;
               if (manufacturerData.isNotEmpty) {
-                manufacturerDataFromScan = manufacturerData.last;
+                manufacturerDataFromScan = statusByte;
                 scanLastByte = manufacturerDataFromScan;
               }
               logger.Logger(
-                'Found device ${result.name} with manufacturer data array: $manufacturerData (last byte: $scanLastByte)',
+                'Found device ${result.name} with manufacturer data array: $manufacturerData (status byte: $scanLastByte)',
               );
-              if (scanLastByte == 2) {
+              if (scanLastByte == BleMsdUtils.statusUpgradeSuccess) {
                 if (!scanDoneCompleter.isCompleted) {
                   scanDoneCompleter.complete();
                 }
@@ -551,14 +555,14 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
       // scanLastByte may already be set from scan results, but ensure it's set
       final scanManufacturerData = device!.manufacturerData;
       if (scanLastByte == null && scanManufacturerData.isNotEmpty) {
-        scanLastByte = scanManufacturerData.last;
+        scanLastByte = BleMsdUtils.statusByte(scanManufacturerData);
       }
 
       print(
-        'DEBUG: After scan complete - Device: ${device!.name}, Full manufacturer data array: $scanManufacturerData, Length: ${scanManufacturerData.length}, Last byte: $scanLastByte',
+        'DEBUG: After scan complete - Device: ${device!.name}, Full manufacturer data array: $scanManufacturerData, Length: ${scanManufacturerData.length}, Status byte: $scanLastByte',
       );
       logger.Logger(
-        'Device found: ${device!.name}, Manufacturer data from scan (full array): $scanManufacturerData (last byte: $scanLastByte)',
+        'Device found: ${device!.name}, Manufacturer data from scan (full array): $scanManufacturerData (status byte: $scanLastByte)',
       );
 
       // If we have manufacturer data from scan, check it first
@@ -566,8 +570,8 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
       // For end command: expect [0,2] for success
       if (scanLastByte != null) {
         if (isJumpCommand) {
-          // Jump command: expect [0,1]
-          if (scanLastByte == 1) {
+          // Jump command: expect bootloader status byte
+          if (scanLastByte == BleMsdUtils.statusBootloader) {
             // Success - device is in bootloader mode
             setState(() {
               _isWaitingForJumpReconnect = false;
@@ -590,7 +594,7 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
             _currentBleStateMessage = 'Validating firmware upgrade success...';
           });
 
-          if (scanLastByte == 2) {
+          if (scanLastByte == BleMsdUtils.statusUpgradeSuccess) {
             // Success - upgrade completed
             setState(() {
               _isWaitingForEndReconnect = false;
@@ -601,7 +605,7 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
             _controller.downloadingStatus.value = fw.DownloadStatus.completed;
             logger.Logger('Firmware upgrade SUCCESS confirmed from MSD [0,2]');
             return; // No need to connect, we have the status
-          } else if (scanLastByte == 1) {
+          } else if (scanLastByte == BleMsdUtils.statusBootloader) {
             // Failed - device still in bootloader mode
             setState(() {
               _isWaitingForEndReconnect = false;
@@ -734,7 +738,7 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
 
       if (isJumpCommand) {
         // For jump command: expect [0,1] - device should be in bootloader mode
-        if (manufacturerDataValue == 1) {
+        if (manufacturerDataValue == BleMsdUtils.statusBootloader) {
           setState(() {
             _selectedDevice = device;
             _currentBleStateMessage = 'Device ready. Continuing upgrade...';
@@ -751,7 +755,7 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
         }
       } else {
         // For end command, check upgrade status
-        // manufacturerDataValue is the last byte from manufacturerData list
+        // manufacturerDataValue is the MSD status byte (index 1)
         // [0,2] = success, [0,1] = failed
 
         // Update message to show we're validating
@@ -760,7 +764,7 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
           _currentBleStateMessage = 'Validating firmware upgrade success...';
         });
 
-        if (manufacturerDataValue == 2) {
+        if (manufacturerDataValue == BleMsdUtils.statusUpgradeSuccess) {
           // Success
           setState(() {
             _selectedDevice = device;
@@ -768,7 +772,7 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
                 'Firmware upgrade completed successfully!';
           });
           _controller.downloadingStatus.value = fw.DownloadStatus.completed;
-        } else if (manufacturerDataValue == 1) {
+        } else if (manufacturerDataValue == BleMsdUtils.statusBootloader) {
           // Failed
           setState(() {
             _errorMessage = 'Firmware upgrade failed';
@@ -776,7 +780,7 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
           _controller.downloadingStatus.value = fw.DownloadStatus.failed;
         } else {
           // Unknown status - fallback to scan data if available
-          if (scanLastByte == 2) {
+          if (scanLastByte == BleMsdUtils.statusUpgradeSuccess) {
             // Success (from scan data)
             setState(() {
               _selectedDevice = device;
@@ -784,7 +788,7 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
                   'Firmware upgrade completed successfully!';
             });
             _controller.downloadingStatus.value = fw.DownloadStatus.completed;
-          } else if (scanLastByte == 1) {
+          } else if (scanLastByte == BleMsdUtils.statusBootloader) {
             // Failed (from scan data)
             setState(() {
               _errorMessage = 'Firmware upgrade failed';
@@ -1718,23 +1722,28 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
                         ? null
                         : () {
                           final md = _selectedDevice?.manufacturerData;
-                          final lastByte =
-                              (md != null && md.isNotEmpty) ? md.last : null;
-                          if ((_validationResult?.hardwareVersion ==
-                                  ble.bleHardwareVersion.value) &&
-                              (_validationResult?.firmwareVersion !=
-                                  ble.bleFirmwareVersion.value)) {
-                            _startUpgrade(
-                              isChipInBootLoader: lastByte == 1,
-                              firmwareVersion:
-                                  _validationResult?.firmwareVersion,
-                            );
-                          } else if (_validationResult?.hardwareVersion !=
-                              ble.bleHardwareVersion.value) {
-                            _showHardwareVersionMismatch();
-                          } else {
-                            _showSameFirmwareVersionPopUp();
-                          }
+                          final inBootloader =
+                              md != null && BleMsdUtils.isBootloader(md);
+
+                          _startUpgrade(
+                            isChipInBootLoader: inBootloader,
+                            firmwareVersion: _validationResult?.firmwareVersion,
+                          );
+                          // if ((_validationResult?.hardwareVersion ==
+                          //         ble.bleHardwareVersion.value) &&
+                          //     (_validationResult?.firmwareVersion !=
+                          //         ble.bleFirmwareVersion.value)) {
+                          //   _startUpgrade(
+                          //     isChipInBootLoader: inBootloader,
+                          //     firmwareVersion:
+                          //         _validationResult?.firmwareVersion,
+                          //   );
+                          // } else if (_validationResult?.hardwareVersion !=
+                          //     ble.bleHardwareVersion.value) {
+                          //   _showHardwareVersionMismatch();
+                          // } else {
+                          //   _showSameFirmwareVersionPopUp();
+                          // }
                         },
                 isDisabled: _isValidating || !isCrcMatched,
                 child: Text(
