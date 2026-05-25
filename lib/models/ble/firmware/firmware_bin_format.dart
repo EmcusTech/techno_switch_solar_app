@@ -2,8 +2,14 @@ import 'dart:typed_data';
 
 /// Trailing structure of a firmware `.bin` (after the raw image bytes).
 /// Order from the start of the 40-byte trailer: FW ver → HW ver → date → product ID → CRC.
+///
+/// Combined images contain bootloader + application. Only the application region
+/// (from [applicationImageOffset] through the byte before the trailer) is sent over BLE.
 class FirmwareBinFormat {
   FirmwareBinFormat._();
+
+  /// File offset where application code starts (bootloader is below this address).
+  static const int applicationImageOffset = 0x11800;
 
   static const int trailerLength = 40;
   static const int crcLength = 4;
@@ -18,6 +24,31 @@ class FirmwareBinFormat {
       hardwareVersionLength +
       dateLength +
       productIdLength;
+
+  /// Smallest valid combined image: bootloader + app + trailer.
+  static int get minFileLength => applicationImageOffset + trailerLength;
+
+  /// Application image bytes for BLE transfer (skips bootloader prefix and trailer).
+  static Uint8List applicationImageFromFile(Uint8List fileBytes) {
+    if (fileBytes.length < minFileLength) {
+      throw ArgumentError(
+        'BIN file too small (need at least $minFileLength bytes, '
+        'got ${fileBytes.length})',
+      );
+    }
+    final int trailerStart = fileBytes.length - trailerLength;
+    if (trailerStart <= applicationImageOffset) {
+      throw ArgumentError(
+        'No application data between offset 0x${applicationImageOffset.toRadixString(16)} '
+        'and trailer',
+      );
+    }
+    return Uint8List.sublistView(
+      fileBytes,
+      applicationImageOffset,
+      trailerStart,
+    );
+  }
 }
 
 class FirmwareBinTrailer {

@@ -14,13 +14,13 @@ class FirmwarePacketService {
   }) async {
     final bytes = await binFile.readAsBytes();
 
-    if (bytes.length < FirmwareBinFormat.trailerLength) {
+    if (bytes.length < FirmwareBinFormat.minFileLength) {
       throw Exception(
-        'BIN file too small (need at least ${FirmwareBinFormat.trailerLength} bytes)',
+        'BIN file too small (need at least ${FirmwareBinFormat.minFileLength} bytes)',
       );
     }
 
-    // CRC covers everything except the last 4 bytes (image + 36 bytes metadata).
+    // CRC covers everything except the last 4 bytes (bootloader + app + metadata).
     final crcInput =
         bytes.sublist(0, bytes.length - FirmwareBinFormat.crcLength);
     final crcFromFile = bytes.sublist(
@@ -28,9 +28,8 @@ class FirmwarePacketService {
       bytes.length,
     );
 
-    // Only the leading part is written to the device (exclude 40-byte trailer).
-    final imageForDevice =
-        bytes.sublist(0, bytes.length - FirmwareBinFormat.trailerLength);
+    // Application region only (from 0x11800, exclude 40-byte trailer).
+    final imageForDevice = FirmwareBinFormat.applicationImageFromFile(bytes);
 
     final expectedCrc = _bytesToUint32BE(crcFromFile);
     final calculatedCrc = _calculateCrc32(crcInput);

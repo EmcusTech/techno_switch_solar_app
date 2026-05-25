@@ -11,7 +11,7 @@ class FirmwareValidationResult {
   final int expectedCrc;
   final int calculatedCrc;
 
-  /// Raw image bytes to flash (file content except the 40-byte trailer).
+  /// Application image bytes for BLE (from [FirmwareBinFormat.applicationImageOffset]).
   final Uint8List firmwareData;
 
   /// Parsed from the 40-byte trailer (see [FirmwareBinFormat]).
@@ -54,7 +54,8 @@ class FirmwareUpgradeService {
   /// Validate a BIN file:
   /// - Last 40 bytes: 10 FW ver + 7 HW ver + 8 date + 11 product id + 4 CRC (BE).
   /// - CRC32 is calculated on all bytes before the final 4 CRC bytes (image + metadata).
-  /// - [FirmwareValidationResult.firmwareData] is only the image (excludes the full trailer).
+  /// - [FirmwareValidationResult.firmwareData] is the application image only
+  ///   (from [FirmwareBinFormat.applicationImageOffset], excludes bootloader prefix and trailer).
   /// - [requiredProductId]: if set, parsed product ID (trimmed) must match
   ///   the given string (e.g. [FirmwareUpgradeService.expectedProductId]).
   FirmwareValidationResult validateFirmwareFile(
@@ -64,14 +65,14 @@ class FirmwareUpgradeService {
     final Uint8List? bytes = file.bytes ??
         (file.path != null ? File(file.path!).readAsBytesSync() : null);
 
-    if (bytes == null || bytes.length < FirmwareBinFormat.trailerLength) {
+    if (bytes == null || bytes.length < FirmwareBinFormat.minFileLength) {
       return FirmwareValidationResult(
         isValid: false,
         expectedCrc: 0,
         calculatedCrc: 0,
         firmwareData: Uint8List(0),
         error: 'Invalid BIN file (too small, need at least '
-            '${FirmwareBinFormat.trailerLength} bytes for trailer, or unreadable)',
+            '${FirmwareBinFormat.minFileLength} bytes, or unreadable)',
       );
     }
 
@@ -90,7 +91,7 @@ class FirmwareUpgradeService {
     final bool crcOk = expectedCrc == calculatedCrc;
 
     final Uint8List firmwareData =
-        bytes.sublist(0, bytes.length - FirmwareBinFormat.trailerLength);
+        FirmwareBinFormat.applicationImageFromFile(bytes);
 
     if (!crcOk) {
       return FirmwareValidationResult(
