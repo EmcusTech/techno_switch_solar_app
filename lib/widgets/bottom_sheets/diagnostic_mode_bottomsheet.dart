@@ -155,12 +155,9 @@ class _DiagnosticInfoBottomSheetState extends State<DiagnosticInfoBottomSheet> {
                                 _section(
                                   title: 'Sounders',
                                   items: [
-                                    _VoltRef('Sounder 1', p.sounderOneAdcValue),
-                                    _VoltRef('Sounder 2', p.sounderTwoAdcValue),
-                                    _VoltRef(
-                                      'Sounder 3',
-                                      p.sounderThreeAdcValue,
-                                    ),
+                                    _VoltRef('SND 1', p.sounderOneAdcValue),
+                                    _VoltRef('SND 2', p.sounderTwoAdcValue),
+                                    _VoltRef('SND 3', p.sounderThreeAdcValue),
                                   ],
                                 ),
                                 _section(
@@ -168,14 +165,14 @@ class _DiagnosticInfoBottomSheetState extends State<DiagnosticInfoBottomSheet> {
                                   items: [
                                     _VoltRef('Vaux', p.vauxAdcValue),
                                     _VoltRef('Vin', p.vinAdcValue),
-                                    _VoltRef('Discharge', p.dischargeAdcValue),
+                                    _VoltRef('EXT', p.dischargeAdcValue),
                                   ],
                                 ),
                                 _section(
                                   title: 'Inputs',
                                   items: [
-                                    _VoltRef('Prog Input', p.progInputAdcValue),
-                                    _VoltRef('Hold Input', p.holdInputAdcValue),
+                                    _VoltRef('Prog In', p.progInputAdcValue),
+                                    _VoltRef('Hold In', p.holdInputAdcValue),
                                   ],
                                 ),
                                 _section(
@@ -188,12 +185,7 @@ class _DiagnosticInfoBottomSheetState extends State<DiagnosticInfoBottomSheet> {
                                 ),
                                 _section(
                                   title: 'Other',
-                                  items: [
-                                    _VoltRef(
-                                      'Earth Detection',
-                                      p.earthAdcValue,
-                                    ),
-                                  ],
+                                  items: [_VoltRef('Earth', p.earthAdcValue)],
                                 ),
                               ],
                             ),
@@ -283,58 +275,100 @@ class _DiagnosticInfoBottomSheetState extends State<DiagnosticInfoBottomSheet> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              color: Colors.red,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
-                ),
-                child: Row(
-                  children: [
-                    Text(
-                      title,
-                      style: GoogleFonts.inter(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: _textPrimary,
+            Padding(
+              padding: const EdgeInsets.only(
+                left: 12,
+                right: 12,
+                top: 8,
+                bottom: 2,
+              ),
+              child: Row(
+                children: [
+                  SvgPicture.asset(
+                    "assets/svgs/diagnostics/sounder_normal_icon.svg",
+                  ),
+                  const SizedBox(width: 16),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: GoogleFonts.inter(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: _textPrimary,
+                        ),
                       ),
-                    ),
-                  ],
-                ),
+                      Text(
+                        '3 channels . All Nominal',
+                        style: GoogleFonts.inter(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                          color: const Color(0xff678196),
+                        ),
+                      ),
+                    ],
+                  ),
+                  // Spacer(),
+                  // Container(
+                  //   height: 14,
+                  //   width: 14,
+                  //   decoration: BoxDecoration(
+                  //     shape: BoxShape.circle,
+                  //     color: _valueColor(DiagnosticVoltageBand.nominal),
+                  //   ),
+                  // ),
+                ],
               ),
             ),
             // const SizedBox(height: 6),
-            Divider(),
-            const SizedBox(height: 8),
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final maxW = constraints.maxWidth;
-                final columns = 3;
-                final spacing = 8.0;
-                final tileW = (maxW - spacing * (columns - 1)) / columns;
+            Divider(color: _border),
+            Padding(
+              padding: const EdgeInsets.only(
+                left: 12,
+                right: 12,
+                top: 2,
+                bottom: 8,
+              ),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final maxW = constraints.maxWidth;
+                  final columns = 3;
+                  final spacing = 8.0;
+                  final tileW = (maxW - spacing * (columns - 1)) / columns;
 
-                return Wrap(
-                  spacing: spacing,
-                  runSpacing: spacing,
-                  children: [
-                    for (final item in items)
-                      SizedBox(
-                        width: tileW,
-                        child: DiagnosticVoltageTile(
-                          label: item.label,
-                          notifier: item.notifier,
-                          unit: 'V',
+                  return Wrap(
+                    spacing: spacing,
+                    runSpacing: spacing,
+                    children: [
+                      for (final item in items)
+                        SizedBox(
+                          width: tileW,
+                          child: DiagnosticVoltageTile(
+                            label: item.label,
+                            notifier: item.notifier,
+                            unit: 'V',
+                          ),
                         ),
-                      ),
-                  ],
-                );
-              },
+                    ],
+                  );
+                },
+              ),
             ),
           ],
         ),
       ),
     );
+  }
+
+  Color _valueColor(DiagnosticVoltageBand band) {
+    if (band == DiagnosticVoltageBand.nominal) {
+      return const Color(0xFF2B8073);
+    }
+    if (band == DiagnosticVoltageBand.high) {
+      return const Color(0xFFEDA145);
+    }
+    return const Color(0xFFE4626F);
   }
 }
 
