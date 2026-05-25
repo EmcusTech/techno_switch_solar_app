@@ -8,6 +8,55 @@ import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/widgets/diagnostic_voltage_tile.dart';
 
+enum DiagnosticSectionType { sounder, power, input, zone, other }
+
+DiagnosticVoltageBand aggregateDiagnosticSectionBand(
+  Iterable<double> voltages,
+) {
+  final bands = voltages.map(diagnosticVoltageBandFor);
+  if (bands.any((b) => b == DiagnosticVoltageBand.critical)) {
+    return DiagnosticVoltageBand.critical;
+  }
+  if (bands.any((b) => b == DiagnosticVoltageBand.high)) {
+    return DiagnosticVoltageBand.high;
+  }
+  return DiagnosticVoltageBand.nominal;
+}
+
+String diagnosticSectionIconAsset(
+  DiagnosticSectionType type,
+  DiagnosticVoltageBand band,
+) {
+  if (type == DiagnosticSectionType.other &&
+      band == DiagnosticVoltageBand.critical) {
+    return 'assets/svgs/diagnostics/other_crticial_icon.svg';
+  }
+
+  final prefix = switch (type) {
+    DiagnosticSectionType.sounder => 'sounder',
+    DiagnosticSectionType.power => 'power',
+    DiagnosticSectionType.input => 'input',
+    DiagnosticSectionType.zone => 'zone',
+    DiagnosticSectionType.other => 'other',
+  };
+  final suffix = switch (band) {
+    DiagnosticVoltageBand.nominal => 'normal',
+    DiagnosticVoltageBand.high => 'high',
+    DiagnosticVoltageBand.critical => 'critical',
+  };
+  return 'assets/svgs/diagnostics/${prefix}_${suffix}_icon.svg';
+}
+
+String diagnosticSectionSubtitle(int channelCount, DiagnosticVoltageBand band) {
+  final channels = channelCount == 1 ? '1 channel' : '$channelCount channels';
+  final status = switch (band) {
+    DiagnosticVoltageBand.nominal => 'All Nominal',
+    DiagnosticVoltageBand.high => 'High',
+    DiagnosticVoltageBand.critical => 'Critical',
+  };
+  return '$channels · $status';
+}
+
 class DiagnosticInfoBottomSheet extends StatefulWidget {
   final String deviceId;
   final VoidCallback onDownload;
@@ -156,6 +205,8 @@ class _DiagnosticInfoBottomSheetState extends State<DiagnosticInfoBottomSheet> {
                                 _section(
                                   title: 'Sounders',
                                   isLive: p.isAdcSetupFetchCommandActive,
+                                  diagnosticSectionType:
+                                      DiagnosticSectionType.sounder,
                                   items: [
                                     _VoltRef('SND 1', p.sounderOneAdcValue),
                                     _VoltRef('SND 2', p.sounderTwoAdcValue),
@@ -165,6 +216,8 @@ class _DiagnosticInfoBottomSheetState extends State<DiagnosticInfoBottomSheet> {
                                 _section(
                                   title: 'Power',
                                   isLive: p.isAdcSetupFetchCommandActive,
+                                  diagnosticSectionType:
+                                      DiagnosticSectionType.power,
                                   items: [
                                     _VoltRef('Vaux', p.vauxAdcValue),
                                     _VoltRef('Vin', p.vinAdcValue),
@@ -174,6 +227,8 @@ class _DiagnosticInfoBottomSheetState extends State<DiagnosticInfoBottomSheet> {
                                 _section(
                                   title: 'Inputs',
                                   isLive: p.isAdcSetupFetchCommandActive,
+                                  diagnosticSectionType:
+                                      DiagnosticSectionType.input,
                                   items: [
                                     _VoltRef('Prog In', p.progInputAdcValue),
                                     _VoltRef('Hold In', p.holdInputAdcValue),
@@ -182,6 +237,8 @@ class _DiagnosticInfoBottomSheetState extends State<DiagnosticInfoBottomSheet> {
                                 _section(
                                   title: 'Zones',
                                   isLive: p.isAdcSetupFetchCommandActive,
+                                  diagnosticSectionType:
+                                      DiagnosticSectionType.zone,
                                   items: [
                                     _VoltRef('Zone 1', p.zone1AdcValue),
                                     _VoltRef('Zone 2', p.zone2AdcValue),
@@ -191,6 +248,8 @@ class _DiagnosticInfoBottomSheetState extends State<DiagnosticInfoBottomSheet> {
                                 _section(
                                   title: 'Other',
                                   isLive: p.isAdcSetupFetchCommandActive,
+                                  diagnosticSectionType:
+                                      DiagnosticSectionType.other,
                                   items: [_VoltRef('Earth', p.earthAdcValue)],
                                 ),
                               ],
@@ -274,6 +333,7 @@ class _DiagnosticInfoBottomSheetState extends State<DiagnosticInfoBottomSheet> {
     required String title,
     required ValueListenable<bool> isLive,
     required List<_VoltRef> items,
+    required DiagnosticSectionType diagnosticSectionType,
   }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
@@ -292,43 +352,60 @@ class _DiagnosticInfoBottomSheetState extends State<DiagnosticInfoBottomSheet> {
                 top: 8,
                 bottom: 2,
               ),
-              child: Row(
-                children: [
-                  SvgPicture.asset(
-                    "assets/svgs/diagnostics/sounder_normal_icon.svg",
-                  ),
-                  const SizedBox(width: 16),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+              child: AnimatedBuilder(
+                animation: Listenable.merge(
+                  items.map((item) => item.notifier).toList(),
+                ),
+                builder: (context, _) {
+                  final sectionBand = aggregateDiagnosticSectionBand(
+                    items.map((item) => item.notifier.value),
+                  );
+
+                  return Row(
                     children: [
-                      Text(
-                        title,
-                        style: GoogleFonts.inter(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: _textPrimary,
+                      SvgPicture.asset(
+                        diagnosticSectionIconAsset(
+                          diagnosticSectionType,
+                          sectionBand,
                         ),
                       ),
-                      Text(
-                        '3 channels . All Nominal',
-                        style: GoogleFonts.inter(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w500,
-                          color: const Color(0xff678196),
+                      const SizedBox(width: 16),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            title,
+                            style: GoogleFonts.inter(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: _textPrimary,
+                            ),
+                          ),
+                          Text(
+                            diagnosticSectionSubtitle(
+                              items.length,
+                              sectionBand,
+                            ),
+                            style: GoogleFonts.inter(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                              color: const Color(0xff678196),
+                            ),
+                          ),
+                        ],
+                      ),
+                      Spacer(),
+                      Container(
+                        height: 14,
+                        width: 14,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: _valueColor(sectionBand),
                         ),
                       ),
                     ],
-                  ),
-                  Spacer(),
-                  Container(
-                    height: 14,
-                    width: 14,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: _valueColor(DiagnosticVoltageBand.nominal),
-                    ),
-                  ),
-                ],
+                  );
+                },
               ),
             ),
             // const SizedBox(height: 6),
