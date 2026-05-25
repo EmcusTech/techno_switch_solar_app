@@ -8,6 +8,8 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'ble_frame.dart';
 import 'aes_key.dart' as aes;
+import 'ble_crypto.dart';
+import 'ble_encryption_config.dart';
 import 'ble_process.dart';
 import 'dart:typed_data';
 import 'package:techno_switch_solar_app/models/access_code_mode_model.dart';
@@ -717,11 +719,14 @@ class BleManager {
   }
 
   /// Reset log retrieval protocol state
-  /// This resets the BLE state machine to initial state for log retrieval
+  /// This resets the BLE state machine to initial state for log retrieval.
+  ///
+  /// Does not clear [bleAESKey]: handshake runs at connection time; clearing
+  /// the session key here caused later [sendData] to send plaintext while the
+  /// device still expects XOR/AES payloads (e.g. ext out / log retrieval).
   void resetLogRetrievalState() {
     bleCurrentState = BleStates.REQ_ENCY_KEY;
     bleStateMachineState = BleStates.REQ_ENCY_KEY;
-    bleAESKey.clear();
     _pollInFlight = false;
     receivedPollCount = 0;
     currentOperationMode = BleOperationMode.logRetrieval;
@@ -730,7 +735,6 @@ class BleManager {
   void resetLiveEventsRetrievalState() {
     bleCurrentState = BleStates.REQ_ENCY_KEY;
     bleStateMachineState = BleStates.REQ_ENCY_KEY;
-    bleAESKey.clear();
     _pollInFlight = false;
     receivedPollCount = 0;
     currentOperationMode = BleOperationMode.logRetrieval;
@@ -739,7 +743,6 @@ class BleManager {
   void resetExtOutState() {
     bleCurrentState = BleStates.REQ_ENCY_KEY;
     bleStateMachineState = BleStates.REQ_ENCY_KEY;
-    bleAESKey.clear();
     _pollInFlight = false;
     receivedPollCount = 0;
     currentOperationMode = BleOperationMode.extOutFetch;
@@ -748,7 +751,6 @@ class BleManager {
   void resetInputSetupState() {
     bleCurrentState = BleStates.REQ_ENCY_KEY;
     bleStateMachineState = BleStates.REQ_ENCY_KEY;
-    bleAESKey.clear();
     _pollInFlight = false;
     receivedPollCount = 0;
     currentOperationMode = BleOperationMode.inputSetupFetch;
@@ -757,7 +759,6 @@ class BleManager {
   void resetRelaySetupState() {
     bleCurrentState = BleStates.REQ_ENCY_KEY;
     bleStateMachineState = BleStates.REQ_ENCY_KEY;
-    bleAESKey.clear();
     _pollInFlight = false;
     receivedPollCount = 0;
     currentOperationMode = BleOperationMode.relaySetupFetch;
@@ -766,7 +767,6 @@ class BleManager {
   void resetRadioSetupState() {
     bleCurrentState = BleStates.REQ_ENCY_KEY;
     bleStateMachineState = BleStates.REQ_ENCY_KEY;
-    bleAESKey.clear();
     _pollInFlight = false;
     receivedPollCount = 0;
     currentOperationMode = BleOperationMode.radioSetupFetch;
@@ -775,7 +775,6 @@ class BleManager {
   void resetModuleSetupState() {
     bleCurrentState = BleStates.REQ_ENCY_KEY;
     bleStateMachineState = BleStates.REQ_ENCY_KEY;
-    bleAESKey.clear();
     _pollInFlight = false;
     receivedPollCount = 0;
     currentOperationMode = BleOperationMode.moduleSetupFetch;
@@ -784,7 +783,6 @@ class BleManager {
   void resetLBusSetupState() {
     bleCurrentState = BleStates.REQ_ENCY_KEY;
     bleStateMachineState = BleStates.REQ_ENCY_KEY;
-    bleAESKey.clear();
     _pollInFlight = false;
     receivedPollCount = 0;
     currentOperationMode = BleOperationMode.lBusSetupFetch;
@@ -793,7 +791,6 @@ class BleManager {
   void resetZoneSetupState() {
     bleCurrentState = BleStates.REQ_ENCY_KEY;
     bleStateMachineState = BleStates.REQ_ENCY_KEY;
-    bleAESKey.clear();
     _pollInFlight = false;
     receivedPollCount = 0;
     currentOperationMode = BleOperationMode.zoneSetupFetch;
@@ -802,7 +799,6 @@ class BleManager {
   void resetSounderSetupState() {
     bleCurrentState = BleStates.REQ_ENCY_KEY;
     bleStateMachineState = BleStates.REQ_ENCY_KEY;
-    bleAESKey.clear();
     _pollInFlight = false;
     receivedPollCount = 0;
     currentOperationMode = BleOperationMode.sounderSetupFetch;
@@ -811,7 +807,6 @@ class BleManager {
   void resetServiceDueState() {
     bleCurrentState = BleStates.REQ_ENCY_KEY;
     bleStateMachineState = BleStates.REQ_ENCY_KEY;
-    bleAESKey.clear();
     _pollInFlight = false;
     receivedPollCount = 0;
     currentOperationMode = BleOperationMode.serviceDueFetch;
@@ -820,7 +815,6 @@ class BleManager {
   void resetAccessCodeSetupState() {
     bleCurrentState = BleStates.REQ_ENCY_KEY;
     bleStateMachineState = BleStates.REQ_ENCY_KEY;
-    bleAESKey.clear();
     _pollInFlight = false;
     receivedPollCount = 0;
     currentOperationMode = BleOperationMode.accessCodeSetupFetch;
@@ -829,7 +823,6 @@ class BleManager {
   void resetPanelInfoSetupState() {
     bleCurrentState = BleStates.REQ_ENCY_KEY;
     bleStateMachineState = BleStates.REQ_ENCY_KEY;
-    bleAESKey.clear();
     _pollInFlight = false;
     receivedPollCount = 0;
     currentOperationMode = BleOperationMode.panelInfoSetupFetch;
@@ -838,7 +831,6 @@ class BleManager {
   void resetGeneralModuleSetupState() {
     bleCurrentState = BleStates.REQ_ENCY_KEY;
     bleStateMachineState = BleStates.REQ_ENCY_KEY;
-    bleAESKey.clear();
     _pollInFlight = false;
     receivedPollCount = 0;
     currentOperationMode = BleOperationMode.generalModuleSetupFetch;
@@ -847,7 +839,6 @@ class BleManager {
   void resetAdcSetupState() {
     bleCurrentState = BleStates.REQ_ENCY_KEY;
     bleStateMachineState = BleStates.REQ_ENCY_KEY;
-    bleAESKey.clear();
     _pollInFlight = false;
     receivedPollCount = 0;
     currentOperationMode = BleOperationMode.adcSetupFetch;
@@ -2303,6 +2294,32 @@ class BleManager {
   // Notification Handler
   // ----------------------
 
+  bool _hasEncryptionKey() {
+    final dynamic key = bleAESKey['AES_KEY'];
+    return key is List<int> && key.length >= kBleEncryKeyByteSize;
+  }
+
+  bool _shouldDecryptIncomingFrame() {
+    return BleCrypto.shouldTransform(
+          encryptParam: true,
+          pastEncryptionKeyExchange:
+              bleCurrentState.index > BleStates.REQ_ENCY_KEY.index,
+        ) &&
+        _hasEncryptionKey();
+  }
+
+  Uint8List _decryptIncomingFrame(Uint8List data) {
+    print(
+      "decryptIncomingFrame: ${data.map((e) => e.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+    );
+    final List<int> key = bleAESKey['AES_KEY'] as List<int>;
+    print("key: $key");
+    print(
+      "transformRx: ${BleCrypto.transformRx(data, key).map((e) => e.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+    );
+    return BleCrypto.transformRx(data, key);
+  }
+
   Future<void> notificationHandler(Uint8List data) async {
     if ((bleProcess.isOtaCompleted ||
             otaProcessState == OtaProcessState.notInUse) &&
@@ -2314,6 +2331,10 @@ class BleManager {
     txData = 1;
     bleProcess.cancelRxTimeout();
     _pollInFlight = false;
+
+    if (_shouldDecryptIncomingFrame()) {
+      data = _decryptIncomingFrame(data);
+    }
 
     print("bleCurrentState: $bleCurrentState");
     // if (bleCurrentState == BleStates.SEND_EXT_OUT_SETUP_CMD_PACKET) {
@@ -2351,11 +2372,13 @@ class BleManager {
       );
       if (bleValidateRxFrame(bleRxFrame)) {
         print("Validation success");
-        bleAESKey["AES_KEY"] = bleRxFrame.payload;
+        final List<int> payload = bleRxFrame.payload;
+        bleAESKey['AES_KEY'] = BleCrypto.extractKeyFromHandshakePayload(
+          payload,
+        );
         print("Received key: ${bleAESKey['AES_KEY']}");
 
         // Parse BLE firmware version from payload (last 10 bytes: "XX.XX.XXXX")
-        final payload = bleRxFrame.payload;
         if (payload.length >= 10) {
           final firmwareVersionBytes = payload.sublist(
             payload.length - 28,
@@ -2387,7 +2410,9 @@ class BleManager {
       }
     } else if (bleCurrentState == BleStates.SEND_AUTHN_MSG) {
       print("Authn msg response");
-      // Uint8List decryptedData = aes.aesDecrypt(bleAESKey["AES_KEY"], data);
+      print(
+        "data: ${data.map((e) => e.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+      );
       bleRxFrame = bleParseAndUpdateRxFrame(data, data.length);
 
       if (bleValidateRxFrame(bleRxFrame)) {
@@ -2680,7 +2705,6 @@ class BleManager {
     } else {
       receivedPollCount++;
       print("The Received RX count is : $receivedPollCount");
-      // Uint8List decryptedData = aes.aesDecrypt(bleAESKey["AES_KEY"], data);
       bleParseAndUpdateRxFrame(data, data.length);
 
       if (bleValidateRxFrame(bleRxFrame)) {
@@ -2799,24 +2823,25 @@ class BleManager {
     if (!isConnected || writeChar == null) return;
 
     try {
-      Uint8List dataToSend;
+      Uint8List dataToSend = frame;
 
-      //Encryption and Decryption is disabled
-      // Encrypt if in proper state
-      // await Future.delayed(const Duration(milliseconds: 300));
-      // if (encrypt && (bleCurrentState.index > BleStates.REQ_ENCY_KEY.index)) {
-      //   dataToSend = aes.aesEncrypt(bleAESKey["AES_KEY"], frame);
-      //   print("Sending encrypted data: length ${dataToSend.length}");
-      // } else {
-      //   dataToSend = frame;
-      //   print("Sending plain data: length ${dataToSend.length}");
-      // }
-
-      dataToSend = frame;
-      print("Sending plain data: length ${dataToSend.length}");
+      if (BleCrypto.shouldTransform(
+            encryptParam: encrypt,
+            pastEncryptionKeyExchange:
+                bleCurrentState.index > BleStates.REQ_ENCY_KEY.index,
+          ) &&
+          _hasEncryptionKey()) {
+        final List<int> key = bleAESKey['AES_KEY'] as List<int>;
+        dataToSend = BleCrypto.transformTx(frame, key);
+        print(
+          'Sending encrypted data (${kBleEncryptionAlgorithm.name}): length ${dataToSend.length}',
+        );
+      } else {
+        print("Sending plain data: length ${dataToSend.length}");
+      }
 
       print(
-        "::::::Data Written:::$dataToSend::TX Time${DateTime.now().toIso8601String()}}",
+        "::::::Data Written:::${dataToSend.map((e) => e.toRadixString(16).padLeft(2, '0')).join(' ')}::TX Time${DateTime.now().toIso8601String()}}",
       );
       await flutterReactiveBle.writeCharacteristicWithResponse(
         writeChar!,
@@ -2843,37 +2868,11 @@ class BleManager {
     ); // 0x01 is small frame type
     Uint8List frameBytes = aes.convertToBytes(frame);
 
-    try {
-      //Encrption and Decryption is disabled
-      // if (encrypt) {
-      //   List<int> encryptedData = aes.aesEncrypt(
-      //     bleAESKey["AES_KEY"],
-      //     frameBytes,
-      //   );
-      //   // await Future.delayed(const Duration(milliseconds: 300));
-      //   print(
-      //     "::::::Data Written:::$encryptedData::TX Time${DateTime.now().toIso8601String()}}",
-      //   );
-      //   await flutterReactiveBle.writeCharacteristicWithResponse(
-      //     writeChar!,
-      //     value: encryptedData,
-      //   );
-      // } else {
-      //   print("::::::Data Written:::::");
-      //   await flutterReactiveBle.writeCharacteristicWithResponse(
-      //     writeChar!,
-      //     value: frameBytes,
-      //   );
-      // }
+    print(
+      "sendSmallDataFrame: ${frameBytes.map((e) => e.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+    );
 
-      // print("::::::Data Written:::::");
-      await flutterReactiveBle.writeCharacteristicWithResponse(
-        writeChar!,
-        value: frameBytes,
-      );
-    } catch (e) {
-      print("Send frame failed: $e");
-    }
+    await sendData(frameBytes, encrypt: encrypt);
   }
 
   Future<void> sendAesKeyReq() async {

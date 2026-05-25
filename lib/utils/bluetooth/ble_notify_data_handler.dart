@@ -11,6 +11,8 @@ import 'dart:async';
 import 'dart:typed_data';
 
 // import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:techno_switch_solar_app/ble/ble_crypto.dart';
+import 'package:techno_switch_solar_app/ble/ble_encryption_config.dart';
 import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
 import 'package:get/get.dart';
 import 'package:techno_switch_solar_app/models/frame_data.dart';
@@ -255,6 +257,7 @@ class BleNotifyDataHandler extends GetxController {
 
     FrameData? frame;
     final bool shouldDecrypt =
+        kBleEncryptionEnabled &&
         encryptionDecryptionState.value == EncryptionDecryptionState.enabled &&
         currentBleState.value != BleStateMachine.reqEncryptionKey;
 
@@ -576,12 +579,22 @@ class BleNotifyDataHandler extends GetxController {
       return;
     }
 
-    final String keyHex =
-        frame.payloadData.map((String byte) => byte.toLowerCase()).join();
+    final List<int> payloadBytes = frame.payloadData
+        .map((String byte) => int.parse(byte, radix: 16))
+        .toList();
+    final Uint8List key16 =
+        BleCrypto.extractKeyFromHandshakePayload(payloadBytes);
+    final String keyHex = key16
+        .map((int b) => b.toRadixString(16).padLeft(2, '0'))
+        .join();
     logger.Logger('Encryption key -  payload bytes: ${frame.payloadData}');
     logger.Logger('Encryption key -  (hex): $keyHex');
     await EncryptionKeyStore.instance.saveKey(keyHex);
-    encryptionDecryptionState(EncryptionDecryptionState.enabled);
+    encryptionDecryptionState(
+      kBleEncryptionEnabled
+          ? EncryptionDecryptionState.enabled
+          : EncryptionDecryptionState.disabled,
+    );
 
     _emitEvent(
       BleHandshakeEvent(
