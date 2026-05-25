@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -17,12 +18,14 @@ class DiagnosticVoltageTile extends StatelessWidget {
     super.key,
     required this.label,
     required this.notifier,
+    required this.isLive,
     this.unit = 'V',
     this.decimals = 2,
   });
 
   final String label;
   final ValueNotifier<double> notifier;
+  final ValueListenable<bool> isLive;
   final String unit;
   final int decimals;
 
@@ -33,86 +36,91 @@ class DiagnosticVoltageTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<double>(
-      valueListenable: notifier,
-      builder: (_, value, __) {
-        final band = diagnosticVoltageBandFor(value);
-        final accent = _accentFor(band);
+    return ValueListenableBuilder<bool>(
+      valueListenable: isLive,
+      builder: (_, live, __) {
+        return ValueListenableBuilder<double>(
+          valueListenable: notifier,
+          builder: (_, value, __) {
+            final band = diagnosticVoltageBandFor(value);
+            final accent = _accentFor(band);
 
-        return Container(
-          decoration: BoxDecoration(
-            // color: _surfaceMuted,
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: _border),
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: Stack(
-            clipBehavior: Clip.none,
-            children: [
-              Positioned(
-                left: 0,
-                top: 0,
-                bottom: 0,
-                child: Container(width: 5, color: accent),
+            return Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: _border),
               ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(13, 8, 10, 8),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Row(
+              clipBehavior: Clip.antiAlias,
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Positioned(
+                    left: 0,
+                    top: 0,
+                    bottom: 0,
+                    child: Container(width: 5, color: accent),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(13, 8, 10, 8),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(
-                          label,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: GoogleFonts.inter(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w500,
-                            color: _textMuted,
-                            height: 1.2,
-                          ),
+                        Row(
+                          children: [
+                            Text(
+                              label,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: GoogleFonts.inter(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w500,
+                                color: _textMuted,
+                                height: 1.2,
+                              ),
+                            ),
+                            Spacer(),
+                            statusBadgeIcon(band, isLive: live),
+                          ],
                         ),
-                        Spacer(),
-                        statusBadgeIcon(band),
+                        const SizedBox(height: 4),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.baseline,
+                          textBaseline: TextBaseline.alphabetic,
+                          children: [
+                            Text(
+                              value.toStringAsFixed(decimals),
+                              style: GoogleFonts.inter(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
+                                color: _valueColor(band),
+                                height: 1.1,
+                                fontFeatures: const [
+                                  FontFeature.tabularFigures(),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 3),
+                            Text(
+                              unit,
+                              style: GoogleFonts.inter(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: _textMuted,
+                                height: 1.1,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        statusBadge(band),
                       ],
                     ),
-                    const SizedBox(height: 4),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.baseline,
-                      textBaseline: TextBaseline.alphabetic,
-                      children: [
-                        Text(
-                          value.toStringAsFixed(decimals),
-                          style: GoogleFonts.inter(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                            color: _valueColor(band),
-                            height: 1.1,
-                            fontFeatures: const [FontFeature.tabularFigures()],
-                          ),
-                        ),
-                        const SizedBox(width: 3),
-                        Text(
-                          unit,
-                          style: GoogleFonts.inter(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: _textMuted,
-                            height: 1.1,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    // statusBar(band: band, progress: 0.5),
-                    statusBadge(band),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            );
+          },
         );
       },
     );
@@ -147,15 +155,8 @@ class DiagnosticVoltageTile extends StatelessWidget {
     );
   }
 
-  Widget statusBadgeIcon(DiagnosticVoltageBand band) {
-    return Container(
-      width: 10,
-      height: 10,
-      decoration: BoxDecoration(
-        color: _valueColor(band),
-        borderRadius: BorderRadius.circular(5),
-      ),
-    );
+  Widget statusBadgeIcon(DiagnosticVoltageBand band, {required bool isLive}) {
+    return _DiagnosticStatusDot(color: _valueColor(band), isLive: isLive);
   }
 
   Widget statusBadge(DiagnosticVoltageBand band) {
@@ -220,5 +221,79 @@ class DiagnosticVoltageTile extends StatelessWidget {
       return "High";
     }
     return "Critical";
+  }
+}
+
+class _DiagnosticStatusDot extends StatefulWidget {
+  const _DiagnosticStatusDot({required this.color, required this.isLive});
+
+  final Color color;
+  final bool isLive;
+
+  @override
+  State<_DiagnosticStatusDot> createState() => _DiagnosticStatusDotState();
+}
+
+class _DiagnosticStatusDotState extends State<_DiagnosticStatusDot>
+    with SingleTickerProviderStateMixin {
+  static const double _size = 10;
+
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    );
+    if (widget.isLive) {
+      _controller.repeat(reverse: true);
+    }
+  }
+
+  @override
+  void didUpdateWidget(_DiagnosticStatusDot oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isLive && !oldWidget.isLive) {
+      _controller.repeat(reverse: true);
+    } else if (!widget.isLive && oldWidget.isLive) {
+      _controller
+        ..stop()
+        ..value = 0;
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final dot = Container(
+      width: _size,
+      height: _size,
+      decoration: BoxDecoration(
+        color: widget.color,
+        borderRadius: BorderRadius.circular(_size / 2),
+      ),
+    );
+
+    if (!widget.isLive) return dot;
+
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (_, __) {
+        final t = Curves.easeInOut.transform(_controller.value);
+        final scale = 1.0 + 0.25 * t;
+        final opacity = 0.55 + 0.45 * t;
+        return Transform.scale(
+          scale: scale,
+          child: Opacity(opacity: opacity, child: dot),
+        );
+      },
+    );
   }
 }

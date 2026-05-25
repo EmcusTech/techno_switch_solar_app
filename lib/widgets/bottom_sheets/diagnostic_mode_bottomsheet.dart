@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
@@ -154,6 +155,7 @@ class _DiagnosticInfoBottomSheetState extends State<DiagnosticInfoBottomSheet> {
                               children: [
                                 _section(
                                   title: 'Sounders',
+                                  isLive: p.isAdcSetupFetchCommandActive,
                                   items: [
                                     _VoltRef('SND 1', p.sounderOneAdcValue),
                                     _VoltRef('SND 2', p.sounderTwoAdcValue),
@@ -162,6 +164,7 @@ class _DiagnosticInfoBottomSheetState extends State<DiagnosticInfoBottomSheet> {
                                 ),
                                 _section(
                                   title: 'Power',
+                                  isLive: p.isAdcSetupFetchCommandActive,
                                   items: [
                                     _VoltRef('Vaux', p.vauxAdcValue),
                                     _VoltRef('Vin', p.vinAdcValue),
@@ -170,6 +173,7 @@ class _DiagnosticInfoBottomSheetState extends State<DiagnosticInfoBottomSheet> {
                                 ),
                                 _section(
                                   title: 'Inputs',
+                                  isLive: p.isAdcSetupFetchCommandActive,
                                   items: [
                                     _VoltRef('Prog In', p.progInputAdcValue),
                                     _VoltRef('Hold In', p.holdInputAdcValue),
@@ -177,6 +181,7 @@ class _DiagnosticInfoBottomSheetState extends State<DiagnosticInfoBottomSheet> {
                                 ),
                                 _section(
                                   title: 'Zones',
+                                  isLive: p.isAdcSetupFetchCommandActive,
                                   items: [
                                     _VoltRef('Zone 1', p.zone1AdcValue),
                                     _VoltRef('Zone 2', p.zone2AdcValue),
@@ -185,6 +190,7 @@ class _DiagnosticInfoBottomSheetState extends State<DiagnosticInfoBottomSheet> {
                                 ),
                                 _section(
                                   title: 'Other',
+                                  isLive: p.isAdcSetupFetchCommandActive,
                                   items: [_VoltRef('Earth', p.earthAdcValue)],
                                 ),
                               ],
@@ -264,7 +270,11 @@ class _DiagnosticInfoBottomSheetState extends State<DiagnosticInfoBottomSheet> {
     );
   }
 
-  Widget _section({required String title, required List<_VoltRef> items}) {
+  Widget _section({
+    required String title,
+    required ValueListenable<bool> isLive,
+    required List<_VoltRef> items,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Container(
@@ -309,15 +319,15 @@ class _DiagnosticInfoBottomSheetState extends State<DiagnosticInfoBottomSheet> {
                       ),
                     ],
                   ),
-                  // Spacer(),
-                  // Container(
-                  //   height: 14,
-                  //   width: 14,
-                  //   decoration: BoxDecoration(
-                  //     shape: BoxShape.circle,
-                  //     color: _valueColor(DiagnosticVoltageBand.nominal),
-                  //   ),
-                  // ),
+                  Spacer(),
+                  Container(
+                    height: 14,
+                    width: 14,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: _valueColor(DiagnosticVoltageBand.nominal),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -347,6 +357,7 @@ class _DiagnosticInfoBottomSheetState extends State<DiagnosticInfoBottomSheet> {
                           child: DiagnosticVoltageTile(
                             label: item.label,
                             notifier: item.notifier,
+                            isLive: isLive,
                             unit: 'V',
                           ),
                         ),
