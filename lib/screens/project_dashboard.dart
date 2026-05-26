@@ -52,6 +52,8 @@ import 'package:techno_switch_solar_app/widgets/bottom_sheets/walk_test_zone_bot
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/zone_mode_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/firmware_upgrade_bottom_sheet.dart';
 import 'package:techno_switch_solar_app/widgets/panel_access_code_dialog.dart';
+import 'package:techno_switch_solar_app/widgets/bootloader_connect_flow.dart';
+import 'package:techno_switch_solar_app/widgets/ble_connecting_dialog.dart';
 
 class ProjectDashboardScreen extends StatefulWidget {
   final String panelVersionNo;
@@ -809,19 +811,37 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
       final bleController = Get.find<BleLogController>();
       await bleController.connectToDevice(device: device);
 
+      var activeDevice = device;
+
+      // The connecting dialog closes when handshake completes (~500ms delay).
+      await Future.delayed(const Duration(milliseconds: 600));
+      if (!mounted) return;
+
+      final resolvedDevice = await resolveBootloaderModeOnConnect(
+        context: context,
+        bleController: bleController,
+        bluetoothService: _bluetoothService,
+        device: device,
+      );
+      if (resolvedDevice == null) {
+        if (mounted) {
+          setState(() => _isConnecting = false);
+        }
+        return;
+      }
+      activeDevice = resolvedDevice;
+
       if (mounted) {
         setState(() {
-          _selectedDevice = device;
+          _selectedDevice = activeDevice;
           _isConnecting = false;
         });
       }
 
-      widget.onDeviceReconnected?.call(device);
+      widget.onDeviceReconnected?.call(activeDevice);
 
-      // The connecting dialog closes when handshake completes (~500ms delay).
       // Match the home/scanned flow: require access-code validation after reconnect
       // (e.g. idle disconnect) so session state and tiles behave like a fresh entry.
-      await Future.delayed(const Duration(milliseconds: 600));
       if (!mounted) return;
 
       bleController.bleProcess.clearSessionAccessCode();
@@ -840,7 +860,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
       await offerOptionalFullConfigDownloadAfterConnect(
         context: context,
         isMounted: () => mounted,
-        device: device,
+        device: activeDevice,
         refreshNotifiers: _panelRefreshNotifiers,
         navigatingToDeviceConnecting: _navigatingToDeviceConnecting,
       );
@@ -1122,144 +1142,56 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
   }
 
   Future<void> showBootloaderModeDialog({required BuildContext context}) async {
-    await showDialog(
+    final wantUpgrade = await showBootloaderUpgradeOfferFromDashboardDialog(
+      context,
+    );
+    if (wantUpgrade != true || !context.mounted) return;
+
+    final upgraded = await showFirmwareUpgradeBottomSheetForConnect(
       context: context,
-      barrierDismissible: false,
-      builder: (context) {
-        return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+      connectedDevice: _selectedDevice,
+    );
+    if (!upgraded || !mounted) return;
+
+    final bleController = Get.find<BleLogController>();
+    await bleController.bleManager.disconnectConnectedDevice();
+
+    final refreshed = await runWithBleConnectingDialog<DiscoveredDevice?>(
+      context: context,
+      device: _selectedDevice,
+      bleController: bleController,
+      messages: BleConnectingDialogMessages.afterFirmwareUpgrade,
+      operation:
+          () => reconnectBleDeviceInAppModeAfterUpgrade(
+            bleController: bleController,
+            bluetoothService: _bluetoothService,
+            originalDevice: _selectedDevice,
           ),
-          child: Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 64,
-                  height: 64,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFBDEE1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Center(
-                    child: Icon(
-                      Icons.warning,
-                      color: Color(0xFFEC1D24),
-                      size: 32,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Device is in bootloader mode',
-                  style: GoogleFonts.inter(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF3D3D3D),
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Tap on Update to update the firmware.',
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w400,
-                    color: const Color(0xFF666666),
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 20),
-                Row(
-                  children: [
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () {
-                          Navigator.of(context).pop();
-                        },
-                        child: Container(
-                          height: 48,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFEFEEEE),
-                            borderRadius: BorderRadius.circular(24),
-                            border: Border.all(
-                              color: const Color(0xFFD0D0D0),
-                              width: 1,
-                            ),
-                          ),
-                          child: Center(
-                            child: Text(
-                              'Close',
-                              style: GoogleFonts.inter(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: const Color(0xFF666666),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () async {
-                          final navigator = Navigator.of(context);
-                          navigator.pop(); // close dialog
-                          if (!Get.isRegistered<UpdatesController>()) {
-                            Get.put(UpdatesController());
-                          }
-                          showModalBottomSheet(
-                            context: context,
-                            isScrollControlled: true,
-                            backgroundColor: Colors.transparent,
-                            isDismissible: false,
-                            enableDrag: false,
-                            builder:
-                                (context) => FirmwareUpgradeBottomSheet(
-                                  connectedDevice: widget.selectedDevice,
-                                ),
-                          );
-                        },
-                        child: Container(
-                          height: 48,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFEC1D24),
-                            borderRadius: BorderRadius.circular(24),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0xFFEC1D24).withOpacity(0.3),
-                                blurRadius: 8,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: Center(
-                            child: Text(
-                              'Update',
-                              style: GoogleFonts.inter(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+    );
+    if (refreshed == null || !mounted) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Device not found after firmware upgrade. Please reconnect.',
             ),
           ),
         );
-      },
+      }
+      return;
+    }
+
+    setState(() => _selectedDevice = refreshed);
+
+    bleController.bleProcess.clearSessionAccessCode();
+    final ok = await showPanelAccessCodeGatewayDialog(
+      context: context,
+      onStartValidation:
+          () => bleController.startSessionAccessCodeValidation(),
     );
+    if (!ok || !mounted) {
+      bleController.bleManager.disconnectConnectedDevice();
+    }
   }
 
   Future<void> showBluetootohOffDialog({required BuildContext context}) async {

@@ -894,7 +894,7 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
               visible: _currentStep != FirmwareUpgradeStep.progress,
               child: IconButton(
                 icon: Icon(Icons.close),
-                onPressed: () => Navigator.of(context).pop(),
+                onPressed: () => Navigator.of(context).pop(false),
               ),
             ),
           ],
@@ -1953,7 +1953,7 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
         SizedBox(height: 32),
         CommonCtaButton(
           onTap: () {
-            Navigator.of(context).pop();
+            Navigator.of(context).pop(isSuccess);
             // Reset state
             _controller.downloadingStatus.value = fw.DownloadStatus.downloading;
             _controller.isFileCrcMatched.value = false;

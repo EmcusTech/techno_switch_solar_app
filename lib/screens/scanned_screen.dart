@@ -20,6 +20,8 @@ import 'package:techno_switch_solar_app/screens/simple_site_creation_screen.dart
 import 'package:techno_switch_solar_app/utils/ble_name_utils.dart';
 import 'package:techno_switch_solar_app/panel_config/post_connect_bulk_download_offer.dart';
 import 'package:techno_switch_solar_app/widgets/panel_access_code_dialog.dart';
+import 'package:techno_switch_solar_app/widgets/bootloader_connect_flow.dart';
+import 'package:techno_switch_solar_app/utils/bluetooth_service.dart';
 import 'package:usb_serial/usb_serial.dart';
 // import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
@@ -54,6 +56,7 @@ class _ScannedScreenState extends State<ScannedScreen> {
   final PanelService _panelService = PanelService();
   final SiteService _siteService = SiteService();
   final BleManager _bleManager = Get.find<BleManager>();
+  final BluetoothService _bluetoothService = BluetoothService();
 
   Future<int?> _promptUserToPickOrCreateSite({
     required List<SiteModel> sites,
@@ -875,6 +878,18 @@ class _ScannedScreenState extends State<ScannedScreen> {
 
                 if (!screenContext.mounted) return;
 
+                var activeDevice = device;
+                if (widget.scanType == ScanType.bluetooth) {
+                  final resolvedDevice = await resolveBootloaderModeOnConnect(
+                    context: screenContext,
+                    bleController: bleController,
+                    bluetoothService: _bluetoothService,
+                    device: device,
+                  );
+                  if (resolvedDevice == null) return;
+                  activeDevice = resolvedDevice;
+                }
+
                 if (widget.isLiveEvent == true) {
                   bleController.bleProcess.processDesc.value = "";
                   if (bleController.bleProcess.sessionAccessCodeReady.value &&
@@ -887,7 +902,7 @@ class _ScannedScreenState extends State<ScannedScreen> {
                         builder:
                             (context) => LogRetrievalLoadingScreen(
                               scanType: ScanType.bluetooth,
-                              selectedDevice: device,
+                              selectedDevice: activeDevice,
                               isLiveEvent: widget.isLiveEvent,
                             ),
                       ),
@@ -895,7 +910,7 @@ class _ScannedScreenState extends State<ScannedScreen> {
                   } else {
                     await showPanelAccessCodeLogRetrievalSheet(
                       context: screenContext,
-                      device: device,
+                      device: activeDevice,
                       isLiveEvent: widget.isLiveEvent,
                       onStartValidation: () => bleController.startLogRetrieval(),
                     );
@@ -941,7 +956,7 @@ class _ScannedScreenState extends State<ScannedScreen> {
                     return;
                   }
 
-                  final bleNameForSiteLookup = device.name.trim();
+                  final bleNameForSiteLookup = activeDevice.name.trim();
                   final preAssocPanel =
                       await _panelService.getPanelByPanelId(bleNameForSiteLookup) ??
                       await _panelService.getPanelByBleName(bleNameForSiteLookup);
@@ -949,7 +964,7 @@ class _ScannedScreenState extends State<ScannedScreen> {
                       preAssocPanel?.siteId == null;
 
                   final siteId = await _ensureConnectedPanelHasSite(
-                    device: device,
+                    device: activeDevice,
                   );
 
                   if (siteId == null) {
@@ -972,10 +987,10 @@ class _ScannedScreenState extends State<ScannedScreen> {
                       MaterialPageRoute(
                         builder:
                             (_) => EventLogScreen(
-                              connectedDevice: device,
+                              connectedDevice: activeDevice,
                               logDataList: [],
-                              panelVersionNo: device.id,
-                              panelName: device.name,
+                              panelVersionNo: activeDevice.id,
+                              panelName: activeDevice.name,
                               isLiveEventLogs: widget.isLiveEventLogs,
                             ),
                       ),
@@ -995,7 +1010,7 @@ class _ScannedScreenState extends State<ScannedScreen> {
                     await offerOptionalFullConfigDownloadAfterConnect(
                       context: screenContext,
                       isMounted: () => screenContext.mounted,
-                      device: device,
+                      device: activeDevice,
                       awaitDownloadIfAccepted: true,
                       showConfigLogCompareAfterDownload: true,
                       panelHadNoSiteBeforeConnect:
@@ -1010,9 +1025,9 @@ class _ScannedScreenState extends State<ScannedScreen> {
                       MaterialPageRoute(
                         builder:
                             (_) => ProjectDashboardScreen(
-                              selectedDevice: device,
-                              panelVersionNo: device.id,
-                              panelName: device.name,
+                              selectedDevice: activeDevice,
+                              panelVersionNo: activeDevice.id,
+                              panelName: activeDevice.name,
                               siteId: siteId,
                             ),
                       ),
