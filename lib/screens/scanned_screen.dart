@@ -830,12 +830,18 @@ class _ScannedScreenState extends State<ScannedScreen> {
         bleController.bleManager.handshakeCompleteNotifier;
     final maxBleConnectionRetriesReachedNotifier =
         bleController.bleManager.maxBleConnectionRetriesReached;
+    final networkCommFailureNotifier =
+        bleController.bleProcess.communicationFailureMessage;
+    final maxOtherPacketsRetriesNotifier =
+        bleController.bleProcess.maxOtherPacketsRetriesReached;
     bool hasNavigated = false;
 
     final mergedListenable = Listenable.merge([
       connectionNotifier,
       handshakeCompleteNotifier,
       maxBleConnectionRetriesReachedNotifier,
+      networkCommFailureNotifier,
+      maxOtherPacketsRetriesNotifier,
     ]);
 
     showDialog(
@@ -850,6 +856,11 @@ class _ScannedScreenState extends State<ScannedScreen> {
             final handshakeComplete = handshakeCompleteNotifier.value;
             final maxBleConnectionRetriesReached =
                 maxBleConnectionRetriesReachedNotifier.value;
+            final networkCommMessage = networkCommFailureNotifier.value;
+            final showNetworkCommError =
+                networkCommMessage != null && networkCommMessage.isNotEmpty;
+            final showConnectionError =
+                maxBleConnectionRetriesReached || showNetworkCommError;
 
             // When handshake complete, close dialog and navigate
             if (handshakeComplete && !hasNavigated) {
@@ -1043,16 +1054,24 @@ class _ScannedScreenState extends State<ScannedScreen> {
                                   size: 32,
                                   color: Colors.green,
                                 )
+                                : showNetworkCommError
+                                ? const Icon(
+                                  Icons.error_outline,
+                                  size: 32,
+                                  color: Color(0xFFEC1D24),
+                                )
                                 : Lottie.asset(
                                   'assets/jsons/ble_connecting.json',
-                                  animate: !maxBleConnectionRetriesReached,
+                                  animate: !showConnectionError,
                                 ),
                       ),
                     ),
                     SizedBox(height: 16),
                     // Title
                     Text(
-                      handshakeComplete
+                      showNetworkCommError
+                          ? 'Connection problem'
+                          : handshakeComplete
                           ? 'Device Connected!'
                           : maxBleConnectionRetriesReached
                           ? 'Max Connection Retries Reached!'
@@ -1071,6 +1090,8 @@ class _ScannedScreenState extends State<ScannedScreen> {
                     Text(
                       handshakeComplete
                           ? 'Preparing to navigate...'
+                          : showNetworkCommError
+                          ? networkCommMessage
                           : maxBleConnectionRetriesReached
                           ? 'Please scan again and connect to the device'
                           : isConnected
@@ -1084,7 +1105,7 @@ class _ScannedScreenState extends State<ScannedScreen> {
                       textAlign: TextAlign.center,
                     ),
                     SizedBox(height: 16),
-                    if (maxBleConnectionRetriesReached)
+                    if (showConnectionError)
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
@@ -1095,6 +1116,10 @@ class _ScannedScreenState extends State<ScannedScreen> {
                             ),
                           ),
                           onPressed: () {
+                            if (showNetworkCommError) {
+                              bleController.bleProcess
+                                  .clearCommunicationFailure();
+                            }
                             Navigator.of(dialogContext).pop();
                           },
                           child: Text(

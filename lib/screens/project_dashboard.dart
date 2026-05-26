@@ -1931,7 +1931,9 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 peripheralName: 'Relays',
                 iconPath: 'assets/svgs/peripheral_relay_icon.svg',
                 onTap: () {
-                  if (BleMsdUtils.isBootloader(_selectedDevice.manufacturerData)) {
+                  if (BleMsdUtils.isBootloader(
+                    _selectedDevice.manufacturerData,
+                  )) {
                     showBootloaderModeDialog(context: context);
                     return;
                   }
@@ -1969,7 +1971,9 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 peripheralName: 'Inputs',
                 iconPath: 'assets/svgs/peripheral_input_icon.svg',
                 onTap: () {
-                  if (BleMsdUtils.isBootloader(_selectedDevice.manufacturerData)) {
+                  if (BleMsdUtils.isBootloader(
+                    _selectedDevice.manufacturerData,
+                  )) {
                     showBootloaderModeDialog(context: context);
                     return;
                   }
@@ -2006,7 +2010,9 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 peripheralName: 'Zones',
                 iconPath: 'assets/svgs/peripheral_zones_icon.svg',
                 onTap: () {
-                  if (BleMsdUtils.isBootloader(_selectedDevice.manufacturerData)) {
+                  if (BleMsdUtils.isBootloader(
+                    _selectedDevice.manufacturerData,
+                  )) {
                     showBootloaderModeDialog(context: context);
                     return;
                   }
@@ -2044,7 +2050,9 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 peripheralName: 'Sounders',
                 iconPath: 'assets/svgs/peripheral_sounder_icon.svg',
                 onTap: () {
-                  if (BleMsdUtils.isBootloader(_selectedDevice.manufacturerData)) {
+                  if (BleMsdUtils.isBootloader(
+                    _selectedDevice.manufacturerData,
+                  )) {
                     showBootloaderModeDialog(context: context);
                     return;
                   }
@@ -2088,7 +2096,9 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 iconPath: 'assets/svgs/peripheral_prog_hold_icon.svg',
                 isDisabled: true,
                 onTap: () {
-                  if (BleMsdUtils.isBootloader(_selectedDevice.manufacturerData)) {
+                  if (BleMsdUtils.isBootloader(
+                    _selectedDevice.manufacturerData,
+                  )) {
                     showBootloaderModeDialog(context: context);
                     return;
                   }
@@ -2127,7 +2137,9 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 peripheralName: 'Module Info',
                 iconPath: 'assets/svgs/peripheral_aux_icon.svg',
                 onTap: () {
-                  if (BleMsdUtils.isBootloader(_selectedDevice.manufacturerData)) {
+                  if (BleMsdUtils.isBootloader(
+                    _selectedDevice.manufacturerData,
+                  )) {
                     showBootloaderModeDialog(context: context);
                     return;
                   }
@@ -2153,7 +2165,9 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 peripheralName: 'L-Bus',
                 iconPath: 'assets/svgs/peripheral_l_bus_icon.svg',
                 onTap: () {
-                  if (BleMsdUtils.isBootloader(_selectedDevice.manufacturerData)) {
+                  if (BleMsdUtils.isBootloader(
+                    _selectedDevice.manufacturerData,
+                  )) {
                     showBootloaderModeDialog(context: context);
                     return;
                   }
@@ -2192,7 +2206,9 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 peripheralName: 'Ext Out',
                 iconPath: 'assets/svgs/peripheral_ext_out_icon.svg',
                 onTap: () {
-                  if (BleMsdUtils.isBootloader(_selectedDevice.manufacturerData)) {
+                  if (BleMsdUtils.isBootloader(
+                    _selectedDevice.manufacturerData,
+                  )) {
                     showBootloaderModeDialog(context: context);
                     return;
                   }
@@ -2851,7 +2867,9 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 peripheralName: 'Event Log',
                 iconPath: 'assets/svgs/panel_action_event_log_icon.svg',
                 onTap: () {
-                  if (BleMsdUtils.isBootloader(_selectedDevice.manufacturerData)) {
+                  if (BleMsdUtils.isBootloader(
+                    _selectedDevice.manufacturerData,
+                  )) {
                     showBootloaderModeDialog(context: context);
                     return;
                   }
@@ -2901,7 +2919,9 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 peripheralName: 'Service Due',
                 iconPath: 'assets/svgs/panel_action_service_due_icon.svg',
                 onTap: () {
-                  if (BleMsdUtils.isBootloader(_selectedDevice.manufacturerData)) {
+                  if (BleMsdUtils.isBootloader(
+                    _selectedDevice.manufacturerData,
+                  )) {
                     showBootloaderModeDialog(context: context);
                     return;
                   }
@@ -2941,7 +2961,9 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 peripheralName: 'Access Code',
                 iconPath: 'assets/svgs/panel_action_access_code_icon.svg',
                 onTap: () {
-                  if (BleMsdUtils.isBootloader(_selectedDevice.manufacturerData)) {
+                  if (BleMsdUtils.isBootloader(
+                    _selectedDevice.manufacturerData,
+                  )) {
                     showBootloaderModeDialog(context: context);
                     return;
                   }
@@ -3065,7 +3087,9 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 peripheralName: 'Diagnostics',
                 iconPath: 'assets/svgs/diagnostic_icon.svg',
                 onTap: () {
-                  if (BleMsdUtils.isBootloader(_selectedDevice.manufacturerData)) {
+                  if (BleMsdUtils.isBootloader(
+                    _selectedDevice.manufacturerData,
+                  )) {
                     showBootloaderModeDialog(context: context);
                     return;
                   }
@@ -3100,7 +3124,9 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 peripheralName: 'Walk Test',
                 iconPath: 'assets/svgs/walk_test_icon.svg',
                 onTap: () {
-                  if (BleMsdUtils.isBootloader(_selectedDevice.manufacturerData)) {
+                  if (BleMsdUtils.isBootloader(
+                    _selectedDevice.manufacturerData,
+                  )) {
                     showBootloaderModeDialog(context: context);
                     return;
                   }
@@ -3138,7 +3164,9 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 peripheralName: 'Config Log',
                 iconPath: 'assets/svgs/panel_action_config_log_icon.svg',
                 onTap: () {
-                  if (BleMsdUtils.isBootloader(_selectedDevice.manufacturerData)) {
+                  if (BleMsdUtils.isBootloader(
+                    _selectedDevice.manufacturerData,
+                  )) {
                     showBootloaderModeDialog(context: context);
                     return;
                   }
@@ -3149,7 +3177,9 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 peripheralName: 'Test Mode',
                 iconPath: 'assets/svgs/peripheral_prog_hold_icon.svg',
                 onTap: () {
-                  if (BleMsdUtils.isBootloader(_selectedDevice.manufacturerData)) {
+                  if (BleMsdUtils.isBootloader(
+                    _selectedDevice.manufacturerData,
+                  )) {
                     showBootloaderModeDialog(context: context);
                     return;
                   }

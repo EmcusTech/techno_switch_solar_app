@@ -4,6 +4,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
+import 'package:techno_switch_solar_app/ble/ble_process.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/widgets/diagnostic_voltage_tile.dart';
@@ -47,14 +48,77 @@ String diagnosticSectionIconAsset(
   return 'assets/svgs/diagnostics/${prefix}_${suffix}_icon.svg';
 }
 
-String diagnosticSectionSubtitle(int channelCount, DiagnosticVoltageBand band) {
+String diagnosticSectionSubtitle(Iterable<double> voltages) {
+  final voltageList = voltages.toList();
+  final channelCount = voltageList.length;
   final channels = channelCount == 1 ? '1 channel' : '$channelCount channels';
+
+  final band = aggregateDiagnosticSectionBand(voltageList);
+  var bandCount = 0;
+  for (final voltage in voltageList) {
+    if (diagnosticVoltageBandFor(voltage) == band) {
+      bandCount++;
+    }
+  }
   final status = switch (band) {
     DiagnosticVoltageBand.nominal => 'All Nominal',
     DiagnosticVoltageBand.high => 'High',
     DiagnosticVoltageBand.critical => 'Critical',
   };
-  return '$channels · $status';
+  final bandLabel = bandCount == 1 ? '1 $status' : '$bandCount $status';
+  return '$channels · $bandLabel';
+}
+
+class DiagnosticBandCounts {
+  const DiagnosticBandCounts({
+    required this.nominal,
+    required this.high,
+    required this.critical,
+  });
+
+  final int nominal;
+  final int high;
+  final int critical;
+}
+
+DiagnosticBandCounts countDiagnosticBands(Iterable<double> voltages) {
+  var nominal = 0;
+  var high = 0;
+  var critical = 0;
+  for (final voltage in voltages) {
+    switch (diagnosticVoltageBandFor(voltage)) {
+      case DiagnosticVoltageBand.nominal:
+        nominal++;
+      case DiagnosticVoltageBand.high:
+        high++;
+      case DiagnosticVoltageBand.critical:
+        critical++;
+    }
+  }
+  return DiagnosticBandCounts(nominal: nominal, high: high, critical: critical);
+}
+
+List<ValueNotifier<double>> allDiagnosticAdcNotifiers(BleProcess process) {
+  return [
+    process.sounderOneAdcValue,
+    process.sounderTwoAdcValue,
+    process.sounderThreeAdcValue,
+    process.vauxAdcValue,
+    process.vinAdcValue,
+    process.dischargeAdcValue,
+    process.progInputAdcValue,
+    process.holdInputAdcValue,
+    process.zone1AdcValue,
+    process.zone2AdcValue,
+    process.zone3AdcValue,
+    process.earthAdcValue,
+  ];
+}
+
+List<double> allDiagnosticAdcValues(BleProcess process) {
+  return allDiagnosticAdcNotifiers(
+    process,
+  ).map((notifier) => notifier.value).toList();
 }
 
 class DiagnosticInfoBottomSheet extends StatefulWidget {
@@ -132,7 +196,6 @@ class _DiagnosticInfoBottomSheetState extends State<DiagnosticInfoBottomSheet> {
     }
 
     final p = manager!.bleProcess;
-    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
     return SafeArea(
       child: AnimatedSize(
@@ -193,8 +256,7 @@ class _DiagnosticInfoBottomSheetState extends State<DiagnosticInfoBottomSheet> {
                         children: [
                           _dragHandle(),
                           _title('Diagnostics'),
-
-                          const SizedBox(height: 24),
+                          const SizedBox(height: 16),
                           Expanded(
                             child: ListView(
                               controller: scrollController,
@@ -202,6 +264,8 @@ class _DiagnosticInfoBottomSheetState extends State<DiagnosticInfoBottomSheet> {
                                 parent: AlwaysScrollableScrollPhysics(),
                               ),
                               children: [
+                                _diagnosticSummaryRow(p),
+                                const SizedBox(height: 16),
                                 _section(
                                   title: 'Sounders',
                                   isLive: p.isAdcSetupFetchCommandActive,
@@ -263,12 +327,8 @@ class _DiagnosticInfoBottomSheetState extends State<DiagnosticInfoBottomSheet> {
                                 width: double.infinity,
                                 child: OutlinedButton(
                                   style: OutlinedButton.styleFrom(
-                                    foregroundColor:
-                                        isFetchActive
-                                            ? Colors.white
-                                            : _brandRed,
-                                    backgroundColor:
-                                        isFetchActive ? _brandRed : null,
+                                    foregroundColor: Colors.white,
+                                    backgroundColor: _brandRed,
                                     side: const BorderSide(color: _brandRed),
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(22),
@@ -329,6 +389,126 @@ class _DiagnosticInfoBottomSheetState extends State<DiagnosticInfoBottomSheet> {
     );
   }
 
+  Widget _diagnosticSummaryRow(BleProcess process) {
+    final notifiers = allDiagnosticAdcNotifiers(process);
+    return AnimatedBuilder(
+      animation: Listenable.merge(notifiers),
+      builder: (context, _) {
+        final counts = countDiagnosticBands(allDiagnosticAdcValues(process));
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 4),
+          child: Row(
+            children: [
+              Expanded(
+                child: _summaryChip(
+                  label: 'Normal',
+                  count: counts.nominal,
+                  band: DiagnosticVoltageBand.nominal,
+                  iconAsset:
+                      'assets/svgs/diagnostics/diagnostics_normal_icon.svg',
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _summaryChip(
+                  label: 'High',
+                  count: counts.high,
+                  band: DiagnosticVoltageBand.high,
+                  iconAsset:
+                      'assets/svgs/diagnostics/diagnostics_high_icon.svg',
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _summaryChip(
+                  label: 'Critical',
+                  count: counts.critical,
+                  band: DiagnosticVoltageBand.critical,
+                  iconAsset:
+                      'assets/svgs/diagnostics/diagnostics_critical_icon.svg',
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _summaryChip({
+    required String label,
+    required int count,
+    required DiagnosticVoltageBand band,
+    required String iconAsset,
+  }) {
+    final accent = _valueColor(band);
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.01),
+            offset: const Offset(3, 6),
+            blurRadius: 3,
+          ),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            offset: const Offset(2, 3),
+            blurRadius: 2,
+          ),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.09),
+            offset: const Offset(1, 1),
+            blurRadius: 2,
+          ),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.10), blurRadius: 1),
+        ],
+      ),
+      child: Container(
+        decoration: BoxDecoration(borderRadius: BorderRadius.circular(8)),
+        clipBehavior: Clip.antiAlias,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: Container(height: 5, color: accent),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SvgPicture.asset(iconAsset),
+                  const SizedBox(height: 8),
+                  Text(
+                    '$count',
+                    style: GoogleFonts.inter(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    label,
+                    style: GoogleFonts.inter(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: Color(0xFF678196),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _section({
     required String title,
     required ValueListenable<bool> isLive,
@@ -383,8 +563,7 @@ class _DiagnosticInfoBottomSheetState extends State<DiagnosticInfoBottomSheet> {
                           ),
                           Text(
                             diagnosticSectionSubtitle(
-                              items.length,
-                              sectionBand,
+                              items.map((item) => item.notifier.value),
                             ),
                             style: GoogleFonts.inter(
                               fontSize: 11,
@@ -395,13 +574,17 @@ class _DiagnosticInfoBottomSheetState extends State<DiagnosticInfoBottomSheet> {
                         ],
                       ),
                       Spacer(),
-                      Container(
-                        height: 14,
-                        width: 14,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: _valueColor(sectionBand),
-                        ),
+                      // Container(
+                      //   height: 14,
+                      //   width: 14,
+                      //   decoration: BoxDecoration(
+                      //     shape: BoxShape.circle,
+                      //     color: _valueColor(sectionBand),
+                      //   ),
+                      // ),
+                      // const SizedBox(width: 10),
+                      SvgPicture.asset(
+                        'assets/svgs/diagnostics/diagnostics_dropdown_icon.svg',
                       ),
                     ],
                   );

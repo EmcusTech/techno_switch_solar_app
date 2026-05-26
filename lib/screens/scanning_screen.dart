@@ -1816,6 +1816,10 @@ class _ScanningScreenState extends State<ScanningScreen>
         bleController.bleManager.handshakeCompleteNotifier;
     final maxRetriesNotifier =
         bleController.bleManager.maxBleConnectionRetriesReached;
+    final networkCommFailureNotifier =
+        bleController.bleProcess.communicationFailureMessage;
+    final maxOtherPacketsRetriesNotifier =
+        bleController.bleProcess.maxOtherPacketsRetriesReached;
 
     bool hasNavigated = false;
 
@@ -1823,6 +1827,8 @@ class _ScanningScreenState extends State<ScanningScreen>
       connectionNotifier,
       handshakeCompleteNotifier,
       maxRetriesNotifier,
+      networkCommFailureNotifier,
+      maxOtherPacketsRetriesNotifier,
     ]);
 
     showDialog<bool>(
@@ -1836,6 +1842,10 @@ class _ScanningScreenState extends State<ScanningScreen>
             final isConnected = connectionNotifier.value;
             final handshakeComplete = handshakeCompleteNotifier.value;
             final maxRetries = maxRetriesNotifier.value;
+            final networkCommMessage = networkCommFailureNotifier.value;
+            final showNetworkCommError =
+                networkCommMessage != null && networkCommMessage.isNotEmpty;
+            final showConnectionError = maxRetries || showNetworkCommError;
 
             if (isConnected && !_bleConnectPauseApplied) {
               _bleConnectPauseApplied = true;
@@ -2031,6 +2041,8 @@ class _ScanningScreenState extends State<ScanningScreen>
                         color:
                             handshakeComplete
                                 ? Colors.green.withValues(alpha: 0.1)
+                                : showNetworkCommError
+                                ? const Color(0xFFFBDEE1)
                                 : const Color(0xFFFBDEE1),
                         shape: BoxShape.circle,
                       ),
@@ -2042,15 +2054,23 @@ class _ScanningScreenState extends State<ScanningScreen>
                                   size: 32,
                                   color: Colors.green,
                                 )
+                                : showNetworkCommError
+                                ? const Icon(
+                                  Icons.error_outline,
+                                  size: 32,
+                                  color: Color(0xFFEC1D24),
+                                )
                                 : Lottie.asset(
                                   'assets/jsons/ble_connecting.json',
-                                  animate: !maxRetries,
+                                  animate: !showConnectionError,
                                 ),
                       ),
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      isConnected
+                      showNetworkCommError
+                          ? 'Connection problem'
+                          : isConnected
                           ? 'Device Connected!'
                           : maxRetries
                           ? 'Max Connection Retries Reached!'
@@ -2066,6 +2086,8 @@ class _ScanningScreenState extends State<ScanningScreen>
                     Text(
                       handshakeComplete
                           ? 'Preparing dashboard...'
+                          : showNetworkCommError
+                          ? networkCommMessage
                           : maxRetries
                           ? 'Please scan again and reconnect.'
                           : isConnected
@@ -2079,7 +2101,7 @@ class _ScanningScreenState extends State<ScanningScreen>
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 16),
-                    if (maxRetries)
+                    if (showConnectionError)
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
@@ -2090,6 +2112,10 @@ class _ScanningScreenState extends State<ScanningScreen>
                             ),
                           ),
                           onPressed: () {
+                            if (showNetworkCommError) {
+                              bleController.bleProcess
+                                  .clearCommunicationFailure();
+                            }
                             _bleConnectPauseApplied = false;
                             if (mounted) _resumeScanAnimations();
                             Navigator.of(

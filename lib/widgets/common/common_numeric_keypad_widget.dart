@@ -94,6 +94,7 @@ class _CommonNumericKeypadWidgetState extends State<CommonNumericKeypadWidget> {
   }
 
   void _onClose() {
+    _bleProcess?.clearCommunicationFailure();
     final sheetContext = _sheetContext;
     if (sheetContext != null && sheetContext.mounted) {
       Navigator.of(sheetContext).pop(false);
@@ -185,58 +186,76 @@ class _CommonNumericKeypadWidgetState extends State<CommonNumericKeypadWidget> {
           });
         }
 
-        return ValueListenableBuilder<String>(
-          valueListenable: bleProcess.processDesc,
-          builder: (context, processDescValue, __) {
-            final hideInput =
-                (processDescValue.isNotEmpty &&
-                    isAccessKeyValidValue != false) ||
-                isAccessKeyValidValue == true;
+        return ValueListenableBuilder<String?>(
+          valueListenable: bleProcess.communicationFailureMessage,
+          builder: (context, commFailure, __) {
+            final bool commFailed =
+                commFailure != null && commFailure.isNotEmpty;
 
-            final ValidatingStatus validatingStatus;
-            if (isAccessKeyValidValue == true) {
-              validatingStatus = ValidatingStatus.success;
-            } else if (hideInput) {
-              validatingStatus = ValidatingStatus.verifying;
-            } else if (isAccessKeyValidValue == false) {
-              validatingStatus = ValidatingStatus.error;
-            } else {
-              validatingStatus = ValidatingStatus.empty;
-            }
+            return ValueListenableBuilder<String>(
+              valueListenable: bleProcess.processDesc,
+              builder: (context, processDescValue, __) {
+                var hideInput =
+                    (processDescValue.isNotEmpty &&
+                        isAccessKeyValidValue != false) ||
+                    isAccessKeyValidValue == true;
 
-            final showKeypad =
-                !_closing &&
-                isAccessKeyValidValue != true &&
-                (processDescValue.isEmpty || isAccessKeyValidValue == false);
-
-            final showVerify = showKeypad;
-
-            String? status;
-            if (isAccessKeyValidValue == false) {
-              status =
-                  processDescValue.isNotEmpty
-                      ? processDescValue
-                      : 'Wrong password. Try again.';
-            }
-            if (isAccessKeyValidValue == false && _controller.text.isNotEmpty) {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (mounted && _controller.text.isNotEmpty) {
-                  _controller.clear();
-                  accessKey.value = '';
-                  setState(() {});
+                ValidatingStatus validatingStatus;
+                if (commFailed) {
+                  validatingStatus = ValidatingStatus.error;
+                  hideInput = true;
+                } else if (isAccessKeyValidValue == true) {
+                  validatingStatus = ValidatingStatus.success;
+                } else if (hideInput) {
+                  validatingStatus = ValidatingStatus.verifying;
+                } else if (isAccessKeyValidValue == false) {
+                  validatingStatus = ValidatingStatus.error;
+                } else {
+                  validatingStatus = ValidatingStatus.empty;
                 }
-              });
-            }
 
-            return _buildSheetContent(
-              context: context,
-              hideInput: hideInput,
-              showKeypad: showKeypad && !hideInput,
-              showVerify: showVerify && !hideInput,
-              status: status,
-              isErrorStatus: isAccessKeyValidValue == false,
-              fieldBorderIsError: isAccessKeyValidValue == false,
-              validatingStatus: validatingStatus,
+                final showKeypad =
+                    !commFailed &&
+                    !_closing &&
+                    isAccessKeyValidValue != true &&
+                    (processDescValue.isEmpty ||
+                        isAccessKeyValidValue == false);
+
+                final showVerify = showKeypad;
+
+                String? status;
+                if (commFailed) {
+                  status = commFailure;
+                } else if (isAccessKeyValidValue == false) {
+                  status =
+                      processDescValue.isNotEmpty
+                          ? processDescValue
+                          : 'Wrong password. Try again.';
+                }
+                if (!commFailed &&
+                    isAccessKeyValidValue == false &&
+                    _controller.text.isNotEmpty) {
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (mounted && _controller.text.isNotEmpty) {
+                      _controller.clear();
+                      accessKey.value = '';
+                      setState(() {});
+                    }
+                  });
+                }
+
+                return _buildSheetContent(
+                  context: context,
+                  hideInput: hideInput,
+                  showKeypad: showKeypad && !hideInput,
+                  showVerify: showVerify && !hideInput,
+                  status: status,
+                  isErrorStatus: commFailed || isAccessKeyValidValue == false,
+                  fieldBorderIsError:
+                      commFailed || isAccessKeyValidValue == false,
+                  validatingStatus: validatingStatus,
+                );
+              },
             );
           },
         );
@@ -288,7 +307,10 @@ class _CommonNumericKeypadWidgetState extends State<CommonNumericKeypadWidget> {
                           duration: _animDuration,
                           switchInCurve: Curves.easeInOutCubic,
                           switchOutCurve: Curves.easeInOutCubic,
-                          child: _buildLockOrLottieHeader(validatingStatus),
+                          child: _buildLockOrLottieHeader(
+                            validatingStatus,
+                            isErrorStatus,
+                          ),
                         ),
                         const SizedBox(height: 26),
                         AnimatedSize(
@@ -545,7 +567,10 @@ class _CommonNumericKeypadWidgetState extends State<CommonNumericKeypadWidget> {
     );
   }
 
-  Widget _buildLockOrLottieHeader(ValidatingStatus validatingStatus) {
+  Widget _buildLockOrLottieHeader(
+    ValidatingStatus validatingStatus,
+    bool isError,
+  ) {
     switch (validatingStatus) {
       case ValidatingStatus.verifying:
         return Column(
@@ -601,7 +626,7 @@ class _CommonNumericKeypadWidgetState extends State<CommonNumericKeypadWidget> {
             ),
             const SizedBox(height: 32),
             Text(
-              'Enter Access Code',
+              isError ? 'Device not responding' : 'Enter Access Code',
               textAlign: TextAlign.center,
               style: GoogleFonts.inter(
                 fontSize: 20,

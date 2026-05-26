@@ -2,6 +2,7 @@ import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
 import 'package:get/get.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/ble/ble_process.dart';
+import 'package:techno_switch_solar_app/widgets/ble_communication_failure_dialog.dart';
 
 class BleLogController extends GetxController {
   final BleManager bleManager = Get.find<BleManager>();
@@ -186,33 +187,56 @@ class BleLogController extends GetxController {
   bool get isConnected => bleManager.isConnected;
 
   restartNetworkFlow() async {
+    if (bleProcess.networkFlowRestartCount >= BleProcess.maxNetworkFlowRestarts) {
+      return;
+    }
     print(
       "------------------------Restarting the network FLow-------------------------------",
     );
-    await Future.delayed(Duration(seconds: 7));
-    sendNetworkPacket();
+    await Future.delayed(const Duration(seconds: 7));
+    if (bleProcess.networkFlowRestartCount >= BleProcess.maxNetworkFlowRestarts) {
+      return;
+    }
+    await sendNetworkPacket();
+  }
+
+  /// After [BleProcess.maxNetworkFlowRestarts] no-response timeouts: disconnect and
+  /// surface error on open UI (keypad, password dialog, connecting dialog).
+  Future<void> onNetworkFlowFailed() async {
+    const message = BleCommunicationFailureDialog.defaultMessage;
+    print('BLE network flow failed after max retries');
+
+    bleProcess.cancelRxTimeout();
+    bleProcess.isOtaCompleted = true;
+    bleProcess.processNextOtaFrame = false;
+    bleManager.otaProcessState = OtaProcessState.notInUse;
+
+    try {
+      await bleManager.disconnectConnectedDevice();
+    } catch (e) {
+      print('disconnect on network flow failure: $e');
+    }
+    await bleManager.shutdown();
+    bleManager.resetProtocolState();
+    bleProcess.resetProcessState();
+    bleProcess.isOtaCompleted = true;
+    bleProcess.processNextOtaFrame = false;
+    bleProcess.publishCommunicationFailure(message);
   }
 
   //FATAL BLE ERROR ENTRY POINT
-  void onBleFatalError(String message) {
+  Future<void> onBleFatalError(String message) async {
     print("BLE FATAL ERROR: $message");
-
-    // Optional: stop any running state machine
     bleProcess.cancelRxTimeout();
-
-    // Navigate user back to scan screen OR show dialog
-    // You decide UI behavior here
-    Get.snackbar(
-      "Connection Lost",
-      message,
-      snackPosition: SnackPosition.BOTTOM,
-      duration: const Duration(seconds: 4),
-    );
-
-    // Optional hard reset of internal states
+    bleProcess.isSessionAccessCodeValidationOnly = false;
+    try {
+      await bleManager.disconnectConnectedDevice();
+    } catch (_) {}
+    await bleManager.shutdown();
     bleProcess.resetProcessState();
     bleManager.resetProtocolState();
-    bleManager.shutdown();
+    bleProcess.isOtaCompleted = true;
+    bleProcess.publishCommunicationFailure(message);
   }
 
   Future<void> restartLogRetrieval() async {

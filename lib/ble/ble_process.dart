@@ -95,6 +95,41 @@ class BleProcess {
   int rxTimeoutRetryCount = 0;
   int nackRetryCount = 0;
 
+  /// Network-flow restart cap (no response → restart network packet).
+  static const int maxNetworkFlowRestarts = 3;
+  int networkFlowRestartCount = 0;
+  bool _networkFlowFailureHandling = false;
+
+  /// Set when communication fails after [maxNetworkFlowRestarts]; open UI
+  /// (keypad, password dialog, connecting dialog) shows this inline.
+  final ValueNotifier<String?> communicationFailureMessage =
+      ValueNotifier<String?>(null);
+
+  void clearCommunicationFailure() {
+    final hadMessage = communicationFailureMessage.value;
+    communicationFailureMessage.value = null;
+    if (hadMessage != null && processDesc.value == hadMessage) {
+      processDesc.value = '';
+    }
+    isAccessKeyValid.value = null;
+    maxOtherPacketsRetriesReached.value = false;
+    resetNetworkFlowRestartCount();
+  }
+
+  /// Publishes inline UI state after network-flow failure (no separate dialog).
+  void publishCommunicationFailure(String message) {
+    communicationFailureMessage.value = message;
+    processDesc.value = message;
+    isAccessKeyValid.value = false;
+    maxOtherPacketsRetriesReached.value = true;
+    isSessionAccessCodeValidationOnly = false;
+  }
+
+  void resetNetworkFlowRestartCount() {
+    networkFlowRestartCount = 0;
+    maxOtherPacketsRetriesReached.value = false;
+  }
+
   // ValueNotifier to expose valid event log count to UI
   final ValueNotifier<int> validEventLogCount = ValueNotifier<int>(0);
 
@@ -636,6 +671,7 @@ class BleProcess {
     rxTimeoutRetryCount = 0;
     pollWaitRspTimeoutCnt = 0;
     nackRetryCount = 0;
+    resetNetworkFlowRestartCount();
 
     bleManager.u8RxPktCnt = rx.payload[4];
 
@@ -2768,6 +2804,8 @@ class BleProcess {
     validEventLogNum = 0;
     read1000Logs = 0;
     receivedPollCount = 0;
+    resetNetworkFlowRestartCount();
+    _networkFlowFailureHandling = false;
 
     // Time tracking
     logStartingTime = null;
@@ -3718,12 +3756,8 @@ class BleProcess {
     print(
       'BLE operation deadline exceeded (${bleOperationDeadlineDuration.inSeconds}s)',
     );
-    processDesc.value = 'Operation timed out. Restarting network flow.';
-    resetProcessState();
-    bleCurrentState = BleStates.PROCESS_PANEL_EVT_LOG_READ;
-    bleManager.bleCurrentState = BleStates.PROCESS_PANEL_EVT_LOG_READ;
-    bleManager.bleStateMachineState = BleStates.PROCESS_PANEL_EVT_LOG_READ;
-    restartInitialNetworkFlow();
+    processDesc.value = 'Operation timed out.';
+    unawaited(handleNetworkFlowNoResponse());
   }
 
   // Public method to cancel timer
@@ -3909,28 +3943,11 @@ class BleProcess {
       processDesc.value =
           "No response from device (${rxTimeoutRetryCount}/$maxRxRetries)";
 
-      //Exceeded retry limit → HARD FAIL
+      //Exceeded retry limit → count toward network-flow restart cap
       if (rxTimeoutRetryCount >= maxRxRetries) {
-        print("RX retry limit reached. Restarting network flow.");
-
-        processDesc.value = "Device not responding. Restarting network flow.";
-
-        // Stop everything
-        bleManager.bleProcess.resetProcessState();
-
-        bleCurrentState = BleStates.PROCESS_PANEL_EVT_LOG_READ;
-        bleManager.bleCurrentState = BleStates.PROCESS_PANEL_EVT_LOG_READ;
-        bleManager.bleStateMachineState = BleStates.PROCESS_PANEL_EVT_LOG_READ;
-
-        // Full BLE shutdown
-        // await bleManager.shutdown(deviceId: connectedDeviceId.value);
-        restartInitialNetworkFlow();
-
-        // Optional: tell controller/UI explicitly
-        // Get.find<BleLogController>().onBleFatalError(
-        //   "Device not responding. Please scan again.",
-        // );
-
+        print("RX retry limit reached.");
+        processDesc.value = "Device not responding.";
+        unawaited(handleNetworkFlowNoResponse());
         return;
       }
 
@@ -3947,17 +3964,42 @@ class BleProcess {
     Get.find<BleLogController>().restartNetworkFlow();
   }
 
+  /// Called when a network/other-packet response does not arrive in time.
+  Future<void> handleNetworkFlowNoResponse() async {
+    if (_networkFlowFailureHandling || isOtaCompleted) return;
+
+    networkFlowRestartCount++;
+    processDesc.value =
+        'No response from device ($networkFlowRestartCount/$maxNetworkFlowRestarts)';
+
+    if (networkFlowRestartCount < maxNetworkFlowRestarts) {
+      print(
+        'Other Packets: No response, network flow restart '
+        '$networkFlowRestartCount/$maxNetworkFlowRestarts',
+      );
+      restartInitialNetworkFlow();
+      return;
+    }
+
+    print('Network flow restart limit reached ($maxNetworkFlowRestarts)');
+    _networkFlowFailureHandling = true;
+    maxOtherPacketsRetriesReached.value = true;
+    cancelRxTimeout();
+    isOtaCompleted = true;
+    processNextOtaFrame = false;
+    bleManager.otaProcessState = OtaProcessState.notInUse;
+    await Get.find<BleLogController>().onNetworkFlowFailed();
+    _networkFlowFailureHandling = false;
+  }
+
   void startOtherPacketsRxTimeout({Duration? timeout}) {
     cancelRxTimeout();
 
     _otherPacketsRxTimeoutTimer = Timer(
       timeout ?? const Duration(seconds: 12),
-      () async {
-        maxOtherPacketsRetriesReached.value = true;
-        print("Other Packets: No response from device, retrying");
-        processDesc.value = "No response from device, retrying";
-        restartInitialNetworkFlow();
-        // bleManager.shutdown();
+      () {
+        print('Other Packets: No response from device');
+        unawaited(handleNetworkFlowNoResponse());
       },
     );
   }

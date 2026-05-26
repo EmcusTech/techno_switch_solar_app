@@ -7,6 +7,7 @@ import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/models/access_code_mode_model.dart';
 import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
+import 'package:techno_switch_solar_app/widgets/app_styled_dialogs.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/widgets/dropdown.dart';
 
 class AccessCodesBottomSheet extends StatefulWidget {
@@ -119,6 +120,43 @@ class _AccessCodesBottomSheetState extends State<AccessCodesBottomSheet> {
     final code = int.tryParse(accessCodeController.text);
     if (code == null || code < 1 || code > 99999999) return false;
     return true;
+  }
+
+  int? _findDuplicateAccessCodeSlot() {
+    if (manager == null) return null;
+    if (accessLevelName == accessLevelNames.first) return null;
+
+    final enteredCode = int.tryParse(accessCodeController.text.trim());
+    if (enteredCode == null) return null;
+
+    final currentIndex = selectedCode - 1;
+    final list = manager!.accessCodeSetupDataList.value;
+
+    for (var i = 0; i < list.length; i++) {
+      if (i == currentIndex) continue;
+
+      final other = list[i];
+      if (other.accessLevelName == accessLevelNames.first) continue;
+
+      final otherCode = int.tryParse(other.accessCode.trim());
+      if (otherCode == null) continue;
+
+      if (otherCode == enteredCode) {
+        return i + 1;
+      }
+    }
+
+    return null;
+  }
+
+  void _showDuplicateAccessCodeDialog(int existingSlot) {
+    showAppStyledOneActionDialog(
+      context: context,
+      title: 'Duplicate Access Code',
+      message:
+          'This access code is already present in Access Code $existingSlot.',
+      icon: Icons.warning_amber_rounded,
+    );
   }
 
   void _saveCurrentToManager() {
@@ -495,6 +533,13 @@ class _AccessCodesBottomSheetState extends State<AccessCodesBottomSheet> {
             _isValidAccessCode()
                 ? () {
                   FocusManager.instance.primaryFocus?.unfocus();
+
+                  final duplicateSlot = _findDuplicateAccessCodeSlot();
+                  if (duplicateSlot != null) {
+                    _showDuplicateAccessCodeDialog(duplicateSlot);
+                    return;
+                  }
+
                   _saveCurrentToManager();
                   widget.onApply();
                 }

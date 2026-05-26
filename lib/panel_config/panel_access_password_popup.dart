@@ -407,13 +407,22 @@ Future<void> showPanelAccessPasswordPopup({
                     });
                   }
 
-                  return ValueListenableBuilder<String>(
-                    valueListenable: bleProcess.processDesc,
-                    builder: (_, processDescValue, __) {
-                      final bool hideInput =
+                  return ValueListenableBuilder<String?>(
+                    valueListenable: bleProcess.communicationFailureMessage,
+                    builder: (_, commFailure, __) {
+                      final bool commFailed =
+                          commFailure != null && commFailure.isNotEmpty;
+
+                      return ValueListenableBuilder<String>(
+                        valueListenable: bleProcess.processDesc,
+                        builder: (_, processDescValue, __) {
+                      var hideInput =
                           (processDescValue.isNotEmpty &&
                               isAccessKeyValidValue != false) ||
                           isAccessKeyValidValue == true;
+                      if (commFailed) {
+                        hideInput = true;
+                      }
                       if (hideInput) {
                         WidgetsBinding.instance.addPostFrameCallback((_) {
                           if (focusNode.hasFocus) {
@@ -427,7 +436,9 @@ Future<void> showPanelAccessPasswordPopup({
                       );
 
                       final String dialogTitle =
-                          !hideInput
+                          commFailed
+                              ? 'Connection problem'
+                              : !hideInput
                               ? 'Enter Access Code'
                               : (isAccessKeyValidValue == true
                                   ? mode == 'bottomsheet_download'
@@ -626,7 +637,9 @@ Future<void> showPanelAccessPasswordPopup({
                           Builder(
                             builder: (context) {
                               String? status;
-                              if (isAccessKeyValidValue == false) {
+                              if (commFailed) {
+                                status = commFailure;
+                              } else if (isAccessKeyValidValue == false) {
                                 status =
                                     processDescValue.isNotEmpty
                                         ? processDescValue
@@ -680,7 +693,7 @@ Future<void> showPanelAccessPasswordPopup({
                                   }
                                 }
                               }
-                              if (isAccessKeyValidValue == false) {
+                              if (!commFailed && isAccessKeyValidValue == false) {
                                 if (accessController.text.isNotEmpty) {
                                   accessController.clear();
                                 }
@@ -705,7 +718,9 @@ Future<void> showPanelAccessPasswordPopup({
                                         fontSize: 14,
                                         fontWeight: FontWeight.w600,
                                         color:
-                                            isAccessKeyValidValue == false
+                                            commFailed ||
+                                                    isAccessKeyValidValue ==
+                                                        false
                                                 ? const Color(0xFFEC1D24)
                                                 : const Color(0xFF3D3D3D),
                                       ),
@@ -719,7 +734,8 @@ Future<void> showPanelAccessPasswordPopup({
                             builder: (_, processDescForButtons, __) {
                               final bool showButtons =
                                   isAccessKeyValidValue != true &&
-                                  (processDescForButtons.isEmpty ||
+                                  (commFailed ||
+                                      processDescForButtons.isEmpty ||
                                       isAccessKeyValidValue == false);
                               return showButtons
                                   ? Column(
@@ -746,6 +762,8 @@ Future<void> showPanelAccessPasswordPopup({
                                                 ),
                                                 onPressed: () {
                                                   cancelAccessKeyTimer();
+                                                  bleProcess
+                                                      .clearCommunicationFailure();
                                                   Navigator.of(
                                                     dialogContext,
                                                   ).pop();
@@ -760,18 +778,19 @@ Future<void> showPanelAccessPasswordPopup({
                                               ),
                                             ),
                                           ),
-                                          const SizedBox(width: 12),
-                                          Expanded(
-                                            child: SizedBox(
-                                              height: 48,
-                                              child: ListenableBuilder(
-                                                listenable: accessController,
-                                                builder: (context, _) {
-                                                  final canVerify =
-                                                      accessController.text
-                                                          .trim()
-                                                          .isNotEmpty;
-                                                  return ElevatedButton(
+                                          if (!commFailed) ...[
+                                            const SizedBox(width: 12),
+                                            Expanded(
+                                              child: SizedBox(
+                                                height: 48,
+                                                child: ListenableBuilder(
+                                                  listenable: accessController,
+                                                  builder: (context, _) {
+                                                    final canVerify =
+                                                        accessController.text
+                                                            .trim()
+                                                            .isNotEmpty;
+                                                    return ElevatedButton(
                                                     style: ElevatedButton.styleFrom(
                                                       backgroundColor:
                                                           const Color(
@@ -829,11 +848,12 @@ Future<void> showPanelAccessPasswordPopup({
                                                             color: Colors.white,
                                                           ),
                                                     ),
-                                                  );
-                                                },
+                                                    );
+                                                  },
+                                                ),
                                               ),
                                             ),
-                                          ),
+                                          ],
                                         ],
                                       ),
                                     ],
@@ -842,6 +862,8 @@ Future<void> showPanelAccessPasswordPopup({
                             },
                           ),
                         ],
+                      );
+                        },
                       );
                     },
                   );
