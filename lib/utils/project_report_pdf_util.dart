@@ -4,7 +4,9 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:techno_switch_solar_app/models/l_bus_setup_data_model.dart';
+import 'package:techno_switch_solar_app/utils/commissioning_test_results_helper.dart';
 import 'package:techno_switch_solar_app/utils/peripheral_config_diff_labels.dart';
+import 'package:techno_switch_solar_app/utils/storage/commissioning_test_results_cache.dart';
 import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
 
 /// Site / panel summary + peripheral sections (cache-backed), same PDF chrome as log report.
@@ -67,6 +69,18 @@ class ProjectReportPdfUtil {
     final lBus = await PeripheralSetupCache.loadLBusSetup(deviceId);
     final sounder = await PeripheralSetupCache.loadSounderSetup(deviceId);
     final serviceDue = await PeripheralSetupCache.loadServiceDueSetup(deviceId);
+    final walkTestResults = await CommissioningTestResultsCache.loadItems(
+      deviceId,
+      CommissioningTestType.walkTest,
+    );
+    final relayTestResults = await CommissioningTestResultsCache.loadItems(
+      deviceId,
+      CommissioningTestType.relayTest,
+    );
+    final sounderTestResults = await CommissioningTestResultsCache.loadItems(
+      deviceId,
+      CommissioningTestType.sounderTest,
+    );
 
     final serviceDate = _serviceDateFromDue(serviceDue);
 
@@ -131,6 +145,24 @@ class ProjectReportPdfUtil {
               _sectionHeader('L-BUS'),
               // _lBusBlock(lBus),
               _newLBusBlock(lBus),
+              _sectionHeader('WALK TEST RESULTS'),
+              _commissioningTestResultsBlock(
+                walkTestResults,
+                CommissioningTestType.walkTest,
+                'No walk test results recorded for this device.',
+              ),
+              _sectionHeader('RELAY TEST RESULTS'),
+              _commissioningTestResultsBlock(
+                relayTestResults,
+                CommissioningTestType.relayTest,
+                'No relay test results recorded for this device.',
+              ),
+              _sectionHeader('SOUNDER TEST RESULTS'),
+              _commissioningTestResultsBlock(
+                sounderTestResults,
+                CommissioningTestType.sounderTest,
+                'No sounder test results recorded for this device.',
+              ),
             ],
       ),
     );
@@ -313,6 +345,100 @@ class ProjectReportPdfUtil {
         message,
         style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey),
       ),
+    );
+  }
+
+  static String _formatTestResult(String? result) {
+    return switch (result) {
+      'pass' => 'Pass',
+      'fail' => 'Fail',
+      _ => '-',
+    };
+  }
+
+  static String _formatTestedAt(Object? testedAt) {
+    if (testedAt is! String || testedAt.isEmpty) return '-';
+    try {
+      return _dtFormat.format(DateTime.parse(testedAt));
+    } catch (_) {
+      return testedAt;
+    }
+  }
+
+  static pw.Widget _commissioningTestResultsBlock(
+    Map<String, dynamic> results,
+    CommissioningTestType type,
+    String emptyMessage,
+  ) {
+    if (results.isEmpty) {
+      return _missing(emptyMessage);
+    }
+
+    pw.Widget headerCell(String text) {
+      return pw.Expanded(
+        child: pw.Padding(
+          padding: const pw.EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+          child: pw.Text(
+            text,
+            style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold),
+          ),
+        ),
+      );
+    }
+
+    pw.Widget dataCell(String text) {
+      return pw.Expanded(
+        child: pw.Padding(
+          padding: const pw.EdgeInsets.symmetric(vertical: 5, horizontal: 4),
+          child: pw.Text(
+            text.isEmpty ? '-' : text,
+            style: pw.TextStyle(
+              fontSize: 9,
+              color: PdfColor.fromInt(0xFF3A3A3A),
+            ),
+          ),
+        ),
+      );
+    }
+
+    final sortedKeys = results.keys.toList()..sort();
+    final dataRows = <pw.Widget>[];
+    for (final key in sortedKeys) {
+      final entry = _asMap(results[key]);
+      if (entry == null) continue;
+      dataRows.add(
+        pw.Row(
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
+          children: [
+            dataCell(commissioningTestItemLabel(type, key)),
+            dataCell(
+              _formatTestResult(
+                CommissioningTestResultsCache.resultForItem(results, key),
+              ),
+            ),
+            dataCell(_formatTestedAt(entry['testedAt'])),
+          ],
+        ),
+      );
+    }
+
+    if (dataRows.isEmpty) {
+      return _missing(emptyMessage);
+    }
+
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        pw.Row(
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
+          children: [
+            headerCell('Item'),
+            headerCell('Result'),
+            headerCell('Tested At'),
+          ],
+        ),
+        ...dataRows,
+      ],
     );
   }
 

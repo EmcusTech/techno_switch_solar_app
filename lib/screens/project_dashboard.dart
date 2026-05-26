@@ -20,6 +20,7 @@ import 'package:techno_switch_solar_app/screens/test_mode_screen.dart';
 import 'package:techno_switch_solar_app/utils/bluetooth_service.dart';
 import 'package:techno_switch_solar_app/utils/ble_name_utils.dart';
 import 'package:techno_switch_solar_app/utils/ble_msd_utils.dart';
+import 'package:techno_switch_solar_app/utils/commissioning_test_results_helper.dart';
 import 'package:techno_switch_solar_app/utils/export_tile.dart';
 import 'package:techno_switch_solar_app/utils/project_report_pdf_util.dart';
 import 'package:techno_switch_solar_app/services/site_service.dart';
@@ -40,6 +41,7 @@ import 'package:techno_switch_solar_app/panel_config/panel_config_cache_sync.dar
 import 'package:techno_switch_solar_app/panel_config/panel_config_feedback_dialogs.dart';
 import 'package:techno_switch_solar_app/panel_config/post_connect_bulk_download_offer.dart';
 import 'package:techno_switch_solar_app/utils/peripheral_config_snapshot.dart';
+import 'package:techno_switch_solar_app/utils/storage/commissioning_test_results_cache.dart';
 import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/config_log_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/sounder_mode_bottomsheet.dart';
@@ -1632,6 +1634,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     String? mode,
     Future<void> Function()? onDownloadComplete,
     String? downloadSuccessMessage,
+    Future<void> Function(BuildContext context)? onAfterApplySuccess,
   }) {
     showPanelAccessPasswordPopup(
       context: context,
@@ -1717,7 +1720,35 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
       mode: mode,
       onDownloadComplete: onDownloadComplete,
       downloadSuccessMessage: downloadSuccessMessage,
+      onAfterApplySuccess: onAfterApplySuccess,
       configLogWorking: _configLogWorking,
+    );
+  }
+
+  Future<void> _showWalkTestResultConfirmation(BuildContext context) {
+    return showCommissioningTestResultConfirmation(
+      context: context,
+      deviceId: _selectedDevice.id,
+      type: CommissioningTestType.walkTest,
+      manager: _bleManager,
+    );
+  }
+
+  Future<void> _showRelayTestResultConfirmation(BuildContext context) {
+    return showCommissioningTestResultConfirmation(
+      context: context,
+      deviceId: _selectedDevice.id,
+      type: CommissioningTestType.relayTest,
+      manager: _bleManager,
+    );
+  }
+
+  Future<void> _showSounderTestResultConfirmation(BuildContext context) {
+    return showCommissioningTestResultConfirmation(
+      context: context,
+      deviceId: _selectedDevice.id,
+      type: CommissioningTestType.sounderTest,
+      manager: _bleManager,
     );
   }
 
@@ -3154,6 +3185,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                         },
                         isZoneSetup: true,
                         mode: 'bottomsheet_apply',
+                        onAfterApplySuccess: _showWalkTestResultConfirmation,
                       );
                     },
                     refreshTrigger: _zoneRefreshTrigger,
@@ -3222,6 +3254,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                         },
                         isRelaySetup: true,
                         mode: 'bottomsheet_apply',
+                        onAfterApplySuccess: _showRelayTestResultConfirmation,
                       );
                     },
                     onApplySounders: () {
@@ -3235,6 +3268,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                         },
                         isSounderSetup: true,
                         mode: 'bottomsheet_apply',
+                        onAfterApplySuccess: _showSounderTestResultConfirmation,
                       );
                     },
                     relayRefreshTrigger: _relayRefreshTrigger,

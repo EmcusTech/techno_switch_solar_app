@@ -8,6 +8,7 @@ void showPanelApplySuccessDialog(
   BleProcess bleProcess,
   String message, {
   String? subtitle,
+  VoidCallback? onDismissed,
 }) {
   showDialog(
     context: context,
@@ -31,6 +32,7 @@ void showPanelApplySuccessDialog(
           bleProcess.isAccessCodeSetupApplyDone.value = false;
           bleProcess.isPanelInfoSetupApplyDone.value = false;
           bleProcess.isGeneralModuleSetupApplyDone.value = false;
+          onDismissed?.call();
         }
       });
       return Dialog(

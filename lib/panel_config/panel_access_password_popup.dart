@@ -7,6 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
+import 'package:techno_switch_solar_app/panel_config/panel_config_feedback_dialogs.dart';
 import 'package:techno_switch_solar_app/utils/peripheral_cache_to_ble.dart';
 
 /// Per-tile cache saves and navigation after access-code verification.
@@ -87,6 +88,7 @@ Future<void> showPanelAccessPasswordPopup({
   bool isAdcSetup = false,
   bool isConfigLogBulk = false,
   bool isConfigLogBulkApply = false,
+
   /// When false (e.g. dashboard Config tile), bulk config uses generic copy only,
   /// not live [BleProcess.processDesc] strings in the access dialog.
   bool showDetailedConfigLogBulkBleProgressInAccessDialog = true,
@@ -94,8 +96,27 @@ Future<void> showPanelAccessPasswordPopup({
   Future<void> Function()? onDownloadComplete,
   String? downloadSuccessMessage,
   ValueNotifier<bool>? configLogWorking,
+  Future<void> Function(BuildContext context)? onAfterApplySuccess,
 }) {
   final bleProcess = bleManager.bleProcess;
+
+  void showApplySuccessWithOptionalFollowUp(String message) {
+    if (onAfterApplySuccess != null) {
+      showPanelApplySuccessDialog(
+        context,
+        bleProcess,
+        message,
+        onDismissed: () {
+          if (isMounted()) {
+            onAfterApplySuccess(context);
+          }
+        },
+      );
+    } else {
+      delegates.showApplySuccess(context, message);
+    }
+  }
+
   final bool useCachedSessionAccess =
       bleProcess.sessionAccessCodeReady.value &&
       bleProcess.accessKey.value.isNotEmpty;
@@ -132,9 +153,7 @@ Future<void> showPanelAccessPasswordPopup({
     barrierDismissible: false,
     builder: (dialogContext) {
       return Dialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
@@ -253,12 +272,13 @@ Future<void> showPanelAccessPasswordPopup({
                           }
                         } else if (isExtOut &&
                             bleManager.bleProcess.isExtOutApplyDone.value) {
-                          bleManager.bleProcess.isExtOutApplyButtonActive.value =
-                              true;
+                          bleManager
+                              .bleProcess
+                              .isExtOutApplyButtonActive
+                              .value = true;
                           await delegates.saveExtOutCache();
                           if (isMounted()) {
-                            delegates.showApplySuccess(
-                              context,
+                            showApplySuccessWithOptionalFollowUp(
                               'Extinguishing Output',
                             );
                           }
@@ -266,28 +286,36 @@ Future<void> showPanelAccessPasswordPopup({
                             bleManager.bleProcess.isInputSetupApplyDone.value) {
                           await delegates.saveInputCache();
                           if (isMounted()) {
-                            delegates.showApplySuccess(context, 'Inputs');
+                            showApplySuccessWithOptionalFollowUp('Inputs');
                           }
                         } else if (isRelaySetup &&
                             bleManager.bleProcess.isRelaySetupApplyDone.value &&
                             isMounted()) {
                           await delegates.saveRelayCache();
-                          delegates.showApplySuccess(context, 'Relays');
+                          if (isMounted()) {
+                            showApplySuccessWithOptionalFollowUp('Relays');
+                          }
                         } else if (isZoneSetup &&
                             bleManager.bleProcess.isRadioSetupApplyDone.value &&
                             isMounted()) {
                           await delegates.saveRadioCache();
-                          delegates.showApplySuccess(context, 'Radio');
+                          if (isMounted()) {
+                            showApplySuccessWithOptionalFollowUp('Radio');
+                          }
                         } else if (isZoneSetup &&
                             bleManager.bleProcess.isZoneSetupApplyDone.value &&
                             isMounted()) {
                           await delegates.saveZoneCache();
-                          delegates.showApplySuccess(context, 'Zones');
+                          if (isMounted()) {
+                            showApplySuccessWithOptionalFollowUp('Zones');
+                          }
                         } else if (isLBusSetup &&
                             bleManager.bleProcess.isLBusSetupApplyDone.value &&
                             isMounted()) {
                           await delegates.saveLBusCache();
-                          delegates.showApplySuccess(context, 'L-Bus');
+                          if (isMounted()) {
+                            showApplySuccessWithOptionalFollowUp('L-Bus');
+                          }
                         } else if (isSounderSetup &&
                             bleManager
                                 .bleProcess
@@ -295,12 +323,16 @@ Future<void> showPanelAccessPasswordPopup({
                                 .value &&
                             isMounted()) {
                           await delegates.saveSounderCache();
-                          delegates.showApplySuccess(context, 'Sounders');
+                          if (isMounted()) {
+                            showApplySuccessWithOptionalFollowUp('Sounders');
+                          }
                         } else if (isServiceDueSetup &&
                             bleManager.bleProcess.isServiceDueApplyDone.value &&
                             isMounted()) {
                           await delegates.saveServiceDueCache();
-                          delegates.showApplySuccess(context, 'Service Due');
+                          if (isMounted()) {
+                            showApplySuccessWithOptionalFollowUp('Service Due');
+                          }
                         } else if (isAccessCodeSetup &&
                             bleManager
                                 .bleProcess
@@ -308,7 +340,9 @@ Future<void> showPanelAccessPasswordPopup({
                                 .value &&
                             isMounted()) {
                           await delegates.saveAccessCodeCache();
-                          delegates.showApplySuccess(context, 'Access Code');
+                          if (isMounted()) {
+                            showApplySuccessWithOptionalFollowUp('Access Code');
+                          }
                         } else if (isPanelInfoSetup &&
                             bleManager
                                 .bleProcess
@@ -316,7 +350,9 @@ Future<void> showPanelAccessPasswordPopup({
                                 .value &&
                             isMounted()) {
                           await delegates.savePanelInfoCache();
-                          delegates.showApplySuccess(context, 'Panel Info');
+                          if (isMounted()) {
+                            showApplySuccessWithOptionalFollowUp('Panel Info');
+                          }
                         } else if (isGeneralModuleSetup &&
                             bleManager
                                 .bleProcess
@@ -324,14 +360,17 @@ Future<void> showPanelAccessPasswordPopup({
                                 .value &&
                             isMounted()) {
                           await delegates.saveGeneralModuleCache();
-                          delegates.showApplySuccess(context, 'General Module');
+                          if (isMounted()) {
+                            showApplySuccessWithOptionalFollowUp(
+                              'General Module',
+                            );
+                          }
                         } else {
                           delegates.openLogRetrievalLoading(dialogContext);
                         }
                       }
 
-                      if (isConfigLogBulkApply &&
-                          mode == 'bottomsheet_apply') {
+                      if (isConfigLogBulkApply && mode == 'bottomsheet_apply') {
                         configLogWorking?.value = true;
                         try {
                           await delegates.afterBulkApplyAccessGranted?.call();
@@ -362,6 +401,7 @@ Future<void> showPanelAccessPasswordPopup({
                           accessDialogClosed = true;
                           _removeOverlayRouteFor(dialogContext);
                         }
+
                         try {
                           await onDownloadComplete?.call();
                           if (isMounted()) {
@@ -398,10 +438,7 @@ Future<void> showPanelAccessPasswordPopup({
                       }
 
                       if (dialogContext.mounted) {
-                        Navigator.of(
-                          dialogContext,
-                          rootNavigator: true,
-                        ).pop();
+                        Navigator.of(dialogContext, rootNavigator: true).pop();
                       }
                       await afterAccessDialogPopped();
                     });
@@ -416,386 +453,363 @@ Future<void> showPanelAccessPasswordPopup({
                       return ValueListenableBuilder<String>(
                         valueListenable: bleProcess.processDesc,
                         builder: (_, processDescValue, __) {
-                      var hideInput =
-                          (processDescValue.isNotEmpty &&
-                              isAccessKeyValidValue != false) ||
-                          isAccessKeyValidValue == true;
-                      if (commFailed) {
-                        hideInput = true;
-                      }
-                      if (hideInput) {
-                        WidgetsBinding.instance.addPostFrameCallback((_) {
-                          if (focusNode.hasFocus) {
-                            focusNode.unfocus();
+                          var hideInput =
+                              (processDescValue.isNotEmpty &&
+                                  isAccessKeyValidValue != false) ||
+                              isAccessKeyValidValue == true;
+                          if (commFailed) {
+                            hideInput = true;
                           }
-                        });
-                      }
+                          if (hideInput) {
+                            WidgetsBinding.instance.addPostFrameCallback((_) {
+                              if (focusNode.hasFocus) {
+                                focusNode.unfocus();
+                              }
+                            });
+                          }
 
-                      const Duration animDuration = Duration(
-                        milliseconds: 280,
-                      );
+                          const Duration animDuration = Duration(
+                            milliseconds: 280,
+                          );
 
-                      final String dialogTitle =
-                          commFailed
-                              ? 'Connection problem'
-                              : !hideInput
-                              ? 'Enter Access Code'
-                              : (isAccessKeyValidValue == true
-                                  ? mode == 'bottomsheet_download'
-                                      ? 'Downloading...'
-                                      : mode == 'bottomsheet_apply'
-                                      ? 'Applying...'
-                                      : 'Validated'
-                                  : (processDescValue == 'Validating' ||
-                                      processDescValue.toLowerCase().contains(
-                                        'validat',
-                                      ))
-                                  ? (bleProcess.sessionAccessCodeReady.value
-                                      ? 'Initiating'
-                                      : 'Verifying access')
-                                  : (mode == 'bottomsheet_download'
-                                      ? 'Downloading...'
-                                      : mode == 'bottomsheet_apply'
-                                      ? 'Applying...'
-                                      : 'Validated'));
+                          final String dialogTitle =
+                              commFailed
+                                  ? 'Connection problem'
+                                  : !hideInput
+                                  ? 'Enter Access Code'
+                                  : (isAccessKeyValidValue == true
+                                      ? mode == 'bottomsheet_download'
+                                          ? 'Downloading...'
+                                          : mode == 'bottomsheet_apply'
+                                          ? 'Applying...'
+                                          : 'Validated'
+                                      : (processDescValue == 'Validating' ||
+                                          processDescValue
+                                              .toLowerCase()
+                                              .contains('validat'))
+                                      ? (bleProcess.sessionAccessCodeReady.value
+                                          ? 'Initiating'
+                                          : 'Verifying access')
+                                      : (mode == 'bottomsheet_download'
+                                          ? 'Downloading...'
+                                          : mode == 'bottomsheet_apply'
+                                          ? 'Applying...'
+                                          : 'Validated'));
 
-                      return Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          SizedBox(
-                            width: double.infinity,
-                            child: AnimatedSwitcher(
-                              duration: animDuration,
-                              switchInCurve: Curves.easeOutCubic,
-                              switchOutCurve: Curves.easeInCubic,
-                              transitionBuilder: (child, animation) {
-                                final offsetAnimation = Tween<Offset>(
-                                  begin: const Offset(0, 0.08),
-                                  end: Offset.zero,
-                                ).animate(
-                                  CurvedAnimation(
-                                    parent: animation,
-                                    curve: Curves.easeOutCubic,
+                          return Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              SizedBox(
+                                width: double.infinity,
+                                child: AnimatedSwitcher(
+                                  duration: animDuration,
+                                  switchInCurve: Curves.easeOutCubic,
+                                  switchOutCurve: Curves.easeInCubic,
+                                  transitionBuilder: (child, animation) {
+                                    final offsetAnimation = Tween<Offset>(
+                                      begin: const Offset(0, 0.08),
+                                      end: Offset.zero,
+                                    ).animate(
+                                      CurvedAnimation(
+                                        parent: animation,
+                                        curve: Curves.easeOutCubic,
+                                      ),
+                                    );
+                                    return FadeTransition(
+                                      opacity: animation,
+                                      child: SlideTransition(
+                                        position: offsetAnimation,
+                                        child: child,
+                                      ),
+                                    );
+                                  },
+                                  child: Text(
+                                    dialogTitle,
+                                    key: ValueKey<String>(dialogTitle),
+                                    style: GoogleFonts.inter(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.w700,
+                                      color: const Color(0xFF3D3D3D),
+                                    ),
+                                    textAlign: TextAlign.center,
                                   ),
-                                );
-                                return FadeTransition(
-                                  opacity: animation,
-                                  child: SlideTransition(
-                                    position: offsetAnimation,
-                                    child: child,
-                                  ),
-                                );
-                              },
-                              child: Text(
-                                dialogTitle,
-                                key: ValueKey<String>(dialogTitle),
-                                style: GoogleFonts.inter(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w700,
-                                  color: const Color(0xFF3D3D3D),
                                 ),
-                                textAlign: TextAlign.center,
                               ),
-                            ),
-                          ),
-                          AnimatedSize(
-                            duration: animDuration,
-                            curve: Curves.easeInOutCubic,
-                            alignment: Alignment.topCenter,
-                            clipBehavior: Clip.hardEdge,
-                            child:
-                                hideInput
-                                    ? const SizedBox.shrink()
-                                    : Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        const SizedBox(height: 24),
-                                        TextField(
-                                          controller: accessController,
-                                          focusNode: focusNode,
-                                          keyboardType: TextInputType.number,
-                                          obscureText: true,
-                                          maxLength: 8,
-                                          textAlign: TextAlign.center,
-                                          style: GoogleFonts.inter(
-                                            fontSize: 24,
-                                            fontWeight: FontWeight.w600,
-                                            letterSpacing: 8,
-                                            color: const Color(0xFF3D3D3D),
-                                          ),
-                                          inputFormatters: [
-                                            FilteringTextInputFormatter
-                                                .digitsOnly,
-                                          ],
-                                          onTap: () {
-                                            if (bleProcess
-                                                    .isAccessKeyValid
-                                                    .value ==
-                                                false) {
-                                              bleProcess.processDesc.value = '';
-                                              bleProcess.isAccessKeyValid.value =
-                                                  null;
-                                            }
-                                          },
-                                          onChanged: (val) {
-                                            final wasWrong =
+                              AnimatedSize(
+                                duration: animDuration,
+                                curve: Curves.easeInOutCubic,
+                                alignment: Alignment.topCenter,
+                                clipBehavior: Clip.hardEdge,
+                                child:
+                                    hideInput
+                                        ? const SizedBox.shrink()
+                                        : Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            const SizedBox(height: 24),
+                                            TextField(
+                                              controller: accessController,
+                                              focusNode: focusNode,
+                                              keyboardType:
+                                                  TextInputType.number,
+                                              obscureText: true,
+                                              maxLength: 8,
+                                              textAlign: TextAlign.center,
+                                              style: GoogleFonts.inter(
+                                                fontSize: 24,
+                                                fontWeight: FontWeight.w600,
+                                                letterSpacing: 8,
+                                                color: const Color(0xFF3D3D3D),
+                                              ),
+                                              inputFormatters: [
+                                                FilteringTextInputFormatter
+                                                    .digitsOnly,
+                                              ],
+                                              onTap: () {
+                                                if (bleProcess
+                                                        .isAccessKeyValid
+                                                        .value ==
+                                                    false) {
+                                                  bleProcess.processDesc.value =
+                                                      '';
+                                                  bleProcess
+                                                      .isAccessKeyValid
+                                                      .value = null;
+                                                }
+                                              },
+                                              onChanged: (val) {
+                                                final wasWrong =
+                                                    bleProcess
+                                                        .isAccessKeyValid
+                                                        .value ==
+                                                    false;
+                                                accessKey.value = val;
                                                 bleProcess
                                                     .isAccessKeyValid
-                                                    .value ==
-                                                false;
-                                            accessKey.value = val;
-                                            bleProcess.isAccessKeyValid.value =
-                                                null;
-                                            if (wasWrong) {
-                                              bleProcess.processDesc.value = '';
-                                            }
-                                          },
-                                          decoration: InputDecoration(
-                                            hintText: '••••••••',
-                                            hintStyle: GoogleFonts.inter(
-                                              fontSize: 24,
-                                              fontWeight: FontWeight.w600,
-                                              letterSpacing: 8,
-                                              color: const Color(0xFFD0D0D0),
-                                            ),
-                                            counterText: '',
-                                            filled: true,
-                                            fillColor: const Color(0xFFF8F8F8),
-                                            border: OutlineInputBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(12),
-                                              borderSide: BorderSide(
-                                                color:
-                                                    isAccessKeyValidValue ==
-                                                            false
-                                                        ? const Color(
-                                                          0xFFEC1D24,
-                                                        )
-                                                        : const Color(
-                                                          0xFFD0D0D0,
-                                                        ),
-                                                width: 1,
-                                              ),
-                                            ),
-                                            enabledBorder: OutlineInputBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(12),
-                                              borderSide: BorderSide(
-                                                color:
-                                                    isAccessKeyValidValue ==
-                                                            false
-                                                        ? const Color(
-                                                          0xFFEC1D24,
-                                                        )
-                                                        : const Color(
-                                                          0xFFD0D0D0,
-                                                        ),
-                                                width: 1,
-                                              ),
-                                            ),
-                                            focusedBorder: OutlineInputBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(12),
-                                              borderSide: const BorderSide(
-                                                color: Color(0xFFEC1D24),
-                                                width: 2,
-                                              ),
-                                            ),
-                                            errorBorder: OutlineInputBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(12),
-                                              borderSide: const BorderSide(
-                                                color: Color(0xFFEC1D24),
-                                                width: 1,
-                                              ),
-                                            ),
-                                            focusedErrorBorder:
-                                                OutlineInputBorder(
+                                                    .value = null;
+                                                if (wasWrong) {
+                                                  bleProcess.processDesc.value =
+                                                      '';
+                                                }
+                                              },
+                                              decoration: InputDecoration(
+                                                hintText: '••••••••',
+                                                hintStyle: GoogleFonts.inter(
+                                                  fontSize: 24,
+                                                  fontWeight: FontWeight.w600,
+                                                  letterSpacing: 8,
+                                                  color: const Color(
+                                                    0xFFD0D0D0,
+                                                  ),
+                                                ),
+                                                counterText: '',
+                                                filled: true,
+                                                fillColor: const Color(
+                                                  0xFFF8F8F8,
+                                                ),
+                                                border: OutlineInputBorder(
                                                   borderRadius:
-                                                      BorderRadius.circular(
-                                                        12,
-                                                      ),
-                                                  borderSide:
-                                                      const BorderSide(
-                                                        color: Color(
-                                                          0xFFEC1D24,
-                                                        ),
-                                                        width: 2,
-                                                      ),
+                                                      BorderRadius.circular(12),
+                                                  borderSide: BorderSide(
+                                                    color:
+                                                        isAccessKeyValidValue ==
+                                                                false
+                                                            ? const Color(
+                                                              0xFFEC1D24,
+                                                            )
+                                                            : const Color(
+                                                              0xFFD0D0D0,
+                                                            ),
+                                                    width: 1,
+                                                  ),
                                                 ),
-                                            contentPadding:
-                                                const EdgeInsets.symmetric(
-                                                  horizontal: 16,
-                                                  vertical: 16,
+                                                enabledBorder: OutlineInputBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(12),
+                                                  borderSide: BorderSide(
+                                                    color:
+                                                        isAccessKeyValidValue ==
+                                                                false
+                                                            ? const Color(
+                                                              0xFFEC1D24,
+                                                            )
+                                                            : const Color(
+                                                              0xFFD0D0D0,
+                                                            ),
+                                                    width: 1,
+                                                  ),
                                                 ),
-                                          ),
-                                        ),
-                                        const SizedBox(height: 12),
-                                      ],
-                                    ),
-                          ),
-                          Builder(
-                            builder: (context) {
-                              String? status;
-                              if (commFailed) {
-                                status = commFailure;
-                              } else if (isAccessKeyValidValue == false) {
-                                status =
-                                    processDescValue.isNotEmpty
-                                        ? processDescValue
-                                        : 'Wrong password. Try again.';
-                              } else if (isAccessKeyValidValue == null &&
-                                  (processDescValue.isNotEmpty ||
-                                      accessController.text.isNotEmpty)) {
-                                final bool validatingLike =
-                                    processDescValue == 'Validating' ||
-                                    processDescValue.toLowerCase().contains(
-                                      'validat',
-                                    );
-                                status =
-                                    processDescValue.isNotEmpty
-                                        ? (bleProcess
-                                                    .sessionAccessCodeReady
-                                                    .value &&
-                                                validatingLike
-                                            ? ''
-                                            : processDescValue)
-                                        : 'Validating...';
-                              } else if (isAccessKeyValidValue == true) {
-                                final bool bulkOp =
-                                    isConfigLogBulk || isConfigLogBulkApply;
-                                if (bulkOp &&
-                                    showDetailedConfigLogBulkBleProgressInAccessDialog) {
-                                  if (processDescValue.isNotEmpty &&
-                                      processDescValue != 'Success') {
-                                    status = processDescValue;
-                                  } else {
-                                    status =
-                                        mode == 'bottomsheet_download'
-                                            ? 'Downloading configuration…'
-                                            : 'Applying configuration to panel…';
-                                  }
-                                } else if (bulkOp &&
-                                    !showDetailedConfigLogBulkBleProgressInAccessDialog) {
-                                  status =
-                                      mode == 'bottomsheet_download'
-                                          ? 'Downloading configuration…'
-                                          : 'Applying configuration to panel…';
-                                } else {
-                                  status =
-                                      mode == 'bottomsheet_download'
-                                          ? 'Processing...'
-                                          : mode == 'bottomsheet_apply'
-                                          ? 'Processing...'
-                                          : 'Fetching...';
-                                  if (isMounted()) {
-                                    bleProcess.processDesc.value = 'Success';
-                                  }
-                                }
-                              }
-                              if (!commFailed && isAccessKeyValidValue == false) {
-                                if (accessController.text.isNotEmpty) {
-                                  accessController.clear();
-                                }
-                                WidgetsBinding.instance.addPostFrameCallback((
-                                  _,
-                                ) {
-                                  if (focusNode.canRequestFocus) {
-                                    focusNode.requestFocus();
-                                  }
-                                });
-                              }
-                              return status == null || status.isEmpty
-                                  ? const SizedBox(height: 8)
-                                  : Padding(
-                                    padding: const EdgeInsets.only(
-                                      bottom: 4,
-                                      top: 12,
-                                    ),
-                                    child: Text(
-                                      status,
-                                      style: GoogleFonts.inter(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w600,
-                                        color:
-                                            commFailed ||
-                                                    isAccessKeyValidValue ==
-                                                        false
-                                                ? const Color(0xFFEC1D24)
-                                                : const Color(0xFF3D3D3D),
-                                      ),
-                                      textAlign: TextAlign.center,
-                                    ),
-                                  );
-                            },
-                          ),
-                          ValueListenableBuilder<String>(
-                            valueListenable: bleProcess.processDesc,
-                            builder: (_, processDescForButtons, __) {
-                              final bool showButtons =
-                                  isAccessKeyValidValue != true &&
-                                  (commFailed ||
-                                      processDescForButtons.isEmpty ||
-                                      isAccessKeyValidValue == false);
-                              return showButtons
-                                  ? Column(
-                                    children: [
-                                      const SizedBox(height: 12),
-                                      Row(
-                                        children: [
-                                          Expanded(
-                                            child: SizedBox(
-                                              height: 48,
-                                              child: OutlinedButton(
-                                                style: OutlinedButton.styleFrom(
-                                                  foregroundColor:
-                                                      const Color(0xFFEC1D24),
-                                                  side: const BorderSide(
+                                                focusedBorder:
+                                                    OutlineInputBorder(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            12,
+                                                          ),
+                                                      borderSide:
+                                                          const BorderSide(
+                                                            color: Color(
+                                                              0xFFEC1D24,
+                                                            ),
+                                                            width: 2,
+                                                          ),
+                                                    ),
+                                                errorBorder: OutlineInputBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(12),
+                                                  borderSide: const BorderSide(
                                                     color: Color(0xFFEC1D24),
-                                                  ),
-                                                  shape: RoundedRectangleBorder(
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                          24,
-                                                        ),
+                                                    width: 1,
                                                   ),
                                                 ),
-                                                onPressed: () {
-                                                  cancelAccessKeyTimer();
-                                                  bleProcess
-                                                      .clearCommunicationFailure();
-                                                  Navigator.of(
-                                                    dialogContext,
-                                                  ).pop();
-                                                },
-                                                child: Text(
-                                                  'Cancel',
-                                                  style: GoogleFonts.inter(
-                                                    fontSize: 16,
-                                                    fontWeight: FontWeight.w600,
-                                                  ),
-                                                ),
+                                                focusedErrorBorder:
+                                                    OutlineInputBorder(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            12,
+                                                          ),
+                                                      borderSide:
+                                                          const BorderSide(
+                                                            color: Color(
+                                                              0xFFEC1D24,
+                                                            ),
+                                                            width: 2,
+                                                          ),
+                                                    ),
+                                                contentPadding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal: 16,
+                                                      vertical: 16,
+                                                    ),
                                               ),
                                             ),
+                                            const SizedBox(height: 12),
+                                          ],
+                                        ),
+                              ),
+                              Builder(
+                                builder: (context) {
+                                  String? status;
+                                  if (commFailed) {
+                                    status = commFailure;
+                                  } else if (isAccessKeyValidValue == false) {
+                                    status =
+                                        processDescValue.isNotEmpty
+                                            ? processDescValue
+                                            : 'Wrong password. Try again.';
+                                  } else if (isAccessKeyValidValue == null &&
+                                      (processDescValue.isNotEmpty ||
+                                          accessController.text.isNotEmpty)) {
+                                    final bool validatingLike =
+                                        processDescValue == 'Validating' ||
+                                        processDescValue.toLowerCase().contains(
+                                          'validat',
+                                        );
+                                    status =
+                                        processDescValue.isNotEmpty
+                                            ? (bleProcess
+                                                        .sessionAccessCodeReady
+                                                        .value &&
+                                                    validatingLike
+                                                ? ''
+                                                : processDescValue)
+                                            : 'Validating...';
+                                  } else if (isAccessKeyValidValue == true) {
+                                    final bool bulkOp =
+                                        isConfigLogBulk || isConfigLogBulkApply;
+                                    if (bulkOp &&
+                                        showDetailedConfigLogBulkBleProgressInAccessDialog) {
+                                      if (processDescValue.isNotEmpty &&
+                                          processDescValue != 'Success') {
+                                        status = processDescValue;
+                                      } else {
+                                        status =
+                                            mode == 'bottomsheet_download'
+                                                ? 'Downloading configuration…'
+                                                : 'Applying configuration to panel…';
+                                      }
+                                    } else if (bulkOp &&
+                                        !showDetailedConfigLogBulkBleProgressInAccessDialog) {
+                                      status =
+                                          mode == 'bottomsheet_download'
+                                              ? 'Downloading configuration…'
+                                              : 'Applying configuration to panel…';
+                                    } else {
+                                      status =
+                                          mode == 'bottomsheet_download'
+                                              ? 'Processing...'
+                                              : mode == 'bottomsheet_apply'
+                                              ? 'Processing...'
+                                              : 'Fetching...';
+                                      if (isMounted()) {
+                                        bleProcess.processDesc.value =
+                                            'Success';
+                                      }
+                                    }
+                                  }
+                                  if (!commFailed &&
+                                      isAccessKeyValidValue == false) {
+                                    if (accessController.text.isNotEmpty) {
+                                      accessController.clear();
+                                    }
+                                    WidgetsBinding.instance
+                                        .addPostFrameCallback((_) {
+                                          if (focusNode.canRequestFocus) {
+                                            focusNode.requestFocus();
+                                          }
+                                        });
+                                  }
+                                  return status == null || status.isEmpty
+                                      ? const SizedBox(height: 8)
+                                      : Padding(
+                                        padding: const EdgeInsets.only(
+                                          bottom: 4,
+                                          top: 12,
+                                        ),
+                                        child: Text(
+                                          status,
+                                          style: GoogleFonts.inter(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w600,
+                                            color:
+                                                commFailed ||
+                                                        isAccessKeyValidValue ==
+                                                            false
+                                                    ? const Color(0xFFEC1D24)
+                                                    : const Color(0xFF3D3D3D),
                                           ),
-                                          if (!commFailed) ...[
-                                            const SizedBox(width: 12),
-                                            Expanded(
-                                              child: SizedBox(
-                                                height: 48,
-                                                child: ListenableBuilder(
-                                                  listenable: accessController,
-                                                  builder: (context, _) {
-                                                    final canVerify =
-                                                        accessController.text
-                                                            .trim()
-                                                            .isNotEmpty;
-                                                    return ElevatedButton(
-                                                    style: ElevatedButton.styleFrom(
-                                                      backgroundColor:
+                                          textAlign: TextAlign.center,
+                                        ),
+                                      );
+                                },
+                              ),
+                              ValueListenableBuilder<String>(
+                                valueListenable: bleProcess.processDesc,
+                                builder: (_, processDescForButtons, __) {
+                                  final bool showButtons =
+                                      isAccessKeyValidValue != true &&
+                                      (commFailed ||
+                                          processDescForButtons.isEmpty ||
+                                          isAccessKeyValidValue == false);
+                                  return showButtons
+                                      ? Column(
+                                        children: [
+                                          const SizedBox(height: 12),
+                                          Row(
+                                            children: [
+                                              Expanded(
+                                                child: SizedBox(
+                                                  height: 48,
+                                                  child: OutlinedButton(
+                                                    style: OutlinedButton.styleFrom(
+                                                      foregroundColor:
                                                           const Color(
                                                             0xFFEC1D24,
                                                           ),
+                                                      side: const BorderSide(
+                                                        color: Color(
+                                                          0xFFEC1D24,
+                                                        ),
+                                                      ),
                                                       shape: RoundedRectangleBorder(
                                                         borderRadius:
                                                             BorderRadius.circular(
@@ -803,66 +817,113 @@ Future<void> showPanelAccessPasswordPopup({
                                                             ),
                                                       ),
                                                     ),
-                                                    onPressed:
-                                                        canVerify
-                                                            ? () async {
-                                                              FocusScope.of(
-                                                                dialogContext,
-                                                              ).unfocus();
-
-                                                              bleProcess
-                                                                      .isAccessKeyValid
-                                                                      .value =
-                                                                  null;
-                                                              bleProcess
-                                                                      .processDesc
-                                                                      .value =
-                                                                  'Validating';
-
-                                                              accessKey
-                                                                      .value =
-                                                                  accessController
-                                                                      .text;
-
-                                                              if (isConfigLogBulkApply &&
-                                                                  mode ==
-                                                                      'bottomsheet_apply') {
-                                                                await PeripheralCacheToBle.applyToBleManager(
-                                                                  bleManager,
-                                                                  selectedDevice
-                                                                      .id,
-                                                                );
-                                                              }
-
-                                                              onCall();
-                                                            }
-                                                            : null,
+                                                    onPressed: () {
+                                                      cancelAccessKeyTimer();
+                                                      bleProcess
+                                                          .clearCommunicationFailure();
+                                                      Navigator.of(
+                                                        dialogContext,
+                                                      ).pop();
+                                                    },
                                                     child: Text(
-                                                      'Verify',
-                                                      style:
-                                                          GoogleFonts.inter(
-                                                            fontSize: 16,
-                                                            fontWeight:
-                                                                FontWeight
-                                                                    .w600,
-                                                            color: Colors.white,
-                                                          ),
+                                                      'Cancel',
+                                                      style: GoogleFonts.inter(
+                                                        fontSize: 16,
+                                                        fontWeight:
+                                                            FontWeight.w600,
+                                                      ),
                                                     ),
-                                                    );
-                                                  },
+                                                  ),
                                                 ),
                                               ),
-                                            ),
-                                          ],
+                                              if (!commFailed) ...[
+                                                const SizedBox(width: 12),
+                                                Expanded(
+                                                  child: SizedBox(
+                                                    height: 48,
+                                                    child: ListenableBuilder(
+                                                      listenable:
+                                                          accessController,
+                                                      builder: (context, _) {
+                                                        final canVerify =
+                                                            accessController
+                                                                .text
+                                                                .trim()
+                                                                .isNotEmpty;
+                                                        return ElevatedButton(
+                                                          style: ElevatedButton.styleFrom(
+                                                            backgroundColor:
+                                                                const Color(
+                                                                  0xFFEC1D24,
+                                                                ),
+                                                            shape: RoundedRectangleBorder(
+                                                              borderRadius:
+                                                                  BorderRadius.circular(
+                                                                    24,
+                                                                  ),
+                                                            ),
+                                                          ),
+                                                          onPressed:
+                                                              canVerify
+                                                                  ? () async {
+                                                                    FocusScope.of(
+                                                                      dialogContext,
+                                                                    ).unfocus();
+
+                                                                    bleProcess
+                                                                        .isAccessKeyValid
+                                                                        .value = null;
+                                                                    bleProcess
+                                                                            .processDesc
+                                                                            .value =
+                                                                        'Validating';
+
+                                                                    accessKey
+                                                                            .value =
+                                                                        accessController
+                                                                            .text;
+
+                                                                    if (isConfigLogBulkApply &&
+                                                                        mode ==
+                                                                            'bottomsheet_apply') {
+                                                                      await PeripheralCacheToBle.applyToBleManager(
+                                                                        bleManager,
+                                                                        selectedDevice
+                                                                            .id,
+                                                                      );
+                                                                    }
+
+                                                                    onCall();
+                                                                  }
+                                                                  : null,
+                                                          child: Text(
+                                                            'Verify',
+                                                            style:
+                                                                GoogleFonts.inter(
+                                                                  fontSize: 16,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .w600,
+                                                                  color:
+                                                                      Colors
+                                                                          .white,
+                                                                ),
+                                                          ),
+                                                        );
+                                                      },
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ],
+                                          ),
                                         ],
-                                      ),
-                                    ],
-                                  )
-                                  : const SizedBox.shrink();
-                            },
-                          ),
-                        ],
-                      );
+                                      )
+                                      : const SizedBox.shrink();
+                                },
+                              ),
+                            ],
+                          );
                         },
                       );
                     },
