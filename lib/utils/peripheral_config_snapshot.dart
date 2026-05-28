@@ -15,8 +15,8 @@ const List<PeripheralConfigSection> kPeripheralConfigFetchOrder = [
   PeripheralConfigSection.relay,
   PeripheralConfigSection.zone,
   PeripheralConfigSection.sounder,
-  PeripheralConfigSection.lBus,
   PeripheralConfigSection.extOut,
+  PeripheralConfigSection.lBus,
 ];
 
 /// Apply order excludes [module] (no panel apply API in app).
@@ -29,8 +29,8 @@ const List<PeripheralConfigSection> kPeripheralConfigApplyOrder = [
   PeripheralConfigSection.relay,
   PeripheralConfigSection.zone,
   PeripheralConfigSection.sounder,
-  PeripheralConfigSection.lBus,
   PeripheralConfigSection.extOut,
+  PeripheralConfigSection.lBus,
 ];
 
 enum PeripheralConfigSection {
@@ -115,6 +115,8 @@ class ConfigCompareResult {
     required this.localBySection,
     this.errorMessage,
     this.sectionDiffLines = const {},
+    this.lBusCommsFaultBusNumbers = const [],
+    this.isAppCacheEmpty = false,
   });
 
   factory ConfigCompareResult.withError(String message) {
@@ -134,6 +136,12 @@ class ConfigCompareResult {
 
   /// Human-readable lines per section key (`PeripheralConfigSection.key`), only for mismatches.
   final Map<String, List<String>> sectionDiffLines;
+
+  /// Enabled L-Bus bus numbers that returned comms fault during panel download.
+  final List<String> lBusCommsFaultBusNumbers;
+
+  /// True when no peripheral setup is saved in app storage for this device.
+  final bool isAppCacheEmpty;
 
   bool get hasMismatch =>
       errorMessage != null || sectionMatch.values.any((m) => !m);
@@ -401,6 +409,20 @@ class PeripheralConfigSnapshot {
     };
   }
 
+  static bool _isEmptyCacheSlice(Object? value) {
+    if (value == null) return true;
+    if (value is Map && value.isEmpty) return true;
+    if (value is List && value.isEmpty) return true;
+    return false;
+  }
+
+  /// True when every config section has no saved app data for this device.
+  static bool isAppCacheEmpty(Map<String, Object?> localBySection) {
+    return kPeripheralConfigFetchOrder.every(
+      (s) => _isEmptyCacheSlice(localBySection[s.key]),
+    );
+  }
+
   static Future<Map<String, Object?>> fromCache(String deviceId) async {
     final relay = await PeripheralSetupCache.loadRelaySetup(deviceId);
     final input = await PeripheralSetupCache.loadInputSetup(deviceId);
@@ -599,7 +621,9 @@ class PeripheralConfigSnapshot {
   static ConfigCompareResult compare({
     required Map<String, Object?> panelBySection,
     required Map<String, Object?> localBySection,
+    List<String> lBusCommsFaultBusNumbers = const [],
   }) {
+    final appCacheEmpty = isAppCacheEmpty(localBySection);
     final match = <String, bool>{};
     final diffs = <String, List<String>>{};
     for (final s in kPeripheralConfigFetchOrder) {
@@ -632,11 +656,30 @@ class PeripheralConfigSnapshot {
         diffs[k] = lines;
       }
     }
+
+    if (lBusCommsFaultBusNumbers.isNotEmpty) {
+      final k = PeripheralConfigSection.lBus.key;
+      match[k] = false;
+      final faultLines = <String>[
+        'L-Bus comms fault on bus(es): ${lBusCommsFaultBusNumbers.join(", ")}',
+        'Enabled-bus detail may be incomplete; compare panel vs app using '
+            'per-bus download if needed.',
+      ];
+      final existing = diffs[k];
+      if (existing == null || existing.isEmpty) {
+        diffs[k] = faultLines;
+      } else {
+        diffs[k] = [...faultLines, ...existing];
+      }
+    }
+
     return ConfigCompareResult(
       sectionMatch: match,
       panelBySection: panelBySection,
       localBySection: localBySection,
       sectionDiffLines: diffs,
+      lBusCommsFaultBusNumbers: List<String>.from(lBusCommsFaultBusNumbers),
+      isAppCacheEmpty: appCacheEmpty,
     );
   }
 }

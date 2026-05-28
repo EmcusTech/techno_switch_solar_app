@@ -117,12 +117,34 @@ class PanelConfigBulkSync {
     for (final s in kPeripheralConfigFetchOrder.skip(1)) {
       startFetchSection(bleController, bleManager, s);
       await waitUntilNotifierQuiet(fetchBusyFor(bleManager, s));
-      if (s == PeripheralConfigSection.lBus &&
-          bleManager.bleProcess.isLbusFetchHasErrors.value) {
-        final errs = bleManager.bleProcess.lbusFetchErrors.value.join(', ');
-        throw StateError('L-Bus download failed: $errs');
-      }
     }
+  }
+
+  /// Panel (BLE) vs saved app cache; marks [PeripheralConfigSection.lBus] mismatch
+  /// when enabled-bus comms faults were recorded during bulk fetch.
+  static Future<ConfigCompareResult> buildConfigCompareResultFromCache(
+    BleManager bleManager,
+    String deviceId,
+  ) async {
+    return buildConfigCompareResult(
+      bleManager,
+      await PeripheralConfigSnapshot.fromCache(deviceId),
+    );
+  }
+
+  static ConfigCompareResult buildConfigCompareResult(
+    BleManager bleManager,
+    Map<String, Object?> localBySection,
+  ) {
+    final bp = bleManager.bleProcess;
+    return PeripheralConfigSnapshot.compare(
+      panelBySection: PeripheralConfigSnapshot.fromBleManager(bleManager),
+      localBySection: localBySection,
+      lBusCommsFaultBusNumbers:
+          bp.isLbusFetchHasErrors.value
+              ? List<String>.from(bp.lbusFetchErrors.value)
+              : const [],
+    );
   }
 
   static ValueNotifier<bool> applyBusyFor(BleManager m, PeripheralConfigSection s) {

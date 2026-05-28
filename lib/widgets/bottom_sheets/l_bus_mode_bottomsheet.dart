@@ -89,6 +89,10 @@ class LBusBottomSheetState extends State<LBusBottomSheet> {
       manager = Get.find<BleLogController>().bleManager;
       manager?.lBusSetupDataList.addListener(_onListChanged);
     }
+    if (manager?.isConnected == true) {
+      _loadFromManager();
+      return;
+    }
     final cached = await PeripheralSetupCache.loadLBusSetup(widget.deviceId);
     if (cached != null && cached.isNotEmpty) {
       final list = cached.map((e) => LBusSetupData.fromJson(e)).toList();

@@ -114,6 +114,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
   void _syncTabControllerFromResult(ConfigCompareResult? result) {
     if (result != null &&
         result.errorMessage == null &&
+        !result.isAppCacheEmpty &&
         result.hasMismatch &&
         result.mismatchedSections.isNotEmpty) {
       _tabController?.dispose();
@@ -142,7 +143,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
 
   void _syncSelectedLBusFromResult(ConfigCompareResult? result) {
     if (result == null) return;
-    final lines = result.diffLinesFor(PeripheralConfigSection.lBus);
+    final lines = _lBusFieldDiffLines(result.diffLinesFor(PeripheralConfigSection.lBus));
     for (final line in lines) {
       final index = _listIndexFromDiffLine(line);
       if (index != null) {
@@ -150,6 +151,47 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
         return;
       }
     }
+  }
+
+  List<String> _lBusFieldDiffLines(List<String> lines) {
+    return lines.where((line) => _listIndexFromDiffLine(line) != null).toList();
+  }
+
+  Widget _lBusCommsFaultBanner(List<String> busNumbers) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFEBEE),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xFFEC1D24).withValues(alpha: 0.35)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'L-Bus comms fault on bus(es): ${busNumbers.join(", ")}',
+            style: GoogleFonts.inter(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: _brandRed,
+              height: 1.35,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Enabled-bus detail may be incomplete. Use per-bus download on the '
+            'L-Bus screen if needed.',
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              fontWeight: FontWeight.w400,
+              color: const Color(0xFF444444),
+              height: 1.35,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   List<String> _filterDiffLinesForLBus(List<String> lines, int selectedBus) {
@@ -664,17 +706,28 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
     final diffLines = result.diffLinesFor(s);
     final sectionKey = s.key;
     final isLBus = s == PeripheralConfigSection.lBus;
+    final lBusCommsFaults =
+        isLBus ? result.lBusCommsFaultBusNumbers : const <String>[];
+    final lBusFieldDiffLines = isLBus ? _lBusFieldDiffLines(diffLines) : diffLines;
+    final hasLBusFieldDiffs = lBusFieldDiffLines.isNotEmpty;
+    final hasLBusCommsFaults = lBusCommsFaults.isNotEmpty;
     final visibleDiffLines =
-        isLBus ? _filterDiffLinesForLBus(diffLines, _selectedLBus) : diffLines;
-    final fieldDiffCount =
-        visibleDiffLines
-            .where((line) => _listIndexFromDiffLine(line) != null)
-            .length;
+        isLBus
+            ? _filterDiffLinesForLBus(lBusFieldDiffLines, _selectedLBus)
+            : diffLines;
+    final fieldDiffCount = visibleDiffLines.length;
     final summaryText = () {
       if (diffLines.isEmpty) {
         return 'Panel data differs from app cache.';
       }
       if (isLBus) {
+        if (hasLBusCommsFaults && !hasLBusFieldDiffs) {
+          return 'Comms fault during download (no field differences vs app)';
+        }
+        if (hasLBusCommsFaults && hasLBusFieldDiffs) {
+          return 'Comms fault on some buses; $fieldDiffCount change(s) on '
+              'L-Bus $_selectedLBus';
+        }
         if (fieldDiffCount == 0) {
           return 'No differences on L-Bus $_selectedLBus';
         }
@@ -722,11 +775,16 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
               color: _textMuted,
             ),
           ),
-          if (isLBus && diffLines.isNotEmpty) ...[
+          if (isLBus && hasLBusCommsFaults) ...[
+            const SizedBox(height: 12),
+            _lBusCommsFaultBanner(lBusCommsFaults),
+          ],
+          if (isLBus && hasLBusFieldDiffs) ...[
             const SizedBox(height: 12),
             _lBusSelector(),
           ],
-          const SizedBox(height: 12),
+          if (isLBus && (hasLBusCommsFaults || hasLBusFieldDiffs))
+            const SizedBox(height: 12),
           if (diffLines.isEmpty)
             Text(
               'No field-level detail available.',
@@ -736,6 +794,8 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
                 color: const Color(0xFF444444),
               ),
             )
+          else if (isLBus && !hasLBusFieldDiffs)
+            const SizedBox.shrink()
           else if (visibleDiffLines.isEmpty)
             Text(
               isLBus
@@ -893,6 +953,44 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
       );
     }
 
+    if (result.isAppCacheEmpty) {
+      return _tileShell(
+        title: 'Result',
+        children: [
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: const Color(0xFFE3F2FD),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0xFF90CAF9)),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(Icons.info_outline, color: Colors.blue.shade700),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'No configuration is saved in the app for this device. '
+                    'Panel data was downloaded successfully. Update the app to '
+                    'save it locally — there is nothing in the app to send to '
+                    'the panel.',
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: const Color(0xFF1565C0),
+                      height: 1.35,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      );
+    }
+
     if (!result.hasMismatch) {
       return _tileShell(
         title: 'Result',
@@ -947,8 +1045,52 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
     return _mismatchTabsSection(result);
   }
 
+  Future<void> _onUpdateAppPressed() async {
+    FocusManager.instance.primaryFocus?.unfocus();
+    final saveFuture = widget.onUsePanelDataInApp();
+    if (!mounted) return;
+    Navigator.of(context).pop();
+    await saveFuture;
+  }
+
   Widget _bottomActions(ConfigCompareResult? result, bool working) {
-    if (result == null || result.errorMessage != null || !result.hasMismatch) {
+    if (result == null || result.errorMessage != null) {
+      return const SizedBox.shrink();
+    }
+
+    if (result.isAppCacheEmpty) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            height: 48,
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _brandRed,
+                foregroundColor: Colors.white,
+                disabledBackgroundColor: Colors.grey.shade400,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24),
+                ),
+              ),
+              onPressed: working ? null : _onUpdateAppPressed,
+              child: Text(
+                'Update App',
+                style: GoogleFonts.inter(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
+    if (!result.hasMismatch) {
       return const SizedBox.shrink();
     }
 
@@ -969,16 +1111,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
                       borderRadius: BorderRadius.circular(24),
                     ),
                   ),
-                  onPressed:
-                      working
-                          ? null
-                          : () async {
-                            FocusManager.instance.primaryFocus?.unfocus();
-                            final saveFuture = widget.onUsePanelDataInApp();
-                            if (!mounted) return;
-                            Navigator.of(context).pop();
-                            await saveFuture;
-                          },
+                  onPressed: working ? null : _onUpdateAppPressed,
                   child: Text(
                     'Update App',
                     style: GoogleFonts.inter(
@@ -1077,6 +1210,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
   bool _showMismatchTabs(ConfigCompareResult? result) {
     return result != null &&
         result.errorMessage == null &&
+        !result.isAppCacheEmpty &&
         result.hasMismatch &&
         result.mismatchedSections.isNotEmpty;
   }
@@ -1106,6 +1240,9 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
     if (result != null) {
       if (_showMismatchTabs(result)) {
         return screenH * 0.85;
+      }
+      if (result.isAppCacheEmpty) {
+        return screenH * (showsIntro ? 0.52 : 0.48);
       }
       if (result.hasMismatch) {
         return screenH * (showsIntro ? 0.50 : 0.58);

@@ -31,9 +31,9 @@ Future<void> presentPostConnectConfigLogCompareAfterDownload({
   var userChoseAction = false;
 
   Future<ConfigCompareResult> buildCompare() async {
-    return PeripheralConfigSnapshot.compare(
-      panelBySection: PeripheralConfigSnapshot.fromBleManager(bleManager),
-      localBySection: await PeripheralConfigSnapshot.fromCache(device.id),
+    return PanelConfigBulkSync.buildConfigCompareResultFromCache(
+      bleManager,
+      device.id,
     );
   }
 
@@ -202,6 +202,12 @@ Future<void> presentPostConnectConfigLogCompareAfterDownload({
               bleManager,
             );
             compareResult.value = await buildCompare();
+            await PanelConfigCacheSync.saveAllFromBle(
+              bleManager,
+              device.id,
+              refreshNotifiers,
+            );
+            refreshNotifiers.bumpAll();
           } catch (e, st) {
             debugPrint('$e\n$st');
             compareResult.value = ConfigCompareResult.withError(

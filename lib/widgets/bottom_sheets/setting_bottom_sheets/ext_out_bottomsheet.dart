@@ -203,6 +203,10 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
     if (Get.isRegistered<BleLogController>()) {
       manager = Get.find<BleLogController>().bleManager;
     }
+    if (manager?.isConnected == true) {
+      _loadFromManager();
+      return;
+    }
     final cached = await PeripheralSetupCache.loadExtOutSetup(widget.deviceId);
     if (cached != null) {
       _applyCachedData(cached);

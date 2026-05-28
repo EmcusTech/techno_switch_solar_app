@@ -1549,14 +1549,12 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
             bleController,
             _bleManager,
           );
-          _configLogCompareResult.value = PeripheralConfigSnapshot.compare(
-            panelBySection: PeripheralConfigSnapshot.fromBleManager(
-              _bleManager,
-            ),
-            localBySection: await PeripheralConfigSnapshot.fromCache(
-              _selectedDevice.id,
-            ),
-          );
+          _configLogCompareResult.value =
+              await PanelConfigBulkSync.buildConfigCompareResultFromCache(
+                _bleManager,
+                _selectedDevice.id,
+              );
+          await _saveAllPeripheralCachesFromBle();
         } catch (e, st) {
           debugPrint('$e\n$st');
           _configLogCompareResult.value = ConfigCompareResult.withError(
@@ -1672,15 +1670,11 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                     );
                     await _saveAllPeripheralCachesFromBle();
                     if (!mounted) return;
-                    _configLogCompareResult
-                        .value = PeripheralConfigSnapshot.compare(
-                      panelBySection: PeripheralConfigSnapshot.fromBleManager(
-                        _bleManager,
-                      ),
-                      localBySection: await PeripheralConfigSnapshot.fromCache(
-                        _selectedDevice.id,
-                      ),
-                    );
+                    _configLogCompareResult.value =
+                        await PanelConfigBulkSync.buildConfigCompareResultFromCache(
+                          _bleManager,
+                          _selectedDevice.id,
+                        );
                     if (!mounted) return;
                     showApplySuccessDialog(
                       context,
