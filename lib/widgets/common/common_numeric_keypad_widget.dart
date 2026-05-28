@@ -273,12 +273,17 @@ class _CommonNumericKeypadWidgetState extends State<CommonNumericKeypadWidget> {
     required bool fieldBorderIsError,
     required ValidatingStatus validatingStatus,
   }) {
-    final maxHeight = MediaQuery.of(context).size.height * 0.82;
+    final maxHeight =
+        status != null && status.isNotEmpty
+            ? MediaQuery.of(context).size.height * 0.85
+            : MediaQuery.of(context).size.height * 0.82;
     final borderColor =
         fieldBorderIsError ? const Color(0xFFEC1D24) : const Color(0xFFD0D0D0);
 
     return SafeArea(
-      child: ConstrainedBox(
+      child: AnimatedContainer(
+        duration: _animDuration,
+        curve: Curves.easeInOutCubic,
         constraints: BoxConstraints(maxHeight: maxHeight),
         child: Container(
           decoration: const BoxDecoration(
@@ -388,24 +393,38 @@ class _CommonNumericKeypadWidgetState extends State<CommonNumericKeypadWidget> {
                                     ),
                                   ),
                         ),
-                        if (status != null && status.isNotEmpty) ...[
-                          const SizedBox(height: 8),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 26),
-                            child: Text(
-                              status,
-                              style: GoogleFonts.inter(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                color:
-                                    isErrorStatus
-                                        ? const Color(0xFFEC1D24)
-                                        : const Color(0xFF3D3D3D),
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
-                        ],
+                        AnimatedSize(
+                          duration: _animDuration,
+                          curve: Curves.easeInOutCubic,
+                          alignment: Alignment.topCenter,
+                          clipBehavior: Clip.hardEdge,
+                          child:
+                              status != null && status.isNotEmpty
+                                  ? Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const SizedBox(height: 8),
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 26,
+                                        ),
+                                        child: Text(
+                                          status,
+                                          style: GoogleFonts.inter(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w600,
+                                            color:
+                                                isErrorStatus
+                                                    ? const Color(0xFFEC1D24)
+                                                    : const Color(0xFF3D3D3D),
+                                          ),
+                                          textAlign: TextAlign.center,
+                                        ),
+                                      ),
+                                    ],
+                                  )
+                                  : const SizedBox.shrink(),
+                        ),
                         AnimatedSize(
                           duration: _animDuration,
                           curve: Curves.easeInOutCubic,
