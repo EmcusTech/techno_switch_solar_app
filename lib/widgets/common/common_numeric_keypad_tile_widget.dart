@@ -135,7 +135,15 @@ class _CommonNumericKeypadTileWidgetState
         child: Center(
           child:
               widget.isDelete == true
-                  ? SvgPicture.asset("assets/svgs/keypad_delete_icon.svg")
+                  ? SvgPicture.asset(
+                    "assets/svgs/keypad_delete_icon.svg",
+                    colorFilter: ColorFilter.mode(
+                      isPressed
+                          ? Colors.white
+                          : Color.fromARGB(255, 207, 47, 47),
+                      BlendMode.srcIn,
+                    ),
+                  )
                   : widget.isClear == true
                   ? SvgPicture.asset("assets/svgs/keypad_clear_icon.svg")
                   : Text(
