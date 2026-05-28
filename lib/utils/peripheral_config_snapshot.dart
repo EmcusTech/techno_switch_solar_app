@@ -119,9 +119,7 @@ class ConfigCompareResult {
 
   factory ConfigCompareResult.withError(String message) {
     return ConfigCompareResult(
-      sectionMatch: {
-        for (final s in kPeripheralConfigFetchOrder) s.key: false,
-      },
+      sectionMatch: {for (final s in kPeripheralConfigFetchOrder) s.key: false},
       panelBySection: {},
       localBySection: {},
       errorMessage: message,
@@ -560,18 +558,8 @@ class PeripheralConfigSnapshot {
 
     final label = path.isEmpty ? '(section root)' : path;
     if (diffSection != null) {
-      final pv = _formatDiffScalar(
-        diffSection,
-        path,
-        panel,
-        panelSectionRoot,
-      );
-      final lv = _formatDiffScalar(
-        diffSection,
-        path,
-        local,
-        localSectionRoot,
-      );
+      final pv = _formatDiffScalar(diffSection, path, panel, panelSectionRoot);
+      final lv = _formatDiffScalar(diffSection, path, local, localSectionRoot);
       return ['$label: panel $pv · app $lv'];
     }
     return [
@@ -637,13 +625,10 @@ class PeripheralConfigSnapshot {
           panelSlice,
           localSlice,
         );
-        if (lines.length > _maxDiffLinesPerSection) {
-          final extra = lines.length - _maxDiffLinesPerSection;
-          lines = [
-            ...lines.take(_maxDiffLinesPerSection),
-            '… $extra more',
-          ];
-        }
+        // if (lines.length > _maxDiffLinesPerSection) {
+        //   final extra = lines.length - _maxDiffLinesPerSection;
+        //   lines = [...lines.take(_maxDiffLinesPerSection), '… $extra more'];
+        // }
         diffs[k] = lines;
       }
     }

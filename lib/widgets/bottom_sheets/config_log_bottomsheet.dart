@@ -7,6 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/screens/device_connecting_screen.dart';
 import 'package:techno_switch_solar_app/utils/peripheral_config_diff_labels.dart';
 import 'package:techno_switch_solar_app/utils/peripheral_config_snapshot.dart';
+import 'package:techno_switch_solar_app/widgets/bottom_sheets/widgets/dropdown.dart';
 
 /// [bottomSheet] - rounded top only (e.g. dashboard modal).
 /// [dialog] - same content in a centered [Dialog] (e.g. post connect compare).
@@ -52,9 +53,12 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
   static const Color _border = Color(0xFFDCDCDC);
   static const Color _surfaceMuted = Color(0xFFF8F8F8);
 
+  static final RegExp _listIndexFromPathRe = RegExp(r'^\[(\d+)\]');
+
   TabController? _tabController;
   final ScrollController _resultController = ScrollController();
   final ScrollController _cardController = ScrollController();
+  int _selectedLBus = 1;
 
   @override
   void initState() {
@@ -66,6 +70,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
     widget.isWorking.addListener(_onWorkingChanged);
     // Notifier does not fire on attach; align TabController before first build.
     _syncTabControllerFromResult(widget.compareResult.value);
+    _syncSelectedLBusFromResult(widget.compareResult.value);
   }
 
   @override
@@ -124,7 +129,62 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
 
   void _onResultChanged() {
     _syncTabControllerFromResult(widget.compareResult.value);
+    _syncSelectedLBusFromResult(widget.compareResult.value);
     if (mounted) setState(() {});
+  }
+
+  int? _listIndexFromDiffLine(String line) {
+    final path = line.split(':').first.trim();
+    final match = _listIndexFromPathRe.firstMatch(path);
+    if (match == null) return null;
+    return int.parse(match.group(1)!);
+  }
+
+  void _syncSelectedLBusFromResult(ConfigCompareResult? result) {
+    if (result == null) return;
+    final lines = result.diffLinesFor(PeripheralConfigSection.lBus);
+    for (final line in lines) {
+      final index = _listIndexFromDiffLine(line);
+      if (index != null) {
+        _selectedLBus = index + 1;
+        return;
+      }
+    }
+  }
+
+  List<String> _filterDiffLinesForLBus(List<String> lines, int selectedBus) {
+    final index = selectedBus - 1;
+    return lines.where((line) {
+      final listIndex = _listIndexFromDiffLine(line);
+      if (listIndex == null) return true;
+      return listIndex == index;
+    }).toList();
+  }
+
+  Widget _lBusSelector() {
+    return DropdownWidget(
+      label: 'Select L-Bus',
+      value: 'L-Bus $_selectedLBus',
+      items: List.generate(31, (i) => 'L-Bus ${i + 1}'),
+      dropdownListHeight: MediaQuery.sizeOf(context).height * 0.2,
+      enableSearch: false,
+      onChanged: (value) {
+        final number = int.parse(value.split(' ').last);
+        setState(() => _selectedLBus = number);
+      },
+    );
+  }
+
+  String _humanizeDiffPath(
+    String sectionKey,
+    String path, {
+    bool stripListDevicePrefix = false,
+  }) {
+    var normalized = path;
+    if (stripListDevicePrefix) {
+      normalized = normalized.replaceFirst(RegExp(r'^\[\d+\]\.?'), '');
+    }
+    return PeripheralConfigDiffLabels.humanizeFieldPath(sectionKey, normalized);
   }
 
   void _onWorkingChanged() {
@@ -426,7 +486,11 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
     );
   }
 
-  Widget _diffLineWidget(String sectionKey, String line) {
+  Widget _diffLineWidget(
+    String sectionKey,
+    String line, {
+    bool stripListDevicePrefix = false,
+  }) {
     const panelPrefix = ': panel ';
     const appSep = ' · app ';
     final panelIdx = line.indexOf(panelPrefix);
@@ -437,9 +501,10 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
       if (appIdx != -1) {
         final panelVal = tail.substring(0, appIdx);
         final appVal = tail.substring(appIdx + appSep.length);
-        final title = PeripheralConfigDiffLabels.humanizeFieldPath(
+        final title = _humanizeDiffPath(
           sectionKey,
           path,
+          stripListDevicePrefix: stripListDevicePrefix,
         );
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -461,9 +526,10 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
       final path = listLen.group(1)!;
       final panelN = listLen.group(2)!;
       final appN = listLen.group(3)!;
-      final title = PeripheralConfigDiffLabels.humanizeFieldPath(
+      final title = _humanizeDiffPath(
         sectionKey,
         path,
+        stripListDevicePrefix: stripListDevicePrefix,
       );
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -490,9 +556,10 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
     if (onlyPanel != null) {
       final path = onlyPanel.group(1)!;
       final val = onlyPanel.group(2)!;
-      final title = PeripheralConfigDiffLabels.humanizeFieldPath(
+      final title = _humanizeDiffPath(
         sectionKey,
         path,
+        stripListDevicePrefix: stripListDevicePrefix,
       );
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -526,9 +593,10 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
     if (onlyApp != null) {
       final path = onlyApp.group(1)!;
       final val = onlyApp.group(2)!;
-      final title = PeripheralConfigDiffLabels.humanizeFieldPath(
+      final title = _humanizeDiffPath(
         sectionKey,
         path,
+        stripListDevicePrefix: stripListDevicePrefix,
       );
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -595,6 +663,25 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
   ) {
     final diffLines = result.diffLinesFor(s);
     final sectionKey = s.key;
+    final isLBus = s == PeripheralConfigSection.lBus;
+    final visibleDiffLines =
+        isLBus ? _filterDiffLinesForLBus(diffLines, _selectedLBus) : diffLines;
+    final fieldDiffCount =
+        visibleDiffLines
+            .where((line) => _listIndexFromDiffLine(line) != null)
+            .length;
+    final summaryText = () {
+      if (diffLines.isEmpty) {
+        return 'Panel data differs from app cache.';
+      }
+      if (isLBus) {
+        if (fieldDiffCount == 0) {
+          return 'No differences on L-Bus $_selectedLBus';
+        }
+        return '$fieldDiffCount change(s) on L-Bus $_selectedLBus';
+      }
+      return '${diffLines.length} change(s) vs saved app data';
+    }();
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(14),
@@ -628,15 +715,17 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
           // ),
           // const SizedBox(height: 6),
           Text(
-            diffLines.isEmpty
-                ? 'Panel data differs from app cache.'
-                : '${diffLines.length} change(s) vs saved app data',
+            summaryText,
             style: GoogleFonts.inter(
               fontSize: 12,
               fontWeight: FontWeight.w500,
               color: _textMuted,
             ),
           ),
+          if (isLBus && diffLines.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            _lBusSelector(),
+          ],
           const SizedBox(height: 12),
           if (diffLines.isEmpty)
             Text(
@@ -647,15 +736,30 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
                 color: const Color(0xFF444444),
               ),
             )
+          else if (visibleDiffLines.isEmpty)
+            Text(
+              isLBus
+                  ? 'Select another L-Bus to view its differences.'
+                  : 'No field-level detail available.',
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                height: 1.45,
+                color: const Color(0xFF444444),
+              ),
+            )
           else
             Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                for (var i = 0; i < diffLines.length; i++) ...[
+                for (var i = 0; i < visibleDiffLines.length; i++) ...[
                   if (i > 0) ...[
                     Divider(height: 20, thickness: 1, color: _border),
                   ],
-                  _diffLineWidget(sectionKey, diffLines[i]),
+                  _diffLineWidget(
+                    sectionKey,
+                    visibleDiffLines[i],
+                    stripListDevicePrefix: isLBus,
+                  ),
                 ],
               ],
             ),
@@ -743,7 +847,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
         ),
         const SizedBox(height: 16),
         SizedBox(
-          height: MediaQuery.of(context).size.height * 0.3,
+          height: MediaQuery.of(context).size.height * 0.42,
           child: TabBarView(
             controller: c,
             children:
@@ -870,9 +974,10 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
                           ? null
                           : () async {
                             FocusManager.instance.primaryFocus?.unfocus();
-                            await widget.onUsePanelDataInApp();
+                            final saveFuture = widget.onUsePanelDataInApp();
                             if (!mounted) return;
                             Navigator.of(context).pop();
+                            await saveFuture;
                           },
                   child: Text(
                     'Update App',
@@ -1000,7 +1105,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
 
     if (result != null) {
       if (_showMismatchTabs(result)) {
-        return screenH * 0.76;
+        return screenH * 0.85;
       }
       if (result.hasMismatch) {
         return screenH * (showsIntro ? 0.50 : 0.58);

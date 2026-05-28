@@ -126,7 +126,6 @@ Future<void> presentPostConnectConfigLogCompareAfterDownload({
       refreshNotifiers,
     );
     refreshNotifiers.bumpAll();
-    compareResult.value = await buildCompare();
   }
 
   void onApplyLocalToPanel() {

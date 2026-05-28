@@ -1571,12 +1571,6 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
 
   Future<void> _onConfigLogUsePanelDataInApp() async {
     await _saveAllPeripheralCachesFromBle();
-    _configLogCompareResult.value = PeripheralConfigSnapshot.compare(
-      panelBySection: PeripheralConfigSnapshot.fromBleManager(_bleManager),
-      localBySection: await PeripheralConfigSnapshot.fromCache(
-        _selectedDevice.id,
-      ),
-    );
   }
 
   void _onConfigLogApplyLocalToPanel() {
