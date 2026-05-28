@@ -238,6 +238,39 @@ class PeripheralConfigDiffLabels {
     'faultLatching': 'Fault latching',
   };
 
+  static const Map<String, String> _moduleFieldLabels = {
+    'moduleNo': 'Module No',
+    'enabled': 'Enabled',
+    'product': 'Product',
+    'id': 'ID',
+    'revision': 'Revision',
+    'hardware': 'Hardware Version',
+    'firmware': 'Firmware Version',
+    'date': 'Manufacturing Date',
+    'protocol': 'Protocol No',
+  };
+
+  static const Map<String, String> _accessCodeFieldLabels = {
+    'accessCodeNo': 'Access code no',
+    'accessLevel': 'Access level',
+    'accessLevelName': 'Access level name',
+    'accessCode': 'Access code',
+  };
+
+  static const Map<String, String> _lBusFieldLabels = {
+    'enabled': 'Enabled',
+    'idLed': 'ID LED',
+    'product': 'Product',
+    'deviceText': 'L-Bus device text',
+    'id': 'ID',
+    'revision': 'Revision',
+    'productRev': 'Product rev.',
+    'hardware': 'Hardware',
+    'firmware': 'Firmware',
+    'date': 'Date',
+    'protocol': 'Protocol',
+  };
+
   static String _humanizeSegment(String sectionKey, String segment) {
     switch (sectionKey) {
       case 'relay':
@@ -263,6 +296,21 @@ class PeripheralConfigDiffLabels {
 
     if (sectionKey == 'general_module') {
       final friendly = _generalModuleFieldLabels[segment];
+      if (friendly != null) return friendly;
+    }
+
+    if (sectionKey == 'module') {
+      final friendly = _moduleFieldLabels[segment];
+      if (friendly != null) return friendly;
+    }
+
+    if (sectionKey == 'access_code') {
+      final friendly = _accessCodeFieldLabels[segment];
+      if (friendly != null) return friendly;
+    }
+
+    if (sectionKey == 'l_bus') {
+      final friendly = _lBusFieldLabels[segment];
       if (friendly != null) return friendly;
     }
 
@@ -325,6 +373,10 @@ class PeripheralConfigDiffLabels {
     final rel = _relativePath(path);
 
     switch (sectionKey) {
+      case 'module':
+        final m = _module(rel, value);
+        if (m != null) return m;
+        break;
       case 'relay':
         final m = _relay(rel, value, sideRoot);
         if (m != null) return m;
@@ -353,10 +405,12 @@ class PeripheralConfigDiffLabels {
         }
         break;
       case 'access_code':
-        if (rel == 'accessLevel') {
-          final i = _asInt(value);
-          return _pick(AccessCodeSetupData.accessLevelNames, i);
-        }
+        final m = _accessCode(rel, value);
+        if (m != null) return m;
+        break;
+      case 'l_bus':
+        final m = _lBus(rel, value);
+        if (m != null) return m;
         break;
       default:
         break;
@@ -364,6 +418,75 @@ class PeripheralConfigDiffLabels {
 
     if (value is bool) return _yesNo(value);
     return _rawPreview(value);
+  }
+
+  static String? _accessCode(String rel, Object? value) {
+    switch (rel) {
+      case 'accessCodeNo':
+        final i = _asInt(value);
+        return i?.toString() ?? _rawPreview(value);
+      case 'accessLevel':
+        final i = _asInt(value);
+        return _pick(AccessCodeSetupData.accessLevelNames, i);
+      case 'accessLevelName':
+        if (value == null) return '—';
+        final s = value.toString();
+        return s.isEmpty ? '—' : s;
+      case 'accessCode':
+        if (value == null) return '—';
+        final s = value.toString();
+        return s.isEmpty ? '—' : s;
+      default:
+        return null;
+    }
+  }
+
+  static String? _lBus(String rel, Object? value) {
+    switch (rel) {
+      case 'enabled':
+      case 'idLed':
+      case 'product':
+        if (value == null) return '—';
+        final s = value.toString();
+        return s.isEmpty ? '—' : s;
+      case 'deviceText':
+      case 'productRev':
+      case 'hardware':
+      case 'firmware':
+      case 'date':
+        if (value == null) return '—';
+        final s = value.toString();
+        return s.isEmpty ? '—' : s;
+      case 'id':
+      case 'revision':
+      case 'protocol':
+        final i = _asInt(value);
+        return i?.toString() ?? _rawPreview(value);
+      default:
+        return null;
+    }
+  }
+
+  static String? _module(String rel, Object? value) {
+    switch (rel) {
+      case 'enabled':
+        return _yesNo(value);
+      case 'moduleNo':
+      case 'id':
+      case 'revision':
+      case 'protocol':
+        final i = _asInt(value);
+        return i?.toString() ?? _rawPreview(value);
+      case 'product':
+      case 'hardware':
+      case 'firmware':
+      case 'date':
+        if (value == null) return '—';
+        final s = value.toString();
+        return s.isEmpty ? '—' : s;
+      default:
+        return null;
+    }
   }
 
   static String? _relay(String rel, Object? value, Object? sideRoot) {

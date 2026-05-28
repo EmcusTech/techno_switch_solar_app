@@ -478,6 +478,18 @@ class PeripheralConfigSnapshot {
   ]) {
     if (_sectionDataEqual(panel, local)) return [];
 
+    // Null vs map/list → empty counterpart so we emit per-field rows instead of
+    // one JSON blob at "(section root)".
+    if (panel is Map && local == null) {
+      local = <String, Object?>{};
+    } else if (local is Map && panel == null) {
+      panel = <String, Object?>{};
+    } else if (panel is List && local == null) {
+      local = <Object?>[];
+    } else if (local is List && panel == null) {
+      panel = <Object?>[];
+    }
+
     if (panel is Map && local is Map) {
       final p = Map<String, Object?>.from(panel);
       final l = Map<String, Object?>.from(local);
@@ -520,22 +532,34 @@ class PeripheralConfigSnapshot {
         );
       }
       for (var i = n; i < panel.length; i++) {
-        lines.add(
-          '$path[$i]: only on panel · ${_formatDiffValue(panel[i])}',
+        lines.addAll(
+          describeConfigDataDiff(
+            panel[i],
+            null,
+            '$path[$i]',
+            diffSection,
+            panelSectionRoot,
+            localSectionRoot,
+          ),
         );
       }
       for (var i = n; i < local.length; i++) {
-        lines.add(
-          '$path[$i]: only in app · ${_formatDiffValue(local[i])}',
+        lines.addAll(
+          describeConfigDataDiff(
+            null,
+            local[i],
+            '$path[$i]',
+            diffSection,
+            panelSectionRoot,
+            localSectionRoot,
+          ),
         );
       }
       return lines;
     }
 
     final label = path.isEmpty ? '(section root)' : path;
-    if (diffSection != null &&
-        panelSectionRoot != null &&
-        localSectionRoot != null) {
+    if (diffSection != null) {
       final pv = _formatDiffScalar(
         diffSection,
         path,
