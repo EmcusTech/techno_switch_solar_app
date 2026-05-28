@@ -93,7 +93,14 @@ class _CommonNumericKeypadWidgetState extends State<CommonNumericKeypadWidget> {
     }
   }
 
+  bool _isSheetLocked(ValidatingStatus validatingStatus) {
+    return validatingStatus == ValidatingStatus.verifying ||
+        validatingStatus == ValidatingStatus.success ||
+        _closing;
+  }
+
   void _onClose() {
+    if (_closing) return;
     _bleProcess?.clearCommunicationFailure();
     final sheetContext = _sheetContext;
     if (sheetContext != null && sheetContext.mounted) {
@@ -279,8 +286,11 @@ class _CommonNumericKeypadWidgetState extends State<CommonNumericKeypadWidget> {
             : MediaQuery.of(context).size.height * 0.82;
     final borderColor =
         fieldBorderIsError ? const Color(0xFFEC1D24) : const Color(0xFFD0D0D0);
+    final lockSheet = _isSheetLocked(validatingStatus);
 
-    return SafeArea(
+    return PopScope(
+      canPop: !lockSheet,
+      child: SafeArea(
       child: AnimatedContainer(
         duration: _animDuration,
         curve: Curves.easeInOutCubic,
@@ -517,21 +527,24 @@ class _CommonNumericKeypadWidgetState extends State<CommonNumericKeypadWidget> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       SvgPicture.asset('assets/svgs/bottomsheet_logo.svg'),
-                      Padding(
-                        padding: const EdgeInsets.only(right: 32.0),
-                        child: GestureDetector(
-                          onTap: _onClose,
-                          child: Container(
-                            height: 38,
-                            width: 38,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Colors.black.withValues(alpha: 0.06),
+                      if (!lockSheet)
+                        Padding(
+                          padding: const EdgeInsets.only(right: 32.0),
+                          child: GestureDetector(
+                            onTap: _onClose,
+                            child: Container(
+                              height: 38,
+                              width: 38,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Colors.black.withValues(alpha: 0.06),
+                              ),
+                              child: const Icon(Icons.close, size: 20),
                             ),
-                            child: const Icon(Icons.close, size: 20),
                           ),
-                        ),
-                      ),
+                        )
+                      else
+                        const SizedBox(width: 70),
                     ],
                   ),
                 ],
@@ -540,6 +553,7 @@ class _CommonNumericKeypadWidgetState extends State<CommonNumericKeypadWidget> {
           ),
         ),
       ),
+    ),
     );
   }
 
