@@ -157,6 +157,16 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
     return lines.where((line) => _listIndexFromDiffLine(line) != null).toList();
   }
 
+  /// True when the only mismatch is L-Bus comms fault with no field-level diffs.
+  bool _isLBusCommsFaultOnlyMismatch(ConfigCompareResult result) {
+    return result.lBusCommsFaultBusNumbers.isNotEmpty &&
+        result.mismatchedSections.length == 1 &&
+        result.mismatchedSections.single == PeripheralConfigSection.lBus &&
+        _lBusFieldDiffLines(
+          result.diffLinesFor(PeripheralConfigSection.lBus),
+        ).isEmpty;
+  }
+
   Widget _lBusCommsFaultBanner(List<String> busNumbers) {
     return Container(
       width: double.infinity,
@@ -1092,6 +1102,45 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
 
     if (!result.hasMismatch) {
       return const SizedBox.shrink();
+    }
+
+    if (_isLBusCommsFaultOnlyMismatch(result)) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            height: 48,
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _brandRed,
+                foregroundColor: Colors.white,
+                disabledBackgroundColor: Colors.grey.shade400,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24),
+                ),
+              ),
+              onPressed:
+                  working
+                      ? null
+                      : () {
+                        FocusManager.instance.primaryFocus?.unfocus();
+                        Navigator.of(context).pop();
+                      },
+              child: Text(
+                'Okay',
+                style: GoogleFonts.inter(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
+        ],
+      );
     }
 
     return Column(
