@@ -1720,30 +1720,8 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
                 onTap:
                     (_isValidating || !isCrcMatched)
                         ? null
-                        : () {
-                          final md = _selectedDevice?.manufacturerData;
-                          final inBootloader =
-                              md != null && BleMsdUtils.isBootloader(md);
-
-                          _startUpgrade(
-                            isChipInBootLoader: inBootloader,
-                            firmwareVersion: _validationResult?.firmwareVersion,
-                          );
-                          // if ((_validationResult?.hardwareVersion ==
-                          //         ble.bleHardwareVersion.value) &&
-                          //     (_validationResult?.firmwareVersion !=
-                          //         ble.bleFirmwareVersion.value)) {
-                          //   _startUpgrade(
-                          //     isChipInBootLoader: inBootloader,
-                          //     firmwareVersion:
-                          //         _validationResult?.firmwareVersion,
-                          //   );
-                          // } else if (_validationResult?.hardwareVersion !=
-                          //     ble.bleHardwareVersion.value) {
-                          //   _showHardwareVersionMismatch();
-                          // } else {
-                          //   _showSameFirmwareVersionPopUp();
-                          // }
+                        : () async {
+                          await _onValidationContinuePressed();
                         },
                 isDisabled: _isValidating || !isCrcMatched,
                 child: Text(
@@ -2067,6 +2045,49 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
         _errorMessage = result.error ?? 'CRC validation failed.';
       }
     });
+  }
+
+  bool _isVersionMissing(String? value) =>
+      value == null || value.trim().isEmpty;
+
+  bool _bleVersionsNotRecovered() =>
+      _isVersionMissing(ble.bleHardwareVersion.value) ||
+      _isVersionMissing(ble.bleFirmwareVersion.value);
+
+  Future<void> _onValidationContinuePressed() async {
+    final md = _selectedDevice?.manufacturerData;
+    final inBootloader = md != null && BleMsdUtils.isBootloader(md);
+
+    ble.bleFirmwareVersion.value = "";
+    ble.bleHardwareVersion.value = "";
+
+    if (_bleVersionsNotRecovered()) {
+      final shouldProceed = await _confirmAndUpgrade(
+        message:
+            'Device hardware and firmware versions could not be read from '
+            'Bluetooth. Do you still want to update?',
+      );
+      if (shouldProceed) {
+        await _startUpgrade(
+          isChipInBootLoader: inBootloader,
+          firmwareVersion: _validationResult?.firmwareVersion,
+        );
+      }
+      return;
+    }
+
+    if ((_validationResult?.hardwareVersion == ble.bleHardwareVersion.value) &&
+        (_validationResult?.firmwareVersion != ble.bleFirmwareVersion.value)) {
+      await _startUpgrade(
+        isChipInBootLoader: inBootloader,
+        firmwareVersion: _validationResult?.firmwareVersion,
+      );
+    } else if (_validationResult?.hardwareVersion !=
+        ble.bleHardwareVersion.value) {
+      await _showHardwareVersionMismatch();
+    } else {
+      await _showSameFirmwareVersionPopUp();
+    }
   }
 
   Future<void> _showSameFirmwareVersionPopUp() async {
@@ -2424,7 +2445,9 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
   }) async {
     // print("isChipInBootLoader: $isChipInBootLoader");
 
-    if (firmwareVersion != null && firmwareVersion.isNotEmpty) {
+    if (firmwareVersion != null &&
+        firmwareVersion.isNotEmpty &&
+        !_isVersionMissing(ble.bleFirmwareVersion.value)) {
       final int comparedValue = compareFirmwareVersion(
         currentVersion: ble.bleFirmwareVersion.value,
         newVersion: firmwareVersion,
