@@ -253,11 +253,13 @@ class SiteService {
     String panelId,
     int siteId, {
     String? panelName,
+    bool offlineProvisioned = false,
   }) async {
     return await _panelService.assignPanelToSite(
       panelId,
       siteId,
       panelName: panelName,
+      offlineProvisioned: offlineProvisioned,
     );
   }
 

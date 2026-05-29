@@ -135,6 +135,30 @@ class PanelModel {
     }
   }
 
+  /// True when the site was created without a live BLE link (skip-connect flow).
+  bool get isOfflineProvisionedOnly {
+    final info = parsedDeviceInfo;
+    if (info['offlineProvisioned'] == true) return true;
+    // Minimal records from skip flow: panel id only, no MAC stored yet.
+    final mac = info['macAddress']?.toString().trim() ?? '';
+    return mac.isEmpty && (info['panelId']?.toString().isNotEmpty ?? false);
+  }
+
+  /// Whether this panel row is already linked to the given BLE MAC.
+  bool isLinkedToBleMac(String mac) {
+    final stored = parsedDeviceInfo['macAddress']?.toString().trim() ?? '';
+    if (stored.isEmpty || mac.trim().isEmpty) return false;
+    return _normalizeMac(stored) == _normalizeMac(mac);
+  }
+
+  static String _normalizeMac(String mac) =>
+      mac.replaceAll(':', '').toUpperCase();
+
+  /// Device info for a panel registered during offline site creation.
+  static Map<String, dynamic> createOfflineProvisionedDeviceInfo(String panelId) {
+    return {'panelId': panelId, 'offlineProvisioned': true};
+  }
+
   /// Get display string for device connection info
   String get deviceDisplayInfo {
     final info = parsedDeviceInfo;

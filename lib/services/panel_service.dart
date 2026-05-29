@@ -130,6 +130,7 @@ class PanelService {
     String panelId,
     int siteId, {
     String? panelName,
+    bool offlineProvisioned = false,
   }) async {
     // Check if panel exists, if not create it first
     var panel = await getPanelByPanelId(panelId);
@@ -160,21 +161,37 @@ class PanelService {
                 ? panelName!.trim()
                 : 'Panel $panelId', // Fallback name
         deviceType: deviceType,
-        deviceInfo: jsonEncode({'panelId': panelId}),
+        deviceInfo: jsonEncode(
+          offlineProvisioned
+              ? PanelModel.createOfflineProvisionedDeviceInfo(panelId)
+              : {'panelId': panelId},
+        ),
         siteId: null, // Will be set below
         createdAt: now,
         updatedAt: now,
-        lastConnected: now,
+        lastConnected: offlineProvisioned ? null : now,
       );
       await _databaseHelper.upsertPanel(panel);
-    } else if ((panelName ?? '').trim().isNotEmpty &&
-        panel.panelName != panelName!.trim()) {
-      // Update panel name if a better one was provided
-      final updatedPanel = panel.copyWith(
-        panelName: panelName.trim(),
-        updatedAt: now,
-      );
-      await _databaseHelper.upsertPanel(updatedPanel);
+    } else {
+      var updatedPanel = panel;
+      if ((panelName ?? '').trim().isNotEmpty &&
+          panel.panelName != panelName!.trim()) {
+        updatedPanel = updatedPanel.copyWith(panelName: panelName.trim());
+      }
+      if (offlineProvisioned && !panel.isOfflineProvisionedOnly) {
+        updatedPanel = updatedPanel.copyWith(
+          deviceInfo: jsonEncode(
+            PanelModel.createOfflineProvisionedDeviceInfo(panelId),
+          ),
+        );
+      }
+      if (updatedPanel.panelName != panel.panelName ||
+          updatedPanel.deviceInfo != panel.deviceInfo) {
+        await _databaseHelper.upsertPanel(
+          updatedPanel.copyWith(updatedAt: now),
+        );
+        panel = updatedPanel;
+      }
     }
 
     // Check if panel is already assigned to another site
@@ -184,6 +201,37 @@ class PanelService {
 
     final result = await _databaseHelper.assignPanelToSite(panelId, siteId);
     return result > 0;
+  }
+
+  /// Records a successful BLE connection against an offline-provisioned panel.
+  Future<bool> markPanelBleLinked(
+    String panelId, {
+    required String macAddress,
+    required String bleName,
+    int? rssi,
+  }) async {
+    final panel = await getPanelByPanelId(panelId);
+    if (panel == null) return false;
+
+    final now = DateTime.now();
+    final deviceInfo = PanelModel.createBluetoothDeviceInfo(
+      macAddress: macAddress,
+      deviceName: bleName,
+      rssi: rssi,
+    );
+    deviceInfo['offlineProvisioned'] = false;
+    deviceInfo['panelId'] = panelId;
+
+    final updatedPanel = panel.copyWith(
+      panelName: bleName.trim().isNotEmpty ? bleName.trim() : panel.panelName,
+      deviceType: 'bluetooth',
+      deviceInfo: jsonEncode(deviceInfo),
+      updatedAt: now,
+      lastConnected: now,
+    );
+    await _databaseHelper.upsertPanel(updatedPanel);
+    await _databaseHelper.updatePanelLastConnected(panelId);
+    return true;
   }
 
   /// Unassign panel from site

@@ -321,4 +321,44 @@ class PeripheralSetupCache {
       return null;
     }
   }
+
+  /// Copies cached peripheral setup from [fromDeviceId] to [toDeviceId] when the
+  /// target has no entry yet (e.g. offline wizard keyed by panel id → BLE MAC).
+  static Future<void> migrateDeviceCache({
+    required String fromDeviceId,
+    required String toDeviceId,
+  }) async {
+    if (fromDeviceId.trim().isEmpty ||
+        toDeviceId.trim().isEmpty ||
+        fromDeviceId == toDeviceId) {
+      return;
+    }
+
+    final prefs = await SharedPreferences.getInstance();
+    final suffixes = [
+      '_relay',
+      '_input',
+      '_zone',
+      '_ext_out',
+      '_radio',
+      '_module',
+      '_l_bus',
+      '_sounder',
+      '_service_due',
+      '_access_code',
+      '_panel_info',
+      '_general_module',
+      '_diagnostic',
+    ];
+
+    for (final suffix in suffixes) {
+      final fromKey = '$_keyPrefix$fromDeviceId$suffix';
+      final toKey = '$_keyPrefix$toDeviceId$suffix';
+      if (prefs.containsKey(toKey)) continue;
+      final value = prefs.getString(fromKey);
+      if (value != null) {
+        await prefs.setString(toKey, value);
+      }
+    }
+  }
 }

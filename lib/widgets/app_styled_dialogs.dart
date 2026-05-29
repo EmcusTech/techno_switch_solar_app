@@ -224,3 +224,223 @@ Future<void> showAppStyledOneActionDialog({
     },
   );
 }
+
+/// Text-field dialog matching the app styled pattern. Returns trimmed text or null.
+Future<String?> showAppStyledTextInputDialog({
+  required BuildContext context,
+  required String title,
+  required String message,
+  required String hintText,
+  String confirmLabel = 'Continue',
+  String cancelLabel = 'Cancel',
+  String? initialValue,
+  String? Function(String value)? validator,
+}) {
+  return showDialog<String>(
+    context: context,
+    barrierDismissible: false,
+    builder:
+        (dialogContext) => _AppStyledTextInputDialog(
+          title: title,
+          message: message,
+          hintText: hintText,
+          confirmLabel: confirmLabel,
+          cancelLabel: cancelLabel,
+          initialValue: initialValue,
+          validator: validator,
+        ),
+  );
+}
+
+class _AppStyledTextInputDialog extends StatefulWidget {
+  const _AppStyledTextInputDialog({
+    required this.title,
+    required this.message,
+    required this.hintText,
+    required this.confirmLabel,
+    required this.cancelLabel,
+    this.initialValue,
+    this.validator,
+  });
+
+  final String title;
+  final String message;
+  final String hintText;
+  final String confirmLabel;
+  final String cancelLabel;
+  final String? initialValue;
+  final String? Function(String value)? validator;
+
+  @override
+  State<_AppStyledTextInputDialog> createState() =>
+      _AppStyledTextInputDialogState();
+}
+
+class _AppStyledTextInputDialogState extends State<_AppStyledTextInputDialog> {
+  late final TextEditingController _controller;
+  String? _errorText;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.initialValue ?? '');
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    final value = _controller.text.trim();
+    final validationError = widget.validator?.call(value);
+    if (validationError != null) {
+      setState(() => _errorText = validationError);
+      return;
+    }
+    Navigator.of(context).pop(value);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: SingleChildScrollView(
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 64,
+                height: 64,
+                decoration: const BoxDecoration(
+                  color: Color(0xFFFBDEE1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Center(
+                  child: Icon(
+                    Icons.tag,
+                    color: Color(0xFFEC1D24),
+                    size: 32,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                widget.title,
+                style: GoogleFonts.inter(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF3D3D3D),
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                widget.message,
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w400,
+                  color: const Color(0xFF666666),
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _controller,
+                autofocus: true,
+                textCapitalization: TextCapitalization.characters,
+                textInputAction: TextInputAction.done,
+                onSubmitted: (_) => _submit(),
+                decoration: InputDecoration(
+                  hintText: widget.hintText,
+                  errorText: _errorText,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(
+                      color: Color(0xFFEC1D24),
+                      width: 1.5,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => Navigator.of(context).pop(),
+                      child: Container(
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFEFEEEE),
+                          borderRadius: BorderRadius.circular(24),
+                          border: Border.all(
+                            color: const Color(0xFFD0D0D0),
+                            width: 1,
+                          ),
+                        ),
+                        child: Center(
+                          child: Text(
+                            widget.cancelLabel,
+                            style: GoogleFonts.inter(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFF666666),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: _submit,
+                      child: Container(
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFEC1D24),
+                          borderRadius: BorderRadius.circular(24),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(
+                                0xFFEC1D24,
+                              ).withValues(alpha: 0.3),
+                              blurRadius: 8,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Center(
+                          child: Text(
+                            widget.confirmLabel,
+                            style: GoogleFonts.inter(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

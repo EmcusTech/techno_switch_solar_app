@@ -55,6 +55,12 @@ class CreateProjectController extends ChangeNotifier {
   /// Set after a successful connect step; used for embedded peripheral sheets.
   DiscoveredDevice? connectedDevice;
 
+  /// User skipped BLE connect on step 2; config is cache-only until a panel connects.
+  bool skippedPanelConnect = false;
+
+  /// Logical panel id entered when [skippedPanelConnect] is true.
+  String manualPanelId = '';
+
   void setCreateProjectPanelBleVerified(bool value) {
     createProjectPanelBleVerified = value;
     notifyListeners();
@@ -62,6 +68,22 @@ class CreateProjectController extends ChangeNotifier {
 
   void setConnectedDevice(DiscoveredDevice? device) {
     connectedDevice = device;
+    notifyListeners();
+  }
+
+  void setSkippedPanelConnect({required bool skipped, String? panelId}) {
+    skippedPanelConnect = skipped;
+    manualPanelId = skipped ? (panelId ?? '').trim() : '';
+    if (skipped) {
+      createProjectPanelBleVerified = false;
+      connectedDevice = null;
+    }
+    notifyListeners();
+  }
+
+  void clearSkippedPanelConnect() {
+    skippedPanelConnect = false;
+    manualPanelId = '';
     notifyListeners();
   }
 

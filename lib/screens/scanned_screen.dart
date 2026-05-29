@@ -15,9 +15,11 @@ import 'package:techno_switch_solar_app/screens/scanning_screen.dart';
 import 'package:techno_switch_solar_app/services/navigation_service.dart';
 import 'package:techno_switch_solar_app/services/panel_service.dart';
 import 'package:techno_switch_solar_app/services/site_service.dart';
+import 'package:techno_switch_solar_app/services/panel_site_connect_flow.dart';
 import 'package:techno_switch_solar_app/models/site_model.dart';
 import 'package:techno_switch_solar_app/screens/simple_site_creation_screen.dart';
 import 'package:techno_switch_solar_app/utils/ble_name_utils.dart';
+import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
 import 'package:techno_switch_solar_app/panel_config/post_connect_bulk_download_offer.dart';
 import 'package:techno_switch_solar_app/widgets/panel_access_code_dialog.dart';
 import 'package:techno_switch_solar_app/widgets/bootloader_connect_flow.dart';
@@ -483,9 +485,21 @@ class _ScannedScreenState extends State<ScannedScreen> {
     final bleName = device.name.trim();
     if (bleName.isEmpty) return null;
 
+    final recoveredSiteId = await PanelSiteConnectFlow.tryTechnoswitchRecoveredSite(
+      context: context,
+      device: device,
+      panelService: _panelService,
+      siteService: _siteService,
+    );
+    if (recoveredSiteId == -1) return null;
+    if (recoveredSiteId != null) return recoveredSiteId;
+
     try {
-      // Look up by full BLE name (panelId or panelName)
+      final logicalId = BleNameUtils.parseTechnoswitchPanelId(bleName);
       var existingPanel =
+          (logicalId != null
+              ? await _panelService.getPanelByPanelId(logicalId)
+              : null) ??
           await _panelService.getPanelByPanelId(bleName) ??
           await _panelService.getPanelByBleName(bleName);
       final existingSiteId = existingPanel?.siteId;
@@ -500,16 +514,31 @@ class _ScannedScreenState extends State<ScannedScreen> {
     );
     if (pickedSiteId == null) return null;
 
-    // Use full BLE name as panelId for new panels; use existing panelId if panel exists
+    final logicalId = BleNameUtils.parseTechnoswitchPanelId(bleName);
     final panel =
+        (logicalId != null
+            ? await _panelService.getPanelByPanelId(logicalId)
+            : null) ??
         await _panelService.getPanelByPanelId(bleName) ??
         await _panelService.getPanelByBleName(bleName);
-    final panelIdToUse = panel?.panelId ?? bleName;
+    final panelIdToUse = panel?.panelId ?? logicalId ?? bleName;
     await _siteService.assignPanelToSite(
       panelIdToUse,
       pickedSiteId,
       panelName: bleName,
     );
+    if (logicalId != null) {
+      await _panelService.markPanelBleLinked(
+        logicalId,
+        macAddress: device.id,
+        bleName: bleName,
+        rssi: device.rssi,
+      );
+      await PeripheralSetupCache.migrateDeviceCache(
+        fromDeviceId: logicalId,
+        toDeviceId: device.id,
+      );
+    }
     return pickedSiteId;
   }
 

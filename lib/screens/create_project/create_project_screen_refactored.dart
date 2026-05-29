@@ -13,8 +13,10 @@ import 'package:techno_switch_solar_app/screens/create_project/pages/panel_selec
 import 'package:techno_switch_solar_app/screens/create_project/pages/site_creation_page.dart';
 import 'package:techno_switch_solar_app/screens/project_dashboard.dart';
 import 'package:techno_switch_solar_app/screens/scanning_screen.dart';
+import 'package:techno_switch_solar_app/screens/site_screen.dart';
 import 'package:techno_switch_solar_app/services/panel_service.dart';
 import 'package:techno_switch_solar_app/services/site_service.dart';
+import 'package:techno_switch_solar_app/utils/ble_name_utils.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/general_mode_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/input_mode_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/l_bus_mode_bottomsheet.dart';
@@ -117,6 +119,23 @@ class _CreateSiteScreenRefactoredState
   Future<void> _confirmFinishAndApply() async {
     await _settleImeBeforeShowingDialog();
     if (!mounted) return;
+
+    if (_controller.skippedPanelConnect) {
+      final proceed = await showAppStyledTwoActionDialog<bool>(
+        context: context,
+        title: 'Create site',
+        message:
+            'This will save the site and panel ID. Configuration will be stored locally and can be applied when you connect the panel later.',
+        leadingActionLabel: 'Cancel',
+        trailingActionLabel: 'Create',
+        leadingValue: false,
+        trailingValue: true,
+      );
+      if (proceed != true || !mounted) return;
+      await _finishCreateSiteWithoutPanel();
+      return;
+    }
+
     final proceed = await showAppStyledTwoActionDialog<bool>(
       context: context,
       title: 'Update panel settings',
@@ -304,6 +323,7 @@ class _CreateSiteScreenRefactoredState
       }
       _controller.setCreateProjectPanelBleVerified(false);
       _controller.setConnectedDevice(null);
+      _controller.clearSkippedPanelConnect();
       _wizardDeviceId = '';
       return true;
     }
@@ -381,6 +401,7 @@ class _CreateSiteScreenRefactoredState
   }
 
   Future<void> _offerBulkDownloadIfNeeded() async {
+    if (_controller.skippedPanelConnect) return;
     if (_offeredBulkDownload) return;
     _offeredBulkDownload = true;
     if (!mounted) return;
@@ -538,6 +559,157 @@ class _CreateSiteScreenRefactoredState
     }
   }
 
+  Future<void> _finishCreateSiteWithoutPanel() async {
+    final panelState = _panelInfoSheetKey.currentState;
+    if (panelState == null || !(await panelState.commitLocal())) {
+      _showSnackBar('Fix panel information fields', isError: true);
+      return;
+    }
+
+    final manualPanelId = BleNameUtils.normalizeManualPanelId(
+      _controller.manualPanelId,
+    );
+    if (manualPanelId.isEmpty) {
+      _showSnackBar('Panel ID is missing', isError: true);
+      return;
+    }
+
+    final errors = _siteService.validateSiteData(
+      siteName: _controller.siteNameController.text,
+      installerName: _controller.installerNameController.text,
+      companyName: _controller.companyNameController.text,
+      saqccRegNumber: _controller.saqccRegNumberController.text,
+      buildingName: _controller.buildingNameController.text,
+      installerContactNumber: _controller.installerContactNumberController.text,
+      installerEmail: _controller.installerEmailController.text,
+      siteDescription: _controller.siteDescriptionController.text,
+    );
+    if (errors.isNotEmpty) {
+      _showSnackBar('Please fix the site form (step 1)', isError: true);
+      return;
+    }
+
+    try {
+      final site = await _siteService.createSite(
+        siteName: _controller.siteNameController.text,
+        installerName: _controller.installerNameController.text,
+        companyName: _controller.companyNameController.text,
+        saqccRegNumber: _controller.saqccRegNumberController.text,
+        buildingName: _controller.buildingNameController.text,
+        installerContactNumber:
+            _controller.installerContactNumberController.text,
+        installerEmail: _controller.installerEmailController.text,
+        siteDescription: _controller.siteDescriptionController.text,
+      );
+
+      final siteId = site.id;
+      if (siteId == null) {
+        _showSnackBar('Site created but missing id', isError: true);
+        return;
+      }
+
+      final bleDisplayName = BleNameUtils.technoswitchBleNameForPanelId(
+        manualPanelId,
+      );
+      final assigned = await _siteService.assignPanelToSite(
+        manualPanelId,
+        siteId,
+        panelName: bleDisplayName,
+        offlineProvisioned: true,
+      );
+      if (!assigned) {
+        _showSnackBar('Could not assign panel to site', isError: true);
+        return;
+      }
+
+      if (!mounted) return;
+
+      _showSnackBar('Site created successfully', isError: false);
+
+      final sitesWithLogCount = await _siteService.getSitesWithLogCount();
+      final siteWithLogCount = sitesWithLogCount.firstWhere(
+        (entry) => entry.site.id == siteId,
+        orElse:
+            () => SiteWithLogCount(
+              site: site,
+              logCount: 0,
+              lastLogRetrieved: null,
+            ),
+      );
+
+      if (!mounted) return;
+
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder:
+              (_) => SiteScreen(
+                site: site,
+                siteWithLogCount: siteWithLogCount,
+              ),
+        ),
+      );
+    } catch (e) {
+      _showSnackBar('Error: $e', isError: true);
+    }
+  }
+
+  Future<void> _skipPanelConnectAndContinue() async {
+    if (!_controller.validateStep(2)) {
+      _showSnackBar('Please fill in all required fields', isError: true);
+      return;
+    }
+
+    await _settleImeBeforeShowingDialog();
+    if (!mounted) return;
+
+    final existingId = BleNameUtils.normalizeManualPanelId(
+      _controller.manualPanelId,
+    );
+    final entered = await showAppStyledTextInputDialog(
+      context: context,
+      title: 'Enter panel ID',
+      message:
+          'Enter the panel ID for this site (e.g. AB12). It should match the ID in the panel BLE name TECHNOSWITCH_XXXX when you connect later.',
+      hintText: 'Panel ID',
+      initialValue: existingId.isNotEmpty ? existingId : null,
+      validator: (value) {
+        if (!BleNameUtils.isValidManualPanelId(value)) {
+          return 'Enter a valid panel ID (letters, numbers, - or _)';
+        }
+        return null;
+      },
+    );
+
+    if (!mounted || entered == null) return;
+
+    final panelId = BleNameUtils.normalizeManualPanelId(entered);
+    final existingPanel = await _panelService.getPanelByPanelId(panelId);
+    if (existingPanel?.siteId != null) {
+      if (!mounted) return;
+      await showAppStyledOneActionDialog(
+        context: context,
+        title: 'Panel already assigned',
+        message:
+            'This panel ID is already linked to a site. Use a different ID or connect to the panel instead.',
+      );
+      return;
+    }
+
+    _controller.setSkippedPanelConnect(skipped: true, panelId: panelId);
+    _controller.setCreateProjectPanelBleVerified(false);
+    _controller.setConnectedDevice(null);
+    _wizardDeviceId = panelId;
+    _offeredBulkDownload = false;
+
+    _controller.clearValidationErrors();
+    await _dismissKeyboardFully();
+    if (!mounted) return;
+    await _pageController.nextPage(
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
+  }
+
   Future<void> _goToNextStep() async {
     await _dismissKeyboardFully();
     if (!mounted) return;
@@ -579,6 +751,7 @@ class _CreateSiteScreenRefactoredState
 
       _controller.setCreateProjectPanelBleVerified(true);
       _controller.setConnectedDevice(device);
+      _controller.clearSkippedPanelConnect();
       _wizardDeviceId = device.id;
 
       final proceed = await _runPostConnectAssignedPanelFlow();
@@ -620,9 +793,13 @@ class _CreateSiteScreenRefactoredState
   void _goToPreviousStep() {
     if (_currentStep > 1) {
       if (_currentStep == 3) {
-        _bleManager.disconnectConnectedDevice();
-        _controller.setCreateProjectPanelBleVerified(false);
-        _controller.setConnectedDevice(null);
+        if (_controller.skippedPanelConnect) {
+          _controller.clearSkippedPanelConnect();
+        } else {
+          _bleManager.disconnectConnectedDevice();
+          _controller.setCreateProjectPanelBleVerified(false);
+          _controller.setConnectedDevice(null);
+        }
         _wizardDeviceId = '';
         _offeredBulkDownload = false;
       }
@@ -939,10 +1116,29 @@ class _CreateSiteScreenRefactoredState
         _currentStep == 2
             ? 'Connect panel'
             : _currentStep == 11
-            ? 'Finish'
+            ? (_controller.skippedPanelConnect ? 'Create site' : 'Finish')
             : 'Next';
 
-    return Row(
+    return Column(
+      children: [
+        if (_currentStep == 2)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: GestureDetector(
+              onTap: _skipPanelConnectAndContinue,
+              child: Text(
+                'Skip connection — enter panel ID manually',
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFFEC1D24),
+                  decoration: TextDecoration.underline,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ),
+        Row(
       children: [
         Opacity(
           opacity: _currentStep == 1 ? 0.2 : 1.0,
@@ -1010,6 +1206,8 @@ class _CreateSiteScreenRefactoredState
             ),
           ),
         ),
+      ],
+    ),
       ],
     );
   }
