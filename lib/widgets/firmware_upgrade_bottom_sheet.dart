@@ -2058,9 +2058,6 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
     final md = _selectedDevice?.manufacturerData;
     final inBootloader = md != null && BleMsdUtils.isBootloader(md);
 
-    ble.bleFirmwareVersion.value = "";
-    ble.bleHardwareVersion.value = "";
-
     if (_bleVersionsNotRecovered()) {
       final shouldProceed = await _confirmAndUpgrade(
         message:
