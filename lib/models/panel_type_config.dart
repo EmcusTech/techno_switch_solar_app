@@ -15,27 +15,27 @@ class PanelTypeConfig {
 
   // Predefined panel types
   static const List<PanelTypeConfig> availablePanels = [
-    PanelTypeConfig(
-      typeName: 'ORYX202',
-      zoneCount: 2,
-      sounderCount: 2,
-      relayCount: 2,
-      fireExtinguisherCount: 0,
-    ),
-    PanelTypeConfig(
-      typeName: 'ORYX204',
-      zoneCount: 4,
-      sounderCount: 2,
-      relayCount: 4,
-      fireExtinguisherCount: 0,
-    ),
-    PanelTypeConfig(
-      typeName: 'ORYX208',
-      zoneCount: 8,
-      sounderCount: 2,
-      relayCount: 8,
-      fireExtinguisherCount: 0,
-    ),
+    // PanelTypeConfig(
+    //   typeName: 'ORYX202',
+    //   zoneCount: 2,
+    //   sounderCount: 2,
+    //   relayCount: 2,
+    //   fireExtinguisherCount: 0,
+    // ),
+    // PanelTypeConfig(
+    //   typeName: 'ORYX204',
+    //   zoneCount: 4,
+    //   sounderCount: 2,
+    //   relayCount: 4,
+    //   fireExtinguisherCount: 0,
+    // ),
+    // PanelTypeConfig(
+    //   typeName: 'ORYX208',
+    //   zoneCount: 8,
+    //   sounderCount: 2,
+    //   relayCount: 8,
+    //   fireExtinguisherCount: 0,
+    // ),
     PanelTypeConfig(
       typeName: 'RHINO103',
       zoneCount: 3,
@@ -43,13 +43,21 @@ class PanelTypeConfig {
       relayCount: 3,
       fireExtinguisherCount: 1,
     ),
-    PanelTypeConfig(
-      typeName: 'RHINO203',
-      zoneCount: 3,
-      sounderCount: 3,
-      relayCount: 6,
-      fireExtinguisherCount: 1,
-    ),
+    // PanelTypeConfig(
+    //   typeName: 'RHINO203',
+    //   zoneCount: 3,
+    //   sounderCount: 3,
+    //   relayCount: 6,
+    //   fireExtinguisherCount: 1,
+    // ),
+
+    //when uncommenting, update the create project controller
+    //   CreateProjectController() {
+    //   _initializeControllerListeners();
+    //   if (PanelTypeConfig.availablePanels.length == 1) {
+    //     updatePanelType(PanelTypeConfig.availablePanels.first.typeName);
+    //   }
+    // }
   ];
 
   /// Get panel configuration by type name

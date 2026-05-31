@@ -642,10 +642,7 @@ class _CreateSiteScreenRefactoredState
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
           builder:
-              (_) => SiteScreen(
-                site: site,
-                siteWithLogCount: siteWithLogCount,
-              ),
+              (_) => SiteScreen(site: site, siteWithLogCount: siteWithLogCount),
         ),
       );
     } catch (e) {
@@ -942,6 +939,7 @@ class _CreateSiteScreenRefactoredState
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
                 color: Colors.white,
+                fontFeatures: const [FontFeature.tabularFigures()],
               ),
             ),
           ),
@@ -1139,75 +1137,75 @@ class _CreateSiteScreenRefactoredState
             ),
           ),
         Row(
-      children: [
-        Opacity(
-          opacity: _currentStep == 1 ? 0.2 : 1.0,
-          child: GestureDetector(
-            onTap: _goToPreviousStep,
-            child: Container(
-              decoration: BoxDecoration(
-                color: const Color(0xFFEFEEEE),
-                borderRadius: BorderRadius.circular(28.5),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.only(
-                  left: 16,
-                  right: 34,
-                  top: 18,
-                  bottom: 18,
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.arrow_back, color: Color(0xFF49454F)),
-                    const SizedBox(width: 6),
-                    Text(
-                      'Back',
-                      style: GoogleFonts.inter(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF49454F),
-                      ),
+          children: [
+            Opacity(
+              opacity: _currentStep == 1 ? 0.2 : 1.0,
+              child: GestureDetector(
+                onTap: _goToPreviousStep,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEFEEEE),
+                    borderRadius: BorderRadius.circular(28.5),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.only(
+                      left: 16,
+                      right: 34,
+                      top: 18,
+                      bottom: 18,
                     ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-        const Spacer(),
-        GestureDetector(
-          onTap: () => _goToNextStep(),
-          child: Container(
-            decoration: BoxDecoration(
-              color: const Color(0xFFEC1D24),
-              borderRadius: BorderRadius.circular(28.5),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.only(
-                left: 28,
-                right: 23,
-                top: 18,
-                bottom: 18,
-              ),
-              child: Row(
-                children: [
-                  Text(
-                    nextLabel,
-                    style: GoogleFonts.inter(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
+                    child: Row(
+                      children: [
+                        const Icon(Icons.arrow_back, color: Color(0xFF49454F)),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Back',
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFF49454F),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(width: 6),
-                  const Icon(Icons.arrow_forward, color: Colors.white),
-                ],
+                ),
               ),
             ),
-          ),
+            const Spacer(),
+            GestureDetector(
+              onTap: () => _goToNextStep(),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEC1D24),
+                  borderRadius: BorderRadius.circular(28.5),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.only(
+                    left: 28,
+                    right: 23,
+                    top: 18,
+                    bottom: 18,
+                  ),
+                  child: Row(
+                    children: [
+                      Text(
+                        nextLabel,
+                        style: GoogleFonts.inter(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      const Icon(Icons.arrow_forward, color: Colors.white),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
-      ],
-    ),
       ],
     );
   }

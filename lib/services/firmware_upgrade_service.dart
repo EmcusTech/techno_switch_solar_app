@@ -55,7 +55,7 @@ class FirmwareUpgradeService {
   /// - Last 40 bytes: 10 FW ver + 7 HW ver + 8 date + 11 product id + 4 CRC (BE).
   /// - CRC32 is calculated on all bytes before the final 4 CRC bytes (image + metadata).
   /// - [FirmwareValidationResult.firmwareData] is the application image only
-  ///   (from [FirmwareBinFormat.applicationImageOffset], excludes bootloader prefix and trailer).
+  ///   (from [FirmwareBinFormat.applicationImageOffset] through EOF, includes trailer).
   /// - [requiredProductId]: if set, parsed product ID (trimmed) must match
   ///   the given string (e.g. [FirmwareUpgradeService.expectedProductId]).
   FirmwareValidationResult validateFirmwareFile(

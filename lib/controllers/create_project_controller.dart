@@ -89,6 +89,9 @@ class CreateProjectController extends ChangeNotifier {
 
   CreateProjectController() {
     _initializeControllerListeners();
+    if (PanelTypeConfig.availablePanels.length == 1) {
+      updatePanelType(PanelTypeConfig.availablePanels.first.typeName);
+    }
   }
 
   /// Initialize listeners for text controllers to sync with data models

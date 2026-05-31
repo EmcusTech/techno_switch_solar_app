@@ -28,7 +28,7 @@ class FirmwarePacketService {
       bytes.length,
     );
 
-    // Application region only (from 0x11800, exclude 40-byte trailer).
+    // Application + trailer (from 0x11800 through end of file).
     final imageForDevice = FirmwareBinFormat.applicationImageFromFile(bytes);
 
     final expectedCrc = _bytesToUint32BE(crcFromFile);
