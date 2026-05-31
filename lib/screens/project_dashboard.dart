@@ -290,8 +290,8 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
   final BleManager _bleManager = Get.find<BleManager>();
   late DiscoveredDevice _selectedDevice;
 
-  /// Tracks prior connection so we only react to real disconnects (not initial "never connected").
-  bool _hadBleConnection = false;
+  /// True after handshake completed — not mere GATT link during connect retries.
+  bool _hadEstablishedBleSession = false;
 
   /// When the user explicitly disconnects (e.g. back + confirm), skip the unexpected-loss dialog.
   bool _suppressUnexpectedBleDisconnectUi = false;
@@ -400,13 +400,17 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     });
   }
 
-  void _onBleConnectivityChanged() {
+  void _onBleSessionChanged() {
     if (!mounted) return;
 
     final connected = _bleManager.isConnectedNotifier.value;
+    final handshakeComplete = _bleManager.handshakeCompleteNotifier.value;
+    final sessionActive = connected && handshakeComplete;
+    final connectInProgress =
+        _isConnecting || _bleManager.isConnectInProgress;
 
-    /// CLOSE disconnect dialog immediately if BLE reconnects
-    if (connected && _isUnexpectedDisconnectDialogOpen) {
+    /// Close disconnect dialog only when the full session is back (not transient GATT).
+    if (sessionActive && _isUnexpectedDisconnectDialogOpen) {
       _isUnexpectedDisconnectDialogOpen = false;
 
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -418,9 +422,17 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
       });
     }
 
-    final lostConnection = _hadBleConnection && !connected;
+    if (sessionActive) {
+      _hadEstablishedBleSession = true;
+    }
 
-    if (lostConnection) {
+    final lostEstablishedSession = _hadEstablishedBleSession &&
+        !sessionActive &&
+        !connectInProgress;
+
+    if (lostEstablishedSession) {
+      _hadEstablishedBleSession = false;
+
       final suppressForFirmware =
           BleSessionIdlePolicy.suppressFirmwareDisconnectUi.value;
 
@@ -441,8 +453,6 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
         }
       }
     }
-
-    _hadBleConnection = connected;
   }
 
   Future<bool> _confirmAndDisconnect() async {
@@ -569,6 +579,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     if (shouldDisconnect == true) {
       if (_bleManager.isConnected) {
         _suppressUnexpectedBleDisconnectUi = true;
+        _hadEstablishedBleSession = false;
         await _bleManager.disconnectConnectedDevice();
       }
       return true;
@@ -591,7 +602,8 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
 
   @override
   void dispose() {
-    _bleManager.isConnectedNotifier.removeListener(_onBleConnectivityChanged);
+    _bleManager.isConnectedNotifier.removeListener(_onBleSessionChanged);
+    _bleManager.handshakeCompleteNotifier.removeListener(_onBleSessionChanged);
     _scanSubscription?.cancel();
     _bluetoothService.stopScanning();
     _configLogCompareResult.dispose();
@@ -631,7 +643,9 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 maxBleConnectionRetriesReachedNotifier.value;
 
             // Close dialog when handshake is complete (encryption + auth done)
-            if (handshakeComplete && !hasNavigated) {
+            if (handshakeComplete &&
+                !hasNavigated &&
+                !maxBleConnectionRetriesReached) {
               hasNavigated = true;
               Future.delayed(const Duration(milliseconds: 500), () {
                 if (context.mounted && hasNavigated) {
@@ -659,14 +673,14 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                       height: 64,
                       decoration: BoxDecoration(
                         color:
-                            handshakeComplete
+                            handshakeComplete && !maxBleConnectionRetriesReached
                                 ? Colors.green.withValues(alpha: 0.1)
                                 : Color(0xFFFBDEE1),
                         shape: BoxShape.circle,
                       ),
                       child: Center(
                         child:
-                            handshakeComplete
+                            handshakeComplete && !maxBleConnectionRetriesReached
                                 ? Icon(
                                   Icons.check_circle,
                                   size: 32,
@@ -681,10 +695,10 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                     SizedBox(height: 16),
                     // Title
                     Text(
-                      handshakeComplete
-                          ? 'Device Connected!'
-                          : maxBleConnectionRetriesReached
+                      maxBleConnectionRetriesReached
                           ? 'Max Connection Retries Reached!'
+                          : handshakeComplete
+                          ? 'Device Connected!'
                           : isConnected
                           ? 'Establishing secure connection...'
                           : 'Connecting...',
@@ -698,7 +712,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                     SizedBox(height: 8),
                     // Subtitle
                     Text(
-                      handshakeComplete
+                      handshakeComplete && !maxBleConnectionRetriesReached
                           ? 'Ready'
                           : maxBleConnectionRetriesReached
                           ? 'Please try connecting again'
@@ -894,8 +908,10 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     super.initState();
     _selectedDevice = widget.selectedDevice;
     BleSessionIdlePolicy.suppressFirmwareDisconnectUi.value = false;
-    _hadBleConnection = _bleManager.isConnectedNotifier.value;
-    _bleManager.isConnectedNotifier.addListener(_onBleConnectivityChanged);
+    _hadEstablishedBleSession = _bleManager.isConnectedNotifier.value &&
+        _bleManager.handshakeCompleteNotifier.value;
+    _bleManager.isConnectedNotifier.addListener(_onBleSessionChanged);
+    _bleManager.handshakeCompleteNotifier.addListener(_onBleSessionChanged);
   }
 
   Future<void> _exportProjectPdf() async {

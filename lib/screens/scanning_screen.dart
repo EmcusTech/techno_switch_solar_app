@@ -1885,7 +1885,10 @@ class _ScanningScreenState extends State<ScanningScreen>
             }
 
             // 🔥 SUCCESS PATH - wait for handshake (encryption + auth) to complete
-            if (handshakeComplete && !hasNavigated) {
+            if (handshakeComplete &&
+                !hasNavigated &&
+                !maxRetries &&
+                !showNetworkCommError) {
               hasNavigated = true;
 
               // Close dialog first
@@ -2114,10 +2117,12 @@ class _ScanningScreenState extends State<ScanningScreen>
                     Text(
                       showNetworkCommError
                           ? 'Connection problem'
-                          : isConnected
-                          ? 'Device Connected!'
                           : maxRetries
                           ? 'Max Connection Retries Reached!'
+                          : handshakeComplete
+                          ? 'Device Connected!'
+                          : isConnected
+                          ? 'Device Connected!'
                           : 'Connecting...',
                       style: GoogleFonts.inter(
                         fontSize: 20,
@@ -2128,12 +2133,12 @@ class _ScanningScreenState extends State<ScanningScreen>
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      handshakeComplete
-                          ? 'Preparing dashboard...'
+                      maxRetries
+                          ? 'Please scan again and reconnect.'
                           : showNetworkCommError
                           ? networkCommMessage
-                          : maxRetries
-                          ? 'Please scan again and reconnect.'
+                          : handshakeComplete
+                          ? 'Preparing dashboard...'
                           : isConnected
                           ? 'Encrypting and authenticating...'
                           : 'Please wait while we connect to ${device.name}',

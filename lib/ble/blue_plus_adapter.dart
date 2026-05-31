@@ -273,9 +273,32 @@ class FlutterReactiveBle {
 
     controller.onCancel = () async {
       await stateSub.cancel();
+      if (device.isConnected) {
+        try {
+          await device.disconnect();
+        } catch (_) {
+          // Device may already be disconnected.
+        }
+      }
     };
 
     return controller.stream;
+  }
+
+  /// Cancels any in-flight native connect, disconnects, and drops the cached handle.
+  Future<void> abortConnection(String id) async {
+    final device = _deviceCache.remove(id);
+    if (device == null) return;
+    try {
+      await device.disconnect();
+    } catch (_) {
+      // Already disconnected or connect never completed.
+    }
+  }
+
+  /// Drops a cached [BluetoothDevice] so the next connect uses a fresh handle.
+  void evictCachedDevice(String id) {
+    _deviceCache.remove(id);
   }
 
   Future<int> requestMtu({required String deviceId, required int mtu}) async {

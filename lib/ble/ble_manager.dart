@@ -180,6 +180,12 @@ class BleManager {
   int receivedPollCount = 0;
   StreamSubscription<ConnectionStateUpdate>? _connectionSub;
   bool _connectedOnce = false;
+  bool _connectInProgress = false;
+
+  /// True while [connectToKnownDevice] retry loop is running.
+  bool get isConnectInProgress => _connectInProgress;
+
+  DateTime? _lastDisconnectAt;
   // ignore: unused_field
   bool _isGattConnected = false;
   StreamSubscription<List<int>>? _notifySub;
@@ -1848,17 +1854,95 @@ class BleManager {
     }
   }
 
+  void _resetConnectNotifiersForNewSession() {
+    _isConnectedNotifier.value = false;
+    handshakeCompleteNotifier.value = false;
+    bleFirmwareVersion.value = '';
+  }
+
+  /// Clears encryption key, state machine, and process state for a fresh handshake.
+  void _resetHandshakeSessionState() {
+    bleProcess.cancelRxTimeout();
+    resetProtocolState();
+    bleProcess.resetProcessState();
+    bleProcess.clearSessionAccessCode();
+    bleCurrentState = BleStates.REQ_ENCY_KEY;
+    bleStateMachineState = BleStates.REQ_ENCY_KEY;
+    bleAESKey.clear();
+    currentOperationMode = BleOperationMode.none;
+    isLogRetrievalDoneOnce = false;
+    notifyChar = null;
+    writeChar = null;
+
+    if (_handshakeCompleter != null && !_handshakeCompleter!.isCompleted) {
+      _handshakeCompleter!.completeError(Exception("BLE session reset"));
+      _handshakeCompleter = null;
+    }
+  }
+
+  Future<void> _tearDownConnectionAttempt(
+    String deviceId, {
+    bool forceAbortNative = false,
+  }) async {
+    final hadGatt = _isGattConnected || _connectedOnce;
+
+    await _notifySub?.cancel();
+    await _connectionSub?.cancel();
+
+    _notifySub = null;
+    _connectionSub = null;
+    _connectedOnce = false;
+    _isGattConnected = false;
+    _isConnectedNotifier.value = false;
+    handshakeCompleteNotifier.value = false;
+    bleFirmwareVersion.value = '';
+
+    if (_handshakeCompleter != null && !_handshakeCompleter!.isCompleted) {
+      _handshakeCompleter!.completeError(
+        Exception("Connection attempt aborted"),
+      );
+      _handshakeCompleter = null;
+    }
+
+    // Only tear down native GATT when we had a real session, or on final abort
+    // (max retries / new connect session). Avoid disconnecting in-flight connects
+    // that have not yet been observed as connected by this attempt.
+    if (forceAbortNative || hadGatt) {
+      try {
+        await flutterReactiveBle.abortConnection(deviceId);
+      } catch (_) {
+        // Native stack may already be disconnected.
+      }
+    }
+  }
+
+  Future<void> _abortActiveConnectSession() async {
+    final deviceId =
+        selectedDevice?.id ??
+        (connectedDeviceId.value.isNotEmpty ? connectedDeviceId.value : null);
+    if (deviceId != null && deviceId.isNotEmpty) {
+      await _tearDownConnectionAttempt(deviceId, forceAbortNative: true);
+    } else {
+      await _notifySub?.cancel();
+      await _connectionSub?.cancel();
+      _notifySub = null;
+      _connectionSub = null;
+      _resetConnectNotifiersForNewSession();
+    }
+    selectedDevice = null;
+    connectedBtDevice.value = null;
+    connectedDeviceId.value = '';
+  }
+
   /// SCAN & CONNECT
   Future<void> connectToKnownDevice({
-    int maxRetries = 10,
+    int maxRetries = 5,
     Duration retryDelay = const Duration(seconds: 1),
     Duration connectionTimeout = const Duration(seconds: 10),
     required DiscoveredDevice device,
     int? manufacturerDataOverride,
     bool skipConnectionHandshake = false,
   }) async {
-    int attempt = 0;
-
     print("Attempting to connect to device: ${device.id}");
 
     if (isConnected) {
@@ -1867,61 +1951,77 @@ class BleManager {
       return;
     }
 
-    while (attempt < maxRetries) {
-      maxBleConnectionRetriesReached.value = false;
-      attempt++;
-      print("BLE connect attempt $attempt / $maxRetries");
+    if (_connectInProgress) {
+      print("Aborting in-flight connect before starting a new session");
+      await _abortActiveConnectSession();
+    }
 
-      try {
-        selectedDevice = device;
-        // Keep a handle to the actual BluetoothDevice (fallback to fromId when not present)
-        connectedBtDevice.value =
-            device.device ?? fbp.BluetoothDevice.fromId(device.id);
-        // Reset connection flag before each attempt to ensure completer gets completed
-        _connectedOnce = false;
-        await _connectOnce(
-          device,
-          manufacturerDataOverride: manufacturerDataOverride,
-          connectionTimeout: connectionTimeout,
-          skipConnectionHandshake: skipConnectionHandshake,
-        );
-        print("BLE connected successfully");
-        return; // ✅ SUCCESS
-      } catch (e) {
-        print("BLE attempt $attempt failed: $e");
+    _connectInProgress = true;
+    maxBleConnectionRetriesReached.value = false;
+    _resetConnectNotifiersForNewSession();
+    _resetHandshakeSessionState();
 
-        await _notifySub?.cancel();
-        await _connectionSub?.cancel();
+    // Android BLE stack needs a brief cooldown after the previous GATT session.
+    if (_lastDisconnectAt != null) {
+      const minCooldown = Duration(milliseconds: 800);
+      final elapsed = DateTime.now().difference(_lastDisconnectAt!);
+      if (elapsed < minCooldown) {
+        await Future.delayed(minCooldown - elapsed);
+      }
+    }
 
-        _notifySub = null;
-        _connectionSub = null;
-        _connectedOnce = false;
-        _isGattConnected = false;
-        selectedDevice = null;
+    int attempt = 0;
 
-        // ---- RESET PROTOCOL STATE ----
-        resetLogRetrievalState();
+    try {
+      while (attempt < maxRetries) {
+        attempt++;
+        print("BLE connect attempt $attempt / $maxRetries");
 
-        if (attempt >= maxRetries) {
-          print("Max BLE retry attempts reached");
-          processDesc.value =
-              "Max BLE retry attempts reached, please scan again and connect.";
-          maxBleConnectionRetriesReached.value = true;
+        try {
+          selectedDevice = device;
+          // Keep a handle to the actual BluetoothDevice (fallback to fromId when not present)
+          connectedBtDevice.value =
+              device.device ?? fbp.BluetoothDevice.fromId(device.id);
+          // Reset connection flag before each attempt to ensure completer gets completed
+          _connectedOnce = false;
+          await _connectOnce(
+            device,
+            manufacturerDataOverride: manufacturerDataOverride,
+            connectionTimeout: connectionTimeout,
+            skipConnectionHandshake: skipConnectionHandshake,
+          );
+          print("BLE connected successfully");
+          return; // ✅ SUCCESS
+        } catch (e) {
+          print("BLE attempt $attempt failed: $e");
 
-          try {
-            await disconnectConnectedDevice();
-          } catch (_) {
-            // Already disconnected or connect never completed.
+          await _tearDownConnectionAttempt(
+            device.id,
+            forceAbortNative: attempt >= maxRetries,
+          );
+          selectedDevice = null;
+          connectedBtDevice.value = null;
+          connectedDeviceId.value = '';
+
+          // ---- RESET PROTOCOL STATE ----
+          resetLogRetrievalState();
+
+          if (attempt >= maxRetries) {
+            print("Max BLE retry attempts reached");
+            processDesc.value =
+                "Max BLE retry attempts reached, please scan again and connect.";
+            maxBleConnectionRetriesReached.value = true;
+            rethrow;
           }
 
-          rethrow;
-        }
-
-        // BLE stack cooldown (important)
-        if (retryDelay > Duration.zero) {
-          await Future.delayed(retryDelay);
+          // BLE stack cooldown (important)
+          if (retryDelay > Duration.zero) {
+            await Future.delayed(retryDelay);
+          }
         }
       }
+    } finally {
+      _connectInProgress = false;
     }
   }
 
@@ -1956,6 +2056,7 @@ class BleManager {
     }
 
     final Completer<void> connectedCompleter = Completer();
+    var ignoreInitialDisconnectedEmission = true;
 
     // IMPORTANT: Store manufacturer data from scan result BEFORE connecting
     // Manufacturer data is only available from scan results in flutter_blue_plus,
@@ -2053,6 +2154,16 @@ class BleManager {
             }
 
             if (update.connectionState == DeviceConnectionState.disconnected) {
+              // connectionState emits the current value on subscribe — ignore only
+              // that first snapshot. A later disconnected before GATT connects is a
+              // real failure (e.g. Android CONNECTION_FAILED_ESTABLISHMENT).
+              if (!_connectedOnce &&
+                  !_isGattConnected &&
+                  ignoreInitialDisconnectedEmission) {
+                ignoreInitialDisconnectedEmission = false;
+                return;
+              }
+
               _isConnectedNotifier.value = false;
               handshakeCompleteNotifier.value = false;
               bleFirmwareVersion.value = '';
@@ -2218,16 +2329,20 @@ class BleManager {
 
   Future<void> disconnectHandler({String? deviceId}) async {
     print("Disconnecting device...");
-    if (deviceId != null && deviceId.isNotEmpty) {
-      //GATT CACHE REFRESH (Android only)
-      await _refreshGattIfNeeded(deviceId);
-    }
 
     await _notifySub?.cancel();
     await _connectionSub?.cancel();
 
     _notifySub = null;
     _connectionSub = null;
+
+    if (deviceId != null && deviceId.isNotEmpty) {
+      try {
+        await flutterReactiveBle.abortConnection(deviceId);
+      } catch (_) {
+        // Native stack may already be disconnected.
+      }
+    }
 
     _isGattConnected = false;
     _connectedOnce = false;
@@ -2236,7 +2351,8 @@ class BleManager {
     _isConnectedNotifier.value = false;
     handshakeCompleteNotifier.value = false;
     bleFirmwareVersion.value = '';
-    bleProcess.clearSessionAccessCode();
+    _resetHandshakeSessionState();
+    _lastDisconnectAt = DateTime.now();
   }
 
   /// SHUTDOWN
@@ -2252,23 +2368,7 @@ class BleManager {
     await _notifySub?.cancel();
     await _connectionSub?.cancel();
 
-    // Cancel any pending timeouts in BleProcess
-    bleProcess.cancelRxTimeout();
-
-    // Reset all state
-    resetProtocolState();
-    bleProcess.resetProcessState();
-    bleProcess.clearSessionAccessCode();
-
-    // Reset BLE state machine
-    bleCurrentState = BleStates.REQ_ENCY_KEY;
-    bleStateMachineState = BleStates.REQ_ENCY_KEY;
-
-    // Clear encryption key
-    bleAESKey.clear();
-
-    // Reset operation mode
-    currentOperationMode = BleOperationMode.none;
+    _resetHandshakeSessionState();
 
     // Reset connection state
     _scanSub = null;
@@ -2277,18 +2377,10 @@ class BleManager {
     _isGattConnected = false;
     _connectedOnce = false;
     selectedDevice = null;
-    notifyChar = null;
-    writeChar = null;
     isBleDisconnected = true;
     _isConnectedNotifier.value = false;
     handshakeCompleteNotifier.value = false;
     bleFirmwareVersion.value = '';
-    isLogRetrievalDoneOnce = false;
-
-    if (_handshakeCompleter != null && !_handshakeCompleter!.isCompleted) {
-      _handshakeCompleter!.completeError(Exception("BLE shutdown"));
-      _handshakeCompleter = null;
-    }
   }
 
   // ----------------------
@@ -2923,8 +3015,8 @@ class BleManager {
 
     print("TX/RX: TRANSMIT: enc key request : $reqFrameBytes");
 
-    // Send using BLE
-    await sendData(reqFrameBytes);
+    // Send using BLE — always plain; panel expects unencrypted key request.
+    await sendData(reqFrameBytes, encrypt: false);
   }
 
   Future<void> sendAuthnMsg() async {

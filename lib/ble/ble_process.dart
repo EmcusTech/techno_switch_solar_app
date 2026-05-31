@@ -3705,10 +3705,9 @@ class BleProcess {
 
   requestENCKey() async {
     print("Send encry req frame");
-    // processDesc.value = "Send Encryption Key Request";
-    await bleManager.sendAesKeyReq();
-    bleManager.bleStateMachineState = BleStates.PROCESS_WAIT_RSP;
     bleCurrentState = BleStates.REQ_ENCY_KEY;
+    bleManager.bleStateMachineState = BleStates.PROCESS_WAIT_RSP;
+    await bleManager.sendAesKeyReq();
   }
 
   sendAuthPacket() async {

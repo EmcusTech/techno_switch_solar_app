@@ -895,7 +895,10 @@ class _ScannedScreenState extends State<ScannedScreen> {
                 maxBleConnectionRetriesReached || showNetworkCommError;
 
             // When handshake complete, close dialog and navigate
-            if (handshakeComplete && !hasNavigated) {
+            if (handshakeComplete &&
+                !hasNavigated &&
+                !maxBleConnectionRetriesReached &&
+                !showNetworkCommError) {
               hasNavigated = true;
 
               WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -1085,14 +1088,14 @@ class _ScannedScreenState extends State<ScannedScreen> {
                       height: 64,
                       decoration: BoxDecoration(
                         color:
-                            handshakeComplete
+                            handshakeComplete && !showConnectionError
                                 ? Colors.green.withValues(alpha: 0.1)
                                 : Color(0xFFFBDEE1),
                         shape: BoxShape.circle,
                       ),
                       child: Center(
                         child:
-                            handshakeComplete
+                            handshakeComplete && !showConnectionError
                                 ? Icon(
                                   Icons.check_circle,
                                   size: 32,
@@ -1115,10 +1118,10 @@ class _ScannedScreenState extends State<ScannedScreen> {
                     Text(
                       showNetworkCommError
                           ? 'Connection problem'
-                          : handshakeComplete
-                          ? 'Device Connected!'
                           : maxBleConnectionRetriesReached
                           ? 'Max Connection Retries Reached!'
+                          : handshakeComplete
+                          ? 'Device Connected!'
                           : isConnected
                           ? 'Establishing secure connection...'
                           : 'Connecting...',
@@ -1132,12 +1135,12 @@ class _ScannedScreenState extends State<ScannedScreen> {
                     SizedBox(height: 8),
                     // Subtitle
                     Text(
-                      handshakeComplete
-                          ? 'Preparing to navigate...'
+                      maxBleConnectionRetriesReached
+                          ? 'Please scan again and connect to the device'
                           : showNetworkCommError
                           ? networkCommMessage
-                          : maxBleConnectionRetriesReached
-                          ? 'Please scan again and connect to the device'
+                          : handshakeComplete
+                          ? 'Preparing to navigate...'
                           : isConnected
                           ? 'Encrypting and authenticating...'
                           : 'Please wait while we connect to ${device.name}',

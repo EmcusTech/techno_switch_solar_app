@@ -19,7 +19,7 @@ class BleLogController extends GetxController {
     Duration? retryDelay,
     Duration? connectionTimeout,
   }) async {
-    final int resolvedMaxRetries = fastReconnect ? 3 : 10;
+    final int resolvedMaxRetries = fastReconnect ? 3 : 5;
     final Duration resolvedRetryDelay =
         retryDelay ??
         (fastReconnect
@@ -187,14 +187,16 @@ class BleLogController extends GetxController {
   bool get isConnected => bleManager.isConnected;
 
   restartNetworkFlow() async {
-    if (bleProcess.networkFlowRestartCount >= BleProcess.maxNetworkFlowRestarts) {
+    if (bleProcess.networkFlowRestartCount >=
+        BleProcess.maxNetworkFlowRestarts) {
       return;
     }
     print(
       "------------------------Restarting the network FLow-------------------------------",
     );
     await Future.delayed(const Duration(seconds: 7));
-    if (bleProcess.networkFlowRestartCount >= BleProcess.maxNetworkFlowRestarts) {
+    if (bleProcess.networkFlowRestartCount >=
+        BleProcess.maxNetworkFlowRestarts) {
       return;
     }
     await sendNetworkPacket();

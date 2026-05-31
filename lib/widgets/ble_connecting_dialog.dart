@@ -79,7 +79,8 @@ Future<T?> runWithBleConnectingDialog<T>({
   T? result;
   try {
     result = await operation();
-    if (bleController.bleManager.handshakeCompleteNotifier.value) {
+    if (bleController.bleManager.handshakeCompleteNotifier.value &&
+        !bleController.bleManager.maxBleConnectionRetriesReached.value) {
       await Future.delayed(const Duration(milliseconds: 400));
     }
   } finally {
@@ -141,21 +142,21 @@ class _BleConnectingDialogState extends State<BleConnectingDialog> {
         final title =
             showNetworkCommError
                 ? 'Connection problem'
-                : handshakeComplete
-                ? messages.connectedTitle
                 : maxRetries
                 ? 'Max Connection Retries Reached!'
+                : handshakeComplete
+                ? messages.connectedTitle
                 : isConnected
                 ? messages.connectedTitle
                 : messages.connectingTitle;
 
         final subtitle =
-            handshakeComplete
-                ? messages.handshakeCompleteSubtitle
+            maxRetries
+                ? 'Please scan again and reconnect.'
                 : showNetworkCommError
                 ? networkCommMessage
-                : maxRetries
-                ? 'Please scan again and reconnect.'
+                : handshakeComplete
+                ? messages.handshakeCompleteSubtitle
                 : isConnected
                 ? messages.connectedSubtitle
                 : messages.connectingSubtitle(widget.device);
@@ -178,7 +179,7 @@ class _BleConnectingDialogState extends State<BleConnectingDialog> {
                   height: 64,
                   decoration: BoxDecoration(
                     color:
-                        handshakeComplete
+                        handshakeComplete && !showConnectionError
                             ? Colors.green.withValues(alpha: 0.1)
                             : showNetworkCommError
                             ? const Color(0xFFFBDEE1)
@@ -187,7 +188,7 @@ class _BleConnectingDialogState extends State<BleConnectingDialog> {
                   ),
                   child: Center(
                     child:
-                        handshakeComplete
+                        handshakeComplete && !showConnectionError
                             ? const Icon(
                               Icons.check_circle,
                               size: 32,
