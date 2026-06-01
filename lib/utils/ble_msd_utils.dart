@@ -1,8 +1,10 @@
 /// Utilities for parsing BLE Manufacturer Specific Data (MSD).
 ///
 /// Legacy format (2 bytes): `[status0, status1]` — mode is in byte index 1.
-/// Current format (4 bytes): `[status0, status1, panelIdHi, panelIdLo]` —
-/// bytes 0–1 unchanged; bytes 2–3 encode the panel identifier.
+/// Current format (4 bytes): `[status0, status1, byte2, byte3]` —
+/// bytes 0–1 unchanged; bytes 2–3 meaning depends on mode:
+/// - In application mode: may encode panel ID (see [panelId]).
+/// - In bootloader mode (byte 1 == 1): `[0, 0]` corrupt, `[0, 1]` valid.
 class BleMsdUtils {
   BleMsdUtils._();
 
@@ -23,12 +25,25 @@ class BleMsdUtils {
     return statusNormal;
   }
 
-  /// Returns the panel ID from bytes 2–3 when present, otherwise null.
+  /// Returns the panel ID from bytes 2–3 when present (application mode).
   static int? panelId(List<int> msd) {
+    if (isBootloader(msd)) return null;
     if (msd.length >= 4) {
       return (msd[2] << 8) | msd[3];
     }
     return null;
+  }
+
+  /// Bootloader MSD bytes 2–3: `[0, 0]` means on-device bootloader image is corrupt.
+  static bool isBootloaderCorrupt(List<int> msd) {
+    if (!isBootloader(msd) || msd.length < 4) return false;
+    return msd[2] == 0 && msd[3] == 0;
+  }
+
+  /// Bootloader MSD bytes 2–3: `[0, 1]` means on-device bootloader image is valid.
+  static bool isBootloaderValid(List<int> msd) {
+    if (!isBootloader(msd) || msd.length < 4) return false;
+    return msd[2] == 0 && msd[3] == 1;
   }
 
   static bool isBootloader(List<int> msd) =>

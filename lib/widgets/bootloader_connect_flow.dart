@@ -28,14 +28,39 @@ bool isBleDeviceInBootloaderMode({
   return false;
 }
 
+String _bootloaderUpgradeConnectMessage({
+  required bool bootloaderFileCorrupted,
+}) {
+  const base =
+      'This device is in firmware upgrade mode and cannot be used normally. ';
+  if (bootloaderFileCorrupted) {
+    return 'The bootloader file on the device is corrupted. '
+        'Do you want to update the firmware?';
+  }
+  return '${base}Do you want to update the firmware?';
+}
+
+String _bootloaderUpgradeDashboardMessage({
+  required bool bootloaderFileCorrupted,
+}) {
+  if (bootloaderFileCorrupted) {
+    return 'The bootloader file on the device is corrupted. '
+        'Tap on Update to update the firmware.';
+  }
+  return 'Tap on Update to update the firmware.';
+}
+
 /// Connect-time offer: Cancel / Yes.
-Future<bool?> showBootloaderUpgradeOfferDialog(BuildContext context) {
+Future<bool?> showBootloaderUpgradeOfferDialog(
+  BuildContext context, {
+  bool bootloaderFileCorrupted = false,
+}) {
   return showAppStyledTwoActionDialog<bool>(
     context: context,
     title: 'Device is in bootloader mode',
-    message:
-        'This device is in firmware upgrade mode and cannot be used normally. '
-        'Do you want to update the firmware?',
+    message: _bootloaderUpgradeConnectMessage(
+      bootloaderFileCorrupted: bootloaderFileCorrupted,
+    ),
     leadingActionLabel: 'Cancel',
     trailingActionLabel: 'Yes',
     leadingValue: false,
@@ -46,12 +71,15 @@ Future<bool?> showBootloaderUpgradeOfferDialog(BuildContext context) {
 
 /// Dashboard tile tap: Close / Update (same upgrade intent, different labels).
 Future<bool?> showBootloaderUpgradeOfferFromDashboardDialog(
-  BuildContext context,
-) {
+  BuildContext context, {
+  bool bootloaderFileCorrupted = false,
+}) {
   return showAppStyledTwoActionDialog<bool>(
     context: context,
     title: 'Device is in bootloader mode',
-    message: 'Tap on Update to update the firmware.',
+    message: _bootloaderUpgradeDashboardMessage(
+      bootloaderFileCorrupted: bootloaderFileCorrupted,
+    ),
     leadingActionLabel: 'Close',
     trailingActionLabel: 'Update',
     leadingValue: false,
@@ -188,7 +216,13 @@ Future<DiscoveredDevice?> resolveBootloaderModeOnConnect({
     return device;
   }
 
-  final wantUpgrade = await showBootloaderUpgradeOfferDialog(context);
+  final bootloaderFileCorrupted = BleMsdUtils.isBootloaderCorrupt(
+    device.manufacturerData,
+  );
+  final wantUpgrade = await showBootloaderUpgradeOfferDialog(
+    context,
+    bootloaderFileCorrupted: bootloaderFileCorrupted,
+  );
   if (wantUpgrade != true || !context.mounted) {
     await bleController.bleManager.disconnectConnectedDevice();
     onAbort?.call();

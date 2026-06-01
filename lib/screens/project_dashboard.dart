@@ -1158,8 +1158,12 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
   }
 
   Future<void> showBootloaderModeDialog({required BuildContext context}) async {
+    final bootloaderFileCorrupted = BleMsdUtils.isBootloaderCorrupt(
+      _selectedDevice.manufacturerData,
+    );
     final wantUpgrade = await showBootloaderUpgradeOfferFromDashboardDialog(
       context,
+      bootloaderFileCorrupted: bootloaderFileCorrupted,
     );
     if (wantUpgrade != true || !context.mounted) return;
 
