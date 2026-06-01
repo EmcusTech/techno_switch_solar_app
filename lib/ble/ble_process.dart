@@ -26,9 +26,14 @@ class BleProcess {
   Timer? _rxTimeoutTimer;
   Timer? _otherPacketsRxTimeoutTimer;
   Timer? _operationDeadlineTimer;
+  Timer? _accessKeyPollDeadlineTimer;
+  DateTime? _accessKeyPollStartedAt;
 
   /// Wall-clock limit per setup step / phase (independent of short RX silence retries).
   static const Duration bleOperationDeadlineDuration = Duration(seconds: 10);
+
+  /// Max time to poll for an access-key response before returning to the keypad.
+  static const Duration accessKeyPollTimeoutDuration = Duration(seconds: 5);
 
   int checkForNetworkPacketRsp = 0;
   int checkForCtrlCmdRsp = 0;
@@ -741,6 +746,7 @@ class BleProcess {
         print("NEXT: CONTINUOUS POLL PACKET");
         bleManager.otaProcessState = OtaProcessState.sendContinuousPollPacket;
         checkForAccessKeyCmdRsp = 1;
+        startAccessKeyPollDeadline();
         break;
 
       case OtaProcessState.sendContinuousPollPacket:
@@ -928,6 +934,8 @@ class BleProcess {
       bleManager.otaProcessState = OtaProcessState.sendPollPacket;
       isNetworkPacketProcess.value = false;
       checkForNetworkPacketRsp = 0;
+      _otherPacketsRxTimeoutTimer?.cancel();
+      _otherPacketsRxTimeoutTimer = null;
       startRxTimeout();
       await bleManager.sendPollPacket();
     }
@@ -978,6 +986,7 @@ class BleProcess {
                 rx.payload.sublist(14, 14 + accessKeyLength.value),
               ) ==
               accessKey.value) {
+        cancelAccessKeyPollDeadline();
         // processDesc.value = "Validation Success";
         // isAccessKeyValid.value = true;
         print("ACCESS KEY RECEIVED → NEXT CONTROL CMD");
@@ -1179,12 +1188,19 @@ class BleProcess {
                 rx.payload.sublist(14, 14 + accessKeyLength.value),
               ) ==
               accessKey.value) {
+        cancelAccessKeyPollDeadline();
         clearSessionAccessCode();
         resetProcessState();
         processDesc.value = "Wrong password. Try again.";
         isAccessKeyValid.value = false;
         return;
       } else {
+        if (_accessKeyPollStartedAt != null &&
+            DateTime.now().difference(_accessKeyPollStartedAt!) >=
+                accessKeyPollTimeoutDuration) {
+          _onAccessKeyPollTimeout();
+          return;
+        }
         print("ACCESS KEY not found, polling again");
         startRxTimeout(bumpOperationDeadline: false);
         await bleManager.sendPollPacket();
@@ -2823,6 +2839,7 @@ class BleProcess {
     _otherPacketsRxTimeoutTimer = null;
 
     cancelOperationDeadline();
+    cancelAccessKeyPollDeadline();
 
     // UI notifiers
     validEventLogCount.value = 0;
@@ -3751,12 +3768,62 @@ class BleProcess {
     _operationDeadlineTimer = null;
     if (isOtaCompleted) return;
     if (checkForCtrlCmdRsp == 2) return;
+    if (checkForAccessKeyCmdRsp == 1) {
+      _onAccessKeyPollTimeout();
+      return;
+    }
 
     print(
       'BLE operation deadline exceeded (${bleOperationDeadlineDuration.inSeconds}s)',
     );
     processDesc.value = 'Operation timed out.';
     unawaited(handleNetworkFlowNoResponse());
+  }
+
+  void startAccessKeyPollDeadline() {
+    cancelAccessKeyPollDeadline();
+    _otherPacketsRxTimeoutTimer?.cancel();
+    _otherPacketsRxTimeoutTimer = null;
+    _accessKeyPollStartedAt = DateTime.now();
+    _accessKeyPollDeadlineTimer = Timer(
+      accessKeyPollTimeoutDuration,
+      _onAccessKeyPollTimeout,
+    );
+    print(
+      'Access key poll deadline started (${accessKeyPollTimeoutDuration.inSeconds}s)',
+    );
+  }
+
+  void cancelAccessKeyPollDeadline() {
+    _accessKeyPollDeadlineTimer?.cancel();
+    _accessKeyPollDeadlineTimer = null;
+    _accessKeyPollStartedAt = null;
+  }
+
+  void _onAccessKeyPollTimeout() {
+    final duringAccessKeyPoll = checkForAccessKeyCmdRsp == 1;
+    final sessionValidation = isSessionAccessCodeValidationOnly;
+    if (!duringAccessKeyPoll && !sessionValidation) return;
+
+    print(
+      'Access key poll deadline exceeded (${accessKeyPollTimeoutDuration.inSeconds}s)',
+    );
+
+    cancelAccessKeyPollDeadline();
+    _rxTimeoutTimer?.cancel();
+    _rxTimeoutTimer = null;
+    _otherPacketsRxTimeoutTimer?.cancel();
+    _otherPacketsRxTimeoutTimer = null;
+    cancelOperationDeadline();
+
+    checkForAccessKeyCmdRsp = 0;
+    bleManager.otaProcessState = OtaProcessState.notInUse;
+    bleManager.resetPollInFlight();
+    isSessionAccessCodeValidationOnly = false;
+    processNextOtaFrame = false;
+
+    processDesc.value = 'Something went wrong, please try again.';
+    isAccessKeyValid.value = false;
   }
 
   // Public method to cancel timer
@@ -3911,6 +3978,7 @@ class BleProcess {
   void dispose() {
     _rxTimeoutTimer?.cancel();
     cancelOperationDeadline();
+    cancelAccessKeyPollDeadline();
     validEventLogCount.dispose();
     validEventLogs.dispose();
     read1000LogsCount.dispose();
@@ -3967,6 +4035,12 @@ class BleProcess {
   Future<void> handleNetworkFlowNoResponse() async {
     if (_networkFlowFailureHandling || isOtaCompleted) return;
 
+    if (checkForAccessKeyCmdRsp == 1 || isSessionAccessCodeValidationOnly) {
+      print('Other Packets: No response during access code validation');
+      _onAccessKeyPollTimeout();
+      return;
+    }
+
     networkFlowRestartCount++;
     processDesc.value =
         'No response from device ($networkFlowRestartCount/$maxNetworkFlowRestarts)';
@@ -3992,7 +4066,13 @@ class BleProcess {
   }
 
   void startOtherPacketsRxTimeout({Duration? timeout}) {
-    cancelRxTimeout();
+    if (checkForAccessKeyCmdRsp == 1) {
+      return;
+    }
+
+    _rxTimeoutTimer?.cancel();
+    _otherPacketsRxTimeoutTimer?.cancel();
+    cancelOperationDeadline();
 
     _otherPacketsRxTimeoutTimer = Timer(
       timeout ?? const Duration(seconds: 12),

@@ -2073,23 +2073,23 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
       return;
     }
 
-    await _startUpgrade(
-      isChipInBootLoader: inBootloader,
-      firmwareVersion: _validationResult?.firmwareVersion,
-    );
+    // await _startUpgrade(
+    //   isChipInBootLoader: inBootloader,
+    //   firmwareVersion: _validationResult?.firmwareVersion,
+    // );
 
-    // if ((_validationResult?.hardwareVersion == ble.bleHardwareVersion.value) &&
-    //     (_validationResult?.firmwareVersion != ble.bleFirmwareVersion.value)) {
-    //   await _startUpgrade(
-    //     isChipInBootLoader: inBootloader,
-    //     firmwareVersion: _validationResult?.firmwareVersion,
-    //   );
-    // } else if (_validationResult?.hardwareVersion !=
-    //     ble.bleHardwareVersion.value) {
-    //   await _showHardwareVersionMismatch();
-    // } else {
-    //   await _showSameFirmwareVersionPopUp();
-    // }
+    if ((_validationResult?.hardwareVersion == ble.bleHardwareVersion.value) &&
+        (_validationResult?.firmwareVersion != ble.bleFirmwareVersion.value)) {
+      await _startUpgrade(
+        isChipInBootLoader: inBootloader,
+        firmwareVersion: _validationResult?.firmwareVersion,
+      );
+    } else if (_validationResult?.hardwareVersion !=
+        ble.bleHardwareVersion.value) {
+      await _showHardwareVersionMismatch();
+    } else {
+      await _showSameFirmwareVersionPopUp();
+    }
   }
 
   Future<void> _showSameFirmwareVersionPopUp() async {
