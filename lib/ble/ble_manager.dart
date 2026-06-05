@@ -2558,32 +2558,22 @@ class BleManager {
 
     List<int> frameBuff = List.filled(dataLen + BLE_FRAME_FILED_SIZE, 0);
 
-    // Start of frame
     frameBuff[enBLE_SOF_MSB_POS] = enBLE_SOF_MSB;
     frameBuff[enBLE_SOF_LSB_POS] = enBLE_SOF_LSB;
-
-    // Command
     frameBuff[enBLE_CMD_MSB_POS] = (cmd >> 8) & 0xFF;
     frameBuff[enBLE_CMD_LSB_POS] = cmd & 0xFF;
-
-    // Type of frame
     frameBuff[enBLE_TOF_POS] = typeOfFrame;
-
-    // Data length
     frameBuff[enBLE_DATA_LEN_MSB_POS] = (dataLen >> 8) & 0xFF;
     frameBuff[enBLE_DATA_LEN_LSB_POS] = dataLen & 0xFF;
 
-    // Copy actual data
     for (int i = 0; i < dataLen; i++) {
       frameBuff[enBLE_DATA_POS + i] = data[i];
     }
 
-    // CRC
     int crc = crcCcittFalse(frameBuff.sublist(0, enBLE_DATA_POS + dataLen));
+
     frameBuff[enBLE_DATA_POS + dataLen] = (crc >> 8) & 0xFF;
     frameBuff[enBLE_DATA_POS + 1 + dataLen] = crc & 0xFF;
-
-    // End of frame
     frameBuff[enBLE_DATA_POS + 2 + dataLen] = enBLE_EOF_MSB;
     frameBuff[enBLE_DATA_POS + 3 + dataLen] = enBLE_EOF_LSB;
 
@@ -2638,12 +2628,7 @@ class BleManager {
   }) async {
     if (writeChar == null) return;
 
-    List<int> frame = bleFrameFormat(
-      cmd,
-      0x01,
-      length,
-      data,
-    ); // 0x01 is small frame type
+    List<int> frame = bleFrameFormat(cmd, 0x01, length, data);
     Uint8List frameBytes = aes.convertToBytes(frame);
 
     print(
@@ -2654,27 +2639,22 @@ class BleManager {
   }
 
   Future<void> sendAesKeyReq() async {
-    // Build BLE frame (same as Python: ble_frame_format(0x1000, 0x01, 1, [0x00]))
     List<int> reqFrame = bleFrameFormat(0x1000, 0x01, 1, [0x00]);
 
-    // Convert to Uint8List
     Uint8List reqFrameBytes = aes.convertToBytes(reqFrame);
 
     print("Framed key req Frame: $reqFrame after bytes convert $reqFrameBytes");
 
     print("TX/RX: TRANSMIT: enc key request : $reqFrameBytes");
 
-    // Send using BLE — always plain; panel expects unencrypted key request.
     await sendData(reqFrameBytes, encrypt: false);
   }
 
   Future<void> sendAuthnMsg() async {
     if (writeChar == null) return;
 
-    // Convert message string to bytes
     List<int> msgBytes = BLE_AUTHN_MSG.codeUnits;
 
-    // Create BLE frame
     List<int> authnMsgFrame = bleFrameFormat(
       0x1000,
       0x02,
@@ -2684,13 +2664,12 @@ class BleManager {
 
     print("Framed Authn Msg: $authnMsgFrame");
 
-    // Convert to Uint8List for BLE
     Uint8List frameBytes = Uint8List.fromList(authnMsgFrame);
+
     print(
       "TX/RX: TRANSMIT: Auth Frame bytes: ${frameBytes.map((e) => e.toRadixString(16).padLeft(2, '0')).join(' ')}",
     );
 
-    // Send using your sendData function which handles encryption
     await sendData(frameBytes);
   }
 
@@ -2702,15 +2681,15 @@ class BleManager {
     u8Pkt[0] = 0xFE;
     u8Pkt[1] = 0x01;
     u8Pkt[2] = 0x00;
-    u8Pkt[3] = 0x04; // pkt type
-    u8Pkt[4] = 0x00; // tx pkt num
-    u8Pkt[5] = 0x00; // rx pkt num
-    u8Pkt[6] = 0x05; // network number
-    u8Pkt[11] = 0x02; // socket number
+    u8Pkt[3] = 0x04;
+    u8Pkt[4] = 0x00;
+    u8Pkt[5] = 0x00;
+    u8Pkt[6] = 0x05;
+    u8Pkt[11] = 0x02;
     u8Pkt[12] = 0x01;
 
-    // Checksum on first 213 bytes
     int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
+
     u8Pkt[213] = (checksum >> 8) & 0xFF;
     u8Pkt[214] = checksum & 0xFF;
     u8Pkt[215] = 0xFD;
@@ -2718,9 +2697,8 @@ class BleManager {
     print(
       "TX/RX: TRANSMIT: Network Packet time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((e) => e.toRadixString(16).padLeft(2, '0')).join(' ')}",
     );
-    // print(u8Pkt.map((e) => e.toRadixString(16).padLeft(2, '0')).join(' '));
 
-    await sendSmallDataFrame(0x1000, 216, u8Pkt); // see step 4
+    await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
 
   Future<void> sendPollPacket() async {
