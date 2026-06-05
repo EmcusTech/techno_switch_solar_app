@@ -2709,30 +2709,25 @@ class BleManager {
       print("Poll blocked (OTA completed / notInUse)");
       return;
     }
-    // Guard: skip if a previous poll write is still awaiting notify
+
     if (_pollInFlight) {
       print("Skipping poll: previous write still in-flight");
       return;
     }
     _pollInFlight = true;
-    // await Future.delayed(Duration(milliseconds: 200));
-    // Create the 216-byte poll packet
+
     List<int> pollPkt = List.filled(216, 0);
     pollPkt[0] = 0xFE;
     pollPkt[1] = 0x01;
     pollPkt[2] = 0x00;
-
-    // Update packet numbers
-    pollPkt[4] = (u8TxPktCnt + 1) & 0xFF; // tx pkt num
-    pollPkt[5] = (u8RxPktCnt & 0xFF); // rx pkt num
+    pollPkt[4] = (u8TxPktCnt + 1) & 0xFF;
+    pollPkt[5] = (u8RxPktCnt & 0xFF);
     print(
       "Sending poll pkt rx cnt pollPkt[5] value:${pollPkt[5]},u8RxPktCnt:${u8RxPktCnt}",
     );
-    // Network + socket
-    pollPkt[6] = 0x00; // network number
-    pollPkt[11] = 0x00; // socket number
+    pollPkt[6] = 0x00;
+    pollPkt[11] = 0x00;
 
-    // Compute checksum over first 213 bytes
     int checksum = toolsFletcherChecksum(pollPkt.sublist(0, 216 - 3));
 
     pollPkt[213] = (checksum >> 8) & 0xFF;
@@ -2742,16 +2737,10 @@ class BleManager {
     print(
       "TX/RX: TRANSMIT: Poll Packet time: ${DateTime.now().toIso8601String()}, packet: ${pollPkt.map((e) => e.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
     );
-    // print(
-    //   pollPkt
-    //       .map((e) => e.toRadixString(16).padLeft(2, '0').toUpperCase())
-    //       .join(' '),
-    // );
 
     await sendSmallDataFrame(0x1000, 216, pollPkt);
   }
 
-  // Allow BleProcess to clear in-flight on timeout
   void resetPollInFlight() {
     _pollInFlight = false;
   }
@@ -2759,7 +2748,6 @@ class BleManager {
   Future<void> sendAccessKeyPkt() async {
     u8TxPktCnt += 1;
 
-    // Create 216-byte packet
     List<int> pkt = List.filled(216, 0);
 
     print("accessKey: ${accessKey.value}");
@@ -2781,16 +2769,15 @@ class BleManager {
     pkt[1] = 0x01;
     pkt[2] = 0x00;
 
-    pkt[3] = 0x01; // pkt type
-    pkt[4] = u8TxPktCnt & 0xFF; // tx pkt num
-    pkt[5] = u8RxPktCnt & 0xFF; // rx pkt num
-    pkt[6] = 0x00; // network number
-    pkt[10] = 0x83; // mode
-    pkt[11] = 0x00; // socket number
+    pkt[3] = 0x01;
+    pkt[4] = u8TxPktCnt & 0xFF;
+    pkt[5] = u8RxPktCnt & 0xFF;
+    pkt[6] = 0x00;
+    pkt[10] = 0x83;
+    pkt[11] = 0x00;
     pkt[12] = 0x04;
     pkt[13] = accessKeyLength.value & 0xFF;
 
-    // Compute checksum on first 213 bytes
     int checksum = toolsFletcherChecksum(pkt.sublist(0, 216 - 3));
 
     pkt[213] = (checksum >> 8) & 0xFF;
@@ -2800,53 +2787,38 @@ class BleManager {
     print(
       "TX/RX: TRANSMIT: Access Key Packet time: ${DateTime.now().toIso8601String()}, packet: ${pkt.map((e) => e.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ').toString()}",
     );
-    // print(
-    //   pkt
-    //       .map((e) => e.toRadixString(16).padLeft(2, '0').toUpperCase())
-    //       .join(' ')
-    //       .toString(),
-    // );
 
     await sendSmallDataFrame(0x1000, 216, pkt);
   }
 
   Future<void> sendStartCntrlCmdPkt() async {
-    // Update global counters
     u8TxPktCnt += 1;
 
-    // Create 216-byte buffer
-    Uint8List u8_pkt = Uint8List(216);
-    u8_pkt[0] = 0xFE;
-    u8_pkt[1] = 0x01;
-    u8_pkt[2] = 0x00;
+    Uint8List u8Pkt = Uint8List(216);
+    u8Pkt[0] = 0xFE;
+    u8Pkt[1] = 0x01;
+    u8Pkt[2] = 0x00;
 
-    u8_pkt[3] = 0x01; // pkt type
-    u8_pkt[4] = u8TxPktCnt & 0xFF; // tx pkt num
-    u8_pkt[5] = u8RxPktCnt & 0xFF; // rx pkt num
-    u8_pkt[6] = 0x00; // network number
-    u8_pkt[10] = 0x83; // mode
-    u8_pkt[11] = 0x04; // socket number
-    u8_pkt[12] = 0x0B; // command byte 1
-    u8_pkt[13] = 0x03; // command byte 2
+    u8Pkt[3] = 0x01;
+    u8Pkt[4] = u8TxPktCnt & 0xFF;
+    u8Pkt[5] = u8RxPktCnt & 0xFF;
+    u8Pkt[6] = 0x00;
+    u8Pkt[10] = 0x83;
+    u8Pkt[11] = 0x04;
+    u8Pkt[12] = 0x0B;
+    u8Pkt[13] = 0x03;
 
-    // Compute checksum on first 213 bytes
-    int checksum = toolsFletcherChecksum(u8_pkt.sublist(0, 213));
+    int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
-    u8_pkt[213] = (checksum >> 8) & 0xFF;
-    u8_pkt[214] = checksum & 0xFF;
-    u8_pkt[215] = 0xFD;
+    u8Pkt[213] = (checksum >> 8) & 0xFF;
+    u8Pkt[214] = checksum & 0xFF;
+    u8Pkt[215] = 0xFD;
 
     print(
-      "TX/RX: TRANSMIT: Start Control Command time: ${DateTime.now().toIso8601String()}, packet: ${u8_pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+      "TX/RX: TRANSMIT: Start Control Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
     );
 
-    // print(
-    //   u8_pkt
-    //       .map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase())
-    //       .join(' '),
-    // );
-
-    await sendSmallDataFrame(0x1000, 216, u8_pkt);
+    await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
 
   Future<void> sendStopCntrlCmdPkt() async {
