@@ -1,9 +1,7 @@
 import 'dart:typed_data';
-
 import 'aes_key.dart' as crypto;
 import 'ble_encryption_config.dart';
 
-/// Unified BLE encrypt/decrypt entry point controlled by [ble_encryption_config.dart].
 class BleCrypto {
   BleCrypto._();
 
@@ -16,7 +14,6 @@ class BleCrypto {
     return kBleEncryptionEnabled && encryptParam && pastEncryptionKeyExchange;
   }
 
-  /// First [kBleEncryKeyByteSize] bytes of the encryption-key response payload.
   static Uint8List extractKeyFromHandshakePayload(List<int> payload) {
     final int end = kBleEncryKeyPayloadOffset + kBleEncryKeyByteSize;
     if (payload.length < end) {

@@ -6,8 +6,6 @@ import 'package:techno_switch_solar_app/widgets/ble_communication_failure_dialog
 
 class BleLogController extends GetxController {
   final BleManager bleManager = Get.find<BleManager>();
-  // Reuse the shared BleProcess instance from the manager so all screens
-  // listen to the same ValueNotifiers.
   late final BleProcess bleProcess = bleManager.bleProcess;
 
   connectToDevice({
@@ -45,9 +43,6 @@ class BleLogController extends GetxController {
     await bleManager.registerNotifyHandler();
   }
 
-  /// Start log retrieval process
-  /// This initializes the protocol state and begins the encryption handshake
-  /// which will eventually start retrieving logs from the device
   Future<void> startLogRetrieval() async {
     await bleManager.startLogRetrieval();
   }
@@ -168,10 +163,6 @@ class BleLogController extends GetxController {
     await bleManager.sendAccessKeyPkt();
   }
 
-  // startExtOut() async {
-  //   await bleManager.startExtOut();
-  // }
-
   sendExtOutApplyCommand() async {
     await bleManager.sendExtOutSetupApplyCmdPkt();
   }
@@ -202,8 +193,6 @@ class BleLogController extends GetxController {
     await sendNetworkPacket();
   }
 
-  /// After [BleProcess.maxNetworkFlowRestarts] no-response timeouts: disconnect and
-  /// surface error on open UI (keypad, password dialog, connecting dialog).
   Future<void> onNetworkFlowFailed() async {
     const message = BleCommunicationFailureDialog.defaultMessage;
     print('BLE network flow failed after max retries');
@@ -226,7 +215,6 @@ class BleLogController extends GetxController {
     bleProcess.publishCommunicationFailure(message);
   }
 
-  //FATAL BLE ERROR ENTRY POINT
   Future<void> onBleFatalError(String message) async {
     print("BLE FATAL ERROR: $message");
     bleProcess.cancelRxTimeout();
@@ -245,12 +233,11 @@ class BleLogController extends GetxController {
     final bleManager = Get.find<BleManager>();
     final bleProcess = bleManager.bleProcess;
 
-    print("🔄 Restarting BLE log retrieval");
+    print("Restarting BLE log retrieval");
 
     bleProcess.resetProcessState();
     bleManager.resetProtocolState();
 
-    // Kick off again
     await bleManager.sendNetworkPacket();
     bleProcess.runStateMachine();
   }

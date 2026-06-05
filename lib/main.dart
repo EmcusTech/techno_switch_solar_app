@@ -15,11 +15,7 @@ void main() async {
 
   Get.put<BleManager>(BleManager(), permanent: true);
 
-  // Initialize app services
   await AppServices.initialize();
-
-  // Seed mock site + panel for testing (skips if already exists)
-  // await seedMockData();
 
   await FlutterLogs.initLogs(
     logLevelsEnabled: <LogLevel>[
@@ -49,17 +45,6 @@ void main() async {
     "----------------------setUpLogs: Setting up logs..-----------------",
   );
 
-  // SystemChrome.setSystemUIOverlayStyle(
-  //   SystemUiOverlayStyle(
-  //     systemNavigationBarColor: Color(
-  //       0xffEC1D24,
-  //     ), // Match your bottom nav color
-  //     systemNavigationBarIconBrightness: Brightness.light, // For white icons
-  //     // statusBarBrightness: Brightness.light,
-  //     // statusBarColor: Colors.transparent,
-  //     statusBarIconBrightness: Brightness.dark,
-  //   ),
-  // );
   Get.put(BleLogController());
 
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
@@ -83,7 +68,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    AppServices.dispose(); // Clean up services when app is disposed
+    AppServices.dispose();
     super.dispose();
   }
 
@@ -92,12 +77,10 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     super.didChangeAppLifecycleState(state);
 
     if (state == AppLifecycleState.detached) {
-      // App is being terminated
       AppServices.dispose();
     }
   }
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return SafeArea(
