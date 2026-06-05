@@ -1020,15 +1020,10 @@ class BleManager {
       );
     }
 
-    // Set operation mode to log retrieval
     currentOperationMode = BleOperationMode.relaySetupApply;
 
-    // Reset protocol state to initial values
     resetRelaySetupState();
     resetProtocolRelaySetupState();
-
-    // IMPORTANT: Reset process state to clear isOtaCompleted flag
-    // This ensures polls aren't blocked after firmware upgrade
     bleProcess.resetProcessRelaySetupState();
 
     if (_notifySub == null) {
@@ -1036,6 +1031,7 @@ class BleManager {
         "BLE handshake not complete. Please wait for connection to finish.",
       );
     }
+
     print("Proceeding with relay setup apply");
     bleCurrentState = BleStates.SEND_RELAY_SETUP_CMD_APPLY_PACKET;
     bleStateMachineState = BleStates.SEND_RELAY_SETUP_CMD_APPLY_PACKET;
@@ -1055,15 +1051,10 @@ class BleManager {
       );
     }
 
-    // Set operation mode to log retrieval
     currentOperationMode = BleOperationMode.zoneSetupFetch;
 
-    // Reset protocol state to initial values
     resetZoneSetupState();
     resetProtocolZoneSetupState();
-
-    // IMPORTANT: Reset process state to clear isOtaCompleted flag
-    // This ensures polls aren't blocked after firmware upgrade
     bleProcess.resetProcessZoneSetupState();
 
     if (_notifySub == null) {
@@ -1071,6 +1062,7 @@ class BleManager {
         "BLE handshake not complete. Please wait for connection to finish.",
       );
     }
+
     print("Proceeding with zone setup fetch");
     bleCurrentState = BleStates.SEND_ZONE_SETUP_CMD_FETCH_PACKET;
     bleStateMachineState = BleStates.SEND_ZONE_SETUP_CMD_FETCH_PACKET;
@@ -1090,15 +1082,10 @@ class BleManager {
       );
     }
 
-    // Set operation mode to log retrieval
     currentOperationMode = BleOperationMode.zoneSetupApply;
 
-    // Reset protocol state to initial values
     resetRelaySetupState();
     resetProtocolZoneSetupState();
-
-    // IMPORTANT: Reset process state to clear isOtaCompleted flag
-    // This ensures polls aren't blocked after firmware upgrade
     bleProcess.resetProcessZoneSetupState();
 
     if (_notifySub == null) {
@@ -1106,6 +1093,7 @@ class BleManager {
         "BLE handshake not complete. Please wait for connection to finish.",
       );
     }
+
     print("Proceeding with zone setup apply");
     bleCurrentState = BleStates.SEND_ZONE_SETUP_CMD_APPLY_PACKET;
     bleStateMachineState = BleStates.SEND_ZONE_SETUP_CMD_APPLY_PACKET;
@@ -1125,15 +1113,10 @@ class BleManager {
       );
     }
 
-    // Set operation mode to log retrieval
     currentOperationMode = BleOperationMode.radioSetupFetch;
 
-    // Reset protocol state to initial values
     resetRadioSetupState();
     resetProtocolRadioSetupState();
-
-    // IMPORTANT: Reset process state to clear isOtaCompleted flag
-    // This ensures polls aren't blocked after firmware upgrade
     bleProcess.resetProcessRadioSetupState();
 
     if (_notifySub == null) {
@@ -1141,6 +1124,7 @@ class BleManager {
         "BLE handshake not complete. Please wait for connection to finish.",
       );
     }
+
     print("Proceeding with radio setup fetch");
     bleCurrentState = BleStates.SEND_RADIO_SETUP_CMD_FETCH_PACKET;
     bleStateMachineState = BleStates.SEND_RADIO_SETUP_CMD_FETCH_PACKET;
@@ -1160,15 +1144,10 @@ class BleManager {
       );
     }
 
-    // Set operation mode to log retrieval
     currentOperationMode = BleOperationMode.radioSetupApply;
 
-    // Reset protocol state to initial values
     resetRadioSetupState();
     resetProtocolRadioSetupState();
-
-    // IMPORTANT: Reset process state to clear isOtaCompleted flag
-    // This ensures polls aren't blocked after firmware upgrade
     bleProcess.resetProcessRadioSetupState();
 
     if (_notifySub == null) {
@@ -1176,6 +1155,7 @@ class BleManager {
         "BLE handshake not complete. Please wait for connection to finish.",
       );
     }
+
     print("Proceeding with radio setup apply");
     bleCurrentState = BleStates.SEND_RADIO_SETUP_CMD_APPLY_PACKET;
     bleStateMachineState = BleStates.SEND_RADIO_SETUP_CMD_APPLY_PACKET;
@@ -1195,15 +1175,10 @@ class BleManager {
       );
     }
 
-    // Set operation mode to log retrieval
     currentOperationMode = BleOperationMode.moduleSetupFetch;
 
-    // Reset protocol state to initial values
     resetModuleSetupState();
     resetProtocolModuleSetupState();
-
-    // IMPORTANT: Reset process state to clear isOtaCompleted flag
-    // This ensures polls aren't blocked after firmware upgrade
     bleProcess.resetProcessModuleSetupState();
 
     if (_notifySub == null) {
@@ -1211,6 +1186,7 @@ class BleManager {
         "BLE handshake not complete. Please wait for connection to finish.",
       );
     }
+
     print("Proceeding with module setup fetch");
     bleCurrentState = BleStates.SEND_MODULE_SETUP_CMD_FETCH_PACKET;
     bleStateMachineState = BleStates.SEND_MODULE_SETUP_CMD_FETCH_PACKET;
@@ -1230,15 +1206,10 @@ class BleManager {
       );
     }
 
-    // Set operation mode to log retrieval
     currentOperationMode = BleOperationMode.lBusSetupFetch;
 
-    // Reset protocol state to initial values
     resetLBusSetupState();
     resetProtocolLBusSetupState();
-
-    // IMPORTANT: Reset process state to clear isOtaCompleted flag
-    // This ensures polls aren't blocked after firmware upgrade
     bleProcess.resetProcessLBusSetupState();
 
     if (_notifySub == null) {
@@ -1246,6 +1217,7 @@ class BleManager {
         "BLE handshake not complete. Please wait for connection to finish.",
       );
     }
+
     print("Proceeding with L-Bus setup fetch");
     bleCurrentState = BleStates.SEND_L_BUS_SETUP_CMD_FETCH_PACKET;
     bleStateMachineState = BleStates.SEND_L_BUS_SETUP_CMD_FETCH_PACKET;
@@ -1265,15 +1237,10 @@ class BleManager {
       );
     }
 
-    // Set operation mode to log retrieval
     currentOperationMode = BleOperationMode.lBusSetupApply;
 
-    // Reset protocol state to initial values
     resetLBusSetupState();
     resetProtocolLBusSetupState();
-
-    // IMPORTANT: Reset process state to clear isOtaCompleted flag
-    // This ensures polls aren't blocked after firmware upgrade
     bleProcess.resetProcessLBusSetupState();
 
     if (_notifySub == null) {
@@ -1281,6 +1248,7 @@ class BleManager {
         "BLE handshake not complete. Please wait for connection to finish.",
       );
     }
+
     print("Proceeding with L-Bus setup apply");
     bleCurrentState = BleStates.SEND_L_BUS_SETUP_CMD_APPLY_PACKET;
     bleStateMachineState = BleStates.SEND_L_BUS_SETUP_CMD_APPLY_PACKET;
@@ -1300,15 +1268,10 @@ class BleManager {
       );
     }
 
-    // Set operation mode to log retrieval
     currentOperationMode = BleOperationMode.sounderSetupFetch;
 
-    // Reset protocol state to initial values
     resetSounderSetupState();
     resetProtocolSounderSetupState();
-
-    // IMPORTANT: Reset process state to clear isOtaCompleted flag
-    // This ensures polls aren't blocked after firmware upgrade
     bleProcess.resetProcessSounderSetupState();
 
     if (_notifySub == null) {
@@ -1316,6 +1279,7 @@ class BleManager {
         "BLE handshake not complete. Please wait for connection to finish.",
       );
     }
+
     print("Proceeding with Sounder setup fetch");
     bleCurrentState = BleStates.SEND_SOUNDER_SETUP_CMD_FETCH_PACKET;
     bleStateMachineState = BleStates.SEND_SOUNDER_SETUP_CMD_FETCH_PACKET;
@@ -1335,15 +1299,10 @@ class BleManager {
       );
     }
 
-    // Set operation mode to log retrieval
     currentOperationMode = BleOperationMode.sounderSetupApply;
 
-    // Reset protocol state to initial values
     resetSounderSetupState();
     resetProtocolSounderSetupState();
-
-    // IMPORTANT: Reset process state to clear isOtaCompleted flag
-    // This ensures polls aren't blocked after firmware upgrade
     bleProcess.resetProcessSounderSetupState();
 
     if (_notifySub == null) {
@@ -1351,6 +1310,7 @@ class BleManager {
         "BLE handshake not complete. Please wait for connection to finish.",
       );
     }
+
     print("Proceeding with Sounder setup apply");
     bleCurrentState = BleStates.SEND_SOUNDER_SETUP_CMD_APPLY_PACKET;
     bleStateMachineState = BleStates.SEND_SOUNDER_SETUP_CMD_APPLY_PACKET;
@@ -1370,15 +1330,10 @@ class BleManager {
       );
     }
 
-    // Set operation mode to log retrieval
     currentOperationMode = BleOperationMode.serviceDueFetch;
 
-    // Reset protocol state to initial values
     resetServiceDueState();
     resetProtocolServiceDueState();
-
-    // IMPORTANT: Reset process state to clear isOtaCompleted flag
-    // This ensures polls aren't blocked after firmware upgrade
     bleProcess.resetProcessServiceDueState();
 
     if (_notifySub == null) {
@@ -1386,6 +1341,7 @@ class BleManager {
         "BLE handshake not complete. Please wait for connection to finish.",
       );
     }
+
     print("Proceeding with Service due fetch");
     bleCurrentState = BleStates.SEND_SERVICE_DUE_SETUP_CMD_FETCH_PACKET;
     bleStateMachineState = BleStates.SEND_SERVICE_DUE_SETUP_CMD_FETCH_PACKET;
@@ -1405,15 +1361,10 @@ class BleManager {
       );
     }
 
-    // Set operation mode to log retrieval
     currentOperationMode = BleOperationMode.serviceDueApply;
 
-    // Reset protocol state to initial values
     resetServiceDueState();
     resetProtocolServiceDueState();
-
-    // IMPORTANT: Reset process state to clear isOtaCompleted flag
-    // This ensures polls aren't blocked after firmware upgrade
     bleProcess.resetProcessServiceDueState();
 
     if (_notifySub == null) {
@@ -1421,6 +1372,7 @@ class BleManager {
         "BLE handshake not complete. Please wait for connection to finish.",
       );
     }
+
     print("Proceeding with Service due apply");
     bleCurrentState = BleStates.SEND_SERVICE_DUE_SETUP_CMD_APPLY_PACKET;
     bleStateMachineState = BleStates.SEND_SERVICE_DUE_SETUP_CMD_APPLY_PACKET;
