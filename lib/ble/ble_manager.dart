@@ -1392,15 +1392,10 @@ class BleManager {
       );
     }
 
-    // Set operation mode to log retrieval
     currentOperationMode = BleOperationMode.accessCodeSetupFetch;
 
-    // Reset protocol state to initial values
     resetAccessCodeSetupState();
     resetProtocolAccessCodeSetupState();
-
-    // IMPORTANT: Reset process state to clear isOtaCompleted flag
-    // This ensures polls aren't blocked after firmware upgrade
     bleProcess.resetProcessAccessCodeSetupState();
 
     if (_notifySub == null) {
@@ -1408,6 +1403,7 @@ class BleManager {
         "BLE handshake not complete. Please wait for connection to finish.",
       );
     }
+
     print("Proceeding with Access code setup fetch");
     bleCurrentState = BleStates.SEND_ACCESS_CODE_SETUP_CMD_FETCH_PACKET;
     bleStateMachineState = BleStates.SEND_ACCESS_CODE_SETUP_CMD_FETCH_PACKET;
@@ -1427,15 +1423,10 @@ class BleManager {
       );
     }
 
-    // Set operation mode to log retrieval
     currentOperationMode = BleOperationMode.accessCodeSetupApply;
 
-    // Reset protocol state to initial values
     resetAccessCodeSetupState();
     resetProtocolAccessCodeSetupState();
-
-    // IMPORTANT: Reset process state to clear isOtaCompleted flag
-    // This ensures polls aren't blocked after firmware upgrade
     bleProcess.resetProcessAccessCodeSetupState();
 
     if (_notifySub == null) {
@@ -1443,6 +1434,7 @@ class BleManager {
         "BLE handshake not complete. Please wait for connection to finish.",
       );
     }
+
     print("Proceeding with Access code setup fetch");
     bleCurrentState = BleStates.SEND_ACCESS_CODE_SETUP_CMD_APPLY_PACKET;
     bleStateMachineState = BleStates.SEND_ACCESS_CODE_SETUP_CMD_APPLY_PACKET;
@@ -1462,15 +1454,10 @@ class BleManager {
       );
     }
 
-    // Set operation mode to log retrieval
     currentOperationMode = BleOperationMode.panelInfoSetupFetch;
 
-    // Reset protocol state to initial values
     resetPanelInfoSetupState();
     resetProtocolPanelInfoSetupState();
-
-    // IMPORTANT: Reset process state to clear isOtaCompleted flag
-    // This ensures polls aren't blocked after firmware upgrade
     bleProcess.resetProcessPanelInfoSetupState();
 
     if (_notifySub == null) {
@@ -1478,6 +1465,7 @@ class BleManager {
         "BLE handshake not complete. Please wait for connection to finish.",
       );
     }
+
     print("Proceeding with Panel info setup fetch");
     bleCurrentState = BleStates.SEND_PANEL_INFO_SETUP_CMD_FETCH_PACKET;
     bleStateMachineState = BleStates.SEND_PANEL_INFO_SETUP_CMD_FETCH_PACKET;
@@ -1497,15 +1485,10 @@ class BleManager {
       );
     }
 
-    // Set operation mode to log retrieval
     currentOperationMode = BleOperationMode.panelInfoSetupApply;
 
-    // Reset protocol state to initial values
     resetPanelInfoSetupState();
     resetProtocolPanelInfoSetupState();
-
-    // IMPORTANT: Reset process state to clear isOtaCompleted flag
-    // This ensures polls aren't blocked after firmware upgrade
     bleProcess.resetProcessPanelInfoSetupState();
 
     if (_notifySub == null) {
@@ -1513,6 +1496,7 @@ class BleManager {
         "BLE handshake not complete. Please wait for connection to finish.",
       );
     }
+
     print("Proceeding with Panel info setup apply");
     bleCurrentState = BleStates.SEND_PANEL_INFO_SETUP_CMD_APPLY_PACKET;
     bleStateMachineState = BleStates.SEND_PANEL_INFO_SETUP_CMD_APPLY_PACKET;
@@ -1532,15 +1516,10 @@ class BleManager {
       );
     }
 
-    // Set operation mode to log retrieval
     currentOperationMode = BleOperationMode.generalModuleSetupFetch;
 
-    // Reset protocol state to initial values
     resetGeneralModuleSetupState();
     resetProtocolGeneralModuleSetupState();
-
-    // IMPORTANT: Reset process state to clear isOtaCompleted flag
-    // This ensures polls aren't blocked after firmware upgrade
     bleProcess.resetProcessGeneralModuleSetupState();
 
     if (_notifySub == null) {
@@ -1548,6 +1527,7 @@ class BleManager {
         "BLE handshake not complete. Please wait for connection to finish.",
       );
     }
+
     print("Proceeding with General module setup fetch");
     bleCurrentState = BleStates.SEND_GENERAL_MODULE_SETUP_CMD_FETCH_PACKET;
     bleStateMachineState = BleStates.SEND_GENERAL_MODULE_SETUP_CMD_FETCH_PACKET;
@@ -1567,15 +1547,10 @@ class BleManager {
       );
     }
 
-    // Set operation mode to log retrieval
     currentOperationMode = BleOperationMode.generalModuleSetupApply;
 
-    // Reset protocol state to initial values
     resetGeneralModuleSetupState();
     resetProtocolGeneralModuleSetupState();
-
-    // IMPORTANT: Reset process state to clear isOtaCompleted flag
-    // This ensures polls aren't blocked after firmware upgrade
     bleProcess.resetProcessGeneralModuleSetupState();
 
     if (_notifySub == null) {
@@ -1583,6 +1558,7 @@ class BleManager {
         "BLE handshake not complete. Please wait for connection to finish.",
       );
     }
+
     print("Proceeding with General module setup apply");
     bleCurrentState = BleStates.SEND_GENERAL_MODULE_SETUP_CMD_APPLY_PACKET;
     bleStateMachineState = BleStates.SEND_GENERAL_MODULE_SETUP_CMD_APPLY_PACKET;
@@ -1602,15 +1578,10 @@ class BleManager {
       );
     }
 
-    // Set operation mode to log retrieval
     currentOperationMode = BleOperationMode.adcSetupFetch;
 
-    // Reset protocol state to initial values
     resetAdcSetupState();
     resetProtocolAdcSetupState();
-
-    // IMPORTANT: Reset process state to clear isOtaCompleted flag
-    // This ensures polls aren't blocked after firmware upgrade
     bleProcess.resetProcessAdcSetupState();
 
     if (_notifySub == null) {
@@ -1618,6 +1589,7 @@ class BleManager {
         "BLE handshake not complete. Please wait for connection to finish.",
       );
     }
+
     print("Proceeding with Adc setup fetch");
     bleCurrentState = BleStates.SEND_ADC_SETUP_CMD_FETCH_PACKET;
     bleStateMachineState = BleStates.SEND_ADC_SETUP_CMD_FETCH_PACKET;
@@ -1625,47 +1597,6 @@ class BleManager {
     bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
     Get.find<BleLogController>().sendNetworkPacket();
   }
-  // Future<void> startExtOut() async {
-  //   if (!isConnected) {
-  //     throw Exception("Device not connected. Cannot start log retrieval.");
-  //   }
-
-  //   if (notifyChar == null || writeChar == null) {
-  //     throw Exception(
-  //       "BLE characteristics not initialized. Cannot start log retrieval.",
-  //     );
-  //   }
-
-  //   // Set operation mode to log retrieval
-  //   currentOperationMode = BleOperationMode.extOut;
-
-  //   // Reset protocol state to initial values
-  //   resetExtOutState();
-  //   resetProtocolExtOutState();
-
-  //   // IMPORTANT: Reset process state to clear isOtaCompleted flag
-  //   // This ensures polls aren't blocked after firmware upgrade
-  //   bleProcess.resetProcessExtOutState();
-
-  //   // Always ensure notify handler is registered (especially after reconnection)
-  //   // Check if subscription is null or if log retrieval hasn't been done once
-  //   if (_notifySub == null) {
-  //     print("Registering notify handler for ext out");
-  //     await registerNotifyHandler(isExtOut: true);
-  //     // Give a small delay after registration to ensure subscription is active
-  //     await Future.delayed(const Duration(milliseconds: 200));
-  //   } else {
-  //     print("Notify handler already registered, proceeding with ext out");
-  //     bleCurrentState = BleStates.SEND_EXT_OUT_SETUP_CMD_PACKET;
-  //     bleStateMachineState = BleStates.SEND_EXT_OUT_SETUP_CMD_PACKET;
-  //     print("Current state: $bleStateMachineState");
-  //     // Send Network Packet
-  //     bleProcess.startOtherPacketsRxTimeout(
-  //       timeout: const Duration(seconds: 5),
-  //     );
-  //     Get.find<BleLogController>().sendExtOutApplyCommand();
-  //   }
-  // }
 
   Future<void> safeDisconnect() async {
     final deviceId = connectedDeviceId.value;
@@ -1687,7 +1618,6 @@ class BleManager {
     bleFirmwareVersion.value = '';
   }
 
-  /// Clears encryption key, state machine, and process state for a fresh handshake.
   void _resetHandshakeSessionState() {
     bleProcess.cancelRxTimeout();
     resetProtocolState();
@@ -1731,9 +1661,6 @@ class BleManager {
       _handshakeCompleter = null;
     }
 
-    // Only tear down native GATT when we had a real session, or on final abort
-    // (max retries / new connect session). Avoid disconnecting in-flight connects
-    // that have not yet been observed as connected by this attempt.
     if (forceAbortNative || hadGatt) {
       try {
         await flutterReactiveBle.abortConnection(deviceId);
@@ -1761,7 +1688,6 @@ class BleManager {
     connectedDeviceId.value = '';
   }
 
-  /// SCAN & CONNECT
   Future<void> connectToKnownDevice({
     int maxRetries = 5,
     Duration retryDelay = const Duration(seconds: 1),
@@ -1788,7 +1714,6 @@ class BleManager {
     _resetConnectNotifiersForNewSession();
     _resetHandshakeSessionState();
 
-    // Android BLE stack needs a brief cooldown after the previous GATT session.
     if (_lastDisconnectAt != null) {
       const minCooldown = Duration(milliseconds: 800);
       final elapsed = DateTime.now().difference(_lastDisconnectAt!);
@@ -1806,10 +1731,8 @@ class BleManager {
 
         try {
           selectedDevice = device;
-          // Keep a handle to the actual BluetoothDevice (fallback to fromId when not present)
           connectedBtDevice.value =
               device.device ?? fbp.BluetoothDevice.fromId(device.id);
-          // Reset connection flag before each attempt to ensure completer gets completed
           _connectedOnce = false;
           await _connectOnce(
             device,
@@ -1818,7 +1741,7 @@ class BleManager {
             skipConnectionHandshake: skipConnectionHandshake,
           );
           print("BLE connected successfully");
-          return; // ✅ SUCCESS
+          return;
         } catch (e) {
           print("BLE attempt $attempt failed: $e");
 
@@ -1830,7 +1753,6 @@ class BleManager {
           connectedBtDevice.value = null;
           connectedDeviceId.value = '';
 
-          // ---- RESET PROTOCOL STATE ----
           resetLogRetrievalState();
 
           if (attempt >= maxRetries) {
@@ -1841,7 +1763,6 @@ class BleManager {
             rethrow;
           }
 
-          // BLE stack cooldown (important)
           if (retryDelay > Duration.zero) {
             await Future.delayed(retryDelay);
           }
@@ -1853,7 +1774,6 @@ class BleManager {
   }
 
   Future<void> _refreshGattIfNeeded(String deviceId) async {
-    //Only works in Android
     if (!Platform.isAndroid) return;
 
     try {
@@ -1873,7 +1793,7 @@ class BleManager {
   }) async {
     await [
       Permission.bluetoothConnect,
-      Permission.bluetoothScan, // still required on Android 12+
+      Permission.bluetoothScan,
       Permission.location,
     ].request();
 
@@ -1884,12 +1804,8 @@ class BleManager {
 
     final Completer<void> connectedCompleter = Completer();
     var ignoreInitialDisconnectedEmission = true;
-
-    // IMPORTANT: Store manufacturer data from scan result BEFORE connecting
-    // Manufacturer data is only available from scan results in flutter_blue_plus,
-    // not from connected devices. If device.manufacturerData is empty, try to
-    // get it from selectedDevice if available, or use override if provided
     List<int> md = device.manufacturerData;
+
     print(
       "DEBUG CONNECTION: Device manufacturer data - Full array: $md, Length: ${md.length}",
     );
@@ -1923,7 +1839,6 @@ class BleManager {
             print("Connection state: ${update.connectionState}");
 
             if (update.connectionState == DeviceConnectionState.connected) {
-              // Use the manufacturer data we preserved from scan result
               print(
                 "DEBUG CONNECTION: Setting bleManufacturerData - Full array: $md, Status byte: $statusByte",
               );
@@ -1938,15 +1853,7 @@ class BleManager {
 
               if (_connectedOnce) return;
               _connectedOnce = true;
-
-              //Let Android finish bonding internally
               await Future.delayed(const Duration(milliseconds: 300));
-
-              // //GATT CACHE REFRESH (Android only)
-              // await _refreshGattIfNeeded(device.id);
-
-              //Small safety delay
-              // await Future.delayed(const Duration(milliseconds: 200));
 
               notifyChar = QualifiedCharacteristic(
                 characteristicId: notifyUuid,
@@ -1968,16 +1875,9 @@ class BleManager {
               bleProcess.deviceConnectState =
                   DeviceConnectState.registerNotifyHandler;
 
-              // Log retrieval will now be started manually via startLogRetrieval()
-              // Removed automatic call: Get.find<BleLogController>().enableNotify();
-
               if (!connectedCompleter.isCompleted) {
                 connectedCompleter.complete();
               }
-
-              // await Future.delayed(const Duration(seconds: 10), () {
-              //   shutdown(device.id);
-              // });
             }
 
             if (update.connectionState == DeviceConnectionState.disconnected) {
