@@ -1881,9 +1881,6 @@ class BleManager {
             }
 
             if (update.connectionState == DeviceConnectionState.disconnected) {
-              // connectionState emits the current value on subscribe — ignore only
-              // that first snapshot. A later disconnected before GATT connects is a
-              // real failure (e.g. Android CONNECTION_FAILED_ESTABLISHMENT).
               if (!_connectedOnce &&
                   !_isGattConnected &&
                   ignoreInitialDisconnectedEmission) {
@@ -1902,11 +1899,8 @@ class BleManager {
 
               await _notifySub?.cancel();
               _notifySub = null;
-
-              // Reset log retrieval flag so notify handler is re-registered on reconnect
               isLogRetrievalDoneOnce = false;
 
-              // Unblock any waiters if handshake was in progress
               if (_handshakeCompleter != null &&
                   !_handshakeCompleter!.isCompleted) {
                 _handshakeCompleter!.completeError(
@@ -1919,7 +1913,6 @@ class BleManager {
                 connectedCompleter.completeError(
                   Exception("Disconnected during connection"),
                 );
-                // processDesc.value = "Disconnected during connection";
               }
             }
           },
@@ -1945,10 +1938,6 @@ class BleManager {
         _handshakeCompleter = null;
       }
     } else {
-      // Bootloader (normal app connect): register notify + bootloader auth; without this
-      // [_notifySub] stays null and [startSessionAccessCodeValidation] fails.
-      // When [skipConnectionHandshake] is true, firmware upgrade registers notify later via
-      // [registerNotifyHandlerForFirmwareUpgrade] - do not register here.
       if (isBootLoaderMode && !skipConnectionHandshake) {
         await registerNotifyHandler(isChipInBootLoader: true);
       }
@@ -1956,14 +1945,12 @@ class BleManager {
     }
   }
 
-  /// REGISTER NOTIFICATIONS
   Future<void> registerNotifyHandler({
     bool? isChipInBootLoader = false,
     bool? isExtOut = false,
   }) async {
     print("Register notify handler");
 
-    // Cancel existing subscription if any (e.g., from previous connection)
     if (_notifySub != null) {
       print("Cancelling existing notify subscription before re-registering");
       try {
@@ -1985,14 +1972,12 @@ class BleManager {
     }
 
     try {
-      // Subscribe to notifications
       _notifySub = flutterReactiveBle
           .subscribeToCharacteristic(notifyChar!)
           .listen(
             (data) => notificationHandler(Uint8List.fromList(data)),
             onError: (e) {
               print("Notification subscription error: $e");
-              // Reset subscription on error so it can be re-registered
               _notifySub = null;
             },
           );
@@ -2000,17 +1985,10 @@ class BleManager {
       print("Listening for notifications...");
       await Future.delayed(const Duration(milliseconds: 300));
       print("---Notification handler registered----");
-      // if (isExtOut == true) {
-      //   bleStateMachineState = BleStates.SEND_EXT_OUT_SETUP_CMD_PACKET;
-      //   bleCurrentState = BleStates.SEND_EXT_OUT_SETUP_CMD_PACKET;
-      //   bleProcess.sendExtOutPacket();
-      // } else
 
       if (isChipInBootLoader != true) {
-        // Request encryption key for both firmware upgrade (first connection) and log retrieval
         bleProcess.requestENCKey();
       } else {
-        // Bootloader mode - skip encryption key request and go directly to auth
         bleStateMachineState = BleStates.SEND_AUTHN_MSG;
         bleCurrentState = BleStates.SEND_AUTHN_MSG;
         bleProcess.sendAuthPacket();
@@ -2022,7 +2000,6 @@ class BleManager {
     }
   }
 
-  /// DISCONNECT
   Future<void> disconnectConnectedDevice() async {
     receivedPanelName.value = "";
     if (!isConnected) {
@@ -2030,8 +2007,8 @@ class BleManager {
       return;
     }
 
-    // Resolve device to disconnect (prefer the stored handle, fallback to ID)
     fbp.BluetoothDevice? device = connectedBtDevice.value;
+
     if (device == null && selectedDevice != null) {
       device = fbp.BluetoothDevice.fromId(selectedDevice!.id);
     }
@@ -2066,9 +2043,7 @@ class BleManager {
     if (deviceId != null && deviceId.isNotEmpty) {
       try {
         await flutterReactiveBle.abortConnection(deviceId);
-      } catch (_) {
-        // Native stack may already be disconnected.
-      }
+      } catch (_) {}
     }
 
     _isGattConnected = false;
@@ -2082,22 +2057,18 @@ class BleManager {
     _lastDisconnectAt = DateTime.now();
   }
 
-  /// SHUTDOWN
   Future<void> shutdown({String? deviceId}) async {
     print("Shutdown BLE");
     if (deviceId != null && deviceId.isNotEmpty) {
-      //GATT CACHE REFRESH (Android only)
       await _refreshGattIfNeeded(deviceId);
     }
 
-    // Cancel all subscriptions
     await _scanSub?.cancel();
     await _notifySub?.cancel();
     await _connectionSub?.cancel();
 
     _resetHandshakeSessionState();
 
-    // Reset connection state
     _scanSub = null;
     _notifySub = null;
     _connectionSub = null;
@@ -2110,16 +2081,11 @@ class BleManager {
     bleFirmwareVersion.value = '';
   }
 
-  // ----------------------
-  // Notification Handler
-  // ----------------------
-
   bool _hasEncryptionKey() {
     final dynamic key = bleAESKey['AES_KEY'];
     return key is List<int> && key.length >= kBleEncryKeyByteSize;
   }
 
-  /// True when MSD status indicates bootloader (no encrypt/decrypt on firmware path).
   bool _isBootloaderMode() {
     return bleManufacturerData.value == BleMsdUtils.statusBootloader;
   }
@@ -2186,12 +2152,6 @@ class BleManager {
     }
 
     print("bleCurrentState: $bleCurrentState");
-    // if (bleCurrentState == BleStates.SEND_EXT_OUT_SETUP_CMD_PACKET) {
-    //   print("Ext out fetch response");
-    //   print(
-    //     "data: ${data.map((e) => e.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
-    //   );
-    // } else
     if (bleCurrentState == BleStates.SEND_JUMP_FIRMWARE_PACKET) {
       print("Jump firmware packet response");
       print(
@@ -2227,7 +2187,6 @@ class BleManager {
         );
         print("Received key: ${bleAESKey['AES_KEY']}");
 
-        // Parse BLE firmware version from payload (last 10 bytes: "XX.XX.XXXX")
         if (payload.length >= 10) {
           final firmwareVersionBytes = payload.sublist(
             payload.length - 28,
@@ -2237,7 +2196,6 @@ class BleManager {
             payload.length - 18,
             payload.length - 11,
           );
-          // bleHardwareVersion
           final hardwareVersion = String.fromCharCodes(hardwareVersionBytes);
           final bleVersion = String.fromCharCodes(firmwareVersionBytes);
           bleFirmwareVersion.value = bleVersion;
@@ -2268,9 +2226,7 @@ class BleManager {
         print("AUTH KEY Validation success");
         await Future.delayed(Duration(seconds: 1));
 
-        // Route to appropriate state based on operation mode
         if (currentOperationMode == BleOperationMode.none) {
-          // Connection handshake complete - device ready for operations
           bleCurrentState = BleStates.IDLE;
           bleStateMachineState = BleStates.IDLE;
           print("Connection handshake complete - device ready for operations");
@@ -2279,17 +2235,13 @@ class BleManager {
             _handshakeCompleter!.complete();
           }
         } else if (currentOperationMode == BleOperationMode.firmwareUpgrade) {
-          // Firmware upgrade path
           bleCurrentState = BleStates.SEND_START_FIRMWARE_PACKET;
           bleStateMachineState = BleStates.SEND_START_FIRMWARE_PACKET;
           print("Current state: $bleStateMachineState (Firmware Upgrade)");
         } else if (currentOperationMode == BleOperationMode.logRetrieval) {
-          // Log retrieval path
           bleCurrentState = BleStates.PROCESS_PANEL_EVT_LOG_READ;
           bleStateMachineState = BleStates.PROCESS_PANEL_EVT_LOG_READ;
           print("Current state: $bleStateMachineState (Log Retrieval)");
-
-          // Send Network Packet for log retrieval
           bleProcess.startOtherPacketsRxTimeout(
             timeout: const Duration(seconds: 5),
           );
@@ -2298,7 +2250,6 @@ class BleManager {
           bleCurrentState = BleStates.SEND_EXT_OUT_SETUP_CMD_FETCH_PACKET;
           bleStateMachineState = BleStates.SEND_EXT_OUT_SETUP_CMD_FETCH_PACKET;
           print("Current state: $bleStateMachineState (Ext Out Fetch)");
-          // Send Network Packet for Ext Out Fetch
           bleProcess.startOtherPacketsRxTimeout(
             timeout: const Duration(seconds: 5),
           );
@@ -2307,7 +2258,6 @@ class BleManager {
           bleCurrentState = BleStates.SEND_EXT_OUT_SETUP_CMD_APPLY_PACKET;
           bleStateMachineState = BleStates.SEND_EXT_OUT_SETUP_CMD_APPLY_PACKET;
           print("Current state : $bleStateMachineState (Ext Out Apply)");
-          // Send Network Packet for Ext Out Apply
           bleProcess.startOtherPacketsRxTimeout(
             timeout: const Duration(seconds: 5),
           );
@@ -2316,7 +2266,6 @@ class BleManager {
           bleCurrentState = BleStates.SEND_INPUT_SETUP_CMD_FETCH_PACKET;
           bleStateMachineState = BleStates.SEND_INPUT_SETUP_CMD_FETCH_PACKET;
           print("Current state: $bleStateMachineState (Input Setup Fetch)");
-          // Send Network Packet for Input Setup Fetch
           bleProcess.startOtherPacketsRxTimeout(
             timeout: const Duration(seconds: 5),
           );
@@ -2325,7 +2274,6 @@ class BleManager {
           bleCurrentState = BleStates.SEND_INPUT_SETUP_CMD_APPLY_PACKET;
           bleStateMachineState = BleStates.SEND_INPUT_SETUP_CMD_APPLY_PACKET;
           print("Current state: $bleStateMachineState (Input Setup Apply)");
-          // Send Network Packet for Input Setup Fetch
           bleProcess.startOtherPacketsRxTimeout(
             timeout: const Duration(seconds: 5),
           );
@@ -2334,7 +2282,6 @@ class BleManager {
           bleCurrentState = BleStates.SEND_RELAY_SETUP_CMD_FETCH_PACKET;
           bleStateMachineState = BleStates.SEND_RELAY_SETUP_CMD_FETCH_PACKET;
           print("Current state: $bleStateMachineState (Relay Setup Fetch)");
-          // Send Network Packet for Input Setup Fetch
           bleProcess.startOtherPacketsRxTimeout(
             timeout: const Duration(seconds: 5),
           );
@@ -2343,7 +2290,6 @@ class BleManager {
           bleCurrentState = BleStates.SEND_RELAY_SETUP_CMD_APPLY_PACKET;
           bleStateMachineState = BleStates.SEND_RELAY_SETUP_CMD_APPLY_PACKET;
           print("Current state: $bleStateMachineState (Relay Setup Apply)");
-          // Send Network Packet for Relay Setup Apply
           bleProcess.startOtherPacketsRxTimeout(
             timeout: const Duration(seconds: 5),
           );
@@ -2352,7 +2298,6 @@ class BleManager {
           bleCurrentState = BleStates.SEND_ZONE_SETUP_CMD_FETCH_PACKET;
           bleStateMachineState = BleStates.SEND_ZONE_SETUP_CMD_FETCH_PACKET;
           print("Current state: $bleStateMachineState (Zone Setup Fetch)");
-          // Send Network Packet for Zone Setup Fetch
           bleProcess.startOtherPacketsRxTimeout(
             timeout: const Duration(seconds: 5),
           );
@@ -2361,7 +2306,6 @@ class BleManager {
           bleCurrentState = BleStates.SEND_ZONE_SETUP_CMD_APPLY_PACKET;
           bleStateMachineState = BleStates.SEND_ZONE_SETUP_CMD_APPLY_PACKET;
           print("Current state: $bleStateMachineState (Zone Setup Apply)");
-          // Send Network Packet for Zone Setup Apply
           bleProcess.startOtherPacketsRxTimeout(
             timeout: const Duration(seconds: 5),
           );
@@ -2370,7 +2314,6 @@ class BleManager {
           bleCurrentState = BleStates.SEND_RADIO_SETUP_CMD_FETCH_PACKET;
           bleStateMachineState = BleStates.SEND_RADIO_SETUP_CMD_FETCH_PACKET;
           print("Current state: $bleStateMachineState (Radio Setup Fetch)");
-          // Send Network Packet for Radio Setup Fetch
           bleProcess.startOtherPacketsRxTimeout(
             timeout: const Duration(seconds: 5),
           );
@@ -2379,7 +2322,6 @@ class BleManager {
           bleCurrentState = BleStates.SEND_RADIO_SETUP_CMD_APPLY_PACKET;
           bleStateMachineState = BleStates.SEND_RADIO_SETUP_CMD_APPLY_PACKET;
           print("Current state: $bleStateMachineState (Radio Setup Apply)");
-          // Send Network Packet for Radio Setup Apply
           bleProcess.startOtherPacketsRxTimeout(
             timeout: const Duration(seconds: 5),
           );
@@ -2388,7 +2330,6 @@ class BleManager {
           bleCurrentState = BleStates.SEND_MODULE_SETUP_CMD_FETCH_PACKET;
           bleStateMachineState = BleStates.SEND_MODULE_SETUP_CMD_FETCH_PACKET;
           print("Current state: $bleStateMachineState (Module Setup Fetch)");
-          // Send Network Packet for Module Setup Fetch
           bleProcess.startOtherPacketsRxTimeout(
             timeout: const Duration(seconds: 5),
           );
@@ -2397,7 +2338,6 @@ class BleManager {
           bleCurrentState = BleStates.SEND_L_BUS_SETUP_CMD_FETCH_PACKET;
           bleStateMachineState = BleStates.SEND_L_BUS_SETUP_CMD_FETCH_PACKET;
           print("Current state: $bleStateMachineState (L-Bus Setup Fetch)");
-          // Send Network Packet for L-Bus Setup Fetch
           bleProcess.startOtherPacketsRxTimeout(
             timeout: const Duration(seconds: 5),
           );
@@ -2406,7 +2346,6 @@ class BleManager {
           bleCurrentState = BleStates.SEND_L_BUS_SETUP_CMD_APPLY_PACKET;
           bleStateMachineState = BleStates.SEND_L_BUS_SETUP_CMD_APPLY_PACKET;
           print("Current state: $bleStateMachineState (L-Bus Setup Apply)");
-          // Send Network Packet for L-Bus Setup Apply
           bleProcess.startOtherPacketsRxTimeout(
             timeout: const Duration(seconds: 5),
           );
@@ -2415,7 +2354,6 @@ class BleManager {
           bleCurrentState = BleStates.SEND_SOUNDER_SETUP_CMD_FETCH_PACKET;
           bleStateMachineState = BleStates.SEND_SOUNDER_SETUP_CMD_FETCH_PACKET;
           print("Current state: $bleStateMachineState (Sounder Setup Fetch)");
-          // Send Network Packet for Sounder Setup Fetch
           bleProcess.startOtherPacketsRxTimeout(
             timeout: const Duration(seconds: 5),
           );
@@ -2424,7 +2362,6 @@ class BleManager {
           bleCurrentState = BleStates.SEND_SOUNDER_SETUP_CMD_APPLY_PACKET;
           bleStateMachineState = BleStates.SEND_SOUNDER_SETUP_CMD_APPLY_PACKET;
           print("Current state: $bleStateMachineState (Sounder Setup Apply)");
-          // Send Network Packet for Sounder Setup Apply
           bleProcess.startOtherPacketsRxTimeout(
             timeout: const Duration(seconds: 5),
           );
@@ -2434,7 +2371,6 @@ class BleManager {
           bleStateMachineState =
               BleStates.SEND_SERVICE_DUE_SETUP_CMD_FETCH_PACKET;
           print("Current state: $bleStateMachineState (Service due fetch)");
-          // Send Network Packet for Service due fetch
           bleProcess.startOtherPacketsRxTimeout(
             timeout: const Duration(seconds: 5),
           );
@@ -2444,7 +2380,6 @@ class BleManager {
           bleStateMachineState =
               BleStates.SEND_SERVICE_DUE_SETUP_CMD_APPLY_PACKET;
           print("Current state: $bleStateMachineState (Service due apply)");
-          // Send Network Packet for Service due apply
           bleProcess.startOtherPacketsRxTimeout(
             timeout: const Duration(seconds: 5),
           );
@@ -2457,7 +2392,6 @@ class BleManager {
           print(
             "Current state: $bleStateMachineState (Access code setup fetch)",
           );
-          // Send Network Packet for Access code setup fetch
           bleProcess.startOtherPacketsRxTimeout(
             timeout: const Duration(seconds: 5),
           );
@@ -2470,7 +2404,6 @@ class BleManager {
           print(
             "Current state: $bleStateMachineState (Access code setup apply)",
           );
-          // Send Network Packet for Access code setup apply
           bleProcess.startOtherPacketsRxTimeout(
             timeout: const Duration(seconds: 5),
           );
@@ -2483,7 +2416,6 @@ class BleManager {
           print(
             "Current state: $bleStateMachineState (Panel info setup fetch)",
           );
-          // Send Network Packet for Panel info setup fetch
           bleProcess.startOtherPacketsRxTimeout(
             timeout: const Duration(seconds: 5),
           );
@@ -2496,7 +2428,6 @@ class BleManager {
           print(
             "Current state: $bleStateMachineState (Panel info setup apply)",
           );
-          // Send Network Packet for Panel info setup apply
           bleProcess.startOtherPacketsRxTimeout(
             timeout: const Duration(seconds: 5),
           );
@@ -2510,7 +2441,6 @@ class BleManager {
           print(
             "Current state: $bleStateMachineState (General module setup fetch)",
           );
-          // Send Network Packet for General module setup fetch
           bleProcess.startOtherPacketsRxTimeout(
             timeout: const Duration(seconds: 5),
           );
@@ -2524,7 +2454,6 @@ class BleManager {
           print(
             "Current state: $bleStateMachineState (General module setup apply)",
           );
-          // Send Network Packet for General module setup apply
           bleProcess.startOtherPacketsRxTimeout(
             timeout: const Duration(seconds: 5),
           );
@@ -2542,7 +2471,6 @@ class BleManager {
           bleCurrentState = BleStates.SEND_ADC_SETUP_CMD_FETCH_PACKET;
           bleStateMachineState = BleStates.SEND_ADC_SETUP_CMD_FETCH_PACKET;
           print("Current state: $bleStateMachineState (Adc setup fetch)");
-          // Send Network Packet for Adc setup fetch
           bleProcess.startOtherPacketsRxTimeout(
             timeout: const Duration(seconds: 5),
           );
@@ -2566,18 +2494,12 @@ class BleManager {
     }
   }
 
-  // ----------------------
-  // Function to register notifications
-  // ----------------------
   void registerNotificationListener(characteristic) {
     characteristic.value.listen((data) async {
       await notificationHandler(data);
     });
   }
 
-  // other BLE functions: connect, write, send frame, etc.
-
-  /// HANDLERS FOR BLE STATE MACHINE
   OtaProcessState otaProcessState = OtaProcessState.sendNetworkPacket;
 
   int toolsFletcherChecksum(List<int> buffer) {
