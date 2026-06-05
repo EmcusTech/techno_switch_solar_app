@@ -39,7 +39,7 @@ const int enBLE_DATA_LEN_MSB_POS = 5;
 const int enBLE_DATA_LEN_LSB_POS = 6;
 const int enBLE_DATA_POS = 7;
 
-const int BLE_FRAME_FILED_SIZE = 11; // total overhead for frame
+const int BLE_FRAME_FILED_SIZE = 11;
 
 enum BleStates {
   REQ_ENCY_KEY,
@@ -76,7 +76,6 @@ enum BleStates {
   SEND_GENERAL_MODULE_SETUP_CMD_FETCH_PACKET,
   SEND_GENERAL_MODULE_SETUP_CMD_APPLY_PACKET,
   SEND_ADC_SETUP_CMD_FETCH_PACKET,
-  // add other states
 }
 
 enum DeviceConnectState { notConnected, registerNotifyHandler, running }
@@ -119,10 +118,10 @@ enum OtaProcessState {
 }
 
 enum BleOperationMode {
-  none, // No active operation
-  firmwareUpgrade, // Firmware upgrade in progress
-  logRetrieval, // Event log retrieval in progress
-  liveEventsRetrieval, // Live events retrieval in progress
+  none,
+  firmwareUpgrade,
+  logRetrieval,
+  liveEventsRetrieval,
   extOutFetch,
   extOutApply,
   inputSetupFetch,
@@ -154,11 +153,9 @@ const String BLE_AUTHN_MSG = "TECHNOSWITCH-AUTH-APP";
 class BleManager {
   int u8TxPktCnt = 0;
   int u8RxPktCnt = 0;
-  // BLE state variables
+
   BleStates bleCurrentState = BleStates.REQ_ENCY_KEY;
   BleStates bleStateMachineState = BleStates.REQ_ENCY_KEY;
-
-  // Operation mode tracking
   BleOperationMode currentOperationMode = BleOperationMode.none;
 
   Map<String, dynamic> bleAESKey = {};
@@ -166,7 +163,6 @@ class BleManager {
   int txData = 0;
 
   final FlutterReactiveBle flutterReactiveBle = FlutterReactiveBle();
-
   final Uuid serviceUuid = Uuid.parse("D973F2F0-B19E-11E2-9E96-0800200C9A66");
   final Uuid notifyUuid = Uuid.parse("D973F2F1-B19E-11E2-9E96-0800200C9A66");
   final Uuid writeUuid = Uuid.parse("D973F2F2-B19E-11E2-9E96-0800200C9A66");
@@ -175,24 +171,17 @@ class BleManager {
   QualifiedCharacteristic? notifyChar;
   QualifiedCharacteristic? writeChar;
   StreamSubscription<DiscoveredDevice>? _scanSub;
-  // Prevent duplicate poll writes while waiting for notify
   bool _pollInFlight = false;
   int receivedPollCount = 0;
   StreamSubscription<ConnectionStateUpdate>? _connectionSub;
   bool _connectedOnce = false;
   bool _connectInProgress = false;
-
-  /// True while [connectToKnownDevice] retry loop is running.
   bool get isConnectInProgress => _connectInProgress;
-
   DateTime? _lastDisconnectAt;
-  // ignore: unused_field
   bool _isGattConnected = false;
   StreamSubscription<List<int>>? _notifySub;
   bool isBleDisconnected = true;
   bool isLogRetrievalDoneOnce = false;
-
-  // BLE state machine
   late BleProcess bleProcess;
 
   BleManager() {
@@ -216,21 +205,18 @@ class BleManager {
 
   ValueNotifier<bool> get isConnectedNotifier => _isConnectedNotifier;
 
-  /// True when encryption + auth handshake is complete. UI should keep connection
-  /// popup visible and disable tiles until this is true.
   final ValueNotifier<bool> handshakeCompleteNotifier = ValueNotifier<bool>(
     false,
   );
 
-  /// BLE firmware version from encryption key response payload (e.g. "00.00.0001")
   final ValueNotifier<String> bleFirmwareVersion = ValueNotifier<String>('');
+
   final ValueNotifier<String> bleHardwareVersion = ValueNotifier<String>('');
 
   Completer<void>? _handshakeCompleter;
 
   bool get isConnected => _isConnectedNotifier.value;
 
-  // Hold onto the connected BluetoothDevice so any screen can disconnect cleanly
   final ValueNotifier<fbp.BluetoothDevice?> connectedBtDevice =
       ValueNotifier<fbp.BluetoothDevice?>(null);
 
@@ -532,184 +518,114 @@ class BleManager {
   ValueNotifier<String> get receivedPanelName => bleProcess.receivedPanelName;
 
   void resetProtocolState() {
-    // Packet counters
     u8TxPktCnt = 0;
     u8RxPktCnt = 0;
     receivedPollCount = 0;
-
-    // Poll guards
     _pollInFlight = false;
-
-    // OTA state
     otaProcessState = OtaProcessState.sendNetworkPacket;
   }
 
   void resetProtocolExtOutState() {
-    // Packet counters
     u8TxPktCnt = 0;
     u8RxPktCnt = 0;
     receivedPollCount = 0;
-
-    // Poll guards
     _pollInFlight = false;
-
-    // OTA state
     otaProcessState = OtaProcessState.sendNetworkPacket;
   }
 
   void resetProtocolInputSetupState() {
-    // Packet counters
     u8TxPktCnt = 0;
     u8RxPktCnt = 0;
     receivedPollCount = 0;
-
-    // Poll guards
     _pollInFlight = false;
-
-    // OTA state
     otaProcessState = OtaProcessState.sendNetworkPacket;
   }
 
   void resetProtocolRelaySetupState() {
-    // Packet counters
     u8TxPktCnt = 0;
     u8RxPktCnt = 0;
     receivedPollCount = 0;
-
-    // Poll guards
     _pollInFlight = false;
-
-    // OTA state
     otaProcessState = OtaProcessState.sendNetworkPacket;
   }
 
   void resetProtocolZoneSetupState() {
-    // Packet counters
     u8TxPktCnt = 0;
     u8RxPktCnt = 0;
     receivedPollCount = 0;
-
-    // Poll guards
     _pollInFlight = false;
-
-    // OTA state
     otaProcessState = OtaProcessState.sendNetworkPacket;
   }
 
   void resetProtocolRadioSetupState() {
-    // Packet counters
     u8TxPktCnt = 0;
     u8RxPktCnt = 0;
     receivedPollCount = 0;
-
-    // Poll guards
     _pollInFlight = false;
-
-    // OTA state
     otaProcessState = OtaProcessState.sendNetworkPacket;
   }
 
   void resetProtocolModuleSetupState() {
-    // Packet counters
     u8TxPktCnt = 0;
     u8RxPktCnt = 0;
     receivedPollCount = 0;
-
-    // Poll guards
     _pollInFlight = false;
-
-    // OTA state
     otaProcessState = OtaProcessState.sendNetworkPacket;
   }
 
   void resetProtocolLBusSetupState() {
-    // Packet counters
     u8TxPktCnt = 0;
     u8RxPktCnt = 0;
     receivedPollCount = 0;
-
-    // Poll guards
     _pollInFlight = false;
-
-    // OTA state
     otaProcessState = OtaProcessState.sendNetworkPacket;
   }
 
   void resetProtocolSounderSetupState() {
-    // Packet counters
     u8TxPktCnt = 0;
     u8RxPktCnt = 0;
     receivedPollCount = 0;
-
-    // Poll guards
     _pollInFlight = false;
-
-    // OTA state
     otaProcessState = OtaProcessState.sendNetworkPacket;
   }
 
   void resetProtocolServiceDueState() {
-    // Packet counters
     u8TxPktCnt = 0;
     u8RxPktCnt = 0;
     receivedPollCount = 0;
-
-    // Poll guards
     _pollInFlight = false;
-
-    // OTA state
     otaProcessState = OtaProcessState.sendNetworkPacket;
   }
 
   void resetProtocolAccessCodeSetupState() {
-    // Packet counters
     u8TxPktCnt = 0;
     u8RxPktCnt = 0;
     receivedPollCount = 0;
-
-    // Poll guards
     _pollInFlight = false;
-
-    // OTA state
     otaProcessState = OtaProcessState.sendNetworkPacket;
   }
 
   void resetProtocolPanelInfoSetupState() {
-    // Packet counters
     u8TxPktCnt = 0;
     u8RxPktCnt = 0;
     receivedPollCount = 0;
-
-    // Poll guards
     _pollInFlight = false;
-
-    // OTA state
     otaProcessState = OtaProcessState.sendNetworkPacket;
   }
 
   void resetProtocolGeneralModuleSetupState() {
-    // Packet counters
     u8TxPktCnt = 0;
     u8RxPktCnt = 0;
     receivedPollCount = 0;
-
-    // Poll guards
     _pollInFlight = false;
-
-    // OTA state
     otaProcessState = OtaProcessState.sendNetworkPacket;
   }
 
   void resetProtocolAdcSetupState() {
-    // Packet counters
     u8TxPktCnt = 0;
     u8RxPktCnt = 0;
     receivedPollCount = 0;
-
-    // Poll guards
     _pollInFlight = false;
-
-    // OTA state
     otaProcessState = OtaProcessState.sendNetworkPacket;
   }
 
@@ -725,12 +641,6 @@ class BleManager {
     currentOperationMode = BleOperationMode.firmwareUpgrade;
   }
 
-  /// Reset log retrieval protocol state
-  /// This resets the BLE state machine to initial state for log retrieval.
-  ///
-  /// Does not clear [bleAESKey]: handshake runs at connection time; clearing
-  /// the session key here caused later [sendData] to send plaintext while the
-  /// device still expects XOR/AES payloads (e.g. ext out / log retrieval).
   void resetLogRetrievalState() {
     bleCurrentState = BleStates.REQ_ENCY_KEY;
     bleStateMachineState = BleStates.REQ_ENCY_KEY;
@@ -851,9 +761,6 @@ class BleManager {
     currentOperationMode = BleOperationMode.adcSetupFetch;
   }
 
-  /// Initialize and start log retrieval process
-  /// Call this method when you want to start log retrieval after connection
-  /// This will reset the protocol state and begin the encryption handshake
   Future<void> startLogRetrieval() async {
     if (!isConnected) {
       throw Exception("Device not connected. Cannot start log retrieval.");
@@ -865,23 +772,18 @@ class BleManager {
       );
     }
 
-    // Set operation mode to log retrieval
     currentOperationMode = BleOperationMode.logRetrieval;
 
-    // Reset protocol state to initial values
     resetLogRetrievalState();
     resetProtocolState();
-
-    // IMPORTANT: Reset process state to clear isOtaCompleted flag
-    // This ensures polls aren't blocked after firmware upgrade
     bleProcess.resetProcessState();
 
-    // Handshake (encryption + auth) is done at connection time - proceed directly
     if (_notifySub == null) {
       throw Exception(
         "BLE handshake not complete. Please wait for connection to finish.",
       );
     }
+
     print("Proceeding with log retrieval");
     bleCurrentState = BleStates.PROCESS_PANEL_EVT_LOG_READ;
     bleStateMachineState = BleStates.PROCESS_PANEL_EVT_LOG_READ;
@@ -890,7 +792,6 @@ class BleManager {
     Get.find<BleLogController>().sendNetworkPacket();
   }
 
-  /// Validates panel access code only (no setup fetch). On success, [BleProcess.isAccessKeyValid] is set.
   Future<void> startSessionAccessCodeValidation() async {
     if (!isConnected) {
       throw Exception("Device not connected.");
@@ -911,7 +812,6 @@ class BleManager {
     resetProtocolState();
     bleProcess.resetProcessState();
     bleProcess.isSessionAccessCodeValidationOnly = true;
-
     bleCurrentState = BleStates.SEND_EXT_OUT_SETUP_CMD_FETCH_PACKET;
     bleStateMachineState = BleStates.SEND_EXT_OUT_SETUP_CMD_FETCH_PACKET;
     bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
@@ -929,23 +829,18 @@ class BleManager {
       );
     }
 
-    // Set operation mode to log retrieval
     currentOperationMode = BleOperationMode.liveEventsRetrieval;
 
-    // Reset protocol state to initial values
     resetLiveEventsRetrievalState();
     resetProtocolState();
-
-    // IMPORTANT: Reset process state to clear isOtaCompleted flag
-    // This ensures polls aren't blocked after firmware upgrade
     bleProcess.resetProcessState();
 
-    // Handshake (encryption + auth) is done at connection time - proceed directly
     if (_notifySub == null) {
       throw Exception(
         "BLE handshake not complete. Please wait for connection to finish.",
       );
     }
+
     otaProcessState = OtaProcessState.sendLiveEventsRetrievalFetchCmdPkt;
     print("Proceeding with live events retrieval");
     bleCurrentState = BleStates.PROCESS_PANEL_LIVE_EVENTS_READ;
@@ -970,15 +865,10 @@ class BleManager {
       );
     }
 
-    // Set operation mode to log retrieval
     currentOperationMode = BleOperationMode.extOutFetch;
 
-    // Reset protocol state to initial values
     resetExtOutState();
     resetProtocolExtOutState();
-
-    // IMPORTANT: Reset process state to clear isOtaCompleted flag
-    // This ensures polls aren't blocked after firmware upgrade
     bleProcess.resetProcessExtOutState();
 
     if (_notifySub == null) {
@@ -986,6 +876,7 @@ class BleManager {
         "BLE handshake not complete. Please wait for connection to finish.",
       );
     }
+
     print("Proceeding with ext out fetch");
     bleCurrentState = BleStates.SEND_EXT_OUT_SETUP_CMD_FETCH_PACKET;
     bleStateMachineState = BleStates.SEND_EXT_OUT_SETUP_CMD_FETCH_PACKET;
@@ -1005,15 +896,10 @@ class BleManager {
       );
     }
 
-    // Set operation mode to log retrieval
     currentOperationMode = BleOperationMode.extOutApply;
 
-    // Reset protocol state to initial values
     resetExtOutState();
     resetProtocolExtOutState();
-
-    // IMPORTANT: Reset process state to clear isOtaCompleted flag
-    // This ensures polls aren't blocked after firmware upgrade
     bleProcess.resetProcessExtOutState();
 
     if (_notifySub == null) {
@@ -1021,6 +907,7 @@ class BleManager {
         "BLE handshake not complete. Please wait for connection to finish.",
       );
     }
+
     print("Proceeding with ext out apply");
     bleCurrentState = BleStates.SEND_EXT_OUT_SETUP_CMD_APPLY_PACKET;
     bleStateMachineState = BleStates.SEND_EXT_OUT_SETUP_CMD_APPLY_PACKET;
@@ -1040,15 +927,10 @@ class BleManager {
       );
     }
 
-    // Set operation mode to log retrieval
     currentOperationMode = BleOperationMode.inputSetupFetch;
 
-    // Reset protocol state to initial values
     resetInputSetupState();
     resetProtocolInputSetupState();
-
-    // IMPORTANT: Reset process state to clear isOtaCompleted flag
-    // This ensures polls aren't blocked after firmware upgrade
     bleProcess.resetProcessInputSetupState();
 
     if (_notifySub == null) {
@@ -1056,6 +938,7 @@ class BleManager {
         "BLE handshake not complete. Please wait for connection to finish.",
       );
     }
+
     print("Proceeding with input setup fetch");
     bleCurrentState = BleStates.SEND_INPUT_SETUP_CMD_FETCH_PACKET;
     bleStateMachineState = BleStates.SEND_INPUT_SETUP_CMD_FETCH_PACKET;
@@ -1075,15 +958,10 @@ class BleManager {
       );
     }
 
-    // Set operation mode to log retrieval
     currentOperationMode = BleOperationMode.inputSetupApply;
 
-    // Reset protocol state to initial values
     resetInputSetupState();
     resetProtocolInputSetupState();
-
-    // IMPORTANT: Reset process state to clear isOtaCompleted flag
-    // This ensures polls aren't blocked after firmware upgrade
     bleProcess.resetProcessInputSetupState();
 
     if (_notifySub == null) {
@@ -1091,6 +969,7 @@ class BleManager {
         "BLE handshake not complete. Please wait for connection to finish.",
       );
     }
+
     print("Proceeding with input setup apply");
     bleCurrentState = BleStates.SEND_INPUT_SETUP_CMD_APPLY_PACKET;
     bleStateMachineState = BleStates.SEND_INPUT_SETUP_CMD_APPLY_PACKET;
@@ -1110,15 +989,10 @@ class BleManager {
       );
     }
 
-    // Set operation mode to log retrieval
     currentOperationMode = BleOperationMode.relaySetupFetch;
 
-    // Reset protocol state to initial values
     resetRelaySetupState();
     resetProtocolRelaySetupState();
-
-    // IMPORTANT: Reset process state to clear isOtaCompleted flag
-    // This ensures polls aren't blocked after firmware upgrade
     bleProcess.resetProcessRelaySetupState();
 
     if (_notifySub == null) {
@@ -1126,6 +1000,7 @@ class BleManager {
         "BLE handshake not complete. Please wait for connection to finish.",
       );
     }
+
     print("Proceeding with relay setup fetch");
     bleCurrentState = BleStates.SEND_RELAY_SETUP_CMD_FETCH_PACKET;
     bleStateMachineState = BleStates.SEND_RELAY_SETUP_CMD_FETCH_PACKET;
