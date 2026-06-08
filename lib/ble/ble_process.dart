@@ -1629,8 +1629,6 @@ class BleProcess {
             final bool zoneEnabled =
                 config.zoneEnable == ZoneEquipmentEnable.enabled;
             final bool zoneMode = config.zoneMode == ZoneEquipmentMode.test;
-            final bool zoneSounderDelay =
-                config.sounderDelay == ZoneSounderDelay.enabled;
 
             isZoneOneEnabled.value = zoneEnabled;
             isZoneOneTest.value = zoneMode;
@@ -1648,8 +1646,6 @@ class BleProcess {
             final bool zoneEnabled =
                 config.zoneEnable == ZoneEquipmentEnable.enabled;
             final bool zoneMode = config.zoneMode == ZoneEquipmentMode.test;
-            final bool zoneSounderDelay =
-                config.sounderDelay == ZoneSounderDelay.enabled;
             isZoneTwoEnabled.value = zoneEnabled;
             isZoneTwoTest.value = zoneMode;
             sounderZoneTwoMode.value = rx.payload[15]
@@ -1665,8 +1661,6 @@ class BleProcess {
             final bool zoneEnabled =
                 config.zoneEnable == ZoneEquipmentEnable.enabled;
             final bool zoneMode = config.zoneMode == ZoneEquipmentMode.test;
-            final bool zoneSounderDelay =
-                config.sounderDelay == ZoneSounderDelay.enabled;
             isZoneThreeEnabled.value = zoneEnabled;
             isZoneThreeTest.value = zoneMode;
             sounderZoneThreeMode.value = rx.payload[15]
