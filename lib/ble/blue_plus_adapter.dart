@@ -1,13 +1,9 @@
 import 'dart:async';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart' as fbp;
 
-/// Minimal compatibility layer that mimics the flutter_reactive_ble API surface
-/// the app uses, but delegates work to flutter_blue_plus underneath.
-
 class Uuid {
   const Uuid._(this.value);
 
-  /// Underlying flutter_blue_plus Guid
   final fbp.Guid value;
 
   factory Uuid(String uuid) => Uuid._(fbp.Guid(uuid));
@@ -105,8 +101,6 @@ class DiscoveredDevice {
 
     final manufacturerData = <int>[];
     try {
-      // Use MSD (Manufacturer Specific Data) instead of manufacturerData
-      // In flutter_blue_plus, the manufacturer data from reactive_ble is now in msd.first
       final ad = result.advertisementData;
 
       print(
@@ -114,14 +108,12 @@ class DiscoveredDevice {
       );
       print("  - msd list length: ${ad.msd.length}");
 
-      // Extract MSD data - msd.first contains the manufacturer data bytes
       if (ad.msd.isNotEmpty) {
         final msdData = ad.msd.first;
         print(
           "DEBUG ADAPTER: MSD entry type: ${msdData.runtimeType}, data: $msdData, data length: ${msdData.length}",
         );
 
-        // MSD.first is already a List<int> containing the manufacturer data bytes
         manufacturerData.addAll(msdData);
         print(
           "DEBUG ADAPTER: Extracted MSD data array: $manufacturerData, Length: ${manufacturerData.length}",
@@ -131,7 +123,6 @@ class DiscoveredDevice {
           "DEBUG ADAPTER: MSD is EMPTY for ${result.device.platformName}, trying fallback to manufacturerData",
         );
 
-        // Fallback to manufacturerData if MSD is empty
         final manuDataMap = ad.manufacturerData;
         if (manuDataMap.isNotEmpty) {
           for (final entry in manuDataMap.entries) {
@@ -143,8 +134,6 @@ class DiscoveredDevice {
         }
       }
     } catch (e, stackTrace) {
-      // Log for debugging but don't fail - MSD/manufacturer data may not always be available
-      // This is especially common after firmware upgrade when device is in bootloader mode
       print("Warning: Could not extract MSD/manufacturer data: $e");
       print("DEBUG ADAPTER: Exception details: $e");
       print("DEBUG ADAPTER: Stack trace: $stackTrace");
@@ -266,9 +255,7 @@ class FlutterReactiveBle {
           timeout: connectionTimeout ?? const Duration(seconds: 10),
           autoConnect: false,
         );
-      } catch (_) {
-        // ignore connect errors; stream will emit state
-      }
+      } catch (_) {}
     }();
 
     controller.onCancel = () async {
@@ -276,27 +263,21 @@ class FlutterReactiveBle {
       if (device.isConnected) {
         try {
           await device.disconnect();
-        } catch (_) {
-          // Device may already be disconnected.
-        }
+        } catch (_) {}
       }
     };
 
     return controller.stream;
   }
 
-  /// Cancels any in-flight native connect, disconnects, and drops the cached handle.
   Future<void> abortConnection(String id) async {
     final device = _deviceCache.remove(id);
     if (device == null) return;
     try {
       await device.disconnect();
-    } catch (_) {
-      // Already disconnected or connect never completed.
-    }
+    } catch (_) {}
   }
 
-  /// Drops a cached [BluetoothDevice] so the next connect uses a fresh handle.
   void evictCachedDevice(String id) {
     _deviceCache.remove(id);
   }
@@ -350,14 +331,8 @@ class FlutterReactiveBle {
       if (device != null) {
         await device.clearGattCache();
       }
-    } catch (_) {
-      // no-op if platform doesn't support clearing cache
-    }
+    } catch (_) {}
   }
-
-  /* -------------------------------------------------------------------------- */
-  /*                                HELPERS                                     */
-  /* -------------------------------------------------------------------------- */
 
   BleStatus _mapAdapterState(fbp.BluetoothAdapterState state) {
     switch (state) {

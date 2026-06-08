@@ -11,6 +11,7 @@ analyzer:
   errors:
     avoid_print: ignore
     constant_identifier_names: ignore
+    deprecated_member_use: ignore
 include: package:flutter_lints/flutter.yaml
 
 linter:
