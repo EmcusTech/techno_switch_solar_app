@@ -29,10 +29,8 @@ class BleProcess {
   Timer? _accessKeyPollDeadlineTimer;
   DateTime? _accessKeyPollStartedAt;
 
-  /// Wall-clock limit per setup step / phase (independent of short RX silence retries).
   static const Duration bleOperationDeadlineDuration = Duration(seconds: 10);
 
-  /// Max time to poll for an access-key response before returning to the keypad.
   static const Duration accessKeyPollTimeoutDuration = Duration(seconds: 5);
 
   int checkForNetworkPacketRsp = 0;
@@ -45,47 +43,46 @@ class BleProcess {
   int checkForInputSetupApplyRes = 0;
   int checkForRelaySetupFetchRes = 0;
   int checkForRelaySetupApplyRes = 0;
-  int relaySetupFetchCommandStep = 0; // 1, 2, 3
-  int relaySetupApplyCommandStep = 0; // 1, 2, 3
+  int relaySetupFetchCommandStep = 0;
+  int relaySetupApplyCommandStep = 0;
   int checkForZoneSetupFetchRes = 0;
   int checkForZoneSetupApplyRes = 0;
-  int zoneSetupFetchCommandStep = 0; // 1, 2, 3
-  int zoneSetupApplyCommandStep = 0; // 1, 2, 3
+  int zoneSetupFetchCommandStep = 0;
+  int zoneSetupApplyCommandStep = 0;
   int checkForRadioSetupFetchRes = 0;
   int checkForRadioSetupApplyRes = 0;
   int checkForModuleSetupFetchRes = 0;
   int checkForLBusSetupFetchRes = 0;
-  int lBusSetupFetchCommandStep = 0; // 1, 2, 3 ... 31
-  int lBusSetupDataFetchCommandStep = 0; // 1, 2, 3 ... 31
+  int lBusSetupFetchCommandStep = 0;
+  int lBusSetupDataFetchCommandStep = 0;
   int checkForLBusSetupApplyRes = 0;
-  int lBusSetupApplyCommandStep = 0; // 1, 2, 3 ... 31
+  int lBusSetupApplyCommandStep = 0;
   int checkForSounderSetupFetchRes = 0;
   int checkForSounderSetupApplyRes = 0;
-  int sounderSetupFetchRelayCommandStep = 0; // 1, 2, 3
-  int sounderSetupFetchZoneCommandStep = 1; // 1, 2, 3
-  int sounderSetupFetchExtOutCommandStep = 1; // 1, 2, 3
-  int sounderSetupApplyRelayCommandStep = 0; // 1, 2, 3
-  int sounderSetupApplyGeneralCommandStep = 0; // 1, 2, 3
-  int sounderSetupApplyZoneCommandStep = 0; // 1, 2, 3
-  int sounderSetupApplyExtOutCommandStep = 0; // 1, 2, 3
+  int sounderSetupFetchRelayCommandStep = 0;
+  int sounderSetupFetchZoneCommandStep = 1;
+  int sounderSetupFetchExtOutCommandStep = 1;
+  int sounderSetupApplyRelayCommandStep = 0;
+  int sounderSetupApplyGeneralCommandStep = 0;
+  int sounderSetupApplyZoneCommandStep = 0;
+  int sounderSetupApplyExtOutCommandStep = 0;
   int checkForServiceDueFetchRes = 0;
   int checkForServiceDueApplyRes = 0;
   int checkForAccessCodeSetupFetchRes = 0;
-  int accessCodeSetupFetchCommandStep = 0; // 1, 2, 3 ... 8
+  int accessCodeSetupFetchCommandStep = 0;
   int checkForAccessCodeSetupApplyRes = 0;
-  int accessCodeSetupApplyCommandStep = 0; // 1, 2, 3 ... 8
+  int accessCodeSetupApplyCommandStep = 0;
   int checkForPanelInfoSetupFetchRes = 0;
   int checkForPanelInfoSetupApplyRes = 0;
-  int panelInfoSetupApplyCommandStep = 0; // 1, 2, 3
+  int panelInfoSetupApplyCommandStep = 0;
   int checkForGeneralModuleSetupFetchRes = 0;
   int checkForGeneralModuleSetupApplyRes = 0;
-  int generalModuleSetupApplyCommandStep = 0; // 1, 2, 3
+  int generalModuleSetupApplyCommandStep = 0;
   int checkForLiveEventsRetrievalRes = 0;
   int checkForAdcSetupFetchRes = 0;
   int validEventLogNum = 0;
   int read1000Logs = 0;
   bool logRetreivalEnded = false;
-  // bool isExtOutCommandActive = false;
 
   DateTime? logStartingTime;
   DateTime? logEndTime;
@@ -95,18 +92,12 @@ class BleProcess {
 
   bool isOtaCompleted = false;
 
-  // RX timeout retry control
   static const int maxRxRetries = 3;
   int rxTimeoutRetryCount = 0;
   int nackRetryCount = 0;
-
-  /// Network-flow restart cap (no response → restart network packet).
   static const int maxNetworkFlowRestarts = 3;
   int networkFlowRestartCount = 0;
   bool _networkFlowFailureHandling = false;
-
-  /// Set when communication fails after [maxNetworkFlowRestarts]; open UI
-  /// (keypad, password dialog, connecting dialog) shows this inline.
   final ValueNotifier<String?> communicationFailureMessage =
       ValueNotifier<String?>(null);
 
@@ -121,7 +112,6 @@ class BleProcess {
     resetNetworkFlowRestartCount();
   }
 
-  /// Publishes inline UI state after network-flow failure (no separate dialog).
   void publishCommunicationFailure(String message) {
     communicationFailureMessage.value = message;
     processDesc.value = message;
@@ -135,13 +125,10 @@ class BleProcess {
     maxOtherPacketsRetriesReached.value = false;
   }
 
-  // ValueNotifier to expose valid event log count to UI
   final ValueNotifier<int> validEventLogCount = ValueNotifier<int>(0);
 
-  // ValueNotifier to expose read1000Logs count to UI for progress tracking
   final ValueNotifier<int> read1000LogsCount = ValueNotifier<int>(0);
 
-  // ValueNotifier to expose list of valid event logs to UI
   final ValueNotifier<List<LogModel>> validEventLogs =
       ValueNotifier<List<LogModel>>([]);
 
@@ -149,7 +136,6 @@ class BleProcess {
 
   final ValueNotifier<String> processDesc = ValueNotifier<String>("");
 
-  // ValueNotifier to expose panel name (kept for API compatibility; set externally)
   final ValueNotifier<String> panelName = ValueNotifier<String>("");
 
   final ValueNotifier<String> connectedDeviceId = ValueNotifier<String>("");
@@ -161,17 +147,14 @@ class BleProcess {
     false,
   );
 
-  // null = not yet validated, true/false = result
   final ValueNotifier<bool?> isAccessKeyValid = ValueNotifier<bool?>(null);
 
   final ValueNotifier<String> accessKey = ValueNotifier<String>("");
 
   final ValueNotifier<int> accessKeyLength = ValueNotifier<int>(0);
 
-  /// Panel access code validated this BLE session; cleared on disconnect / wrong code.
   final ValueNotifier<bool> sessionAccessCodeReady = ValueNotifier<bool>(false);
 
-  /// True while running [BleManager.startSessionAccessCodeValidation] (access-only, no setup fetch).
   bool isSessionAccessCodeValidationOnly = false;
 
   void clearSessionAccessCode() {
@@ -182,8 +165,6 @@ class BleProcess {
     processDesc.value = "";
   }
 
-  /// Clears peripheral apply-completion flags (e.g. after bulk apply, or to avoid
-  /// stale flags routing unrelated flows like log retrieval through apply-success UI).
   void clearPeripheralApplyDoneFlags() {
     isExtOutApplyDone.value = false;
     isInputSetupApplyDone.value = false;
@@ -198,15 +179,12 @@ class BleProcess {
     isGeneralModuleSetupApplyDone.value = false;
   }
 
-  /// Call after the panel has accepted the access code for this session.
   void setSessionAccessCode(String code) {
     accessKey.value = code;
     sessionAccessCodeReady.value = true;
   }
 
   final ValueNotifier<int> bleManufacturerData = ValueNotifier<int>(0);
-
-  // Ext Out Variables
 
   final ValueNotifier<String> extZoneMode = ValueNotifier<String>("18");
 
@@ -248,8 +226,6 @@ class BleProcess {
 
   final ValueNotifier<bool> isExtOutApplyDone = ValueNotifier<bool>(false);
 
-  // Input Setup Variables
-
   final ValueNotifier<bool> isInputSetupFetchCommandActive =
       ValueNotifier<bool>(false);
 
@@ -273,7 +249,6 @@ class BleProcess {
 
   final ValueNotifier<String> inputMode = ValueNotifier<String>("");
 
-  // Relay Setup Variables
   final ValueNotifier<bool> isRelaySetupFetchCommandActive =
       ValueNotifier<bool>(false);
 
@@ -337,7 +312,6 @@ class BleProcess {
 
   final ValueNotifier<bool> isRelaySetupApplyDone = ValueNotifier<bool>(false);
 
-  // Zone Setup Variables
   final ValueNotifier<bool> isZoneSetupFetchCommandActive = ValueNotifier<bool>(
     false,
   );
@@ -395,7 +369,6 @@ class BleProcess {
   final ValueNotifier<String> zoneThreeSetupVerificationTime =
       ValueNotifier<String>("");
 
-  // Radio Setup Variables
   final ValueNotifier<bool> isRadioSetupFetchCommandActive =
       ValueNotifier<bool>(false);
 
@@ -414,7 +387,6 @@ class BleProcess {
   final ValueNotifier<bool> isRadioSetupProgrammed = ValueNotifier<bool>(false);
   final ValueNotifier<bool> isRadioSetupBooted = ValueNotifier<bool>(false);
 
-  // Module Setup Variables
   final ValueNotifier<bool> isModuleSetupFetchCommandActive =
       ValueNotifier<bool>(false);
 
@@ -428,7 +400,6 @@ class BleProcess {
   final ValueNotifier<String> moduleDate = ValueNotifier<String>("");
   final ValueNotifier<int> moduleProtocol = ValueNotifier<int>(0);
 
-  // L-Bus Setup Variables
   final ValueNotifier<bool> isLBusSetupFetchCommandActive = ValueNotifier<bool>(
     false,
   );
@@ -453,7 +424,6 @@ class BleProcess {
   final ValueNotifier<List<String>> lbusFetchErrors =
       ValueNotifier<List<String>>([]);
 
-  // Sounder Setup Variables
   final ValueNotifier<bool> isSounderSetupFetchCommandActive =
       ValueNotifier<bool>(false);
 
@@ -464,7 +434,6 @@ class BleProcess {
     false,
   );
 
-  //sounder relay variables
   final ValueNotifier<int> sounderOneRelayFunctionGroup = ValueNotifier<int>(0);
   final ValueNotifier<int> sounderOneRelayFunction = ValueNotifier<int>(0);
   final ValueNotifier<int> sounderOneFunctionNo = ValueNotifier<int>(0);
@@ -501,7 +470,6 @@ class BleProcess {
   final ValueNotifier<String> sounderThreeRelayOutputMode =
       ValueNotifier<String>("");
 
-  //Sounder general variables
   final ValueNotifier<bool> isSounderGeneralEnabled = ValueNotifier<bool>(
     false,
   );
@@ -511,7 +479,6 @@ class BleProcess {
   final ValueNotifier<bool> isSounderGeneralDelay = ValueNotifier<bool>(false);
   final ValueNotifier<int> sounderGeneralDelay = ValueNotifier<int>(0);
 
-  // Sounder Zone Equipment Variables
   final ValueNotifier<bool> isZoneOneEnabled = ValueNotifier<bool>(false);
   final ValueNotifier<bool> isZoneOneTest = ValueNotifier<bool>(false);
   final ValueNotifier<int> zoneOneAction = ValueNotifier<int>(0);
@@ -526,7 +493,6 @@ class BleProcess {
   final ValueNotifier<bool> isZoneThreeTest = ValueNotifier<bool>(false);
   final ValueNotifier<int> zoneThreeAction = ValueNotifier<int>(0);
   final ValueNotifier<String> sounderZoneThreeMode = ValueNotifier<String>("");
-  //Sounder ext out variables
   final ValueNotifier<bool> isExtOutOneEnabled = ValueNotifier<bool>(false);
   final ValueNotifier<bool> isExtOutOneTest = ValueNotifier<bool>(false);
   final ValueNotifier<int> extoutOneCountdownAction = ValueNotifier<int>(0);
@@ -550,7 +516,6 @@ class BleProcess {
     "",
   );
 
-  // Service Due Setup Variables
   final ValueNotifier<bool> isServiceDueFetchCommandActive =
       ValueNotifier<bool>(false);
 
@@ -566,7 +531,6 @@ class BleProcess {
   final ValueNotifier<String> serviceDueContact = ValueNotifier<String>("");
   final ValueNotifier<int> serviceDueReminder = ValueNotifier<int>(0);
 
-  // Access Code Setup Variables
   final ValueNotifier<bool> isAccessCodeSetupFetchCommandActive =
       ValueNotifier<bool>(false);
 
@@ -582,7 +546,6 @@ class BleProcess {
         List.generate(8, (_) => const AccessCodeSetupData()),
       );
 
-  // Panel Info Setup Variables
   final ValueNotifier<bool> isPanelInfoSetupFetchCommandActive =
       ValueNotifier<bool>(false);
 
@@ -603,7 +566,6 @@ class BleProcess {
   final ValueNotifier<int> panelInfoSecond = ValueNotifier<int>(0);
   final ValueNotifier<int> panelInfoEventReminderDelay = ValueNotifier<int>(0);
 
-  // General Module Setup Variables
   final ValueNotifier<bool> isGeneralModuleSetupFetchCommandActive =
       ValueNotifier<bool>(false);
 
@@ -624,7 +586,6 @@ class BleProcess {
   final ValueNotifier<int> generalModuleResetLvl = ValueNotifier<int>(0);
   final ValueNotifier<int> generalModuleFaultLatching = ValueNotifier<int>(0);
 
-  // ADC Variables
   final ValueNotifier<bool> isAdcSetupFetchCommandActive = ValueNotifier<bool>(
     false,
   );
@@ -641,7 +602,6 @@ class BleProcess {
   final ValueNotifier<double> zone3AdcValue = ValueNotifier<double>(0);
   final ValueNotifier<double> earthAdcValue = ValueNotifier<double>(0);
 
-  // Network Variables
   final ValueNotifier<bool> isNetworkPacketProcess = ValueNotifier<bool>(true);
   final ValueNotifier<String> receivedPanelName = ValueNotifier<String>("");
   final ValueNotifier<String> receivedHardwareVersion = ValueNotifier<String>(
@@ -658,7 +618,6 @@ class BleProcess {
   final ValueNotifier<bool> isEventLogRetrievalFetchCommandActive =
       ValueNotifier<bool>(false);
 
-  // BleStates bleStateMachineState = BleStates.IDLE;
   BleStates bleCurrentState = BleStates.IDLE;
   DeviceConnectState deviceConnectState = DeviceConnectState.notConnected;
 
@@ -672,7 +631,6 @@ class BleProcess {
   BleProcess(this.bleManager);
 
   Future<void> bleRxFrameProcess(BleRxFrame rx) async {
-    //RX received → reset retry counter
     rxTimeoutRetryCount = 0;
     pollWaitRspTimeoutCnt = 0;
     nackRetryCount = 0;
@@ -694,12 +652,6 @@ class BleProcess {
       return;
     }
 
-    // if (rx.payload[3] == 0x01) {
-    //   print(
-    //     "the received packet: ${rx.payload.map((e) => e.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
-    //   );
-    // }
-
     if (rx.payload[10] == 0x83 &&
         rx.payload[12] == 0x02 &&
         rx.payload[13] == 0x0A &&
@@ -712,31 +664,12 @@ class BleProcess {
       return;
     }
 
-    // ----- OTA STATE MACHINE -----
     switch (bleManager.otaProcessState) {
       case OtaProcessState.sendNetworkPacket:
         checkForNetworkPacketRsp = 1;
-      // print("NEXT: POLL PACKET");
-      // print("This is network packet called");
-      // print(
-      //   "The network packet is: ${rx.payload.map((e) => e.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
-      // );
-      // receivedPanelName.value = extractStringFromPayload(
-      //   rx.payload,
-      //   startIndex: 16,
-      // );
-
-      // print("The received panel name is: ${receivedPanelName.value}");
-      // // await Future.delayed(Duration(seconds: 1));
-      // bleManager.otaProcessState = OtaProcessState.sendPollPacket;
-      // isNetworkPacketProcess.value = false;
-      // startRxTimeout();
-      // await bleManager.sendPollPacket();
-      // break;
 
       case OtaProcessState.sendPollPacket:
         print("NEXT: ACCESS PACKET");
-        // await Future.delayed(Duration(seconds: 1));
         bleManager.otaProcessState = OtaProcessState.sendAccessKeyPacket;
         startRxTimeout();
         await bleManager.sendAccessKeyPkt();
@@ -762,12 +695,10 @@ class BleProcess {
           bleManager.otaProcessState = OtaProcessState.sendContinuousPollPacket;
         }
         checkForCtrlCmdRsp = 1;
-        //the poll for the control cmd will be send down in the if else condition's
         break;
 
       case OtaProcessState.sendStopCntrlCmdPkt:
         print("Sending Stop Control Command");
-        // processDesc.value = "Sending Stop Control Command";
         if (checkForCtrlCmdRsp == 1) {
           logRetreivalEnded = true;
           isEventLogRetrievalFetchCommandActive.value = false;
@@ -930,7 +861,6 @@ class BleProcess {
       }
 
       print("The received panel name is: ${receivedPanelName.value}");
-      // await Future.delayed(Duration(seconds: 1));
       bleManager.otaProcessState = OtaProcessState.sendPollPacket;
       isNetworkPacketProcess.value = false;
       checkForNetworkPacketRsp = 0;
@@ -973,7 +903,6 @@ class BleProcess {
       await bleManager.sendPollPacket();
     }
 
-    // ----- ACCESS KEY RESPONSE -----
     if (checkForAccessKeyCmdRsp == 1) {
       print("Checking ACCESS KEY CMD RSP...");
 
@@ -987,8 +916,6 @@ class BleProcess {
               ) ==
               accessKey.value) {
         cancelAccessKeyPollDeadline();
-        // processDesc.value = "Validation Success";
-        // isAccessKeyValid.value = true;
         print("ACCESS KEY RECEIVED → NEXT CONTROL CMD");
         if (isInputSetupFetchCommandActive.value) {
           bleManager.otaProcessState =
@@ -1181,7 +1108,6 @@ class BleProcess {
           cancelOperationDeadline();
           checkForAccessKeyCmdRsp = 0;
           isAccessKeyValid.value = true;
-          // return;
         }
       } else if (rx.payload[13] == 0x0a &&
           String.fromCharCodes(
@@ -1236,12 +1162,7 @@ class BleProcess {
       print("Checking Adc Setup Fetch CMD RSP");
       if (rx.payload[12] == 0x09) {
         print("We got adc setup fetch response");
-        // bleManager.otaProcessState = OtaProcessState.notInUse;
-        // cancelOperationDeadline();
-        // checkForAdcSetupFetchRes = 0;
-        // isAdcSetupFetchCommandActive.value = false;
         isAccessKeyValid.value = true;
-        // processDesc.value = "Adc Setup Fetch Completed";
         try {
           final parsed = AdcParser.parse(rx.payload);
           final adc = AdcValues.fromList(parsed);
@@ -1915,18 +1836,10 @@ class BleProcess {
             processDesc.value = "Applying Sounder (Ext Out) 1/3";
             startRxTimeout();
             await bleManager.sendSounderSetupExtOutApplyCmdPkt(extMaxZone: 1);
-            // print("Zone apply phase complete");
-            // bleManager.otaProcessState = OtaProcessState.notInUse;
-            // checkForSounderSetupApplyRes = 0;
-            // isSounderSetupApplyCommandActive.value = false;
-            // isAccessKeyValid.value = true;
           }
         } else if (sounderSetupApplyExtOutCommandStep >= 1 &&
             sounderSetupApplyExtOutCommandStep <= 3) {
           final nextExtOutNo = sounderSetupApplyExtOutCommandStep + 1;
-          // if (nextExtOutNo >= 3) {
-          //   processDesc.value = "Applying Sounder (Ext Out) $nextExtOutNo/3";
-          // }
           print(
             "CMD $sounderSetupApplyExtOutCommandStep Validated -> send Ext Out $nextExtOutNo, keep polling",
           );
@@ -2008,7 +1921,6 @@ class BleProcess {
           startRxTimeout();
           await bleManager.sendLBusSetupFetchCmdPkt(lBusNo: nextBusNo);
         } else {
-          // All 31 buses received – compute enabled list now (includes bus 31)
           enabledLBusNumbers.value = [
             for (var i = 0; i < lBusSetupDataList.value.length; i++)
               if (lBusSetupDataList.value[i].enabled == 'Yes') i + 1,
@@ -2034,10 +1946,7 @@ class BleProcess {
         }
       } else if ((rx.payload[12] == 0x02 || rx.payload[12] == 0x01) &&
           lBusSetupFetchCommandStep == 31) {
-        // Response for sendLBusEnabledBusDataFetchCmdPkt
         if (rx.payload[12] == 0x01) {
-          // Parse Id, Revision, Product rev, Hardware, Firmware, Date, Protocol
-          // Preserve existing values (enabled, idLed, product, deviceText) via copyWith
           if (lBusSetupDataFetchCommandStep < enabledLBusNumbers.value.length) {
             final busNo =
                 enabledLBusNumbers.value[lBusSetupDataFetchCommandStep];
@@ -2052,7 +1961,6 @@ class BleProcess {
             lBusSetupDataList.value = list;
           }
         } else if (rx.payload[12] == 0x02 && rx.payload[13] == 0x14) {
-          // Handle 0x02/0x14 response if needed
           isLbusFetchHasErrors.value = true;
           lbusFetchErrors.value.add(
             (lBusSetupDataFetchCommandStep + 1).toString(),
@@ -2067,7 +1975,6 @@ class BleProcess {
           startRxTimeout();
           await bleManager.sendLBusEnabledBusDataFetchCmdPkt(lBusNo: nextBusNo);
         } else {
-          // All enabled bus data fetched – complete
           bleManager.otaProcessState = OtaProcessState.notInUse;
           cancelOperationDeadline();
           checkForLBusSetupFetchRes = 0;
@@ -2112,9 +2019,7 @@ class BleProcess {
           rx.payload[36],
           rx.payload[37],
         ].join('.');
-        // Date: [39][40]=year, [41]=month, [42]=day (adjust byte order if needed)
-        final year = (rx.payload[38] << 8) | rx.payload[39]; // big-endian
-        // Or: final year = (rx.payload[40] << 8) | rx.payload[39];  // little-endian
+        final year = (rx.payload[38] << 8) | rx.payload[39];
         final month = rx.payload[40];
         final day = rx.payload[41];
         moduleDate.value =
@@ -2174,7 +2079,6 @@ class BleProcess {
         bleManager.otaProcessState = OtaProcessState.notInUse;
         cancelOperationDeadline();
         checkForRadioSetupApplyRes = 0;
-        // isRadioSetupApplyCommandActive.value = false;
         isAccessKeyValid.value = true;
         isRadioSetupCommandApplyActive.value = false;
         isRadioSetupApplyDone.value = true;
@@ -2185,8 +2089,6 @@ class BleProcess {
         await bleManager.sendPollPacket();
       }
     }
-
-    // __ext out response
 
     if (checkForExtCmdApplyRes == 1) {
       print(
@@ -2292,8 +2194,6 @@ class BleProcess {
       }
     }
 
-    //need to add this catch in show password dialog for access code
-
     if (checkForExtCmdFetchRes == 1) {
       print(
         "Checking EXT Fetch CMD RSP Value ${rx.payload[12]}:::::${rx.payload[12] == 0x16} ",
@@ -2301,9 +2201,6 @@ class BleProcess {
       if (rx.payload[12] == 0x16) {
         bleManager.otaProcessState = OtaProcessState.sendDipSettingFetchCmd;
         checkForExtCmdFetchRes = 0;
-        // Keep isExtOutCommandFetchActive true until DIP response updates
-        // isExtOutApplyButtonActive so bulk config save and waitUntilNotifierQuiet
-        // include the full ext-out + DIP sequence (matches tile download behavior).
         isAccessKeyValid.value = true;
         print("We got the response for ext fetch");
         final ExtZoneModeConfig config = ExtZoneModeCodec.fromHex(
@@ -2534,7 +2431,6 @@ class BleProcess {
       }
     }
 
-    // ----- CONTROL CMD RESPONSE -----
     if (checkForCtrlCmdRsp == 1) {
       print(
         "Checking CONTROL CMD RSP Value ${rx.payload[10]}:::::${rx.payload[10] == 0x83} ",
@@ -2543,7 +2439,6 @@ class BleProcess {
         Get.find<BleLogController>().restartNetworkFlow();
       } else if (rx.payload[10] == 0x83) {
         isAccessKeyValid.value = true;
-        // nackRetryCount = 0;
         print("CONTROL CMD RESPONSE RECEIVED");
         if (isSessionAccessCodeValidationOnly) {
           isSessionAccessCodeValidationOnly = false;
@@ -2555,7 +2450,6 @@ class BleProcess {
         } else {
           checkForCtrlCmdRsp = 2;
           logStartingTime = DateTime.now();
-          // Continue with normal polling now that we got the response
           startRxTimeout();
           await bleManager.sendPollPacket();
         }
@@ -2567,8 +2461,6 @@ class BleProcess {
         cancelOperationDeadline();
         cancelRxTimeout();
       } else {
-        // nackRetryCount = 0;
-        // Response not found, send poll again
         print("CONTROL CMD RSP not found, polling again");
         startRxTimeout();
         await bleManager.sendPollPacket();
@@ -2588,10 +2480,7 @@ class BleProcess {
 
       if (rxLastEvtLogNum != 0) {
         validEventLogNum++;
-        // Update the ValueNotifier to notify UI listeners
         validEventLogCount.value = validEventLogNum;
-
-        // Parse and store the valid log entry
         try {
           LogModel? parsedLog = _parseEventLogFromPayload(
             rx.payload,
@@ -2629,7 +2518,6 @@ class BleProcess {
       }
     }
 
-    // ----- READY FOR NEXT FRAME -----
     processNextOtaFrame = true;
 
     if (read1000Logs >= 1000 && !isOtaCompleted) {
@@ -2739,9 +2627,6 @@ class BleProcess {
     }
   }
 
-  /// Parses hardware / firmware (byte-per-component decimals), firmware date (BE year,
-  /// then month/day bytes), and protocol revision (BE u16), after the panel name at
-  /// [startIndex] with UTF-8 length byte. Optionally skips one `0x20` pad after the name.
   void _applyNetworkPacketVersionFields(List<int> payload) {
     const int startIndex = 16;
     if (startIndex >= payload.length) return;
@@ -2779,7 +2664,6 @@ class BleProcess {
 
   void resetProcessState() {
     isSessionAccessCodeValidationOnly = false;
-    // Terminal guards
     isOtaCompleted = false;
     processNextOtaFrame = true;
     logRetreivalEnded = false;
@@ -2814,7 +2698,6 @@ class BleProcess {
     checkForLiveEventsRetrievalRes = 0;
     processDesc.value = "";
     checkForAdcSetupFetchRes = 0;
-    // Counters
     checkForCtrlCmdRsp = 0;
     checkForAccessKeyCmdRsp = 0;
     validEventLogNum = 0;
@@ -2823,15 +2706,12 @@ class BleProcess {
     resetNetworkFlowRestartCount();
     _networkFlowFailureHandling = false;
 
-    // Time tracking
     logStartingTime = null;
     logEndTime = null;
 
-    // OTA state
     bleManager.otaProcessState = OtaProcessState.sendNetworkPacket;
     isNetworkPacketProcess.value = true;
 
-    // RX timeout
     _rxTimeoutTimer?.cancel();
     _rxTimeoutTimer = null;
 
@@ -2841,7 +2721,6 @@ class BleProcess {
     cancelOperationDeadline();
     cancelAccessKeyPollDeadline();
 
-    // UI notifiers
     validEventLogCount.value = 0;
     read1000LogsCount.value = 0;
     validEventLogs.value = [];
@@ -2850,12 +2729,10 @@ class BleProcess {
   }
 
   void resetProcessExtOutState() {
-    // Terminal guards
     isOtaCompleted = false;
     processNextOtaFrame = true;
     logRetreivalEnded = false;
 
-    // Counters
     checkForCtrlCmdRsp = 0;
     checkForAccessKeyCmdRsp = 0;
     checkDipSetCmdRsp = 0;
@@ -2873,8 +2750,6 @@ class BleProcess {
     validEventLogNum = 0;
     read1000Logs = 0;
     receivedPollCount = 0;
-    // Keep isExtOutApplyButtonActive (Solar vs DIP): ext-out apply does not
-    // re-run dip fetch; clearing here made bulk apply persist wrong isSolar.
     checkForLBusSetupFetchRes = 0;
     checkForLBusSetupApplyRes = 0;
     checkForSounderSetupFetchRes = 0;
@@ -2893,15 +2768,9 @@ class BleProcess {
     checkForLiveEventsRetrievalRes = 0;
     processDesc.value = "";
     checkForAdcSetupFetchRes = 0;
-    // Time tracking
-    // logStartingTime = null;
-    // logEndTime = null;
-
-    // OTA state
     bleManager.otaProcessState = OtaProcessState.sendNetworkPacket;
     isNetworkPacketProcess.value = true;
 
-    // RX timeout
     _rxTimeoutTimer?.cancel();
     _rxTimeoutTimer = null;
 
@@ -2909,22 +2778,13 @@ class BleProcess {
     _otherPacketsRxTimeoutTimer = null;
 
     cancelOperationDeadline();
-
-    // UI notifiers
-    // validEventLogCount.value = 0;
-    // read1000LogsCount.value = 0;
-    // validEventLogs.value = [];
-    // isValidLogRecieved.value = false;
-    // panelName.value = "";
   }
 
   void resetProcessInputSetupState() {
-    // Terminal guards
     isOtaCompleted = false;
     processNextOtaFrame = true;
     logRetreivalEnded = false;
 
-    // Counters
     checkForCtrlCmdRsp = 0;
     checkForAccessKeyCmdRsp = 0;
     checkDipSetCmdRsp = 0;
@@ -2959,15 +2819,10 @@ class BleProcess {
     checkForLiveEventsRetrievalRes = 0;
     processDesc.value = "";
     checkForAdcSetupFetchRes = 0;
-    // Time tracking
-    // logStartingTime = null;
-    // logEndTime = null;
 
-    // OTA state
     bleManager.otaProcessState = OtaProcessState.sendNetworkPacket;
     isNetworkPacketProcess.value = true;
 
-    // RX timeout
     _rxTimeoutTimer?.cancel();
     _rxTimeoutTimer = null;
 
@@ -2975,22 +2830,13 @@ class BleProcess {
     _otherPacketsRxTimeoutTimer = null;
 
     cancelOperationDeadline();
-
-    // UI notifiers
-    // validEventLogCount.value = 0;
-    // read1000LogsCount.value = 0;
-    // validEventLogs.value = [];
-    // isValidLogRecieved.value = false;
-    // panelName.value = "";
   }
 
   void resetProcessRelaySetupState() {
-    // Terminal guards
     isOtaCompleted = false;
     processNextOtaFrame = true;
     logRetreivalEnded = false;
 
-    // Counters
     checkForCtrlCmdRsp = 0;
     checkForAccessKeyCmdRsp = 0;
     checkDipSetCmdRsp = 0;
@@ -3023,15 +2869,10 @@ class BleProcess {
     checkForLiveEventsRetrievalRes = 0;
     processDesc.value = "";
     checkForAdcSetupFetchRes = 0;
-    // Time tracking
-    // logStartingTime = null;
-    // logEndTime = null;
 
-    // OTA state
     bleManager.otaProcessState = OtaProcessState.sendNetworkPacket;
     isNetworkPacketProcess.value = true;
 
-    // RX timeout
     _rxTimeoutTimer?.cancel();
     _rxTimeoutTimer = null;
 
@@ -3039,22 +2880,13 @@ class BleProcess {
     _otherPacketsRxTimeoutTimer = null;
 
     cancelOperationDeadline();
-
-    // UI notifiers
-    // validEventLogCount.value = 0;
-    // read1000LogsCount.value = 0;
-    // validEventLogs.value = [];
-    // isValidLogRecieved.value = false;
-    // panelName.value = "";
   }
 
   void resetProcessZoneSetupState() {
-    // Terminal guards
     isOtaCompleted = false;
     processNextOtaFrame = true;
     logRetreivalEnded = false;
 
-    // Counters
     checkForCtrlCmdRsp = 0;
     checkForAccessKeyCmdRsp = 0;
     checkDipSetCmdRsp = 0;
@@ -3087,15 +2919,10 @@ class BleProcess {
     checkForLiveEventsRetrievalRes = 0;
     processDesc.value = "";
     checkForAdcSetupFetchRes = 0;
-    // Time tracking
-    // logStartingTime = null;
-    // logEndTime = null;
 
-    // OTA state
     bleManager.otaProcessState = OtaProcessState.sendNetworkPacket;
     isNetworkPacketProcess.value = true;
 
-    // RX timeout
     _rxTimeoutTimer?.cancel();
     _rxTimeoutTimer = null;
 
@@ -3103,22 +2930,13 @@ class BleProcess {
     _otherPacketsRxTimeoutTimer = null;
 
     cancelOperationDeadline();
-
-    // UI notifiers
-    // validEventLogCount.value = 0;
-    // read1000LogsCount.value = 0;
-    // validEventLogs.value = [];
-    // isValidLogRecieved.value = false;
-    // panelName.value = "";
   }
 
   void resetProcessRadioSetupState() {
-    // Terminal guards
     isOtaCompleted = false;
     processNextOtaFrame = true;
     logRetreivalEnded = false;
 
-    // Counters
     checkForCtrlCmdRsp = 0;
     checkForAccessKeyCmdRsp = 0;
     checkDipSetCmdRsp = 0;
@@ -3151,15 +2969,10 @@ class BleProcess {
     checkForLiveEventsRetrievalRes = 0;
     processDesc.value = "";
     checkForAdcSetupFetchRes = 0;
-    // Time tracking
-    // logStartingTime = null;
-    // logEndTime = null;
 
-    // OTA state
     bleManager.otaProcessState = OtaProcessState.sendNetworkPacket;
     isNetworkPacketProcess.value = true;
 
-    // RX timeout
     _rxTimeoutTimer?.cancel();
     _rxTimeoutTimer = null;
 
@@ -3167,13 +2980,6 @@ class BleProcess {
     _otherPacketsRxTimeoutTimer = null;
 
     cancelOperationDeadline();
-
-    // UI notifiers
-    // validEventLogCount.value = 0;
-    // read1000LogsCount.value = 0;
-    // validEventLogs.value = [];
-    // isValidLogRecieved.value = false;
-    // panelName.value = "";
   }
 
   void resetProcessModuleSetupState() {
