@@ -88,8 +88,6 @@ class LBusSetupData {
     );
   }
 
-  /// Merges id, revision, productRev, hardware, firmware, date, protocol from
-  /// the Enabled Bus Data (0x01) payload into this record. Preserves enabled, idLed, product, deviceText.
   static LBusSetupData mergeFromEnabledBusPayload(
     LBusSetupData existing,
     List<int> payload,

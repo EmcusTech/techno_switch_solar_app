@@ -12,7 +12,6 @@ import 'package:techno_switch_solar_app/screens/log_retrieval_loading_screen.dar
     hide ble;
 import 'package:techno_switch_solar_app/screens/scanning_screen.dart';
 
-/// Bulk download/apply entry points for create-site flow.
 class PanelConfigurationCoordinator {
   PanelConfigurationCoordinator({
     required this.bleManager,
@@ -29,74 +28,79 @@ class PanelConfigurationCoordinator {
   final DiscoveredDevice device;
   final PanelConfigRefreshNotifiers refreshNotifiers;
   final ValueNotifier<bool> navigatingToDeviceConnecting;
-
-  /// When true (e.g. create-site wizard), bulk BLE work stays in the access-code
-  /// dialog with [BleProcess.processDesc] instead of pushing [LogRetrievalLoadingScreen].
   final bool useDialogOnlyBulkProgress;
-
-  /// When false, after bulk download completes, BLE state is not written to disk
-  /// (e.g. tap-to-connect shows Config Log compare first).
   final bool saveCachesAfterBulkDownload;
 
   PanelAccessPasswordDelegates _delegates({
     Future<void> Function()? afterBulkApplyAccessGranted,
   }) {
     return PanelAccessPasswordDelegates(
-      saveExtOutCache: () => PanelConfigCacheSync.saveExtOut(
-        bleManager,
-        device.id,
-        refreshNotifiers.extOut,
-      ),
-      saveInputCache: () => PanelConfigCacheSync.saveInput(
-        bleManager,
-        device.id,
-        refreshNotifiers.input,
-      ),
-      saveRelayCache: () => PanelConfigCacheSync.saveRelay(
-        bleManager,
-        device.id,
-        refreshNotifiers.relay,
-      ),
-      saveZoneCache: () => PanelConfigCacheSync.saveZone(
-        bleManager,
-        device.id,
-        refreshNotifiers.zone,
-      ),
-      saveRadioCache: () => PanelConfigCacheSync.saveRadio(
-        bleManager,
-        device.id,
-        refreshNotifiers.zone,
-      ),
-      saveLBusCache: () => PanelConfigCacheSync.saveLBus(
-        bleManager,
-        device.id,
-        refreshNotifiers.zone,
-      ),
-      saveSounderCache: () => PanelConfigCacheSync.saveSounder(
-        bleManager,
-        device.id,
-        refreshNotifiers.sounder,
-      ),
-      saveServiceDueCache: () => PanelConfigCacheSync.saveServiceDue(
-        bleManager,
-        device.id,
-        refreshNotifiers.serviceDue,
-      ),
-      saveAccessCodeCache: () => PanelConfigCacheSync.saveAccessCode(
-        bleManager,
-        device.id,
-        refreshNotifiers.accessCode,
-      ),
-      savePanelInfoCache: () => PanelConfigCacheSync.savePanelInfo(
-        bleManager,
-        device.id,
-        refreshNotifiers.panelInfo,
-      ),
-      saveGeneralModuleCache: () => PanelConfigCacheSync.saveGeneralModule(
-        bleManager,
-        device.id,
-        refreshNotifiers.generalModule,
-      ),
+      saveExtOutCache:
+          () => PanelConfigCacheSync.saveExtOut(
+            bleManager,
+            device.id,
+            refreshNotifiers.extOut,
+          ),
+      saveInputCache:
+          () => PanelConfigCacheSync.saveInput(
+            bleManager,
+            device.id,
+            refreshNotifiers.input,
+          ),
+      saveRelayCache:
+          () => PanelConfigCacheSync.saveRelay(
+            bleManager,
+            device.id,
+            refreshNotifiers.relay,
+          ),
+      saveZoneCache:
+          () => PanelConfigCacheSync.saveZone(
+            bleManager,
+            device.id,
+            refreshNotifiers.zone,
+          ),
+      saveRadioCache:
+          () => PanelConfigCacheSync.saveRadio(
+            bleManager,
+            device.id,
+            refreshNotifiers.zone,
+          ),
+      saveLBusCache:
+          () => PanelConfigCacheSync.saveLBus(
+            bleManager,
+            device.id,
+            refreshNotifiers.zone,
+          ),
+      saveSounderCache:
+          () => PanelConfigCacheSync.saveSounder(
+            bleManager,
+            device.id,
+            refreshNotifiers.sounder,
+          ),
+      saveServiceDueCache:
+          () => PanelConfigCacheSync.saveServiceDue(
+            bleManager,
+            device.id,
+            refreshNotifiers.serviceDue,
+          ),
+      saveAccessCodeCache:
+          () => PanelConfigCacheSync.saveAccessCode(
+            bleManager,
+            device.id,
+            refreshNotifiers.accessCode,
+          ),
+      savePanelInfoCache:
+          () => PanelConfigCacheSync.savePanelInfo(
+            bleManager,
+            device.id,
+            refreshNotifiers.panelInfo,
+          ),
+      saveGeneralModuleCache:
+          () => PanelConfigCacheSync.saveGeneralModule(
+            bleManager,
+            device.id,
+            refreshNotifiers.generalModule,
+          ),
       showApplySuccess: (ctx, msg, {subtitle}) {
         showPanelApplySuccessDialog(
           ctx,
@@ -163,10 +167,6 @@ class PanelConfigurationCoordinator {
     }
   }
 
-  /// Awaits the access / bulk-download dialog route (same as [startBulkDownload]).
-  /// Call before [Navigator.pushReplacement] so the scanning route is not disposed
-  /// while the progress UI is visible. Adds a short delay after a successful
-  /// download so the success dialog can show before navigation.
   Future<void> startBulkDownloadAwaitCompletion({
     required BuildContext context,
     required bool Function() isMounted,
@@ -197,7 +197,6 @@ class PanelConfigurationCoordinator {
     }
   }
 
-  /// Returns when bulk apply finishes, or throws on error / timeout.
   Future<void> startBulkApply({
     required BuildContext context,
     required bool Function() isMounted,

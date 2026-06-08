@@ -13,7 +13,6 @@ class PanelTypeConfig {
     required this.fireExtinguisherCount,
   });
 
-  // Predefined panel types
   static const List<PanelTypeConfig> availablePanels = [
     // PanelTypeConfig(
     //   typeName: 'ORYX202',
@@ -60,7 +59,6 @@ class PanelTypeConfig {
     // }
   ];
 
-  /// Get panel configuration by type name
   static PanelTypeConfig? getByTypeName(String typeName) {
     try {
       return availablePanels.firstWhere((panel) => panel.typeName == typeName);

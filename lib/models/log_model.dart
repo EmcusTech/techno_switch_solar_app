@@ -1,8 +1,7 @@
 class LogModel {
-  final int? id; // Database ID for stored logs
-  final int? siteId; // Foreign key to associate log with a site
-  final int?
-  retrievalId; // Foreign key to associate log with a retrieval session
+  final int? id;
+  final int? siteId;
+  final int? retrievalId;
   final String? panelText;
   final String? eventId;
   final DateTime? eventDateTime;
@@ -17,7 +16,7 @@ class LogModel {
   final String? identifier;
   final String? text;
   final DateTime? retrievedAt;
-  final bool? isValid; // When the log was retrieved/stored
+  final bool? isValid;
 
   LogModel({
     this.id,
@@ -40,7 +39,6 @@ class LogModel {
     this.isValid,
   });
 
-  // Convert Log object to Map for database storage
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -66,7 +64,6 @@ class LogModel {
     };
   }
 
-  // Convert Map from database to Log object
   factory LogModel.fromMap(Map<String, dynamic> map) {
     return LogModel(
       id: map['id']?.toInt(),
@@ -96,7 +93,6 @@ class LogModel {
     );
   }
 
-  // Create a copy with updated fields, especially for associating with a site
   LogModel copyWith({
     int? id,
     int? siteId,

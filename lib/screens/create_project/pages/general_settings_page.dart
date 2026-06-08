@@ -84,11 +84,7 @@ class _GeneralSettingsPageState extends State<GeneralSettingsPage> {
                 _buildDropdownField(
                   'Service Due Reminder',
                   widget.serviceDueReminder,
-                  [
-                    '13/09/2025',
-                    '14/09/2025',
-                    '15/09/2025',
-                  ],
+                  ['13/09/2025', '14/09/2025', '15/09/2025'],
                 ),
                 SizedBox(height: 24),
                 _buildDropdownField('Event Reminder', widget.eventReminder, [
@@ -258,8 +254,8 @@ class _GeneralSettingsPageState extends State<GeneralSettingsPage> {
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
-            children: options
-                .map((option) {
+            children:
+                options.map((option) {
                   return RadioListTile<String>(
                     title: Text(
                       option,
@@ -278,8 +274,7 @@ class _GeneralSettingsPageState extends State<GeneralSettingsPage> {
                       widget.onFieldChanged(label, selectedValue);
                     },
                   );
-                })
-                .toList(),
+                }).toList(),
           ),
           actions: [
             TextButton(
@@ -300,4 +295,4 @@ class _GeneralSettingsPageState extends State<GeneralSettingsPage> {
       },
     );
   }
-} 
+}

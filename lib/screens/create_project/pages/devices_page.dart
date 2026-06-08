@@ -41,10 +41,13 @@ class _LBusDevicesPageState extends State<LBusDevicesPage> {
   @override
   void initState() {
     super.initState();
-    // Initialize controllers for L-BUS 1 and L-BUS 2
     for (String lbus in ['L-BUS 1', 'L-BUS 2']) {
-      _inputControllers[lbus] = TextEditingController(text: widget.lbusInputs[lbus] ?? '');
-      _inputTextControllers[lbus] = TextEditingController(text: widget.lbusInputTexts[lbus] ?? '');
+      _inputControllers[lbus] = TextEditingController(
+        text: widget.lbusInputs[lbus] ?? '',
+      );
+      _inputTextControllers[lbus] = TextEditingController(
+        text: widget.lbusInputTexts[lbus] ?? '',
+      );
     }
   }
 
@@ -109,7 +112,7 @@ class _LBusDevicesPageState extends State<LBusDevicesPage> {
 
   Widget _buildLBusSection(String lbusName) {
     bool isExpanded = widget.expandedLBus == lbusName;
-    
+
     return Column(
       children: [
         GestureDetector(
@@ -118,10 +121,7 @@ class _LBusDevicesPageState extends State<LBusDevicesPage> {
           },
           child: Container(
             padding: EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Color(0xFFF5F5F5),
-              // borderRadius: BorderRadius.circular(8),
-            ),
+            decoration: BoxDecoration(color: Color(0xFFF5F5F5)),
             child: Row(
               children: [
                 Text(
@@ -134,7 +134,9 @@ class _LBusDevicesPageState extends State<LBusDevicesPage> {
                 ),
                 Spacer(),
                 Icon(
-                  isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                  isExpanded
+                      ? Icons.keyboard_arrow_up
+                      : Icons.keyboard_arrow_down,
                   color: Color(0xFF696969),
                 ),
               ],
@@ -147,7 +149,6 @@ class _LBusDevicesPageState extends State<LBusDevicesPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Input field
                 Text(
                   'Input',
                   style: GoogleFonts.inter(
@@ -184,8 +185,6 @@ class _LBusDevicesPageState extends State<LBusDevicesPage> {
                   ),
                 ),
                 SizedBox(height: 16),
-    
-                // Input Text field
                 Text(
                   'Input Text',
                   style: GoogleFonts.inter(
@@ -222,8 +221,6 @@ class _LBusDevicesPageState extends State<LBusDevicesPage> {
                   ),
                 ),
                 SizedBox(height: 24),
-    
-                // Dropdown fields
                 _buildDropdownField(
                   lbusName,
                   'Product',
@@ -274,7 +271,12 @@ class _LBusDevicesPageState extends State<LBusDevicesPage> {
     );
   }
 
-  Widget _buildDropdownField(String lbusName, String label, String value, List<String> options) {
+  Widget _buildDropdownField(
+    String lbusName,
+    String label,
+    String value,
+    List<String> options,
+  ) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -333,8 +335,8 @@ class _LBusDevicesPageState extends State<LBusDevicesPage> {
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
-            children: options
-                .map((option) {
+            children:
+                options.map((option) {
                   return RadioListTile<String>(
                     title: Text(
                       option,
@@ -350,12 +352,18 @@ class _LBusDevicesPageState extends State<LBusDevicesPage> {
                     onChanged: (String? value) {
                       selectedValue = value!;
                       Navigator.of(context).pop();
-                      String fieldType = label.toLowerCase().replaceAll(' ', '');
-                      widget.onLBusFieldChanged(lbusName, fieldType, selectedValue);
+                      String fieldType = label.toLowerCase().replaceAll(
+                        ' ',
+                        '',
+                      );
+                      widget.onLBusFieldChanged(
+                        lbusName,
+                        fieldType,
+                        selectedValue,
+                      );
                     },
                   );
-                })
-                .toList(),
+                }).toList(),
           ),
           actions: [
             TextButton(
@@ -376,4 +384,4 @@ class _LBusDevicesPageState extends State<LBusDevicesPage> {
       },
     );
   }
-} 
+}

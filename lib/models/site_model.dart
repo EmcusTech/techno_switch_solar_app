@@ -25,7 +25,6 @@ class SiteModel {
     required this.updatedAt,
   });
 
-  // Convert Site object to Map for database storage
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -42,7 +41,6 @@ class SiteModel {
     };
   }
 
-  // Convert Map from database to Site object
   factory SiteModel.fromMap(Map<String, dynamic> map) {
     return SiteModel(
       id: map['id']?.toInt(),
@@ -59,7 +57,6 @@ class SiteModel {
     );
   }
 
-  // Create a copy with updated fields
   SiteModel copyWith({
     int? id,
     String? siteName,

@@ -1,6 +1,5 @@
-/// Model class to store MCU information including version and byte data
 class MCUInfo {
-  final String mcuType; // 'MainMCU', 'RfMCU', 'NetMCU'
+  final String mcuType;
   final String version;
   final List<int> byteData;
   final List<int> last100Bytes;
@@ -17,4 +16,3 @@ class MCUInfo {
     return 'MCUInfo(mcuType: $mcuType, version: $version, byteDataLength: ${byteData.length})';
   }
 }
-

@@ -1086,37 +1086,6 @@ class DataTransferManager {
     // After reaching [maxRetries] we will show respected error messages to the user.
   }
 
-  String getActualData(String hexString) {
-    String dataPacketInHex = "";
-
-    /// Get the payload data from the packet
-    String payLoadData = DataHandler().getPayloadFromPacket(hexString);
-    debugPrint("BEFORE CONVERTING:::::>$payLoadData");
-
-    if (payLoadData.length > 4) {
-      /// Convert the payload data to big-endian format
-      String convertedPayLoad = DataHandler().convertPayloadToBigEndian(
-        payLoadHexString: payLoadData,
-      );
-      debugPrint("AFTER CONVERTING:::::>$convertedPayLoad");
-
-      /// Generate a data packet from the converted payload
-      List<int> dataPacket = generateDataPacketFromPayload(convertedPayLoad);
-      debugPrint(
-        "::::::::::::<Data Packet Generated After BIG ENDIAN>::::::::::",
-      );
-      debugPrint(dataPacket.toString());
-
-      /// Convert the generated data packet to hexadecimal
-      dataPacketInHex = bytesToHex(dataPacket);
-      debugPrint(dataPacketInHex);
-    } else {
-      dataPacketInHex = payLoadData;
-    }
-
-    return dataPacketInHex;
-  }
-
   FrameData parseRxFrame(List<int> rxData) {
     // Add logic to parse rxData into FrameData
     List<String> hexValues =

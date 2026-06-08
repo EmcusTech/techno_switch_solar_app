@@ -34,7 +34,6 @@ class AccessCodeSetupData {
     );
   }
 
-  /// Decode Access Code record from payload
   static AccessCodeSetupData fromPayload(List<int> payload) {
     if (payload.length < 16) {
       return const AccessCodeSetupData();

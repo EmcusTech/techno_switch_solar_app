@@ -5,7 +5,6 @@ import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/utils/peripheral_config_snapshot.dart';
 
-/// BLE fetch/apply sequencing shared by dashboard and create-site flow.
 class PanelConfigBulkSync {
   PanelConfigBulkSync._();
 
@@ -26,7 +25,10 @@ class PanelConfigBulkSync {
     );
   }
 
-  static ValueNotifier<bool> fetchBusyFor(BleManager m, PeripheralConfigSection s) {
+  static ValueNotifier<bool> fetchBusyFor(
+    BleManager m,
+    PeripheralConfigSection s,
+  ) {
     final bp = m.bleProcess;
     switch (s) {
       case PeripheralConfigSection.module:
@@ -56,7 +58,11 @@ class PanelConfigBulkSync {
     }
   }
 
-  static void startFetchSection(BleLogController c, BleManager m, PeripheralConfigSection s) {
+  static void startFetchSection(
+    BleLogController c,
+    BleManager m,
+    PeripheralConfigSection s,
+  ) {
     final bp = m.bleProcess;
     switch (s) {
       case PeripheralConfigSection.module:
@@ -120,8 +126,6 @@ class PanelConfigBulkSync {
     }
   }
 
-  /// Panel (BLE) vs saved app cache; marks [PeripheralConfigSection.lBus] mismatch
-  /// when enabled-bus comms faults were recorded during bulk fetch.
   static Future<ConfigCompareResult> buildConfigCompareResultFromCache(
     BleManager bleManager,
     String deviceId,
@@ -147,7 +151,10 @@ class PanelConfigBulkSync {
     );
   }
 
-  static ValueNotifier<bool> applyBusyFor(BleManager m, PeripheralConfigSection s) {
+  static ValueNotifier<bool> applyBusyFor(
+    BleManager m,
+    PeripheralConfigSection s,
+  ) {
     final bp = m.bleProcess;
     switch (s) {
       case PeripheralConfigSection.module:
@@ -177,7 +184,11 @@ class PanelConfigBulkSync {
     }
   }
 
-  static void startApplySection(BleLogController c, BleManager m, PeripheralConfigSection s) {
+  static void startApplySection(
+    BleLogController c,
+    BleManager m,
+    PeripheralConfigSection s,
+  ) {
     final bp = m.bleProcess;
     switch (s) {
       case PeripheralConfigSection.module:

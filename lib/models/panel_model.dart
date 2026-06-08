@@ -3,11 +3,11 @@ import 'package:crypto/crypto.dart';
 
 class PanelModel {
   final int? id;
-  final String panelId; // Unique identifier generated from device info
-  final String panelName; // Display name (device name)
-  final String deviceType; // 'bluetooth' or 'usb'
-  final String deviceInfo; // JSON string containing device details
-  final int? siteId; // Foreign key to associated site (nullable)
+  final String panelId;
+  final String panelName;
+  final String deviceType;
+  final String deviceInfo;
+  final int? siteId;
   final DateTime createdAt;
   final DateTime updatedAt;
   final DateTime? lastConnected;
@@ -24,7 +24,6 @@ class PanelModel {
     this.lastConnected,
   });
 
-  /// Generate a unique panel ID from device information
   static String generatePanelId({
     required String deviceType,
     String? bluetoothMac,
@@ -36,13 +35,11 @@ class PanelModel {
     String baseString;
 
     if (deviceType == 'bluetooth') {
-      // Use MAC address as primary identifier, fallback to name
       baseString =
           bluetoothMac?.isNotEmpty == true
               ? 'BT_${bluetoothMac!.replaceAll(':', '').toUpperCase()}'
               : 'BT_NAME_${bluetoothName ?? 'UNKNOWN'}';
     } else if (deviceType == 'usb') {
-      // Use VID:PID combination, fallback to product name
       if (usbVid?.isNotEmpty == true && usbPid?.isNotEmpty == true) {
         baseString = 'USB_${usbVid!.toUpperCase()}_${usbPid!.toUpperCase()}';
       } else {
@@ -53,16 +50,13 @@ class PanelModel {
           'UNKNOWN_${deviceType}_${DateTime.now().millisecondsSinceEpoch}';
     }
 
-    // Generate a consistent hash for the panel ID
     var bytes = utf8.encode(baseString);
     var digest = sha1.convert(bytes);
 
-    // Take first 8 characters of hash and combine with device type prefix
     String shortHash = digest.toString().substring(0, 8).toUpperCase();
     return '${deviceType.toUpperCase()}_$shortHash';
   }
 
-  /// Create panel info from Bluetooth device
   static Map<String, dynamic> createBluetoothDeviceInfo({
     required String macAddress,
     required String deviceName,
@@ -76,7 +70,6 @@ class PanelModel {
     };
   }
 
-  /// Create panel info from USB device
   static Map<String, dynamic> createUsbDeviceInfo({
     String? vid,
     String? pid,
@@ -92,7 +85,6 @@ class PanelModel {
     };
   }
 
-  /// Convert Panel object to Map for database storage
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -107,7 +99,6 @@ class PanelModel {
     };
   }
 
-  /// Convert Map from database to Panel object
   factory PanelModel.fromMap(Map<String, dynamic> map) {
     return PanelModel(
       id: map['id']?.toInt(),
@@ -125,7 +116,6 @@ class PanelModel {
     );
   }
 
-  /// Get parsed device info as Map
   Map<String, dynamic> get parsedDeviceInfo {
     try {
       if (deviceInfo.isEmpty) return {};
@@ -135,16 +125,13 @@ class PanelModel {
     }
   }
 
-  /// True when the site was created without a live BLE link (skip-connect flow).
   bool get isOfflineProvisionedOnly {
     final info = parsedDeviceInfo;
     if (info['offlineProvisioned'] == true) return true;
-    // Minimal records from skip flow: panel id only, no MAC stored yet.
     final mac = info['macAddress']?.toString().trim() ?? '';
     return mac.isEmpty && (info['panelId']?.toString().isNotEmpty ?? false);
   }
 
-  /// Whether this panel row is already linked to the given BLE MAC.
   bool isLinkedToBleMac(String mac) {
     final stored = parsedDeviceInfo['macAddress']?.toString().trim() ?? '';
     if (stored.isEmpty || mac.trim().isEmpty) return false;
@@ -154,12 +141,12 @@ class PanelModel {
   static String _normalizeMac(String mac) =>
       mac.replaceAll(':', '').toUpperCase();
 
-  /// Device info for a panel registered during offline site creation.
-  static Map<String, dynamic> createOfflineProvisionedDeviceInfo(String panelId) {
+  static Map<String, dynamic> createOfflineProvisionedDeviceInfo(
+    String panelId,
+  ) {
     return {'panelId': panelId, 'offlineProvisioned': true};
   }
 
-  /// Get display string for device connection info
   String get deviceDisplayInfo {
     final info = parsedDeviceInfo;
     if (deviceType == 'bluetooth') {
@@ -176,7 +163,6 @@ class PanelModel {
     return 'Unknown Device';
   }
 
-  /// Create a copy with updated fields
   PanelModel copyWith({
     int? id,
     String? panelId,
@@ -217,7 +203,6 @@ class PanelModel {
   int get hashCode => panelId.hashCode;
 }
 
-/// Enum for device connection types
 enum DeviceType {
   bluetooth,
   usb,

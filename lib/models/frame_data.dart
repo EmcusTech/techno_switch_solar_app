@@ -1,13 +1,3 @@
-/*
-* Project      : gemini_mobile_app
-* File         : frame_data.dart
-* Description  : Models a data frame structure for byte-level communication, allowing conversion to a Uint8List and providing a string representation. It encapsulates preamble, command, frame type, payload length, payload data, CRC, and end frame components using hexadecimal string lists for byte conversion and manipulation
-* Author       : SrihariharanT
-* Date         : 2024-06-17
-* Version      : 1.0
-* Ticket       : 
-*/
-
 import 'dart:typed_data';
 
 class FrameData {
@@ -36,8 +26,6 @@ class FrameData {
 
   Uint8List toUint8List() {
     List<int> bytes = <int>[];
-
-    // Convert each list of strings to bytes
 
     bytes.addAll(convertHexListToBytes(preambleByte));
 

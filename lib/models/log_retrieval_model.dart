@@ -17,7 +17,6 @@ class LogRetrievalModel {
     required this.updatedAt,
   });
 
-  /// Create from database map
   factory LogRetrievalModel.fromMap(Map<String, dynamic> map) {
     return LogRetrievalModel(
       id: map['id'] as int?,
@@ -32,7 +31,6 @@ class LogRetrievalModel {
     );
   }
 
-  /// Convert to database map
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -45,7 +43,6 @@ class LogRetrievalModel {
     };
   }
 
-  /// Create copy with modified fields
   LogRetrievalModel copyWith({
     int? id,
     int? siteId,
@@ -66,7 +63,6 @@ class LogRetrievalModel {
     );
   }
 
-  /// Generate session name based on site and timestamp
   static String generateSessionName(String siteName, DateTime retrievalDate) {
     final String sanitizedSiteName = siteName.replaceAll(
       RegExp(r'[^a-zA-Z0-9]'),

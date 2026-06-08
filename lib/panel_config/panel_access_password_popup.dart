@@ -10,7 +10,6 @@ import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/panel_config/panel_config_feedback_dialogs.dart';
 import 'package:techno_switch_solar_app/utils/peripheral_cache_to_ble.dart';
 
-/// Per-tile cache saves and navigation after access-code verification.
 class PanelAccessPasswordDelegates {
   PanelAccessPasswordDelegates({
     required this.saveExtOutCache,
@@ -48,15 +47,9 @@ class PanelAccessPasswordDelegates {
 
   final void Function(BuildContext dialogContext) openLogRetrievalLoading;
 
-  /// When [isConfigLogBulkApply] succeeds: run apply chain (and optional UI).
   final Future<void> Function()? afterBulkApplyAccessGranted;
 }
 
-/// Removes the modal route that contains [routeContext] from its [Navigator].
-///
-/// [Navigator.pop(context)] always pops the **top** route on that navigator.
-/// After bulk apply, delegates may push a success dialog on top; popping would
-/// dismiss that dialog and leave the access ("Applying…") route visible.
 void _removeOverlayRouteFor(BuildContext routeContext) {
   if (!routeContext.mounted) return;
   final route = ModalRoute.of(routeContext);
@@ -88,9 +81,6 @@ Future<void> showPanelAccessPasswordPopup({
   bool isAdcSetup = false,
   bool isConfigLogBulk = false,
   bool isConfigLogBulkApply = false,
-
-  /// When false (e.g. dashboard Config tile), bulk config uses generic copy only,
-  /// not live [BleProcess.processDesc] strings in the access dialog.
   bool showDetailedConfigLogBulkBleProgressInAccessDialog = true,
   String? mode,
   Future<void> Function()? onDownloadComplete,
@@ -137,12 +127,7 @@ Future<void> showPanelAccessPasswordPopup({
     accessKeyValidationTimer = null;
   }
 
-  /// Prevents scheduling [afterBulkApplyAccessGranted] twice when access stays
-  /// valid but [navigatingToDeviceConnecting] is reset in the bulk `finally`
-  /// (duplicate [ValueListenableBuilder] rebuilds would otherwise enqueue
-  /// another post-frame bulk apply).
   var configLogBulkApplyChainScheduled = false;
-
   final TextEditingController accessController = TextEditingController();
   final FocusNode focusNode = FocusNode();
   final accessKey = bleProcess.accessKey;

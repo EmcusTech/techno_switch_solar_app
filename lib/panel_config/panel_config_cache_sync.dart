@@ -3,7 +3,6 @@ import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/utils/peripheral_config_snapshot.dart';
 import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
 
-/// Refresh triggers for peripheral setup bottom sheets (increment after cache write).
 class PanelConfigRefreshNotifiers {
   PanelConfigRefreshNotifiers({
     required this.relay,

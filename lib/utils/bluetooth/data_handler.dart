@@ -15,7 +15,6 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
-import 'package:techno_switch_solar_app/models/ble/ble_data_structure_model.dart';
 import 'package:techno_switch_solar_app/models/frame_data.dart';
 import 'package:techno_switch_solar_app/utils/bluetooth/ble_frame_utils.dart';
 import 'package:techno_switch_solar_app/utils/bluetooth/ble_notify_data_handler.dart';
@@ -23,7 +22,6 @@ import 'package:techno_switch_solar_app/utils/bluetooth/data_transfer_manager.da
 import 'package:techno_switch_solar_app/utils/encryption_utils.dart';
 import 'package:techno_switch_solar_app/utils/logger.dart';
 import 'data_helper.dart';
-import 'data_packet_generator.dart';
 
 /// Converts bytes to ASCII representation (printable chars or dots)
 String _bytesToAscii(List<int> bytes) {
@@ -40,28 +38,6 @@ String _bytesToAscii(List<int> bytes) {
 
 /// A utility class for handling data related operations, such as extracting firmware versions and verifying CRC.
 class DataHandler {
-  /// Extracts the payload data from a given packet.
-  ///
-  /// This function takes a packet represented as a string and extracts the payload
-  /// data from it. It skips the preamble, command, CRC, and end byte sections of
-  /// the packet to retrieve the payload. The extracted payload data is returned as a string.
-  String getPayloadFromPacket(String packet) {
-    String payload = "";
-
-    int crcAndEndByteLength = 8;
-    int preambleAndCommandLength = 14;
-
-    for (
-      int i = preambleAndCommandLength;
-      i < packet.length - crcAndEndByteLength;
-      i++
-    ) {
-      payload = payload + packet[i];
-    }
-    Logger("::::::Key Value $payload");
-    return payload;
-  }
-
   /// Creating chunks of large data packet for sending to the ble
   List<List<int>> generateChunksForConfigPayload(List<int> payload) {
     List<List<int>> payloadChunkList = <List<int>>[];
@@ -260,58 +236,6 @@ class DataHandler {
     return trimmedDataValue;
   }
 
-  /// Converts a payload represented as a hexadecimal string to big-endian byte order.
-  ///
-  /// This function takes a hexadecimal string representing the payload data,
-  /// converts it to a list of bytes, then to a `Uint8List`, and finally converts
-  /// it to big-endian byte order using a `BleDataStructure`. The resulting
-  /// big-endian payload is returned as a hexadecimal string.
-  String convertPayloadToBigEndian({required String payLoadHexString}) {
-    List<int> payLoadDataBytes = hexToBytes(payLoadHexString);
-    Uint8List unit8Data = Uint8List.fromList(payLoadDataBytes);
-    BleDataStructure bleStruct = BleDataStructure.fromBytes(unit8Data);
-
-    /// Convert each value to hexadecimal and concatenate them
-    String result =
-        bleStruct.u16_member.toRadixString(16).padLeft(4, '0') +
-        bleStruct.u8_member.toRadixString(16).padLeft(2, '0') +
-        bleStruct.au8_msg
-            .map((int e) => e.toRadixString(16).padLeft(2, '0'))
-            .join('') +
-        bleStruct.u16_u16_data.toRadixString(16).padLeft(4, '0');
-
-    return result;
-  }
-
-  /// Decrypts the received data packet and parses it into a `FrameData` object.
-  Future<FrameData?> decryptTheDataPacket(List<int> dataPacket) async {
-    try {
-      String hexString = bytesToHex(dataPacket);
-
-      /// Decrypt received data
-      List<int>? decryptedData = await EncryptionUtils().decryptData(hexString);
-      FrameData parsedFrame = DataTransferManager().parseRxFrame(
-        decryptedData!,
-      );
-
-      /// Convert decrypted data to big-endian format
-      if (parsedFrame.payloadData.length > 4) {
-        String bigEndianFormatedData = DataHandler().convertPayloadToBigEndian(
-          payLoadHexString: parsedFrame.payloadData.join(),
-        );
-        Logger(":::::::::::::::Payload Got Here::::::::::::");
-        Logger(bigEndianFormatedData);
-
-        parsedFrame.payloadData = <String>[bigEndianFormatedData];
-      }
-
-      return parsedFrame;
-    } catch (e) {
-      // TODO(username): message.
-      return null;
-    }
-  }
-
   /// Decrypts the received data packet and parses it into a `FrameData` object.
   Future<FrameData?> decryptTheDataPacketWithoutConversion(
     List<int> dataPacket,
@@ -407,56 +331,6 @@ class DataHandler {
       // TODO(username): message.
       return null;
     }
-  }
-
-  /// Converts a payload represented as a hexadecimal string to little-endian byte order.
-  ///
-  /// This function takes a hexadecimal string representing the payload data,
-  /// converts it to a list of bytes, then to a `Uint8List`, and finally converts
-  /// it to little-endian byte order using a `BleDataStructure`. The resulting
-  /// little-endian payload is returned as a `Uint8List`.
-  Uint8List convertPayloadToLittleEndian({required String payLoadHexString}) {
-    List<int> payLoadDataBytes = hexToBytes(payLoadHexString);
-    Uint8List unit8Data = Uint8List.fromList(payLoadDataBytes);
-    BleDataStructure bleStruct = BleDataStructure.fromBytesBigEndian(unit8Data);
-    Uint8List littleEndianPayLoad = bleStruct.toBytes();
-
-    return littleEndianPayLoad;
-  }
-
-  /// Converts a hexadecimal string to little-endian byte order.
-  ///
-  /// This function first extracts payload data from the provided hexadecimal string
-  /// using a `DataHandler`. It then converts the payload data to little-endian byte order
-  /// and generates a data packet from the converted payload. The resulting data packet
-  /// is returned as a list of integers.
-  ///
-  /// Parameters:
-  ///   - hexString: The hexadecimal string to be converted to little-endian byte order.
-  ///
-  /// Returns:
-  ///   A list of integers representing the data packet in little-endian byte order.
-  ///
-  /// Ensure that the provided hexadecimal string represents valid data
-  /// that can be converted to little-endian byte order.
-
-  List<int> convertItToLittleEndian(String hexString) {
-    String payLoadData = DataHandler().getPayloadFromPacket(hexString);
-    Logger("BEFORE CONVERTING:::::>$payLoadData");
-    Uint8List convertedPayLoad = DataHandler().convertPayloadToLittleEndian(
-      payLoadHexString: payLoadData,
-    );
-    Logger("AFTER CONVERTING:::::>$convertedPayLoad");
-
-    String payLoadDataFrame = bytesToHex(convertedPayLoad);
-
-    List<int> dataPacket = generateDataPacketFromPayload(payLoadDataFrame);
-    Logger("::::::::::::<Data Packet Generated After Little ENDIAN>::::::::::");
-    Logger(dataPacket.toString());
-    String dataPacketInHex = bytesToHex(dataPacket);
-    Logger(dataPacketInHex);
-
-    return dataPacket;
   }
 
   bool frameValidation(FrameData? data, {Function(String)? errorCode}) {

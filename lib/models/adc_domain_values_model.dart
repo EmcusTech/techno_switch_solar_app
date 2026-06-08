@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:techno_switch_solar_app/models/adc_input_model.dart';
 
 class AdcValues {

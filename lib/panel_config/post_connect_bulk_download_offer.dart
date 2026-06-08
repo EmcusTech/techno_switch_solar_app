@@ -22,24 +22,6 @@ PanelConfigRefreshNotifiers _ephemeralPanelRefreshNotifiers() {
   );
 }
 
-/// After access-code validation on a normal connect: offer the same optional
-/// full config download as create-site. If the user accepts, runs bulk download
-/// with in-dialog BLE progress ([useDialogOnlyBulkProgress]).
-///
-/// When [awaitDownloadIfAccepted] is true (e.g. tap-to-connect before pushing
-/// [ProjectDashboardScreen]), the future completes after download finishes so the
-/// host route is not disposed while the progress dialog is showing. When false
-/// (e.g. reconnect while already on the dashboard), download runs in parallel
-/// like create-site.
-/// When [showConfigLogCompareAfterDownload] is true (e.g. tap-to-connect with
-/// [awaitDownloadIfAccepted]: true), bulk download skips writing to disk until
-/// the user resolves the Config Log sheet (or dismisses, then we save panel to app).
-///
-/// When [panelHadNoSiteBeforeConnect] is true (no DB row for this panel, or
-/// [site_id] was null before site assignment during this connect flow), bulk
-/// download persists BLE state to disk immediately—same as “Use panel data in
-/// app”—and the Config Log compare dialog is skipped so navigation can go
-/// straight to [ProjectDashboardScreen].
 Future<void> offerOptionalFullConfigDownloadAfterConnect({
   required BuildContext context,
   required bool Function() isMounted,
@@ -66,8 +48,7 @@ Future<void> offerOptionalFullConfigDownloadAfterConnect({
   final bleManager = Get.find<BleManager>();
   final bleController = Get.find<BleLogController>();
   final notifiers = refreshNotifiers ?? _ephemeralPanelRefreshNotifiers();
-  final nav =
-      navigatingToDeviceConnecting ?? ValueNotifier<bool>(false);
+  final nav = navigatingToDeviceConnecting ?? ValueNotifier<bool>(false);
 
   final bool deferWritingCachesUntilConfigLogResolution =
       awaitDownloadIfAccepted &&
@@ -101,9 +82,7 @@ Future<void> offerOptionalFullConfigDownloadAfterConnect({
           navigatingToDeviceConnecting: nav,
         );
       }
-    } catch (_) {
-      // Error surfaced in popup / snackbar; continue to dashboard.
-    }
+    } catch (_) {}
   } else {
     coordinator.startBulkDownload(context: context, isMounted: isMounted);
   }
