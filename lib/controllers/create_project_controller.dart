@@ -10,10 +10,7 @@ import 'package:techno_switch_solar_app/models/create_project/input_data.dart';
 import 'package:techno_switch_solar_app/models/create_project/lbus_data.dart';
 import 'package:techno_switch_solar_app/models/panel_type_config.dart';
 
-/// Controller class that manages all state for the create project flow
-/// This follows the Single Responsibility Principle and separation of concerns
 class CreateProjectController extends ChangeNotifier {
-  // Controllers for text inputs
   final TextEditingController siteNameController = TextEditingController(
     text: '',
   );
@@ -33,7 +30,6 @@ class CreateProjectController extends ChangeNotifier {
     text: '',
   );
 
-  // Data models
   SiteFormData siteData = SiteFormData();
   PanelFormData panelData = PanelFormData();
   GeneralSettingsData generalSettings = GeneralSettingsData();
@@ -45,20 +41,14 @@ class CreateProjectController extends ChangeNotifier {
   LBusData lbusData = LBusData();
   ExtinguishingData extinguishingData = ExtinguishingData();
 
-  // Validation errors
   Map<String, String> validationErrors = {};
 
-  /// True after create-site flow has connected to a panel whose model matches
-  /// [panelData.selectedPanelType] (verified via BLE `receivedPanelName`).
   bool createProjectPanelBleVerified = false;
 
-  /// Set after a successful connect step; used for embedded peripheral sheets.
   DiscoveredDevice? connectedDevice;
 
-  /// User skipped BLE connect on step 2; config is cache-only until a panel connects.
   bool skippedPanelConnect = false;
 
-  /// Logical panel id entered when [skippedPanelConnect] is true.
   String manualPanelId = '';
 
   void setCreateProjectPanelBleVerified(bool value) {
@@ -94,7 +84,6 @@ class CreateProjectController extends ChangeNotifier {
     }
   }
 
-  /// Initialize listeners for text controllers to sync with data models
   void _initializeControllerListeners() {
     siteNameController.addListener(() {
       siteData = siteData.copyWith(siteName: siteNameController.text);
@@ -141,7 +130,6 @@ class CreateProjectController extends ChangeNotifier {
     });
   }
 
-  // Panel Type Management
   void updatePanelType(String? panelType) {
     panelData = panelData.copyWith(selectedPanelType: panelType);
 
@@ -161,7 +149,6 @@ class CreateProjectController extends ChangeNotifier {
     notifyListeners();
   }
 
-  // General Settings Management
   void updateGeneralSetting(String label, String value) {
     switch (label) {
       case 'Level Timeout':
@@ -205,7 +192,6 @@ class CreateProjectController extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Zone Management
   void setExpandedZone(String? zoneName) {
     zoneSettings.expandedZone = zoneName;
     notifyListeners();
@@ -216,7 +202,6 @@ class CreateProjectController extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Sounder Management
   void setExpandedSounder(String? sounderName) {
     sounderData.expandedSounder = sounderName;
     notifyListeners();
@@ -233,7 +218,6 @@ class CreateProjectController extends ChangeNotifier {
         sounderSettings.fireSoundTone = value;
         break;
       case 'Sounder Delay':
-        // Handle both fire and ext sounder delay
         if (sounderSettings.fireSounderDelay == value) {
           sounderSettings.fireSounderDelay = value;
         } else {
@@ -253,13 +237,11 @@ class CreateProjectController extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Input Management
   void updateInputSetting(String label, String value) {
     inputData.updateField(label, value);
     notifyListeners();
   }
 
-  // Relay Management
   void setExpandedRelay(String? relayName) {
     relayData.expandedRelay = relayName;
     notifyListeners();
@@ -270,7 +252,6 @@ class CreateProjectController extends ChangeNotifier {
     notifyListeners();
   }
 
-  // L-BUS Management
   void setExpandedLBus(String? lbusName) {
     lbusData.expandedLBus = lbusName;
     notifyListeners();
@@ -281,18 +262,15 @@ class CreateProjectController extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Extinguishing Management
   void updateExtinguishingSetting(String label, String value) {
     extinguishingData.updateField(label, value);
     notifyListeners();
   }
 
-  // Validation
   bool validateStep(int step) {
     validationErrors.clear();
 
     if (step == 1) {
-      // Site Creation validation
       if (siteNameController.text.trim().isEmpty) {
         validationErrors['siteName'] = 'Site Name is required';
       }
@@ -301,7 +279,6 @@ class CreateProjectController extends ChangeNotifier {
             'SAQCC Registration Number is required';
       }
     } else if (step == 2) {
-      // Panel Selection validation
       if (panelNameController.text.trim().isEmpty) {
         validationErrors['panelName'] = 'Panel Name is required';
       }
