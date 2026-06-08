@@ -10,8 +10,6 @@ import 'package:techno_switch_solar_app/services/firmware_upgrade_service.dart';
 class UpdatesController extends GetxController {
   final FirmwareUpgradeService _firmwareService = FirmwareUpgradeService();
   final FirmwarePacketService _packetService = FirmwarePacketService();
-
-  // UI-observed state
   final Rx<DownloadStatus> downloadingStatus = DownloadStatus.downloading.obs;
   final RxBool isFileCrcMatched = false.obs;
   final RxDouble progressbarCount = 0.0.obs;
@@ -39,7 +37,6 @@ class UpdatesController extends GetxController {
     selectedFirmwareFile = file;
   }
 
-  /// STEP 1 - CRC, trailer fields, and optional product ID
   FirmwareValidationResult? validateSelectedFile({String? requiredProductId}) {
     if (selectedFirmwareFile == null) return null;
 
@@ -54,7 +51,6 @@ class UpdatesController extends GetxController {
     return result;
   }
 
-  /// STEP 2 - Packet preparation (service-based)
   Future<bool> preparePackets() async {
     if (selectedFirmwareFile == null ||
         validationResult == null ||
@@ -75,7 +71,6 @@ class UpdatesController extends GetxController {
     }
   }
 
-  /// STEP 3 - Progress simulation (replace with BLE sender later)
   Future<void> simulateUpgradeProgress({
     Duration packetDelay = const Duration(milliseconds: 35),
   }) async {
@@ -90,14 +85,6 @@ class UpdatesController extends GetxController {
     final logicalTotal = packetResult!.totalLogicalPackets;
 
     int logicalIndex = 0;
-
-    // await Get.find<BleLogController>().bleManager.sendStartFirmwarePacket();
-
-    // await Future.delayed(const Duration(milliseconds: 300));
-
-    // await Get.find<BleLogController>().bleManager.sendFirmwarePacket(
-    //   Uint8List.fromList(packets[0].bytes),
-    // );
 
     for (final packet in packets) {
       print("Sending packet: ${packet.sequence}");
