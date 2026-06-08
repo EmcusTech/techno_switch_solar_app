@@ -2983,12 +2983,10 @@ class BleProcess {
   }
 
   void resetProcessModuleSetupState() {
-    // Terminal guards
     isOtaCompleted = false;
     processNextOtaFrame = true;
     logRetreivalEnded = false;
 
-    // Counters
     checkForCtrlCmdRsp = 0;
     checkForAccessKeyCmdRsp = 0;
     checkDipSetCmdRsp = 0;
@@ -3020,15 +3018,10 @@ class BleProcess {
     checkForLiveEventsRetrievalRes = 0;
     processDesc.value = "";
     checkForAdcSetupFetchRes = 0;
-    // Time tracking
-    // logStartingTime = null;
-    // logEndTime = null;
 
-    // OTA state
     bleManager.otaProcessState = OtaProcessState.sendNetworkPacket;
     isNetworkPacketProcess.value = true;
 
-    // RX timeout
     _rxTimeoutTimer?.cancel();
     _rxTimeoutTimer = null;
 
@@ -3036,22 +3029,13 @@ class BleProcess {
     _otherPacketsRxTimeoutTimer = null;
 
     cancelOperationDeadline();
-
-    // UI notifiers
-    // validEventLogCount.value = 0;
-    // read1000LogsCount.value = 0;
-    // validEventLogs.value = [];
-    // isValidLogRecieved.value = false;
-    // panelName.value = "";
   }
 
   void resetProcessLBusSetupState() {
-    // Terminal guards
     isOtaCompleted = false;
     processNextOtaFrame = true;
     logRetreivalEnded = false;
 
-    // Counters
     checkForCtrlCmdRsp = 0;
     checkForAccessKeyCmdRsp = 0;
     checkDipSetCmdRsp = 0;
@@ -3084,15 +3068,10 @@ class BleProcess {
     checkForLiveEventsRetrievalRes = 0;
     processDesc.value = "";
     checkForAdcSetupFetchRes = 0;
-    // Time tracking
-    // logStartingTime = null;
-    // logEndTime = null;
 
-    // OTA state
     bleManager.otaProcessState = OtaProcessState.sendNetworkPacket;
     isNetworkPacketProcess.value = true;
 
-    // RX timeout
     _rxTimeoutTimer?.cancel();
     _rxTimeoutTimer = null;
 
@@ -3100,22 +3079,13 @@ class BleProcess {
     _otherPacketsRxTimeoutTimer = null;
 
     cancelOperationDeadline();
-
-    // UI notifiers
-    // validEventLogCount.value = 0;
-    // read1000LogsCount.value = 0;
-    // validEventLogs.value = [];
-    // isValidLogRecieved.value = false;
-    // panelName.value = "";
   }
 
   void resetProcessSounderSetupState() {
-    // Terminal guards
     isOtaCompleted = false;
     processNextOtaFrame = true;
     logRetreivalEnded = false;
 
-    // Counters
     checkForCtrlCmdRsp = 0;
     checkForAccessKeyCmdRsp = 0;
     checkDipSetCmdRsp = 0;
@@ -3148,15 +3118,10 @@ class BleProcess {
     checkForLiveEventsRetrievalRes = 0;
     processDesc.value = "";
     checkForAdcSetupFetchRes = 0;
-    // Time tracking
-    // logStartingTime = null;
-    // logEndTime = null;
 
-    // OTA state
     bleManager.otaProcessState = OtaProcessState.sendNetworkPacket;
     isNetworkPacketProcess.value = true;
 
-    // RX timeout
     _rxTimeoutTimer?.cancel();
     _rxTimeoutTimer = null;
 
@@ -3164,22 +3129,13 @@ class BleProcess {
     _otherPacketsRxTimeoutTimer = null;
 
     cancelOperationDeadline();
-
-    // UI notifiers
-    // validEventLogCount.value = 0;
-    // read1000LogsCount.value = 0;
-    // validEventLogs.value = [];
-    // isValidLogRecieved.value = false;
-    // panelName.value = "";
   }
 
   void resetProcessServiceDueState() {
-    // Terminal guards
     isOtaCompleted = false;
     processNextOtaFrame = true;
     logRetreivalEnded = false;
 
-    // Counters
     checkForCtrlCmdRsp = 0;
     checkForAccessKeyCmdRsp = 0;
     checkDipSetCmdRsp = 0;
@@ -3212,15 +3168,10 @@ class BleProcess {
     checkForLiveEventsRetrievalRes = 0;
     processDesc.value = "";
     checkForAdcSetupFetchRes = 0;
-    // Time tracking
-    // logStartingTime = null;
-    // logEndTime = null;
 
-    // OTA state
     bleManager.otaProcessState = OtaProcessState.sendNetworkPacket;
     isNetworkPacketProcess.value = true;
 
-    // RX timeout
     _rxTimeoutTimer?.cancel();
     _rxTimeoutTimer = null;
 
@@ -3228,22 +3179,13 @@ class BleProcess {
     _otherPacketsRxTimeoutTimer = null;
 
     cancelOperationDeadline();
-
-    // UI notifiers
-    // validEventLogCount.value = 0;
-    // read1000LogsCount.value = 0;
-    // validEventLogs.value = [];
-    // isValidLogRecieved.value = false;
-    // panelName.value = "";
   }
 
   void resetProcessAccessCodeSetupState() {
-    // Terminal guards
     isOtaCompleted = false;
     processNextOtaFrame = true;
     logRetreivalEnded = false;
 
-    // Counters
     checkForCtrlCmdRsp = 0;
     checkForAccessKeyCmdRsp = 0;
     checkDipSetCmdRsp = 0;
@@ -3276,15 +3218,10 @@ class BleProcess {
     checkForLiveEventsRetrievalRes = 0;
     processDesc.value = "";
     checkForAdcSetupFetchRes = 0;
-    // Time tracking
-    // logStartingTime = null;
-    // logEndTime = null;
 
-    // OTA state
     bleManager.otaProcessState = OtaProcessState.sendNetworkPacket;
     isNetworkPacketProcess.value = true;
 
-    // RX timeout
     _rxTimeoutTimer?.cancel();
     _rxTimeoutTimer = null;
 
@@ -3292,22 +3229,13 @@ class BleProcess {
     _otherPacketsRxTimeoutTimer = null;
 
     cancelOperationDeadline();
-
-    // UI notifiers
-    // validEventLogCount.value = 0;
-    // read1000LogsCount.value = 0;
-    // validEventLogs.value = [];
-    // isValidLogRecieved.value = false;
-    // panelName.value = "";
   }
 
   void resetProcessPanelInfoSetupState() {
-    // Terminal guards
     isOtaCompleted = false;
     processNextOtaFrame = true;
     logRetreivalEnded = false;
 
-    // Counters
     checkForCtrlCmdRsp = 0;
     checkForAccessKeyCmdRsp = 0;
     checkDipSetCmdRsp = 0;
@@ -3340,15 +3268,10 @@ class BleProcess {
     checkForLiveEventsRetrievalRes = 0;
     processDesc.value = "";
     checkForAdcSetupFetchRes = 0;
-    // Time tracking
-    // logStartingTime = null;
-    // logEndTime = null;
 
-    // OTA state
     bleManager.otaProcessState = OtaProcessState.sendNetworkPacket;
     isNetworkPacketProcess.value = true;
 
-    // RX timeout
     _rxTimeoutTimer?.cancel();
     _rxTimeoutTimer = null;
 
@@ -3356,22 +3279,13 @@ class BleProcess {
     _otherPacketsRxTimeoutTimer = null;
 
     cancelOperationDeadline();
-
-    // UI notifiers
-    // validEventLogCount.value = 0;
-    // read1000LogsCount.value = 0;
-    // validEventLogs.value = [];
-    // isValidLogRecieved.value = false;
-    // panelName.value = "";
   }
 
   void resetProcessGeneralModuleSetupState() {
-    // Terminal guards
     isOtaCompleted = false;
     processNextOtaFrame = true;
     logRetreivalEnded = false;
 
-    // Counters
     checkForCtrlCmdRsp = 0;
     checkForAccessKeyCmdRsp = 0;
     checkDipSetCmdRsp = 0;
@@ -3404,15 +3318,10 @@ class BleProcess {
     checkForLiveEventsRetrievalRes = 0;
     processDesc.value = "";
     checkForAdcSetupFetchRes = 0;
-    // Time tracking
-    // logStartingTime = null;
-    // logEndTime = null;
 
-    // OTA state
     bleManager.otaProcessState = OtaProcessState.sendNetworkPacket;
     isNetworkPacketProcess.value = true;
 
-    // RX timeout
     _rxTimeoutTimer?.cancel();
     _rxTimeoutTimer = null;
 
@@ -3420,22 +3329,13 @@ class BleProcess {
     _otherPacketsRxTimeoutTimer = null;
 
     cancelOperationDeadline();
-
-    // UI notifiers
-    // validEventLogCount.value = 0;
-    // read1000LogsCount.value = 0;
-    // validEventLogs.value = [];
-    // isValidLogRecieved.value = false;
-    // panelName.value = "";
   }
 
   void resetProcessAdcSetupState() {
-    // Terminal guards
     isOtaCompleted = false;
     processNextOtaFrame = true;
     logRetreivalEnded = false;
 
-    // Counters
     checkForCtrlCmdRsp = 0;
     checkForAccessKeyCmdRsp = 0;
     checkDipSetCmdRsp = 0;
@@ -3468,15 +3368,10 @@ class BleProcess {
     checkForLiveEventsRetrievalRes = 0;
     processDesc.value = "";
     checkForAdcSetupFetchRes = 0;
-    // Time tracking
-    // logStartingTime = null;
-    // logEndTime = null;
 
-    // OTA state
     bleManager.otaProcessState = OtaProcessState.sendNetworkPacket;
     isNetworkPacketProcess.value = true;
 
-    // RX timeout
     _rxTimeoutTimer?.cancel();
     _rxTimeoutTimer = null;
 
@@ -3484,13 +3379,6 @@ class BleProcess {
     _otherPacketsRxTimeoutTimer = null;
 
     cancelOperationDeadline();
-
-    // UI notifiers
-    // validEventLogCount.value = 0;
-    // read1000LogsCount.value = 0;
-    // validEventLogs.value = [];
-    // isValidLogRecieved.value = false;
-    // panelName.value = "";
   }
 
   String formatDuration(Duration d) {
@@ -3499,10 +3387,7 @@ class BleProcess {
     return '$m:${s.toString().padLeft(2, '0')}';
   }
 
-  /// MAIN BLE STATE MACHINE
   Future<void> bleProcess() async {
-    // await Future.delayed(const Duration(milliseconds: 200));
-    // print("bleStateMachineState: ${bleManager.bleCurrentState}");
     switch (bleManager.bleStateMachineState) {
       case BleStates.PROCESS_PANEL_EVT_LOG_READ:
         bleCurrentState = BleStates.PROCESS_PANEL_EVT_LOG_READ;
@@ -3511,7 +3396,6 @@ class BleProcess {
 
       case BleStates.PROCESS_WAIT_RSP:
         print("Waiting state");
-        // await Future.delayed(const Duration(seconds: 1));
         break;
 
       case BleStates.IDLE:
@@ -3534,7 +3418,6 @@ class BleProcess {
   }
 
   sendAuthPacket() async {
-    // processDesc.value = "Sending Auth Packet";
     await bleManager.sendAuthnMsg();
     bleManager.bleStateMachineState = BleStates.PROCESS_WAIT_RSP;
     bleCurrentState = BleStates.SEND_AUTHN_MSG;
@@ -3548,7 +3431,6 @@ class BleProcess {
     bleCurrentState = BleStates.SEND_EXT_OUT_SETUP_CMD_FETCH_PACKET;
   }
 
-  /// Setup / handshake phases only - not while streaming event logs (ctrl rsp phase 2).
   bool _shouldBumpOperationDeadline() {
     if (isOtaCompleted) return false;
     if (checkForCtrlCmdRsp == 2) return false;
@@ -3632,23 +3514,19 @@ class BleProcess {
     isAccessKeyValid.value = false;
   }
 
-  // Public method to cancel timer
   void cancelRxTimeout() {
     _rxTimeoutTimer?.cancel();
     _otherPacketsRxTimeoutTimer?.cancel();
     cancelOperationDeadline();
   }
 
-  /// Parse event log data from payload
   LogModel? _parseEventLogFromPayload(List<int> payload, int eventLogNum) {
     try {
-      // Check if payload has enough data (should be 216 bytes for full packet)
       if (payload.length < 130) {
         print("Payload too short for event log parsing");
         return null;
       }
 
-      // Extract timestamp (bytes 12-16) - little endian
       List<int> timestamp = payload.sublist(25, 29);
       int timestampDecimal =
           timestamp[3] |
@@ -3656,25 +3534,11 @@ class BleProcess {
           (timestamp[1] << 16) |
           (timestamp[0] << 24);
 
-      // Use current time if timestamp is invalid
       DateTime eventTime =
           timestampDecimal != 0x00
               ? TimestampConverter.clockTimeFromTimeStamp(timestampDecimal)
               : DateTime.now();
 
-      // Extract Event ID (bytes 126-129) - big endian
-
-      //not using in the protocol document of 110
-      // int eventId = 0;
-      // if (payload.length >= 130) {
-      //   eventId =
-      //       (payload[126] << 24) |
-      //       (payload[127] << 16) |
-      //       (payload[128] << 8) |
-      //       (payload[129] << 0);
-      // }
-
-      // Extract event text (bytes 42-124)
       String evtTextAscii = "";
       if (payload.length >= 124) {
         List<int> evtText = payload.sublist(55, 137);
@@ -3687,7 +3551,6 @@ class BleProcess {
         }
       }
 
-      // Extract panel source
       String panelSource = "";
       if (payload.length >= 31) {
         if (payload[22] == EventConstants.evtTypeNetworkAddress) {
@@ -3728,12 +3591,11 @@ class BleProcess {
       print("I/O number: ${payload[30] - payload[31]}");
       print("I/O type: ${payload[33]}");
 
-      // Create LogModel
       return LogModel(
         panelText: panelSource,
         eventId: eventLogNum.toString(),
         eventDateTime: eventTime,
-        panelNo: payload.length > 0 ? payload[13].toString() : null,
+        panelNo: payload.isNotEmpty ? payload[13].toString() : null,
         lBusNo: payload.length > 1 ? payload[14].toString() : null,
         moduleNo: payload.length > 2 ? payload[15].toString() : null,
         eventStatus:
@@ -3780,7 +3642,6 @@ class BleProcess {
     }
   }
 
-  // Dispose method to clean up resources
   void dispose() {
     _rxTimeoutTimer?.cancel();
     cancelOperationDeadline();
@@ -3791,7 +3652,6 @@ class BleProcess {
     isValidLogRecieved.dispose();
   }
 
-  // Call this after every TX
   void startRxTimeout({bool bumpOperationDeadline = true}) {
     maxOtherPacketsRetriesReached.value = false;
     if (isOtaCompleted) return;
@@ -3814,9 +3674,8 @@ class BleProcess {
       print("RX timeout [$rxTimeoutRetryCount / $maxRxRetries] - no response");
 
       processDesc.value =
-          "No response from device (${rxTimeoutRetryCount}/$maxRxRetries)";
+          "No response from device ($rxTimeoutRetryCount/$maxRxRetries)";
 
-      //Exceeded retry limit → count toward network-flow restart cap
       if (rxTimeoutRetryCount >= maxRxRetries) {
         print("RX retry limit reached.");
         processDesc.value = "Device not responding.";
@@ -3824,7 +3683,6 @@ class BleProcess {
         return;
       }
 
-      // 🔁 Retry allowed
       bleManager.resetPollInFlight();
       processNextOtaFrame = true;
 
@@ -3837,7 +3695,6 @@ class BleProcess {
     Get.find<BleLogController>().restartNetworkFlow();
   }
 
-  /// Called when a network/other-packet response does not arrive in time.
   Future<void> handleNetworkFlowNoResponse() async {
     if (_networkFlowFailureHandling || isOtaCompleted) return;
 
@@ -3889,7 +3746,6 @@ class BleProcess {
     );
   }
 
-  /// HANDLE OTA EVENT LOG
   Future<void> handleTsEvtLogRead() async {
     if (isOtaCompleted ||
         bleManager.otaProcessState == OtaProcessState.notInUse) {
@@ -3899,9 +3755,6 @@ class BleProcess {
     if (processNextOtaFrame) {
       startRxTimeout();
       processNextOtaFrame = false;
-      // print(
-      //   "TS EVT LOG READ STATE: ${bleManager.otaProcessState}, processNextOtaFrame: $processNextOtaFrame",
-      // );
 
       switch (bleManager.otaProcessState) {
         case OtaProcessState.sendNetworkPacket:
@@ -3926,7 +3779,6 @@ class BleProcess {
         case OtaProcessState.notInUse:
           break;
         case OtaProcessState.otaWaitRsp:
-          // await Future.delayed(const Duration(milliseconds: 100));
           break;
         case OtaProcessState.sendExtOutSetupFetchCmdPkt:
           break;
@@ -3987,7 +3839,6 @@ class BleProcess {
     }
   }
 
-  /// RUN STATE MACHINE LOOP
   Future<void> runStateMachine() async {
     if (_isStateMachineRunning) return;
 
@@ -3999,7 +3850,6 @@ class BleProcess {
         await Future.delayed(const Duration(milliseconds: 5));
       } catch (e) {
         print("Exception in state machine: $e");
-        // await bleManager.shutdown(connectedDeviceId.value);
         break;
       }
     }
