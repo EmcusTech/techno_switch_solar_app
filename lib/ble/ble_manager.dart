@@ -4071,54 +4071,49 @@ class BleManager {
   }
 
   Future<void> sendLBusEnabledBusDataFetchCmdPkt({required int lBusNo}) async {
-    // Create 216-byte buffer
-    Uint8List u8_pkt = Uint8List(216);
+    Uint8List u8Pkt = Uint8List(216);
 
-    // Update global counters
     u8TxPktCnt += 1;
 
-    u8_pkt[0] = 0xFE;
-    u8_pkt[1] = 0x01;
-    u8_pkt[2] = 0x00;
+    u8Pkt[0] = 0xFE;
+    u8Pkt[1] = 0x01;
+    u8Pkt[2] = 0x00;
+    u8Pkt[3] = 0x01;
+    u8Pkt[4] = u8TxPktCnt & 0xFF;
+    u8Pkt[5] = u8RxPktCnt & 0xFF;
+    u8Pkt[6] = 0x00;
+    u8Pkt[8] = lBusNo;
+    u8Pkt[11] = 0x00;
+    u8Pkt[12] = 0x01;
 
-    u8_pkt[3] = 0x01; // pkt type
-    u8_pkt[4] = u8TxPktCnt & 0xFF; // tx pkt num
-    u8_pkt[5] = u8RxPktCnt & 0xFF; // rx pkt num
-    u8_pkt[6] = 0x00; // network number
-    u8_pkt[8] = lBusNo;
-    u8_pkt[11] = 0x00; // socket number
-    u8_pkt[12] = 0x01; // command
-    // Compute checksum on first 213 bytes
-    int checksum = toolsFletcherChecksum(u8_pkt.sublist(0, 213));
+    int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
-    u8_pkt[213] = (checksum >> 8) & 0xFF;
-    u8_pkt[214] = checksum & 0xFF;
-    u8_pkt[215] = 0xFD;
+    u8Pkt[213] = (checksum >> 8) & 0xFF;
+    u8Pkt[214] = checksum & 0xFF;
+    u8Pkt[215] = 0xFD;
 
     print(
-      "TX/RX: TRANSMIT: L-Bus Enabled Bus $lBusNo Data Fetch Command time: ${DateTime.now().toIso8601String()}, packet: ${u8_pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+      "TX/RX: TRANSMIT: L-Bus Enabled Bus $lBusNo Data Fetch Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
     );
 
-    await sendSmallDataFrame(0x1000, 216, u8_pkt);
+    await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
 
   Future<void> sendLBusSetupApplyCmdPkt({required int lBusNo}) async {
-    // Create 216-byte buffer
-    Uint8List u8_pkt = Uint8List(216);
+    Uint8List u8Pkt = Uint8List(216);
 
     final data = lBusSetupDataList.value[lBusNo - 1];
-
     final String lBusDeviceText = data.deviceText;
     final List<int> lBusDeviceTextBytes = lBusDeviceText.codeUnits;
     final lBusDeviceTextLength = lBusDeviceTextBytes.length;
 
     print("lBusDeviceText: $lBusDeviceText");
     print("lBusProduct: ${data.product}");
-
     final initialindex = 23;
+
     for (int i = 0; i < lBusDeviceTextLength; i++) {
       if (i < lBusDeviceTextLength) {
-        u8_pkt[initialindex + i] = lBusDeviceTextBytes[i];
+        u8Pkt[initialindex + i] = lBusDeviceTextBytes[i];
       }
     }
 
@@ -4130,185 +4125,168 @@ class BleManager {
       idLed: data.idLed == 'Yes' ? LBusIdLed.on : LBusIdLed.off,
     );
 
-    // Update global counters
     u8TxPktCnt += 1;
 
-    u8_pkt[0] = 0xFE;
-    u8_pkt[1] = 0x01;
-    u8_pkt[2] = 0x00;
-
-    u8_pkt[3] = 0x01; // pkt type
-    u8_pkt[4] = u8TxPktCnt & 0xFF; // tx pkt num
-    u8_pkt[5] = u8RxPktCnt & 0xFF; // rx pkt num
-    u8_pkt[6] = 0x00; // network number
-    u8_pkt[10] = 0x81; // mode
-    u8_pkt[11] = 0x00; // socket number
-    u8_pkt[12] = 0x10; // command
-    u8_pkt[13] = lBusNo; // L-Bus No
-    u8_pkt[14] =
+    u8Pkt[0] = 0xFE;
+    u8Pkt[1] = 0x01;
+    u8Pkt[2] = 0x00;
+    u8Pkt[3] = 0x01;
+    u8Pkt[4] = u8TxPktCnt & 0xFF;
+    u8Pkt[5] = u8RxPktCnt & 0xFF;
+    u8Pkt[6] = 0x00;
+    u8Pkt[10] = 0x81;
+    u8Pkt[11] = 0x00;
+    u8Pkt[12] = 0x10;
+    u8Pkt[13] = lBusNo;
+    u8Pkt[14] =
         lBusSetupDataList.value[lBusNo - 1].product == 'Rhino103R'
             ? 0x16
             : 0x00;
-    u8_pkt[17] = LBusRepeaterStatusCodec.encode(statusConfig);
-    u8_pkt[18] = 0x01;
-    u8_pkt[19] = 0x64;
-    u8_pkt[20] = lBusNo == 1 ? 0x00 : 0x02;
-    u8_pkt[21] = lBusNo == 1 ? 0x50 : 0x58;
-    u8_pkt[22] = lBusDeviceTextLength & 0xFF;
+    u8Pkt[17] = LBusRepeaterStatusCodec.encode(statusConfig);
+    u8Pkt[18] = 0x01;
+    u8Pkt[19] = 0x64;
+    u8Pkt[20] = lBusNo == 1 ? 0x00 : 0x02;
+    u8Pkt[21] = lBusNo == 1 ? 0x50 : 0x58;
+    u8Pkt[22] = lBusDeviceTextLength & 0xFF;
 
-    // Compute checksum on first 213 bytes
-    int checksum = toolsFletcherChecksum(u8_pkt.sublist(0, 213));
+    int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
-    u8_pkt[213] = (checksum >> 8) & 0xFF;
-    u8_pkt[214] = checksum & 0xFF;
-    u8_pkt[215] = 0xFD;
+    u8Pkt[213] = (checksum >> 8) & 0xFF;
+    u8Pkt[214] = checksum & 0xFF;
+    u8Pkt[215] = 0xFD;
 
     print(
-      "TX/RX: TRANSMIT: L-Bus Setup Apply Command time: ${DateTime.now().toIso8601String()}, packet: ${u8_pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+      "TX/RX: TRANSMIT: L-Bus Setup Apply Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
     );
 
-    await sendSmallDataFrame(0x1000, 216, u8_pkt);
+    await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
 
   Future<void> sendSounderSetupRelayFetchCmdPkt({
     required int outputMaxZone,
   }) async {
-    // Create 216-byte buffer
-    Uint8List u8_pkt = Uint8List(216);
+    Uint8List u8Pkt = Uint8List(216);
 
-    // Update global counters
     u8TxPktCnt += 1;
 
-    u8_pkt[0] = 0xFE;
-    u8_pkt[1] = 0x01;
-    u8_pkt[2] = 0x00;
+    u8Pkt[0] = 0xFE;
+    u8Pkt[1] = 0x01;
+    u8Pkt[2] = 0x00;
+    u8Pkt[3] = 0x01;
+    u8Pkt[4] = u8TxPktCnt & 0xFF;
+    u8Pkt[5] = u8RxPktCnt & 0xFF;
+    u8Pkt[6] = 0x00;
+    u8Pkt[10] = 0x01;
+    u8Pkt[11] = 0x00;
+    u8Pkt[12] = 0x07;
+    u8Pkt[13] = 0x00;
+    u8Pkt[14] = outputMaxZone;
 
-    u8_pkt[3] = 0x01; // pkt type
-    u8_pkt[4] = u8TxPktCnt & 0xFF; // tx pkt num
-    u8_pkt[5] = u8RxPktCnt & 0xFF; // rx pkt num
-    u8_pkt[6] = 0x00; // network number
-    u8_pkt[10] = 0x01; // mode
-    u8_pkt[11] = 0x00; // socket number
-    u8_pkt[12] = 0x07; // command
-    u8_pkt[13] = 0x00; // output max zone byte 1
-    u8_pkt[14] = outputMaxZone; // output max zone byte 2
+    int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
-    // Compute checksum on first 213 bytes
-    int checksum = toolsFletcherChecksum(u8_pkt.sublist(0, 213));
-
-    u8_pkt[213] = (checksum >> 8) & 0xFF;
-    u8_pkt[214] = checksum & 0xFF;
-    u8_pkt[215] = 0xFD;
+    u8Pkt[213] = (checksum >> 8) & 0xFF;
+    u8Pkt[214] = checksum & 0xFF;
+    u8Pkt[215] = 0xFD;
 
     print(
-      "TX/RX: TRANSMIT: Sounder Setup Relay $outputMaxZone Fetch Command time: ${DateTime.now().toIso8601String()}, packet: ${u8_pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+      "TX/RX: TRANSMIT: Sounder Setup Relay $outputMaxZone Fetch Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
     );
 
-    await sendSmallDataFrame(0x1000, 216, u8_pkt);
+    await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
 
   Future<void> sendSounderSetupGeneralFetchCmdPkt() async {
-    // Create 216-byte buffer
-    Uint8List u8_pkt = Uint8List(216);
+    Uint8List u8Pkt = Uint8List(216);
 
-    // Update global counters
     u8TxPktCnt += 1;
 
-    u8_pkt[0] = 0xFE;
-    u8_pkt[1] = 0x01;
-    u8_pkt[2] = 0x00;
+    u8Pkt[0] = 0xFE;
+    u8Pkt[1] = 0x01;
+    u8Pkt[2] = 0x00;
+    u8Pkt[3] = 0x01;
+    u8Pkt[4] = u8TxPktCnt & 0xFF;
+    u8Pkt[5] = u8RxPktCnt & 0xFF;
+    u8Pkt[6] = 0x00;
+    u8Pkt[10] = 0x01;
+    u8Pkt[11] = 0x00;
+    u8Pkt[12] = 0x14;
 
-    u8_pkt[3] = 0x01; // pkt type
-    u8_pkt[4] = u8TxPktCnt & 0xFF; // tx pkt num
-    u8_pkt[5] = u8RxPktCnt & 0xFF; // rx pkt num
-    u8_pkt[6] = 0x00; // network number
-    u8_pkt[10] = 0x01; // mode
-    u8_pkt[11] = 0x00; // socket number
-    u8_pkt[12] = 0x14; // command
+    int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
-    // Compute checksum on first 213 bytes
-    int checksum = toolsFletcherChecksum(u8_pkt.sublist(0, 213));
-
-    u8_pkt[213] = (checksum >> 8) & 0xFF;
-    u8_pkt[214] = checksum & 0xFF;
-    u8_pkt[215] = 0xFD;
+    u8Pkt[213] = (checksum >> 8) & 0xFF;
+    u8Pkt[214] = checksum & 0xFF;
+    u8Pkt[215] = 0xFD;
 
     print(
-      "TX/RX: TRANSMIT: Sounder Setup General Fetch Command time: ${DateTime.now().toIso8601String()}, packet: ${u8_pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+      "TX/RX: TRANSMIT: Sounder Setup General Fetch Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
     );
 
-    await sendSmallDataFrame(0x1000, 216, u8_pkt);
+    await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
 
   Future<void> sendSounderSetupZoneFetchCmdPkt({
     required int zoneMaxZone,
   }) async {
-    // Create 216-byte buffer
-    Uint8List u8_pkt = Uint8List(216);
+    Uint8List u8Pkt = Uint8List(216);
 
-    // Update global counters
     u8TxPktCnt += 1;
 
-    u8_pkt[0] = 0xFE;
-    u8_pkt[1] = 0x01;
-    u8_pkt[2] = 0x00;
+    u8Pkt[0] = 0xFE;
+    u8Pkt[1] = 0x01;
+    u8Pkt[2] = 0x00;
+    u8Pkt[3] = 0x01;
+    u8Pkt[4] = u8TxPktCnt & 0xFF;
+    u8Pkt[5] = u8RxPktCnt & 0xFF;
+    u8Pkt[6] = 0x00;
+    u8Pkt[10] = 0x01;
+    u8Pkt[11] = 0x00;
+    u8Pkt[12] = 0x19;
+    u8Pkt[13] = zoneMaxZone;
 
-    u8_pkt[3] = 0x01; // pkt type
-    u8_pkt[4] = u8TxPktCnt & 0xFF; // tx pkt num
-    u8_pkt[5] = u8RxPktCnt & 0xFF; // rx pkt num
-    u8_pkt[6] = 0x00; // network number
-    u8_pkt[10] = 0x01; // mode
-    u8_pkt[11] = 0x00; // socket number
-    u8_pkt[12] = 0x19; // command
-    u8_pkt[13] = zoneMaxZone; // ext max zone
-    // Compute checksum on first 213 bytes
-    int checksum = toolsFletcherChecksum(u8_pkt.sublist(0, 213));
+    int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
-    u8_pkt[213] = (checksum >> 8) & 0xFF;
-    u8_pkt[214] = checksum & 0xFF;
-    u8_pkt[215] = 0xFD;
+    u8Pkt[213] = (checksum >> 8) & 0xFF;
+    u8Pkt[214] = checksum & 0xFF;
+    u8Pkt[215] = 0xFD;
 
     print(
-      "TX/RX: TRANSMIT: Sounder Setup Zone $zoneMaxZone Fetch Command time: ${DateTime.now().toIso8601String()}, packet: ${u8_pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+      "TX/RX: TRANSMIT: Sounder Setup Zone $zoneMaxZone Fetch Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
     );
 
-    await sendSmallDataFrame(0x1000, 216, u8_pkt);
+    await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
 
   Future<void> sendSounderSetupExtOutFetchCmdPkt({
     required int extMaxZone,
   }) async {
-    // Create 216-byte buffer
-    Uint8List u8_pkt = Uint8List(216);
+    Uint8List u8Pkt = Uint8List(216);
 
-    // Update global counters
     u8TxPktCnt += 1;
 
-    u8_pkt[0] = 0xFE;
-    u8_pkt[1] = 0x01;
-    u8_pkt[2] = 0x00;
+    u8Pkt[0] = 0xFE;
+    u8Pkt[1] = 0x01;
+    u8Pkt[2] = 0x00;
+    u8Pkt[3] = 0x01;
+    u8Pkt[4] = u8TxPktCnt & 0xFF;
+    u8Pkt[5] = u8RxPktCnt & 0xFF;
+    u8Pkt[6] = 0x00;
+    u8Pkt[10] = 0x01;
+    u8Pkt[11] = 0x00;
+    u8Pkt[12] = 0x1B;
+    u8Pkt[13] = 0x01;
+    u8Pkt[14] = extMaxZone;
 
-    u8_pkt[3] = 0x01; // pkt type
-    u8_pkt[4] = u8TxPktCnt & 0xFF; // tx pkt num
-    u8_pkt[5] = u8RxPktCnt & 0xFF; // rx pkt num
-    u8_pkt[6] = 0x00; // network number
-    u8_pkt[10] = 0x01; // mode
-    u8_pkt[11] = 0x00; // socket number
-    u8_pkt[12] = 0x1B; // command
-    u8_pkt[13] = 0x01;
-    u8_pkt[14] = extMaxZone; // ext max zone
-    // Compute checksum on first 213 bytes
-    int checksum = toolsFletcherChecksum(u8_pkt.sublist(0, 213));
+    int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
-    u8_pkt[213] = (checksum >> 8) & 0xFF;
-    u8_pkt[214] = checksum & 0xFF;
-    u8_pkt[215] = 0xFD;
+    u8Pkt[213] = (checksum >> 8) & 0xFF;
+    u8Pkt[214] = checksum & 0xFF;
+    u8Pkt[215] = 0xFD;
 
     print(
-      "TX/RX: TRANSMIT: Sounder Setup Ext Out $extMaxZone Fetch Command time: ${DateTime.now().toIso8601String()}, packet: ${u8_pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+      "TX/RX: TRANSMIT: Sounder Setup Ext Out $extMaxZone Fetch Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
     );
 
-    await sendSmallDataFrame(0x1000, 216, u8_pkt);
+    await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
 
   Future<void> sendSounderSetupRelayApplyCmdPkt({
