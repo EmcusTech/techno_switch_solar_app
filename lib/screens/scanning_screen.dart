@@ -1,7 +1,5 @@
-// scanning_screen.dart
 import 'dart:async';
 import 'dart:math';
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
@@ -35,13 +33,7 @@ enum ScanType { usb, bluetooth }
 class ScanningScreen extends StatefulWidget {
   final bool? isLiveEvent;
   final bool? isLiveEventLogs;
-
-  /// When set (e.g. create-site wizard), after access-code validation the
-  /// panel model from [BleProcess.receivedPanelName] must match this string.
-  /// On success, this route is popped with `true` unless [onCreateProjectPanelVerified] is set.
   final String? createProjectExpectedPanelType;
-
-  /// If non-null, called instead of [Navigator.pop] when create-project verification succeeds.
   final VoidCallback? onCreateProjectPanelVerified;
 
   const ScanningScreen({
@@ -65,7 +57,7 @@ class _ScanningScreenState extends State<ScanningScreen>
   bool _isScanning = false;
   bool _showSelection = true;
   ScanType? _selectedScanType;
-  static const int _scanDurationSeconds = 30; // longer so logs are visible
+  static const int _scanDurationSeconds = 30;
   int _remainingSeconds = _scanDurationSeconds;
 
   final BluetoothService _bluetoothService = BluetoothService();
@@ -75,25 +67,19 @@ class _ScanningScreenState extends State<ScanningScreen>
 
   late final AnimationController _sweepController;
 
-  // Slot assignment (stable positions)
-  final Map<String, int> _assignedSlot = {}; // deviceKey -> slotIndex
-  final Map<int, String> _slotToDevice = {}; // slotIndex -> deviceKey
-  final Map<String, DateTime> _lastSeen = {}; // deviceKey -> last seen
+  final Map<String, int> _assignedSlot = {};
+  final Map<int, String> _slotToDevice = {};
+  final Map<String, DateTime> _lastSeen = {};
 
   final int maxSlots = 12;
-  final int staleTimeoutSeconds = 20; // longer to avoid flapping
+  final int staleTimeoutSeconds = 20;
 
-  // UI: track which keys were just assigned to pulse them
   final Map<String, bool> _justAssigned = {};
 
   final BleManager _bleManager = Get.find<BleManager>();
 
-  /// Drives [ScanningAnimation] pause; paired with [_sweepController] in
-  /// [_pauseScanAnimations] / [_resumeScanAnimations].
   final ValueNotifier<bool> _scanAnimationsPaused = ValueNotifier(false);
 
-  /// Ensures we only pause radar/ripples once per connection attempt when BLE
-  /// links ([isConnectedNotifier]).
   bool _bleConnectPauseApplied = false;
 
   void _pauseScanAnimations() {
@@ -117,7 +103,6 @@ class _ScanningScreenState extends State<ScanningScreen>
   }) async {
     if (!mounted) return null;
 
-    // If there are no sites at all, force create flow.
     if (sites.isEmpty) {
       final shouldCreate = await showDialog<bool>(
         context: context,
@@ -172,8 +157,6 @@ class _ScanningScreenState extends State<ScanningScreen>
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 20),
-
-                  // Actions
                   Row(
                     children: [
                       Expanded(
@@ -258,7 +241,7 @@ class _ScanningScreenState extends State<ScanningScreen>
             sites.length < maxVisibleSites ? sites.length : maxVisibleSites;
 
         final listHeight =
-            visibleCount * siteRowHeight + ((visibleCount - 1) * 8); // spacing
+            visibleCount * siteRowHeight + ((visibleCount - 1) * 8);
 
         return StatefulBuilder(
           builder: (_, setState) {
@@ -275,7 +258,6 @@ class _ScanningScreenState extends State<ScanningScreen>
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // ───────── Icon ─────────
                     Container(
                       width: 64,
                       height: 64,
@@ -291,10 +273,7 @@ class _ScanningScreenState extends State<ScanningScreen>
                         ),
                       ),
                     ),
-
                     const SizedBox(height: 16),
-
-                    // ───────── Title ─────────
                     Text(
                       'Select a site',
                       style: GoogleFonts.inter(
@@ -304,9 +283,7 @@ class _ScanningScreenState extends State<ScanningScreen>
                       ),
                       textAlign: TextAlign.center,
                     ),
-
                     const SizedBox(height: 8),
-
                     Text(
                       'Choose the site where this panel should be assigned.',
                       style: GoogleFonts.inter(
@@ -316,10 +293,7 @@ class _ScanningScreenState extends State<ScanningScreen>
                       ),
                       textAlign: TextAlign.center,
                     ),
-
                     const SizedBox(height: 20),
-
-                    // ───────── Site List (dynamic height) ─────────
                     SizedBox(
                       height: listHeight.toDouble(),
                       child: ListView.separated(
@@ -415,10 +389,7 @@ class _ScanningScreenState extends State<ScanningScreen>
                         },
                       ),
                     ),
-
                     const SizedBox(height: 20),
-
-                    // ───────── Actions ─────────
                     Column(
                       children: [
                         SizedBox(
@@ -446,9 +417,7 @@ class _ScanningScreenState extends State<ScanningScreen>
                             ),
                           ),
                         ),
-
                         const SizedBox(height: 12),
-
                         Row(
                           children: [
                             Expanded(
@@ -535,12 +504,13 @@ class _ScanningScreenState extends State<ScanningScreen>
     final bleName = device.name.trim();
     if (bleName.isEmpty) return null;
 
-    final recoveredSiteId = await PanelSiteConnectFlow.tryTechnoswitchRecoveredSite(
-      context: context,
-      device: device,
-      panelService: _panelService,
-      siteService: _siteService,
-    );
+    final recoveredSiteId =
+        await PanelSiteConnectFlow.tryTechnoswitchRecoveredSite(
+          context: context,
+          device: device,
+          panelService: _panelService,
+          siteService: _siteService,
+        );
     if (recoveredSiteId == -1) return null;
     if (recoveredSiteId != null) return recoveredSiteId;
 
@@ -554,9 +524,7 @@ class _ScanningScreenState extends State<ScanningScreen>
           await _panelService.getPanelByBleName(bleName);
       final existingSiteId = existingPanel?.siteId;
       if (existingSiteId != null) return existingSiteId;
-    } catch (_) {
-      // Ignore and fall back to prompting user.
-    }
+    } catch (_) {}
 
     final sites = await _siteService.getAllSites();
     final pickedSiteId = await _promptUserToPickOrCreateSite(
@@ -632,10 +600,10 @@ class _ScanningScreenState extends State<ScanningScreen>
         await _bluetoothService.requestPermissions();
       } catch (_) {}
 
-      final poweredOn = await _bluetooth_service_ensureSafe();
+      final poweredOn = await bluetoothServiceEnsureSafe();
       if (poweredOn) {
         await _bleResultsSub?.cancel();
-        _bleResultsSub = _bluetooth_service_scanListener();
+        _bleResultsSub = bluetoothServiceScanListener();
         try {
           await _bluetoothService.startScanning();
         } catch (_) {}
@@ -665,14 +633,13 @@ class _ScanningScreenState extends State<ScanningScreen>
     });
   }
 
-  // small wrapper to get stream subscription with proper casting
-  StreamSubscription _bluetooth_service_scanListener() {
+  StreamSubscription bluetoothServiceScanListener() {
     return _bluetoothService.scanResultsStream.listen((results) {
       if (mounted) _handleNewScanResults(results.cast<dynamic>());
     });
   }
 
-  Future<bool> _bluetooth_service_ensureSafe() async {
+  Future<bool> bluetoothServiceEnsureSafe() async {
     try {
       return await _bluetoothService.ensurePoweredOn();
     } catch (_) {
@@ -680,10 +647,7 @@ class _ScanningScreenState extends State<ScanningScreen>
     }
   }
 
-  void _showBluetoothOffDialog({
-    // kept for signature compatibility
-    required BuildContext context,
-  }) {
+  void _showBluetoothOffDialog({required BuildContext context}) {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -786,7 +750,6 @@ class _ScanningScreenState extends State<ScanningScreen>
     }
   }
 
-  // --- KEY PART: robust device key extraction (unchanged) ---
   String? _computeStableKey(dynamic device) {
     try {
       if (device == null) return null;
@@ -905,7 +868,6 @@ class _ScanningScreenState extends State<ScanningScreen>
     return h;
   }
 
-  // ----- RE-ADDED HELPERS: _findFreeSlot and _hashToSlot -----
   int? _findFreeSlot() {
     for (int i = 0; i < maxSlots; i++) {
       if (!_slotToDevice.containsKey(i)) return i;
@@ -917,9 +879,7 @@ class _ScanningScreenState extends State<ScanningScreen>
     final h = _simpleHash(key);
     return h % maxSlots;
   }
-  // ----------------------------------------------------------
 
-  // --- Handle scan results and assign slots (unchanged behavior) ---
   void _handleNewScanResults(List<dynamic> results) {
     final Map<String, dynamic> keyToDevice = {};
 
@@ -934,8 +894,6 @@ class _ScanningScreenState extends State<ScanningScreen>
         if (free != null) {
           _assignedSlot[key] = free;
           _slotToDevice[free] = key;
-
-          // mark as just assigned to pulse UI
           _justAssigned[key] = true;
           Timer(const Duration(milliseconds: 900), () {
             if (mounted) {
@@ -961,7 +919,6 @@ class _ScanningScreenState extends State<ScanningScreen>
       }
     }
 
-    // Remove stale
     final cutoff = DateTime.now().subtract(
       Duration(seconds: staleTimeoutSeconds),
     );
@@ -977,7 +934,6 @@ class _ScanningScreenState extends State<ScanningScreen>
       _justAssigned.remove(sid);
     }
 
-    // Build ordered list of devices present (by slot order)
     final Map<int, dynamic> devicesBySlot = {};
     for (var entry in keyToDevice.entries) {
       final k = entry.key;
@@ -996,34 +952,6 @@ class _ScanningScreenState extends State<ScanningScreen>
 
   String? _deviceKeyByObject(dynamic device) {
     return _computeStableKey(device);
-  }
-
-  // String _deviceLabel(DiscoveredDevice device) {
-  //   try {
-  //     final name = device.name;
-  //     return name;
-  //   } catch (_) {
-  //     return device.toString();
-  //   }
-  // }
-
-  // Builds a small details widget to show under the image
-  Widget _deviceDetailsWidget(String label, String meta) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          style: GoogleFonts.inter(
-            fontSize: 12,
-            color: Colors.black87,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ],
-    );
   }
 
   void _stopScanningForConnection() {
@@ -1059,10 +987,6 @@ class _ScanningScreenState extends State<ScanningScreen>
       Future.delayed(const Duration(milliseconds: 300));
 
       if (mounted) {
-        // Create-site wizard awaits [Navigator.push(ScanningScreen)]. If we
-        // [pushReplacement] to [ScannedScreen], [ScanningScreen] is removed and
-        // that future completes with null — panel verify never reaches the wizard.
-        // Push [ScannedScreen] on top and bubble success with [Navigator.pop(true)].
         final isCreateWizard =
             widget.createProjectExpectedPanelType?.trim().isNotEmpty ?? false;
 
@@ -1089,10 +1013,6 @@ class _ScanningScreenState extends State<ScanningScreen>
     }
   }
 
-  /// Create-site wizard [Navigator.push]es [ScanningScreen] and awaits `true`.
-  /// If we [pushReplacement] to [ScannedScreen], the wizard's future completes
-  /// with null; this pushes [ScannedScreen] on top and [Navigator.pop(true)]s
-  /// [ScanningScreen] when verification succeeds.
   Future<void> _openScannedForCreateWizard(
     MaterialPageRoute<bool> route,
   ) async {
@@ -1260,7 +1180,7 @@ class _ScanningScreenState extends State<ScanningScreen>
   }
 
   Widget _buildScanningView() {
-    const double radarSize = 340; // slightly larger for more space
+    const double radarSize = 340;
 
     return Stack(
       alignment: Alignment.center,
@@ -1275,39 +1195,6 @@ class _ScanningScreenState extends State<ScanningScreen>
             ),
           ],
         ),
-        // Center(
-        //   child: SizedBox(
-        //     width: radarSize,
-        //     height: radarSize,
-        //     child: Stack(
-        //       children: [
-        //         Positioned.fill(
-        //           child: CustomPaint(
-        //             painter: _RadarPainter(sweepAnimation: _sweepController),
-        //           ),
-        //         ),
-        //         Positioned.fill(
-        //           child: AnimatedBuilder(
-        //             animation: _sweep_controller_proxy(),
-        //             builder:
-        //                 (c, _) => CustomPaint(
-        //                   painter: _SweepPainter(
-        //                     progress: _sweepController.value,
-        //                   ),
-        //                 ),
-        //           ),
-        //         ),
-        //         ..._buildSlotWidgets(
-        //           radarSize,
-        //           center,
-        //           fixedRadius,
-        //           cardWidth,
-        //           cardHeight,
-        //         ),
-        //       ],
-        //     ),
-        //   ),
-        // ),
         Align(
           alignment: Alignment.center,
           child: ScanningAnimation(pausedListenable: _scanAnimationsPaused),
@@ -1342,29 +1229,6 @@ class _ScanningScreenState extends State<ScanningScreen>
         Column(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
-            // if (_discoveredDevices.isNotEmpty)
-            // Padding(
-            //   padding: const EdgeInsets.symmetric(horizontal: 28),
-            //   child: Container(
-            //     width: double.infinity,
-            //     padding: const EdgeInsets.all(16),
-            //     margin: const EdgeInsets.only(bottom: 20),
-            //     decoration: BoxDecoration(
-            //       color: Colors.green.withOpacity(0.1),
-            //       borderRadius: BorderRadius.circular(12),
-            //       border: Border.all(color: Colors.green.withOpacity(0.3)),
-            //     ),
-            //     child: Text(
-            //       '${_discoveredDevices.length} device(s) found',
-            //       textAlign: TextAlign.center,
-            //       style: GoogleFonts.inter(
-            //         fontSize: 14,
-            //         fontWeight: FontWeight.w600,
-            //         color: Colors.green[700],
-            //       ),
-            //     ),
-            //   ),
-            // ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 28),
               child: GestureDetector(
@@ -1418,7 +1282,7 @@ class _ScanningScreenState extends State<ScanningScreen>
                 ),
                 Positioned.fill(
                   child: AnimatedBuilder(
-                    animation: _sweep_controller_proxy(),
+                    animation: sweepControllerProxy(),
                     builder:
                         (c, _) => CustomPaint(
                           painter: _SweepPainter(
@@ -1427,13 +1291,6 @@ class _ScanningScreenState extends State<ScanningScreen>
                         ),
                   ),
                 ),
-                // ..._buildSlotWidgets(
-                //   radarSize,
-                //   center,
-                //   fixedRadius,
-                //   cardWidth,
-                //   cardHeight,
-                // ),
               ],
             ),
           ),
@@ -1459,7 +1316,6 @@ class _ScanningScreenState extends State<ScanningScreen>
 
     final widgets = <Widget>[];
 
-    // Sort slots so order is stable
     final slots = _slotToDevice.keys.toList()..sort();
 
     for (int i = 0; i < slots.length; i++) {
@@ -1557,178 +1413,8 @@ class _ScanningScreenState extends State<ScanningScreen>
     );
   }
 
-  // Small proxy function so analyzer doesn't complain about using controller directly in AnimatedBuilder
-  Animation<double> _sweep_controller_proxy() => _sweepController;
+  Animation<double> sweepControllerProxy() => _sweepController;
 
-  // ignore: unused_element
-  List<Widget> _buildSlotWidgets(
-    double radarSize,
-    double center,
-    double fixedRadius,
-    double cardWidth,
-    double cardHeight,
-  ) {
-    final widgets = <Widget>[];
-
-    for (int slot = 0; slot < maxSlots; slot++) {
-      final angle = _angleForSlot(slot);
-      final dx = center + fixedRadius * cos(angle);
-      final dy = center + fixedRadius * sin(angle);
-
-      final deviceKey = _slotToDevice[slot];
-      if (deviceKey != null && _lastSeen.containsKey(deviceKey)) {
-        final DiscoveredDevice device = _discoveredDevices.firstWhere(
-          (d) => _deviceKeyByObject(d) == deviceKey,
-          orElse: () => null,
-        );
-        final label = device.name;
-        final justAssigned = _justAssigned.containsKey(deviceKey);
-
-        // Card position: center the card at dx,dy (clamped)
-        final left = (dx - cardWidth / 2).clamp(4.0, radarSize - cardWidth);
-        final top = (dy - cardHeight / 2).clamp(4.0, radarSize - cardHeight);
-
-        widgets.add(
-          Positioned(
-            key: ValueKey('card-$deviceKey'),
-            left: left,
-            top: top,
-            width: cardWidth,
-            height: cardHeight,
-            child: AnimatedOpacity(
-              duration: const Duration(milliseconds: 260),
-              opacity: 1.0,
-              child: AnimatedScale(
-                scale: justAssigned ? 1.06 : 1.0,
-                duration: const Duration(milliseconds: 420),
-                curve: Curves.easeOutBack,
-                child: GestureDetector(
-                  onTap: () => _onDeviceSelected(device),
-                  child: Material(
-                    color: Colors.white.withOpacity(0.95),
-                    elevation: 6,
-                    borderRadius: BorderRadius.circular(12),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.12),
-                            blurRadius: 8,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        children: [
-                          // image area (top)
-                          Container(
-                            height: cardHeight * 0.6,
-                            width: double.infinity,
-                            decoration: BoxDecoration(
-                              color: Colors.grey.shade50,
-                              borderRadius: const BorderRadius.only(
-                                topLeft: Radius.circular(12),
-                                topRight: Radius.circular(12),
-                              ),
-                            ),
-                            child: Center(
-                              child: Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: SvgPicture.asset(
-                                  'assets/svgs/panel_icon.svg',
-                                  width: cardWidth * 0.5,
-                                  height: cardWidth * 0.5,
-                                ),
-                              ),
-                            ),
-                          ),
-
-                          // details area (bottom)
-                          Expanded(
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 8,
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  _deviceDetailsWidget(
-                                    label,
-                                    _shortMeta(device),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        );
-      }
-    }
-    return widgets;
-  }
-
-  // Create a short meta string (e.g., id or address) for the card
-  String _shortMeta(dynamic device) {
-    try {
-      final dyn = device;
-      try {
-        final ad = (dyn as dynamic).advertisementData;
-        if (ad != null) {
-          final tx = (ad as dynamic).txPowerLevel;
-          final advName = (ad as dynamic).advName ?? (ad as dynamic).localName;
-          final r = (dyn as dynamic).rssi;
-          final partRssi = r != null ? 'RSSI ${r.toString()}' : '';
-          if (advName != null) {
-            return advName.toString();
-          }
-          if (tx != null) return 'Tx $tx ${partRssi}';
-        }
-      } catch (_) {}
-      if (device is Map) {
-        return (device['id'] ?? device['address'] ?? '').toString();
-      }
-      final id = (dyn as dynamic).id ?? (dyn as dynamic).address;
-      return id?.toString() ?? '';
-    } catch (_) {
-      return '';
-    }
-  }
-
-  double _angleForSlot(int slotIndex) {
-    return (slotIndex * (2 * pi / maxSlots));
-  }
-
-  // helper to show a short represention of device for logs (kept for debug if needed)
-  // ignore: unused_element
-  String _shortRepr(dynamic d) {
-    try {
-      if (d == null) return 'null';
-      if (d is Map) {
-        final n = d['name'] ?? d['id'] ?? d['address'];
-        return 'Map(${n ?? 'no-name'})';
-      } else {
-        final dyn = d;
-        final name =
-            (dyn as dynamic).name ??
-            (dyn as dynamic).id ??
-            (dyn as dynamic).address;
-        return '${d.runtimeType}(${name ?? d.toString().split('(').first})';
-      }
-    } catch (e) {
-      return d.toString();
-    }
-  }
-
-  /// After session access validation, [receivedPanelName] may arrive slightly later.
   Future<void> _waitForReceivedPanelName(BleLogController bleController) async {
     const attempts = 80;
     for (var i = 0; i < attempts; i++) {
@@ -1884,14 +1570,11 @@ class _ScanningScreenState extends State<ScanningScreen>
               });
             }
 
-            // 🔥 SUCCESS PATH - wait for handshake (encryption + auth) to complete
             if (handshakeComplete &&
                 !hasNavigated &&
                 !maxRetries &&
                 !showNetworkCommError) {
               hasNavigated = true;
-
-              // Close dialog first
               WidgetsBinding.instance.addPostFrameCallback((_) async {
                 if (!dialogContext.mounted) return;
 
@@ -1937,7 +1620,8 @@ class _ScanningScreenState extends State<ScanningScreen>
                       context: context,
                       device: activeDevice,
                       isLiveEvent: widget.isLiveEvent,
-                      onStartValidation: () => bleController.startLogRetrieval(),
+                      onStartValidation:
+                          () => bleController.startLogRetrieval(),
                     );
                     if (!ok) {
                       _bleConnectPauseApplied = false;
@@ -1947,7 +1631,6 @@ class _ScanningScreenState extends State<ScanningScreen>
                   return;
                 }
 
-                // Create-site flow: verify panel model from network exchange, then pop `true` or callback.
                 final expectedPanel =
                     widget.createProjectExpectedPanelType?.trim() ?? '';
                 if (expectedPanel.isNotEmpty) {
@@ -1987,7 +1670,6 @@ class _ScanningScreenState extends State<ScanningScreen>
                   return;
                 }
 
-                // Resolve site
                 final bleNameForSiteLookup = activeDevice.name.trim();
                 final preAssocPanel =
                     await _panelService.getPanelByPanelId(
@@ -2067,7 +1749,6 @@ class _ScanningScreenState extends State<ScanningScreen>
               });
             }
 
-            // 🔥 UI ONLY BELOW - NO NAVIGATION HERE
             return Dialog(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
@@ -2193,7 +1874,6 @@ class _ScanningScreenState extends State<ScanningScreen>
   }
 }
 
-// Painters (unchanged)
 class _RadarPainter extends CustomPainter {
   final Animation<double> sweepAnimation;
   _RadarPainter({required this.sweepAnimation})

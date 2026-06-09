@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:techno_switch_solar_app/screens/home_screen.dart';
 
 class LogRetrievalFailedScreen extends StatefulWidget {
   const LogRetrievalFailedScreen({super.key});
@@ -138,55 +137,5 @@ class _LogRetrievalFailedScreenState extends State<LogRetrievalFailedScreen> {
         ),
       ),
     );
-
-    // @override
-    // Widget build(BuildContext context) {
-    //   return Scaffold(
-    //     body: Center(
-    //       child: Padding(
-    //         padding: const EdgeInsets.symmetric(horizontal: 24.0),
-    //         child: Column(
-    //           // mainAxisAlignment: MainAxisAlignment.center,
-    //           children: [
-    //             SizedBox(height: 100),
-    //             Text(
-    //               "Log Retrieval Failed!",
-    //               style: GoogleFonts.inter(
-    //                 fontSize: 30,
-    //                 fontWeight: FontWeight.bold,
-    //                 color: Color(0xFFEC1D24),
-    //               ),
-    //             ),
-    //             SizedBox(height: 80),
-    // Container(
-    //   decoration: BoxDecoration(
-    //     color: Color(0xFFEC1D24),
-    //     shape: BoxShape.circle,
-    //   ),
-    //   child: Padding(
-    //     padding: const EdgeInsets.all(28.0),
-    //     child: Icon(
-    //       Icons.close_rounded,
-    //       color: Colors.white,
-    //       size: 56,
-    //     ),
-    //   ),
-    // ),
-    //             SizedBox(height: 80),
-    //             Text(
-    //               "Unable to connect to the panel. Please check your connection and try again.",
-    //               style: GoogleFonts.inter(
-    //                 fontSize: 14,
-    //                 fontWeight: FontWeight.w500,
-    //                 color: Color(0xFF666666),
-    //               ),
-    //               textAlign: TextAlign.center,
-    //             ),
-    //           ],
-    //         ),
-    //       ),
-    //     ),
-    //   );
-    // }
   }
 }

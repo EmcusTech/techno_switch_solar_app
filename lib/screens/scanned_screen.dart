@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
 import 'package:flutter_svg/svg.dart';
@@ -25,19 +24,13 @@ import 'package:techno_switch_solar_app/widgets/panel_access_code_dialog.dart';
 import 'package:techno_switch_solar_app/widgets/bootloader_connect_flow.dart';
 import 'package:techno_switch_solar_app/utils/bluetooth_service.dart';
 import 'package:usb_serial/usb_serial.dart';
-// import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
 class ScannedScreen extends StatefulWidget {
-  final List<dynamic>
-  discoveredDevices; // Can hold both UsbDevice and ScanResult
+  final List<dynamic> discoveredDevices;
   final ScanType scanType;
   final bool? isLiveEvent;
   final bool? isLiveEventLogs;
-
-  /// Mirrors [ScanningScreen]: create-site wizard panel type check (see that screen).
   final String? createProjectExpectedPanelType;
-
-  /// If non-null, called instead of [Navigator.pop] when create-project verification succeeds.
   final VoidCallback? onCreateProjectPanelVerified;
 
   const ScannedScreen({
@@ -67,7 +60,6 @@ class _ScannedScreenState extends State<ScannedScreen> {
   }) async {
     if (!mounted) return null;
 
-    // If there are no sites at all, force create flow.
     if (sites.isEmpty) {
       final shouldCreate = await showDialog<bool>(
         context: context,
@@ -122,8 +114,6 @@ class _ScannedScreenState extends State<ScannedScreen> {
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 20),
-
-                  // Actions
                   Row(
                     children: [
                       Expanded(
@@ -208,7 +198,7 @@ class _ScannedScreenState extends State<ScannedScreen> {
             sites.length < maxVisibleSites ? sites.length : maxVisibleSites;
 
         final listHeight =
-            visibleCount * siteRowHeight + ((visibleCount - 1) * 8); // spacing
+            visibleCount * siteRowHeight + ((visibleCount - 1) * 8);
 
         return StatefulBuilder(
           builder: (_, setState) {
@@ -225,7 +215,6 @@ class _ScannedScreenState extends State<ScannedScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // ───────── Icon ─────────
                     Container(
                       width: 64,
                       height: 64,
@@ -241,10 +230,7 @@ class _ScannedScreenState extends State<ScannedScreen> {
                         ),
                       ),
                     ),
-
                     const SizedBox(height: 16),
-
-                    // ───────── Title ─────────
                     Text(
                       'Select a site',
                       style: GoogleFonts.inter(
@@ -254,9 +240,7 @@ class _ScannedScreenState extends State<ScannedScreen> {
                       ),
                       textAlign: TextAlign.center,
                     ),
-
                     const SizedBox(height: 8),
-
                     Text(
                       'Choose the site where this panel should be assigned.',
                       style: GoogleFonts.inter(
@@ -266,10 +250,7 @@ class _ScannedScreenState extends State<ScannedScreen> {
                       ),
                       textAlign: TextAlign.center,
                     ),
-
                     const SizedBox(height: 20),
-
-                    // ───────── Site List (dynamic height) ─────────
                     SizedBox(
                       height: listHeight.toDouble(),
                       child: ListView.separated(
@@ -365,10 +346,7 @@ class _ScannedScreenState extends State<ScannedScreen> {
                         },
                       ),
                     ),
-
                     const SizedBox(height: 20),
-
-                    // ───────── Actions ─────────
                     Column(
                       children: [
                         SizedBox(
@@ -396,9 +374,7 @@ class _ScannedScreenState extends State<ScannedScreen> {
                             ),
                           ),
                         ),
-
                         const SizedBox(height: 12),
-
                         Row(
                           children: [
                             Expanded(
@@ -485,12 +461,13 @@ class _ScannedScreenState extends State<ScannedScreen> {
     final bleName = device.name.trim();
     if (bleName.isEmpty) return null;
 
-    final recoveredSiteId = await PanelSiteConnectFlow.tryTechnoswitchRecoveredSite(
-      context: context,
-      device: device,
-      panelService: _panelService,
-      siteService: _siteService,
-    );
+    final recoveredSiteId =
+        await PanelSiteConnectFlow.tryTechnoswitchRecoveredSite(
+          context: context,
+          device: device,
+          panelService: _panelService,
+          siteService: _siteService,
+        );
     if (recoveredSiteId == -1) return null;
     if (recoveredSiteId != null) return recoveredSiteId;
 
@@ -591,13 +568,9 @@ class _ScannedScreenState extends State<ScannedScreen> {
                   padding: const EdgeInsets.all(30.0),
                   child: GestureDetector(
                     onTap: () async {
-                      // Disconnect Bluetooth before going back to scan
                       await NavigationService.navigateToScanAgain(context);
-
-                      // Then navigate to scanning screen
                       if (context.mounted) {
                         final navigator = Navigator.of(context);
-                        // navigator.pop(); // close dialog
                         navigator.pushAndRemoveUntil(
                           MaterialPageRoute(
                             builder: (_) => const ScanningScreen(),
@@ -944,11 +917,11 @@ class _ScannedScreenState extends State<ScannedScreen> {
                       context: screenContext,
                       device: activeDevice,
                       isLiveEvent: widget.isLiveEvent,
-                      onStartValidation: () => bleController.startLogRetrieval(),
+                      onStartValidation:
+                          () => bleController.startLogRetrieval(),
                     );
                   }
                 } else {
-                  // Create-site flow: verify panel model (matches [ScanningScreen]).
                   final expectedPanel =
                       widget.createProjectExpectedPanelType?.trim() ?? '';
                   if (expectedPanel.isNotEmpty) {
@@ -967,7 +940,8 @@ class _ScannedScreenState extends State<ScannedScreen> {
                     final received =
                         bleController.bleProcess.receivedPanelName.value.trim();
                     if (!_panelTypeMatchesReceived(expectedPanel, received)) {
-                      await bleController.bleManager.disconnectConnectedDevice();
+                      await bleController.bleManager
+                          .disconnectConnectedDevice();
                       if (screenContext.mounted) {
                         await _showWrongPanelTypeDialog(
                           context: screenContext,
@@ -990,8 +964,12 @@ class _ScannedScreenState extends State<ScannedScreen> {
 
                   final bleNameForSiteLookup = activeDevice.name.trim();
                   final preAssocPanel =
-                      await _panelService.getPanelByPanelId(bleNameForSiteLookup) ??
-                      await _panelService.getPanelByBleName(bleNameForSiteLookup);
+                      await _panelService.getPanelByPanelId(
+                        bleNameForSiteLookup,
+                      ) ??
+                      await _panelService.getPanelByBleName(
+                        bleNameForSiteLookup,
+                      );
                   final panelHadNoSiteBeforeConnect =
                       preAssocPanel?.siteId == null;
 
@@ -1015,7 +993,10 @@ class _ScannedScreenState extends State<ScannedScreen> {
                   if (!screenContext.mounted) return;
 
                   if (widget.isLiveEventLogs == true) {
-                    Navigator.of(screenContext, rootNavigator: true).pushReplacement(
+                    Navigator.of(
+                      screenContext,
+                      rootNavigator: true,
+                    ).pushReplacement(
                       MaterialPageRoute(
                         builder:
                             (_) => EventLogScreen(
@@ -1045,8 +1026,7 @@ class _ScannedScreenState extends State<ScannedScreen> {
                       device: activeDevice,
                       awaitDownloadIfAccepted: true,
                       showConfigLogCompareAfterDownload: true,
-                      panelHadNoSiteBeforeConnect:
-                          panelHadNoSiteBeforeConnect,
+                      panelHadNoSiteBeforeConnect: panelHadNoSiteBeforeConnect,
                     );
                     if (!screenContext.mounted) return;
 
@@ -1114,7 +1094,6 @@ class _ScannedScreenState extends State<ScannedScreen> {
                       ),
                     ),
                     SizedBox(height: 16),
-                    // Title
                     Text(
                       showNetworkCommError
                           ? 'Connection problem'
@@ -1133,7 +1112,6 @@ class _ScannedScreenState extends State<ScannedScreen> {
                       textAlign: TextAlign.center,
                     ),
                     SizedBox(height: 8),
-                    // Subtitle
                     Text(
                       maxBleConnectionRetriesReached
                           ? 'Please scan again and connect to the device'
@@ -1189,7 +1167,6 @@ class _ScannedScreenState extends State<ScannedScreen> {
     );
   }
 
-
   Widget _buildDevicesList() {
     return ListView.separated(
       physics: NeverScrollableScrollPhysics(),
@@ -1203,8 +1180,6 @@ class _ScannedScreenState extends State<ScannedScreen> {
         return GestureDetector(
           onTap: () async {
             _showConnectingDialog(device: device, context: context);
-
-            // Start connection
             await Get.find<BleLogController>().connectToDevice(device: device);
           },
           child: Container(
@@ -1221,8 +1196,6 @@ class _ScannedScreenState extends State<ScannedScreen> {
               child: Row(
                 children: [
                   Container(
-                    // width: 48,
-                    // height: 48,
                     decoration: BoxDecoration(
                       color: (widget.scanType == ScanType.usb
                               ? Color(0xFFEC1D24)

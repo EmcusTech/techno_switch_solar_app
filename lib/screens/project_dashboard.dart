@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/ble/ble_session_idle_policy.dart';
@@ -76,8 +75,6 @@ class ProjectDashboardScreen extends StatefulWidget {
 
 class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
   int _selectedIndex = 0;
-
-  /// Holds the device with real manufacturerData after reconnect; survives tab switches.
   DiscoveredDevice? _currentDevice;
 
   void _onDeviceReconnected(DiscoveredDevice device) {
@@ -238,7 +235,6 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
   }
 }
 
-// Create a separate widget for the EventLog content
 class _ProjectDashboardContent extends StatefulWidget {
   final String panelName;
   final String panelVersionNo;
@@ -263,12 +259,10 @@ class _ProjectDashboardContent extends StatefulWidget {
 
 class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
   bool _isUnexpectedDisconnectDialogOpen = false;
-  // Prevent multiple navigations while dialog rebuilds
   final ValueNotifier<bool> _navigatingToDeviceConnecting = ValueNotifier<bool>(
     false,
   );
 
-  // Refresh triggers for peripheral bottom sheets (increment when download completes)
   final ValueNotifier<int> _relayRefreshTrigger = ValueNotifier(0);
   final ValueNotifier<int> _inputRefreshTrigger = ValueNotifier(0);
   final ValueNotifier<int> _zoneRefreshTrigger = ValueNotifier(0);
@@ -282,7 +276,6 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
       ValueNotifier(null);
   final ValueNotifier<bool> _configLogWorking = ValueNotifier(false);
 
-  // Connection state
   bool _isConnecting = false;
   StreamSubscription? _scanSubscription;
   final BluetoothService _bluetoothService = BluetoothService();
@@ -290,10 +283,8 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
   final BleManager _bleManager = Get.find<BleManager>();
   late DiscoveredDevice _selectedDevice;
 
-  /// True after handshake completed — not mere GATT link during connect retries.
   bool _hadEstablishedBleSession = false;
 
-  /// When the user explicitly disconnects (e.g. back + confirm), skip the unexpected-loss dialog.
   bool _suppressUnexpectedBleDisconnectUi = false;
 
   void _closeModalOverlaysAboveDashboard() {
@@ -406,10 +397,8 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     final connected = _bleManager.isConnectedNotifier.value;
     final handshakeComplete = _bleManager.handshakeCompleteNotifier.value;
     final sessionActive = connected && handshakeComplete;
-    final connectInProgress =
-        _isConnecting || _bleManager.isConnectInProgress;
+    final connectInProgress = _isConnecting || _bleManager.isConnectInProgress;
 
-    /// Close disconnect dialog only when the full session is back (not transient GATT).
     if (sessionActive && _isUnexpectedDisconnectDialogOpen) {
       _isUnexpectedDisconnectDialogOpen = false;
 
@@ -426,9 +415,8 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
       _hadEstablishedBleSession = true;
     }
 
-    final lostEstablishedSession = _hadEstablishedBleSession &&
-        !sessionActive &&
-        !connectInProgress;
+    final lostEstablishedSession =
+        _hadEstablishedBleSession && !sessionActive && !connectInProgress;
 
     if (lostEstablishedSession) {
       _hadEstablishedBleSession = false;
@@ -642,7 +630,6 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
             final maxBleConnectionRetriesReached =
                 maxBleConnectionRetriesReachedNotifier.value;
 
-            // Close dialog when handshake is complete (encryption + auth done)
             if (handshakeComplete &&
                 !hasNavigated &&
                 !maxBleConnectionRetriesReached) {
@@ -693,7 +680,6 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                       ),
                     ),
                     SizedBox(height: 16),
-                    // Title
                     Text(
                       maxBleConnectionRetriesReached
                           ? 'Max Connection Retries Reached!'
@@ -777,27 +763,22 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
         throw Exception('Device name is empty');
       }
 
-      // Show connecting dialog
       _showConnectingDialog(device: widget.selectedDevice, context: context);
       dialogShown = true;
 
-      // Request permissions and ensure Bluetooth is on
       await _bluetoothService.requestPermissions();
       final poweredOn = await _bluetoothService.ensurePoweredOn();
       if (!poweredOn) {
         throw Exception('Bluetooth is not enabled');
       }
 
-      // Start scanning
       await _bluetoothService.startScanning();
 
-      // Set up scan listener to find device by name
       final Completer<DiscoveredDevice?> deviceFoundCompleter =
           Completer<DiscoveredDevice?>();
 
       _scanSubscription = _bluetoothService.scanResultsStream.listen((results) {
         for (var result in results) {
-          // Match by full BLE name
           if (result.name == widget.panelName) {
             if (!deviceFoundCompleter.isCompleted) {
               deviceFoundCompleter.complete(result);
@@ -807,7 +788,6 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
         }
       });
 
-      // Wait for device to be found (timeout after 15 seconds)
       final foundDeviceFuture = deviceFoundCompleter.future.timeout(
         const Duration(seconds: 15),
         onTimeout: () => null,
@@ -821,13 +801,11 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
         throw Exception('Device "$deviceName" not found');
       }
 
-      // Connect to the found device
       final bleController = Get.find<BleLogController>();
       await bleController.connectToDevice(device: device);
 
       var activeDevice = device;
 
-      // The connecting dialog closes when handshake completes (~500ms delay).
       await Future.delayed(const Duration(milliseconds: 600));
       if (!mounted) return;
 
@@ -854,8 +832,6 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
 
       widget.onDeviceReconnected?.call(activeDevice);
 
-      // Match the home/scanned flow: require access-code validation after reconnect
-      // (e.g. idle disconnect) so session state and tiles behave like a fresh entry.
       if (!mounted) return;
 
       bleController.bleProcess.clearSessionAccessCode();
@@ -883,13 +859,10 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
         setState(() {
           _isConnecting = false;
         });
-        // Close dialog if it was shown
         if (dialogShown) {
           try {
             Navigator.of(context).pop();
-          } catch (_) {
-            // Dialog might have already been closed
-          }
+          } catch (_) {}
         }
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -908,7 +881,8 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     super.initState();
     _selectedDevice = widget.selectedDevice;
     BleSessionIdlePolicy.suppressFirmwareDisconnectUi.value = false;
-    _hadEstablishedBleSession = _bleManager.isConnectedNotifier.value &&
+    _hadEstablishedBleSession =
+        _bleManager.isConnectedNotifier.value &&
         _bleManager.handshakeCompleteNotifier.value;
     _bleManager.isConnectedNotifier.addListener(_onBleSessionChanged);
     _bleManager.handshakeCompleteNotifier.addListener(_onBleSessionChanged);
@@ -1042,29 +1016,6 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                             ),
                           ),
                         ),
-                        // GestureDetector(
-                        //   onTap: _exportProjectPdf,
-                        //   child: Container(
-                        //     width: 40,
-                        //     height: 40,
-                        //     decoration: BoxDecoration(
-                        //       color: Colors.white,
-                        //       shape: BoxShape.circle,
-                        //       boxShadow: [
-                        //         BoxShadow(
-                        //           color: Colors.black.withOpacity(0.1),
-                        //           blurRadius: 8,
-                        //           offset: const Offset(0, 2),
-                        //         ),
-                        //       ],
-                        //     ),
-                        //     child: const Icon(
-                        //       Icons.picture_as_pdf_outlined,
-                        //       color: Color(0xFF3D3D3D),
-                        //       size: 22,
-                        //     ),
-                        //   ),
-                        // ),
                       ],
                     ),
                   ),
@@ -1095,7 +1046,6 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Drag handle
               Center(
                 child: Container(
                   width: 40,
@@ -1119,29 +1069,6 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
 
               const SizedBox(height: 12),
 
-              // ExportTile(
-              //   icon: Icons.table_chart_outlined,
-              //   title: 'Export as Excel',
-              //   onTap: () async {
-              //     Navigator.pop(context);
-              //     final logs = ble.bleProcess.validEventLogs.value;
-              //     if (logs.isEmpty) return;
-
-              //     await EventLogExcelExporter.export(logs);
-              //   },
-              // ),
-
-              // ExportTile(
-              //   icon: Icons.description_outlined,
-              //   title: 'Export as CSV',
-              //   onTap: () async {
-              //     Navigator.pop(context);
-              //     final logs = ble.bleProcess.validEventLogs.value;
-              //     if (logs.isEmpty) return;
-
-              //     await EventLogCsvExporter.export(logs);
-              //   },
-              // ),
               ExportTile(
                 iconPath: "assets/svgs/share_icon_red.svg",
                 title: 'Export as PDF',
@@ -1206,8 +1133,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     bleController.bleProcess.clearSessionAccessCode();
     final ok = await showPanelAccessCodeGatewayDialog(
       context: context,
-      onStartValidation:
-          () => bleController.startSessionAccessCodeValidation(),
+      onStartValidation: () => bleController.startSessionAccessCodeValidation(),
     );
     if (!ok || !mounted) {
       bleController.bleManager.disconnectConnectedDevice();
@@ -1440,35 +1366,6 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                     textAlign: TextAlign.center,
                   ),
                 ),
-                // SizedBox(height: 24),
-                // Visibility(
-                //   visible: message != "Diagnostics",
-                //   child: SizedBox(
-                //     width: double.infinity,
-                //     child: GestureDetector(
-                //       onTap: () {
-                //         Navigator.of(dialogContext, rootNavigator: true).pop();
-                //       },
-                //       child: Container(
-                //         height: 48,
-                //         decoration: BoxDecoration(
-                //           color: Color(0xFFEC1D24),
-                //           borderRadius: BorderRadius.circular(24),
-                //         ),
-                //         child: Center(
-                //           child: Text(
-                //             'OK',
-                //             style: GoogleFonts.inter(
-                //               fontSize: 16,
-                //               fontWeight: FontWeight.w600,
-                //               color: Colors.white,
-                //             ),
-                //           ),
-                //         ),
-                //       ),
-                //     ),
-                //   ),
-                // ),
               ],
             ),
           ),
@@ -1769,12 +1666,10 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Fixed header - Panel Information Row (out of scroll region)
             Padding(
               padding: const EdgeInsets.all(20),
               child: _buildPanelInfoHeader(),
             ),
-            // Scrollable content
             Expanded(
               child: SingleChildScrollView(
                 child: Padding(
@@ -1852,39 +1747,6 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                             ),
                           ),
                         ),
-                        // SizedBox(width: 8),
-                        // _isConnecting
-                        //     ? SizedBox(
-                        //       width: 16,
-                        //       height: 16,
-                        //       child: CircularProgressIndicator(
-                        //         strokeWidth: 2,
-                        //         valueColor: AlwaysStoppedAnimation<Color>(
-                        //           Color(0xFFEC1D24),
-                        //         ),
-                        //       ),
-                        //     )
-                        //     : GestureDetector(
-                        //       onTap: _connectToDeviceByName,
-                        //       child: Container(
-                        //         padding: EdgeInsets.symmetric(
-                        //           horizontal: 12,
-                        //           vertical: 6,
-                        //         ),
-                        //         decoration: BoxDecoration(
-                        //           color: Color(0xFFEC1D24),
-                        //           borderRadius: BorderRadius.circular(8),
-                        //         ),
-                        //         child: Text(
-                        //           'Connect',
-                        //           style: GoogleFonts.inter(
-                        //             fontSize: 12,
-                        //             fontWeight: FontWeight.w600,
-                        //             color: Colors.white,
-                        //           ),
-                        //         ),
-                        //       ),
-                        //     ),
                       ],
                     );
                   }
@@ -1945,11 +1807,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
       children: [
         Text(
           'Peripheral Overview',
-          style: GoogleFonts.inter(
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
-            // color: Colors.white,
-          ),
+          style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700),
         ),
         SizedBox(height: 8),
         SizedBox(
@@ -2442,28 +2300,6 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     });
   }
 
-  // showAdcDiagnosticsSetupBottomSheet({
-  //   required BuildContext context,
-  //   required String deviceId,
-  //   required VoidCallback onDownload,
-  //   required VoidCallback onApply,
-  //   required ValueNotifier<int> refreshTrigger,
-  // }) {
-  //   showModalBottomSheet(
-  //     context: context,
-  //     isScrollControlled: true,
-  //     backgroundColor: Colors.transparent,
-  //     barrierColor: Colors.black.withOpacity(0.4),
-  //     builder:
-  //         (_) => GeneralModuleBottomSheet(
-  //           deviceId: deviceId,
-  //           onDownload: onDownload,
-  //           onApply: onApply,
-  //           refreshTrigger: refreshTrigger,
-  //         ),
-  //   );
-  // }
-
   void showModuleSetupBottomSheet({
     required BuildContext context,
     required String deviceId,
@@ -2880,11 +2716,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
       children: [
         Text(
           'Panel Actions',
-          style: GoogleFonts.inter(
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
-            // color: Colors.white,
-          ),
+          style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700),
         ),
         SizedBox(height: 8),
         SizedBox(
@@ -2920,23 +2752,12 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                       bleController.startLogRetrieval();
                     },
                   );
-                  // Get.find<BleLogController>().startLogRetrieval();
-                  // Navigator.of(context).push(
-                  //   MaterialPageRoute(
-                  //     builder:
-                  //         (context) => DeviceConnectingScreen(
-                  //           scanType: ScanType.bluetooth,
-                  //           selectedDevice: widget.selectedDevice,
-                  //         ),
-                  //   ),
-                  // );
                 },
               ),
               _peripheralTile(
                 peripheralName: 'FW Upgrade',
                 iconPath: 'assets/svgs/firmware_icon.svg',
                 onTap: () {
-                  // Ensure UpdatesController is registered
                   if (!Get.isRegistered<UpdatesController>()) {
                     Get.put(UpdatesController());
                   }
@@ -3151,12 +2972,6 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                       showDiagnosticStopDialog(context);
                     },
                   );
-                  // showPasswordPopup(
-                  //   onCall: () {
-                  //     ble.bleProcess.isAdcSetupFetchCommandActive.value = true;
-                  //     bleController.startAdcSetupFetch();
-                  //   },
-                  // );
                 },
               ),
               _peripheralTile(

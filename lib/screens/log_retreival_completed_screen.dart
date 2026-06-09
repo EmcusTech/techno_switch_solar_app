@@ -12,7 +12,6 @@ import 'package:techno_switch_solar_app/services/panel_service.dart';
 import 'package:techno_switch_solar_app/services/site_service.dart';
 import 'package:techno_switch_solar_app/widgets/site_creation_dialog.dart';
 import 'package:techno_switch_solar_app/utils/ble_name_utils.dart';
-// import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
 class LogRetrievalCompletedScreen extends StatefulWidget {
   final List<LogModel> logs;
@@ -120,21 +119,8 @@ class _LogRetrievalCompletedScreenState
     try {
       final bleManager = ble;
       final logs = bleManager.bleProcess.validEventLogs.value;
-      // Prefer resolved panelId from scanned device name / provided panelId (not deviceId or network name)
       final panelIdToUse = _resolvedPanelId();
-
-      // AppServices.serialService.disconnect();
-
-      // //Stop BLE cleanly
-      // if (bleManager.isConnected) {
-      //   await bleManager.shutdown(deviceId: panelIdToUse);
-      // }
-
-      //No logs? Just go back to scanning
       if (logs.isEmpty) {
-        // if (widget.connectedDevice != null) {
-        //   await widget.connectedDevice!.device!.disconnect();
-        // }
         await NavigationService.navigateBackToScanning(context);
         return;
       }
@@ -150,21 +136,6 @@ class _LogRetrievalCompletedScreenState
           if (existingSite != null) {
             await _siteService.storeLogs(logs, siteId: existingSite.id!);
 
-            final allSitesWithLogCount =
-                await _siteService.getSitesWithLogCount();
-            final updatedSiteWithLogCount = allSitesWithLogCount.firstWhere(
-              (siteWithLogCount) => siteWithLogCount.site.id == existingSite.id,
-              orElse:
-                  () => SiteWithLogCount(
-                    site: existingSite,
-                    logCount: logs.length,
-                    lastLogRetrieved: DateTime.now(),
-                  ),
-            );
-            // if (widget.connectedDevice != null) {
-            //   await widget.connectedDevice!.device!.disconnect();
-            // }
-
             if (mounted) {
               await NavigationService.navigateBackToScanning(context);
             }
@@ -173,10 +144,14 @@ class _LogRetrievalCompletedScreenState
           }
         }
 
-        final shouldCreateSite = await showSiteCreationDialog(
-          context,
-          logCount: logs.length,
-        );
+        bool? shouldCreateSite = false;
+
+        if (mounted) {
+          shouldCreateSite = await showSiteCreationDialog(
+            context,
+            logCount: logs.length,
+          );
+        }
         final resolvedName = _resolvedPanelName();
         final displayName = _panelDisplayName(resolvedName);
         final resolvedPanelId = _resolvedPanelId();
@@ -203,9 +178,6 @@ class _LogRetrievalCompletedScreenState
         }
       }
 
-      // if (widget.connectedDevice != null) {
-      //   await widget.connectedDevice!.device!.disconnect();
-      // }
       if (mounted) {
         await NavigationService.navigateBackToScanning(context);
       }
@@ -341,28 +313,6 @@ class _LogRetrievalCompletedScreenState
             ),
           ],
         ),
-      ),
-    );
-    return GestureDetector(
-      onTap: () {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder:
-                (context) => EventLogScreen(
-                  logDataList: widget.logs,
-                  panelName: widget.panelName,
-                  panelVersionNo: '0.98',
-                  isStandalone: true,
-                  panelId: widget.panelId,
-                ),
-          ),
-        );
-      },
-      child: Container(
-        height: 70,
-        width: 200,
-        color: Colors.red,
-        child: Center(child: Text("Go")),
       ),
     );
   }

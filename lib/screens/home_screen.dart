@@ -34,18 +34,14 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    // Disconnect Bluetooth when returning to home screen
     _handleBluetoothCleanup();
   }
 
   Future<void> _handleBluetoothCleanup() async {
-    // If there's an active Bluetooth connection, disconnect it
-    // This ensures clean state when user returns to home
     if (AppServices.isConnected) {
       await AppServices.disconnect();
     }
 
-    // Reset app state for fresh start
     AppState.reset();
   }
 
@@ -154,8 +150,8 @@ class _HomeContentState extends State<_HomeContent> with RouteAware {
   final LogRetrievalService _logRetrievalService = LogRetrievalService();
   List<SiteWithLogCount> _sites = [];
   bool _isLoading = true;
-  Map<int, int> _lastRetrievalCounts = {};
-  Map<int, DateTime?> _lastRetrievalDates = {};
+  Map<int, int> lastRetrievalCounts = {};
+  Map<int, DateTime?> lastRetrievalDates = {};
   final ble = Get.find<BleLogController>().bleManager;
   bool _routeSubscriptionRegistered = false;
 
@@ -180,8 +176,6 @@ class _HomeContentState extends State<_HomeContent> with RouteAware {
     super.dispose();
   }
 
-  /// When a route pushed above Home is popped (scanning, dashboard, event log,
-  /// site detail, etc.), reload sites so the list matches DB on all devices.
   @override
   void didPopNext() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -276,8 +270,6 @@ class _HomeContentState extends State<_HomeContent> with RouteAware {
                   padding: const EdgeInsets.all(30.0),
                   child: InkWell(
                     onTap: () async {
-                      // await testPasskeyFrameGeneration('1974');
-
                       if (ble.isConnected) {
                         print("Disconnecting device...");
                         await ble.disconnectConnectedDevice();
@@ -506,14 +498,12 @@ class _HomeContentState extends State<_HomeContent> with RouteAware {
       }
     }
 
-    _lastRetrievalCounts = counts;
-    _lastRetrievalDates = dates;
+    lastRetrievalCounts = counts;
+    lastRetrievalDates = dates;
   }
 
   Widget _buildLastLogSummary(SiteWithLogCount siteWithLogCount) {
     final site = siteWithLogCount.site;
-
-    // Use site creation time instead of last log time
     final DateTime createdAt = site.createdAt;
 
     return Padding(
