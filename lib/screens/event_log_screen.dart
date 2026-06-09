@@ -23,11 +23,10 @@ class EventLogScreen extends StatefulWidget {
   final List<LogModel> logDataList;
   final String panelVersionNo;
   final String panelName;
-  final bool isStandalone; // True if accessed without site context
-  final String? panelId; // Panel ID to preserve across disconnects
-  final bool isHistoryView; // True when viewing saved logs from history
-  final DiscoveredDevice?
-  connectedDevice; // True when accessed from project dashboard
+  final bool isStandalone;
+  final String? panelId;
+  final bool isHistoryView;
+  final DiscoveredDevice? connectedDevice;
   final int? siteId;
   final bool? isDirectLogRet;
   final bool? isLiveEventLogs;
@@ -102,8 +101,6 @@ class _EventLogContentState extends State<_EventLogContent> {
   bool _isListSelected = true;
   int _selectedViewIndex = 0;
   bool _useProvidedLogs = false;
-
-  // Filter state
   DateTime? _fromDate;
   DateTime? _toDate;
   Set<String> _selectedStatuses = {};
@@ -113,14 +110,9 @@ class _EventLogContentState extends State<_EventLogContent> {
   bool _filtersApplied = false;
   int textFieldResetKey = 0;
   bool _isHandlingBack = false;
-
-  /// When non-null, replaces [widget.logDataList] so the user can clear the
-  /// on-screen list without mutating the parent.
   List<LogModel>? _providedLogsOverride;
-
   final TextEditingController _eventIdFilterController =
       TextEditingController();
-
   final PanelService _panelService = PanelService();
   final SiteService _siteService = SiteService();
 
@@ -130,19 +122,17 @@ class _EventLogContentState extends State<_EventLogContent> {
       sorted.sort((a, b) {
         final aId = int.tryParse(a.eventId ?? '0') ?? 0;
         final bId = int.tryParse(b.eventId ?? '0') ?? 0;
-        return bId.compareTo(aId); // DESC (latest first)
+        return bId.compareTo(aId);
       });
       return sorted;
     }
     return logs;
   }
 
-  // Resolve panel name using the provided value to ensure consistency
   String _resolvedPanelName() {
     return widget.panelName.trim();
   }
 
-  // Prefer provided panelId, otherwise use full BLE name for DB lookup
   String _resolvedPanelId() {
     if ((widget.panelId ?? '').isNotEmpty) return widget.panelId!;
     return widget.panelName;
@@ -152,7 +142,6 @@ class _EventLogContentState extends State<_EventLogContent> {
     return BleNameUtils.getDisplayPrefixFromBleName(name);
   }
 
-  // Keep logs sorted by eventId (numeric if possible)
   List<LogModel> _sortLogsByEventId(List<LogModel> logs) {
     final sorted = List<LogModel>.from(logs);
     sorted.sort((a, b) {
@@ -238,10 +227,6 @@ class _EventLogContentState extends State<_EventLogContent> {
                       'assets/svgs/clear_icon.svg',
                       height: 28,
                       width: 28,
-                      // colorFilter: const ColorFilter.mode(
-                      //   Color(0xFFFF6467),
-                      //   BlendMode.srcIn,
-                      // ),
                     ),
                   ),
                 ),
@@ -343,8 +328,6 @@ class _EventLogContentState extends State<_EventLogContent> {
     return _applyEventIdQuickFilter(afterSheetFilters);
   }
 
-  /// Narrows the log list to entries whose [LogModel.eventId] matches the
-  /// quick-filter field (exact or numeric equality, e.g. `5` matches `"005"`).
   List<LogModel> _applyEventIdQuickFilter(List<LogModel> logs) {
     final q = _eventIdFilterController.text.trim();
     if (q.isEmpty) return logs;
@@ -366,7 +349,6 @@ class _EventLogContentState extends State<_EventLogContent> {
       Get.find<BleLogController>().startLiveEventSetup();
     }
     _useProvidedLogs = widget.logDataList.isNotEmpty;
-    // Initialize filtered logs with whichever source we have on load
     final initialLogs =
         widget.logDataList.isNotEmpty
             ? widget.logDataList
@@ -394,49 +376,6 @@ class _EventLogContentState extends State<_EventLogContent> {
     super.dispose();
   }
 
-  // Future<void> _handleBackNavigation() async {
-  //   final bleManager = ble;
-  //   final logs = bleManager.bleProcess.validEventLogs.value;
-  //   final deviceId = bleManager.connectedDeviceId.value;
-
-  //   //Stop BLE cleanly
-  //   if (bleManager.isConnected) {
-  //     await bleManager.safeDisconnect();
-  //   }
-
-  //   //No logs? Just go back to scanning
-  //   if (logs.isEmpty) {
-  //     await NavigationService.navigateBackToScanning(context);
-  //     return;
-  //   }
-
-  //   //Decide persistence flow
-  //   if (widget.isStandalone) {
-  //     final shouldSave = await showSiteCreationDialog(
-  //       context,
-  //       logCount: logs.length,
-  //     );
-
-  //     if (shouldSave == true) {
-  //       Navigator.of(context).pushReplacement(
-  //         MaterialPageRoute(
-  //           builder:
-  //               (_) => SimpleSiteCreationScreen(
-  //                 retrievedLogs: logs,
-  //                 panelName: widget.panelName,
-  //                 panelVersionNo: widget.panelVersionNo,
-  //                 panelId: deviceId.isNotEmpty ? deviceId : widget.panelId,
-  //               ),
-  //         ),
-  //       );
-  //       return;
-  //     }
-  //   }
-
-  //   // 4️⃣ Default fallback
-  //   await NavigationService.navigateBackToScanning(context);
-  // }
-
   Future<void> _handleBackNavigation() async {
     if (widget.isLiveEventLogs == true) {
       Get.find<BleLogController>().stopLiveEventSetup();
@@ -456,21 +395,8 @@ class _EventLogContentState extends State<_EventLogContent> {
 
       final bleManager = ble;
       final logs = bleManager.bleProcess.validEventLogs.value;
-      // Prefer resolved panelId from scanned device name / provided panelId (not deviceId or network name)
       final panelIdToUse = _resolvedPanelId();
-
-      // AppServices.serialService.disconnect();
-
-      // //Stop BLE cleanly
-      // if (bleManager.isConnected) {
-      //   await bleManager.shutdown(deviceId: panelIdToUse);
-      // }
-
-      //No logs? Just go back to scanning
       if (logs.isEmpty) {
-        // if (widget.connectedDevice != null) {
-        //   await widget.connectedDevice!.device!.disconnect();
-        // }
         await NavigationService.navigateBackToScanning(context);
         return;
       }
@@ -486,20 +412,17 @@ class _EventLogContentState extends State<_EventLogContent> {
           if (existingSite != null) {
             await _siteService.storeLogs(logs, siteId: existingSite.id!);
 
-            final allSitesWithLogCount =
-                await _siteService.getSitesWithLogCount();
-            final updatedSiteWithLogCount = allSitesWithLogCount.firstWhere(
-              (siteWithLogCount) => siteWithLogCount.site.id == existingSite.id,
-              orElse:
-                  () => SiteWithLogCount(
-                    site: existingSite,
-                    logCount: logs.length,
-                    lastLogRetrieved: DateTime.now(),
-                  ),
-            );
-            // if (widget.connectedDevice != null) {
-            //   await widget.connectedDevice!.device!.disconnect();
-            // }
+            // final allSitesWithLogCount =
+            //     await _siteService.getSitesWithLogCount();
+            // final updatedSiteWithLogCount = allSitesWithLogCount.firstWhere(
+            //   (siteWithLogCount) => siteWithLogCount.site.id == existingSite.id,
+            //   orElse:
+            //       () => SiteWithLogCount(
+            //         site: existingSite,
+            //         logCount: logs.length,
+            //         lastLogRetrieved: DateTime.now(),
+            //       ),
+            // );
 
             if (mounted) {
               await NavigationService.navigateBackToScanning(context);
@@ -542,128 +465,12 @@ class _EventLogContentState extends State<_EventLogContent> {
         }
       }
 
-      // if (widget.connectedDevice != null) {
-      //   await widget.connectedDevice!.device!.disconnect();
-      // }
       if (mounted) {
         await NavigationService.navigateBackToScanning(context);
       }
     } finally {
       _isHandlingBack = false;
     }
-  }
-
-  Future<bool?> _showExistingSiteDialog(
-    BuildContext context,
-    String siteName,
-    int logCount,
-  ) async {
-    return showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          title: Row(
-            children: [
-              Icon(Icons.info_outline, color: Color(0xFF0F72E9), size: 28),
-              SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  'Panel Already Installed',
-                  style: GoogleFonts.inter(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF3A3A3A),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'This panel is already installed at:',
-                style: GoogleFonts.inter(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w400,
-                  color: Color(0xFF666666),
-                ),
-              ),
-              SizedBox(height: 8),
-              Container(
-                padding: EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Color(0xFFF0F7FF),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Color(0xFF0F72E9).withOpacity(0.2)),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.location_on, color: Color(0xFF0F72E9), size: 20),
-                    SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        siteName,
-                        style: GoogleFonts.inter(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF0F72E9),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(height: 16),
-              Text(
-                'Would you like to save the $logCount retrieved log${logCount == 1 ? '' : 's'} to this existing site?',
-                style: GoogleFonts.inter(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w400,
-                  color: Color(0xFF3A3A3A),
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: Text(
-                'Discard Logs',
-                style: GoogleFonts.inter(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF666666),
-                ),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFF0F72E9),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                elevation: 0,
-              ),
-              child: Text(
-                'Save to Existing Site',
-                style: GoogleFonts.inter(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
   }
 
   void _showExportBottomSheet(BuildContext context) {
@@ -682,7 +489,6 @@ class _EventLogContentState extends State<_EventLogContent> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Drag handle
               Center(
                 child: Container(
                   width: 40,
@@ -694,7 +500,6 @@ class _EventLogContentState extends State<_EventLogContent> {
                   ),
                 ),
               ),
-
               Text(
                 'Export',
                 style: GoogleFonts.inter(
@@ -703,32 +508,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                   color: const Color(0xFF3A3A3A),
                 ),
               ),
-
               const SizedBox(height: 12),
-
-              // ExportTile(
-              //   icon: Icons.table_chart_outlined,
-              //   title: 'Export as Excel',
-              //   onTap: () async {
-              //     Navigator.pop(context);
-              //     final logs = ble.bleProcess.validEventLogs.value;
-              //     if (logs.isEmpty) return;
-
-              //     await EventLogExcelExporter.export(logs);
-              //   },
-              // ),
-
-              // ExportTile(
-              //   icon: Icons.description_outlined,
-              //   title: 'Export as CSV',
-              //   onTap: () async {
-              //     Navigator.pop(context);
-              //     final logs = ble.bleProcess.validEventLogs.value;
-              //     if (logs.isEmpty) return;
-
-              //     await EventLogCsvExporter.export(logs);
-              //   },
-              // ),
               ExportTile(
                 iconPath: "assets/svgs/share_icon_red.svg",
                 title: 'Export as PDF',
@@ -739,7 +519,6 @@ class _EventLogContentState extends State<_EventLogContent> {
                   );
                   if (logs.isEmpty) return;
 
-                  //Resolve site data
                   String siteName = '-';
                   String installerName = '-';
                   String saqccNo = '-';
@@ -795,7 +574,6 @@ class _EventLogContentState extends State<_EventLogContent> {
       final allLogs = _getBaseLogs();
       _filteredLogs =
           allLogs.where((log) {
-            // Date filter
             if (_fromDate != null || _toDate != null) {
               if (log.eventDateTime == null) return false;
               final logDate = DateTime(
@@ -816,14 +594,13 @@ class _EventLogContentState extends State<_EventLogContent> {
                   _toDate!.year,
                   _toDate!.month,
                   _toDate!.day,
-                ).add(Duration(days: 1)); // Include the entire end date
+                ).add(Duration(days: 1));
                 if (logDate.isAfter(toDate.subtract(Duration(seconds: 1)))) {
                   return false;
                 }
               }
             }
 
-            // Status filter
             if (_selectedStatuses.isNotEmpty) {
               if (log.eventStatus == null ||
                   !_selectedStatuses.contains(log.eventStatus)) {
@@ -831,7 +608,6 @@ class _EventLogContentState extends State<_EventLogContent> {
               }
             }
 
-            // Event Class filter
             if (_selectedEventClasses.isNotEmpty) {
               if (log.eventClass == null ||
                   !_selectedEventClasses.contains(log.eventClass)) {
@@ -839,12 +615,9 @@ class _EventLogContentState extends State<_EventLogContent> {
               }
             }
 
-            // Alarm Count filter (if provided)
             if (_alarmCount != null && _alarmCount!.isNotEmpty) {
               final count = int.tryParse(_alarmCount!);
               if (count != null) {
-                // Assuming alarm count might be related to event ID or some other field
-                // Adjust this logic based on your requirements
                 final eventId = int.tryParse(log.eventId ?? '0') ?? 0;
                 if (eventId != count) return false;
               }
@@ -870,7 +643,7 @@ class _EventLogContentState extends State<_EventLogContent> {
       _selectedEventClasses.clear();
       _alarmCount = null;
       _filtersApplied = false;
-      textFieldResetKey++; // Force TextField to reset
+      textFieldResetKey++;
       _filteredLogs = _getBaseLogs();
     });
   }
@@ -975,10 +748,6 @@ class _EventLogContentState extends State<_EventLogContent> {
                                   'assets/svgs/clear_icon.svg',
                                   height: 28,
                                   width: 28,
-                                  // colorFilter: const ColorFilter.mode(
-                                  //   Color(0xFFFF6467),
-                                  //   BlendMode.srcIn,
-                                  // ),
                                 ),
                               ),
                             ),
@@ -1001,40 +770,6 @@ class _EventLogContentState extends State<_EventLogContent> {
                             ),
                           ),
                         ),
-
-                        // IconButton(
-                        //   icon: const Icon(
-                        //     Icons.ios_share,
-                        //     color: Colors.black,
-                        //   ),
-                        //   onPressed: () => _showExportBottomSheet(context),
-                        // ),
-                        // IconButton(
-                        //   icon: const Icon(
-                        //     Icons.filter_alt_outlined,
-                        //     color: Colors.black,
-                        //   ),
-                        //   onPressed: () => _showFilterBottomSheet(context),
-                        // ),
-
-                        // IconButton(
-                        //   tooltip: 'Export PDF',
-                        //   icon: const Icon(
-                        //     Icons.picture_as_pdf,
-                        //     color: Color(0xFFEC1D24),
-                        //   ),
-                        //   onPressed: () async {
-                        //     final logs = ble.bleProcess.validEventLogs.value;
-
-                        //     if (logs.isEmpty) return;
-
-                        //     await EventLogPdfExporter.export(
-                        //       logs: logs,
-                        //       panelName: widget.panelName,
-                        //       panelVersion: widget.panelVersionNo,
-                        //     );
-                        //   },
-                        // ),
                       ],
                     ),
                   ),
@@ -1124,7 +859,6 @@ class _EventLogContentState extends State<_EventLogContent> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Select Date Section
                         Text(
                           'Select Date',
                           style: GoogleFonts.inter(
@@ -1242,8 +976,6 @@ class _EventLogContentState extends State<_EventLogContent> {
                           ],
                         ),
                         SizedBox(height: 21),
-
-                        // Status Section - Show in rows (max 3 per row)
                         Text(
                           'Status:',
                           style: GoogleFonts.inter(
@@ -1334,8 +1066,6 @@ class _EventLogContentState extends State<_EventLogContent> {
                               ).toList(),
                         ),
                         SizedBox(height: 24),
-
-                        // Event Class Section - Show max 3 per row
                         Text(
                           'Event Class:',
                           style: GoogleFonts.inter(
@@ -1352,7 +1082,6 @@ class _EventLogContentState extends State<_EventLogContent> {
                               EventConstants.statusEventClassNames.skip(1).map((
                                 eventClass,
                               ) {
-                                // Map "Release" to "Ext. Release" and "Evacuation" to "Fire" for UI
                                 String displayName = eventClass;
                                 if (eventClass == "Release") {
                                   displayName = "Ext. Release";
@@ -1435,61 +1164,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                                 );
                               }).toList(),
                         ),
-                        // SizedBox(height: 21),
-
-                        // // Alarm Count Section
-                        // Text(
-                        //   'Alarm Count:',
-                        //   style: GoogleFonts.inter(
-                        //     fontSize: 14,
-                        //     fontWeight: FontWeight.bold,
-                        //     color: Color(0xFF3A3A3A),
-                        //   ),
-                        // ),
-                        // SizedBox(height: 8),
-                        // TextField(
-                        //   key: ValueKey('alarm_count_$textFieldResetKey'),
-                        //   onChanged: (value) {
-                        //     setState(() {
-                        //       _alarmCount = value.isEmpty ? null : value;
-                        //     });
-                        //   },
-                        //   keyboardType: TextInputType.number,
-                        //   decoration: InputDecoration(
-                        //     hintText: 'Enter Alarm Count',
-                        //     hintStyle: GoogleFonts.inter(
-                        //       fontSize: 13,
-                        //       color: Color(0xFFBDBDBD),
-                        //     ),
-                        //     border: OutlineInputBorder(
-                        //       borderRadius: BorderRadius.circular(4),
-                        //       borderSide: BorderSide(color: Color(0xFFD7D7D7)),
-                        //     ),
-                        //     enabledBorder: OutlineInputBorder(
-                        //       borderRadius: BorderRadius.circular(4),
-                        //       borderSide: BorderSide(color: Color(0xFFD7D7D7)),
-                        //     ),
-                        //     focusedBorder: OutlineInputBorder(
-                        //       borderRadius: BorderRadius.circular(4),
-                        //       borderSide: BorderSide(
-                        //         color: Color(0xFFEC1D24),
-                        //         width: 2,
-                        //       ),
-                        //     ),
-                        //     contentPadding: EdgeInsets.symmetric(
-                        //       horizontal: 12,
-                        //       vertical: 14,
-                        //     ),
-                        //   ),
-                        //   style: GoogleFonts.inter(
-                        //     fontSize: 14,
-                        //     fontWeight: FontWeight.w500,
-                        //     color: Color(0xFF3A3A3A),
-                        //   ),
-                        // ),
                         SizedBox(height: 32),
-
-                        // Action Buttons
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -1547,30 +1222,6 @@ class _EventLogContentState extends State<_EventLogContent> {
                                 ),
                               ),
                             ),
-                            // Expanded(
-                            //   child: ElevatedButton(
-                            //     onPressed: () {
-                            // _applyFilters();
-                            // Navigator.pop(context);
-                            //     },
-                            //     style: ElevatedButton.styleFrom(
-                            //       padding: EdgeInsets.symmetric(vertical: 14),
-                            //       backgroundColor: Color(0xFFEC1D24),
-                            //       shape: RoundedRectangleBorder(
-                            //         borderRadius: BorderRadius.circular(8),
-                            //       ),
-                            //       elevation: 0,
-                            //     ),
-                            //     child: Text(
-                            //       'Apply Now',
-                            //       style: GoogleFonts.inter(
-                            //         fontSize: 14,
-                            //         fontWeight: FontWeight.w600,
-                            //         color: Colors.white,
-                            //       ),
-                            //     ),
-                            //   ),
-                            // ),
                           ],
                         ),
                         SizedBox(height: 20),
@@ -1825,71 +1476,6 @@ class _EventLogContentState extends State<_EventLogContent> {
   }
 }
 
-// Widget _buildProgressBar() {
-//   return ValueListenableBuilder<int>(
-//     valueListenable: ble.bleProcess.read1000LogsCount,
-//     builder: (context, readCount, child) {
-//       return ValueListenableBuilder<List<LogModel>>(
-//         valueListenable: ble.bleProcess.validEventLogs,
-//         builder: (context, validLogs, child) {
-//           final progress = readCount / 1000.0;
-//           return Container(
-//             padding: const EdgeInsets.all(16),
-//             decoration: BoxDecoration(
-//               color: Colors.white,
-//               borderRadius: BorderRadius.circular(12),
-//               border: Border.all(
-//                 color: Color(0xFFB9B9B9).withOpacity(0.31),
-//                 width: 1,
-//               ),
-//             ),
-//             child: Column(
-//               crossAxisAlignment: CrossAxisAlignment.start,
-//               children: [
-//                 Row(
-//                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//                   children: [
-//                     Text(
-//                       'Progress: $readCount / 1000',
-//                       style: GoogleFonts.inter(
-//                         fontSize: 14,
-//                         fontWeight: FontWeight.w600,
-//                         color: Color(0xFF3D3D3D),
-//                         fontFeatures: [FontFeature.tabularFigures()],
-//                       ),
-//                     ),
-//                     Text(
-//                       'Valid Logs: ${validLogs.length}',
-//                       style: GoogleFonts.inter(
-//                         fontSize: 14,
-//                         fontWeight: FontWeight.w600,
-//                         color: Color(0xFFEC1D24),
-//                         fontFeatures: [FontFeature.tabularFigures()],
-//                       ),
-//                     ),
-//                   ],
-//                 ),
-//                 SizedBox(height: 8),
-//                 ClipRRect(
-//                   borderRadius: BorderRadius.circular(4),
-//                   child: LinearProgressIndicator(
-//                     value: progress,
-//                     minHeight: 8,
-//                     backgroundColor: Color(0xFFE0E0E0),
-//                     valueColor: AlwaysStoppedAnimation<Color>(
-//                       Color(0xFFEC1D24),
-//                     ),
-//                   ),
-//                 ),
-//               ],
-//             ),
-//           );
-//         },
-//       );
-//     },
-//   );
-// }
-
 enum DataType {
   id,
   dateTime,
@@ -1905,7 +1491,6 @@ enum DataType {
   lBusNo,
 }
 
-// ---------- UPDATED _LogListView: header + rows share one horizontal scroll ----------
 class _LogListView extends StatefulWidget {
   final List<LogModel> displayLogs;
 
@@ -1920,15 +1505,11 @@ class _LogListViewState extends State<_LogListView>
   @override
   bool get wantKeepAlive => true;
 
-  // One horizontal controller for header + all rows (they will be inside the same horizontal scroll view)
   final ScrollController _horizontalController = ScrollController();
-
-  // Sorting state
   String? _sortColumn;
   bool _sortAscending = true;
   List<LogModel> _sortedLogs = [];
 
-  // Fixed widths for columns (same as before)
   static const double wEventId = 80;
   static const double wDateTime = 140;
   static const double wEventStatus = 100;
@@ -1942,7 +1523,6 @@ class _LogListViewState extends State<_LogListView>
   static const double wModuleNo = 100;
   static const double wLbusNo = 90;
 
-  // total width computed from column widths
   late final double _totalTableWidth =
       wEventId +
       wDateTime +
@@ -1957,7 +1537,6 @@ class _LogListViewState extends State<_LogListView>
       wModuleNo +
       wLbusNo;
 
-  // Row height (can be adjusted)
   static const double _rowHeight = 72.0;
   static const double _headerHeight = 48.0;
 
@@ -1970,12 +1549,10 @@ class _LogListViewState extends State<_LogListView>
   @override
   void didUpdateWidget(_LogListView oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // Update _sortedLogs when displayLogs changes
     if (widget.displayLogs.length != oldWidget.displayLogs.length ||
         !listEquals(widget.displayLogs, oldWidget.displayLogs)) {
       setState(() {
         _sortedLogs = List.from(widget.displayLogs);
-        // Re-apply sorting if there was a sort active
         if (_sortColumn != null) {
           _sortedLogs.sort((a, b) {
             int comparison = 0;
@@ -2050,17 +1627,14 @@ class _LogListViewState extends State<_LogListView>
     setState(() {
       if (_sortColumn == column) {
         if (_sortAscending) {
-          // Second tap: sort descending
           _sortAscending = false;
         } else {
-          // Third tap: clear sorting
           _sortColumn = null;
           _sortAscending = true;
           _sortedLogs = List.from(widget.displayLogs);
           return;
         }
       } else {
-        // First tap: sort ascending
         _sortColumn = column;
         _sortAscending = true;
       }
@@ -2212,7 +1786,6 @@ class _LogListViewState extends State<_LogListView>
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        // we get vertical space available to this widget, use it to size the internal ListView
         final double availableHeight = constraints.maxHeight;
 
         return SingleChildScrollView(
@@ -2221,15 +1794,12 @@ class _LogListViewState extends State<_LogListView>
           physics: const ClampingScrollPhysics(),
           child: SizedBox(
             width: _totalTableWidth + 16,
-            height:
-                availableHeight, // constrain vertical space for internal Column/ListView
+            height: availableHeight,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // header (will scroll horizontally because it's inside the outer SingleChildScrollView)
                 _buildHeader(),
                 const Divider(height: 1, thickness: 1),
-                // Expanded ListView takes remaining vertical space and scrolls vertically only.
                 Expanded(
                   child: ListView.builder(
                     itemCount: _sortedLogs.length,
@@ -2332,7 +1902,6 @@ class _LogListViewState extends State<_LogListView>
   }
 }
 
-// ---------- Unchanged _LogTableView (kept for completeness) ----------
 class _LogTableView extends StatefulWidget {
   final List<LogModel> displayLogs;
 
@@ -2360,15 +1929,12 @@ class _LogTableViewState extends State<_LogTableView>
     super.build(context);
     return Scrollbar(
       controller: _scrollController,
-      // thumbVisibility: true,
       trackVisibility: true,
       interactive: true,
       thickness: 12,
       radius: const Radius.circular(10),
       child: ListView.separated(
         controller: _scrollController,
-        // shrinkWrap: true,
-        // physics: NeverScrollableScrollPhysics(),
         itemCount: widget.displayLogs.length,
         separatorBuilder: (context, index) => SizedBox(height: 10),
         itemBuilder: (context, index) {
