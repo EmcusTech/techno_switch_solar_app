@@ -111,7 +111,7 @@ class _EventLogContentState extends State<_EventLogContent> {
   String? _alarmCount;
   List<LogModel> _filteredLogs = [];
   bool _filtersApplied = false;
-  int _textFieldResetKey = 0;
+  int textFieldResetKey = 0;
   bool _isHandlingBack = false;
 
   /// When non-null, replaces [widget.logDataList] so the user can clear the
@@ -870,7 +870,7 @@ class _EventLogContentState extends State<_EventLogContent> {
       _selectedEventClasses.clear();
       _alarmCount = null;
       _filtersApplied = false;
-      _textFieldResetKey++; // Force TextField to reset
+      textFieldResetKey++; // Force TextField to reset
       _filteredLogs = _getBaseLogs();
     });
   }
@@ -1448,7 +1448,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                         // ),
                         // SizedBox(height: 8),
                         // TextField(
-                        //   key: ValueKey('alarm_count_$_textFieldResetKey'),
+                        //   key: ValueKey('alarm_count_$textFieldResetKey'),
                         //   onChanged: (value) {
                         //     setState(() {
                         //       _alarmCount = value.isEmpty ? null : value;

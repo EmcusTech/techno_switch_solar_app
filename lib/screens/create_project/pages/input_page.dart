@@ -108,8 +108,6 @@ class _InputPageState extends State<InputPage> {
                         ),
                       ),
                       SizedBox(height: 24),
-
-                      // Input Configuration Fields
                       _buildDropdownField('Inverted', widget.inverted, [
                         'No',
                         'Yes',
@@ -126,13 +124,14 @@ class _InputPageState extends State<InputPage> {
                 ),
                 Divider(color: Color(0xFFBDBDBD), thickness: 1),
                 SizedBox(height: 16),
-
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 24,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Programming Group Section
                       Text(
                         'Programming Group',
                         style: GoogleFonts.inter(

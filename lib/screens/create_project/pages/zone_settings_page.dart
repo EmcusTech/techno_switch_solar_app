@@ -53,16 +53,11 @@ class _ZoneSettingsPageState extends State<ZoneSettingsPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Dynamically build zone sections based on available zones
                 ...widget.zoneTexts.keys.map((zoneName) {
                   return Column(
                     children: [
                       _buildZoneSection(zoneName),
-                      if (zoneName !=
-                          widget
-                              .zoneTexts
-                              .keys
-                              .last) // Don't add spacing after last zone
+                      if (zoneName != widget.zoneTexts.keys.last)
                         SizedBox(height: 16),
                     ],
                   );
@@ -83,13 +78,9 @@ class _ZoneSettingsPageState extends State<ZoneSettingsPage> {
         widget.onZoneExpanded(isExpanded ? null : zoneName);
       },
       child: Container(
-        decoration: BoxDecoration(
-          color: Color(0xFFF5F5F5),
-          // borderRadius: BorderRadius.circular(8),
-        ),
+        decoration: BoxDecoration(color: Color(0xFFF5F5F5)),
         child: Column(
           children: [
-            // Zone header
             Padding(
               padding: EdgeInsets.only(
                 left: 19,
@@ -118,8 +109,6 @@ class _ZoneSettingsPageState extends State<ZoneSettingsPage> {
                 ],
               ),
             ),
-
-            // Expanded content
             if (isExpanded) ...[
               Container(
                 color: Colors.white,
@@ -128,7 +117,6 @@ class _ZoneSettingsPageState extends State<ZoneSettingsPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Zone Text
                       Text(
                         'Zone Text',
                         style: GoogleFonts.inter(
@@ -176,8 +164,6 @@ class _ZoneSettingsPageState extends State<ZoneSettingsPage> {
                         ),
                       ),
                       SizedBox(height: 20),
-
-                      // Zone Type
                       _buildZoneDropdownField(
                         'Zone Type',
                         widget.zoneTypes[zoneName]!,
@@ -191,8 +177,6 @@ class _ZoneSettingsPageState extends State<ZoneSettingsPage> {
                         },
                       ),
                       SizedBox(height: 20),
-
-                      // Zone
                       _buildZoneDropdownField(
                         'Zone',
                         widget.zoneStates[zoneName]!,
@@ -206,8 +190,6 @@ class _ZoneSettingsPageState extends State<ZoneSettingsPage> {
                         },
                       ),
                       SizedBox(height: 20),
-
-                      // Zone Test
                       _buildZoneDropdownField(
                         'Zone Test',
                         widget.zoneTests[zoneName]!,
@@ -221,8 +203,6 @@ class _ZoneSettingsPageState extends State<ZoneSettingsPage> {
                         },
                       ),
                       SizedBox(height: 20),
-
-                      // Zone Mode
                       _buildZoneDropdownField(
                         'Zone Mode',
                         widget.zoneModes[zoneName]!,
@@ -236,8 +216,6 @@ class _ZoneSettingsPageState extends State<ZoneSettingsPage> {
                         },
                       ),
                       SizedBox(height: 20),
-
-                      // Zone Verification Time
                       _buildZoneDropdownField(
                         'Zone Verification Time',
                         widget.zoneVerificationTimes[zoneName]!,

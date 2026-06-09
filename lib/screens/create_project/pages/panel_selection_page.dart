@@ -189,10 +189,7 @@ class _PanelSelectionPageState extends State<PanelSelectionPage> {
                   panelFireExtinguisherCount:
                       panelConfig.fireExtinguisherCount.toString(),
                 ),
-                if (panelConfig !=
-                    PanelTypeConfig
-                        .availablePanels
-                        .last) // Don't add spacing after last item
+                if (panelConfig != PanelTypeConfig.availablePanels.last)
                   SizedBox(height: 16),
               ],
             );

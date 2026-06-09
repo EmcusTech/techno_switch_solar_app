@@ -10,8 +10,7 @@ import 'package:techno_switch_solar_app/services/app_services.dart';
 import 'package:techno_switch_solar_app/utils/bluetooth/ble_notify_data_handler.dart';
 
 class AccessCodeScreen extends StatefulWidget {
-  final dynamic
-  selectedDevice; // Can be BluetoothDevice or UsbDevice or ScanResult
+  final dynamic selectedDevice;
   final ScanType scanType;
   final bool? isLiveEvent;
 
@@ -63,7 +62,6 @@ class _AccessCodeScreenState extends State<AccessCodeScreen> {
 
   void _onFocusChange() {
     if (_accessFocusNode.hasFocus) {
-      // ensure the text field is visible when keyboard opens
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (_textFieldKey.currentContext != null) {
           Scrollable.ensureVisible(
@@ -73,7 +71,6 @@ class _AccessCodeScreenState extends State<AccessCodeScreen> {
             alignment: 0.3,
           );
         } else {
-          // fallback: scroll to bottom
           _scrollController.animateTo(
             _scrollController.position.maxScrollExtent,
             duration: const Duration(milliseconds: 250),
@@ -145,7 +142,6 @@ class _AccessCodeScreenState extends State<AccessCodeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // allow scaffold to resize when keyboard opens
     final themePrimary = Theme.of(context).primaryColor;
 
     return Scaffold(
@@ -168,7 +164,6 @@ class _AccessCodeScreenState extends State<AccessCodeScreen> {
                 left: 24,
                 right: 24,
                 top: 24,
-                // add viewInsets.bottom so when keyboard opens there's extra space
                 bottom: 120 + MediaQuery.of(context).viewInsets.bottom,
               ),
               child: Column(
@@ -217,12 +212,6 @@ class _AccessCodeScreenState extends State<AccessCodeScreen> {
 
   void _submitPasskey() {
     final text = _accessCodeController.text.trim();
-    // if (text.length != 4) {
-    //   setState(() {
-    //     _errorMessage = 'Enter the 4-digit passkey';
-    //   });
-    //   return;
-    // }
 
     if (_isBleFlow) {
       if (text.isEmpty) {
@@ -335,7 +324,6 @@ class _AccessCodeScreenState extends State<AccessCodeScreen> {
               ),
             ),
             const SizedBox(height: 32),
-            // TextField with dynamic border color based on validation state
             Container(
               key: _textFieldKey,
               height: 50,
@@ -353,7 +341,6 @@ class _AccessCodeScreenState extends State<AccessCodeScreen> {
                   focusNode: _accessFocusNode,
                   textAlign: TextAlign.center,
                   controller: _accessCodeController,
-                  // maxLength: 4,
                   showCursor: true,
                   obscureText: true,
                   obscuringCharacter: "*",

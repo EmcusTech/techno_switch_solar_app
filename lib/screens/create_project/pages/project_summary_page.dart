@@ -44,19 +44,17 @@ class _ProjectSummaryPageState extends State<ProjectSummaryPage> {
           child: SingleChildScrollView(
             child: Column(
               children: [
-                // Main configuration container with yellow background and stripes
                 ClipRRect(
                   borderRadius: BorderRadius.circular(16),
                   child: Container(
                     width: double.infinity,
                     decoration: BoxDecoration(
-                      color: Color(0xFFFFFAA4), // Light yellow background
+                      color: Color(0xFFFFFAA4),
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(color: Color(0xFFD2CD7D)),
                     ),
                     child: Column(
                       children: [
-                        // Top diagonal stripes
                         Container(
                           width: double.infinity,
                           height: 30,
@@ -68,8 +66,6 @@ class _ProjectSummaryPageState extends State<ProjectSummaryPage> {
                           ),
                           child: CustomPaint(painter: DiagonalStripesPainter()),
                         ),
-
-                        // Main content
                         Column(
                           children: [
                             SizedBox(height: 36),
@@ -101,7 +97,6 @@ class _ProjectSummaryPageState extends State<ProjectSummaryPage> {
                               ),
                               child: Column(
                                 children: [
-                                  // Configuration fields
                                   _buildDropdownField(
                                     'Enabled',
                                     widget.enabled,
@@ -160,8 +155,6 @@ class _ProjectSummaryPageState extends State<ProjectSummaryPage> {
                             ),
                           ],
                         ),
-
-                        // Bottom diagonal stripes
                         Container(
                           width: double.infinity,
                           height: 30,
@@ -177,19 +170,15 @@ class _ProjectSummaryPageState extends State<ProjectSummaryPage> {
                     ),
                   ),
                 ),
-
                 SizedBox(height: 32),
               ],
             ),
           ),
         ),
-
-        // Upload to Panel button - Fixed at bottom
         SizedBox(
           width: double.infinity,
           child: ElevatedButton(
             onPressed: () {
-              // Handle upload to panel
               _showUploadDialog();
             },
             style: ElevatedButton.styleFrom(
@@ -365,7 +354,6 @@ class _ProjectSummaryPageState extends State<ProjectSummaryPage> {
               onPressed: () {
                 Navigator.of(context).pop();
                 widget.onUploadToPanel();
-                // Handle successful upload
                 _showSuccessDialog();
               },
               style: ElevatedButton.styleFrom(
@@ -423,7 +411,7 @@ class _ProjectSummaryPageState extends State<ProjectSummaryPage> {
             ElevatedButton(
               onPressed: () {
                 Navigator.of(context).pop();
-                Navigator.of(context).pop(); // Return to previous screen
+                Navigator.of(context).pop();
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Color(0xFFEC1D24),
@@ -450,10 +438,9 @@ class _ProjectSummaryPageState extends State<ProjectSummaryPage> {
 class DiagonalStripesPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    // Fill background with bright yellow (hazard warning yellow)
     final backgroundPaint =
         Paint()
-          ..color = Color(0xFFFFDD00) // Classic hazard warning yellow
+          ..color = Color(0xFFFFDD00)
           ..style = PaintingStyle.fill;
 
     canvas.drawRect(
@@ -461,35 +448,24 @@ class DiagonalStripesPainter extends CustomPainter {
       backgroundPaint,
     );
 
-    // Draw black diagonal stripes
     final stripePaint =
         Paint()
-          ..color = Color(0xFF000000) // Pure black
+          ..color = Color(0xFF000000)
           ..style = PaintingStyle.fill;
 
-    // Much thinner stripes to match the reference image
-    const double stripeWidth = 6; // Thin black stripes
-    const double totalStripeWidth =
-        12; // Total width including yellow gap (6px black + 6px yellow)
-
-    // Calculate the diagonal offset based on the height to create 45-degree angle
+    const double stripeWidth = 6;
+    const double totalStripeWidth = 12;
     final double diagonalOffset = size.height;
-
-    // Draw diagonal stripes from top-left to bottom-right
     for (
       double i = -diagonalOffset;
       i < size.width + diagonalOffset;
       i += totalStripeWidth
     ) {
       final path = Path();
-      // Create parallelogram shape for the stripe
-      path.moveTo(i, 0); // Top left
-      path.lineTo(i + stripeWidth, 0); // Top right
-      path.lineTo(
-        i + stripeWidth + diagonalOffset,
-        size.height,
-      ); // Bottom right
-      path.lineTo(i + diagonalOffset, size.height); // Bottom left
+      path.moveTo(i, 0);
+      path.lineTo(i + stripeWidth, 0);
+      path.lineTo(i + stripeWidth + diagonalOffset, size.height);
+      path.lineTo(i + diagonalOffset, size.height);
       path.close();
 
       canvas.drawPath(path, stripePaint);

@@ -51,16 +51,11 @@ class _RelayPageState extends State<RelayPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Dynamically build relay sections based on available relays
                 ...widget.relayTexts.keys.map((relayName) {
                   return Column(
                     children: [
                       _buildRelaySection(relayName),
-                      if (relayName !=
-                          widget
-                              .relayTexts
-                              .keys
-                              .last) // Don't add spacing after last relay
+                      if (relayName != widget.relayTexts.keys.last)
                         SizedBox(height: 16),
                     ],
                   );
@@ -84,7 +79,6 @@ class _RelayPageState extends State<RelayPage> {
         decoration: BoxDecoration(color: Color(0xFFF5F5F5)),
         child: Column(
           children: [
-            // Relay header
             Padding(
               padding: EdgeInsets.only(
                 left: 19,
@@ -113,8 +107,6 @@ class _RelayPageState extends State<RelayPage> {
                 ],
               ),
             ),
-
-            // Expanded content
             if (isExpanded) ...[
               Container(
                 color: Colors.white,
@@ -123,7 +115,6 @@ class _RelayPageState extends State<RelayPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Relay Text
                       Text(
                         'Relay Text',
                         style: GoogleFonts.inter(
@@ -172,8 +163,6 @@ class _RelayPageState extends State<RelayPage> {
                         ),
                       ),
                       SizedBox(height: 20),
-
-                      // Test
                       _buildRelayDropdownField(
                         'Test',
                         widget.relayTests[relayName]!,
@@ -187,8 +176,6 @@ class _RelayPageState extends State<RelayPage> {
                         },
                       ),
                       SizedBox(height: 20),
-
-                      // Relay State
                       _buildRelayDropdownField(
                         'Relay',
                         widget.relayStates[relayName]!,
@@ -202,8 +189,6 @@ class _RelayPageState extends State<RelayPage> {
                         },
                       ),
                       SizedBox(height: 24),
-
-                      // Programming Group Section Header
                       Text(
                         'Programming Group',
                         style: GoogleFonts.inter(
@@ -213,8 +198,6 @@ class _RelayPageState extends State<RelayPage> {
                         ),
                       ),
                       SizedBox(height: 20),
-
-                      // Group
                       _buildRelayDropdownField(
                         'Group',
                         widget.relayGroups[relayName]!,
@@ -228,8 +211,6 @@ class _RelayPageState extends State<RelayPage> {
                         },
                       ),
                       SizedBox(height: 20),
-
-                      // Function
                       _buildRelayDropdownField(
                         'Function',
                         widget.relayFunctions[relayName]!,

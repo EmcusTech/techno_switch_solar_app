@@ -28,8 +28,6 @@ import 'package:techno_switch_solar_app/widgets/bottom_sheets/sounder_mode_botto
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/zone_mode_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/app_styled_dialogs.dart';
 
-/// Create-site wizard: site → panel → BLE connect → nine dashboard-equivalent
-/// configuration steps → create site, assign panel, bulk apply, open dashboard.
 class CreateSiteScreenRefactored extends StatefulWidget {
   const CreateSiteScreenRefactored({super.key});
 
@@ -85,14 +83,10 @@ class _CreateSiteScreenRefactoredState
       GlobalKey<PanelInfoBottomSheetState>();
 
   bool _offeredBulkDownload = false;
-
-  /// BLE device id for peripheral caches; set only after a successful connect.
   String _wizardDeviceId = '';
 
   void _noop() {}
 
-  /// Hides the soft keyboard and drops focus so step transitions (e.g. Connect
-  /// panel → scan route) do not fight with the Panel Name field.
   Future<void> _dismissKeyboardFully() async {
     if (!mounted) return;
     FocusManager.instance.primaryFocus?.unfocus();
@@ -102,9 +96,6 @@ class _CreateSiteScreenRefactoredState
     await WidgetsBinding.instance.endOfFrame;
   }
 
-  /// After scan / access-code routes, keyboard [viewInsets] can still animate.
-  /// Showing [Dialog]s while that happens makes them shift vertically. Tear down
-  /// the IME and wait a beat so the overlay is stable.
   Future<void> _settleImeBeforeShowingDialog() async {
     await _dismissKeyboardFully();
     if (!mounted) return;
@@ -195,7 +186,6 @@ class _CreateSiteScreenRefactoredState
     super.dispose();
   }
 
-  /// Same flow as [ProjectDashboardScreen] / `_ProjectDashboardContentState`.
   Future<bool> _confirmAndDisconnect() async {
     final shouldDisconnect = await showDialog<bool>(
       context: context,
@@ -354,7 +344,6 @@ class _CreateSiteScreenRefactoredState
     );
   }
 
-  /// Returns `false` if the user chose to abort the wizard (e.g. skip → Home).
   Future<bool> _runPostConnectAssignedPanelFlow() async {
     final device = _controller.connectedDevice;
     if (device == null) return false;
@@ -540,8 +529,6 @@ class _CreateSiteScreenRefactoredState
 
       _showSnackBar('Site ready - opening dashboard', isError: false);
 
-      // Match connect flow: replace wizard so back from dashboard returns to the
-      // screen below (e.g. home), not an empty navigator.
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
           builder:
@@ -725,7 +712,6 @@ class _CreateSiteScreenRefactoredState
       _controller.clearValidationErrors();
       await _dismissKeyboardFully();
       if (!mounted) return;
-      // Let the IME fully close before route push to avoid keyboard resize jank.
       await Future<void>.delayed(const Duration(milliseconds: 120));
       if (!mounted) return;
       final verified = await Navigator.of(context).push<bool>(

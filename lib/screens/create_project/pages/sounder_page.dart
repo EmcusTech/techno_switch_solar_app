@@ -12,7 +12,7 @@ class SounderPage extends StatefulWidget {
   final Map<String, String> sounderFunctions;
   final Function(String?) onSounderExpanded;
   final Function(String, String, String) onSounderFieldChanged;
-  final List<String>? availableZones; // Optional list of available zones
+  final List<String>? availableZones;
 
   const SounderPage({
     super.key,
@@ -61,16 +61,11 @@ class _SounderPageState extends State<SounderPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Dynamically build sounder sections based on available sounders
                 ...widget.sounderTexts.keys.map((sounderName) {
                   return Column(
                     children: [
                       _buildSounderSection(sounderName),
-                      if (sounderName !=
-                          widget
-                              .sounderTexts
-                              .keys
-                              .last) // Don't add spacing after last sounder
+                      if (sounderName != widget.sounderTexts.keys.last)
                         SizedBox(height: 16),
                     ],
                   );
@@ -91,10 +86,7 @@ class _SounderPageState extends State<SounderPage> {
         widget.onSounderExpanded(isExpanded ? null : sounderName);
       },
       child: Container(
-        decoration: BoxDecoration(
-          color: Color(0xFFF5F5F5),
-          // borderRadius: BorderRadius.circular(8),
-        ),
+        decoration: BoxDecoration(color: Color(0xFFF5F5F5)),
         child: Column(
           children: [
             // Sounder header
@@ -131,7 +123,6 @@ class _SounderPageState extends State<SounderPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Sounder Text
                       Text(
                         'Sounder Text',
                         style: GoogleFonts.inter(
@@ -181,8 +172,6 @@ class _SounderPageState extends State<SounderPage> {
                         ),
                       ),
                       SizedBox(height: 20),
-
-                      // Sounder
                       _buildSounderDropdownField(
                         'Sounder',
                         widget.sounderStates[sounderName]!,
@@ -196,8 +185,6 @@ class _SounderPageState extends State<SounderPage> {
                         },
                       ),
                       SizedBox(height: 20),
-
-                      // Sounder Test
                       _buildSounderDropdownField(
                         'Sounder Test',
                         widget.sounderTests[sounderName]!,
@@ -211,8 +198,6 @@ class _SounderPageState extends State<SounderPage> {
                         },
                       ),
                       SizedBox(height: 20),
-
-                      // Sounder Type
                       _buildSounderDropdownField(
                         'Sounder Type',
                         widget.sounderTypes[sounderName]!,
@@ -226,15 +211,10 @@ class _SounderPageState extends State<SounderPage> {
                         },
                       ),
                       SizedBox(height: 20),
-
-                      // Sounder Group
                       _buildSounderDropdownField(
                         'Sounder Group',
                         widget.sounderGroups[sounderName]!,
-                        widget.availableZones ??
-                            [
-                              'Zone 1',
-                            ], // Use dynamic zones or default to Zone 1
+                        widget.availableZones ?? ['Zone 1'],
                         (value) {
                           widget.onSounderFieldChanged(
                             sounderName,
@@ -244,8 +224,6 @@ class _SounderPageState extends State<SounderPage> {
                         },
                       ),
                       SizedBox(height: 20),
-
-                      // Sounder Function
                       _buildSounderDropdownField(
                         'Sounder Function',
                         widget.sounderFunctions[sounderName]!,
