@@ -72,24 +72,6 @@ class _SplashScreenState extends State<SplashScreen> {
                     ),
                     child: Image.asset('assets/images/full_logo.png'),
                   ),
-                  // Text(
-                  //   'Techno Switch',
-                  //   style: GoogleFonts.inter(
-                  //     fontSize: 22,
-                  //     fontWeight: FontWeight.w700,
-                  //     color: const Color(0xFF3D3D3D),
-                  //   ),
-                  // ),
-                  // const SizedBox(height: 8),
-                  // Text(
-                  //   'Smart monitoring for fire panels',
-                  //   style: GoogleFonts.inter(
-                  //     fontSize: 14,
-                  //     fontWeight: FontWeight.w500,
-                  //     color: Colors.grey.shade600,
-                  //   ),
-                  // ),
-                  // const SizedBox(height: 6),
                   Text(
                     'Panel Configuration Tool',
                     style: GoogleFonts.inter(
@@ -116,7 +98,6 @@ class _SplashScreenState extends State<SplashScreen> {
                     ),
                   ),
                   SizedBox(height: 10),
-                  //last production version : v0.0.8
                   Text(
                     'v0.0.49 -- testing version',
                     style: GoogleFonts.inter(

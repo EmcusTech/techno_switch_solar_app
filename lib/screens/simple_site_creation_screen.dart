@@ -14,9 +14,7 @@ class SimpleSiteCreationScreen extends StatefulWidget {
   final List<LogModel> retrievedLogs;
   final String? panelName;
   final String? panelVersionNo;
-  final String? panelId; // Store panel ID to associate with site
-  /// If true, this screen will `pop(siteId)` on success (and `pop(null)` on cancel)
-  /// instead of navigating to `HomeScreen()`.
+  final String? panelId;
   final bool returnCreatedSiteId;
 
   const SimpleSiteCreationScreen({
@@ -86,7 +84,6 @@ class _SimpleSiteCreationScreenState extends State<SimpleSiteCreationScreen> {
     });
 
     try {
-      // First, check if panel is already associated with a site
       final panelIdToCheck =
           widget.panelId ?? AppServices.serialService.currentPanelId;
       print('DEBUG: SimpleSiteCreation - Checking panel ID: $panelIdToCheck');
@@ -100,30 +97,14 @@ class _SimpleSiteCreationScreenState extends State<SimpleSiteCreationScreen> {
         );
 
         if (existingPanel != null && existingPanel.siteId != null) {
-          // Panel is already associated with a site
           final existingSite = await _siteService.getSiteById(
             existingPanel.siteId!,
           );
           if (existingSite != null) {
-            // Save logs to the existing site
             await _siteService.storeLogs(
               widget.retrievedLogs,
               siteId: existingSite.id!,
             );
-
-            // Show message and navigate to existing site
-            // ScaffoldMessenger.of(context).showSnackBar(
-            //   SnackBar(
-            //     content: Text(
-            //       'Panel already installed at "${existingSite.siteName}". ${widget.retrievedLogs.length} logs saved to existing site.',
-            //     ),
-            //     backgroundColor: Color(0xFF0F72E9),
-            //     duration: Duration(seconds: 4),
-            //   ),
-            // );
-
-            // Navigate to the existing site screen
-            // Get updated site information with new log count
             final allSitesWithLogCount =
                 await _siteService.getSitesWithLogCount();
             final updatedSiteWithLogCount = allSitesWithLogCount.firstWhere(
@@ -131,10 +112,7 @@ class _SimpleSiteCreationScreenState extends State<SimpleSiteCreationScreen> {
               orElse:
                   () => SiteWithLogCount(
                     site: existingSite,
-                    logCount:
-                        widget
-                            .retrievedLogs
-                            .length, // fallback to current logs count
+                    logCount: widget.retrievedLogs.length,
                     lastLogRetrieved: DateTime.now(),
                   ),
             );
@@ -160,9 +138,7 @@ class _SimpleSiteCreationScreenState extends State<SimpleSiteCreationScreen> {
         print('DEBUG: SimpleSiteCreation - No panel ID to check');
       }
 
-      // Panel is not associated with any site, proceed with site creation
       print('DEBUG: SimpleSiteCreation - Proceeding with new site creation');
-      // Validate the form data
       final errors = _siteService.validateSiteData(
         siteName: _siteNameController.text,
         installerName: _installerNameController.text,
@@ -180,17 +156,9 @@ class _SimpleSiteCreationScreenState extends State<SimpleSiteCreationScreen> {
           _isLoading = false;
         });
 
-        // // Show error snackbar
-        // ScaffoldMessenger.of(context).showSnackBar(
-        //   SnackBar(
-        //     content: Text('Please fix the errors in the form'),
-        //     backgroundColor: Color(0xFFEC1D24),
-        //   ),
-        // );
         return;
       }
 
-      // Create the site
       final site = await _siteService.createSite(
         siteName: _siteNameController.text,
         installerName: _installerNameController.text,
@@ -202,10 +170,8 @@ class _SimpleSiteCreationScreenState extends State<SimpleSiteCreationScreen> {
         siteDescription: _siteDescriptionController.text,
       );
 
-      // Save the logs and associate them with the site
       await _siteService.storeLogs(widget.retrievedLogs, siteId: site.id!);
 
-      // Associate the panel with the site (use stored panelId if available)
       final panelIdToAssociate =
           widget.panelId ?? AppServices.serialService.currentPanelId;
       print(
@@ -215,7 +181,6 @@ class _SimpleSiteCreationScreenState extends State<SimpleSiteCreationScreen> {
 
       if (panelIdToAssociate != null) {
         try {
-          // Debug: Check if panel exists before assignment
           final existingPanel = await _siteService.getPanelByPanelId(
             panelIdToAssociate,
           );
@@ -237,17 +202,7 @@ class _SimpleSiteCreationScreenState extends State<SimpleSiteCreationScreen> {
           );
           print('DEBUG: Panel association success: $success');
         } catch (e) {
-          // Panel association failed, but don't block site creation
           print('DEBUG: Panel association failed: $e');
-
-          // Show error to user
-          // ScaffoldMessenger.of(context).showSnackBar(
-          //   SnackBar(
-          //     content: Text('Warning: Panel association failed - $e'),
-          //     backgroundColor: Color(0xFFFF9800),
-          //     duration: Duration(seconds: 4),
-          //   ),
-          // );
         }
       } else {
         print(
@@ -255,7 +210,6 @@ class _SimpleSiteCreationScreenState extends State<SimpleSiteCreationScreen> {
         );
       }
 
-      // // Show success message
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -266,10 +220,8 @@ class _SimpleSiteCreationScreenState extends State<SimpleSiteCreationScreen> {
       );
 
       if (widget.returnCreatedSiteId) {
-        // Return created site id to caller (e.g. connect flow)
         Navigator.of(context).pop(site.id);
       } else {
-        // Navigate back to home screen
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (context) => HomeScreen()),
           (route) => false,
@@ -279,13 +231,6 @@ class _SimpleSiteCreationScreenState extends State<SimpleSiteCreationScreen> {
       setState(() {
         _isLoading = false;
       });
-
-      // ScaffoldMessenger.of(context).showSnackBar(
-      //   SnackBar(
-      //     content: Text('Error creating site: $error'),
-      //     backgroundColor: Color(0xFFEC1D24),
-      //   ),
-      // );
     }
   }
 
@@ -309,7 +254,6 @@ class _SimpleSiteCreationScreenState extends State<SimpleSiteCreationScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // Header
                     Row(
                       children: [
                         GestureDetector(
@@ -333,41 +277,7 @@ class _SimpleSiteCreationScreenState extends State<SimpleSiteCreationScreen> {
                         ),
                       ],
                     ),
-
                     SizedBox(height: 18),
-
-                    // Info card
-                    // Container(
-                    //   margin: EdgeInsets.only(bottom: 18),
-                    //   padding: EdgeInsets.all(16),
-                    //   decoration: BoxDecoration(
-                    //     color: Color(0xFFFFF3CD),
-                    //     borderRadius: BorderRadius.circular(12),
-                    //     border: Border.all(color: Color(0xFFFFE69C)),
-                    //   ),
-                    //   child: Row(
-                    //     children: [
-                    //       Icon(
-                    //         Icons.info_outline,
-                    //         color: Color(0xFF856404),
-                    //         size: 24,
-                    //       ),
-                    //       SizedBox(width: 12),
-                    //       Expanded(
-                    //         child: Text(
-                    //           'You retrieved ${widget.retrievedLogs.length} log${widget.retrievedLogs.length == 1 ? '' : 's'}. Fill in the site details to save them.',
-                    //           style: GoogleFonts.inter(
-                    //             fontSize: 14,
-                    //             fontWeight: FontWeight.w500,
-                    //             color: Color(0xFF856404),
-                    //           ),
-                    //         ),
-                    //       ),
-                    //     ],
-                    //   ),
-                    // ),
-
-                    // Form container
                     Expanded(
                       child: Container(
                         decoration: BoxDecoration(
@@ -379,17 +289,7 @@ class _SimpleSiteCreationScreenState extends State<SimpleSiteCreationScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              // Text(
-                              //   'Site Details',
-                              //   style: GoogleFonts.inter(
-                              //     fontSize: 18,
-                              //     fontWeight: FontWeight.w700,
-                              //     color: Color(0xFF3A3A3A),
-                              //   ),
-                              // ),
                               SizedBox(height: 20),
-
-                              // Site creation form
                               Expanded(
                                 child: SiteCreationPage(
                                   siteNameController: _siteNameController,
@@ -409,13 +309,9 @@ class _SimpleSiteCreationScreenState extends State<SimpleSiteCreationScreen> {
                                   validationErrors: _validationErrors,
                                 ),
                               ),
-
                               SizedBox(height: 20),
-
-                              // Action buttons
                               Row(
                                 children: [
-                                  // Skip button
                                   Expanded(
                                     child: GestureDetector(
                                       onTap:
@@ -472,10 +368,7 @@ class _SimpleSiteCreationScreenState extends State<SimpleSiteCreationScreen> {
                                       ),
                                     ),
                                   ),
-
                                   SizedBox(width: 12),
-
-                                  // Create site button
                                   Expanded(
                                     child: GestureDetector(
                                       onTap:

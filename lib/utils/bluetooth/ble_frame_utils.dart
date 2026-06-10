@@ -1,13 +1,3 @@
-/*
-* Project      : gemini-en54-2-mobile_app
-* File         : ble_response.dart
-* Description  : 
-* Author       : SrihariharanT
-* Date         : 2024-07-05
-* Version      : 1.0
-* Ticket       : 
-*/
-
 import 'dart:typed_data';
 
 import 'data_helper.dart';
@@ -36,7 +26,6 @@ enum BleCommandsList {
   BLE_EXPANDER_CONFIG_SEND_CMD(0x102A),
   BLE_REPLACE_EXPANDER_CONFIG_SEND_CMD(0x103A),
   BLE_EXPANDER_CONFIG_DOWNLOAD_CMD(0x1031),
-  // BLE_FIRMWARE_UPDATE_END_CMD(0x1028),
   BLE_UPLOAD_PROJECT_DATA_CMD(0x102C),
   BLE_DOWNLOAD_PROJECT_DATA_CMD(0x102D),
   BLE_GET_ALL_DEVICE_STATUS_CMD(0x100C),
@@ -122,26 +111,16 @@ enum KbleTypeOfFrameDef {
 const int BLE_FRAME_FILED_SIZE = 0x0B;
 const int enBLE_PROCESS_FAILED = 0;
 const int enBLE_PROCESS_SUCCESS = 1;
-
-/// PAYLOAD SIZE THAT WE CAN SEND ON EACH PACKET
-/// 495 - 11 = 484
-/// 2 BYTES OF SEQUENCE NUMBER (484-2) = 482
 const int enBLE_PAYLOAD_SIZE_PER_PACKET = 482;
-
 const int enBLE_PAYLOAD_SIZE_PER_PACKET_BASED_ON_DEVICE = 441;
 const int enBLE_PAYLOAD_SIZE_PER_PACKET_BASED_ON_ZONE = 368;
 
-/// Panel address
 const int enPanel_ADDRESS = 200;
 
-// Placeholder function for CRC calculation
 int calculateCrc(Uint8List data, int length) {
-  // Placeholder for actual CRC calculation
-  // Replace this with the actual CRC calculation logic
-  return 0xEA9A; // Example CRC value for demonstration
+  return 0xEA9A;
 }
 
-// Function to frame the data packet
 int bleFrameTheTxPkt(
   int u16Cmd,
   int u8TypeofFrame,
@@ -154,32 +133,20 @@ int bleFrameTheTxPkt(
       (u16DataLen > 0) &&
       (pu8Data.isNotEmpty) &&
       (pu8FrameBuff.isNotEmpty)) {
-    // Add preamble AA 55
-    // placing AA (SOF_MSB) in the 0th index
     pu8FrameBuff[FrameHeaderFieldPosDef.enBLE_SOF_MSB_POS.index] =
         FrameFieldersDef.enBLE_SOF_MSB.value;
-
-    // placing 55 (SOF_LSB) in the 1st index
     pu8FrameBuff[FrameHeaderFieldPosDef.enBLE_SOF_LSB_POS.index] =
         FrameFieldersDef.enBLE_SOF_LSB.value;
-
-    //Add frame command
     pu8FrameBuff[FrameHeaderFieldPosDef.enBLE_CMD_MSB_POS.index] =
         (u16Cmd >> 8) & 0xFF;
     pu8FrameBuff[FrameHeaderFieldPosDef.enBLE_CMD_LSB_POS.index] =
         u16Cmd & 0xFF;
-
-    //Add type of frame
     pu8FrameBuff[FrameHeaderFieldPosDef.enBLE_TOF_POS.index] = u8TypeofFrame;
-
-    //Add payload length
     pu8FrameBuff[FrameHeaderFieldPosDef.enBLE_DATA_LEN_MSB_POS.index] =
         (u16DataLen >> 8) & 0xFF;
-
     pu8FrameBuff[FrameHeaderFieldPosDef.enBLE_DATA_LEN_LSB_POS.index] =
         u16DataLen & 0xFF;
 
-    /// calculate the crc from preamble to till payload
     Uint8List crcData = Uint8List.fromList(
       pu8FrameBuff.sublist(
         0,
@@ -187,21 +154,22 @@ int bleFrameTheTxPkt(
       ),
     );
 
-    /// calculate the crc from preamble to till payload
     int crc = convertCrc16(crcData);
 
-    //Add calculated crc
     pu8FrameBuff[TxFrameFooterFieldPos.enBLE_TXPKT_CRC_MSB_POS.value +
-        u16DataLen] = (crc >> 8) & 0xFF;
+            u16DataLen] =
+        (crc >> 8) & 0xFF;
 
     pu8FrameBuff[TxFrameFooterFieldPos.enBLE_TXPKT_CRC_LSB_POS.value +
-        u16DataLen] = crc & 0xFF;
+            u16DataLen] =
+        crc & 0xFF;
 
-    //Add end of frame EE BB
     pu8FrameBuff[TxFrameFooterFieldPos.enBLE_TXPKT_EOF_MSB_POS.value +
-        u16DataLen] = FrameFieldersDef.enBLE_EOF_MSB.value;
+            u16DataLen] =
+        FrameFieldersDef.enBLE_EOF_MSB.value;
     pu8FrameBuff[TxFrameFooterFieldPos.enBLE_TXPKT_EOF_LSB_POS.value +
-        u16DataLen] = FrameFieldersDef.enBLE_EOF_LSB.value;
+            u16DataLen] =
+        FrameFieldersDef.enBLE_EOF_LSB.value;
 
     return (BLE_FRAME_FILED_SIZE + u16DataLen);
   } else {
@@ -214,41 +182,28 @@ List<int> frameDataPacket({
   required int typeOfFrame,
   required List<int> payLoadData,
 }) {
-  //Logger("Frame Happening");
-  //Logger(payLoadData.toString());
-
-  /// Convert the byte length to hexadecimal and get it as a list of bytes
   String hexLengthByte = calculateLengthByteByBytes(payLoadData);
   List<int> lengthByte = hexToBytes(hexLengthByte);
 
   Uint8List dataFrame = Uint8List.fromList(<int>[
-    //Preamble
     FrameFieldersDef.enBLE_SOF_MSB.value,
     FrameFieldersDef.enBLE_SOF_LSB.value,
 
-    //command
     (bleCommand >> 8) & 0xFF,
     bleCommand & 0xFF,
 
-    //type of frame
     typeOfFrame,
 
-    //payload length
     ...lengthByte,
 
-    //payload
     ...payLoadData,
   ]);
 
   int calculatedCRC = convertCrc16(dataFrame);
-  // Logger(
-  //     "Calculated CRC: $calculatedCRC ; ${calculatedCRC.toRadixString(16).toUpperCase()}");
   List<int> newList = dataFrame.toList();
 
-  //Crc
   newList.addAll(intToBytesBigEndian(calculatedCRC));
 
-  //End of frame
   newList.add(FrameFieldersDef.enBLE_EOF_MSB.value);
   newList.add(FrameFieldersDef.enBLE_EOF_LSB.value);
 

@@ -53,7 +53,6 @@ class _SiteScreenState extends State<SiteScreen> {
         'DEBUG: Loading panels for site ${widget.site.id} (${widget.site.siteName})',
       );
 
-      // First, check if any panels exist at all
       final allPanels = await _siteService.getAllPanels();
       print('DEBUG: Total panels in database: ${allPanels.length}');
       for (int i = 0; i < allPanels.length; i++) {
@@ -62,11 +61,9 @@ class _SiteScreenState extends State<SiteScreen> {
         );
       }
 
-      // Check unassigned panels
       final unassignedPanels = await _siteService.getUnassignedPanels();
       print('DEBUG: Unassigned panels: ${unassignedPanels.length}');
 
-      // Now check panels for this specific site
       final panels = await _siteService.getSitePanels(widget.site.id!);
       print('DEBUG: Loaded ${panels.length} panels for site ${widget.site.id}');
       for (int i = 0; i < panels.length; i++) {
@@ -129,7 +126,6 @@ class _SiteScreenState extends State<SiteScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // ───────── Icon ─────────
                 Container(
                   width: 64,
                   height: 64,
@@ -147,8 +143,6 @@ class _SiteScreenState extends State<SiteScreen> {
                 ),
 
                 const SizedBox(height: 16),
-
-                // ───────── Title ─────────
                 Text(
                   'Delete site?',
                   style: GoogleFonts.inter(
@@ -160,8 +154,6 @@ class _SiteScreenState extends State<SiteScreen> {
                 ),
 
                 const SizedBox(height: 8),
-
-                // ───────── Description ─────────
                 Text(
                   'This will remove "${widget.site.siteName}".\n'
                   'All logs will be deleted and panels will be unassigned.',
@@ -175,8 +167,6 @@ class _SiteScreenState extends State<SiteScreen> {
                 ),
 
                 const SizedBox(height: 20),
-
-                // ───────── Actions ─────────
                 Row(
                   children: [
                     Expanded(
@@ -186,7 +176,7 @@ class _SiteScreenState extends State<SiteScreen> {
                             borderRadius: BorderRadius.circular(24),
                           ),
                           side: const BorderSide(
-                            color: Color(0xFFD0D0D0), // subtle neutral border
+                            color: Color(0xFFD0D0D0),
                             width: 1,
                           ),
                         ),
@@ -296,7 +286,6 @@ class _SiteScreenState extends State<SiteScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // ───────── Icon ─────────
                 Container(
                   width: 64,
                   height: 64,
@@ -314,8 +303,6 @@ class _SiteScreenState extends State<SiteScreen> {
                 ),
 
                 const SizedBox(height: 16),
-
-                // ───────── Title ─────────
                 Text(
                   'Remove panel?',
                   style: GoogleFonts.inter(
@@ -327,8 +314,6 @@ class _SiteScreenState extends State<SiteScreen> {
                 ),
 
                 const SizedBox(height: 8),
-
-                // ───────── Description ─────────
                 Text(
                   'Remove panel "${panel.panelName}" (${panel.panelId}) '
                   'from this site?',
@@ -342,8 +327,6 @@ class _SiteScreenState extends State<SiteScreen> {
                 ),
 
                 const SizedBox(height: 20),
-
-                // ───────── Actions ─────────
                 Row(
                   children: [
                     Expanded(
@@ -353,7 +336,7 @@ class _SiteScreenState extends State<SiteScreen> {
                             borderRadius: BorderRadius.circular(24),
                           ),
                           side: const BorderSide(
-                            color: Color(0xFFD0D0D0), // subtle neutral border
+                            color: Color(0xFFD0D0D0),
                             width: 1,
                           ),
                         ),
@@ -500,21 +483,7 @@ class _SiteScreenState extends State<SiteScreen> {
             colors: [Color(0xFFF6EBEB), Colors.white],
           ),
         ),
-        child: Stack(
-          children: [
-            _buildHeader(context),
-            // Padding(
-            //   padding: const EdgeInsets.only(top: 330),
-            //   child: Column(
-            //     children: [
-            //       _buildSiteDetails(),
-            //       SizedBox(height: 20),
-            //       _buildPanels(),
-            //     ],
-            //   ),
-            // ),
-          ],
-        ),
+        child: Stack(children: [_buildHeader(context)]),
       ),
     );
   }
@@ -522,75 +491,7 @@ class _SiteScreenState extends State<SiteScreen> {
   Widget _buildHeader(BuildContext context) {
     return Stack(
       children: [
-        // Padding(
-        //   padding: const EdgeInsets.only(top: 100),
-        //   child: Align(
-        //     alignment: Alignment.topCenter,
-        //     child: Opacity(
-        //       opacity: 0.3,
-        //       child: Container(
-        //         width: 166,
-        //         height: 166,
-        //         decoration: BoxDecoration(
-        //           shape: BoxShape.circle,
-        //           color: Color(0xffEC1D24).withValues(alpha: 0.5),
-        //         ),
-        //       ),
-        //     ),
-        //   ),
-        // ),
         SvgPicture.asset('assets/svgs/background_1.svg'),
-        // Padding(
-        //   padding: const EdgeInsets.only(top: 100),
-        //   child: Column(
-        //     children: [
-        //       Align(
-        //         alignment: Alignment.topCenter,
-        //         child: Padding(
-        //           padding: const EdgeInsets.all(30.0),
-        //           child: InkWell(
-        //             onTap: () {
-        //               Navigator.of(context).push(
-        //                 MaterialPageRoute(
-        //                   builder: (context) => ScanningScreen(),
-        //                 ),
-        //               );
-        //             },
-        //             child: Container(
-        //               width: 106,
-        //               height: 106,
-        //               decoration: BoxDecoration(
-        //                 shape: BoxShape.circle,
-        //                 color: Color(0xFFFBDEE1),
-        //               ),
-        //               child: Padding(
-        //                 padding: const EdgeInsets.all(25.0),
-        //                 child: SvgPicture.asset(
-        //                   'assets/svgs/logo.svg',
-        //                   height: 59.29,
-        //                   width: 51,
-        //                   colorFilter: ColorFilter.mode(
-        //                     Color(0xFFEC1D24),
-        //                     BlendMode.srcIn,
-        //                   ),
-        //                 ),
-        //               ),
-        //             ),
-        //           ),
-        //         ),
-        //       ),
-        //       SizedBox(height: 15),
-        //       Text(
-        //         'Tap to connect',
-        //         style: GoogleFonts.inter(
-        //           fontSize: 14,
-        //           fontWeight: FontWeight.w400,
-        //           color: Color(0xFF3D3D3D),
-        //         ),
-        //       ),
-        //     ],
-        //   ),
-        // ),
         Padding(
           padding: const EdgeInsets.only(top: 120),
           child: Column(

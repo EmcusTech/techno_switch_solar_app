@@ -9,7 +9,6 @@ class EventLogCsvExporter {
   static Future<void> export(List<LogModel> logs) async {
     final rows = <List<String>>[];
 
-    // Header
     rows.add([
       'ID',
       'Date & Time',
@@ -25,7 +24,6 @@ class EventLogCsvExporter {
       'L-Bus No',
     ]);
 
-    // Data
     for (final log in logs) {
       rows.add([
         log.eventId ?? '',

@@ -1,16 +1,5 @@
-/*
-* Project      : technoswitch_solar_app
-* File         : ble_notify_data_handler.dart
-* Description  : Simplified GetX controller that manages the Technoswitch BLE
-*                handshake (encryption exchange, auth message and passkey flow).
-*                The older project specific navigation/hooks have been removed
-*                so the rest of the app can integrate it freely.
-*/
-
 import 'dart:async';
 import 'dart:typed_data';
-
-// import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:techno_switch_solar_app/ble/ble_crypto.dart';
 import 'package:techno_switch_solar_app/ble/ble_encryption_config.dart';
 import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
@@ -22,51 +11,26 @@ import 'package:techno_switch_solar_app/utils/bluetooth/data_helper.dart';
 import 'package:techno_switch_solar_app/utils/bluetooth/data_transfer_manager.dart';
 import 'package:techno_switch_solar_app/utils/logger.dart' as logger;
 import 'package:techno_switch_solar_app/utils/storage/encryption_key_store.dart';
-import 'package:techno_switch_solar_app/controllers/updates_controller.dart';
-import 'package:techno_switch_solar_app/services/firmware_upgrade_service.dart';
-import 'package:techno_switch_solar_app/models/mcu_info.dart';
-
 import '../../services/app_services.dart';
-
-/// Converts bytes to ASCII representation (printable chars or dots)
-String _bytesToAscii(List<int> bytes) {
-  return bytes.map((b) {
-    if (b >= 32 && b <= 126) {
-      // Printable ASCII characters
-      return String.fromCharCode(b);
-    } else {
-      // Non-printable characters shown as dots
-      return '.';
-    }
-  }).join();
-}
 
 class BleNotifyDataHandler extends GetxController {
   final DataTransferManager _dataTransferManager = DataTransferManager();
 
-  // Packet counters for network packet and passkey
   int _pktTxCnt = 0;
   int _pktRxCnt = 0;
-  int _lastFeaturePacketCounter =
-      0; // Track counter of last feature packet sent
+  int _lastFeaturePacketCounter = 0;
 
-  // Poll packet flow tracking
-  int _pollPacketCount = 0; // Track how many poll packets sent after passkey
-  int _pollPacketCountAfterControlRes =
-      0; // Track how many poll packets sent after CONTROL_RES_EVENT_REPORT
-  String? _storedPasskey; // Store passkey to detect response in poll packets
-  bool _passkeyAccepted = false; // Track if passkey was found in poll response
+  int pollPacketCount = 0;
+  int _pollPacketCountAfterControlRes = 0;
+  String? _storedPasskey;
+  bool passkeyAccepted = false;
   bool _controlResEventReportSent = false;
-  bool _controlResEventReportValidResponseReceived =
-      false; // Track if CONTROL_RES_EVENT_REPORT was sent
-  bool _passkeySent = false; // Track if passkey was sent
-  Timer? _continuousPollTimer; // Timer for continuous poll packet sending
-  Timer?
-  _pollPacketResponseTimer; // Timer to wait 100ms for poll packet response
-  int _lastKnownRxCounter =
-      0; // Store last known RX counter when no response received
+  bool _controlResEventReportValidResponseReceived = false;
+  bool _passkeySent = false;
+  Timer? _continuousPollTimer;
+  Timer? _pollPacketResponseTimer;
+  int lastKnownRxCounter = 0;
 
-  /// Observables used across the Bluetooth helpers.
   final Rx<BleStateMachine> currentBleState = BleStateMachine.none.obs;
   final Rx<EncryptionDecryptionState> encryptionDecryptionState =
       EncryptionDecryptionState.disabled.obs;
@@ -77,7 +41,6 @@ class BleNotifyDataHandler extends GetxController {
   final Rx<SystemBuildStatus> systemBuildStatus = SystemBuildStatus.none.obs;
   final Rx<BuildModule> currentBuildSystemModule = BuildModule.installation.obs;
 
-  /// Legacy properties referenced by other helpers (large data transfer).
   List<Uint8List> lOnGoinglargePacketsList = <Uint8List>[];
   int lOngoingsequenceNumber = 0;
   int retryCount = 1;
@@ -88,7 +51,7 @@ class BleNotifyDataHandler extends GetxController {
   static const String _nack = '03';
   static const String _authenticationRequired = '05';
   static const String _timeout = '08';
-  static const String _invalidPassword = '09';
+  static const String invalidPassword = '09';
 
   final StreamController<BleHandshakeEvent> _handshakeController =
       StreamController<BleHandshakeEvent>.broadcast();
@@ -97,24 +60,14 @@ class BleNotifyDataHandler extends GetxController {
 
   StreamSubscription<List<int>>? _notifySub;
 
-  /// Enable notifications on the currently connected BLE device.
-  ///
   Future<void> enableNotifyForCallBack({
     required DiscoveredDevice device,
   }) async {
-    final DiscoveredDevice? connectedDevice = device;
+    final DiscoveredDevice connectedDevice = device;
 
-    if (connectedDevice == null) {
-      logger.Logger("BLE NOTIFY HANDLER: no connected device found.");
-      _emitEvent(
-        BleHandshakeEvent.error("Device disconnected before handshake"),
-      );
-      return;
-    } else {
-      logger.Logger(
-        "BLE NOTIFY HANDLER: connected device found $connectedDevice.",
-      );
-    }
+    logger.Logger(
+      "BLE NOTIFY HANDLER: connected device found $connectedDevice.",
+    );
 
     try {
       _notifySub ??= BtUtils().subscribeToNotifications(
@@ -141,48 +94,7 @@ class BleNotifyDataHandler extends GetxController {
       );
     }
   }
-  // Future<void> enableNotifyForCallBack() async {
-  //   final DiscoveredDevice? connectedDevice =
-  //       await BtUtils().getConnectedDevice();
-  //   if (connectedDevice == null) {
-  //     logger.Logger('BLE notify handler: no connected device found.');
-  //     _emitEvent(
-  //       BleHandshakeEvent.error('Device disconnected before handshake'),
-  //     );
-  //     return;
-  //   }
 
-  //   BtUtils().enableNotifications(
-  //     connectedDevice,
-  //     (List<int> data) {
-  //       if (connectedDevice.isConnected) {
-  //         _handleNotifyData(data, connectedDevice);
-  //       }
-  //     },
-  //     notifyEnabledcallback: (bool enabled) {
-  //       if (!enabled) {
-  //         _emitEvent(
-  //           BleHandshakeEvent.error(
-  //             'Unable to enable notifications on primary characteristic',
-  //           ),
-  //         );
-  //         return;
-  //       }
-
-  //       _dataTransferManager.requestEncryptionKey(
-  //         dataWritten: (bool isWritten) {
-  //           if (isWritten) {
-  //             currentBleState(BleStateMachine.reqEncryptionKey);
-  //             _emitStateChange('Requesting encryption key');
-  //           }
-  //         },
-  //       );
-  //     },
-  //   );
-  // }
-
-  /// Sends the user provided passkey back to the panel.
-  /// After sending passkey, sends 3 poll packets, then CONTROL_RES_EVENT_REPORT, then continuous poll packets.
   Future<void> submitPasskey(String passkey) async {
     logger.Logger('========================================');
     logger.Logger('SUBMITTING PASSKEY');
@@ -196,13 +108,11 @@ class BleNotifyDataHandler extends GetxController {
       return;
     }
 
-    // Store passkey to detect response in poll packets
     _storedPasskey = passkey;
-    _pollPacketCount = 0;
-    _passkeyAccepted = false; // Reset passkey acceptance flag
+    pollPacketCount = 0;
+    passkeyAccepted = false;
     _controlResEventReportSent = false;
     _passkeySent = true;
-    // Compute TX for this feature = lastFeature + 1
     _pktTxCnt = _lastFeaturePacketCounter + 1;
     _lastFeaturePacketCounter = _pktTxCnt;
 
@@ -223,8 +133,6 @@ class BleNotifyDataHandler extends GetxController {
           logger.Logger(
             'Passkey submission - Waiting for acknowledgment response...',
           );
-          // Don't send poll packet here - wait for acknowledgment in _processFrame
-          // The acknowledgment will be handled in sendingPasskeyPacket state case
         } else {
           logger.Logger(
             'Passkey submission - WARNING: Frame write may have failed',
@@ -252,7 +160,6 @@ class BleNotifyDataHandler extends GetxController {
       return;
     }
 
-    // Stop any outstanding timers – we received a response.
     _dataTransferManager.stopResponseTimer();
 
     FrameData? frame;
@@ -270,7 +177,6 @@ class BleNotifyDataHandler extends GetxController {
         logger.Logger('BLE notify: failed to decrypt frame $e');
       }
     } else {
-      // Non-encrypted RX (encryption key response)
       logger.Logger('========================================');
       logger.Logger('TX/RX Logs - STEP 2: RECEIVE ENCRYPTION KEY (RX)');
       logger.Logger('========================================');
@@ -301,7 +207,6 @@ class BleNotifyDataHandler extends GetxController {
       logger.Logger('TX/RX Logs - ========================================\n');
     }
 
-    // Log RX frames (BLE + inner Technoswitch if present)
     _logRxTechnoswitchFrames(frame, rxData);
 
     if (frame == null) {
@@ -312,9 +217,7 @@ class BleNotifyDataHandler extends GetxController {
     _processFrame(frame, device);
   }
 
-  /// Logs RX BLE frame (raw) and inner Technoswitch frame (if length 216).
   void _logRxTechnoswitchFrames(FrameData? frame, List<int> rawRxData) {
-    // Log raw BLE frame
     String bleHex = rawRxData
         .map((b) => b.toRadixString(16).toUpperCase().padLeft(2, '0'))
         .join(' ');
@@ -326,7 +229,6 @@ class BleNotifyDataHandler extends GetxController {
       return;
     }
 
-    // Convert payload to Technoswitch bytes and log if full length
     List<int> technoBytes = convertStringListToHex(frame.payloadData);
     if (technoBytes.length == 216) {
       String technoHex = technoBytes
@@ -370,8 +272,6 @@ class BleNotifyDataHandler extends GetxController {
         _handlePassKeyRequestResponse(frame, connectedDevice);
         break;
       case BleStateMachine.sendingPasskeyPacket:
-        // Handle immediate acknowledgment response for passkey
-        // Extract Technoswitch frame from payload and log it
         if (frame.payloadData.isNotEmpty) {
           List<int> technoswitchFrameBytes = convertStringListToHex(
             frame.payloadData,
@@ -384,13 +284,11 @@ class BleNotifyDataHandler extends GetxController {
               'TX/RX ORIGINAL TECHNOSWITCH LOGS [PASSKEY] - RX Frame: $passkeyAckHex',
             );
 
-            // Extract packet type for ACK/NACK validation
             int pktTyp = technoswitchFrameBytes[3];
             logger.Logger(
               'Passkey acknowledgment - Packet Type: 0x${pktTyp.toRadixString(16).padLeft(2, '0')}',
             );
 
-            // Check for NACK (0x03) - restart from network packet
             if (pktTyp == 0x03) {
               logger.Logger(
                 'Passkey acknowledgment - NACK (0x03) received - Restarting from Network packet',
@@ -399,13 +297,10 @@ class BleNotifyDataHandler extends GetxController {
               break;
             }
 
-            // Validate ACK/NACK - should be ACK (0x02) or NRM (0x01)
             if (pktTyp != 0x01 && pktTyp != 0x02) {
               logger.Logger(
                 'Passkey acknowledgment - ERROR: Unexpected packet type: 0x${pktTyp.toRadixString(16).padLeft(2, '0')} (expected ACK=0x02 or NRM=0x01) - Restarting from Network packet',
               );
-              // await Future.delayed(Duration(seconds: 1));
-              // // _sendPollPacket();
               _restartFromNetworkPacket('Passkey acknowledgment');
               break;
             }
@@ -414,23 +309,13 @@ class BleNotifyDataHandler extends GetxController {
               'Passkey acknowledgment - Valid response received (Packet Type: ${pktTyp == 0x01 ? "NRM" : "ACK"})',
             );
 
-            // Update RX counter from acknowledgment
-            _pktRxCnt = technoswitchFrameBytes[4]; // Panel's tx = our rx
-
-            // Now send first poll packet after acknowledgment
-            _pollPacketCount = 0;
+            _pktRxCnt = technoswitchFrameBytes[4];
+            pollPacketCount = 0;
             _sendPollPacket();
           }
         }
         break;
-      // case BleStateMachine.requestedPasskey:
-      //   _handlePassKeyRequestResponse(frame, connectedDevice);
-      //   break;
       case BleStateMachine.sendingControlResEventReport:
-        // After sending CONTROL_RES_EVENT_REPORT, we may receive a normal acknowledgment response
-        // This is NOT the CONTROL_RES_EVENT_REPORT response - that comes in a poll packet
-        // We don't wait for this acknowledgment - polling already started
-        // But if acknowledgment comes, we can still update counters
         List<int> technoswitchFrameBytes = convertStringListToHex(
           frame.payloadData,
         );
@@ -445,7 +330,6 @@ class BleNotifyDataHandler extends GetxController {
           'Passkey acknowledgment - Packet Type: 0x${pktTyp.toRadixString(16).padLeft(2, '0')}',
         );
 
-        // Check for NACK (0x03) - restart from network packet
         if (pktTyp == 0x03) {
           logger.Logger(
             'Passkey acknowledgment - NACK (0x03) received - Restarting from Network packet',
@@ -454,7 +338,6 @@ class BleNotifyDataHandler extends GetxController {
           break;
         }
 
-        // Validate ACK/NACK - should be ACK (0x02) or NRM (0x01)
         if (pktTyp != 0x01 && pktTyp != 0x02) {
           logger.Logger(
             'Passkey acknowledgment - ERROR: Unexpected packet type: 0x${pktTyp.toRadixString(16).padLeft(2, '0')} (expected ACK=0x02 or NRM=0x01) - Restarting from Network packet',
@@ -466,7 +349,6 @@ class BleNotifyDataHandler extends GetxController {
           'CONTROL_RES_EVENT_REPORT - Normal acknowledgment received',
         );
 
-        // Parse the response to update counters and log it
         if (frame.payloadData.isNotEmpty) {
           List<int> technoswitchFrameBytes = convertStringListToHex(
             frame.payloadData,
@@ -482,13 +364,11 @@ class BleNotifyDataHandler extends GetxController {
               'TX/RX ORIGINAL TECHNOSWITCH LOGS [CONTROL_RES_EVENT_REPORT] - RX Frame: $controlAckHex',
             );
 
-            // Extract packet type for ACK/NACK validation
             int pktTyp = technoswitchFrameBytes[3];
             logger.Logger(
               'CONTROL_RES_EVENT_REPORT acknowledgment - Packet Type: 0x${pktTyp.toRadixString(16).padLeft(2, '0')}',
             );
 
-            // Check for NACK (0x03) - restart from network packet
             if (pktTyp == 0x03) {
               logger.Logger(
                 'CONTROL_RES_EVENT_REPORT acknowledgment - NACK (0x03) received - Restarting from Network packet',
@@ -499,7 +379,6 @@ class BleNotifyDataHandler extends GetxController {
               break;
             }
 
-            // Validate ACK/NACK - should be ACK (0x02) or NRM (0x01)
             if (pktTyp != 0x01 && pktTyp != 0x02) {
               logger.Logger(
                 'CONTROL_RES_EVENT_REPORT acknowledgment - ERROR: Unexpected packet type: 0x${pktTyp.toRadixString(16).padLeft(2, '0')} (expected ACK=0x02 or NRM=0x01) - Restarting from Network packet',
@@ -514,13 +393,11 @@ class BleNotifyDataHandler extends GetxController {
               'CONTROL_RES_EVENT_REPORT acknowledgment - Valid response received (Packet Type: ${pktTyp == 0x01 ? "NRM" : "ACK"})',
             );
 
-            // Update counters from response (optional - polling already started)
-            _pktRxCnt = technoswitchFrameBytes[4]; // Panel's tx = our rx
-            _pktTxCnt = technoswitchFrameBytes[5]; // Panel's rx = our tx
+            _pktRxCnt = technoswitchFrameBytes[4];
+            _pktTxCnt = technoswitchFrameBytes[5];
 
-            // Update last known RX counter if polling is active
             if (currentBleState.value == BleStateMachine.sendingPollPacket) {
-              _lastKnownRxCounter = _pktRxCnt;
+              lastKnownRxCounter = _pktRxCnt;
             }
             _sendPollPacket();
             currentBleState(BleStateMachine.sendingPollPacket);
@@ -530,7 +407,6 @@ class BleNotifyDataHandler extends GetxController {
             );
           }
         }
-        // Don't call _startContinuousPollPackets() here - already started
         break;
       case BleStateMachine.receivingEventLogs:
         _handleEventLogPacketResponse(frame);
@@ -579,14 +455,15 @@ class BleNotifyDataHandler extends GetxController {
       return;
     }
 
-    final List<int> payloadBytes = frame.payloadData
-        .map((String byte) => int.parse(byte, radix: 16))
-        .toList();
-    final Uint8List key16 =
-        BleCrypto.extractKeyFromHandshakePayload(payloadBytes);
-    final String keyHex = key16
-        .map((int b) => b.toRadixString(16).padLeft(2, '0'))
-        .join();
+    final List<int> payloadBytes =
+        frame.payloadData
+            .map((String byte) => int.parse(byte, radix: 16))
+            .toList();
+    final Uint8List key16 = BleCrypto.extractKeyFromHandshakePayload(
+      payloadBytes,
+    );
+    final String keyHex =
+        key16.map((int b) => b.toRadixString(16).padLeft(2, '0')).join();
     logger.Logger('Encryption key -  payload bytes: ${frame.payloadData}');
     logger.Logger('Encryption key -  (hex): $keyHex');
     await EncryptionKeyStore.instance.saveKey(keyHex);
@@ -655,14 +532,14 @@ class BleNotifyDataHandler extends GetxController {
     _continuousPollTimer?.cancel();
 
     // Reset all state variables
-    _pollPacketCount = 0;
+    pollPacketCount = 0;
     _pollPacketCountAfterControlRes = 0;
     _storedPasskey = "1974";
-    _passkeyAccepted = false; // Reset passkey acceptance flag
+    passkeyAccepted = false; // Reset passkey acceptance flag
     _controlResEventReportSent = false;
     _controlResEventReportValidResponseReceived = false;
     _passkeySent = false;
-    _lastKnownRxCounter = 0;
+    lastKnownRxCounter = 0;
     _pktTxCnt = 0;
     _pktRxCnt = 0;
     _lastFeaturePacketCounter = 0;
@@ -1012,7 +889,7 @@ class BleNotifyDataHandler extends GetxController {
         );
 
         // Mark passkey as accepted
-        _passkeyAccepted = true;
+        passkeyAccepted = true;
 
         // Update counters from response (rx only); keep feature counter as the passkey TX
         _pktRxCnt = technoswitchFrameBytes[4]; // Panel's tx = our rx
@@ -1099,7 +976,7 @@ class BleNotifyDataHandler extends GetxController {
           _pktTxCnt = technoswitchFrameBytes[5]; // Panel's rx = our tx
 
           // Store the RX counter as last known value
-          _lastKnownRxCounter = _pktRxCnt;
+          lastKnownRxCounter = _pktRxCnt;
 
           // Set state to indicate completion
           currentBleState(BleStateMachine.receivingEventLogs);
@@ -1332,7 +1209,7 @@ class BleNotifyDataHandler extends GetxController {
         _pktTxCnt = technoswitchFrameBytes[5]; // Panel's rx = our tx
 
         // Store the RX counter as last known value
-        _lastKnownRxCounter = _pktRxCnt;
+        lastKnownRxCounter = _pktRxCnt;
       }
     }
 
@@ -1514,7 +1391,7 @@ class BleNotifyDataHandler extends GetxController {
   //     currentBleState(BleStateMachine.connected);
   //     _emitEvent(BleHandshakeEvent.passkeyAccepted());
   //     _emitStateChange('Handshake completed - Connection established');
-  //   } else if (status == _invalidPassword) {
+  //   } else if (status == invalidPassword) {
   //     logger.Logger(
   //       'TX/RX Logs - Passkey response - ERROR: Invalid passkey (status: 0x09)',
   //     );

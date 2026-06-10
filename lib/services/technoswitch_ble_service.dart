@@ -1,11 +1,8 @@
 import 'dart:async';
-
-// import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
 import 'package:get/get.dart';
 import 'package:techno_switch_solar_app/utils/bluetooth/ble_notify_data_handler.dart';
 import 'package:techno_switch_solar_app/utils/bluetooth/bt_utils.dart';
-import 'package:techno_switch_solar_app/utils/logger.dart' as logger;
 
 class TechnoswitchBleService {
   TechnoswitchBleService._() {
@@ -29,14 +26,11 @@ class TechnoswitchBleService {
   Stream<BleHandshakeEvent> get handshakeEvents => _bleHandler.handshakeEvents;
   bool get isConnected => _isConnected;
 
-  /// Scans for nearby BLE devices and returns the first batch of results.
   Future<List<DiscoveredDevice>> scanForDevices({
     Duration duration = const Duration(seconds: 15),
   }) async {
     final List<DiscoveredDevice> devices = [];
 
-    //this starts the scan process, the moment we kisten to the stream, we are actively starting
-    //scan process
     final StreamSubscription sub = _btUtils.scanResultsStream.listen((results) {
       devices
         ..clear()
@@ -45,31 +39,11 @@ class TechnoswitchBleService {
 
     await Future.delayed(duration);
 
-    //this stops the scan process
     await sub.cancel();
 
     return List.unmodifiable(devices);
-
-    // final Completer<List<ScanResult>> completer = Completer<List<ScanResult>>();
-
-    // await _btUtils.scanDevices((List<ScanResult> results) {
-    //   if (!completer.isCompleted) {
-    //     completer.complete(List<ScanResult>.from(results));
-    //   }
-    // });
-
-    // return completer.future.timeout(
-    //   const Duration(seconds: 15),
-    //   onTimeout: () {
-    //     if (!completer.isCompleted) {
-    //       completer.complete(<ScanResult>[]);
-    //     }
-    //     return <ScanResult>[];
-    //   },
-    // );
   }
 
-  /// Connects to the provided [device] and kicks off the handshake flow.
   Stream<DeviceConnectionState> connectToDevice(
     DiscoveredDevice device,
   ) async* {

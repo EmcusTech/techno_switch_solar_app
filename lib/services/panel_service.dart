@@ -9,7 +9,6 @@ class PanelService {
 
   final DatabaseHelper _databaseHelper = DatabaseHelper();
 
-  /// Register or update a panel from device connection
   Future<PanelModel> registerPanelFromDevice({
     required dynamic device,
     required String scanType,
@@ -17,26 +16,22 @@ class PanelService {
   }) async {
     final now = DateTime.now();
 
-    // Generate panel info based on device type
     String panelId;
     String panelName;
     String deviceType;
     Map<String, dynamic> deviceInfo;
 
     if (scanType.toLowerCase() == 'bluetooth') {
-      // Handle Bluetooth device
       String macAddress = '';
       String deviceName = '';
       int? rssi;
 
       if (device.runtimeType.toString().contains('ScanResult')) {
-        // Extract from ScanResult
         final bluetoothDevice = (device as dynamic).device;
         macAddress = bluetoothDevice.remoteId.toString();
         deviceName = bluetoothDevice.platformName ?? 'BLE Solar Device';
         rssi = (device as dynamic).rssi;
       } else {
-        // Direct BluetoothDevice
         macAddress = (device as dynamic).remoteId.toString();
         deviceName = (device as dynamic).platformName ?? 'BLE Solar Device';
       }
@@ -55,7 +50,6 @@ class PanelService {
         rssi: rssi,
       );
     } else {
-      // Handle USB device
       String? vid;
       String? pid;
       String? productName;
@@ -65,9 +59,7 @@ class PanelService {
           vid = (device as dynamic).vid?.toRadixString(16)?.toUpperCase();
           pid = (device as dynamic).pid?.toRadixString(16)?.toUpperCase();
           productName = (device as dynamic).productName;
-        } catch (e) {
-          // Fallback if device properties are not accessible
-        }
+        } catch (_) {}
       }
 
       panelId = PanelModel.generatePanelId(
@@ -86,7 +78,6 @@ class PanelService {
       );
     }
 
-    // Create panel model
     final panel = PanelModel(
       panelId: panelId,
       panelName: panelName,
@@ -98,50 +89,39 @@ class PanelService {
       lastConnected: now,
     );
 
-    // Upsert panel (insert if new, update if existing)
     await _databaseHelper.upsertPanel(panel);
 
-    // Return the registered panel
     return await getPanelByPanelId(panelId) ?? panel;
   }
 
-  /// Get panel by panel ID
   Future<PanelModel?> getPanelByPanelId(String panelId) async {
     return await _databaseHelper.getPanelByPanelId(panelId);
   }
 
-  /// Get panel by BLE name (full advertised name). Used for site management lookup.
   Future<PanelModel?> getPanelByBleName(String bleName) async {
     return await _databaseHelper.getPanelByPanelName(bleName);
   }
 
-  /// Get all panels for a site
   Future<List<PanelModel>> getPanelsBySiteId(int siteId) async {
     return await _databaseHelper.getPanelsBySiteId(siteId);
   }
 
-  /// Get unassigned panels
   Future<List<PanelModel>> getUnassignedPanels() async {
     return await _databaseHelper.getUnassignedPanels();
   }
 
-  /// Assign panel to site
   Future<bool> assignPanelToSite(
     String panelId,
     int siteId, {
     String? panelName,
     bool offlineProvisioned = false,
   }) async {
-    // Check if panel exists, if not create it first
     var panel = await getPanelByPanelId(panelId);
 
     final now = DateTime.now();
 
     if (panel == null) {
-      // Panel doesn't exist, create it with minimal info
-      // This can happen if panel was never registered during connection
-      // Detect device type from panel ID format
-      String deviceType = 'bluetooth'; // Default
+      String deviceType = 'bluetooth';
       if (panelId.startsWith('BT_') || panelId.startsWith('BLUETOOTH_')) {
         deviceType = 'bluetooth';
       } else if (panelId.startsWith('USB_')) {
@@ -150,7 +130,6 @@ class PanelService {
         r'^[0-9A-F]{2}(:[0-9A-F]{2}){5}$',
         caseSensitive: false,
       ).hasMatch(panelId)) {
-        // MAC address format (e.g., DC:ED:12:B1:56:37)
         deviceType = 'bluetooth';
       }
 
@@ -159,14 +138,14 @@ class PanelService {
         panelName:
             (panelName ?? '').trim().isNotEmpty
                 ? panelName!.trim()
-                : 'Panel $panelId', // Fallback name
+                : 'Panel $panelId',
         deviceType: deviceType,
         deviceInfo: jsonEncode(
           offlineProvisioned
               ? PanelModel.createOfflineProvisionedDeviceInfo(panelId)
               : {'panelId': panelId},
         ),
-        siteId: null, // Will be set below
+        siteId: null,
         createdAt: now,
         updatedAt: now,
         lastConnected: offlineProvisioned ? null : now,
@@ -194,7 +173,6 @@ class PanelService {
       }
     }
 
-    // Check if panel is already assigned to another site
     if (panel.siteId != null && panel.siteId != siteId) {
       throw Exception('Panel is already assigned to another site');
     }
@@ -203,7 +181,6 @@ class PanelService {
     return result > 0;
   }
 
-  /// Records a successful BLE connection against an offline-provisioned panel.
   Future<bool> markPanelBleLinked(
     String panelId, {
     required String macAddress,
@@ -234,30 +211,25 @@ class PanelService {
     return true;
   }
 
-  /// Unassign panel from site
   Future<bool> unassignPanelFromSite(String panelId) async {
     final result = await _databaseHelper.unassignPanelFromSite(panelId);
     return result > 0;
   }
 
-  /// Update panel last connected time
   Future<bool> updatePanelLastConnected(String panelId) async {
     final result = await _databaseHelper.updatePanelLastConnected(panelId);
     return result > 0;
   }
 
-  /// Get all panels
   Future<List<PanelModel>> getAllPanels() async {
     return await _databaseHelper.getAllPanels();
   }
 
-  /// Delete panel
   Future<bool> deletePanel(String panelId) async {
     final result = await _databaseHelper.deletePanel(panelId);
     return result > 0;
   }
 
-  /// Get panels with site information
   Future<List<PanelWithSiteInfo>> getPanelsWithSiteInfo() async {
     final db = await _databaseHelper.database;
     final List<Map<String, dynamic>> maps = await db.rawQuery('''
@@ -282,22 +254,18 @@ class PanelService {
     }).toList();
   }
 
-  /// Check if panel can be assigned to site (not already assigned elsewhere)
   Future<bool> canAssignPanelToSite(String panelId, int siteId) async {
     final panel = await getPanelByPanelId(panelId);
     if (panel == null) return false;
 
-    // Panel can be assigned if it's not assigned or already assigned to the same site
     return panel.siteId == null || panel.siteId == siteId;
   }
 
-  /// Get site panels count
   Future<int> getSitePanelsCount(int siteId) async {
     final panels = await getPanelsBySiteId(siteId);
     return panels.length;
   }
 
-  /// Generate a unique panel ID for testing purposes
   String generateTestPanelId(String deviceName) {
     return PanelModel.generatePanelId(
       deviceType: 'test',
@@ -306,7 +274,6 @@ class PanelService {
   }
 }
 
-/// Helper class to combine panel with site information
 class PanelWithSiteInfo {
   final PanelModel panel;
   final String? siteName;

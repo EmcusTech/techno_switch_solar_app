@@ -47,8 +47,6 @@ class EventLogExcelExporter {
         TextCellValue(log.lBusNo ?? ''),
       ]);
     }
-
-    // Auto-freeze header row
     sheet.setDefaultRowHeight(18);
     sheet.setColumnAutoFit(0);
 

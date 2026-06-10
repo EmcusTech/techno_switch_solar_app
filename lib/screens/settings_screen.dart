@@ -4,9 +4,7 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
-import 'package:techno_switch_solar_app/controllers/updates_controller.dart';
 import 'package:techno_switch_solar_app/screens/device_connecting_screen.dart';
-import 'package:techno_switch_solar_app/widgets/firmware_upgrade_bottom_sheet.dart';
 import 'package:techno_switch_solar_app/utils/ble_name_utils.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -36,7 +34,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 }
 
-// Create a separate widget for the EventLog content
 class _SettingsContent extends StatefulWidget {
   final String panelName;
   final String panelVersionNo;
@@ -199,7 +196,6 @@ class _SettingsContentState extends State<_SettingsContent> {
       padding: const EdgeInsets.all(20),
       child: Column(
         children: [
-          // Panel Information Row
           Row(
             children: [
               SvgPicture.asset(
@@ -259,15 +255,6 @@ class _SettingsContentState extends State<_SettingsContent> {
                   ),
                 ],
               ),
-              // Spacer(),
-              // Transform.rotate(
-              //   angle: 180 * 3.14159 / 360,
-              //   child: Icon(
-              //     Icons.arrow_forward_ios,
-              //     size: 18,
-              //     color: Color(0xFF696969),
-              //   ),
-              // ),
             ],
           ),
           SizedBox(height: 10),
@@ -288,23 +275,7 @@ class _SettingsContentState extends State<_SettingsContent> {
           Divider(color: Colors.black.withValues(alpha: 0.18), thickness: 1),
           _settingTile(title: 'Panel Information', onTap: () {}),
           Divider(color: Colors.black.withValues(alpha: 0.18), thickness: 1),
-          _settingTile(
-            title: 'Firmware Upgrade',
-            onTap: () {
-              // // Ensure UpdatesController is registered
-              // if (!Get.isRegistered<UpdatesController>()) {
-              //   Get.put(UpdatesController());
-              // }
-              // showModalBottomSheet(
-              //   context: context,
-              //   isScrollControlled: true,
-              //   backgroundColor: Colors.transparent,
-              //   isDismissible: false,
-              //   enableDrag: true,
-              //   builder: (context) => FirmwareUpgradeBottomSheet(),
-              // );
-            },
-          ),
+          _settingTile(title: 'Firmware Upgrade', onTap: () {}),
           Divider(color: Colors.black.withValues(alpha: 0.18), thickness: 1),
           SizedBox(height: 80),
         ],

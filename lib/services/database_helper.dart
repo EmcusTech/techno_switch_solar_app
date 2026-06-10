@@ -23,10 +23,9 @@ class DatabaseHelper {
     String path = join(await getDatabasesPath(), 'techno_switch_solar.db');
     return await openDatabase(
       path,
-      version: 5, // Increment version to add retrieval_id column to logs table
+      version: 5,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
-      // Ensure SQLite enforces foreign keys for cascading behavior
       onConfigure: (db) async {
         await db.execute('PRAGMA foreign_keys = ON');
       },
@@ -34,7 +33,6 @@ class DatabaseHelper {
   }
 
   Future<void> _onCreate(Database db, int version) async {
-    // Create sites table
     await db.execute('''
       CREATE TABLE sites (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -51,7 +49,6 @@ class DatabaseHelper {
       )
     ''');
 
-    // Create log_retrievals table
     await db.execute('''
       CREATE TABLE log_retrievals (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -65,7 +62,6 @@ class DatabaseHelper {
       )
     ''');
 
-    // Create logs table
     await db.execute('''
       CREATE TABLE logs (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -91,7 +87,6 @@ class DatabaseHelper {
       )
     ''');
 
-    // Create panels table
     await db.execute('''
       CREATE TABLE panels (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -107,12 +102,13 @@ class DatabaseHelper {
       )
     ''');
 
-    // Create indexes for better performance
     await db.execute('CREATE INDEX idx_logs_site_id ON logs (site_id)');
     await db.execute(
       'CREATE INDEX idx_logs_event_date ON logs (event_date_time)',
     );
-    await db.execute('CREATE INDEX idx_logs_retrieval_id ON logs (retrieval_id)');
+    await db.execute(
+      'CREATE INDEX idx_logs_retrieval_id ON logs (retrieval_id)',
+    );
     await db.execute('CREATE INDEX idx_sites_created_at ON sites (created_at)');
     await db.execute('CREATE INDEX idx_panels_panel_id ON panels (panel_id)');
     await db.execute('CREATE INDEX idx_panels_site_id ON panels (site_id)');
@@ -126,7 +122,6 @@ class DatabaseHelper {
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
-      // Add panels table if upgrading from version 1
       await db.execute('''
         CREATE TABLE panels (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -147,7 +142,6 @@ class DatabaseHelper {
     }
 
     if (oldVersion < 3) {
-      // Add log_retrievals table if upgrading from version 2
       await db.execute('''
         CREATE TABLE log_retrievals (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -170,26 +164,22 @@ class DatabaseHelper {
     }
 
     if (oldVersion < 4) {
-      // Add is_valid column to logs table if upgrading from version 3
       await db.execute('ALTER TABLE logs ADD COLUMN is_valid INTEGER');
     }
 
     if (oldVersion < 5) {
-      // Add retrieval_id column to logs table to link logs to retrieval sessions
       await db.execute('ALTER TABLE logs ADD COLUMN retrieval_id INTEGER');
-      await db.execute('CREATE INDEX idx_logs_retrieval_id ON logs (retrieval_id)');
+      await db.execute(
+        'CREATE INDEX idx_logs_retrieval_id ON logs (retrieval_id)',
+      );
     }
   }
 
-  // SITE OPERATIONS
-
-  /// Insert a new site into the database
   Future<int> insertSite(SiteModel site) async {
     final db = await database;
     return await db.insert('sites', site.toMap());
   }
 
-  /// Get all sites from the database, ordered by most recent first
   Future<List<SiteModel>> getAllSites() async {
     final db = await database;
     final List<Map<String, dynamic>> maps = await db.query(
@@ -202,7 +192,6 @@ class DatabaseHelper {
     });
   }
 
-  /// Get a specific site by ID
   Future<SiteModel?> getSiteById(int id) async {
     final db = await database;
     final List<Map<String, dynamic>> maps = await db.query(
@@ -217,7 +206,6 @@ class DatabaseHelper {
     return null;
   }
 
-  /// Update an existing site
   Future<int> updateSite(SiteModel site) async {
     final db = await database;
     return await db.update(
@@ -228,32 +216,22 @@ class DatabaseHelper {
     );
   }
 
-  /// Delete a site and all its associated logs
   Future<int> deleteSite(int id) async {
     final db = await database;
 
     return await db.transaction((txn) async {
-      // Remove logs and retrieval sessions first to avoid orphans
       await txn.delete('logs', where: 'site_id = ?', whereArgs: [id]);
       await txn.delete('log_retrievals', where: 'site_id = ?', whereArgs: [id]);
-
-      // Unassign any panels that were linked to this site
       await txn.update(
         'panels',
-        {
-          'site_id': null,
-          'updated_at': DateTime.now().millisecondsSinceEpoch,
-        },
+        {'site_id': null, 'updated_at': DateTime.now().millisecondsSinceEpoch},
         where: 'site_id = ?',
         whereArgs: [id],
       );
-
-      // Finally remove the site itself
       return await txn.delete('sites', where: 'id = ?', whereArgs: [id]);
     });
   }
 
-  /// Search sites by name
   Future<List<SiteModel>> searchSites(String searchTerm) async {
     final db = await database;
     final List<Map<String, dynamic>> maps = await db.query(
@@ -268,15 +246,11 @@ class DatabaseHelper {
     });
   }
 
-  // LOG OPERATIONS
-
-  /// Insert a new log into the database
   Future<int> insertLog(LogModel log) async {
     final db = await database;
     return await db.insert('logs', log.toMap());
   }
 
-  /// Insert multiple logs in a transaction for better performance
   Future<void> insertLogs(List<LogModel> logs) async {
     final db = await database;
     final batch = db.batch();
@@ -288,7 +262,6 @@ class DatabaseHelper {
     await batch.commit(noResult: true);
   }
 
-  /// Get all logs for a specific site
   Future<List<LogModel>> getLogsBySiteId(int siteId) async {
     final db = await database;
     final List<Map<String, dynamic>> maps = await db.query(
@@ -303,7 +276,6 @@ class DatabaseHelper {
     });
   }
 
-  /// Get all logs that are not associated with any site (orphaned logs)
   Future<List<LogModel>> getOrphanedLogs() async {
     final db = await database;
     final List<Map<String, dynamic>> maps = await db.query(
@@ -317,7 +289,6 @@ class DatabaseHelper {
     });
   }
 
-  /// Get all logs belonging to a specific retrieval session
   Future<List<LogModel>> getLogsByRetrievalId(int retrievalId) async {
     final db = await database;
     final List<Map<String, dynamic>> maps = await db.query(
@@ -332,7 +303,6 @@ class DatabaseHelper {
     });
   }
 
-  /// Get logs for a site within a retrieved_at range (fallback for older data)
   Future<List<LogModel>> getLogsBySiteIdAndRetrievedRange(
     int siteId,
     DateTime start,
@@ -355,7 +325,6 @@ class DatabaseHelper {
     });
   }
 
-  /// Update logs to associate them with a site
   Future<int> associateLogsWithSite(List<int> logIds, int siteId) async {
     final db = await database;
     final batch = db.batch();
@@ -373,13 +342,11 @@ class DatabaseHelper {
     return results.length;
   }
 
-  /// Delete logs for a specific site
   Future<int> deleteLogsBySiteId(int siteId) async {
     final db = await database;
     return await db.delete('logs', where: 'site_id = ?', whereArgs: [siteId]);
   }
 
-  /// Delete orphaned logs older than specified days
   Future<int> deleteOldOrphanedLogs(int daysOld) async {
     final db = await database;
     final cutoffTime =
@@ -392,9 +359,6 @@ class DatabaseHelper {
     );
   }
 
-  // COMBINED OPERATIONS
-
-  /// Get site with its log count
   Future<List<Map<String, dynamic>>> getSitesWithLogCount() async {
     final db = await database;
     final List<Map<String, dynamic>> maps = await db.rawQuery('''
@@ -411,7 +375,6 @@ class DatabaseHelper {
     return maps;
   }
 
-  /// Get recent activity (sites and their latest logs)
   Future<List<Map<String, dynamic>>> getRecentActivity(int limit) async {
     final db = await database;
     final List<Map<String, dynamic>> maps = await db.rawQuery(
@@ -441,13 +404,8 @@ class DatabaseHelper {
     return maps;
   }
 
-  // PANEL OPERATIONS
-
-  /// Insert or update a panel (upsert based on panel_id)
   Future<int> upsertPanel(PanelModel panel) async {
     final db = await database;
-
-    // Check if panel already exists
     final existing = await db.query(
       'panels',
       where: 'panel_id = ?',
@@ -455,13 +413,10 @@ class DatabaseHelper {
     );
 
     if (existing.isNotEmpty) {
-      // Update existing panel - preserve siteId if it exists and panel.siteId is null
       final existingSiteId = existing.first['site_id'] as int?;
       final updatedPanel = panel.copyWith(
         id: existing.first['id'] as int,
-        siteId:
-            panel.siteId ??
-            existingSiteId, // Preserve existing siteId if new one is null
+        siteId: panel.siteId ?? existingSiteId,
         updatedAt: DateTime.now(),
         lastConnected: DateTime.now(),
       );
@@ -473,12 +428,10 @@ class DatabaseHelper {
       );
       return existing.first['id'] as int;
     } else {
-      // Insert new panel
       return await db.insert('panels', panel.toMap());
     }
   }
 
-  /// Get panel by panel_id
   Future<PanelModel?> getPanelByPanelId(String panelId) async {
     final db = await database;
     final List<Map<String, dynamic>> maps = await db.query(
@@ -493,7 +446,6 @@ class DatabaseHelper {
     return null;
   }
 
-  /// Get panel by panel_name (BLE name). Used when looking up by full advertised name.
   Future<PanelModel?> getPanelByPanelName(String panelName) async {
     final db = await database;
     final List<Map<String, dynamic>> maps = await db.query(
@@ -508,7 +460,6 @@ class DatabaseHelper {
     return null;
   }
 
-  /// Get all panels for a specific site
   Future<List<PanelModel>> getPanelsBySiteId(int siteId) async {
     final db = await database;
     final List<Map<String, dynamic>> maps = await db.query(
@@ -523,7 +474,6 @@ class DatabaseHelper {
     });
   }
 
-  /// Get all panels that are not associated with any site
   Future<List<PanelModel>> getUnassignedPanels() async {
     final db = await database;
     final List<Map<String, dynamic>> maps = await db.query(
@@ -537,7 +487,6 @@ class DatabaseHelper {
     });
   }
 
-  /// Associate a panel with a site
   Future<int> assignPanelToSite(String panelId, int siteId) async {
     final db = await database;
     return await db.update(
@@ -548,7 +497,6 @@ class DatabaseHelper {
     );
   }
 
-  /// Remove panel from site (unassign)
   Future<int> unassignPanelFromSite(String panelId) async {
     final db = await database;
     return await db.update(
@@ -559,7 +507,6 @@ class DatabaseHelper {
     );
   }
 
-  /// Update panel last connected time
   Future<int> updatePanelLastConnected(String panelId) async {
     final db = await database;
     return await db.update(
@@ -573,7 +520,6 @@ class DatabaseHelper {
     );
   }
 
-  /// Get all panels
   Future<List<PanelModel>> getAllPanels() async {
     final db = await database;
     final List<Map<String, dynamic>> maps = await db.query(
@@ -586,7 +532,6 @@ class DatabaseHelper {
     });
   }
 
-  /// Delete a panel
   Future<int> deletePanel(String panelId) async {
     final db = await database;
     return await db.delete(
@@ -596,15 +541,11 @@ class DatabaseHelper {
     );
   }
 
-  // LOG RETRIEVAL OPERATIONS
-
-  /// Insert a new log retrieval session
   Future<int> insertLogRetrieval(LogRetrievalModel logRetrieval) async {
     final db = await database;
     return await db.insert('log_retrievals', logRetrieval.toMap());
   }
 
-  /// Get all log retrievals for a site
   Future<List<LogRetrievalModel>> getLogRetrievalsBySite(int siteId) async {
     final db = await database;
     final List<Map<String, dynamic>> maps = await db.query(
@@ -619,7 +560,6 @@ class DatabaseHelper {
     });
   }
 
-  /// Get a specific log retrieval by ID
   Future<LogRetrievalModel?> getLogRetrievalById(int id) async {
     final db = await database;
     final List<Map<String, dynamic>> maps = await db.query(
@@ -634,7 +574,6 @@ class DatabaseHelper {
     return null;
   }
 
-  /// Update an existing log retrieval
   Future<int> updateLogRetrieval(LogRetrievalModel logRetrieval) async {
     final db = await database;
     return await db.update(
@@ -645,13 +584,11 @@ class DatabaseHelper {
     );
   }
 
-  /// Delete a log retrieval
   Future<int> deleteLogRetrieval(int id) async {
     final db = await database;
     return await db.delete('log_retrievals', where: 'id = ?', whereArgs: [id]);
   }
 
-  /// Get total number of log retrievals for a site
   Future<int> getLogRetrievalCountBySite(int siteId) async {
     final db = await database;
     return Sqflite.firstIntValue(
@@ -663,7 +600,6 @@ class DatabaseHelper {
         0;
   }
 
-  /// Get the most recent log retrieval for a site
   Future<LogRetrievalModel?> getMostRecentLogRetrieval(int siteId) async {
     final db = await database;
     final List<Map<String, dynamic>> maps = await db.query(
@@ -680,9 +616,6 @@ class DatabaseHelper {
     return null;
   }
 
-  // DATABASE MAINTENANCE
-
-  /// Get database statistics
   Future<Map<String, int>> getDatabaseStats() async {
     final db = await database;
 
@@ -709,13 +642,11 @@ class DatabaseHelper {
     };
   }
 
-  /// Close the database connection
   Future<void> close() async {
     final db = await database;
     await db.close();
   }
 
-  /// Delete the entire database (for testing purposes)
   Future<void> deleteDatabase() async {
     String path = join(await getDatabasesPath(), 'techno_switch_solar.db');
     await databaseFactory.deleteDatabase(path);
