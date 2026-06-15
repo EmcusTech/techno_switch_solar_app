@@ -2,7 +2,7 @@
 import 'package:flutter/foundation.dart';
 
 class AppState {
-  AppState._(); // private constructor
+  AppState._();
 
   static final AppState instance = AppState._();
 

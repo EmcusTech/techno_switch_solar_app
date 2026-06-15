@@ -1,8 +1,3 @@
-// ==========================================
-// EXT ZONE EQUIPMENT MODE BITMASK
-// SounderDelay fixed to ENABLED
-// ==========================================
-
 enum ExtZoneEquipmentEnable { disabled, enabled }
 
 enum ExtZoneEquipmentMode { normal, test }
@@ -28,22 +23,15 @@ Ext Zone Mode   : $zoneMode
 }
 
 class ExtZoneEquipmentModeCodec {
-  // Bit 5 always ON
   static const int _defaultSounderDelay = 0x20;
-
-  // ================= ENCODER =================
   static int encode(ExtZoneEquipmentModeConfig config) {
     int value = 0;
-
-    // Apply fixed default
     value |= _defaultSounderDelay;
 
-    // Bit 0 → Enable
     if (config.zoneEnable == ExtZoneEquipmentEnable.enabled) {
       value |= 0x01;
     }
 
-    // Bit 1 → Test mode
     if (config.zoneMode == ExtZoneEquipmentMode.test) {
       value |= 0x02;
     }
@@ -55,7 +43,6 @@ class ExtZoneEquipmentModeCodec {
     return (encode(config) + 4).toRadixString(16).toUpperCase().padLeft(2, '0');
   }
 
-  // ================= DECODER =================
   static ExtZoneEquipmentModeConfig decode(int value) {
     return ExtZoneEquipmentModeConfig(
       zoneEnable:
@@ -75,8 +62,6 @@ class ExtZoneEquipmentModeCodec {
     return decode(value);
   }
 }
-
-// ================= DEMO =================
 
 void main() {
   print("========= EXT ZONE EQUIPMENT MODE =========\n");

@@ -1,5 +1,4 @@
 class EventConstants {
-  // Event types
   static const int evtTypeAllSearchNoneRsp = 0;
   static const int evtTypeGeneral = 1;
   static const int evtTypeAction = 2;
@@ -91,10 +90,7 @@ class EventConstants {
   ];
 
   static final List<List<String>> eventDescriptions = [
-    // 0 - None
     ["-"],
-
-    // 1 - General
     [
       "Memory lock open",
       "Service switch open",
@@ -116,8 +112,6 @@ class EventConstants {
       "Firmware changed",
       "Firmware check-sum error",
     ],
-
-    // 2 - Action
     [
       "Memory lock closed",
       "Service switch closed",
@@ -149,8 +143,6 @@ class EventConstants {
       "Local Controls Enabled",
       "Local Controls Disabled",
     ],
-
-    // 3 - Restart
     [
       "Other",
       "Power-On",
@@ -169,8 +161,6 @@ class EventConstants {
       "Independent watchdog",
       "Cold start",
     ],
-
-    // 4 - Network
     [
       "Network Comms Down",
       "Network Comms Up",
@@ -194,11 +184,7 @@ class EventConstants {
       "Extnl controls enabled",
       "Extnl controls disabled",
     ],
-
-    // 5 - Access
     ["Enabled", "Violation", "Disabled"],
-
-    // 6 - Zone
     [
       "Enabled",
       "Disabled",
@@ -215,8 +201,6 @@ class EventConstants {
       "Alarm Off (MCP)",
       "Evacuation",
     ],
-
-    // 7 - Area
     [
       "Enabled",
       "Disabled",
@@ -231,8 +215,6 @@ class EventConstants {
       "Test-coincidence off",
       "Evacuation",
     ],
-
-    // 8 - Input
     [
       "Enabled",
       "Disabled",
@@ -242,23 +224,11 @@ class EventConstants {
       "Input off (test)",
       "Input duplication",
     ],
-
-    // 9 - Output
     ["Enabled", "Disabled", "Test On", "Test Off"],
-
-    // 10 - Supervised Input
     ["Supervisory Fault", "Supervisory Normal"],
-
-    // 11 - Supervised Output
     ["Supervisory Fault", "Supervisory Normal"],
-
-    // 12 - Zone Input
     ["Supervisory Fault", "Supervisory Normal"],
-
-    // 13 - Supervisory
     ["Process Limit", "Mailbox Limit", "Queue Limit"],
-
-    // 14 - General Equipment
     [
       "Enabled",
       "Disabled",
@@ -269,8 +239,6 @@ class EventConstants {
       "Delay Enabled",
       "Delay Disabled",
     ],
-
-    // 15 - Ext. Zone
     [
       "Enabled",
       "Disabled",
@@ -334,8 +302,6 @@ class EventConstants {
       "Extnl Extinguishing Flt Fault On",
       "Extnl Extinguishing Flt Fault Off",
     ],
-
-    // 16 - Zone Equipment
     [
       "Enabled",
       "Disabled",
@@ -346,8 +312,6 @@ class EventConstants {
       "Delay Enabled",
       "Delay Disabled",
     ],
-
-    // 17 - Area Equipment
     [
       "Enabled",
       "Disabled",
@@ -358,8 +322,6 @@ class EventConstants {
       "Delay Enabled",
       "Delay Disabled",
     ],
-
-    // 18 - Ext. Zone Equipment
     [
       "Enabled",
       "Disabled",
@@ -370,14 +332,8 @@ class EventConstants {
       "Delay Enabled",
       "Delay Disabled",
     ],
-
-    // 19 - Timer alarm
     ["Alarm On", "Alarm Off"],
-
-    // 20 - Service due
     ["Service Due"],
-
-    // 21 - Supply
     [
       "Earth Fault Ok",
       "Earth Fault High",
@@ -408,8 +364,6 @@ class EventConstants {
       "Extnl Fault",
       "Extnl Fault Ok",
     ],
-
-    // 22 - Network
     ["Ring Open", "Ring Closed", "Ring Disconnect", "Test On", "Test Off"],
   ];
 
@@ -621,26 +575,6 @@ class EventConstants {
     } else if (evttype == evtTypeExtZoneEquipment) {
       returnIdentifier = "Ext. Snd 2";
     }
-
-    // try {
-    //   if ((evtTypeZone == evttype) ||
-    //       (evtTypeSupervisedInput == evttype) ||
-    //       (evtTypeSupervisedOutput == evttype) ||
-    //       (evtTypeZoneInput == evttype) ||
-    //       (evtTypeExtZone == evttype)) {
-    //     String valuePar0 = eventParam0NumberNameList[evttype]?.replaceAll('{par0}', rxpar0.toString()) ?? "";
-    //     String valuePar1 = supervisoryFaultParam12Name[rxpar1] ?? "";
-    //     returnIdentifier = "$valuePar0 $valuePar1";
-    //   } else if ((evtTypeZoneEquipment == evttype) ||
-    //       (evtTypeAreaEquipment == evttype) ||
-    //       (evtTypeExtZoneEquipment == evttype)) {
-    //     String valuePar1 = eventParam1NumberNameList[evttype]?.replaceAll('{par1}', rxpar1.toString()) ?? "";
-    //     String valuePar2 = supervisoryFaultParam12Name[rxpar2] ?? "";
-    //     returnIdentifier = "Equipment $valuePar1 $valuePar2";
-    //   }
-    // } catch (e) {
-    //   return returnIdentifier;
-    // }
 
     return returnIdentifier;
   }

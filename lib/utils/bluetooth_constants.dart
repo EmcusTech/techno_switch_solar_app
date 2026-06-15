@@ -1,5 +1,5 @@
-// import 'package:flutter_blue_plus/flutter_blue_plus.dart' as fbp;
 import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
+
 class BleUuids {
   static const String primaryServiceUuid =
       "D973F2F0-B19E-11E2-9E96-0800200C9A66";

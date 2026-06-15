@@ -1,54 +1,34 @@
-/*
-* Project      : gemini_mobile_app
-* File         : data_helper.dart
-* Description  : Utility functions for CRC-16 checksum calculation, byte manipulation (big-endian), and hexadecimal data conversion.
-* Author       : SrihariharanT
-* Date         : 2024-05-20
-* Version      : 1.0
-* Ticket       :
-*/
-
-/// {@category bluetooth}
 library;
 
 import 'dart:convert';
 import 'dart:typed_data';
 
-/// Calculates the CRC-16 checksum for the provided data.
-///
-/// This function calculates the CRC-16 checksum for the given data using the
-/// CRC-16-CCITT polynomial (0x1021) with an initial seed value of 0xFFFF.
-///  Ensure that the provided data is valid and not empty.
 int convertCrc16(Uint8List data, {bool isDefaultPolynomial = true}) {
-  int crc = 0xFFFF; // Initial seed value
+  int crc = 0xFFFF;
 
-  int polynomial = isDefaultPolynomial ? 0x1021 : 0x8408; // Polynomial value
+  int polynomial = isDefaultPolynomial ? 0x1021 : 0x8408;
 
   for (int byte in data) {
-    crc ^= (byte << 8); // XOR byte into the high byte of crc
+    crc ^= (byte << 8);
 
     for (int i = 0; i < 8; i++) {
       if ((crc & 0x8000) != 0) {
-        crc = ((crc << 1) ^ polynomial) & 0xFFFF; // Ensure crc remains 16-bit
+        crc = ((crc << 1) ^ polynomial) & 0xFFFF;
       } else {
-        crc = (crc << 1) & 0xFFFF; // Ensure crc remains 16-bit
+        crc = (crc << 1) & 0xFFFF;
       }
     }
   }
 
-  crc =
-      crc ^
-      0x0000; // Final XOR value (no effect in this case, could be omitted)
+  crc = crc ^ 0x0000;
 
   return crc;
 }
 
 int crc16ForLogs(List<int> data, [int? size]) {
-  // Initialize CRC value
   int crc = 0xFFFF;
   size ??= data.length;
 
-  // Calculate CRC for each byte in the data buffer
   for (int i = 0; i < size; i++) {
     int byte = data[i];
     for (int j = 0; j < 8; j++) {
@@ -61,42 +41,9 @@ int crc16ForLogs(List<int> data, [int? size]) {
     }
   }
 
-  // Invert CRC and return
   return ~crc & 0xFFFF;
 }
 
-// int crcCcittFalse(List<int> data, {int poly = 0x1021, int initVal = 0xFFFF}) {
-//   int crc = initVal;
-//   for (var byte in data) {
-//     crc ^= byte << 8;
-//     for (int i = 0; i < 8; i++) {
-//       if (crc & 0x8000 != 0) {
-//         crc = (crc << 1) ^ poly;
-//       } else {
-//         crc <<= 1;
-//       }
-//       crc &= 0xFFFF;  // Keep crc within 16 bits
-//     }
-//   }
-//   return crc;
-// }
-//
-// int calculateCrc16(List<int> pu8Data, int u16DataLen) {
-//   // Initialize the frame buffer
-//   List<int> pu8FrameBuff = List.filled(u16DataLen, 0);
-//
-//   // Fill the frame buffer with the data
-//   for (int i = 0; i < u16DataLen; i++) {
-//     pu8FrameBuff[i] = pu8Data[i];
-//   }
-//
-//   // Calculate the CRC
-//   int u16CalculatedCrc = crcCcittFalse(pu8FrameBuff);
-//
-//   return u16CalculatedCrc;
-// }
-
-// Function to convert list of 8-bit values to 32-bit little-endian values
 List<int> convertTo32BitLittleEndian(Uint8List data) {
   List<int> littleEndianData = <int>[];
   for (int i = 0; i < data.length; i += 4) {
@@ -134,7 +81,6 @@ int calculateCrc32(
   return crc & 0xFFFFFFFF;
 }
 
-// Helper function to reverse the byte order to little-endian format
 int toLittleEndian(int value) {
   return ((value >> 24) & 0xFF) |
       ((value >> 16) & 0xFF) << 8 |
@@ -142,43 +88,28 @@ int toLittleEndian(int value) {
       (value & 0xFF) << 24;
 }
 
-/// Converts a 16-bit integer value to a Uint8List representing the bytes in big-endian order.
-///
-/// This function takes a 16-bit integer value and converts it to a Uint8List containing
-/// the bytes representing the value in big-endian (network byte order).
-///
-/// Ensure that the provided value is within the range of a 16-bit integer.
 Uint8List intToBytesBigEndian(int value) {
-  // Create a ByteData instance with a buffer of length 2
   ByteData buffer = ByteData(2);
 
-  // Set the 16-bit integer value in big-endian order
   buffer.setUint16(0, value, Endian.big);
 
-  // Create a Uint8List from the ByteData buffer
   return Uint8List.view(buffer.buffer);
 }
 
 Uint8List intToBytesLittleEndian(int value) {
-  // Create a ByteData instance with a buffer of length 2
   ByteData buffer = ByteData(2);
 
-  // Set the 16-bit integer value in big-endian order
   buffer.setUint16(0, value, Endian.little);
 
-  // Create a Uint8List from the ByteData buffer
   return Uint8List.view(buffer.buffer);
 }
 
 int bytesToIntLittleEndian(Uint8List bytes) {
-  // Create a ByteData instance from the byte list
   ByteData buffer = ByteData.sublistView(bytes);
 
-  // Read the 16-bit integer value in little-endian order
   return buffer.getUint16(0, Endian.little);
 }
 
-/// Converts a list of bytes to a hexadecimal string.
 String bytesToHex(List<int> bytes) {
   return bytes
       .map((int byte) => byte.toRadixString(16).padLeft(2, '0'))
@@ -197,7 +128,6 @@ int hexToInt(String hexString) {
   return decimalValue;
 }
 
-/// Converts a hexadecimal string to a list of bytes.
 List<int> hexToBytes(String hexString) {
   List<int> bytes = <int>[];
 
@@ -210,8 +140,6 @@ List<int> hexToBytes(String hexString) {
   return bytes;
 }
 
-/// Converts a given [text] string into a list of integers representing
-/// the hexadecimal values of its characters.
 List<int> convertStringToHex(String text) {
   List<int> hexValues = <int>[];
   for (int i = 0; i < text.length; i++) {
@@ -220,7 +148,6 @@ List<int> convertStringToHex(String text) {
   return hexValues;
 }
 
-/// Converts a list of hexadecimal strings to a list of integers.
 List<int> convertStringListToHex(List<String> stringList) {
   return stringList.map((String str) => int.parse(str, radix: 16)).toList();
 }
@@ -230,7 +157,6 @@ List<int> convertPassword(String password) {
   return convertStringListToHex(data);
 }
 
-/// Converts a list of hexadecimal strings to a list of integers.
 List<String> convertIntListToHex(List<int> stringList) {
   return stringList.map((int str) => str.toRadixString(16)).toList();
 }
@@ -242,59 +168,38 @@ Uint8List hexStringToUint8List(String hexString) {
 }
 
 List<String> intToHexList(int value) {
-  String hexStr =
-      value
-          .toRadixString(16)
-          .padLeft(4, '0')
-          .toUpperCase(); // Ensure it is 4 characters long
+  String hexStr = value.toRadixString(16).padLeft(4, '0').toUpperCase();
   return <String>[hexStr.substring(0, 2), hexStr.substring(2, 4)];
 }
 
-/// Calculates the length byte for a given hexadecimal string.
-///
-/// This function calculates the length byte for the provided hexadecimal string,
-/// which represents the length of the data in bytes. The length byte is formatted
-/// as a 16-bit hexadecimal value (2 bytes).
 String calculateLengthByte(String hexString) {
   List<int> byteArray = hexToBytes(hexString);
   String lengthInHex = byteArray.length.toRadixString(16).padLeft(2, '0');
   lengthInHex = lengthInHex.padLeft(4, '0');
-  // Logger(
-  //     "Hex bytes: ${byteArray.map((e) => e.toRadixString(16).padLeft(2, '0')).join('')}");
-  // Logger("Length (hex, 2 bytes): $lengthInHex");
   return lengthInHex;
 }
 
 String calculateLengthByteByBytes(List<int> byteArray) {
   String lengthInHex = byteArray.length.toRadixString(16).padLeft(2, '0');
   lengthInHex = lengthInHex.padLeft(4, '0');
-  // Logger(
-  //     "Hex bytes: ${byteArray.map((e) => e.toRadixString(16).padLeft(2, '0')).join('')}");
-  // Logger("Length (hex, 2 bytes): $lengthInHex");
   return lengthInHex;
 }
 
-///Convert bit value to hex
 String convertBitToHex(String binaryStr) {
   int decimalValue = int.parse(binaryStr, radix: 2);
-
-  // Convert the decimal value to a hexadecimal string
   String hexValue = decimalValue.toRadixString(16);
 
   return hexValue;
 }
 
-///Convert bit value to hex
 int convertBitToDecimal(String binaryStr) {
   int decimalValue = int.parse(binaryStr, radix: 2);
   return decimalValue;
 }
 
 Uint8List convertZoneBytesToLittleEndian(int value) {
-  // Create a ByteData instance with a buffer of length 4
   ByteData buffer = ByteData(8);
 
-  // Set the 32-bit integer value in big-endian order
   buffer.setUint64(0, value, Endian.little);
 
   return Uint8List.view(buffer.buffer);
@@ -308,7 +213,6 @@ int convertLittleEndianToZoneBytes(Uint8List bytes) {
 int convertStringListToInt(List<String> data) {
   List<int> bytes = convertStringListToHex(data).reversed.toList();
 
-  // Combine the two bytes to form an integer
   int value = (bytes[0] << 8) | bytes[1];
 
   return value;
@@ -381,7 +285,7 @@ bool checkForFormat(String? qrData) {
 
 int uint8ListToIntUsingByteData(Uint8List uint8List) {
   ByteData byteData = ByteData.sublistView(uint8List);
-  return byteData.getUint32(0, Endian.big); // Adjust size if needed
+  return byteData.getUint32(0, Endian.big);
 }
 
 String handleEmptyString(String value) {

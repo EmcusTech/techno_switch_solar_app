@@ -1,15 +1,9 @@
-// ==========================================
-// ZONE EQUIPMENT MODE BITMASK
-// Only 3 fields configurable
-// ==========================================
-
 enum ZoneEquipmentEnable { disabled, enabled }
 
 enum ZoneEquipmentMode { normal, test }
 
 enum ZoneSounderDelay { disabled, enabled }
 
-// Defaults (not configurable)
 enum ZoneSilenceCapability { cannotSilence, canSilence }
 
 enum ZoneWalkTestActivation { noActivation, activate }
@@ -18,8 +12,6 @@ class ZoneEquipmentModeConfig {
   final ZoneEquipmentEnable zoneEnable;
   final ZoneEquipmentMode zoneMode;
   final ZoneSounderDelay sounderDelay;
-
-  // Fixed defaults
   final ZoneSilenceCapability silenceCapability;
   final ZoneWalkTestActivation walkTestActivation;
 
@@ -43,29 +35,22 @@ Sounder Delay   : $sounderDelay
 }
 
 class ZoneEquipmentModeCodec {
-  // Default bits
-  static const int _defaultSilence = 0x04; // Bit 2
-  static const int _defaultWalkTest = 0x08; // Bit 3
-
-  // ================= ENCODER =================
+  static const int _defaultSilence = 0x04;
+  static const int _defaultWalkTest = 0x08;
   static int encode(ZoneEquipmentModeConfig config) {
     int value = 0;
 
-    // Apply defaults first
     value |= _defaultSilence;
     value |= _defaultWalkTest;
 
-    // Bit 0
     if (config.zoneEnable == ZoneEquipmentEnable.enabled) {
       value |= 0x01;
     }
 
-    // Bit 1
     if (config.zoneMode == ZoneEquipmentMode.test) {
       value |= 0x02;
     }
 
-    // Bit 5
     if (config.sounderDelay == ZoneSounderDelay.enabled) {
       value |= 0x20;
     }
@@ -77,7 +62,6 @@ class ZoneEquipmentModeCodec {
     return encode(config).toRadixString(16).toUpperCase().padLeft(2, '0');
   }
 
-  // ================= DECODER =================
   static ZoneEquipmentModeConfig decode(int value) {
     return ZoneEquipmentModeConfig(
       zoneEnable:
@@ -102,8 +86,6 @@ class ZoneEquipmentModeCodec {
     return decode(value);
   }
 }
-
-// ================= DEMO =================
 
 void main() {
   print("========= ZONE EQUIPMENT MODE =========\n");

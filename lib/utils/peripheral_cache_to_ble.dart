@@ -10,8 +10,6 @@ import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dar
 import 'package:techno_switch_solar_app/utils/zone_equipment_mode_util.dart';
 import 'package:techno_switch_solar_app/utils/zone_setup_manager_sync.dart';
 
-/// Loads saved peripheral setup from [PeripheralSetupCache] into [BleManager]
-/// notifiers so bulk "Update Panel" sends app data instead of the last fetch.
 class PeripheralCacheToBle {
   PeripheralCacheToBle._();
 
@@ -93,10 +91,7 @@ class PeripheralCacheToBle {
 
   static int _clampInt(int v, int max) => v.clamp(0, max);
 
-  static Future<void> applyToBleManager(
-    BleManager m,
-    String deviceId,
-  ) async {
+  static Future<void> applyToBleManager(BleManager m, String deviceId) async {
     final panel = await PeripheralSetupCache.loadPanelInfoSetup(deviceId);
     if (panel != null) _applyPanelInfo(m, panel);
 
@@ -149,8 +144,7 @@ class PeripheralCacheToBle {
     m.panelInfoHour.value = (data['hour'] as num?)?.toInt() ?? 0;
     m.panelInfoMinute.value = (data['minute'] as num?)?.toInt() ?? 0;
     m.panelInfoSecond.value = (data['second'] as num?)?.toInt() ?? 0;
-    m.panelInfoEventReminderDelay.value =
-        (data['delay'] as num?)?.toInt() ?? 0;
+    m.panelInfoEventReminderDelay.value = (data['delay'] as num?)?.toInt() ?? 0;
   }
 
   static void _applyGeneralModule(BleManager m, Map<String, dynamic> data) {
@@ -246,13 +240,15 @@ class PeripheralCacheToBle {
       final gIdx = _clampInt((r['group'] as num?)?.toInt() ?? 0, 3);
       final group = _relayGroups[gIdx];
       final opts = _relayFunctions[group]!;
-      final fIdx = _clampInt((r['function'] as num?)?.toInt() ?? 0, opts.length - 1);
+      final fIdx = _clampInt(
+        (r['function'] as num?)?.toInt() ?? 0,
+        opts.length - 1,
+      );
       final isEnabled = r['enabled'] == true;
       final isTest = r['test'] == true;
 
       final cfg = OutputModeConfig(
-        outputEnable:
-            isEnabled ? OutputEnable.enabled : OutputEnable.disabled,
+        outputEnable: isEnabled ? OutputEnable.enabled : OutputEnable.disabled,
         outputMode: isTest ? OutputMode.test : OutputMode.normal,
         supervisionMode: SupervisionMode.normal,
       );
@@ -354,8 +350,7 @@ class PeripheralCacheToBle {
       final fn = (s['functionNo'] as num?)?.toInt() ?? 0;
 
       final cfg = OutputModeConfig(
-        outputEnable:
-            isEnabled ? OutputEnable.enabled : OutputEnable.disabled,
+        outputEnable: isEnabled ? OutputEnable.enabled : OutputEnable.disabled,
         outputMode: isTest ? OutputMode.test : OutputMode.normal,
         supervisionMode:
             isNormal ? SupervisionMode.normal : SupervisionMode.mtl5525,
@@ -406,7 +401,9 @@ class PeripheralCacheToBle {
       );
       final zcfg = ZoneEquipmentModeConfig(
         zoneEnable:
-            isEnabled ? ZoneEquipmentEnable.enabled : ZoneEquipmentEnable.disabled,
+            isEnabled
+                ? ZoneEquipmentEnable.enabled
+                : ZoneEquipmentEnable.disabled,
         zoneMode: isTest ? ZoneEquipmentMode.test : ZoneEquipmentMode.normal,
         sounderDelay: ZoneSounderDelay.disabled,
       );
@@ -493,8 +490,7 @@ class PeripheralCacheToBle {
       m.isSounderGeneralEnabled.value = ge;
       m.isSounderGeneralTest.value = gt;
       m.isSounderGeneralDelay.value = gd;
-      m.sounderGeneralAction.value =
-          (gen['action'] as num?)?.toInt() ?? 0;
+      m.sounderGeneralAction.value = (gen['action'] as num?)?.toInt() ?? 0;
       m.sounderGeneralDelay.value = (gen['delay'] as num?)?.toInt() ?? 0;
 
       final gcfg = GeneralEquipmentModeConfig(
@@ -503,8 +499,7 @@ class PeripheralCacheToBle {
         equipmentMode: gt ? EquipmentMode.test : EquipmentMode.normal,
         sounderDelay: gd ? SounderDelay.enabled : SounderDelay.disabled,
       );
-      m.sounderGeneralMode.value =
-          GeneralEquipmentModeCodec.encodeHex(gcfg);
+      m.sounderGeneralMode.value = GeneralEquipmentModeCodec.encodeHex(gcfg);
     }
   }
 
@@ -538,13 +533,13 @@ class PeripheralCacheToBle {
     m.extZoneMode.value = hexValue;
     m.extZoneCountdownAuto.value =
         (data['countdownAuto'] as num?)?.toInt() ?? 0;
-    m.extZoneCountdownMan.value =
-        (data['countdownMan'] as num?)?.toInt() ?? 0;
-    m.extZoneReleaseTime.value =
-        (data['releaseTime'] as num?)?.toInt() ?? 0;
+    m.extZoneCountdownMan.value = (data['countdownMan'] as num?)?.toInt() ?? 0;
+    m.extZoneReleaseTime.value = (data['releaseTime'] as num?)?.toInt() ?? 0;
     m.extZoneResetDelay.value = (data['resetDelay'] as num?)?.toInt() ?? 0;
-    m.extZoneAction.value =
-        _clampInt((data['action'] as num?)?.toInt() ?? 0, 9);
+    m.extZoneAction.value = _clampInt(
+      (data['action'] as num?)?.toInt() ?? 0,
+      9,
+    );
     m.extZoneFunction.value = functionInt;
     m.extZoneActuatorType.value = actuaturTypeInt;
     m.isResetAllowed.value = resetAllowedInt;

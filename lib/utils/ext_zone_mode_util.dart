@@ -1,30 +1,14 @@
-// =============================
-// ZONE MODE BITMASK DEMO
-// Paste directly into DartPad
-// =============================
-
 enum ExtZoneEnable { disabled, enabled }
 
 enum ExtZoneMode { normal, test }
 
-enum HoldMode {
-  notUsed, // 0
-  restartCount, // 1
-  suspendCount, // 2
-  continueCount, // 3
-}
+enum HoldMode { notUsed, restartCount, suspendCount, continueCount }
 
 class ExtZoneModeConfig {
   final ExtZoneEnable extZoneEnable;
   final ExtZoneMode extZoneMode;
   final HoldMode holdMode;
-
-  /// IMPORTANT:
-  /// Firmware behaviour is reversed from documentation
-  /// true  -> reset allowed
-  /// false -> reset NOT allowed
   final bool resetAllowed;
-
   final bool flowDetectionUsed;
 
   const ExtZoneModeConfig({
@@ -48,7 +32,6 @@ Flow Detection     : $flowDetectionUsed
 }
 
 class ExtZoneModeCodec {
-  // ================= ENCODER =================
   static int encode(ExtZoneModeConfig config) {
     int value = 0;
 
@@ -77,7 +60,6 @@ class ExtZoneModeCodec {
     return encode(config).toRadixString(16).toUpperCase().padLeft(2, '0');
   }
 
-  // ================= DECODER =================
   static ExtZoneModeConfig decode(int value) {
     return ExtZoneModeConfig(
       extZoneEnable:
@@ -93,8 +75,6 @@ class ExtZoneModeCodec {
     );
   }
 
-  // ================= NEW HELPER =================
-  /// Create ZoneModeConfig directly from HEX string (e.g. "12")
   static ExtZoneModeConfig fromHex(String hex) {
     final int value = int.parse(hex, radix: 16);
     return decode(value);

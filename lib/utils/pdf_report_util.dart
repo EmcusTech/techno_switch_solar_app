@@ -9,11 +9,6 @@ class LogReportPdfUtil {
   LogReportPdfUtil._();
 
   static final DateFormat _dtFormat = DateFormat('dd/MM/yyyy HH:mm:ss');
-
-  // ─────────────────────────────────────────────
-  // ENTRY POINT
-  // ─────────────────────────────────────────────
-
   static Future<void> generate({
     required List<LogModel> logs,
     required String siteName,
@@ -28,31 +23,19 @@ class LogReportPdfUtil {
 
     pdf.addPage(
       pw.MultiPage(
-        // ❌ DO NOT set pageFormat or margin here
         header: (context) => _header(context, logo),
         footer: _footer,
-
-        // ✅ ALL page-level config goes here
         pageTheme: pw.PageTheme(
           pageFormat: PdfPageFormat(
             PdfPageFormat.a4.height,
             PdfPageFormat.a4.width,
           ),
           margin: const pw.EdgeInsets.fromLTRB(24, 24, 24, 48),
-
-          // ✅ SVG watermark (repeats every page)
-          // buildBackground:
-          //     (context) => pw.Center(
-          //       child: pw.Opacity(
-          //         opacity: 0.06,
-          //         child: pw.SizedBox(child: watermarkSvg),
-          //       ),
-          //     ),
           buildForeground: (context) {
             return pw.Align(
               alignment: pw.Alignment.bottomCenter,
               child: pw.Opacity(
-                opacity: 0.008, // keep low – this is ABOVE text
+                opacity: 0.008,
                 child: pw.Container(
                   margin: const pw.EdgeInsets.only(bottom: 24),
                   child: watermarkSvg,
@@ -61,8 +44,6 @@ class LogReportPdfUtil {
             );
           },
         ),
-
-        // ✅ FLOWING CONTENT (pagination-safe)
         build:
             (_) => [
               _reportInfo(
@@ -88,10 +69,6 @@ class LogReportPdfUtil {
       onLayout: (format) async => pdf.save(),
     );
   }
-
-  // ─────────────────────────────────────────────
-  // HEADER
-  // ─────────────────────────────────────────────
 
   static pw.Widget _sectionHeader(String title) {
     return pw.Padding(
@@ -136,10 +113,6 @@ class LogReportPdfUtil {
       ),
     );
   }
-
-  // ─────────────────────────────────────────────
-  // REPORT INFO (ONLY PAGE 1)
-  // ─────────────────────────────────────────────
 
   static pw.Widget _reportInfo({
     required String siteName,
@@ -186,10 +159,6 @@ class LogReportPdfUtil {
     );
   }
 
-  // ─────────────────────────────────────────────
-  // LOG TABLE
-  // ─────────────────────────────────────────────
-
   static pw.Widget _logTable(List<LogModel> logs) {
     if (logs.isEmpty) {
       return pw.Text('No log entries available');
@@ -214,43 +183,6 @@ class LogReportPdfUtil {
       );
     }
 
-    pw.Widget statusPill(String status) {
-      PdfColor bg;
-      PdfColor fg;
-
-      switch (status.toLowerCase()) {
-        case 'logged':
-          bg = PdfColor.fromInt(0xFFE6F4EA);
-          fg = PdfColor.fromInt(0xFF1E7F43);
-          break;
-        case 'active':
-          bg = PdfColor.fromInt(0xFFFFF4CC);
-          fg = PdfColor.fromInt(0xFF8A6D00);
-          break;
-        default:
-          bg = PdfColors.grey300;
-          fg = PdfColors.black;
-      }
-
-      return pw.Container(
-        padding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-        decoration: pw.BoxDecoration(
-          color: bg,
-          borderRadius: pw.BorderRadius.circular(10),
-          border: pw.Border.all(color: PdfColors.amber),
-        ),
-        child: pw.Text(
-          status,
-          style: pw.TextStyle(
-            fontSize: 7,
-            fontWeight: pw.FontWeight.bold,
-            color: fg,
-          ),
-        ),
-      );
-    }
-
-    // ───────── HEADER ROW ─────────
     final headerRow = pw.Column(
       children: [
         pw.Row(
@@ -273,7 +205,6 @@ class LogReportPdfUtil {
       ],
     );
 
-    // ───────── DATA ROWS ─────────
     final dataRows = logs.asMap().entries.map((entry) {
       final i = entry.key + 1;
       final log = entry.value;
@@ -305,10 +236,6 @@ class LogReportPdfUtil {
     return pw.Column(children: [headerRow, ...dataRows]);
   }
 
-  // ─────────────────────────────────────────────
-  // FOOTER
-  // ─────────────────────────────────────────────
-
   static pw.Widget _footer(pw.Context context) {
     return pw.Row(
       mainAxisAlignment: pw.MainAxisAlignment.end,
@@ -320,10 +247,6 @@ class LogReportPdfUtil {
       ],
     );
   }
-
-  // ─────────────────────────────────────────────
-  // HELPERS
-  // ─────────────────────────────────────────────
 
   static String _safe(String? value) =>
       (value == null || value.isEmpty) ? '-' : value;

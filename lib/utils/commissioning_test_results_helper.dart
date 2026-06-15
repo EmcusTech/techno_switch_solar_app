@@ -3,7 +3,6 @@ import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/utils/storage/commissioning_test_results_cache.dart';
 import 'package:techno_switch_solar_app/widgets/commissioning_test_result_dialog.dart';
 
-/// Shows Pass/Fail confirmation for items currently in test mode on [manager].
 Future<void> showCommissioningTestResultConfirmation({
   required BuildContext context,
   required String deviceId,
@@ -94,20 +93,13 @@ List<CommissioningTestItem> _itemsFromFlags(
   for (var i = 0; i < flags.length; i++) {
     if (!flags[i]) continue;
     items.add(
-      CommissioningTestItem(
-        id: '$idPrefix${i + 1}',
-        label: '$prefix ${i + 1}',
-      ),
+      CommissioningTestItem(id: '$idPrefix${i + 1}', label: '$prefix ${i + 1}'),
     );
   }
   return items;
 }
 
-/// Simple item label for PDF report rows (no zone/relay/sounder text).
-String commissioningTestItemLabel(
-  CommissioningTestType type,
-  String itemId,
-) {
+String commissioningTestItemLabel(CommissioningTestType type, String itemId) {
   final index = int.tryParse(itemId.replaceAll(RegExp(r'[^0-9]'), ''));
   if (index == null) return itemId.toUpperCase();
 

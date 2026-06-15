@@ -1,14 +1,3 @@
-/*
-* Project      : gemini_mobile_app
-* File         : data_handler.dart
-* Description  : Facilitates operations on Bluetooth data packets, including extracting payload data, converting payloads to big-endian and little-endian byte orders, decrypting data packets, validating frame integrity, and generating data packets. It also handles error checking and logging throughout these processes.
-* Author       : SrihariharanT
-* Date         : 2024-05-20
-* Version      : 1.0
-* Ticket       :
-*/
-
-/// {@category bluetooth}
 library;
 
 import 'dart:convert';
@@ -23,22 +12,17 @@ import 'package:techno_switch_solar_app/utils/encryption_utils.dart';
 import 'package:techno_switch_solar_app/utils/logger.dart';
 import 'data_helper.dart';
 
-/// Converts bytes to ASCII representation (printable chars or dots)
 String _bytesToAscii(List<int> bytes) {
   return bytes.map((b) {
     if (b >= 32 && b <= 126) {
-      // Printable ASCII characters
       return String.fromCharCode(b);
     } else {
-      // Non-printable characters shown as dots
       return '.';
     }
   }).join();
 }
 
-/// A utility class for handling data related operations, such as extracting firmware versions and verifying CRC.
 class DataHandler {
-  /// Creating chunks of large data packet for sending to the ble
   List<List<int>> generateChunksForConfigPayload(List<int> payload) {
     List<List<int>> payloadChunkList = <List<int>>[];
 
@@ -64,7 +48,6 @@ class DataHandler {
       payloadChunkList.add(tempSubList);
     }
 
-    // Adding sequence number to the payload chunks
     for (int j = 0; j < payloadChunkList.length; j++) {
       List<int> sequenceNumber = intToBytesLittleEndian(j + 1);
 
@@ -74,20 +57,16 @@ class DataHandler {
     return payloadChunkList;
   }
 
-  /// Creating chunks of large data packet for Upgrading Firmware to the ble
   Future<List<List<int>>> generateChunksForFirmwareUpgradePayload(
     List<int> payload,
   ) async {
     List<List<int>> payloadChunkList = <List<int>>[];
-    // Firmware upgrade uses 256-byte chunks (no sequence number)
-    int chunkSize =
-        256; // Changed from 484 (482 + 2 sequence) to 256 bytes without sequence number
+    int chunkSize = 256;
 
     Logger(
       'Firmware Upgrade: Using chunk size ${chunkSize} bytes (no sequence number)',
     );
 
-    // Step 1: Generate chunks from payload
     for (int i = 0; i < payload.length - 100; i += chunkSize) {
       List<int> tempSubList = payload.sublist(
         i,
@@ -96,21 +75,12 @@ class DataHandler {
             : i + chunkSize,
       );
 
-      // Step 2: Check if the chunk is full of 0xFF and skip if it is
       if (tempSubList.every((int e) => e == 0xFF)) {
-        continue; // Skip this chunk
+        continue;
       }
 
-      // Add the non-skipped chunk to the list (no sequence number added)
       payloadChunkList.add(tempSubList);
     }
-
-    // OLD CODE (commented out - sequence number removed):
-    // // Step 3: Adding sequence numbers to the payload chunks
-    // for (int j = 0; j < payloadChunkList.length; j++) {
-    //   List<int> sequenceNumber = intToBytesLittleEndian(j + 1);
-    //   payloadChunkList[j].insertAll(0, sequenceNumber);
-    // }
 
     return payloadChunkList;
   }
@@ -119,81 +89,28 @@ class DataHandler {
     List<int> payload,
   ) async {
     List<List<int>> payloadChunkList = <List<int>>[];
-    // Firmware upgrade uses 256-byte chunks (no sequence number)
-    int chunkSize =
-        256; // Changed from 484 (482 + 2 sequence) to 256 bytes without sequence number
+    int chunkSize = 256;
 
     Logger(
-      'Firmware Upgrade: Using chunk size ${chunkSize} bytes (no sequence number)',
+      'Firmware Upgrade: Using chunk size $chunkSize bytes (no sequence number)',
     );
 
-    // Step 1: Generate chunks from the complete payload
     for (int i = 0; i < payload.length; i += chunkSize) {
       List<int> tempSubList = payload.sublist(
         i,
         i + chunkSize > payload.length ? payload.length : i + chunkSize,
       );
 
-      // Step 2: Check if the chunk is full of 0xFF and skip if it is
       if (tempSubList.every((int e) => e == 0xFF)) {
-        continue; // Skip this chunk
+        continue;
       }
 
-      // OLD CODE (commented out - sequence number removed):
-      // bool isGoneThroughFF = false;
-      // if (isGoneThroughFF) {
-      //   List<int> sequenceNumber = intToBytesLittleEndian(
-      //     tempSequenceNumber - 1,
-      //   );
-      //   List<int> chunkSizeByes = intToBytesLittleEndian(chunkSize);
-      //   payloadChunkList.add(<int>[...sequenceNumber, ...chunkSizeByes]);
-      //   isGoneThroughFF = false;
-      // }
-      // List<int> sequenceNumber = intToBytesLittleEndian(tempSequenceNumber);
-      // tempSubList.insertAll(0, sequenceNumber);
-
-      // Add the chunk to the list (no sequence number added)
       payloadChunkList.add(tempSubList);
     }
-
-    // // Step 2: Add sequence numbers to the payload chunks
-    // for (int j = 0; j < payloadChunkList.length; j++) {
-    //   List<int> sequenceNumber = intToBytesLittleEndian(j + 1);
-    //   payloadChunkList[j].insertAll(0, sequenceNumber);
-    // }
 
     return payloadChunkList;
   }
 
-  // Future<List<List<int>>> generateChunksForFirmwareUpgradeWithFullPayload(
-  //     List<int> payload) async {
-  //   List<List<int>> payloadChunkList = [];
-  //   int chunkSize = enBLE_PAYLOAD_SIZE_PER_PACKET;
-
-  //   // Step 1: Generate chunks from the complete payload
-  //   for (int i = 0; i < payload.length; i += chunkSize) {
-  //     var tempSubList = payload.sublist(
-  //       i,
-  //       i + chunkSize > payload.length ? payload.length : i + chunkSize,
-  //     );
-
-  //     // Add the chunk to the list (no skipping logic)
-  //     payloadChunkList.add(tempSubList);
-  //   }
-
-  //   // Step 2: Add sequence numbers to the payload chunks
-  //   for (int j = 0; j < payloadChunkList.length; j++) {
-  //     List<int> sequenceNumber = intToBytesLittleEndian(j + 1);
-  //     payloadChunkList[j].insertAll(0, sequenceNumber);
-  //   }
-
-  //   return payloadChunkList;
-  // }
-
-  /// This function formats a given string to a fixed length.
-  /// It trims the string if it exceeds the specified length, or pads it with
-  /// null bytes (0x00) if it's shorter than the specified length.
-  /// Returns a Uint8List of the fixed length.
   Uint8List formatDataToFixedLength({
     required String dataValue,
     required int lengthOfTheString,
@@ -236,21 +153,17 @@ class DataHandler {
     return trimmedDataValue;
   }
 
-  /// Decrypts the received data packet and parses it into a `FrameData` object.
   Future<FrameData?> decryptTheDataPacketWithoutConversion(
     List<int> dataPacket,
   ) async {
     try {
       String hexString = bytesToHex(dataPacket);
 
-      /// Decrypt received data
       List<int>? decryptedData = await EncryptionUtils().decryptData(hexString);
 
-      // Get current state to determine step name
       final BleNotifyDataHandler handler = Get.find<BleNotifyDataHandler>();
       final BleStateMachine currentState = handler.currentBleState.value;
 
-      // Determine step name based on current state
       String stepName = 'UNKNOWN';
       int stepNumber = 0;
       switch (currentState) {
@@ -296,7 +209,6 @@ class DataHandler {
       Logger('========================================');
       Logger("TX/RX Logs - Current State: ${currentState.name}");
 
-      // Log non-encrypted RX data (after decryption)
       String rxHex = decryptedData!
           .map((b) => b.toRadixString(16).toUpperCase().padLeft(2, '0'))
           .join(' ');
@@ -307,7 +219,6 @@ class DataHandler {
       Logger('TX/RX Logs - Hex: $rxHex');
       Logger('TX/RX Logs - ASCII: $rxAscii');
 
-      // Parse frame to get command and frame type
       FrameData parsedFrame = DataTransferManager().parseRxFrame(decryptedData);
 
       if (parsedFrame.commandByte.isNotEmpty &&
@@ -328,7 +239,6 @@ class DataHandler {
       return parsedFrame;
     } catch (e) {
       Logger('TX/RX Logs - ERROR: Failed to decrypt/parse frame: $e');
-      // TODO(username): message.
       return null;
     }
   }
@@ -345,48 +255,37 @@ class DataHandler {
         Logger('Calculated CRC from the frame: $calculatedCrcHexList ');
         Logger('Expected CRC from the frame: ${data.calculatedCrc}');
         String errorMessage = "";
-        // Check preamble byte
         if (!listEquals(data.preambleByte, <String>['AA', '55'])) {
           errorMessage = "Invalid preamble";
           Logger(errorMessage);
           Logger("${data.preambleByte}");
           errorCode!(errorMessage);
           isValid = false;
-        } else
-        // Check Frame type is greater than zero
-        if (data.frameTypeByte.isEmpty) {
+        } else if (data.frameTypeByte.isEmpty) {
           errorMessage = "Invalid Type of Frame";
           Logger("Invalid Type of Frame");
           errorCode!(errorMessage);
           Logger(data.frameTypeByte);
           isValid = false;
-        } else
-        // Check payload data is greater than zero
-        if (data.payloadData.isEmpty) {
+        } else if (data.payloadData.isEmpty) {
           errorMessage = "Invalid payload Data";
           Logger("Invalid payload Data");
           errorCode!(errorMessage);
           Logger("${data.payloadData}");
           isValid = false;
-        } else
-        // Check payload length is greater than zero
-        if (data.payloadLength.isEmpty) {
+        } else if (data.payloadLength.isEmpty) {
           errorMessage = "Invalid payload length";
           Logger("Invalid payload length");
           errorCode!(errorMessage);
           Logger("${data.payloadLength}");
           isValid = false;
-        } else
-        // Check Calculated CRC byte
-        if (!listEquals(data.calculatedCrc, calculatedCrcHexList)) {
+        } else if (!listEquals(data.calculatedCrc, calculatedCrcHexList)) {
           errorMessage = "Invalid CRC";
           Logger("Invalid CRC");
           errorCode!(errorMessage);
           Logger("${data.calculatedCrc}");
           isValid = false;
-        } else
-        // Check end frame
-        if (!listEquals(data.endFrame, <String>['EE', 'BB'])) {
+        } else if (!listEquals(data.endFrame, <String>['EE', 'BB'])) {
           errorMessage = "Invalid end frame";
           Logger("Invalid end frame");
           errorCode!(errorMessage);
@@ -406,8 +305,6 @@ class DataHandler {
     return isValid;
   }
 
-  /// For getting Expander Address
-  /// that is starting from 201
   int getExpanderAddress(int index) {
     int baseIndex = 200;
 

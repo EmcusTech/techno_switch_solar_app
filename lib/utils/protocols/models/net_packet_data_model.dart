@@ -1,17 +1,13 @@
 class NetPacketDataModel {
-  //ids
   final int uniqueId;
   final int uniqueIdChecksum;
-  // module info
   final int moduleType;
   final int moduleRevision;
   final int moduleName;
-  //module hardware info
   final int moduleHardwareMajorRevision;
   final int moduleHardwareMinorRevision;
   final int moduleHardwareOption;
   final int moduleHardwareVersion;
-  //module software info
   final int moduleSoftwareMajorRevision;
   final int moduleSoftwareMinorRevision;
   final int moduleSoftwareRelease;
@@ -19,7 +15,6 @@ class NetPacketDataModel {
   final int moduleSoftwareReleaseYear;
   final int moduleSoftwareReleaseMonth;
   final int moduleSoftwareReleaseDay;
-
   final int moduleSoftwareProtocolRevision;
 
   NetPacketDataModel({

@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-/// Soft classification for ADC-derived voltages (generic thresholds).
 enum DiagnosticVoltageBand { critical, nominal, high }
 
 DiagnosticVoltageBand diagnosticVoltageBandFor(double volts) {
@@ -12,7 +11,6 @@ DiagnosticVoltageBand diagnosticVoltageBandFor(double volts) {
   return DiagnosticVoltageBand.nominal;
 }
 
-/// Compact read-only tile: label, numeric value, and unit.
 class DiagnosticVoltageTile extends StatelessWidget {
   const DiagnosticVoltageTile({
     super.key,
@@ -29,10 +27,8 @@ class DiagnosticVoltageTile extends StatelessWidget {
   final String unit;
   final int decimals;
 
-  static const Color _textPrimary = Color(0xFF3D3D3D);
   static const Color _textMuted = Color(0xFF918F8F);
   static const Color _border = Color(0xFFDCDCDC);
-  static const Color _surfaceMuted = Color(0xFFF8F8F8);
 
   @override
   Widget build(BuildContext context) {

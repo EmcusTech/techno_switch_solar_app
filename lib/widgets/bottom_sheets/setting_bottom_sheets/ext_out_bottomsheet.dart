@@ -32,8 +32,6 @@ class ExtOutBottomSheet extends StatefulWidget {
 }
 
 class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
-  // Dropdown values
-
   List<String> enabledOptions = ['No', 'Yes'];
   List<String> actuatorTypeOptions = [
     'Not Defined',
@@ -78,20 +76,15 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
   late String resetInCount;
   late String holdCount;
   late String action;
-
-  // Controllers
   late TextEditingController autoCtrl;
   late TextEditingController manCtrl;
   late TextEditingController releaseCtrl;
   late TextEditingController resetDelayCtrl;
-
   final FocusNode autoFocusNode = FocusNode();
   final FocusNode manFocusNode = FocusNode();
   final FocusNode releaseFocusNode = FocusNode();
   final FocusNode resetDelayFocusNode = FocusNode();
-
   BleManager? manager;
-
   final String _autoError = "Countdown Auto must be between 0 and 60";
   final String _manError = "Countdown Man must be between 0 and 60";
   final String _releaseError = "Release Time must be between 10 and 300";
@@ -109,30 +102,6 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
     if (resetDelay == null || resetDelay < 0 || resetDelay > 1800) return false;
     return true;
   }
-
-  // void _updateValidationErrors() {
-  //   final auto = int.tryParse(autoCtrl.text);
-  //   final man = int.tryParse(manCtrl.text);
-  //   final release = int.tryParse(releaseCtrl.text);
-  //   final resetDelay = int.tryParse(resetDelayCtrl.text);
-
-  //   _autoError =
-  //       (auto == null || auto < 0 || auto > 60)
-  //           ? 'Countdown Auto must be between 0 and 60'
-  //           : null;
-  //   _manError =
-  //       (man == null || man < 0 || man > 60)
-  //           ? 'Countdown Man must be between 0 and 60'
-  //           : null;
-  //   _releaseError =
-  //       (release == null || release < 10 || release > 300)
-  //           ? 'Release Time must be between 10 and 300'
-  //           : null;
-  //   _resetDelayError =
-  //       (resetDelay == null || resetDelay < 0 || resetDelay > 1800)
-  //           ? 'Reset Delay must be between 0 and 1800'
-  //           : null;
-  // }
 
   final bleController = Get.find<BleLogController>();
 
@@ -485,12 +454,6 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
                 color: Colors.white,
                 borderRadius: BorderRadius.vertical(top: Radius.circular(50)),
               ),
-              // padding: EdgeInsets.only(
-              //   left: 24,
-              //   right: 24,
-              //   top: 16,
-              //   bottom: MediaQuery.of(context).viewInsets.bottom + 16,
-              // ),
               child: Stack(
                 children: [
                   Row(
@@ -528,7 +491,6 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
                         const SizedBox(height: 4),
                         _modeBadge(),
                         const SizedBox(height: 8),
-                        // _headerRow(),
                         Expanded(child: scroll),
                         const SizedBox(height: 12),
                         Row(
@@ -549,8 +511,6 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
       ),
     );
   }
-
-  // ---------- UI Helpers ----------
 
   Widget _dragHandle() {
     return Container(
@@ -575,316 +535,6 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
           color: const Color(0xFF3D3D3D),
         ),
       ),
-    );
-  }
-
-  // Widget _dropdown(
-  //   String label,
-  //   String value,
-  //   List<String> items,
-  //   ValueChanged<String> onChanged,
-  // ) {
-  //   return Padding(
-  //     padding: const EdgeInsets.only(bottom: 14),
-  //     child: Column(
-  //       crossAxisAlignment: CrossAxisAlignment.start,
-  //       children: [
-  //         _label(label),
-  //         const SizedBox(height: 6),
-  //         SizedBox(
-  //           height: 48,
-  //           child: DropdownButtonFormField2<String>(
-  //             isExpanded: true,
-  //             value: value,
-
-  //             items:
-  //                 items
-  //                     .map(
-  //                       (e) => DropdownMenuItem<String>(
-  //                         value: e,
-  //                         child: Text(
-  //                           e,
-  //                           overflow: TextOverflow.ellipsis,
-  //                           style: GoogleFonts.inter(
-  //                             fontSize: 14,
-  //                             fontWeight: FontWeight.w500,
-  //                             color: const Color(0xFF3D3D3D),
-  //                           ),
-  //                         ),
-  //                       ),
-  //                     )
-  //                     .toList(),
-
-  //             onChanged: (v) => onChanged(v!),
-
-  //             // 🔥 REMOVE horizontal padding from buttonStyleData
-  //             buttonStyleData: ButtonStyleData(
-  //               height: 48,
-  //               padding: EdgeInsets.zero,
-  //               decoration: BoxDecoration(
-  //                 color: const Color(0xFFF8F8F8),
-  //                 borderRadius: BorderRadius.circular(12),
-  //               ),
-  //             ),
-
-  //             iconStyleData: const IconStyleData(
-  //               icon: Icon(
-  //                 Icons.keyboard_arrow_down_rounded,
-  //                 color: Color(0xFF3D3D3D),
-  //               ),
-  //               iconSize: 22,
-  //             ),
-
-  //             dropdownStyleData: DropdownStyleData(
-  //               maxHeight: 280,
-  //               decoration: BoxDecoration(
-  //                 color: Colors.white,
-  //                 borderRadius: BorderRadius.circular(12),
-  //               ),
-  //               elevation: 4,
-  //             ),
-
-  //             menuItemStyleData: const MenuItemStyleData(
-  //               height: 40,
-  //               padding: EdgeInsets.symmetric(horizontal: 14),
-  //             ),
-
-  //             // 🔥 CONTROL ALL PADDING HERE ONLY
-  //             decoration: InputDecoration(
-  //               filled: true,
-  //               fillColor: const Color(0xFFF8F8F8),
-  //               contentPadding: const EdgeInsets.symmetric(
-  //                 horizontal: 14,
-  //                 vertical: 12,
-  //               ),
-
-  //               enabledBorder: OutlineInputBorder(
-  //                 borderRadius: BorderRadius.circular(12),
-  //                 borderSide: const BorderSide(
-  //                   color: Color(0xFFD0D0D0),
-  //                   width: 1,
-  //                 ),
-  //               ),
-
-  //               focusedBorder: OutlineInputBorder(
-  //                 borderRadius: BorderRadius.circular(12),
-  //                 borderSide: const BorderSide(
-  //                   color: Color(0xFFEC1D24),
-  //                   width: 2,
-  //                 ),
-  //               ),
-  //             ),
-  //           ),
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
-
-  // Widget _dropdown(
-  //   String label,
-  //   String value,
-  //   List<String> items,
-  //   ValueChanged<String> onChanged,
-  // ) {
-  //   return Padding(
-  //     padding: const EdgeInsets.only(bottom: 14),
-  //     child: Column(
-  //       crossAxisAlignment: CrossAxisAlignment.start,
-  //       children: [
-  //         _label(label),
-  //         const SizedBox(height: 6),
-  //         SizedBox(
-  //           height: 48,
-  //           child: DropdownButtonFormField<String>(
-  //             value: value,
-  //             isExpanded: true,
-  //             icon: const Icon(
-  //               Icons.keyboard_arrow_down_rounded,
-  //               color: Color(0xFF3D3D3D),
-  //             ),
-  //             style: GoogleFonts.inter(
-  //               fontSize: 14,
-  //               fontWeight: FontWeight.w500,
-  //               color: const Color(0xFF3D3D3D),
-  //             ),
-  //             items:
-  //                 items
-  //                     .map(
-  //                       (e) => DropdownMenuItem<String>(
-  //                         value: e,
-  //                         child: Text(e, overflow: TextOverflow.ellipsis),
-  //                       ),
-  //                     )
-  //                     .toList(),
-  //             onChanged: (v) => onChanged(v!),
-  //             decoration: InputDecoration(
-  //               filled: true,
-  //               fillColor: const Color(0xFFF8F8F8),
-  //               contentPadding: const EdgeInsets.symmetric(
-  //                 horizontal: 14,
-  //                 vertical: 12,
-  //               ),
-  //               border: OutlineInputBorder(
-  //                 borderRadius: BorderRadius.circular(12),
-  //                 borderSide: const BorderSide(
-  //                   color: Color(0xFFD0D0D0),
-  //                   width: 1,
-  //                 ),
-  //               ),
-  //               enabledBorder: OutlineInputBorder(
-  //                 borderRadius: BorderRadius.circular(12),
-  //                 borderSide: const BorderSide(
-  //                   color: Color(0xFFD0D0D0),
-  //                   width: 1,
-  //                 ),
-  //               ),
-  //               focusedBorder: OutlineInputBorder(
-  //                 borderRadius: BorderRadius.circular(12),
-  //                 borderSide: const BorderSide(
-  //                   color: Color(0xFFEC1D24),
-  //                   width: 2,
-  //                 ),
-  //               ),
-  //             ),
-  //             dropdownColor: Colors.white,
-  //             menuMaxHeight: 280,
-  //           ),
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
-
-  // Widget _selectorField({
-  //   required String label,
-  //   required String value,
-  //   required List<String> options,
-  //   required ValueChanged<String> onSelected,
-  // }) {
-  //   return Padding(
-  //     padding: const EdgeInsets.only(bottom: 14),
-  //     child: Column(
-  //       crossAxisAlignment: CrossAxisAlignment.start,
-  //       children: [
-  //         _label(label),
-  //         const SizedBox(height: 6),
-  //         GestureDetector(
-  //           onTap: () async {
-  //             final selected = await _showOptionSelector(
-  //               title: label,
-  //               options: options,
-  //               selected: value,
-  //             );
-  //             if (selected != null) {
-  //               onSelected(selected);
-  //             }
-  //           },
-  //           child: Container(
-  //             height: 48,
-  //             padding: const EdgeInsets.symmetric(horizontal: 14),
-  //             decoration: BoxDecoration(
-  //               color: const Color(0xFFF8F8F8),
-  //               borderRadius: BorderRadius.circular(12),
-  //               border: Border.all(color: const Color(0xFFD0D0D0)),
-  //             ),
-  //             child: Row(
-  //               children: [
-  //                 Expanded(
-  //                   child: Text(
-  //                     value,
-  //                     style: GoogleFonts.inter(
-  //                       fontSize: 14,
-  //                       fontWeight: FontWeight.w500,
-  //                       color: const Color(0xFF3D3D3D),
-  //                     ),
-  //                     overflow: TextOverflow.ellipsis,
-  //                   ),
-  //                 ),
-  //                 const Icon(
-  //                   Icons.chevron_right_rounded,
-  //                   color: Color(0xFF3D3D3D),
-  //                 ),
-  //               ],
-  //             ),
-  //           ),
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
-
-  Future<String?> _showOptionSelector({
-    required String title,
-    required List<String> options,
-    required String selected,
-  }) {
-    return showModalBottomSheet<String>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) {
-        final maxHeight = MediaQuery.of(context).size.height * 0.6;
-
-        return SafeArea(
-          child: ConstrainedBox(
-            constraints: BoxConstraints(maxHeight: maxHeight),
-            child: Container(
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-              ),
-              child: Column(
-                children: [
-                  const SizedBox(height: 12),
-                  _dragHandle(),
-                  _title(title),
-                  const Divider(height: 1),
-
-                  Expanded(
-                    child: ListView.separated(
-                      padding: const EdgeInsets.all(16),
-                      itemCount: options.length,
-                      separatorBuilder: (_, __) => const Divider(height: 1),
-                      itemBuilder: (_, index) {
-                        final option = options[index];
-                        final isSelected = option == selected;
-
-                        return ListTile(
-                          onTap: () {
-                            Navigator.of(context).pop(option);
-                          },
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                          ),
-                          title: Text(
-                            option,
-                            style: GoogleFonts.inter(
-                              fontSize: 14,
-                              fontWeight:
-                                  isSelected
-                                      ? FontWeight.w600
-                                      : FontWeight.w400,
-                              color: const Color(0xFF3D3D3D),
-                            ),
-                          ),
-                          trailing:
-                              isSelected
-                                  ? const Icon(
-                                    Icons.check_circle,
-                                    color: Color(0xFFEC1D24),
-                                  )
-                                  : null,
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
     );
   }
 

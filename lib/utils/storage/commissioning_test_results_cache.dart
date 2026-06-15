@@ -4,7 +4,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 enum CommissioningTestType { walkTest, relayTest, sounderTest }
 
-/// Cached Pass/Fail outcomes for commissioning tests (Walk Test, Test Mode).
 class CommissioningTestResultsCache {
   CommissioningTestResultsCache._();
 
@@ -61,10 +60,7 @@ class CommissioningTestResultsCache {
     );
   }
 
-  static String? resultForItem(
-    Map<String, dynamic> items,
-    String itemId,
-  ) {
+  static String? resultForItem(Map<String, dynamic> items, String itemId) {
     final item = items[itemId];
     if (item is! Map) return null;
     final result = item['result'];

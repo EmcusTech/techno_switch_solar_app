@@ -1,34 +1,17 @@
-/*
-* Project      : gemini_mobile_app
-* File         : data_transfer_manager.dart
-* Description  : Manages the data transfer operations, particularly over Bluetooth Low Energy (BLE)
-* Author       : SrihariharanT
-* Date         : 2024-05-21
-* Version      : 1.0
-* Ticket       :
-*/
-
-/// {@category bluetooth}
 library;
 
 import 'dart:async';
 import 'dart:typed_data';
-
-// import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
 import 'package:get/get.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:techno_switch_solar_app/models/frame_data.dart';
 import 'package:techno_switch_solar_app/utils/bluetooth/ble_frame_utils.dart';
 import 'package:techno_switch_solar_app/utils/bluetooth/ble_notify_data_handler.dart';
-import 'package:techno_switch_solar_app/utils/bluetooth/data_handler.dart';
-import 'package:techno_switch_solar_app/utils/bluetooth/data_helper.dart';
 import 'package:techno_switch_solar_app/utils/logger.dart' as logger;
-import 'package:techno_switch_solar_app/controllers/updates_controller.dart';
 import 'bt_utils.dart';
 import 'data_packet_generator.dart';
 
-/// A manager class responsible for handling data transfer operations.
 class DataTransferManager {
   static final DataTransferManager _instance = DataTransferManager._internal();
 
@@ -38,23 +21,14 @@ class DataTransferManager {
 
   DataTransferManager._internal();
 
-  /// Number of retries after CRC mismatch.
   int retryCount = 0;
 
-  /// Maximum number of retries allowed after CRC mismatch.
   int maxRetries = 40;
 
-  // final controller = Get.find<UpdatesController>();
-
-  /// [bleWriteError] this variable is used to store the type of error we are getting from BLE
-  /// and show respected error messages
   BluetoothWriteError bleWriteError = BluetoothWriteError.none;
 
-  /// Current Large Data That is going to send over Ble
   List<int> currentLargeDataPacket = <int>[];
-  // CurrentLargeDataAndState? currentLargeDataAndState;
 
-  /// Sending the data packets to the BLE device to read the firmware version.
   void requestingPassKeyToBle({dynamic Function(bool)? dataWritten}) async {
     logger.Logger("<<===========Requesting pass Key===========>>");
     List<int> passKeyPacket = await passKeyRequestFrame();
@@ -95,7 +69,6 @@ class DataTransferManager {
       'network packet frame <<===========NetworkPacket: $networkPacket===========>>',
     );
     sendDataToBle(networkPacket, dataWritten: dataWritten);
-    // startResponseTimer(BleStateMachine.requestingNetworkPacket, networkPacket);
   }
 
   void sendingPollPacketToBle({
@@ -131,21 +104,6 @@ class DataTransferManager {
     sendDataToBle(dummyPacket, dataWritten: dataWritten);
   }
 
-  /// Sends CONTROL_RES_EVENT_REPORT command to BLE device.
-  ///
-  /// This command controls event reporting for different event printers.
-  /// The panel will respond with a CONTROL_MESSAGE message.
-  ///
-  /// Parameters:
-  ///   - dataWritten: Callback function called when data is written (optional)
-  ///   - pktTxCnt: Packet transmit counter (default: 0)
-  ///   - pktRxCnt: Packet receive counter (default: 0)
-  ///   - network: Network value (default: 0)
-  ///   - node: Node value (default: 0)
-  ///   - subnode: Sub-node value (default: 0)
-  ///   - module: Module value (default: 0)
-  ///   - eventBufferMask: Event buffer mask (default: 3 for Radio event printer)
-  ///   - eventBufferMode: Event buffer mode (default: 0 for Start)
   void sendingControlResEventReportToBle({
     Function(bool)? dataWritten,
     int pktTxCnt = 0,
@@ -173,21 +131,12 @@ class DataTransferManager {
     sendDataToBle(controlResEventReportPacket, dataWritten: dataWritten);
   }
 
-  void toggleLedButton() {
-    // sendDataToBle(ledToggleFrame());
-  }
+  void toggleLedButton() {}
 
-  /// Sends a Gemini packet over Bluetooth Low Energy (BLE).
-  ///
-  /// This function asynchronously creates a Gemini packet and sends it over BLE.
-  ///
   void sendAuthPacket({Function(bool)? dataWritten}) async {
-    /// Create a Gemini packet
     List<int> data = await authMsgFrame();
     logger.Logger("Authentication message -  data: $data");
     logger.Logger("%%%%%%%%%%%%% AUTH MESSAGE SENT %%%%%%%%%%%%");
-
-    /// Send the BLE data packet
     sendDataToBle(data, dataWritten: dataWritten);
     startResponseTimer(BleStateMachine.sendingAuthMessage, data);
   }
@@ -276,8 +225,6 @@ class DataTransferManager {
   }) async {
     List<int> getAllDeviceStatus = await generateGetAllDeviceStatusDataPacket();
     sendDataToBle(getAllDeviceStatus, dataWritten: dataWritten);
-    // startResponseTimer(
-    //     BleStateMachine.getSystemOnlineStatus, getAllDeviceStatus);
   }
 
   Future<void> sendGetSingleDeviceStatusDataPacketToBle({
@@ -312,11 +259,8 @@ class DataTransferManager {
     List<int> getAllDeviceVersions =
         await generateGetAllDeviceVersionsDataPacket();
     sendDataToBle(getAllDeviceVersions, dataWritten: dataWritten);
-    // startResponseTimer(
-    //     BleStateMachine.getSystemOnlineStatus, getAllDeviceStatus);
   }
 
-  // Sending network data request to panel
   Future<void> sendGetNetworkDataFromPanelPacketToBle({
     dynamic Function(bool)? dataWritten,
     required int dataIndex,
@@ -328,7 +272,6 @@ class DataTransferManager {
     startResponseTimer(BleStateMachine.requestedForNetworkData, dataPacket);
   }
 
-  // Sending Expander Parent Data Request
   Future<void> sendRequestForExpanderParentPacketToBle({
     dynamic Function(bool)? dataWritten,
     required int expanderAddress,
@@ -474,7 +417,6 @@ class DataTransferManager {
     sendDataToBle(panelVersionPacket, dataWritten: dataWritten);
   }
 
-  // sending expander pass key
   Future<void> sendExpanderPasskeyToBLE(
     List<int> payLoadData, {
     dynamic Function(bool)? dataWritten,
@@ -486,7 +428,6 @@ class DataTransferManager {
     startResponseTimer(BleStateMachine.expanderPassKeySent, encryptedPayload);
   }
 
-  /// Add Device ///
   Future<void> sendAddDevicePacketToBle(
     List<int> payLoadData, {
     dynamic Function(bool)? dataWritten,
@@ -496,7 +437,6 @@ class DataTransferManager {
     startResponseTimer(BleStateMachine.addDeviceState, generatedPacket);
   }
 
-  /// Change Device ///
   Future<void> sendChangeDeviceAddress(
     List<int> payLoadData, {
     dynamic Function(bool)? dataWritten,
@@ -506,7 +446,6 @@ class DataTransferManager {
     startResponseTimer(BleStateMachine.changeDeviceAddress, generatedPacket);
   }
 
-  /// Edit Properties
   Future<void> sendEditProperties(
     List<int> payLoadData, {
     dynamic Function(bool)? dataWritten,
@@ -516,7 +455,6 @@ class DataTransferManager {
     startResponseTimer(BleStateMachine.editDeviceProperties, generatedPacket);
   }
 
-  /// Identify Devices
   Future<void> sendIdentifyDevice({
     required int deviceAddress,
     required bool isEnable,
@@ -530,7 +468,6 @@ class DataTransferManager {
     startResponseTimer(BleStateMachine.identifyDevices, generatedPacket);
   }
 
-  /// Remove Device
   Future<void> sendRemoveDevicePacketToBle(
     List<int> payLoadData, {
     dynamic Function(bool)? dataWritten,
@@ -542,7 +479,6 @@ class DataTransferManager {
     startResponseTimer(BleStateMachine.skipRemoveDeviceState, generatedPacket);
   }
 
-  /// Replace Device
   Future<void> sendReplaceDevicePacketToBle(
     List<int> payLoadData, {
     dynamic Function(bool)? dataWritten,
@@ -553,7 +489,6 @@ class DataTransferManager {
     sendDataToBle(generatedPacket, dataWritten: dataWritten);
   }
 
-  /// Send Single Device Data To Ble
   Future<void> sendUpdateDevicePointDataToBle(
     List<int> payLoadData, {
     dynamic Function(bool)? dataWritten,
@@ -597,21 +532,11 @@ class DataTransferManager {
     sendDataToBle(deviceVersionRequestPacket, dataWritten: dataWritten);
   }
 
-  //////////////////////////////////Large Data Functions/////////////////////////////////////
-
-  /// Send Data based on length
-  /// if the payLoad length is > [enBLE_PAYLOAD_SIZE_PER_PACKET] it should send on the Large packet
-  /// otherwise it should send on the small packet
   Future<void> sendDataPacketBasedOnSize({
     required List<int> dataPacket,
     required BleStateMachine currentState,
   }) async {
     if (dataPacket.length > enBLE_PAYLOAD_SIZE_PER_PACKET) {
-      /// Sending Data Over Large Packet
-      // currentLargeDataAndState = CurrentLargeDataAndState(
-      //   largeDataPacket: dataPacket,
-      //   state: currentState,
-      // );
       DataTransferManager().sendDataSyncRequestPacket(
         dataWritten: (bool isWritten) async {
           if (isWritten) {
@@ -633,7 +558,6 @@ class DataTransferManager {
         currentState,
       );
 
-      /// Sending Data Over Small Packet
       sendDataToBle(
         smallDataPacket,
         dataWritten: (bool isWritten) async {
@@ -646,42 +570,12 @@ class DataTransferManager {
     }
   }
 
-  Future<void> sendLargeDataPacketLength() async {
-    // List<Uint8List> largePacketsList =
-    //     await generateListOfLargePacketsFromPayload(
-    //       currentLargeDataAndState!.largeDataPacket,
-    //     );
-
-    // logger.Logger("Sending Length packet::>>");
-    // logger.Logger(largePacketsList.length.toString());
-
-    // List<int> totalPacketLengthData = intToBytesLittleEndian(
-    //   largePacketsList.length,
-    // );
-
-    // DataTransferManager().sendLargeFrameStartDataPacket(
-    //   totalPacketLengthData,
-    //   dataWritten: (bool isWritten) {
-    //     if (isWritten) {
-    //       Get.find<BleNotifyDataHandler>().currentBleState(
-    //         BleStateMachine.dataStartRequest,
-    //       );
-    //     }
-    //   },
-    // );
-  }
+  Future<void> sendLargeDataPacketLength() async {}
 
   Future<void> generateAndSendLargePacketData({
     int sequenceNumber = 1,
     bool isResending = false,
   }) async {
-    // List<Uint8List> largePacketsList =
-    //     await generateListOfLargePacketsFromPayload(
-    //       currentLargeDataAndState!.largeDataPacket,
-    //       sequenceNumber: sequenceNumber,
-    //       isResnding: isResending,
-    //     );
-
     Get.find<BleNotifyDataHandler>().currentBleState(
       BleStateMachine.sendingLargePacketOnGoing,
     );
@@ -690,15 +584,8 @@ class DataTransferManager {
       stopSendingData = true;
     }
     await Future<dynamic>.delayed(const Duration(milliseconds: 100));
-    // sendLargeDataPacketsOverBle(
-    //   largePacketsList: largePacketsList,
-    //   isResending: isResending,
-    //   sequenceNumber:
-    //       sequenceNumber == -1 ? largePacketsList.length : sequenceNumber,
-    // );
   }
 
-  ///Sending Data Sync Request Packet to the Ble
   Future<void> sendDataSyncRequestPacket({
     dynamic Function(bool)? dataWritten,
   }) async {
@@ -707,7 +594,6 @@ class DataTransferManager {
     startResponseTimer(BleStateMachine.dataSyncRequest, dataSyncRequestPacket);
   }
 
-  /// Sending large frame start packet to the ble
   Future<void> sendLargeFrameStartDataPacket(
     List<int> payLoadData, {
     dynamic Function(bool)? dataWritten,
@@ -723,13 +609,6 @@ class DataTransferManager {
     );
   }
 
-  /// Send Large Data Packet to BLE
-  // sendLargeDataPacketToBle(List<int> payLoadData,
-  //     {dynamic Function(bool)? dataWritten}) async {
-  //   sendDataToBleWithResponse(payLoadData, dataWritten: dataWritten);
-  // }
-
-  /// Sending large frame start packet to the ble
   Future<void> sendLargeFrameEndDataPacket({
     dynamic Function(bool)? dataWritten,
   }) async {
@@ -738,11 +617,6 @@ class DataTransferManager {
     startResponseTimer(BleStateMachine.dataEndRequest, dataLargeFrameEndPacket);
   }
 
-  //////////////////////////////////////////////////////////////
-  ///                                                     ///
-  //////////////////-Download data From BLE-///////////////////
-
-  ///Sending Download Panel Config Command Packet Request From BLE
   Future<void> sendDownloadPanelConfigPacket({
     dynamic Function(bool)? dataWritten,
   }) async {
@@ -755,7 +629,6 @@ class DataTransferManager {
     );
   }
 
-  ///Sending Download Panel Config Command Packet Request From BLE
   Future<void> sendDownloadProjectDataPacket({
     dynamic Function(bool)? dataWritten,
   }) async {
@@ -821,7 +694,6 @@ class DataTransferManager {
     );
   }
 
-  ///Sending Download Panel Config Command Packet Request From BLE
   Future<void> sendDownloadDeviceConfigPacket({
     dynamic Function(bool)? dataWritten,
   }) async {
@@ -834,7 +706,6 @@ class DataTransferManager {
     );
   }
 
-  ///Sending Download Panel Config Command Packet Request From BLE
   Future<void> sendDownloadEventLogsPacket({
     dynamic Function(bool)? dataWritten,
   }) async {
@@ -870,7 +741,6 @@ class DataTransferManager {
     startResponseTimer(BleStateMachine.requestedForDiagnosticLogs, dataPacket);
   }
 
-  ///Sending Large packet sync response Packet To BLE
   Future<void> sendLargeDataSyncResponsePacket({
     dynamic Function(bool)? dataWritten,
   }) async {
@@ -883,18 +753,14 @@ class DataTransferManager {
     );
   }
 
-  ///Sending Large packet Start response Packet To BLE
   Future<void> sendLargeDataStartResponsePacket({
     dynamic Function(bool)? dataWritten,
   }) async {
     List<int> largeDataStartResponsePacket =
         await generateDataStartResponseCommand();
     sendDataToBle(largeDataStartResponsePacket, dataWritten: dataWritten);
-    // startResponseTimer(
-    //     BleStateMachine.respondedToDataStart, largeDataStartResponsePacket);
   }
 
-  ///Sending Large packet Start response Packet To BLE
   Future<void> sendLargeDataResendRequestPacket({
     required List<int> payLoad,
     required int bleCommand,
@@ -906,11 +772,8 @@ class DataTransferManager {
           payLoad: payLoad,
         );
     sendDataToBle(largeDataStartResendRequestPacket, dataWritten: dataWritten);
-    // startResponseTimer(
-    //     BleStateMachine.respondedToDataStart, largeDataStartResponsePacket);
   }
 
-  ///Sending End Packet response Packet To BLE
   Future<void> sendEndPacketACKPacket({
     dynamic Function(bool)? dataWritten,
     required int command,
@@ -919,30 +782,22 @@ class DataTransferManager {
       bleCommand: command,
     );
     sendDataToBle(endPacketAckPacket, dataWritten: dataWritten);
-    // startResponseTimer(BleStateMachine.respondToEndPacket, endPacketAckPacket);
   }
 
-  ///Sending End Packet response Packet To BLE
   Future<void> sendEEventLogsSmallPacketACKPacket({
     dynamic Function(bool)? dataWritten,
   }) async {
     List<int> endPacketAckPacket = await generateEventLogACK();
     sendDataToBle(endPacketAckPacket, dataWritten: dataWritten);
-    // startResponseTimer(BleStateMachine.respondToEndPacket, endPacketAckPacket);
   }
 
-  ///Test
   Future<void> sendRfTestCommandPacket({
     dynamic Function(bool)? dataWritten,
   }) async {
     List<int> endPacketAckPacket = await generateRfTestCmdDataPacket();
     sendDataToBle(endPacketAckPacket, dataWritten: dataWritten);
-    // startResponseTimer(BleStateMachine.respondToEndPacket, endPacketAckPacket);
   }
 
-  //////////////////////////////////////////////////////////////
-
-  /// get current project state from BLE ///
   Future<void> sendGetCurrentProjectStateCmd({
     dynamic Function(bool)? dataWritten,
   }) async {
@@ -952,61 +807,35 @@ class DataTransferManager {
       requestForCurrentProjectStatePacket,
       dataWritten: dataWritten,
     );
-    // startResponseTimer(
-    //     BleStateMachine.respondedToDataStart, largeDataStartResponsePacket);
   }
 
-  /// get current project state from BLE ///
   Future<void> sendReqEventLogFilterData({
     dynamic Function(bool)? dataWritten,
   }) async {
     List<int> reqEventLogFilterData =
         await generateReqEventLogFilterDataPacket();
     sendDataToBle(reqEventLogFilterData, dataWritten: dataWritten);
-    // startResponseTimer(
-    //     BleStateMachine.respondedToDataStart, largeDataStartResponsePacket);
   }
 
-  /// get current project state from BLE ///
   Future<void> sendReqPanelStatusData({
     dynamic Function(bool)? dataWritten,
   }) async {
     List<int> reqEventLogFilterData = await generateReqPanelStatusDataPacket();
     sendDataToBle(reqEventLogFilterData, dataWritten: dataWritten);
-    // startResponseTimer(
-    //     BleStateMachine.respondedToDataStart, largeDataStartResponsePacket);
   }
 
-  /// get current project state from BLE ///
   Future<void> sendResetBleTrack({dynamic Function(bool)? dataWritten}) async {
     List<int> dataPacket = await generateResetBleTrackDataPacket();
     sendDataToBle(dataPacket, dataWritten: dataWritten);
-    // startResponseTimer(
-    //     BleStateMachine.respondedToDataStart, largeDataStartResponsePacket);
   }
 
-  /////////////////////////////////////////
-
-  /// Sends BLE (Bluetooth Low Energy) data to the connected device.
-  ///
-  /// This will write the [data] to the connected BLE Device.
-  /// [data]: The BLE data packet to send.
   void sendDataToBle(List<int> data, {Function(bool)? dataWritten}) async {
     DiscoveredDevice? connectedDevice = await BtUtils().getConnectedDevice();
     if (connectedDevice != null) {
       BtUtils().writeData(connectedDevice, data, dataWritten: dataWritten);
-    } else {
-      // AppAlert.alertSnackBar(
-      //   Get.context!,
-      //   'Oops!!!.Your device is not connected',
-      // );
-    }
+    } else {}
   }
 
-  /// Sends BLE (Bluetooth Low Energy) data to the connected device.
-  ///
-  /// This will write the [data] to the connected BLE Device.
-  /// [data]: The BLE data packet to send.
   Future<void> sendDataToBleWithResponse(
     List<int> data, {
     Function(bool)? dataWritten,
@@ -1019,75 +848,43 @@ class DataTransferManager {
         dataWritten: dataWritten,
         withoutResponse: false,
       );
-    } else {
-      // AppAlert.alertSnackBar(
-      //   Get.context!,
-      //   'Oops!!!.Your device is not connected',
-      // );
-    }
+    } else {}
   }
 
-  // void sendConfigurationData() async {
-  //   List<int> data = await requestConfigurationData();
-  //   sendDataToBle(data);
-  // }
-
-  /// This function is used to handle Bluetooth communication errors.
-  ///
-  /// Handles potential CRC mismatch errors,No data errors, COMM Hardware and software errors by retrying the write request up to a maximum number
-  /// of retries defined by [maxRetries].
   Future<void> handleBluetoothCommunicationErrors(
     String payLoad,
     List<int> data,
     void Function(bool) callback,
   ) async {
-    //Checking if CRC Mismatching (NACK) if its true retrying the write request for 3 time
     if (payLoad == "01") {
       debugPrint("<:::CRC Mismatch:::>$retryCount");
       bleWriteError = BluetoothWriteError.crcMissMatchError;
       callback(true);
-      // sendDataToBle(data);
     } else if (payLoad == "03") {
       bleWriteError = BluetoothWriteError.nackUnSuccess;
       debugPrint("<:::COMM Nack unsuccessful ERROR:::>$retryCount");
       callback(true);
-      // sendDataToBle(data);
-    }
-    // Checking if COMM Hardware Error if its true retrying the write request for 3 time
-    else if (payLoad == "04") {
+    } else if (payLoad == "04") {
       bleWriteError = BluetoothWriteError.invalidFrame;
       debugPrint("<:::COMM Invalid frame ERROR:::>$retryCount");
       callback(true);
-      // sendDataToBle(data);
-    }
-    // Checking if COMM Software Error if its true retrying the write request for 3 time
-    else if (payLoad == "05") {
+    } else if (payLoad == "05") {
       debugPrint("<:::COMM Authentication required ERROR:::>$retryCount");
       bleWriteError = BluetoothWriteError.authenticationRequired;
       callback(true);
-      // sendDataToBle(data);
-    }
-    // Checking if Data's like [0] we are receiving from BLE if its [0] retrying the write request for 3 time
-    else if (payLoad == "06") {
+    } else if (payLoad == "06") {
       debugPrint("<:::Busy on process ERROR:::>$retryCount");
       bleWriteError = BluetoothWriteError.busyOnProcess;
       callback(true);
-
-      // Adding a 10-second delay before sending the BLE data
-      Future<Null>.delayed(const Duration(seconds: 10), () {
-        // sendDataToBle(data);
-      });
+      Future<Null>.delayed(const Duration(seconds: 10), () {});
     } else {
       debugPrint("<:::ACK:::>$retryCount");
       bleWriteError = BluetoothWriteError.ackSuccess;
       callback(false);
     }
-
-    // After reaching [maxRetries] we will show respected error messages to the user.
   }
 
   FrameData parseRxFrame(List<int> rxData) {
-    // Add logic to parse rxData into FrameData
     List<String> hexValues =
         rxData
             .map(
@@ -1115,9 +912,7 @@ class DataTransferManager {
     BluetoothWriteError error,
     String debugMessage,
     String snackBarMessage,
-  ) {
-    // AppAlert.errorSnackBar(Get.context!, snackBarMessage);
-  }
+  ) {}
 
   Timer? _waitingTimer;
 
@@ -1185,13 +980,7 @@ class DataTransferManager {
       );
       if (Get.find<BleNotifyDataHandler>().currentBleState.value ==
           currentBleState) {
-        // Get.find<InstallationController>().isBuildingSystem(false);
-        // Get.find<InstallationController>().update();
         logger.Logger("Disconnected due to no response from the panel");
-        // AppAlert.alertSnackBar(
-        //   Get.context!,
-        //   "Disconnected due to no response from panel.",
-        // );
         stopResponseTimer();
         BtUtils().disconnect();
       } else {
@@ -1216,7 +1005,6 @@ class DataTransferManager {
     );
 
     if (retryCount < maxRetries) {
-      // send the command again
       sendDataToBle(
         dataSent!,
         dataWritten: (bool isWritten) {
@@ -1225,13 +1013,7 @@ class DataTransferManager {
         },
       );
     } else {
-      // Get.find<InstallationController>().isBuildingSystem(false);
-      // Get.find<InstallationController>().update();
       logger.Logger("Disconnected due to no response from the panel");
-      // AppAlert.alertSnackBar(
-      //   Get.context!,
-      //   "Disconnected due to no response from panel.",
-      // );
       stopResponseTimer();
       BtUtils().disconnect();
     }
@@ -1247,7 +1029,6 @@ class DataTransferManager {
     );
 
     if (retryCount < maxRetries) {
-      // send the command again
       sendDataToBle(
         dataSent!,
         dataWritten: (bool isWritten) {
@@ -1256,129 +1037,13 @@ class DataTransferManager {
         },
       );
     } else {
-      ///
-      // Get.context!.loaderOverlay.hide();
-      // if (currentBleState == BleStateMachine.linkStatusCommand) {
-      //   if (Get.find<InstallationController>().stopFetchingStatus.isFalse) {
-      //     if (Get.find<HomeController>().isBleConnected.isTrue) {
-      //       Get.find<InstallationController>().sendRequestForConfigCRC();
-      //     }
-      //     Get.find<InstallationController>().startSystemStatusTimerTask();
-      //   }
-      // }
       stopResponseTimer();
     }
   }
 
-  /////////////////// Large Data Functions ////////////////////
-
   bool stopSendingData = false;
   bool loopGoingON = false;
 
-  // Future<void> sendLargeDataPacketsOverBle({
-  //   required List<Uint8List> largePacketsList,
-  //   required int sequenceNumber,
-  //   required bool isResending,
-  // }) async {
-  //   int packetsSentCount = 0;
-  //   logger.Logger("Sequence Number");
-  //   logger.Logger(sequenceNumber.toString());
-
-  //   // Get UpdatesController if available for progress tracking
-  //   UpdatesController? forUpdateController;
-  //   try {
-  //     if (Get.isRegistered<UpdatesController>()) {
-  //       forUpdateController = Get.find<UpdatesController>();
-  //     }
-  //   } catch (e) {
-  //     // UpdatesController not available, continue without progress tracking
-  //     logger.Logger('UpdatesController not available: $e');
-  //   }
-
-  //   ///if the sequenceNumber != 1 then we will send the packet 3 times to the ble with few delay
-  //   if (isResending) {
-  //     await sendDataToBleWithResponse(
-  //       largePacketsList[sequenceNumber - 1],
-  //       dataWritten: (bool isWritten) {
-  //         if (isWritten) {
-  //           logger.Logger(
-  //             "||||||||||||||||||||||||||||||||||Large Data Written resend (${sequenceNumber - 1})($isWritten)||||||||||||||||||||||||||||||||||",
-  //           );
-  //           Get.find<BleNotifyDataHandler>().currentBleState(
-  //             BleStateMachine.largeDataResended,
-  //           );
-  //         }
-  //       },
-  //     );
-
-  //     Get.find<BleNotifyDataHandler>().lOngoingsequenceNumber =
-  //         sequenceNumber + 1;
-  //     Get.find<BleNotifyDataHandler>().lOnGoinglargePacketsList =
-  //         largePacketsList;
-  //     Get.find<BleNotifyDataHandler>().update();
-  //     return;
-  //   }
-
-  //   logger.Logger("-- Going to start the loop From  ${sequenceNumber - 1} --");
-
-  //   for (int i = sequenceNumber - 1; i < largePacketsList.length; i++) {
-  //     await Future<dynamic>.delayed(const Duration(milliseconds: 1));
-  //     await sendDataToBleWithResponse(
-  //       largePacketsList[i],
-  //       dataWritten: (bool isWritten) {
-  //         // Update progress for firmware upgrade
-  //         if (forUpdateController != null &&
-  //             Get.find<BleNotifyDataHandler>().currentLargePacketModule.value ==
-  //                 LargePacketModule.firmWareUpgrade) {
-  //           if ((forUpdateController.tempCurrentIndex.value + 1) == i) {
-  //             forUpdateController.tempCurrentIndex(i);
-  //             int value = forUpdateController.progressbarIndex.value + 1;
-  //             forUpdateController.progressbarIndex(value);
-  //             if (forUpdateController.totalPacketLength.value > 0) {
-  //               forUpdateController.progressbarCount(
-  //                 forUpdateController.progressbarIndex.value.toDouble() /
-  //                     forUpdateController.totalPacketLength.value.toDouble(),
-  //               );
-  //             }
-  //           }
-  //         }
-  //       },
-  //     );
-  //     await Future<dynamic>.delayed(const Duration(milliseconds: 1));
-  //     if (stopSendingData) {
-  //       logger.Logger("--Breaking the loop--");
-  //       stopSendingData = false;
-  //       i = 0;
-  //       break;
-  //     }
-  //     packetsSentCount = i;
-  //     loopGoingON = true;
-  //   }
-  //   loopGoingON = false;
-  //   await Future<dynamic>.delayed(const Duration(milliseconds: 50));
-  //   if (packetsSentCount == largePacketsList.length - 1) {
-  //     await Future<dynamic>.delayed(const Duration(milliseconds: 1000));
-  //     if (Get.find<BleNotifyDataHandler>().currentBleState.value !=
-  //         BleStateMachine.dataEndRequest) {
-  //       sendLargeFrameEndDataPacket(
-  //         dataWritten: (bool isWritten) async {
-  //           logger.Logger("-- Sending End Packet --");
-  //           Get.find<BleNotifyDataHandler>().currentBleState(
-  //             BleStateMachine.dataEndRequest,
-  //           );
-  //         },
-  //       );
-  //     }
-  //   }
-  // }
-
-  // void sendUpgradeFirmwareDataPacketToBle(
-  //     {dynamic Function(bool)? dataWritten}) async {
-  //   List<int> updateFirmwareDataPacket = await upgradeCompletedDataPacket();
-  //   sendDataToBle(updateFirmwareDataPacket, dataWritten: dataWritten);
-  //   startResponseTimer(
-  //       BleStateMachine.firmwareUpdated, updateFirmwareDataPacket);
-  // }
   Future<void> sendStatusAsUpdated() async {
     List<int> sendUpdatedStatus = await updateStatusAsCompletedDataPacket();
     sendDataToBle(sendUpdatedStatus);

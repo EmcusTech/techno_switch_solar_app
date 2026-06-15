@@ -1,7 +1,6 @@
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/utils/zone_mode_util.dart';
 
-/// Writes [z1]/[z2]/[z3] `test` booleans from cached zone setup into [manager].
 void applyZoneTestFlagsFromCacheMap(
   BleManager manager,
   Map<String, dynamic> data,
@@ -24,7 +23,6 @@ void applyZoneTestFlagsFromCacheMap(
   }
 }
 
-/// Recomputes each zone mode hex from current enable / test / type on [manager].
 void syncZoneModeHexFromBleManager(BleManager manager) {
   for (int i = 0; i < 3; i++) {
     final bool enabled;

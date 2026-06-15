@@ -1,18 +1,8 @@
-/*
-* Project      : gemini-en54-2-mobile_app
-* File         : logger.dart
-* Description  : Multi-file logger supporting MAIN + BLE logs,
-*                writes timestamped logs to separate TXT files
-*                and forwards them to FlutterLogs.
-* Author       : Upgraded by ChatGPT (2025)
-*/
-
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_logs/flutter_logs.dart';
 import 'package:path_provider/path_provider.dart';
 
-/// Log channels
 enum LogType { main, ble }
 
 class Logger {
@@ -25,12 +15,10 @@ class Logger {
 
   Logger._internal();
 
-  // 🔥 Factory constructor — logs immediately
   factory Logger(String message, {LogType type = LogType.main}) {
     final String timestamp = _timestamp();
     final String formatted = "[$timestamp] $message";
 
-    // Forward log to FlutterLogs
     FlutterLogs.logThis(
       tag: type == LogType.main ? "TechnoSwitchLogs" : "BLELogs",
       subTag: "logData",
@@ -38,15 +26,11 @@ class Logger {
       level: LogLevel.INFO,
     );
 
-    // Also write to our local file
     _writeToFile(formatted, type);
 
     return _instance;
   }
 
-  // ------------------------------------------------------------
-  // 🔧 Timestamp formatter
-  // ------------------------------------------------------------
   static String _timestamp() {
     final now = DateTime.now();
     return "${now.year.toString().padLeft(4, '0')}"
@@ -57,9 +41,6 @@ class Logger {
         "${now.second.toString().padLeft(2, '0')}.${now.millisecond.toString().padLeft(3, '0')}";
   }
 
-  // ------------------------------------------------------------
-  // 📁 Initialize BOTH log files
-  // ------------------------------------------------------------
   static Future<void> _initializeLogFiles() async {
     if (_isInitialized) return;
 
@@ -93,7 +74,6 @@ class Logger {
     }
   }
 
-  // Date for file name
   static String _dateString() {
     final now = DateTime.now();
     return "${now.year}"
@@ -101,9 +81,6 @@ class Logger {
         "${now.day.toString().padLeft(2, '0')}";
   }
 
-  // ------------------------------------------------------------
-  // ✍ Write to correct file
-  // ------------------------------------------------------------
   static Future<void> _writeToFile(String message, LogType type) async {
     try {
       if (!_isInitialized) {
@@ -120,9 +97,6 @@ class Logger {
     }
   }
 
-  // ------------------------------------------------------------
-  // 📍 Get log file path (useful for exporting)
-  // ------------------------------------------------------------
   static Future<String?> getLogFilePath({LogType type = LogType.main}) async {
     if (!_isInitialized) {
       await _initializeLogFiles();
@@ -131,9 +105,6 @@ class Logger {
     return type == LogType.main ? _mainLogFile?.path : _bleLogFile?.path;
   }
 
-  // ------------------------------------------------------------
-  // 🧹 Clear selected log file
-  // ------------------------------------------------------------
   static Future<void> clearLogFile({LogType type = LogType.main}) async {
     try {
       if (!_isInitialized) {

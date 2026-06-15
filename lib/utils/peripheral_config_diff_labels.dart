@@ -2,12 +2,9 @@ import 'dart:convert';
 
 import 'package:techno_switch_solar_app/models/access_code_mode_model.dart';
 
-/// Maps stored indices (and a few bools) to the same labels shown in setup sheets,
-/// for Config Log diff display only.
 class PeripheralConfigDiffLabels {
   PeripheralConfigDiffLabels._();
 
-  // --- Relay (relay_mode_bottomsheet) ---
   static const List<String> _relayGroups = [
     'None',
     'General',
@@ -47,7 +44,6 @@ class PeripheralConfigDiffLabels {
     ],
   };
 
-  // --- Input (input_mode_bottomsheet) ---
   static const List<String> _inputGroups = ['None', 'General', 'Ext. Out'];
   static const Map<String, List<String>> _inputFunctions = {
     'None': ['None'],
@@ -71,7 +67,6 @@ class PeripheralConfigDiffLabels {
     ],
   };
 
-  // --- Zone (zone_mode_bottomsheet) ---
   static const List<String> _zoneTypes = ['Normal', 'IS (MTL 5561)'];
   static const List<String> _zoneModes = [
     'Immediate',
@@ -80,7 +75,6 @@ class PeripheralConfigDiffLabels {
     'Confirmed',
   ];
 
-  // --- Extinguishing output (ext_out_bottomsheet) ---
   static const List<String> _extEnabled = ['No', 'Yes'];
   static const List<String> _extActuator = [
     'Not Defined',
@@ -119,7 +113,6 @@ class PeripheralConfigDiffLabels {
     'Pulsing 1s On, 5s Off',
   ];
 
-  // --- Sounder tab: outputs s1–s3 (sounder_mode_bottomsheet) ---
   static const List<String> _sounderGroups = [
     'None',
     'General',
@@ -190,7 +183,6 @@ class PeripheralConfigDiffLabels {
     return p;
   }
 
-  /// List index prefix like `[3].foo` → human title for that row (1-based).
   static String? _listIndexPrefix(String sectionKey, String path) {
     final m = RegExp(r'^\[(\d+)\]\.').firstMatch(path);
     if (m == null) return null;
@@ -317,7 +309,6 @@ class PeripheralConfigDiffLabels {
     return _wordsFromKey(segment);
   }
 
-  /// Turns internal diff paths into short titles, e.g. `r1.group` → `Relay 1 Group`.
   static String humanizeFieldPath(String sectionKey, String path) {
     if (path.isEmpty || path == '(section root)') {
       return 'This section';
@@ -490,8 +481,9 @@ class PeripheralConfigDiffLabels {
   }
 
   static String? _relay(String rel, Object? value, Object? sideRoot) {
-    final m = RegExp(r'^r([123])\.(group|function|enabled|test|outputText|dynamicText)$')
-        .firstMatch(rel);
+    final m = RegExp(
+      r'^r([123])\.(group|function|enabled|test|outputText|dynamicText)$',
+    ).firstMatch(rel);
     if (m == null) return null;
     final rk = 'r${m.group(1)}';
     final field = m.group(2)!;
@@ -538,8 +530,9 @@ class PeripheralConfigDiffLabels {
   }
 
   static String? _zone(String rel, Object? value) {
-    final zm = RegExp(r'^z([123])\.(enabled|test|type|detectionMode|verificationTime|text)$')
-        .firstMatch(rel);
+    final zm = RegExp(
+      r'^z([123])\.(enabled|test|type|detectionMode|verificationTime|text)$',
+    ).firstMatch(rel);
     if (zm == null) return null;
     final field = zm.group(2)!;
     switch (field) {
@@ -584,8 +577,9 @@ class PeripheralConfigDiffLabels {
   }
 
   static String? _sounder(String rel, Object? value, Object? sideRoot) {
-    final sm = RegExp(r'^s([123])\.(enabled|test|normal|outputText|group|function|functionNo)$')
-        .firstMatch(rel);
+    final sm = RegExp(
+      r'^s([123])\.(enabled|test|normal|outputText|group|function|functionNo)$',
+    ).firstMatch(rel);
     if (sm != null) {
       final sk = 's${sm.group(1)}';
       final field = sm.group(2)!;

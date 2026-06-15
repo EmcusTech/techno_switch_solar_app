@@ -1,8 +1,6 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// Caches peripheral setup data per device and peripheral type.
-/// Used when opening bottom sheets before a download - shows cached data or defaults.
 class PeripheralSetupCache {
   PeripheralSetupCache._();
 
@@ -28,8 +26,6 @@ class PeripheralSetupCache {
   static String _diagnosticKey(String deviceId) =>
       '$_keyPrefix${deviceId}_diagnostic';
 
-  // ───────────────── Sounder ─────────────────
-
   static Future<void> saveSounderSetup(
     String deviceId,
     Map<String, dynamic> data,
@@ -48,8 +44,6 @@ class PeripheralSetupCache {
       return null;
     }
   }
-
-  // ───────────────── Relay ─────────────────
 
   static Future<void> saveRelaySetup(
     String deviceId,
@@ -70,8 +64,6 @@ class PeripheralSetupCache {
     }
   }
 
-  // ───────────────── Input ─────────────────
-
   static Future<void> saveInputSetup(
     String deviceId,
     Map<String, dynamic> data,
@@ -90,8 +82,6 @@ class PeripheralSetupCache {
       return null;
     }
   }
-
-  // ───────────────── Zone ─────────────────
 
   static Future<void> saveZoneSetup(
     String deviceId,
@@ -112,8 +102,6 @@ class PeripheralSetupCache {
     }
   }
 
-  // ───────────────── Ext Out ─────────────────
-
   static Future<void> saveExtOutSetup(
     String deviceId,
     Map<String, dynamic> data,
@@ -132,8 +120,6 @@ class PeripheralSetupCache {
       return null;
     }
   }
-
-  // ───────────────── Radio ─────────────────
 
   static Future<void> saveRadioSetup(
     String deviceId,
@@ -154,8 +140,6 @@ class PeripheralSetupCache {
     }
   }
 
-  // ───────────────── Module ─────────────────
-
   static Future<void> saveModuleSetup(
     String deviceId,
     Map<String, dynamic> data,
@@ -174,8 +158,6 @@ class PeripheralSetupCache {
       return null;
     }
   }
-
-  // ───────────────── L-Bus ─────────────────
 
   static Future<void> saveLBusSetup(
     String deviceId,
@@ -200,8 +182,6 @@ class PeripheralSetupCache {
       return null;
     }
   }
-
-  // ───────────────── Access Code ─────────────────
 
   static Future<void> saveAccessCodeSetup(
     String deviceId,
@@ -230,8 +210,6 @@ class PeripheralSetupCache {
     }
   }
 
-  // ───────────────── Service Due ─────────────────
-
   static Future<void> saveServiceDueSetup(
     String deviceId,
     Map<String, dynamic> data,
@@ -252,8 +230,6 @@ class PeripheralSetupCache {
       return null;
     }
   }
-
-  // ───────────────── Panel Info ─────────────────
 
   static Future<void> savePanelInfoSetup(
     String deviceId,
@@ -276,8 +252,6 @@ class PeripheralSetupCache {
     }
   }
 
-  // ───────────────── General Module ─────────────────
-
   static Future<void> saveGeneralModuleSetup(
     String deviceId,
     Map<String, dynamic> data,
@@ -298,8 +272,6 @@ class PeripheralSetupCache {
       return null;
     }
   }
-
-  // ───────────────── Diagnostic (ADC) ─────────────────
 
   static Future<void> saveDiagnosticSetup(
     String deviceId,
@@ -322,8 +294,6 @@ class PeripheralSetupCache {
     }
   }
 
-  /// Copies cached peripheral setup from [fromDeviceId] to [toDeviceId] when the
-  /// target has no entry yet (e.g. offline wizard keyed by panel id → BLE MAC).
   static Future<void> migrateDeviceCache({
     required String fromDeviceId,
     required String toDeviceId,

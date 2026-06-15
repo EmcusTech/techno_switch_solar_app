@@ -1,30 +1,15 @@
-// =============================
-// INPUT MODE BITMASK DEMO
-// Paste directly into DartPad
-// =============================
-
 enum InputEnable { disabled, enabled }
 
 enum InputMode { normal, test }
 
-enum LatchMode {
-  nonLatched, // 0
-  latched, // 1
-}
+enum LatchMode { nonLatched, latched }
 
-enum InvertMode {
-  notInverted, // 0
-  inverted, // 1
-}
+enum InvertMode { notInverted, inverted }
 
 class InputModeConfig {
   final InputEnable inputEnable;
   final InputMode inputMode;
-
-  /// Only valid for Logic Table group
   final LatchMode latchMode;
-
-  /// Only valid for Logic Table group
   final InvertMode invertMode;
 
   const InputModeConfig({
@@ -46,26 +31,21 @@ Invert Mode    : $invertMode
 }
 
 class InputModeCodec {
-  // ================= ENCODER =================
   static int encode(InputModeConfig config) {
     int value = 0;
 
-    // Bit 0 → Input Enable
     if (config.inputEnable == InputEnable.enabled) {
       value |= 0x01;
     }
 
-    // Bit 1 → Test Mode
     if (config.inputMode == InputMode.test) {
       value |= 0x02;
     }
 
-    // Bit 2 → Latch Mode (Logic Table only)
     if (config.latchMode == LatchMode.latched) {
       value |= 0x04;
     }
 
-    // Bit 3 → Invert Mode (Logic Table only)
     if (config.invertMode == InvertMode.inverted) {
       value |= 0x08;
     }
@@ -77,7 +57,6 @@ class InputModeCodec {
     return encode(config).toRadixString(16).toUpperCase().padLeft(2, '0');
   }
 
-  // ================= DECODER =================
   static InputModeConfig decode(int value) {
     return InputModeConfig(
       inputEnable:
@@ -92,15 +71,11 @@ class InputModeCodec {
     );
   }
 
-  // ================= NEW HELPER =================
-  /// Create InputModeConfig directly from HEX string (e.g. "0A")
   static InputModeConfig fromHex(String hex) {
     final int value = int.parse(hex, radix: 16);
     return decode(value);
   }
 }
-
-// ================= DEMO / TEST =================
 
 void main() {
   print("========= INPUT MODE ENCODE TEST =========\n");
