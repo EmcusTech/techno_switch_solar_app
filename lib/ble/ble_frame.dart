@@ -1,4 +1,7 @@
 import 'dart:typed_data';
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
+import 'package:techno_switch_solar_app/utils/logger.dart';
+
 import 'ble_manager.dart';
 
 class BleRxFrame {
@@ -18,18 +21,17 @@ BleRxFrame bleParseAndUpdateRxFrame(Uint8List frame, int frameLen) {
   final int frameLen = frame.length;
 
   if (frameLen < 12) {
-    print("Invalid frame length");
+    Logger(StringConstants.invalidFrameLen);
     return bleRxFrame;
   }
 
   int count = 0;
 
-  print(
+  Logger(
     "TX/RX: RECEIVED: time: ${DateTime.now().toIso8601String()}, frame: ${frame.sublist(7, frameLen - 4).map((b) => b.toRadixString(16).padLeft(2, '0')).join(" ")}",
   );
 
   int sof = (frame[count] << 8) | frame[count + 1];
-  print("SOF: $sof");
   count += 2;
 
   int cmd = (frame[count] << 8) | frame[count + 1];
@@ -38,13 +40,11 @@ BleRxFrame bleParseAndUpdateRxFrame(Uint8List frame, int frameLen) {
   int tof = frame[count++];
 
   int payloadLen = (frame[count] << 8) | frame[count + 1];
-  print(
-    "frame desc: payload bytes:${frame[count + 1]}, ${frame[count]} frame length: $frameLen, count: $count, payloadLength: $payloadLen}",
-  );
+
   count += 2;
 
   if (frameLen < count + payloadLen + 4) {
-    print("Frame length does not match payload length");
+    Logger(StringConstants.mismatchFrameLen);
     return bleRxFrame;
   }
 
@@ -71,34 +71,34 @@ BleRxFrame bleParseAndUpdateRxFrame(Uint8List frame, int frameLen) {
 }
 
 bool bleValidateRxFrame(BleRxFrame rx) {
-  print("the input dats is : $rx");
+  Logger("the input dats is : $rx");
   if (rx.sof != 0xAA55) {
-    print("SOF validation failed");
+    Logger(StringConstants.sofValidationFail);
     return false;
   }
 
   if (rx.cmd <= 0) {
-    print("CMD validation failed");
+    Logger(StringConstants.cmdValidationFail);
     return false;
   }
 
   if (rx.tof <= 0) {
-    print("TOF validation failed");
+    Logger(StringConstants.tofValidationFail);
     return false;
   }
 
   if (rx.payloadLen <= 0) {
-    print("Payload length validation failed");
+    Logger(StringConstants.payloadLenValidationFail);
     return false;
   }
 
   if (rx.crc != rx.calculatedCrc) {
-    print("CRC validation failed");
+    Logger(StringConstants.crcValidationFail);
     return false;
   }
 
   if (rx.eof != 0xEEBB) {
-    print("EOF validation failed");
+    Logger(StringConstants.eofValidationFail);
     return false;
   }
 

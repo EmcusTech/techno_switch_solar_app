@@ -1,4 +1,5 @@
 import 'package:encrypt/encrypt.dart' as encrypt;
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 import 'dart:typed_data';
 import 'dart:convert';
 
@@ -81,11 +82,11 @@ Uint8List convertToBytes(dynamic data) {
     return Uint8List.fromList(data);
   }
 
-  throw ArgumentError("Unsupported data type for conversion to bytes");
+  throw ArgumentError(StringConstants.convError);
 }
 
 bool isHex(String s) {
-  final hexReg = RegExp(r'^[0-9A-Fa-f]+$');
+  final hexReg = RegExp(StringConstants.isHexRegExp);
   return hexReg.hasMatch(s);
 }
 

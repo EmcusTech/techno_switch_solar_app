@@ -2,6 +2,7 @@ import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
 import 'package:get/get.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/ble/ble_process.dart';
+import 'package:techno_switch_solar_app/utils/logger.dart';
 import 'package:techno_switch_solar_app/widgets/ble_communication_failure_dialog.dart';
 
 class BleLogController extends GetxController {
@@ -182,7 +183,7 @@ class BleLogController extends GetxController {
         BleProcess.maxNetworkFlowRestarts) {
       return;
     }
-    print(
+    Logger(
       "------------------------Restarting the network FLow-------------------------------",
     );
     await Future.delayed(const Duration(seconds: 7));
@@ -195,7 +196,6 @@ class BleLogController extends GetxController {
 
   Future<void> onNetworkFlowFailed() async {
     const message = BleCommunicationFailureDialog.defaultMessage;
-    print('BLE network flow failed after max retries');
 
     bleProcess.cancelRxTimeout();
     bleProcess.isOtaCompleted = true;
@@ -205,7 +205,7 @@ class BleLogController extends GetxController {
     try {
       await bleManager.disconnectConnectedDevice();
     } catch (e) {
-      print('disconnect on network flow failure: $e');
+      Logger('disconnect on network flow failure: $e');
     }
     await bleManager.shutdown();
     bleManager.resetProtocolState();
@@ -216,7 +216,7 @@ class BleLogController extends GetxController {
   }
 
   Future<void> onBleFatalError(String message) async {
-    print("BLE FATAL ERROR: $message");
+    Logger("BLE FATAL ERROR: $message");
     bleProcess.cancelRxTimeout();
     bleProcess.isSessionAccessCodeValidationOnly = false;
     try {
@@ -232,8 +232,6 @@ class BleLogController extends GetxController {
   Future<void> restartLogRetrieval() async {
     final bleManager = Get.find<BleManager>();
     final bleProcess = bleManager.bleProcess;
-
-    print("Restarting BLE log retrieval");
 
     bleProcess.resetProcessState();
     bleManager.resetProtocolState();
