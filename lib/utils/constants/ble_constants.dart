@@ -66,6 +66,14 @@ abstract final class BleConstants {
   static const int radioSetupNotServiced = 0x00;
   static const int firstExtOutNoHigh = 0x00;
   static const int firstExtOutNoLow = 0x01;
+  static const int sounderSetupRelayNoHigh = 0x00;
+  static const int sounderSetupRelayNoLow = 0x01;
+  static const int sounderSetupGeneralNoHigh = 0x00;
+  static const int sounderSetupGeneralNoLow = 0x01;
+  static const int sounderSetupZoneNoHigh = 0x00;
+  static const int sounderSetupZoneNoLow = 0x01;
+  static const int sounderSetupExtOutNoHigh = 0x00;
+  static const int sounderSetupExtOutNoLow = 0x01;
 }
 
 class _BleType {
@@ -149,6 +157,8 @@ class _BleCommand {
   final int sounderSetupRelay = 0x07;
   final int sounderSetupZone = 0x19;
   final int sounderSetupExtOut = 0x1B;
+  final int serviceDue = 0x18;
+  final int accessCodeSetup = 0x03;
 }
 
 class _BleFirmware {
