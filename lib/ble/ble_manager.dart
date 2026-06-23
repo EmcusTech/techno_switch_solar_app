@@ -6,6 +6,10 @@ import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
+import 'package:techno_switch_solar_app/screens/log_retrieval_loading_screen.dart';
+import 'package:techno_switch_solar_app/utils/constants/ble_constants.dart';
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
+import 'package:techno_switch_solar_app/utils/logger.dart';
 import 'ble_frame.dart';
 import 'aes_key.dart' as aes;
 import 'ble_crypto.dart';
@@ -147,7 +151,7 @@ enum BleOperationMode {
   adcSetupFetch,
 }
 
-const String BLE_AUTHN_MSG = "TECHNOSWITCH-AUTH-APP";
+const String BLE_AUTHN_MSG = StringConstants.bleAuthMsg;
 
 class BleManager {
   int u8TxPktCnt = 0;
@@ -162,9 +166,9 @@ class BleManager {
   int txData = 0;
 
   final FlutterReactiveBle flutterReactiveBle = FlutterReactiveBle();
-  final Uuid serviceUuid = Uuid.parse("D973F2F0-B19E-11E2-9E96-0800200C9A66");
-  final Uuid notifyUuid = Uuid.parse("D973F2F1-B19E-11E2-9E96-0800200C9A66");
-  final Uuid writeUuid = Uuid.parse("D973F2F2-B19E-11E2-9E96-0800200C9A66");
+  final Uuid serviceUuid = Uuid.parse(StringConstants.bleServiceUuid);
+  final Uuid notifyUuid = Uuid.parse(StringConstants.bleNotifyUuid);
+  final Uuid writeUuid = Uuid.parse(StringConstants.bleWriteUuid);
 
   DiscoveredDevice? selectedDevice;
   QualifiedCharacteristic? notifyChar;
@@ -762,13 +766,11 @@ class BleManager {
 
   Future<void> startLogRetrieval() async {
     if (!isConnected) {
-      throw Exception("Device not connected. Cannot start log retrieval.");
+      throw Exception(StringConstants.deviceNotConnected);
     }
 
     if (notifyChar == null || writeChar == null) {
-      throw Exception(
-        "BLE characteristics not initialized. Cannot start log retrieval.",
-      );
+      throw Exception(StringConstants.bleCharNotInit);
     }
 
     currentOperationMode = BleOperationMode.logRetrieval;
@@ -778,34 +780,26 @@ class BleManager {
     bleProcess.resetProcessState();
 
     if (_notifySub == null) {
-      throw Exception(
-        "BLE handshake not complete. Please wait for connection to finish.",
-      );
+      throw Exception(StringConstants.bleHandshakeIncomplete);
     }
 
-    print("Proceeding with log retrieval");
     bleCurrentState = BleStates.PROCESS_PANEL_EVT_LOG_READ;
     bleStateMachineState = BleStates.PROCESS_PANEL_EVT_LOG_READ;
-    print("Current state: $bleStateMachineState");
     bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
     Get.find<BleLogController>().sendNetworkPacket();
   }
 
   Future<void> startSessionAccessCodeValidation() async {
     if (!isConnected) {
-      throw Exception("Device not connected.");
+      throw Exception(StringConstants.deviceNotConnected);
     }
 
     if (notifyChar == null || writeChar == null) {
-      throw Exception(
-        "BLE characteristics not initialized. Cannot validate access code.",
-      );
+      throw Exception(StringConstants.bleCharNotInit);
     }
 
     if (_notifySub == null) {
-      throw Exception(
-        "BLE handshake not complete. Please wait for connection to finish.",
-      );
+      throw Exception(StringConstants.bleHandshakeIncomplete);
     }
 
     resetProtocolState();
@@ -819,13 +813,11 @@ class BleManager {
 
   Future<void> startLiveEventsRetrieval() async {
     if (!isConnected) {
-      throw Exception("Device not connected. Cannot start log retrieval.");
+      throw Exception(StringConstants.deviceNotConnected);
     }
 
     if (notifyChar == null || writeChar == null) {
-      throw Exception(
-        "BLE characteristics not initialized. Cannot start log retrieval.",
-      );
+      throw Exception(StringConstants.bleCharNotInit);
     }
 
     currentOperationMode = BleOperationMode.liveEventsRetrieval;
@@ -835,16 +827,12 @@ class BleManager {
     bleProcess.resetProcessState();
 
     if (_notifySub == null) {
-      throw Exception(
-        "BLE handshake not complete. Please wait for connection to finish.",
-      );
+      throw Exception(StringConstants.bleHandshakeIncomplete);
     }
 
     otaProcessState = OtaProcessState.sendLiveEventsRetrievalFetchCmdPkt;
-    print("Proceeding with live events retrieval");
     bleCurrentState = BleStates.PROCESS_PANEL_LIVE_EVENTS_READ;
     bleStateMachineState = BleStates.PROCESS_PANEL_LIVE_EVENTS_READ;
-    print("Current state: $bleStateMachineState");
     bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
     Get.find<BleLogController>().sendNetworkPacket();
   }
@@ -855,13 +843,11 @@ class BleManager {
 
   Future<void> startExtOutFetch() async {
     if (!isConnected) {
-      throw Exception("Device not connected. Cannot start log retrieval.");
+      throw Exception(StringConstants.deviceNotConnected);
     }
 
     if (notifyChar == null || writeChar == null) {
-      throw Exception(
-        "BLE characteristics not initialized. Cannot start log retrieval.",
-      );
+      throw Exception(StringConstants.bleCharNotInit);
     }
 
     currentOperationMode = BleOperationMode.extOutFetch;
@@ -871,28 +857,22 @@ class BleManager {
     bleProcess.resetProcessExtOutState();
 
     if (_notifySub == null) {
-      throw Exception(
-        "BLE handshake not complete. Please wait for connection to finish.",
-      );
+      throw Exception(StringConstants.bleHandshakeIncomplete);
     }
 
-    print("Proceeding with ext out fetch");
     bleCurrentState = BleStates.SEND_EXT_OUT_SETUP_CMD_FETCH_PACKET;
     bleStateMachineState = BleStates.SEND_EXT_OUT_SETUP_CMD_FETCH_PACKET;
-    print("Current state: $bleStateMachineState");
     bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
     Get.find<BleLogController>().sendNetworkPacket();
   }
 
   Future<void> startExtOutApply() async {
     if (!isConnected) {
-      throw Exception("Device not connected. Cannot start log retrieval.");
+      throw Exception(StringConstants.deviceNotConnected);
     }
 
     if (notifyChar == null || writeChar == null) {
-      throw Exception(
-        "BLE characteristics not initialized. Cannot start log retrieval.",
-      );
+      throw Exception(StringConstants.bleCharNotInit);
     }
 
     currentOperationMode = BleOperationMode.extOutApply;
@@ -902,28 +882,22 @@ class BleManager {
     bleProcess.resetProcessExtOutState();
 
     if (_notifySub == null) {
-      throw Exception(
-        "BLE handshake not complete. Please wait for connection to finish.",
-      );
+      throw Exception(StringConstants.bleHandshakeIncomplete);
     }
 
-    print("Proceeding with ext out apply");
     bleCurrentState = BleStates.SEND_EXT_OUT_SETUP_CMD_APPLY_PACKET;
     bleStateMachineState = BleStates.SEND_EXT_OUT_SETUP_CMD_APPLY_PACKET;
-    print("Current state: $bleStateMachineState");
     bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
     Get.find<BleLogController>().sendNetworkPacket();
   }
 
   Future<void> startInputSetupFetch() async {
     if (!isConnected) {
-      throw Exception("Device not connected. Cannot start log retrieval.");
+      throw Exception(StringConstants.deviceNotConnected);
     }
 
     if (notifyChar == null || writeChar == null) {
-      throw Exception(
-        "BLE characteristics not initialized. Cannot start log retrieval.",
-      );
+      throw Exception(StringConstants.bleCharNotInit);
     }
 
     currentOperationMode = BleOperationMode.inputSetupFetch;
@@ -933,28 +907,22 @@ class BleManager {
     bleProcess.resetProcessInputSetupState();
 
     if (_notifySub == null) {
-      throw Exception(
-        "BLE handshake not complete. Please wait for connection to finish.",
-      );
+      throw Exception(StringConstants.bleHandshakeIncomplete);
     }
 
-    print("Proceeding with input setup fetch");
     bleCurrentState = BleStates.SEND_INPUT_SETUP_CMD_FETCH_PACKET;
     bleStateMachineState = BleStates.SEND_INPUT_SETUP_CMD_FETCH_PACKET;
-    print("Current state: $bleStateMachineState");
     bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
     Get.find<BleLogController>().sendNetworkPacket();
   }
 
   Future<void> startInputSetupApply() async {
     if (!isConnected) {
-      throw Exception("Device not connected. Cannot start log retrieval.");
+      throw Exception(StringConstants.deviceNotConnected);
     }
 
     if (notifyChar == null || writeChar == null) {
-      throw Exception(
-        "BLE characteristics not initialized. Cannot start log retrieval.",
-      );
+      throw Exception(StringConstants.bleCharNotInit);
     }
 
     currentOperationMode = BleOperationMode.inputSetupApply;
@@ -964,28 +932,22 @@ class BleManager {
     bleProcess.resetProcessInputSetupState();
 
     if (_notifySub == null) {
-      throw Exception(
-        "BLE handshake not complete. Please wait for connection to finish.",
-      );
+      throw Exception(StringConstants.bleHandshakeIncomplete);
     }
 
-    print("Proceeding with input setup apply");
     bleCurrentState = BleStates.SEND_INPUT_SETUP_CMD_APPLY_PACKET;
     bleStateMachineState = BleStates.SEND_INPUT_SETUP_CMD_APPLY_PACKET;
-    print("Current state: $bleStateMachineState");
     bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
     Get.find<BleLogController>().sendNetworkPacket();
   }
 
   Future<void> startRelaySetupFetch() async {
     if (!isConnected) {
-      throw Exception("Device not connected. Cannot start log retrieval.");
+      throw Exception(StringConstants.deviceNotConnected);
     }
 
     if (notifyChar == null || writeChar == null) {
-      throw Exception(
-        "BLE characteristics not initialized. Cannot start log retrieval.",
-      );
+      throw Exception(StringConstants.bleCharNotInit);
     }
 
     currentOperationMode = BleOperationMode.relaySetupFetch;
@@ -995,28 +957,22 @@ class BleManager {
     bleProcess.resetProcessRelaySetupState();
 
     if (_notifySub == null) {
-      throw Exception(
-        "BLE handshake not complete. Please wait for connection to finish.",
-      );
+      throw Exception(StringConstants.bleHandshakeIncomplete);
     }
 
-    print("Proceeding with relay setup fetch");
     bleCurrentState = BleStates.SEND_RELAY_SETUP_CMD_FETCH_PACKET;
     bleStateMachineState = BleStates.SEND_RELAY_SETUP_CMD_FETCH_PACKET;
-    print("Current state: $bleStateMachineState");
     bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
     Get.find<BleLogController>().sendNetworkPacket();
   }
 
   Future<void> startRelaySetupApply() async {
     if (!isConnected) {
-      throw Exception("Device not connected. Cannot start log retrieval.");
+      throw Exception(StringConstants.deviceNotConnected);
     }
 
     if (notifyChar == null || writeChar == null) {
-      throw Exception(
-        "BLE characteristics not initialized. Cannot start log retrieval.",
-      );
+      throw Exception(StringConstants.bleCharNotInit);
     }
 
     currentOperationMode = BleOperationMode.relaySetupApply;
@@ -1026,28 +982,22 @@ class BleManager {
     bleProcess.resetProcessRelaySetupState();
 
     if (_notifySub == null) {
-      throw Exception(
-        "BLE handshake not complete. Please wait for connection to finish.",
-      );
+      throw Exception(StringConstants.bleHandshakeIncomplete);
     }
 
-    print("Proceeding with relay setup apply");
     bleCurrentState = BleStates.SEND_RELAY_SETUP_CMD_APPLY_PACKET;
     bleStateMachineState = BleStates.SEND_RELAY_SETUP_CMD_APPLY_PACKET;
-    print("Current state: $bleStateMachineState");
     bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
     Get.find<BleLogController>().sendNetworkPacket();
   }
 
   Future<void> startZoneSetupFetch() async {
     if (!isConnected) {
-      throw Exception("Device not connected. Cannot start log retrieval.");
+      throw Exception(StringConstants.deviceNotConnected);
     }
 
     if (notifyChar == null || writeChar == null) {
-      throw Exception(
-        "BLE characteristics not initialized. Cannot start log retrieval.",
-      );
+      throw Exception(StringConstants.bleCharNotInit);
     }
 
     currentOperationMode = BleOperationMode.zoneSetupFetch;
@@ -1057,28 +1007,22 @@ class BleManager {
     bleProcess.resetProcessZoneSetupState();
 
     if (_notifySub == null) {
-      throw Exception(
-        "BLE handshake not complete. Please wait for connection to finish.",
-      );
+      throw Exception(StringConstants.bleHandshakeIncomplete);
     }
 
-    print("Proceeding with zone setup fetch");
     bleCurrentState = BleStates.SEND_ZONE_SETUP_CMD_FETCH_PACKET;
     bleStateMachineState = BleStates.SEND_ZONE_SETUP_CMD_FETCH_PACKET;
-    print("Current state: $bleStateMachineState");
     bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
     Get.find<BleLogController>().sendNetworkPacket();
   }
 
   Future<void> startZoneSetupApply() async {
     if (!isConnected) {
-      throw Exception("Device not connected. Cannot start log retrieval.");
+      throw Exception(StringConstants.deviceNotConnected);
     }
 
     if (notifyChar == null || writeChar == null) {
-      throw Exception(
-        "BLE characteristics not initialized. Cannot start log retrieval.",
-      );
+      throw Exception(StringConstants.bleCharNotInit);
     }
 
     currentOperationMode = BleOperationMode.zoneSetupApply;
@@ -1088,28 +1032,22 @@ class BleManager {
     bleProcess.resetProcessZoneSetupState();
 
     if (_notifySub == null) {
-      throw Exception(
-        "BLE handshake not complete. Please wait for connection to finish.",
-      );
+      throw Exception(StringConstants.bleHandshakeIncomplete);
     }
 
-    print("Proceeding with zone setup apply");
     bleCurrentState = BleStates.SEND_ZONE_SETUP_CMD_APPLY_PACKET;
     bleStateMachineState = BleStates.SEND_ZONE_SETUP_CMD_APPLY_PACKET;
-    print("Current state: $bleStateMachineState");
     bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
     Get.find<BleLogController>().sendNetworkPacket();
   }
 
   Future<void> startRadioSetupFetch() async {
     if (!isConnected) {
-      throw Exception("Device not connected. Cannot start log retrieval.");
+      throw Exception(StringConstants.deviceNotConnected);
     }
 
     if (notifyChar == null || writeChar == null) {
-      throw Exception(
-        "BLE characteristics not initialized. Cannot start log retrieval.",
-      );
+      throw Exception(StringConstants.bleCharNotInit);
     }
 
     currentOperationMode = BleOperationMode.radioSetupFetch;
@@ -1119,28 +1057,22 @@ class BleManager {
     bleProcess.resetProcessRadioSetupState();
 
     if (_notifySub == null) {
-      throw Exception(
-        "BLE handshake not complete. Please wait for connection to finish.",
-      );
+      throw Exception(StringConstants.bleHandshakeIncomplete);
     }
 
-    print("Proceeding with radio setup fetch");
     bleCurrentState = BleStates.SEND_RADIO_SETUP_CMD_FETCH_PACKET;
     bleStateMachineState = BleStates.SEND_RADIO_SETUP_CMD_FETCH_PACKET;
-    print("Current state: $bleStateMachineState");
     bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
     Get.find<BleLogController>().sendNetworkPacket();
   }
 
   Future<void> startRadioSetupApply() async {
     if (!isConnected) {
-      throw Exception("Device not connected. Cannot start log retrieval.");
+      throw Exception(StringConstants.deviceNotConnected);
     }
 
     if (notifyChar == null || writeChar == null) {
-      throw Exception(
-        "BLE characteristics not initialized. Cannot start log retrieval.",
-      );
+      throw Exception(StringConstants.bleCharNotInit);
     }
 
     currentOperationMode = BleOperationMode.radioSetupApply;
@@ -1150,28 +1082,22 @@ class BleManager {
     bleProcess.resetProcessRadioSetupState();
 
     if (_notifySub == null) {
-      throw Exception(
-        "BLE handshake not complete. Please wait for connection to finish.",
-      );
+      throw Exception(StringConstants.bleHandshakeIncomplete);
     }
 
-    print("Proceeding with radio setup apply");
     bleCurrentState = BleStates.SEND_RADIO_SETUP_CMD_APPLY_PACKET;
     bleStateMachineState = BleStates.SEND_RADIO_SETUP_CMD_APPLY_PACKET;
-    print("Current state: $bleStateMachineState");
     bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
     Get.find<BleLogController>().sendNetworkPacket();
   }
 
   Future<void> startModuleSetupFetch() async {
     if (!isConnected) {
-      throw Exception("Device not connected. Cannot start log retrieval.");
+      throw Exception(StringConstants.deviceNotConnected);
     }
 
     if (notifyChar == null || writeChar == null) {
-      throw Exception(
-        "BLE characteristics not initialized. Cannot start log retrieval.",
-      );
+      throw Exception(StringConstants.bleCharNotInit);
     }
 
     currentOperationMode = BleOperationMode.moduleSetupFetch;
@@ -1181,28 +1107,22 @@ class BleManager {
     bleProcess.resetProcessModuleSetupState();
 
     if (_notifySub == null) {
-      throw Exception(
-        "BLE handshake not complete. Please wait for connection to finish.",
-      );
+      throw Exception(StringConstants.bleHandshakeIncomplete);
     }
 
-    print("Proceeding with module setup fetch");
     bleCurrentState = BleStates.SEND_MODULE_SETUP_CMD_FETCH_PACKET;
     bleStateMachineState = BleStates.SEND_MODULE_SETUP_CMD_FETCH_PACKET;
-    print("Current state: $bleStateMachineState");
     bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
     Get.find<BleLogController>().sendNetworkPacket();
   }
 
   Future<void> startLBusSetupFetch() async {
     if (!isConnected) {
-      throw Exception("Device not connected. Cannot start log retrieval.");
+      throw Exception(StringConstants.deviceNotConnected);
     }
 
     if (notifyChar == null || writeChar == null) {
-      throw Exception(
-        "BLE characteristics not initialized. Cannot start log retrieval.",
-      );
+      throw Exception(StringConstants.bleCharNotInit);
     }
 
     currentOperationMode = BleOperationMode.lBusSetupFetch;
@@ -1212,28 +1132,22 @@ class BleManager {
     bleProcess.resetProcessLBusSetupState();
 
     if (_notifySub == null) {
-      throw Exception(
-        "BLE handshake not complete. Please wait for connection to finish.",
-      );
+      throw Exception(StringConstants.bleHandshakeIncomplete);
     }
 
-    print("Proceeding with L-Bus setup fetch");
     bleCurrentState = BleStates.SEND_L_BUS_SETUP_CMD_FETCH_PACKET;
     bleStateMachineState = BleStates.SEND_L_BUS_SETUP_CMD_FETCH_PACKET;
-    print("Current state: $bleStateMachineState");
     bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
     Get.find<BleLogController>().sendNetworkPacket();
   }
 
   Future<void> startLBusSetupApply() async {
     if (!isConnected) {
-      throw Exception("Device not connected. Cannot start log retrieval.");
+      throw Exception(StringConstants.deviceNotConnected);
     }
 
     if (notifyChar == null || writeChar == null) {
-      throw Exception(
-        "BLE characteristics not initialized. Cannot start log retrieval.",
-      );
+      throw Exception(StringConstants.bleCharNotInit);
     }
 
     currentOperationMode = BleOperationMode.lBusSetupApply;
@@ -1243,28 +1157,22 @@ class BleManager {
     bleProcess.resetProcessLBusSetupState();
 
     if (_notifySub == null) {
-      throw Exception(
-        "BLE handshake not complete. Please wait for connection to finish.",
-      );
+      throw Exception(StringConstants.bleHandshakeIncomplete);
     }
 
-    print("Proceeding with L-Bus setup apply");
     bleCurrentState = BleStates.SEND_L_BUS_SETUP_CMD_APPLY_PACKET;
     bleStateMachineState = BleStates.SEND_L_BUS_SETUP_CMD_APPLY_PACKET;
-    print("Current state: $bleStateMachineState");
     bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
     Get.find<BleLogController>().sendNetworkPacket();
   }
 
   Future<void> startSounderSetupFetch() async {
     if (!isConnected) {
-      throw Exception("Device not connected. Cannot start log retrieval.");
+      throw Exception(StringConstants.deviceNotConnected);
     }
 
     if (notifyChar == null || writeChar == null) {
-      throw Exception(
-        "BLE characteristics not initialized. Cannot start log retrieval.",
-      );
+      throw Exception(StringConstants.bleCharNotInit);
     }
 
     currentOperationMode = BleOperationMode.sounderSetupFetch;
@@ -1274,28 +1182,22 @@ class BleManager {
     bleProcess.resetProcessSounderSetupState();
 
     if (_notifySub == null) {
-      throw Exception(
-        "BLE handshake not complete. Please wait for connection to finish.",
-      );
+      throw Exception(StringConstants.bleHandshakeIncomplete);
     }
 
-    print("Proceeding with Sounder setup fetch");
     bleCurrentState = BleStates.SEND_SOUNDER_SETUP_CMD_FETCH_PACKET;
     bleStateMachineState = BleStates.SEND_SOUNDER_SETUP_CMD_FETCH_PACKET;
-    print("Current state: $bleStateMachineState");
     bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
     Get.find<BleLogController>().sendNetworkPacket();
   }
 
   Future<void> startSounderSetupApply() async {
     if (!isConnected) {
-      throw Exception("Device not connected. Cannot start log retrieval.");
+      throw Exception(StringConstants.deviceNotConnected);
     }
 
     if (notifyChar == null || writeChar == null) {
-      throw Exception(
-        "BLE characteristics not initialized. Cannot start log retrieval.",
-      );
+      throw Exception(StringConstants.bleCharNotInit);
     }
 
     currentOperationMode = BleOperationMode.sounderSetupApply;
@@ -1305,28 +1207,22 @@ class BleManager {
     bleProcess.resetProcessSounderSetupState();
 
     if (_notifySub == null) {
-      throw Exception(
-        "BLE handshake not complete. Please wait for connection to finish.",
-      );
+      throw Exception(StringConstants.bleHandshakeIncomplete);
     }
 
-    print("Proceeding with Sounder setup apply");
     bleCurrentState = BleStates.SEND_SOUNDER_SETUP_CMD_APPLY_PACKET;
     bleStateMachineState = BleStates.SEND_SOUNDER_SETUP_CMD_APPLY_PACKET;
-    print("Current state: $bleStateMachineState");
     bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
     Get.find<BleLogController>().sendNetworkPacket();
   }
 
   Future<void> startServiceDueFetch() async {
     if (!isConnected) {
-      throw Exception("Device not connected. Cannot start log retrieval.");
+      throw Exception(StringConstants.deviceNotConnected);
     }
 
     if (notifyChar == null || writeChar == null) {
-      throw Exception(
-        "BLE characteristics not initialized. Cannot start log retrieval.",
-      );
+      throw Exception(StringConstants.bleCharNotInit);
     }
 
     currentOperationMode = BleOperationMode.serviceDueFetch;
@@ -1336,28 +1232,22 @@ class BleManager {
     bleProcess.resetProcessServiceDueState();
 
     if (_notifySub == null) {
-      throw Exception(
-        "BLE handshake not complete. Please wait for connection to finish.",
-      );
+      throw Exception(StringConstants.bleHandshakeIncomplete);
     }
 
-    print("Proceeding with Service due fetch");
     bleCurrentState = BleStates.SEND_SERVICE_DUE_SETUP_CMD_FETCH_PACKET;
     bleStateMachineState = BleStates.SEND_SERVICE_DUE_SETUP_CMD_FETCH_PACKET;
-    print("Current state: $bleStateMachineState");
     bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
     Get.find<BleLogController>().sendNetworkPacket();
   }
 
   Future<void> startServiceDueApply() async {
     if (!isConnected) {
-      throw Exception("Device not connected. Cannot start log retrieval.");
+      throw Exception(StringConstants.deviceNotConnected);
     }
 
     if (notifyChar == null || writeChar == null) {
-      throw Exception(
-        "BLE characteristics not initialized. Cannot start log retrieval.",
-      );
+      throw Exception(StringConstants.bleCharNotInit);
     }
 
     currentOperationMode = BleOperationMode.serviceDueApply;
@@ -1367,28 +1257,22 @@ class BleManager {
     bleProcess.resetProcessServiceDueState();
 
     if (_notifySub == null) {
-      throw Exception(
-        "BLE handshake not complete. Please wait for connection to finish.",
-      );
+      throw Exception(StringConstants.bleHandshakeIncomplete);
     }
 
-    print("Proceeding with Service due apply");
     bleCurrentState = BleStates.SEND_SERVICE_DUE_SETUP_CMD_APPLY_PACKET;
     bleStateMachineState = BleStates.SEND_SERVICE_DUE_SETUP_CMD_APPLY_PACKET;
-    print("Current state: $bleStateMachineState");
     bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
     Get.find<BleLogController>().sendNetworkPacket();
   }
 
   Future<void> startAccessCodeSetupFetch() async {
     if (!isConnected) {
-      throw Exception("Device not connected. Cannot start log retrieval.");
+      throw Exception(StringConstants.deviceNotConnected);
     }
 
     if (notifyChar == null || writeChar == null) {
-      throw Exception(
-        "BLE characteristics not initialized. Cannot start log retrieval.",
-      );
+      throw Exception(StringConstants.bleCharNotInit);
     }
 
     currentOperationMode = BleOperationMode.accessCodeSetupFetch;
@@ -1398,28 +1282,22 @@ class BleManager {
     bleProcess.resetProcessAccessCodeSetupState();
 
     if (_notifySub == null) {
-      throw Exception(
-        "BLE handshake not complete. Please wait for connection to finish.",
-      );
+      throw Exception(StringConstants.bleHandshakeIncomplete);
     }
 
-    print("Proceeding with Access code setup fetch");
     bleCurrentState = BleStates.SEND_ACCESS_CODE_SETUP_CMD_FETCH_PACKET;
     bleStateMachineState = BleStates.SEND_ACCESS_CODE_SETUP_CMD_FETCH_PACKET;
-    print("Current state: $bleStateMachineState");
     bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
     Get.find<BleLogController>().sendNetworkPacket();
   }
 
   Future<void> startAccessCodeSetupApply() async {
     if (!isConnected) {
-      throw Exception("Device not connected. Cannot start log retrieval.");
+      throw Exception(StringConstants.deviceNotConnected);
     }
 
     if (notifyChar == null || writeChar == null) {
-      throw Exception(
-        "BLE characteristics not initialized. Cannot start log retrieval.",
-      );
+      throw Exception(StringConstants.bleCharNotInit);
     }
 
     currentOperationMode = BleOperationMode.accessCodeSetupApply;
@@ -1429,28 +1307,22 @@ class BleManager {
     bleProcess.resetProcessAccessCodeSetupState();
 
     if (_notifySub == null) {
-      throw Exception(
-        "BLE handshake not complete. Please wait for connection to finish.",
-      );
+      throw Exception(StringConstants.bleHandshakeIncomplete);
     }
 
-    print("Proceeding with Access code setup fetch");
     bleCurrentState = BleStates.SEND_ACCESS_CODE_SETUP_CMD_APPLY_PACKET;
     bleStateMachineState = BleStates.SEND_ACCESS_CODE_SETUP_CMD_APPLY_PACKET;
-    print("Current state: $bleStateMachineState");
     bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
     Get.find<BleLogController>().sendNetworkPacket();
   }
 
   Future<void> startPanelInfoSetupFetch() async {
     if (!isConnected) {
-      throw Exception("Device not connected. Cannot start log retrieval.");
+      throw Exception(StringConstants.deviceNotConnected);
     }
 
     if (notifyChar == null || writeChar == null) {
-      throw Exception(
-        "BLE characteristics not initialized. Cannot start log retrieval.",
-      );
+      throw Exception(StringConstants.bleCharNotInit);
     }
 
     currentOperationMode = BleOperationMode.panelInfoSetupFetch;
@@ -1460,28 +1332,22 @@ class BleManager {
     bleProcess.resetProcessPanelInfoSetupState();
 
     if (_notifySub == null) {
-      throw Exception(
-        "BLE handshake not complete. Please wait for connection to finish.",
-      );
+      throw Exception(StringConstants.bleHandshakeIncomplete);
     }
 
-    print("Proceeding with Panel info setup fetch");
     bleCurrentState = BleStates.SEND_PANEL_INFO_SETUP_CMD_FETCH_PACKET;
     bleStateMachineState = BleStates.SEND_PANEL_INFO_SETUP_CMD_FETCH_PACKET;
-    print("Current state: $bleStateMachineState");
     bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
     Get.find<BleLogController>().sendNetworkPacket();
   }
 
   Future<void> startPanelInfoSetupApply() async {
     if (!isConnected) {
-      throw Exception("Device not connected. Cannot start log retrieval.");
+      throw Exception(StringConstants.deviceNotConnected);
     }
 
     if (notifyChar == null || writeChar == null) {
-      throw Exception(
-        "BLE characteristics not initialized. Cannot start log retrieval.",
-      );
+      throw Exception(StringConstants.bleCharNotInit);
     }
 
     currentOperationMode = BleOperationMode.panelInfoSetupApply;
@@ -1491,28 +1357,22 @@ class BleManager {
     bleProcess.resetProcessPanelInfoSetupState();
 
     if (_notifySub == null) {
-      throw Exception(
-        "BLE handshake not complete. Please wait for connection to finish.",
-      );
+      throw Exception(StringConstants.bleHandshakeIncomplete);
     }
 
-    print("Proceeding with Panel info setup apply");
     bleCurrentState = BleStates.SEND_PANEL_INFO_SETUP_CMD_APPLY_PACKET;
     bleStateMachineState = BleStates.SEND_PANEL_INFO_SETUP_CMD_APPLY_PACKET;
-    print("Current state: $bleStateMachineState");
     bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
     Get.find<BleLogController>().sendNetworkPacket();
   }
 
   Future<void> startGeneralModuleSetupFetch() async {
     if (!isConnected) {
-      throw Exception("Device not connected. Cannot start log retrieval.");
+      throw Exception(StringConstants.deviceNotConnected);
     }
 
     if (notifyChar == null || writeChar == null) {
-      throw Exception(
-        "BLE characteristics not initialized. Cannot start log retrieval.",
-      );
+      throw Exception(StringConstants.bleCharNotInit);
     }
 
     currentOperationMode = BleOperationMode.generalModuleSetupFetch;
@@ -1522,28 +1382,22 @@ class BleManager {
     bleProcess.resetProcessGeneralModuleSetupState();
 
     if (_notifySub == null) {
-      throw Exception(
-        "BLE handshake not complete. Please wait for connection to finish.",
-      );
+      throw Exception(StringConstants.bleHandshakeIncomplete);
     }
 
-    print("Proceeding with General module setup fetch");
     bleCurrentState = BleStates.SEND_GENERAL_MODULE_SETUP_CMD_FETCH_PACKET;
     bleStateMachineState = BleStates.SEND_GENERAL_MODULE_SETUP_CMD_FETCH_PACKET;
-    print("Current state: $bleStateMachineState");
     bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
     Get.find<BleLogController>().sendNetworkPacket();
   }
 
   Future<void> startGeneralModuleSetupApply() async {
     if (!isConnected) {
-      throw Exception("Device not connected. Cannot start log retrieval.");
+      throw Exception(StringConstants.deviceNotConnected);
     }
 
     if (notifyChar == null || writeChar == null) {
-      throw Exception(
-        "BLE characteristics not initialized. Cannot start log retrieval.",
-      );
+      throw Exception(StringConstants.bleCharNotInit);
     }
 
     currentOperationMode = BleOperationMode.generalModuleSetupApply;
@@ -1553,28 +1407,22 @@ class BleManager {
     bleProcess.resetProcessGeneralModuleSetupState();
 
     if (_notifySub == null) {
-      throw Exception(
-        "BLE handshake not complete. Please wait for connection to finish.",
-      );
+      throw Exception(StringConstants.bleHandshakeIncomplete);
     }
 
-    print("Proceeding with General module setup apply");
     bleCurrentState = BleStates.SEND_GENERAL_MODULE_SETUP_CMD_APPLY_PACKET;
     bleStateMachineState = BleStates.SEND_GENERAL_MODULE_SETUP_CMD_APPLY_PACKET;
-    print("Current state: $bleStateMachineState");
     bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
     Get.find<BleLogController>().sendNetworkPacket();
   }
 
   Future<void> startAdcSetupFetch() async {
     if (!isConnected) {
-      throw Exception("Device not connected. Cannot start log retrieval.");
+      throw Exception(StringConstants.deviceNotConnected);
     }
 
     if (notifyChar == null || writeChar == null) {
-      throw Exception(
-        "BLE characteristics not initialized. Cannot start log retrieval.",
-      );
+      throw Exception(StringConstants.bleCharNotInit);
     }
 
     currentOperationMode = BleOperationMode.adcSetupFetch;
@@ -1584,15 +1432,11 @@ class BleManager {
     bleProcess.resetProcessAdcSetupState();
 
     if (_notifySub == null) {
-      throw Exception(
-        "BLE handshake not complete. Please wait for connection to finish.",
-      );
+      throw Exception(StringConstants.bleHandshakeIncomplete);
     }
 
-    print("Proceeding with Adc setup fetch");
     bleCurrentState = BleStates.SEND_ADC_SETUP_CMD_FETCH_PACKET;
     bleStateMachineState = BleStates.SEND_ADC_SETUP_CMD_FETCH_PACKET;
-    print("Current state: $bleStateMachineState");
     bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
     Get.find<BleLogController>().sendNetworkPacket();
   }
@@ -1604,8 +1448,7 @@ class BleManager {
     try {
       bleProcess.cancelRxTimeout();
       await disconnectHandler(deviceId: deviceId);
-    } catch (e) {
-      debugPrint("Safe disconnect failed: $e");
+    } catch (_) {
     } finally {
       connectedDeviceId.value = "";
     }
@@ -1631,7 +1474,9 @@ class BleManager {
     writeChar = null;
 
     if (_handshakeCompleter != null && !_handshakeCompleter!.isCompleted) {
-      _handshakeCompleter!.completeError(Exception("BLE session reset"));
+      _handshakeCompleter!.completeError(
+        Exception(StringConstants.bleSessionReset),
+      );
       _handshakeCompleter = null;
     }
   }
@@ -1655,7 +1500,7 @@ class BleManager {
 
     if (_handshakeCompleter != null && !_handshakeCompleter!.isCompleted) {
       _handshakeCompleter!.completeError(
-        Exception("Connection attempt aborted"),
+        Exception(StringConstants.bleConnAbort),
       );
       _handshakeCompleter = null;
     }
@@ -1663,9 +1508,7 @@ class BleManager {
     if (forceAbortNative || hadGatt) {
       try {
         await flutterReactiveBle.abortConnection(deviceId);
-      } catch (_) {
-        // Native stack may already be disconnected.
-      }
+      } catch (_) {}
     }
   }
 
@@ -1695,16 +1538,14 @@ class BleManager {
     int? manufacturerDataOverride,
     bool skipConnectionHandshake = false,
   }) async {
-    print("Attempting to connect to device: ${device.id}");
+    Logger("Attempting to connect to device: ${device.id}");
 
     if (isConnected) {
-      print("Return from here");
       shutdown();
       return;
     }
 
     if (_connectInProgress) {
-      print("Aborting in-flight connect before starting a new session");
       await _abortActiveConnectSession();
     }
 
@@ -1726,7 +1567,7 @@ class BleManager {
     try {
       while (attempt < maxRetries) {
         attempt++;
-        print("BLE connect attempt $attempt / $maxRetries");
+        Logger("BLE connect attempt $attempt / $maxRetries");
 
         try {
           selectedDevice = device;
@@ -1739,10 +1580,10 @@ class BleManager {
             connectionTimeout: connectionTimeout,
             skipConnectionHandshake: skipConnectionHandshake,
           );
-          print("BLE connected successfully");
+          Logger(StringConstants.bleConnSuccess);
           return;
         } catch (e) {
-          print("BLE attempt $attempt failed: $e");
+          Logger("BLE attempt $attempt failed: $e");
 
           await _tearDownConnectionAttempt(
             device.id,
@@ -1755,9 +1596,7 @@ class BleManager {
           resetLogRetrievalState();
 
           if (attempt >= maxRetries) {
-            print("Max BLE retry attempts reached");
-            processDesc.value =
-                "Max BLE retry attempts reached, please scan again and connect.";
+            processDesc.value = StringConstants.bleMaxRetryReached;
             maxBleConnectionRetriesReached.value = true;
             rethrow;
           }
@@ -1776,12 +1615,10 @@ class BleManager {
     if (!Platform.isAndroid) return;
 
     try {
-      print("Clearing GATT cache...");
+      Logger(StringConstants.bleClearingGattCache);
       await flutterReactiveBle.clearGattCache(deviceId);
-      print("GATT cache cleared");
-    } catch (e) {
-      print("GATT cache clear failed: $e");
-    }
+      Logger(StringConstants.bleClearedGattCache);
+    } catch (_) {}
   }
 
   Future<void> _connectOnce(
@@ -1798,53 +1635,38 @@ class BleManager {
 
     if (await Permission.bluetoothConnect.isDenied ||
         await Permission.location.isDenied) {
-      throw Exception("Bluetooth permissions not granted");
+      throw Exception(StringConstants.blePermissionNotGranted);
     }
 
     final Completer<void> connectedCompleter = Completer();
     var ignoreInitialDisconnectedEmission = true;
     List<int> md = device.manufacturerData;
 
-    print(
+    Logger(
       "DEBUG CONNECTION: Device manufacturer data - Full array: $md, Length: ${md.length}",
     );
 
     if (manufacturerDataOverride != null) {
       md = [manufacturerDataOverride];
-      print(
+      Logger(
         "DEBUG CONNECTION: Using manufacturer data override: $manufacturerDataOverride (as array: $md)",
       );
     } else if (md.isEmpty &&
         selectedDevice != null &&
         selectedDevice!.id == device.id) {
       md = selectedDevice!.manufacturerData;
-      print(
+      Logger(
         "DEBUG CONNECTION: Using manufacturer data from selectedDevice - Full array: $md, Length: ${md.length}, Status byte: ${BleMsdUtils.statusByte(md)}",
       );
-    } else if (md.isEmpty) {
-      print(
-        "DEBUG CONNECTION: WARNING - Manufacturer data is empty for device ${device.id}, will use default 0",
-      );
-    }
+    } else if (md.isEmpty) {}
     final statusByte = manufacturerDataOverride ?? BleMsdUtils.statusByte(md);
-    print(
-      "DEBUG CONNECTION: Final manufacturer data array: $md, Status byte: $statusByte",
-    );
 
     _connectionSub = flutterReactiveBle
         .connectToDevice(id: device.id, connectionTimeout: connectionTimeout)
         .listen(
           (update) async {
-            print("Connection state: ${update.connectionState}");
-
             if (update.connectionState == DeviceConnectionState.connected) {
-              print(
-                "DEBUG CONNECTION: Setting bleManufacturerData - Full array: $md, Status byte: $statusByte",
-              );
               bleManufacturerData.value = statusByte;
-              print(
-                "DEBUG CONNECTION: bleManufacturerData.value is now: ${bleManufacturerData.value}",
-              );
               _isConnectedNotifier.value = true;
               isBleDisconnected = false;
               connectedDeviceId.value = device.id;
@@ -1903,14 +1725,14 @@ class BleManager {
               if (_handshakeCompleter != null &&
                   !_handshakeCompleter!.isCompleted) {
                 _handshakeCompleter!.completeError(
-                  Exception("Disconnected during handshake"),
+                  Exception(StringConstants.disconnectHandshake),
                 );
                 _handshakeCompleter = null;
               }
 
               if (!connectedCompleter.isCompleted) {
                 connectedCompleter.completeError(
-                  Exception("Disconnected during connection"),
+                  Exception(StringConstants.disconnectConn),
                 );
               }
             }
@@ -1948,25 +1770,18 @@ class BleManager {
     bool? isChipInBootLoader = false,
     bool? isExtOut = false,
   }) async {
-    print("Register notify handler");
-
     if (_notifySub != null) {
-      print("Cancelling existing notify subscription before re-registering");
       try {
         await _notifySub?.cancel();
-      } catch (e) {
-        print("Error cancelling existing subscription: $e");
-      }
+      } catch (e) {}
       _notifySub = null;
     }
 
     if (!isConnected) {
-      print("Device disconnected before notification start");
       return;
     }
 
     if (notifyChar == null) {
-      print("Notify characteristic not initialized");
       return;
     }
 
@@ -1976,14 +1791,11 @@ class BleManager {
           .listen(
             (data) => notificationHandler(Uint8List.fromList(data)),
             onError: (e) {
-              print("Notification subscription error: $e");
               _notifySub = null;
             },
           );
 
-      print("Listening for notifications...");
       await Future.delayed(const Duration(milliseconds: 300));
-      print("---Notification handler registered----");
 
       if (isChipInBootLoader != true) {
         bleProcess.requestENCKey();
@@ -1993,7 +1805,6 @@ class BleManager {
         bleProcess.sendAuthPacket();
       }
     } catch (e) {
-      print("Failed to register notify handler: $e");
       _notifySub = null;
       rethrow;
     }
@@ -2002,7 +1813,6 @@ class BleManager {
   Future<void> disconnectConnectedDevice() async {
     receivedPanelName.value = "";
     if (!isConnected) {
-      print("Device not connected, returning");
       return;
     }
 
@@ -2014,16 +1824,12 @@ class BleManager {
 
     try {
       if (device != null) {
-        print("Disconnecting device using fbp: $device");
         await device.disconnect();
       } else {
-        print("Device not found, returning");
         return;
       }
     } catch (e) {
-      print("Error disconnecting device: $e");
     } finally {
-      print("Disconnecting device finally: $device");
       final deviceId = device?.remoteId.str ?? connectedDeviceId.value;
       connectedBtDevice.value = null;
       await disconnectHandler(deviceId: deviceId);
@@ -2031,8 +1837,6 @@ class BleManager {
   }
 
   Future<void> disconnectHandler({String? deviceId}) async {
-    print("Disconnecting device...");
-
     await _notifySub?.cancel();
     await _connectionSub?.cancel();
 
@@ -2057,7 +1861,6 @@ class BleManager {
   }
 
   Future<void> shutdown({String? deviceId}) async {
-    print("Shutdown BLE");
     if (deviceId != null && deviceId.isNotEmpty) {
       await _refreshGattIfNeeded(deviceId);
     }
@@ -2081,7 +1884,7 @@ class BleManager {
   }
 
   bool _hasEncryptionKey() {
-    final dynamic key = bleAESKey['AES_KEY'];
+    final dynamic key = bleAESKey[StringConstants.bleAeskey];
     return key is List<int> && key.length >= kBleEncryKeyByteSize;
   }
 
@@ -2105,7 +1908,7 @@ class BleManager {
     if (!_shouldEncryptOutgoing(encryptParam: encrypt)) {
       return frame;
     }
-    final List<int> key = bleAESKey['AES_KEY'] as List<int>;
+    final List<int> key = bleAESKey[StringConstants.bleAeskey] as List<int>;
     return BleCrypto.transformTx(frame, key);
   }
 
@@ -2122,15 +1925,15 @@ class BleManager {
         _hasEncryptionKey();
   }
 
+  bool _isFirmwareTransferState(BleStates state) {
+    return state == BleStates.SEND_JUMP_FIRMWARE_PACKET ||
+        state == BleStates.SEND_START_FIRMWARE_PACKET ||
+        state == BleStates.SEND_FIRMWARE_PACKET ||
+        state == BleStates.SEND_END_FIRMWARE_PACKET;
+  }
+
   Uint8List _decryptIncomingFrame(Uint8List data) {
-    print(
-      "decryptIncomingFrame: ${data.map((e) => e.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
-    );
-    final List<int> key = bleAESKey['AES_KEY'] as List<int>;
-    print("key: $key");
-    print(
-      "transformRx: ${BleCrypto.transformRx(data, key).map((e) => e.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
-    );
+    final List<int> key = bleAESKey[StringConstants.bleAeskey] as List<int>;
     return BleCrypto.transformRx(data, key);
   }
 
@@ -2138,7 +1941,6 @@ class BleManager {
     if ((bleProcess.isOtaCompleted ||
             otaProcessState == OtaProcessState.notInUse) &&
         isBleDisconnected) {
-      print("RX ignored after OTA completion");
       return;
     }
 
@@ -2150,41 +1952,17 @@ class BleManager {
       data = _decryptIncomingFrame(data);
     }
 
-    print("bleCurrentState: $bleCurrentState");
-    if (bleCurrentState == BleStates.SEND_JUMP_FIRMWARE_PACKET) {
-      print("Jump firmware packet response");
-      print(
-        "data: ${data.map((e) => e.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
-      );
-    } else if (bleCurrentState == BleStates.SEND_START_FIRMWARE_PACKET) {
-      print("Start firmware packet response");
-      print("Ack/Nack: ${data[7]}");
-      print(
-        "data: ${data.map((e) => e.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
-      );
-    } else if (bleCurrentState == BleStates.SEND_FIRMWARE_PACKET) {
-      print("Firmware packet response");
-      print(
-        "data: ${data.map((e) => e.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
-      );
-    } else if (bleCurrentState == BleStates.SEND_END_FIRMWARE_PACKET) {
-      print("End firmware packet response");
-      print(
-        "data: ${data.map((e) => e.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
-      );
-    } else if (bleCurrentState == BleStates.REQ_ENCY_KEY) {
-      print("Encryption key req response");
+    if (_isFirmwareTransferState(bleCurrentState)) {
+      // OTA TX is driven from firmware_upgrade_bottom_sheet; ignore RX here.
+      return;
+    }
+
+    if (bleCurrentState == BleStates.REQ_ENCY_KEY) {
       bleRxFrame = bleParseAndUpdateRxFrame(data, data.length);
-      print(
-        "SOF:${bleRxFrame.sof},${bleRxFrame.cmd},${bleRxFrame.tof},${bleRxFrame.payloadLen},${bleRxFrame.payload},${bleRxFrame.crc},${bleRxFrame.calculatedCrc},${bleRxFrame.crc},${bleRxFrame.eof}",
-      );
       if (bleValidateRxFrame(bleRxFrame)) {
-        print("Validation success");
         final List<int> payload = bleRxFrame.payload;
-        bleAESKey['AES_KEY'] = BleCrypto.extractKeyFromHandshakePayload(
-          payload,
-        );
-        print("Received key: ${bleAESKey['AES_KEY']}");
+        bleAESKey[StringConstants
+            .bleAeskey] = BleCrypto.extractKeyFromHandshakePayload(payload);
 
         if (payload.length >= 10) {
           final firmwareVersionBytes = payload.sublist(
@@ -2199,8 +1977,6 @@ class BleManager {
           final bleVersion = String.fromCharCodes(firmwareVersionBytes);
           bleFirmwareVersion.value = bleVersion;
           bleHardwareVersion.value = hardwareVersion;
-          print("BLE firmware version: $bleVersion");
-          print("BLE hardware version: $hardwareVersion");
         } else {
           bleFirmwareVersion.value = '';
         }
@@ -2209,26 +1985,17 @@ class BleManager {
         bleStateMachineState = BleStates.SEND_AUTHN_MSG;
         bleCurrentState = BleStates.SEND_AUTHN_MSG;
 
-        print("handler bleStateMachineState: $bleStateMachineState");
         bleProcess.sendAuthPacket();
-      } else {
-        print("Validation failed");
       }
     } else if (bleCurrentState == BleStates.SEND_AUTHN_MSG) {
-      print("Authn msg response");
-      print(
-        "data: ${data.map((e) => e.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
-      );
       bleRxFrame = bleParseAndUpdateRxFrame(data, data.length);
 
       if (bleValidateRxFrame(bleRxFrame)) {
-        print("AUTH KEY Validation success");
         await Future.delayed(Duration(seconds: 1));
 
         if (currentOperationMode == BleOperationMode.none) {
           bleCurrentState = BleStates.IDLE;
           bleStateMachineState = BleStates.IDLE;
-          print("Connection handshake complete - device ready for operations");
           if (_handshakeCompleter != null &&
               !_handshakeCompleter!.isCompleted) {
             _handshakeCompleter!.complete();
@@ -2236,11 +2003,9 @@ class BleManager {
         } else if (currentOperationMode == BleOperationMode.firmwareUpgrade) {
           bleCurrentState = BleStates.SEND_START_FIRMWARE_PACKET;
           bleStateMachineState = BleStates.SEND_START_FIRMWARE_PACKET;
-          print("Current state: $bleStateMachineState (Firmware Upgrade)");
         } else if (currentOperationMode == BleOperationMode.logRetrieval) {
           bleCurrentState = BleStates.PROCESS_PANEL_EVT_LOG_READ;
           bleStateMachineState = BleStates.PROCESS_PANEL_EVT_LOG_READ;
-          print("Current state: $bleStateMachineState (Log Retrieval)");
           bleProcess.startOtherPacketsRxTimeout(
             timeout: const Duration(seconds: 5),
           );
@@ -2248,7 +2013,6 @@ class BleManager {
         } else if (currentOperationMode == BleOperationMode.extOutFetch) {
           bleCurrentState = BleStates.SEND_EXT_OUT_SETUP_CMD_FETCH_PACKET;
           bleStateMachineState = BleStates.SEND_EXT_OUT_SETUP_CMD_FETCH_PACKET;
-          print("Current state: $bleStateMachineState (Ext Out Fetch)");
           bleProcess.startOtherPacketsRxTimeout(
             timeout: const Duration(seconds: 5),
           );
@@ -2256,7 +2020,6 @@ class BleManager {
         } else if (currentOperationMode == BleOperationMode.extOutApply) {
           bleCurrentState = BleStates.SEND_EXT_OUT_SETUP_CMD_APPLY_PACKET;
           bleStateMachineState = BleStates.SEND_EXT_OUT_SETUP_CMD_APPLY_PACKET;
-          print("Current state : $bleStateMachineState (Ext Out Apply)");
           bleProcess.startOtherPacketsRxTimeout(
             timeout: const Duration(seconds: 5),
           );
@@ -2264,7 +2027,6 @@ class BleManager {
         } else if (currentOperationMode == BleOperationMode.inputSetupFetch) {
           bleCurrentState = BleStates.SEND_INPUT_SETUP_CMD_FETCH_PACKET;
           bleStateMachineState = BleStates.SEND_INPUT_SETUP_CMD_FETCH_PACKET;
-          print("Current state: $bleStateMachineState (Input Setup Fetch)");
           bleProcess.startOtherPacketsRxTimeout(
             timeout: const Duration(seconds: 5),
           );
@@ -2272,7 +2034,6 @@ class BleManager {
         } else if (currentOperationMode == BleOperationMode.inputSetupApply) {
           bleCurrentState = BleStates.SEND_INPUT_SETUP_CMD_APPLY_PACKET;
           bleStateMachineState = BleStates.SEND_INPUT_SETUP_CMD_APPLY_PACKET;
-          print("Current state: $bleStateMachineState (Input Setup Apply)");
           bleProcess.startOtherPacketsRxTimeout(
             timeout: const Duration(seconds: 5),
           );
@@ -2280,7 +2041,6 @@ class BleManager {
         } else if (currentOperationMode == BleOperationMode.relaySetupFetch) {
           bleCurrentState = BleStates.SEND_RELAY_SETUP_CMD_FETCH_PACKET;
           bleStateMachineState = BleStates.SEND_RELAY_SETUP_CMD_FETCH_PACKET;
-          print("Current state: $bleStateMachineState (Relay Setup Fetch)");
           bleProcess.startOtherPacketsRxTimeout(
             timeout: const Duration(seconds: 5),
           );
@@ -2288,7 +2048,6 @@ class BleManager {
         } else if (currentOperationMode == BleOperationMode.relaySetupApply) {
           bleCurrentState = BleStates.SEND_RELAY_SETUP_CMD_APPLY_PACKET;
           bleStateMachineState = BleStates.SEND_RELAY_SETUP_CMD_APPLY_PACKET;
-          print("Current state: $bleStateMachineState (Relay Setup Apply)");
           bleProcess.startOtherPacketsRxTimeout(
             timeout: const Duration(seconds: 5),
           );
@@ -2296,7 +2055,6 @@ class BleManager {
         } else if (currentOperationMode == BleOperationMode.zoneSetupFetch) {
           bleCurrentState = BleStates.SEND_ZONE_SETUP_CMD_FETCH_PACKET;
           bleStateMachineState = BleStates.SEND_ZONE_SETUP_CMD_FETCH_PACKET;
-          print("Current state: $bleStateMachineState (Zone Setup Fetch)");
           bleProcess.startOtherPacketsRxTimeout(
             timeout: const Duration(seconds: 5),
           );
@@ -2304,7 +2062,6 @@ class BleManager {
         } else if (currentOperationMode == BleOperationMode.zoneSetupApply) {
           bleCurrentState = BleStates.SEND_ZONE_SETUP_CMD_APPLY_PACKET;
           bleStateMachineState = BleStates.SEND_ZONE_SETUP_CMD_APPLY_PACKET;
-          print("Current state: $bleStateMachineState (Zone Setup Apply)");
           bleProcess.startOtherPacketsRxTimeout(
             timeout: const Duration(seconds: 5),
           );
@@ -2312,7 +2069,6 @@ class BleManager {
         } else if (currentOperationMode == BleOperationMode.radioSetupFetch) {
           bleCurrentState = BleStates.SEND_RADIO_SETUP_CMD_FETCH_PACKET;
           bleStateMachineState = BleStates.SEND_RADIO_SETUP_CMD_FETCH_PACKET;
-          print("Current state: $bleStateMachineState (Radio Setup Fetch)");
           bleProcess.startOtherPacketsRxTimeout(
             timeout: const Duration(seconds: 5),
           );
@@ -2320,7 +2076,6 @@ class BleManager {
         } else if (currentOperationMode == BleOperationMode.radioSetupApply) {
           bleCurrentState = BleStates.SEND_RADIO_SETUP_CMD_APPLY_PACKET;
           bleStateMachineState = BleStates.SEND_RADIO_SETUP_CMD_APPLY_PACKET;
-          print("Current state: $bleStateMachineState (Radio Setup Apply)");
           bleProcess.startOtherPacketsRxTimeout(
             timeout: const Duration(seconds: 5),
           );
@@ -2328,7 +2083,6 @@ class BleManager {
         } else if (currentOperationMode == BleOperationMode.moduleSetupFetch) {
           bleCurrentState = BleStates.SEND_MODULE_SETUP_CMD_FETCH_PACKET;
           bleStateMachineState = BleStates.SEND_MODULE_SETUP_CMD_FETCH_PACKET;
-          print("Current state: $bleStateMachineState (Module Setup Fetch)");
           bleProcess.startOtherPacketsRxTimeout(
             timeout: const Duration(seconds: 5),
           );
@@ -2336,7 +2090,6 @@ class BleManager {
         } else if (currentOperationMode == BleOperationMode.lBusSetupFetch) {
           bleCurrentState = BleStates.SEND_L_BUS_SETUP_CMD_FETCH_PACKET;
           bleStateMachineState = BleStates.SEND_L_BUS_SETUP_CMD_FETCH_PACKET;
-          print("Current state: $bleStateMachineState (L-Bus Setup Fetch)");
           bleProcess.startOtherPacketsRxTimeout(
             timeout: const Duration(seconds: 5),
           );
@@ -2344,7 +2097,6 @@ class BleManager {
         } else if (currentOperationMode == BleOperationMode.lBusSetupApply) {
           bleCurrentState = BleStates.SEND_L_BUS_SETUP_CMD_APPLY_PACKET;
           bleStateMachineState = BleStates.SEND_L_BUS_SETUP_CMD_APPLY_PACKET;
-          print("Current state: $bleStateMachineState (L-Bus Setup Apply)");
           bleProcess.startOtherPacketsRxTimeout(
             timeout: const Duration(seconds: 5),
           );
@@ -2352,7 +2104,6 @@ class BleManager {
         } else if (currentOperationMode == BleOperationMode.sounderSetupFetch) {
           bleCurrentState = BleStates.SEND_SOUNDER_SETUP_CMD_FETCH_PACKET;
           bleStateMachineState = BleStates.SEND_SOUNDER_SETUP_CMD_FETCH_PACKET;
-          print("Current state: $bleStateMachineState (Sounder Setup Fetch)");
           bleProcess.startOtherPacketsRxTimeout(
             timeout: const Duration(seconds: 5),
           );
@@ -2360,7 +2111,6 @@ class BleManager {
         } else if (currentOperationMode == BleOperationMode.sounderSetupApply) {
           bleCurrentState = BleStates.SEND_SOUNDER_SETUP_CMD_APPLY_PACKET;
           bleStateMachineState = BleStates.SEND_SOUNDER_SETUP_CMD_APPLY_PACKET;
-          print("Current state: $bleStateMachineState (Sounder Setup Apply)");
           bleProcess.startOtherPacketsRxTimeout(
             timeout: const Duration(seconds: 5),
           );
@@ -2369,7 +2119,6 @@ class BleManager {
           bleCurrentState = BleStates.SEND_SERVICE_DUE_SETUP_CMD_FETCH_PACKET;
           bleStateMachineState =
               BleStates.SEND_SERVICE_DUE_SETUP_CMD_FETCH_PACKET;
-          print("Current state: $bleStateMachineState (Service due fetch)");
           bleProcess.startOtherPacketsRxTimeout(
             timeout: const Duration(seconds: 5),
           );
@@ -2378,7 +2127,6 @@ class BleManager {
           bleCurrentState = BleStates.SEND_SERVICE_DUE_SETUP_CMD_APPLY_PACKET;
           bleStateMachineState =
               BleStates.SEND_SERVICE_DUE_SETUP_CMD_APPLY_PACKET;
-          print("Current state: $bleStateMachineState (Service due apply)");
           bleProcess.startOtherPacketsRxTimeout(
             timeout: const Duration(seconds: 5),
           );
@@ -2388,9 +2136,6 @@ class BleManager {
           bleCurrentState = BleStates.SEND_ACCESS_CODE_SETUP_CMD_FETCH_PACKET;
           bleStateMachineState =
               BleStates.SEND_ACCESS_CODE_SETUP_CMD_FETCH_PACKET;
-          print(
-            "Current state: $bleStateMachineState (Access code setup fetch)",
-          );
           bleProcess.startOtherPacketsRxTimeout(
             timeout: const Duration(seconds: 5),
           );
@@ -2400,9 +2145,6 @@ class BleManager {
           bleCurrentState = BleStates.SEND_ACCESS_CODE_SETUP_CMD_APPLY_PACKET;
           bleStateMachineState =
               BleStates.SEND_ACCESS_CODE_SETUP_CMD_APPLY_PACKET;
-          print(
-            "Current state: $bleStateMachineState (Access code setup apply)",
-          );
           bleProcess.startOtherPacketsRxTimeout(
             timeout: const Duration(seconds: 5),
           );
@@ -2412,9 +2154,6 @@ class BleManager {
           bleCurrentState = BleStates.SEND_PANEL_INFO_SETUP_CMD_FETCH_PACKET;
           bleStateMachineState =
               BleStates.SEND_PANEL_INFO_SETUP_CMD_FETCH_PACKET;
-          print(
-            "Current state: $bleStateMachineState (Panel info setup fetch)",
-          );
           bleProcess.startOtherPacketsRxTimeout(
             timeout: const Duration(seconds: 5),
           );
@@ -2424,9 +2163,6 @@ class BleManager {
           bleCurrentState = BleStates.SEND_PANEL_INFO_SETUP_CMD_APPLY_PACKET;
           bleStateMachineState =
               BleStates.SEND_PANEL_INFO_SETUP_CMD_APPLY_PACKET;
-          print(
-            "Current state: $bleStateMachineState (Panel info setup apply)",
-          );
           bleProcess.startOtherPacketsRxTimeout(
             timeout: const Duration(seconds: 5),
           );
@@ -2437,9 +2173,6 @@ class BleManager {
               BleStates.SEND_GENERAL_MODULE_SETUP_CMD_FETCH_PACKET;
           bleStateMachineState =
               BleStates.SEND_GENERAL_MODULE_SETUP_CMD_FETCH_PACKET;
-          print(
-            "Current state: $bleStateMachineState (General module setup fetch)",
-          );
           bleProcess.startOtherPacketsRxTimeout(
             timeout: const Duration(seconds: 5),
           );
@@ -2450,9 +2183,6 @@ class BleManager {
               BleStates.SEND_GENERAL_MODULE_SETUP_CMD_APPLY_PACKET;
           bleStateMachineState =
               BleStates.SEND_GENERAL_MODULE_SETUP_CMD_APPLY_PACKET;
-          print(
-            "Current state: $bleStateMachineState (General module setup apply)",
-          );
           bleProcess.startOtherPacketsRxTimeout(
             timeout: const Duration(seconds: 5),
           );
@@ -2461,7 +2191,6 @@ class BleManager {
             BleOperationMode.liveEventsRetrieval) {
           bleCurrentState = BleStates.PROCESS_PANEL_LIVE_EVENTS_READ;
           bleStateMachineState = BleStates.PROCESS_PANEL_LIVE_EVENTS_READ;
-          print("Current state: $bleStateMachineState (Live events retrieval)");
           bleProcess.startOtherPacketsRxTimeout(
             timeout: const Duration(seconds: 5),
           );
@@ -2469,26 +2198,18 @@ class BleManager {
         } else if (currentOperationMode == BleOperationMode.adcSetupFetch) {
           bleCurrentState = BleStates.SEND_ADC_SETUP_CMD_FETCH_PACKET;
           bleStateMachineState = BleStates.SEND_ADC_SETUP_CMD_FETCH_PACKET;
-          print("Current state: $bleStateMachineState (Adc setup fetch)");
           bleProcess.startOtherPacketsRxTimeout(
             timeout: const Duration(seconds: 5),
           );
           Get.find<BleLogController>().sendNetworkPacket();
         }
-      } else {
-        print("Validation failed");
       }
     } else {
       receivedPollCount++;
-      print("The Received RX count is : $receivedPollCount");
       bleParseAndUpdateRxFrame(data, data.length);
 
       if (bleValidateRxFrame(bleRxFrame)) {
         await bleProcess.bleRxFrameProcess(bleRxFrame);
-      } else {
-        print(
-          "<<<<<<<<<<<<<<<< RECEIVED FRAME VALIDATION FAILED >>>>>>>>>>>>>>>>>>>>>>>>>>",
-        );
       }
     }
   }
@@ -2513,8 +2234,8 @@ class BleManager {
       sum2 = (sum2 + sum1) % 255;
     }
 
-    int chk1 = (255 - ((sum1 + sum2) % 255)) & 0xFF;
-    int chk2 = (255 - ((sum1 + chk1) % 255)) & 0xFF;
+    int chk1 = (255 - ((sum1 + sum2) % 255)) & BleConstants.base;
+    int chk2 = (255 - ((sum1 + chk1) % 255)) & BleConstants.base;
 
     return (chk1 << 8) | chk2;
   }
@@ -2522,27 +2243,27 @@ class BleManager {
   List<int> convertToBytes(dynamic data) {
     if (data is List<int>) return data;
     if (data is String) return data.codeUnits;
-    throw Exception("Unsupported data type for conversion to bytes");
+    throw Exception(StringConstants.invalidDataByteConv);
   }
 
   static crcCcittFalse(
     List<int> data, {
     int poly = 0x1021,
-    int initVal = 0xFFFF,
+    int initVal = BleConstants.baseFF,
   }) {
     int crc = initVal;
 
     for (int byte in data) {
-      crc ^= (byte << 8) & 0xFFFF;
+      crc ^= (byte << 8) & BleConstants.baseFF;
       for (int i = 0; i < 8; i++) {
         if ((crc & 0x8000) != 0) {
-          crc = ((crc << 1) ^ poly) & 0xFFFF;
+          crc = ((crc << 1) ^ poly) & BleConstants.baseFF;
         } else {
-          crc = (crc << 1) & 0xFFFF;
+          crc = (crc << 1) & BleConstants.baseFF;
         }
       }
     }
-    return crc & 0xFFFF;
+    return crc & BleConstants.baseFF;
   }
 
   List<int> bleFrameFormat(
@@ -2559,11 +2280,11 @@ class BleManager {
 
     frameBuff[enBLE_SOF_MSB_POS] = enBLE_SOF_MSB;
     frameBuff[enBLE_SOF_LSB_POS] = enBLE_SOF_LSB;
-    frameBuff[enBLE_CMD_MSB_POS] = (cmd >> 8) & 0xFF;
-    frameBuff[enBLE_CMD_LSB_POS] = cmd & 0xFF;
+    frameBuff[enBLE_CMD_MSB_POS] = (cmd >> 8) & BleConstants.base;
+    frameBuff[enBLE_CMD_LSB_POS] = cmd & BleConstants.base;
     frameBuff[enBLE_TOF_POS] = typeOfFrame;
-    frameBuff[enBLE_DATA_LEN_MSB_POS] = (dataLen >> 8) & 0xFF;
-    frameBuff[enBLE_DATA_LEN_LSB_POS] = dataLen & 0xFF;
+    frameBuff[enBLE_DATA_LEN_MSB_POS] = (dataLen >> 8) & BleConstants.base;
+    frameBuff[enBLE_DATA_LEN_LSB_POS] = dataLen & BleConstants.base;
 
     for (int i = 0; i < dataLen; i++) {
       frameBuff[enBLE_DATA_POS + i] = data[i];
@@ -2571,8 +2292,8 @@ class BleManager {
 
     int crc = crcCcittFalse(frameBuff.sublist(0, enBLE_DATA_POS + dataLen));
 
-    frameBuff[enBLE_DATA_POS + dataLen] = (crc >> 8) & 0xFF;
-    frameBuff[enBLE_DATA_POS + 1 + dataLen] = crc & 0xFF;
+    frameBuff[enBLE_DATA_POS + dataLen] = (crc >> 8) & BleConstants.base;
+    frameBuff[enBLE_DATA_POS + 1 + dataLen] = crc & BleConstants.base;
     frameBuff[enBLE_DATA_POS + 2 + dataLen] = enBLE_EOF_MSB;
     frameBuff[enBLE_DATA_POS + 3 + dataLen] = enBLE_EOF_LSB;
 
@@ -2592,17 +2313,6 @@ class BleManager {
         encrypt: encrypt,
       );
 
-      if (_shouldEncryptOutgoing(encryptParam: encrypt)) {
-        print(
-          'Sending encrypted data (${kBleEncryptionAlgorithm.name}): length ${dataToSend.length}',
-        );
-      } else {
-        print("Sending plain data: length ${dataToSend.length}");
-      }
-
-      print(
-        "::::::Data Written:::${dataToSend.map((e) => e.toRadixString(16).padLeft(2, '0')).join(' ')}::TX Time${DateTime.now().toIso8601String()}}",
-      );
       if (withoutResponse) {
         await flutterReactiveBle.writeCharacteristicWithoutResponse(
           writeChar!,
@@ -2615,7 +2325,7 @@ class BleManager {
         );
       }
     } catch (e) {
-      print("Send data failed: $e");
+      Logger("Sending data failed with error: $e");
     }
   }
 
@@ -2630,10 +2340,6 @@ class BleManager {
     List<int> frame = bleFrameFormat(cmd, 0x01, length, data);
     Uint8List frameBytes = aes.convertToBytes(frame);
 
-    print(
-      "sendSmallDataFrame: ${frameBytes.map((e) => e.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
-    );
-
     await sendData(frameBytes, encrypt: encrypt);
   }
 
@@ -2641,10 +2347,6 @@ class BleManager {
     List<int> reqFrame = bleFrameFormat(0x1000, 0x01, 1, [0x00]);
 
     Uint8List reqFrameBytes = aes.convertToBytes(reqFrame);
-
-    print("Framed key req Frame: $reqFrame after bytes convert $reqFrameBytes");
-
-    print("TX/RX: TRANSMIT: enc key request : $reqFrameBytes");
 
     await sendData(reqFrameBytes, encrypt: false);
   }
@@ -2661,13 +2363,7 @@ class BleManager {
       msgBytes,
     );
 
-    print("Framed Authn Msg: $authnMsgFrame");
-
     Uint8List frameBytes = Uint8List.fromList(authnMsgFrame);
-
-    print(
-      "TX/RX: TRANSMIT: Auth Frame bytes: ${frameBytes.map((e) => e.toRadixString(16).padLeft(2, '0')).join(' ')}",
-    );
 
     await sendData(frameBytes);
   }
@@ -2677,24 +2373,25 @@ class BleManager {
     u8TxPktCnt = 0;
 
     List<int> u8Pkt = List.filled(216, 0);
-    u8Pkt[0] = 0xFE;
-    u8Pkt[1] = 0x01;
-    u8Pkt[2] = 0x00;
-    u8Pkt[3] = 0x04;
-    u8Pkt[4] = 0x00;
-    u8Pkt[5] = 0x00;
-    u8Pkt[6] = 0x05;
-    u8Pkt[11] = 0x02;
-    u8Pkt[12] = 0x01;
+    u8Pkt[0] = BleConstants.sot;
+    u8Pkt[1] = BleConstants.des;
+    u8Pkt[2] = BleConstants.ori;
+    u8Pkt[3] = BleConstants.type.net;
+    u8Pkt[4] = BleConstants.txPkNoInit;
+    u8Pkt[5] = BleConstants.rxPkNoInit;
+    u8Pkt[6] = BleConstants.network.radio;
+    u8Pkt[11] = BleConstants.socket.radio;
+    u8Pkt[12] = BleConstants.command.moduleId;
 
     int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
-    u8Pkt[213] = (checksum >> 8) & 0xFF;
-    u8Pkt[214] = checksum & 0xFF;
-    u8Pkt[215] = 0xFD;
+    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
+    u8Pkt[214] = checksum & BleConstants.base;
+    u8Pkt[215] = BleConstants.eot;
 
-    print(
-      "TX/RX: TRANSMIT: Network Packet time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((e) => e.toRadixString(16).padLeft(2, '0')).join(' ')}",
+    Logger(
+      "TX/RX: TRANSMIT: Network Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+      type: LogType.ble,
     );
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
@@ -2703,38 +2400,33 @@ class BleManager {
   Future<void> sendPollPacket() async {
     if (bleProcess.isOtaCompleted &&
         otaProcessState == OtaProcessState.notInUse) {
-      print("bleprocess.isOtaCompleted : ${bleProcess.isOtaCompleted}");
-      print("otaProcessState : ${otaProcessState == OtaProcessState.notInUse}");
-      print("Poll blocked (OTA completed / notInUse)");
       return;
     }
 
     if (_pollInFlight) {
-      print("Skipping poll: previous write still in-flight");
       return;
     }
     _pollInFlight = true;
 
     List<int> pollPkt = List.filled(216, 0);
-    pollPkt[0] = 0xFE;
-    pollPkt[1] = 0x01;
-    pollPkt[2] = 0x00;
-    pollPkt[4] = (u8TxPktCnt + 1) & 0xFF;
-    pollPkt[5] = (u8RxPktCnt & 0xFF);
-    print(
-      "Sending poll pkt rx cnt pollPkt[5] value:${pollPkt[5]},u8RxPktCnt:$u8RxPktCnt",
-    );
-    pollPkt[6] = 0x00;
-    pollPkt[11] = 0x00;
+    pollPkt[0] = BleConstants.sot;
+    pollPkt[1] = BleConstants.des;
+    pollPkt[2] = BleConstants.ori;
+    pollPkt[3] = BleConstants.type.poll;
+    pollPkt[4] = (u8TxPktCnt + 1) & BleConstants.base;
+    pollPkt[5] = (u8RxPktCnt & BleConstants.base);
+    pollPkt[6] = BleConstants.network.radio;
+    pollPkt[11] = BleConstants.socket.radio;
 
     int checksum = toolsFletcherChecksum(pollPkt.sublist(0, 216 - 3));
 
-    pollPkt[213] = (checksum >> 8) & 0xFF;
-    pollPkt[214] = checksum & 0xFF;
-    pollPkt[215] = 0xFD;
+    pollPkt[213] = (checksum >> 8) & BleConstants.base;
+    pollPkt[214] = checksum & BleConstants.base;
+    pollPkt[215] = BleConstants.eot;
 
-    print(
-      "TX/RX: TRANSMIT: Poll Packet time: ${DateTime.now().toIso8601String()}, packet: ${pollPkt.map((e) => e.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+    Logger(
+      "TX/RX: TRANSMIT: Poll Packet Command time: ${DateTime.now().toIso8601String()}, packet: ${pollPkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+      type: LogType.ble,
     );
 
     await sendSmallDataFrame(0x1000, 216, pollPkt);
@@ -2749,9 +2441,6 @@ class BleManager {
 
     List<int> pkt = List.filled(216, 0);
 
-    print("accessKey: ${accessKey.value}");
-    print("accessKey length: ${accessKey.value.length}");
-
     String accessKeyString = accessKey.value;
     List<int> accessKeyBytes = accessKeyString.codeUnits;
     accessKeyLength.value = accessKeyBytes.length;
@@ -2762,29 +2451,27 @@ class BleManager {
       }
     }
 
-    print("pkt[14]: ${pkt[14]}");
-
-    pkt[0] = 0xFE;
-    pkt[1] = 0x01;
-    pkt[2] = 0x00;
-
-    pkt[3] = 0x01;
-    pkt[4] = u8TxPktCnt & 0xFF;
-    pkt[5] = u8RxPktCnt & 0xFF;
-    pkt[6] = 0x00;
-    pkt[10] = 0x83;
-    pkt[11] = 0x00;
-    pkt[12] = 0x04;
-    pkt[13] = accessKeyLength.value & 0xFF;
+    pkt[0] = BleConstants.sot;
+    pkt[1] = BleConstants.des;
+    pkt[2] = BleConstants.ori;
+    pkt[3] = BleConstants.type.nrm;
+    pkt[4] = u8TxPktCnt & BleConstants.base;
+    pkt[5] = u8RxPktCnt & BleConstants.base;
+    pkt[6] = BleConstants.network.radio;
+    pkt[10] = BleConstants.mode.instruction.ctrl;
+    pkt[11] = BleConstants.socket.radio;
+    pkt[12] = BleConstants.command.ctrlAcces;
+    pkt[13] = accessKeyLength.value & BleConstants.base;
 
     int checksum = toolsFletcherChecksum(pkt.sublist(0, 216 - 3));
 
-    pkt[213] = (checksum >> 8) & 0xFF;
-    pkt[214] = checksum & 0xFF;
-    pkt[215] = 0xFD;
+    pkt[213] = (checksum >> 8) & BleConstants.base;
+    pkt[214] = checksum & BleConstants.base;
+    pkt[215] = BleConstants.eot;
 
-    print(
-      "TX/RX: TRANSMIT: Access Key Packet time: ${DateTime.now().toIso8601String()}, packet: ${pkt.map((e) => e.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ').toString()}",
+    Logger(
+      "TX/RX: TRANSMIT: Access Command time: ${DateTime.now().toIso8601String()}, packet: ${pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+      type: LogType.ble,
     );
 
     await sendSmallDataFrame(0x1000, 216, pkt);
@@ -2794,27 +2481,28 @@ class BleManager {
     u8TxPktCnt += 1;
 
     Uint8List u8Pkt = Uint8List(216);
-    u8Pkt[0] = 0xFE;
-    u8Pkt[1] = 0x01;
-    u8Pkt[2] = 0x00;
-
-    u8Pkt[3] = 0x01;
-    u8Pkt[4] = u8TxPktCnt & 0xFF;
-    u8Pkt[5] = u8RxPktCnt & 0xFF;
-    u8Pkt[6] = 0x00;
-    u8Pkt[10] = 0x83;
-    u8Pkt[11] = 0x04;
-    u8Pkt[12] = 0x0B;
-    u8Pkt[13] = 0x03;
+    u8Pkt[0] = BleConstants.sot;
+    u8Pkt[1] = BleConstants.des;
+    u8Pkt[2] = BleConstants.ori;
+    u8Pkt[3] = BleConstants.type.nrm;
+    u8Pkt[4] = u8TxPktCnt & BleConstants.base;
+    u8Pkt[5] = u8RxPktCnt & BleConstants.base;
+    u8Pkt[6] = BleConstants.network.radio;
+    u8Pkt[10] = BleConstants.mode.instruction.ctrl;
+    u8Pkt[11] = BleConstants.socket.radio;
+    u8Pkt[12] = BleConstants.command.ctrlResEventReport;
+    u8Pkt[13] = BleConstants.ctrlResEvtReport.evtBufferMask.radioEvtPrinter;
+    u8Pkt[14] = BleConstants.ctrlResEvtReport.evtBufferMode.start;
 
     int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
-    u8Pkt[213] = (checksum >> 8) & 0xFF;
-    u8Pkt[214] = checksum & 0xFF;
+    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
+    u8Pkt[214] = checksum & BleConstants.base;
     u8Pkt[215] = 0xFD;
 
-    print(
+    Logger(
       "TX/RX: TRANSMIT: Start Control Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+      type: LogType.ble,
     );
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
@@ -2824,28 +2512,27 @@ class BleManager {
     u8TxPktCnt += 1;
 
     Uint8List u8Pkt = Uint8List(216);
-    u8Pkt[0] = 0xFE;
-    u8Pkt[1] = 0x01;
-    u8Pkt[2] = 0x00;
-
-    u8Pkt[3] = 0x01;
-    u8Pkt[4] = u8TxPktCnt & 0xFF;
-    u8Pkt[5] = u8RxPktCnt & 0xFF;
-    u8Pkt[6] = 0x00;
-    u8Pkt[10] = 0x83;
-    u8Pkt[11] = 0x04;
-    u8Pkt[12] = 0x0B;
-    u8Pkt[13] = 0x03;
-    u8Pkt[14] = 0x01;
+    u8Pkt[0] = BleConstants.sot;
+    u8Pkt[1] = BleConstants.des;
+    u8Pkt[2] = BleConstants.ori;
+    u8Pkt[3] = BleConstants.type.nrm;
+    u8Pkt[4] = u8TxPktCnt & BleConstants.base;
+    u8Pkt[5] = u8RxPktCnt & BleConstants.base;
+    u8Pkt[6] = BleConstants.network.radio;
+    u8Pkt[10] = BleConstants.mode.instruction.ctrl;
+    u8Pkt[11] = BleConstants.socket.radio;
+    u8Pkt[12] = BleConstants.command.ctrlResEventReport;
+    u8Pkt[13] = BleConstants.ctrlResEvtReport.evtBufferMask.radioEvtPrinter;
+    u8Pkt[14] = BleConstants.ctrlResEvtReport.evtBufferMode.stop;
 
     int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
-    u8Pkt[213] = (checksum >> 8) & 0xFF;
-    u8Pkt[214] = checksum & 0xFF;
-    u8Pkt[215] = 0xFD;
-
-    print(
+    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
+    u8Pkt[214] = checksum & BleConstants.base;
+    u8Pkt[215] = BleConstants.eot;
+    Logger(
       "TX/RX: TRANSMIT: Stop Control Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+      type: LogType.ble,
     );
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
@@ -2853,23 +2540,22 @@ class BleManager {
 
   Future<void> sendJumpFirmwarePacket({bool withoutResponse = true}) async {
     if (!isConnected || writeChar == null) {
-      throw Exception("BLE not connected or write characteristic missing");
+      throw Exception(StringConstants.deviceNotConnected);
     }
 
     final Uint8List jumpFrame = aes.convertToBytes(
-      bleFrameFormat(0x1002, 0x02, 1, [0x00]),
+      bleFrameFormat(
+        BleConstants.command.bleJump,
+        BleConstants.firmware.firmwareType,
+        BleConstants.firmware.firmwarelen,
+        [BleConstants.firmware.firmwareData],
+      ),
     );
     final Uint8List dataToSend = _transformOutgoingFrame(
       jumpFrame,
       encrypt: true,
     );
     try {
-      print(
-        'Sending encrypted jump firmware packet (${kBleEncryptionAlgorithm.name}): length ${dataToSend.length}',
-      );
-      print(
-        "::::::Data Written:::${dataToSend.map((e) => e.toRadixString(16).padLeft(2, '0')).join(' ')}::TX Time${DateTime.now().toIso8601String()}}",
-      );
       if (withoutResponse) {
         await flutterReactiveBle.writeCharacteristicWithoutResponse(
           writeChar!,
@@ -2881,11 +2567,7 @@ class BleManager {
           value: dataToSend,
         );
       }
-      print(
-        "TX/RX: TRANSMIT: Jump Firmware Packet time: ${DateTime.now().toIso8601String()}",
-      );
     } catch (e) {
-      print("Send Jump firmware packet failed: $e");
       rethrow;
     }
   }
@@ -2899,12 +2581,14 @@ class BleManager {
 
   Future<void> sendStartFirmwarePacket() async {
     if (!isConnected || writeChar == null) {
-      throw Exception("BLE not connected or write characteristic missing");
+      throw Exception(StringConstants.deviceNotConnected);
     }
 
-    List<int> startFrame = bleFrameFormat(0x1001, 0x02, 1, [0x00]);
-    print(
-      "TX/RX: TRANSMIT: Start Firmware Packet time: ${DateTime.now().toIso8601String()}, packet: ${startFrame.map((e) => e.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+    List<int> startFrame = bleFrameFormat(
+      BleConstants.command.startFirmware,
+      BleConstants.firmware.firmwareType,
+      BleConstants.firmware.firmwarelen,
+      [BleConstants.firmware.firmwareData],
     );
     try {
       await flutterReactiveBle.writeCharacteristicWithResponse(
@@ -2912,27 +2596,27 @@ class BleManager {
         value: startFrame,
       );
     } catch (e) {
-      print("Send firmware packet failed: Start Firmware Packet $e");
       rethrow;
     }
   }
 
   Future<void> sendEndFirmwarePacket() async {
     if (!isConnected || writeChar == null) {
-      throw Exception("BLE not connected or write characteristic missing");
+      throw Exception(StringConstants.deviceNotConnected);
     }
 
-    List<int> endFrame = bleFrameFormat(0x1004, 0x02, 1, [0x00]);
+    List<int> endFrame = bleFrameFormat(
+      BleConstants.command.endFirmware,
+      BleConstants.firmware.firmwareType,
+      BleConstants.firmware.firmwarelen,
+      [BleConstants.firmware.firmwareData],
+    );
     try {
-      print(
-        "TX/RX: TRANSMIT: End Firmware Packet time: ${DateTime.now().toIso8601String()}, packet: ${endFrame.map((e) => e.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
-      );
       await flutterReactiveBle.writeCharacteristicWithResponse(
         writeChar!,
         value: endFrame,
       );
     } catch (e) {
-      print("Send End firmware packet failed: $e");
       rethrow;
     }
   }
@@ -2942,29 +2626,24 @@ class BleManager {
     bool? isFirstPacketAfterSkip = false,
   }) async {
     if (!isConnected || writeChar == null) {
-      throw Exception("BLE not connected or write characteristic missing");
+      throw Exception(StringConstants.deviceNotConnected);
     }
-    print("isFirstPacketAfterSkip: $isFirstPacketAfterSkip");
-
-    print("packet length: ${packet.toList().length}");
 
     List<int> firmwareFrame = bleFrameFormat(
-      isFirstPacketAfterSkip == true ? 0x1003 : 0x1002,
-      0x02,
+      isFirstPacketAfterSkip == true
+          ? BleConstants.command.sendFirstFirmwarePktAfterSkip
+          : BleConstants.command.sendFirmware,
+      BleConstants.firmware.firmwareType,
       packet.toList().length,
       packet.toList(),
     );
 
     try {
-      print(
-        "TX/RX: TRANSMIT: Firmware Packet time: ${DateTime.now().toIso8601String()}, packet: ${firmwareFrame.map((e) => e.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
-      );
       await flutterReactiveBle.writeCharacteristicWithResponse(
         writeChar!,
         value: firmwareFrame,
       );
     } catch (e) {
-      print("Send firmware packet failed: Firmware Packet $e");
       rethrow;
     }
   }
@@ -2975,7 +2654,7 @@ class BleManager {
     void Function(int sent, int total)? onProgress,
   }) async {
     if (!isConnected || writeChar == null) {
-      throw Exception("BLE not connected or write characteristic missing");
+      throw Exception(StringConstants.deviceNotConnected);
     }
 
     for (int i = 0; i < packets.length; i++) {
@@ -2992,27 +2671,27 @@ class BleManager {
 
     u8TxPktCnt += 1;
 
-    u8Pkt[0] = 0xFE;
-    u8Pkt[1] = 0x01;
-    u8Pkt[2] = 0x00;
-
-    u8Pkt[3] = 0x01;
-    u8Pkt[4] = u8TxPktCnt & 0xFF;
-    u8Pkt[5] = u8RxPktCnt & 0xFF;
-    u8Pkt[6] = 0x00;
-    u8Pkt[10] = 0x01;
-    u8Pkt[11] = 0x00;
-    u8Pkt[12] = 0x16;
-    u8Pkt[13] = 0x01;
+    u8Pkt[0] = BleConstants.sot;
+    u8Pkt[1] = BleConstants.des;
+    u8Pkt[2] = BleConstants.ori;
+    u8Pkt[3] = BleConstants.type.nrm;
+    u8Pkt[4] = u8TxPktCnt & BleConstants.base;
+    u8Pkt[5] = u8RxPktCnt & BleConstants.base;
+    u8Pkt[6] = BleConstants.network.radio;
+    u8Pkt[10] = BleConstants.mode.request.dbSetup;
+    u8Pkt[11] = BleConstants.socket.radio;
+    u8Pkt[12] = BleConstants.command.extOut;
+    u8Pkt[13] = BleConstants.extZoneNo;
 
     int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
-    u8Pkt[213] = (checksum >> 8) & 0xFF;
-    u8Pkt[214] = checksum & 0xFF;
-    u8Pkt[215] = 0xFD;
+    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
+    u8Pkt[214] = checksum & BleConstants.base;
+    u8Pkt[215] = BleConstants.eot;
 
-    print(
-      "TX/RX: TRANSMIT: Ext Out Fetch command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+    Logger(
+      "TX/RX: TRANSMIT: Ext Out fetch Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+      type: LogType.ble,
     );
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
@@ -3036,54 +2715,46 @@ class BleManager {
 
     u8TxPktCnt += 1;
 
-    u8Pkt[0] = 0xFE;
-    u8Pkt[1] = 0x01;
-    u8Pkt[2] = 0x00;
-
-    u8Pkt[3] = 0x01;
-    u8Pkt[4] = u8TxPktCnt & 0xFF;
-    u8Pkt[5] = u8RxPktCnt & 0xFF;
-    u8Pkt[6] = 0x00;
-    u8Pkt[10] = 0x81;
-    u8Pkt[11] = 0x00;
-    u8Pkt[12] = 0x16;
-    u8Pkt[13] = 0x01;
+    u8Pkt[0] = BleConstants.sot;
+    u8Pkt[1] = BleConstants.des;
+    u8Pkt[2] = BleConstants.ori;
+    u8Pkt[3] = BleConstants.type.nrm;
+    u8Pkt[4] = u8TxPktCnt & BleConstants.base;
+    u8Pkt[5] = u8RxPktCnt & BleConstants.base;
+    u8Pkt[6] = BleConstants.network.radio;
+    u8Pkt[10] = BleConstants.mode.instruction.dbSetup;
+    u8Pkt[11] = BleConstants.socket.radio;
+    u8Pkt[12] = BleConstants.command.extOut;
+    u8Pkt[13] = BleConstants.extZoneNo;
     u8Pkt[14] = int.parse(extZoneMode.value, radix: 16);
-    u8Pkt[15] = 0x01;
+    u8Pkt[15] = BleConstants.extZoneTriggerArea;
     u8Pkt[16] = extZoneActuatorType.value;
-    u8Pkt[17] = (autoDelay >> 8) & 0xFF;
-    u8Pkt[18] = autoDelay & 0xFF;
-    u8Pkt[19] = (manDelay >> 8) & 0xFF;
-    u8Pkt[20] = manDelay & 0xFF;
-    u8Pkt[21] = (releasePeriod >> 8) & 0xFF;
-    u8Pkt[22] = releasePeriod & 0xFF;
-    u8Pkt[23] = (resetDelay >> 8) & 0xFF;
-    u8Pkt[24] = resetDelay & 0xFF;
+    u8Pkt[17] = (autoDelay >> 8) & BleConstants.base;
+    u8Pkt[18] = autoDelay & BleConstants.base;
+    u8Pkt[19] = (manDelay >> 8) & BleConstants.base;
+    u8Pkt[20] = manDelay & BleConstants.base;
+    u8Pkt[21] = (releasePeriod >> 8) & BleConstants.base;
+    u8Pkt[22] = releasePeriod & BleConstants.base;
+    u8Pkt[23] = (resetDelay >> 8) & BleConstants.base;
+    u8Pkt[24] = resetDelay & BleConstants.base;
     u8Pkt[25] = extZoneAction.value;
     u8Pkt[26] = extZoneFunction.value;
-    u8Pkt[27] = 0x1E;
-    u8Pkt[28] = 0x00;
-    u8Pkt[29] = 0x3C;
-    u8Pkt[30] = 0x03;
-    u8Pkt[31] = 0x84;
-    u8Pkt[32] = 0x00;
-    u8Pkt[33] = 0x00;
-    u8Pkt[34] = 0x00;
-    u8Pkt[35] = 0x00;
-    u8Pkt[36] = 0x00;
-    u8Pkt[37] = 0x00;
-    u8Pkt[38] = 0x00;
-    u8Pkt[39] = 0x00;
-    u8Pkt[40] = extZoneTextLength & 0xFF;
+    u8Pkt[27] = BleConstants.extZoneValveDelay;
+    u8Pkt[28] = BleConstants.extZoneExtractionTimeHigh;
+    u8Pkt[29] = BleConstants.extZoneExtractionTimeLow;
+    u8Pkt[30] = BleConstants.extZoneExtractionDelayHigh;
+    u8Pkt[31] = BleConstants.extZoneExtractionDelayLow;
+    u8Pkt[40] = extZoneTextLength & BleConstants.base;
 
     int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
-    u8Pkt[213] = (checksum >> 8) & 0xFF;
-    u8Pkt[214] = checksum & 0xFF;
-    u8Pkt[215] = 0xFD;
+    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
+    u8Pkt[214] = checksum & BleConstants.base;
+    u8Pkt[215] = BleConstants.eot;
 
-    print(
-      "TX/RX: TRANSMIT: Ext Out command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+    Logger(
+      "TX/RX: TRANSMIT: Ext Out apply Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+      type: LogType.ble,
     );
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
@@ -3094,25 +2765,26 @@ class BleManager {
 
     u8TxPktCnt += 1;
 
-    u8Pkt[0] = 0xFE;
-    u8Pkt[1] = 0x01;
-    u8Pkt[2] = 0x00;
-    u8Pkt[3] = 0x01;
-    u8Pkt[4] = u8TxPktCnt & 0xFF;
-    u8Pkt[5] = u8RxPktCnt & 0xFF;
-    u8Pkt[6] = 0x00;
-    u8Pkt[10] = 0x01;
-    u8Pkt[11] = 0x00;
-    u8Pkt[12] = 0x1C;
+    u8Pkt[0] = BleConstants.sot;
+    u8Pkt[1] = BleConstants.des;
+    u8Pkt[2] = BleConstants.ori;
+    u8Pkt[3] = BleConstants.type.nrm;
+    u8Pkt[4] = u8TxPktCnt & BleConstants.base;
+    u8Pkt[5] = u8RxPktCnt & BleConstants.base;
+    u8Pkt[6] = BleConstants.network.radio;
+    u8Pkt[10] = BleConstants.mode.request.dbSetup;
+    u8Pkt[11] = BleConstants.socket.radio;
+    u8Pkt[12] = BleConstants.command.dipSetting;
 
     int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
-    u8Pkt[213] = (checksum >> 8) & 0xFF;
-    u8Pkt[214] = checksum & 0xFF;
-    u8Pkt[215] = 0xFD;
+    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
+    u8Pkt[214] = checksum & BleConstants.base;
+    u8Pkt[215] = BleConstants.eot;
 
-    print(
-      "TX/RX: TRANSMIT: Fetch Dip setting command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+    Logger(
+      "TX/RX: TRANSMIT: Dip Fetch Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+      type: LogType.ble,
     );
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
@@ -3123,27 +2795,28 @@ class BleManager {
 
     u8TxPktCnt += 1;
 
-    u8Pkt[0] = 0xFE;
-    u8Pkt[1] = 0x01;
-    u8Pkt[2] = 0x00;
-    u8Pkt[3] = 0x01;
-    u8Pkt[4] = u8TxPktCnt & 0xFF;
-    u8Pkt[5] = u8RxPktCnt & 0xFF;
-    u8Pkt[6] = 0x00;
-    u8Pkt[10] = 0x01;
-    u8Pkt[11] = 0x00;
-    u8Pkt[12] = 0x06;
-    u8Pkt[13] = 0x00;
-    u8Pkt[14] = 0x01;
+    u8Pkt[0] = BleConstants.sot;
+    u8Pkt[1] = BleConstants.des;
+    u8Pkt[2] = BleConstants.ori;
+    u8Pkt[3] = BleConstants.type.nrm;
+    u8Pkt[4] = u8TxPktCnt & BleConstants.base;
+    u8Pkt[5] = u8RxPktCnt & BleConstants.base;
+    u8Pkt[6] = BleConstants.network.radio;
+    u8Pkt[10] = BleConstants.mode.request.dbSetup;
+    u8Pkt[11] = BleConstants.socket.radio;
+    u8Pkt[12] = BleConstants.command.inputSetup;
+    u8Pkt[13] = BleConstants.inputSetupNoHigh;
+    u8Pkt[14] = BleConstants.inputSetupNoLow;
 
     int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
-    u8Pkt[213] = (checksum >> 8) & 0xFF;
-    u8Pkt[214] = checksum & 0xFF;
-    u8Pkt[215] = 0xFD;
+    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
+    u8Pkt[214] = checksum & BleConstants.base;
+    u8Pkt[215] = BleConstants.eot;
 
-    print(
-      "TX/RX: TRANSMIT: Ext Out Fetch command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+    Logger(
+      "TX/RX: TRANSMIT: Input Setup Fetch Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+      type: LogType.ble,
     );
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
@@ -3163,19 +2836,18 @@ class BleManager {
 
     u8TxPktCnt += 1;
 
-    u8Pkt[0] = 0xFE;
-    u8Pkt[1] = 0x01;
-    u8Pkt[2] = 0x00;
-
-    u8Pkt[3] = 0x01;
-    u8Pkt[4] = u8TxPktCnt & 0xFF;
-    u8Pkt[5] = u8RxPktCnt & 0xFF;
-    u8Pkt[6] = 0x00;
-    u8Pkt[10] = 0x81;
-    u8Pkt[11] = 0x00;
-    u8Pkt[12] = 0x06;
-    u8Pkt[13] = 0x00;
-    u8Pkt[14] = 0x01;
+    u8Pkt[0] = BleConstants.sot;
+    u8Pkt[1] = BleConstants.des;
+    u8Pkt[2] = BleConstants.ori;
+    u8Pkt[3] = BleConstants.type.nrm;
+    u8Pkt[4] = u8TxPktCnt & BleConstants.base;
+    u8Pkt[5] = u8RxPktCnt & BleConstants.base;
+    u8Pkt[6] = BleConstants.network.radio;
+    u8Pkt[10] = BleConstants.mode.instruction.dbSetup;
+    u8Pkt[11] = BleConstants.socket.radio;
+    u8Pkt[12] = BleConstants.command.inputSetup;
+    u8Pkt[13] = BleConstants.inputSetupNoHigh;
+    u8Pkt[14] = BleConstants.inputSetupNoLow;
     int inputModeByte;
     try {
       final raw = inputMode.value.trim();
@@ -3197,26 +2869,24 @@ class BleManager {
       inputModeByte = InputModeCodec.encode(cfg);
       bleProcess.inputMode.value = InputModeCodec.encodeHex(cfg);
     }
-    u8Pkt[15] = inputModeByte & 0xFF;
-    u8Pkt[16] = 0x02;
-    u8Pkt[17] = 0x00;
-    u8Pkt[18] = 0x00;
-    u8Pkt[19] = 0x00;
-    u8Pkt[20] = 0x01;
-    u8Pkt[21] = 0x01;
-    u8Pkt[22] = 0x01;
+    u8Pkt[15] = inputModeByte & BleConstants.base;
+    u8Pkt[16] = BleConstants.inputSetupType;
+    u8Pkt[20] = BleConstants.inputSetupTypeParams;
+    u8Pkt[21] = BleConstants.inputSetupTypeParams;
+    u8Pkt[22] = BleConstants.inputSetupTypeParams;
     u8Pkt[23] = inputSetupGroup.value;
     u8Pkt[24] = inputSetupFunction.value;
-    u8Pkt[25] = inputTextLength & 0xFF;
+    u8Pkt[25] = inputTextLength & BleConstants.base;
 
     int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
-    u8Pkt[213] = (checksum >> 8) & 0xFF;
-    u8Pkt[214] = checksum & 0xFF;
-    u8Pkt[215] = 0xFD;
+    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
+    u8Pkt[214] = checksum & BleConstants.base;
+    u8Pkt[215] = BleConstants.eot;
 
-    print(
-      "TX/RX: TRANSMIT: Input Setup Apply command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+    Logger(
+      "TX/RX: TRANSMIT: Input Setup Apply Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+      type: LogType.ble,
     );
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
@@ -3227,27 +2897,28 @@ class BleManager {
 
     u8TxPktCnt += 1;
 
-    u8Pkt[0] = 0xFE;
-    u8Pkt[1] = 0x01;
-    u8Pkt[2] = 0x00;
-    u8Pkt[3] = 0x01;
-    u8Pkt[4] = u8TxPktCnt & 0xFF;
-    u8Pkt[5] = u8RxPktCnt & 0xFF;
-    u8Pkt[6] = 0x00;
-    u8Pkt[10] = 0x01;
-    u8Pkt[11] = 0x00;
-    u8Pkt[12] = 0x07;
-    u8Pkt[13] = 0x00;
-    u8Pkt[14] = 0x04;
+    u8Pkt[0] = BleConstants.sot;
+    u8Pkt[1] = BleConstants.des;
+    u8Pkt[2] = BleConstants.ori;
+    u8Pkt[3] = BleConstants.type.nrm;
+    u8Pkt[4] = u8TxPktCnt & BleConstants.base;
+    u8Pkt[5] = u8RxPktCnt & BleConstants.base;
+    u8Pkt[6] = BleConstants.network.radio;
+    u8Pkt[10] = BleConstants.mode.request.dbSetup;
+    u8Pkt[11] = BleConstants.socket.radio;
+    u8Pkt[12] = BleConstants.command.relaySetup;
+    u8Pkt[13] = BleConstants.firstOutputNoHigh;
+    u8Pkt[14] = BleConstants.firstOutputNoLow;
 
     int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
-    u8Pkt[213] = (checksum >> 8) & 0xFF;
-    u8Pkt[214] = checksum & 0xFF;
-    u8Pkt[215] = 0xFD;
+    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
+    u8Pkt[214] = checksum & BleConstants.base;
+    u8Pkt[215] = BleConstants.eot;
 
-    print(
-      "TX/RX: TRANSMIT: Relay Setup Fetch First Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+    Logger(
+      "TX/RX: TRANSMIT: First Relay Setup Fetch Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+      type: LogType.ble,
     );
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
@@ -3258,27 +2929,28 @@ class BleManager {
 
     u8TxPktCnt += 1;
 
-    u8Pkt[0] = 0xFE;
-    u8Pkt[1] = 0x01;
-    u8Pkt[2] = 0x00;
-    u8Pkt[3] = 0x01;
-    u8Pkt[4] = u8TxPktCnt & 0xFF;
-    u8Pkt[5] = u8RxPktCnt & 0xFF;
-    u8Pkt[6] = 0x00;
-    u8Pkt[10] = 0x01;
-    u8Pkt[11] = 0x00;
-    u8Pkt[12] = 0x07;
-    u8Pkt[13] = 0x00;
-    u8Pkt[14] = 0x05;
+    u8Pkt[0] = BleConstants.sot;
+    u8Pkt[1] = BleConstants.des;
+    u8Pkt[2] = BleConstants.ori;
+    u8Pkt[3] = BleConstants.type.nrm;
+    u8Pkt[4] = u8TxPktCnt & BleConstants.base;
+    u8Pkt[5] = u8RxPktCnt & BleConstants.base;
+    u8Pkt[6] = BleConstants.network.radio;
+    u8Pkt[10] = BleConstants.mode.request.dbSetup;
+    u8Pkt[11] = BleConstants.socket.radio;
+    u8Pkt[12] = BleConstants.command.relaySetup;
+    u8Pkt[13] = BleConstants.secondOutputNoHigh;
+    u8Pkt[14] = BleConstants.secondtOutputNoLow;
 
     int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
-    u8Pkt[213] = (checksum >> 8) & 0xFF;
-    u8Pkt[214] = checksum & 0xFF;
-    u8Pkt[215] = 0xFD;
+    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
+    u8Pkt[214] = checksum & BleConstants.base;
+    u8Pkt[215] = BleConstants.eot;
 
-    print(
-      "TX/RX: TRANSMIT: Relay Setup Fetch Second Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+    Logger(
+      "TX/RX: TRANSMIT: Second Relay Setup Fetch Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+      type: LogType.ble,
     );
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
@@ -3289,27 +2961,28 @@ class BleManager {
 
     u8TxPktCnt += 1;
 
-    u8Pkt[0] = 0xFE;
-    u8Pkt[1] = 0x01;
-    u8Pkt[2] = 0x00;
-    u8Pkt[3] = 0x01;
-    u8Pkt[4] = u8TxPktCnt & 0xFF;
-    u8Pkt[5] = u8RxPktCnt & 0xFF;
-    u8Pkt[6] = 0x00;
-    u8Pkt[10] = 0x01;
-    u8Pkt[11] = 0x00;
-    u8Pkt[12] = 0x07;
-    u8Pkt[13] = 0x00;
-    u8Pkt[14] = 0x06;
+    u8Pkt[0] = BleConstants.sot;
+    u8Pkt[1] = BleConstants.des;
+    u8Pkt[2] = BleConstants.ori;
+    u8Pkt[3] = BleConstants.type.nrm;
+    u8Pkt[4] = u8TxPktCnt & BleConstants.base;
+    u8Pkt[5] = u8RxPktCnt & BleConstants.base;
+    u8Pkt[6] = BleConstants.network.radio;
+    u8Pkt[10] = BleConstants.mode.request.dbSetup;
+    u8Pkt[11] = BleConstants.socket.radio;
+    u8Pkt[12] = BleConstants.command.relaySetup;
+    u8Pkt[13] = BleConstants.thirdOutputNoHigh;
+    u8Pkt[14] = BleConstants.thirdtOutputNoLow;
 
     int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
-    u8Pkt[213] = (checksum >> 8) & 0xFF;
-    u8Pkt[214] = checksum & 0xFF;
-    u8Pkt[215] = 0xFD;
+    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
+    u8Pkt[214] = checksum & BleConstants.base;
+    u8Pkt[215] = BleConstants.eot;
 
-    print(
-      "TX/RX: TRANSMIT: Relay Setup Fetch Third Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+    Logger(
+      "TX/RX: TRANSMIT: Third Relay Setup Fetch Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+      type: LogType.ble,
     );
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
@@ -3323,7 +2996,7 @@ class BleManager {
     try {
       final raw = modeHex.value.trim();
       if (raw.isEmpty) throw FormatException('empty relay mode');
-      return int.parse(raw, radix: 16) & 0xFF;
+      return int.parse(raw, radix: 16) & BleConstants.base;
     } catch (_) {
       final cfg = OutputModeConfig(
         outputEnable: enabled ? OutputEnable.enabled : OutputEnable.disabled,
@@ -3340,7 +3013,7 @@ class BleManager {
     final t = raw.trim();
     if (t.isEmpty) return 0;
     try {
-      return int.parse(t, radix: 16) & 0xFF;
+      return int.parse(t, radix: 16) & BleConstants.base;
     } catch (_) {
       return 0;
     }
@@ -3373,7 +3046,7 @@ class BleManager {
     try {
       final raw = sounderGeneralMode.value.trim();
       if (raw.isEmpty) throw FormatException('empty sounder general mode');
-      return int.parse(raw, radix: 16) & 0xFF;
+      return int.parse(raw, radix: 16) & BleConstants.base;
     } catch (_) {
       final cfg = GeneralEquipmentModeConfig(
         equipmentEnable:
@@ -3418,7 +3091,7 @@ class BleManager {
     try {
       final raw = modeHex.value.trim();
       if (raw.isEmpty) throw FormatException('empty zone mode');
-      return int.parse(raw, radix: 16) & 0xFF;
+      return int.parse(raw, radix: 16) & BleConstants.base;
     } catch (_) {
       final cfg = ZoneEquipmentModeConfig(
         zoneEnable:
@@ -3457,7 +3130,7 @@ class BleManager {
     try {
       final raw = modeHex.value.trim();
       if (raw.isEmpty) throw FormatException('empty ext out mode');
-      return int.parse(raw, radix: 16) & 0xFF;
+      return int.parse(raw, radix: 16) & BleConstants.base;
     } catch (_) {
       final cfg = ExtZoneEquipmentModeConfig(
         zoneEnable:
@@ -3469,7 +3142,7 @@ class BleManager {
       );
       final h = ExtZoneEquipmentModeCodec.encodeHex(cfg);
       modeHex.value = h;
-      return int.parse(h, radix: 16) & 0xFF;
+      return int.parse(h, radix: 16) & BleConstants.base;
     }
   }
 
@@ -3487,45 +3160,42 @@ class BleManager {
 
     u8TxPktCnt += 1;
 
-    u8Pkt[0] = 0xFE;
-    u8Pkt[1] = 0x01;
-    u8Pkt[2] = 0x00;
-    u8Pkt[3] = 0x01;
-    u8Pkt[4] = u8TxPktCnt & 0xFF;
-    u8Pkt[5] = u8RxPktCnt & 0xFF;
-    u8Pkt[6] = 0x00;
-    u8Pkt[10] = 0x81;
-    u8Pkt[11] = 0x00;
-    u8Pkt[12] = 0x07;
-    u8Pkt[13] = 0x00;
-    u8Pkt[14] = 0x04;
+    u8Pkt[0] = BleConstants.sot;
+    u8Pkt[1] = BleConstants.des;
+    u8Pkt[2] = BleConstants.ori;
+    u8Pkt[3] = BleConstants.type.nrm;
+    u8Pkt[4] = u8TxPktCnt & BleConstants.base;
+    u8Pkt[5] = u8RxPktCnt & BleConstants.base;
+    u8Pkt[6] = BleConstants.network.radio;
+    u8Pkt[10] = BleConstants.mode.instruction.dbSetup;
+    u8Pkt[11] = BleConstants.socket.radio;
+    u8Pkt[12] = BleConstants.command.relaySetup;
+    u8Pkt[13] = BleConstants.firstOutputNoHigh;
+    u8Pkt[14] = BleConstants.firstOutputNoLow;
     u8Pkt[15] = _relayOutputModeByteForApply(
       modeHex: relayOneMode,
       enabled: isRelayOneSetupEnabled.value,
       test: isRelayOneSetupTest.value,
     );
-    u8Pkt[16] = 0x01;
-    u8Pkt[17] = 0x00;
-    u8Pkt[18] = 0x00;
-    u8Pkt[19] = 0x00;
-    u8Pkt[20] = 0x03;
-    u8Pkt[21] = 0x00;
+    u8Pkt[16] = BleConstants.outputSetupType;
+    u8Pkt[20] = BleConstants.firstOutputSetupTypeParams;
     u8Pkt[22] =
         relayOneSetupDynamicText.value.isNotEmpty
             ? _parseRelayDynamicFieldByte(relayOneSetupDynamicText.value)
-            : 0x00;
+            : BleConstants.init;
     u8Pkt[23] = relayOneSetupGroup.value;
     u8Pkt[24] = relayOneSetupFunction.value;
-    u8Pkt[25] = outputTextLength & 0xFF;
+    u8Pkt[25] = outputTextLength & BleConstants.base;
 
     int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
-    u8Pkt[213] = (checksum >> 8) & 0xFF;
-    u8Pkt[214] = checksum & 0xFF;
-    u8Pkt[215] = 0xFD;
+    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
+    u8Pkt[214] = checksum & BleConstants.base;
+    u8Pkt[215] = BleConstants.eot;
 
-    print(
+    Logger(
       "TX/RX: TRANSMIT: Relay Setup Apply First Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+      type: LogType.ble,
     );
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
@@ -3545,46 +3215,42 @@ class BleManager {
 
     u8TxPktCnt += 1;
 
-    u8Pkt[0] = 0xFE;
-    u8Pkt[1] = 0x01;
-    u8Pkt[2] = 0x00;
-
-    u8Pkt[3] = 0x01;
-    u8Pkt[4] = u8TxPktCnt & 0xFF;
-    u8Pkt[5] = u8RxPktCnt & 0xFF;
-    u8Pkt[6] = 0x00;
-    u8Pkt[10] = 0x81;
-    u8Pkt[11] = 0x00;
-    u8Pkt[12] = 0x07;
-    u8Pkt[13] = 0x00;
-    u8Pkt[14] = 0x05;
+    u8Pkt[0] = BleConstants.sot;
+    u8Pkt[1] = BleConstants.des;
+    u8Pkt[2] = BleConstants.ori;
+    u8Pkt[3] = BleConstants.type.nrm;
+    u8Pkt[4] = u8TxPktCnt & BleConstants.base;
+    u8Pkt[5] = u8RxPktCnt & BleConstants.base;
+    u8Pkt[6] = BleConstants.network.radio;
+    u8Pkt[10] = BleConstants.mode.instruction.dbSetup;
+    u8Pkt[11] = BleConstants.socket.radio;
+    u8Pkt[12] = BleConstants.command.relaySetup;
+    u8Pkt[13] = BleConstants.secondOutputNoHigh;
+    u8Pkt[14] = BleConstants.secondtOutputNoLow;
     u8Pkt[15] = _relayOutputModeByteForApply(
       modeHex: relayTwoMode,
       enabled: isRelayTwoSetupEnabled.value,
       test: isRelayTwoSetupTest.value,
     );
-    u8Pkt[16] = 0x01;
-    u8Pkt[17] = 0x00;
-    u8Pkt[18] = 0x00;
-    u8Pkt[19] = 0x00;
-    u8Pkt[20] = 0x04;
-    u8Pkt[21] = 0x00;
+    u8Pkt[16] = BleConstants.outputSetupType;
+    u8Pkt[20] = BleConstants.secondOutputSetupTypeParams;
     u8Pkt[22] =
         relayTwoSetupDynamicText.value.isNotEmpty
             ? _parseRelayDynamicFieldByte(relayTwoSetupDynamicText.value)
-            : 0x00;
+            : BleConstants.init;
     u8Pkt[23] = relayTwoSetupGroup.value;
     u8Pkt[24] = relayTwoSetupFunction.value;
-    u8Pkt[25] = outputTextLength & 0xFF;
+    u8Pkt[25] = outputTextLength & BleConstants.base;
 
     int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
-    u8Pkt[213] = (checksum >> 8) & 0xFF;
-    u8Pkt[214] = checksum & 0xFF;
-    u8Pkt[215] = 0xFD;
+    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
+    u8Pkt[214] = checksum & BleConstants.base;
+    u8Pkt[215] = BleConstants.eot;
 
-    print(
+    Logger(
       "TX/RX: TRANSMIT: Relay Setup Apply Second Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+      type: LogType.ble,
     );
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
@@ -3604,45 +3270,42 @@ class BleManager {
 
     u8TxPktCnt += 1;
 
-    u8Pkt[0] = 0xFE;
-    u8Pkt[1] = 0x01;
-    u8Pkt[2] = 0x00;
-    u8Pkt[3] = 0x01;
-    u8Pkt[4] = u8TxPktCnt & 0xFF;
-    u8Pkt[5] = u8RxPktCnt & 0xFF;
-    u8Pkt[6] = 0x00;
-    u8Pkt[10] = 0x81;
-    u8Pkt[11] = 0x00;
-    u8Pkt[12] = 0x07;
-    u8Pkt[13] = 0x00;
-    u8Pkt[14] = 0x06;
+    u8Pkt[0] = BleConstants.sot;
+    u8Pkt[1] = BleConstants.des;
+    u8Pkt[2] = BleConstants.ori;
+    u8Pkt[3] = BleConstants.type.nrm;
+    u8Pkt[4] = u8TxPktCnt & BleConstants.base;
+    u8Pkt[5] = u8RxPktCnt & BleConstants.base;
+    u8Pkt[6] = BleConstants.network.radio;
+    u8Pkt[10] = BleConstants.mode.instruction.dbSetup;
+    u8Pkt[11] = BleConstants.socket.radio;
+    u8Pkt[12] = BleConstants.command.relaySetup;
+    u8Pkt[13] = BleConstants.thirdOutputNoHigh;
+    u8Pkt[14] = BleConstants.thirdtOutputNoLow;
     u8Pkt[15] = _relayOutputModeByteForApply(
       modeHex: relayThreeMode,
       enabled: isRelayThreeSetupEnabled.value,
       test: isRelayThreeSetupTest.value,
     );
-    u8Pkt[16] = 0x01;
-    u8Pkt[17] = 0x00;
-    u8Pkt[18] = 0x00;
-    u8Pkt[19] = 0x00;
-    u8Pkt[20] = 0x05;
-    u8Pkt[21] = 0x00;
+    u8Pkt[16] = BleConstants.outputSetupType;
+    u8Pkt[20] = BleConstants.thirdOutputSetupTypeParams;
     u8Pkt[22] =
         relayThreeSetupDynamicText.value.isNotEmpty
             ? _parseRelayDynamicFieldByte(relayThreeSetupDynamicText.value)
-            : 0x00;
+            : BleConstants.init;
     u8Pkt[23] = relayThreeSetupGroup.value;
     u8Pkt[24] = relayThreeSetupFunction.value;
-    u8Pkt[25] = outputTextLength & 0xFF;
+    u8Pkt[25] = outputTextLength & BleConstants.base;
 
     int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
-    u8Pkt[213] = (checksum >> 8) & 0xFF;
-    u8Pkt[214] = checksum & 0xFF;
-    u8Pkt[215] = 0xFD;
+    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
+    u8Pkt[214] = checksum & BleConstants.base;
+    u8Pkt[215] = BleConstants.eot;
 
-    print(
+    Logger(
       "TX/RX: TRANSMIT: Relay Setup Apply Third Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+      type: LogType.ble,
     );
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
@@ -3653,26 +3316,27 @@ class BleManager {
 
     u8TxPktCnt += 1;
 
-    u8Pkt[0] = 0xFE;
-    u8Pkt[1] = 0x01;
-    u8Pkt[2] = 0x00;
-    u8Pkt[3] = 0x01;
-    u8Pkt[4] = u8TxPktCnt & 0xFF;
-    u8Pkt[5] = u8RxPktCnt & 0xFF;
-    u8Pkt[6] = 0x00;
-    u8Pkt[10] = 0x01;
-    u8Pkt[11] = 0x00;
-    u8Pkt[12] = 0x04;
-    u8Pkt[13] = 0x01;
+    u8Pkt[0] = BleConstants.sot;
+    u8Pkt[1] = BleConstants.des;
+    u8Pkt[2] = BleConstants.ori;
+    u8Pkt[3] = BleConstants.type.nrm;
+    u8Pkt[4] = u8TxPktCnt & BleConstants.base;
+    u8Pkt[5] = u8RxPktCnt & BleConstants.base;
+    u8Pkt[6] = BleConstants.network.radio;
+    u8Pkt[10] = BleConstants.mode.request.dbSetup;
+    u8Pkt[11] = BleConstants.socket.radio;
+    u8Pkt[12] = BleConstants.command.zoneSetup;
+    u8Pkt[13] = BleConstants.firstZoneSetupNo;
 
     int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
-    u8Pkt[213] = (checksum >> 8) & 0xFF;
-    u8Pkt[214] = checksum & 0xFF;
-    u8Pkt[215] = 0xFD;
+    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
+    u8Pkt[214] = checksum & BleConstants.base;
+    u8Pkt[215] = BleConstants.eot;
 
-    print(
+    Logger(
       "TX/RX: TRANSMIT: Zone Setup Fetch First Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+      type: LogType.ble,
     );
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
@@ -3683,26 +3347,27 @@ class BleManager {
 
     u8TxPktCnt += 1;
 
-    u8Pkt[0] = 0xFE;
-    u8Pkt[1] = 0x01;
-    u8Pkt[2] = 0x00;
-    u8Pkt[3] = 0x01;
-    u8Pkt[4] = u8TxPktCnt & 0xFF;
-    u8Pkt[5] = u8RxPktCnt & 0xFF;
-    u8Pkt[6] = 0x00;
-    u8Pkt[10] = 0x01;
-    u8Pkt[11] = 0x00;
-    u8Pkt[12] = 0x04;
-    u8Pkt[13] = 0x02;
+    u8Pkt[0] = BleConstants.sot;
+    u8Pkt[1] = BleConstants.des;
+    u8Pkt[2] = BleConstants.ori;
+    u8Pkt[3] = BleConstants.type.nrm;
+    u8Pkt[4] = u8TxPktCnt & BleConstants.base;
+    u8Pkt[5] = u8RxPktCnt & BleConstants.base;
+    u8Pkt[6] = BleConstants.network.radio;
+    u8Pkt[10] = BleConstants.mode.request.dbSetup;
+    u8Pkt[11] = BleConstants.socket.radio;
+    u8Pkt[12] = BleConstants.command.zoneSetup;
+    u8Pkt[13] = BleConstants.secondZoneSetupNo;
 
     int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
-    u8Pkt[213] = (checksum >> 8) & 0xFF;
-    u8Pkt[214] = checksum & 0xFF;
-    u8Pkt[215] = 0xFD;
+    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
+    u8Pkt[214] = checksum & BleConstants.base;
+    u8Pkt[215] = BleConstants.eot;
 
-    print(
+    Logger(
       "TX/RX: TRANSMIT: Zone Setup Fetch Second Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+      type: LogType.ble,
     );
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
@@ -3713,26 +3378,27 @@ class BleManager {
 
     u8TxPktCnt += 1;
 
-    u8Pkt[0] = 0xFE;
-    u8Pkt[1] = 0x01;
-    u8Pkt[2] = 0x00;
-    u8Pkt[3] = 0x01;
-    u8Pkt[4] = u8TxPktCnt & 0xFF;
-    u8Pkt[5] = u8RxPktCnt & 0xFF;
-    u8Pkt[6] = 0x00;
-    u8Pkt[10] = 0x01;
-    u8Pkt[11] = 0x00;
-    u8Pkt[12] = 0x04;
-    u8Pkt[13] = 0x03;
+    u8Pkt[0] = BleConstants.sot;
+    u8Pkt[1] = BleConstants.des;
+    u8Pkt[2] = BleConstants.ori;
+    u8Pkt[3] = BleConstants.type.nrm;
+    u8Pkt[4] = u8TxPktCnt & BleConstants.base;
+    u8Pkt[5] = u8RxPktCnt & BleConstants.base;
+    u8Pkt[6] = BleConstants.network.radio;
+    u8Pkt[10] = BleConstants.mode.request.dbSetup;
+    u8Pkt[11] = BleConstants.socket.radio;
+    u8Pkt[12] = BleConstants.command.zoneSetup;
+    u8Pkt[13] = BleConstants.thirdZoneSetupNo;
 
     int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
-    u8Pkt[213] = (checksum >> 8) & 0xFF;
-    u8Pkt[214] = checksum & 0xFF;
-    u8Pkt[215] = 0xFD;
+    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
+    u8Pkt[214] = checksum & BleConstants.base;
+    u8Pkt[215] = BleConstants.eot;
 
-    print(
+    Logger(
       "TX/RX: TRANSMIT: Zone Setup Fetch Third Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+      type: LogType.ble,
     );
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
@@ -3752,43 +3418,41 @@ class BleManager {
 
     u8TxPktCnt += 1;
 
-    u8Pkt[0] = 0xFE;
-    u8Pkt[1] = 0x01;
-    u8Pkt[2] = 0x00;
-    u8Pkt[3] = 0x01;
-    u8Pkt[4] = u8TxPktCnt & 0xFF;
-    u8Pkt[5] = u8RxPktCnt & 0xFF;
-    u8Pkt[6] = 0x00;
-    u8Pkt[10] = 0x81;
-    u8Pkt[11] = 0x00;
-    u8Pkt[12] = 0x04;
-    u8Pkt[13] = 0x01;
+    u8Pkt[0] = BleConstants.sot;
+    u8Pkt[1] = BleConstants.des;
+    u8Pkt[2] = BleConstants.ori;
+    u8Pkt[3] = BleConstants.type.nrm;
+    u8Pkt[4] = u8TxPktCnt & BleConstants.base;
+    u8Pkt[5] = u8RxPktCnt & BleConstants.base;
+    u8Pkt[6] = BleConstants.network.radio;
+    u8Pkt[10] = BleConstants.mode.instruction.dbSetup;
+    u8Pkt[11] = BleConstants.socket.radio;
+    u8Pkt[12] = BleConstants.command.zoneSetup;
+    u8Pkt[13] = BleConstants.firstZoneSetupNo;
     u8Pkt[14] =
         zoneOneSetupMode.value.isNotEmpty
             ? int.parse(zoneOneSetupMode.value, radix: 16)
-            : 0x00;
-    u8Pkt[15] = zoneOneSetupDetectionMode.value & 0xFF;
-    print(
-      "zoneOneSetupDetectionMode.value: ${zoneOneSetupDetectionMode.value}",
-    );
-    print(
-      "zoneOneSetupVerificationTime.value: ${zoneOneSetupVerificationTime.value}",
-    );
+            : BleConstants.init;
+    u8Pkt[15] = zoneOneSetupDetectionMode.value & BleConstants.base;
     u8Pkt[16] =
         zoneOneSetupVerificationTime.value.isNotEmpty
             ? int.parse(zoneOneSetupVerificationTime.value)
-            : 0x00;
-    u8Pkt[17] = zoneOneSetupDetectionMode.value == 3 ? 0x1E : 0x00;
-    u8Pkt[18] = zoneTextLength & 0xFF;
+            : BleConstants.init;
+    u8Pkt[17] =
+        zoneOneSetupDetectionMode.value == 3
+            ? BleConstants.extZoneValveDelay
+            : BleConstants.init;
+    u8Pkt[18] = zoneTextLength & BleConstants.base;
 
     int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
-    u8Pkt[213] = (checksum >> 8) & 0xFF;
-    u8Pkt[214] = checksum & 0xFF;
-    u8Pkt[215] = 0xFD;
+    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
+    u8Pkt[214] = checksum & BleConstants.base;
+    u8Pkt[215] = BleConstants.eot;
 
-    print(
+    Logger(
       "TX/RX: TRANSMIT: Zone Setup Apply First Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+      type: LogType.ble,
     );
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
@@ -3809,43 +3473,41 @@ class BleManager {
     // Update global counters
     u8TxPktCnt += 1;
 
-    u8Pkt[0] = 0xFE;
-    u8Pkt[1] = 0x01;
-    u8Pkt[2] = 0x00;
-    u8Pkt[3] = 0x01;
-    u8Pkt[4] = u8TxPktCnt & 0xFF;
-    u8Pkt[5] = u8RxPktCnt & 0xFF;
-    u8Pkt[6] = 0x00;
-    u8Pkt[10] = 0x81;
-    u8Pkt[11] = 0x00;
-    u8Pkt[12] = 0x04;
-    u8Pkt[13] = 0x02;
+    u8Pkt[0] = BleConstants.sot;
+    u8Pkt[1] = BleConstants.des;
+    u8Pkt[2] = BleConstants.ori;
+    u8Pkt[3] = BleConstants.type.nrm;
+    u8Pkt[4] = u8TxPktCnt & BleConstants.base;
+    u8Pkt[5] = u8RxPktCnt & BleConstants.base;
+    u8Pkt[6] = BleConstants.network.radio;
+    u8Pkt[10] = BleConstants.mode.instruction.dbSetup;
+    u8Pkt[11] = BleConstants.socket.radio;
+    u8Pkt[12] = BleConstants.command.zoneSetup;
+    u8Pkt[13] = BleConstants.secondZoneSetupNo;
     u8Pkt[14] =
         zoneTwoSetupMode.value.isNotEmpty
             ? int.parse(zoneTwoSetupMode.value, radix: 16)
-            : 0x00;
-    u8Pkt[15] = zoneTwoSetupDetectionMode.value & 0xFF;
-    print(
-      "zoneTwoSetupDetectionMode.value: ${zoneTwoSetupDetectionMode.value}",
-    );
-    print(
-      "zoneTwoSetupVerificationTime.value: ${zoneTwoSetupVerificationTime.value}",
-    );
+            : BleConstants.init;
+    u8Pkt[15] = zoneTwoSetupDetectionMode.value & BleConstants.base;
     u8Pkt[16] =
         zoneTwoSetupVerificationTime.value.isNotEmpty
             ? int.parse(zoneTwoSetupVerificationTime.value)
-            : 0x00;
-    u8Pkt[17] = zoneTwoSetupDetectionMode.value == 3 ? 0x1E : 0x00;
-    u8Pkt[18] = zoneTextLength & 0xFF;
+            : BleConstants.init;
+    u8Pkt[17] =
+        zoneTwoSetupDetectionMode.value == 3
+            ? BleConstants.extZoneValveDelay
+            : BleConstants.init;
+    u8Pkt[18] = zoneTextLength & BleConstants.base;
 
     int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
-    u8Pkt[213] = (checksum >> 8) & 0xFF;
-    u8Pkt[214] = checksum & 0xFF;
-    u8Pkt[215] = 0xFD;
+    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
+    u8Pkt[214] = checksum & BleConstants.base;
+    u8Pkt[215] = BleConstants.eot;
 
-    print(
+    Logger(
       "TX/RX: TRANSMIT: Zone Setup Apply Second Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+      type: LogType.ble,
     );
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
@@ -3866,43 +3528,41 @@ class BleManager {
     // Update global counters
     u8TxPktCnt += 1;
 
-    u8Pkt[0] = 0xFE;
-    u8Pkt[1] = 0x01;
-    u8Pkt[2] = 0x00;
-    u8Pkt[3] = 0x01;
-    u8Pkt[4] = u8TxPktCnt & 0xFF;
-    u8Pkt[5] = u8RxPktCnt & 0xFF;
-    u8Pkt[6] = 0x00;
-    u8Pkt[10] = 0x81;
-    u8Pkt[11] = 0x00;
-    u8Pkt[12] = 0x04;
-    u8Pkt[13] = 0x03;
+    u8Pkt[0] = BleConstants.sot;
+    u8Pkt[1] = BleConstants.des;
+    u8Pkt[2] = BleConstants.ori;
+    u8Pkt[3] = BleConstants.type.nrm;
+    u8Pkt[4] = u8TxPktCnt & BleConstants.base;
+    u8Pkt[5] = u8RxPktCnt & BleConstants.base;
+    u8Pkt[6] = BleConstants.network.radio;
+    u8Pkt[10] = BleConstants.mode.instruction.dbSetup;
+    u8Pkt[11] = BleConstants.socket.radio;
+    u8Pkt[12] = BleConstants.command.zoneSetup;
+    u8Pkt[13] = BleConstants.thirdZoneSetupNo;
     u8Pkt[14] =
         zoneThreeSetupMode.value.isNotEmpty
             ? int.parse(zoneThreeSetupMode.value, radix: 16)
-            : 0x00;
-    u8Pkt[15] = zoneThreeSetupDetectionMode.value & 0xFF;
-    print(
-      "zoneThreeSetupDetectionMode.value: ${zoneThreeSetupDetectionMode.value}",
-    );
-    print(
-      "zoneThreeSetupVerificationTime.value: ${zoneThreeSetupVerificationTime.value}",
-    );
+            : BleConstants.init;
+    u8Pkt[15] = zoneThreeSetupDetectionMode.value & BleConstants.base;
     u8Pkt[16] =
         zoneThreeSetupVerificationTime.value.isNotEmpty
             ? int.parse(zoneThreeSetupVerificationTime.value)
-            : 0x00;
-    u8Pkt[17] = zoneThreeSetupDetectionMode.value == 3 ? 0x1E : 0x00;
-    u8Pkt[18] = zoneTextLength & 0xFF;
+            : BleConstants.init;
+    u8Pkt[17] =
+        zoneThreeSetupDetectionMode.value == 3
+            ? BleConstants.extZoneValveDelay
+            : BleConstants.init;
+    u8Pkt[18] = zoneTextLength & BleConstants.base;
 
     int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
-    u8Pkt[213] = (checksum >> 8) & 0xFF;
-    u8Pkt[214] = checksum & 0xFF;
-    u8Pkt[215] = 0xFD;
+    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
+    u8Pkt[214] = checksum & BleConstants.base;
+    u8Pkt[215] = BleConstants.eot;
 
-    print(
+    Logger(
       "TX/RX: TRANSMIT: Zone Setup Apply Third Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+      type: LogType.ble,
     );
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
@@ -3913,25 +3573,26 @@ class BleManager {
 
     u8TxPktCnt += 1;
 
-    u8Pkt[0] = 0xFE;
-    u8Pkt[1] = 0x01;
-    u8Pkt[2] = 0x00;
-    u8Pkt[3] = 0x01;
-    u8Pkt[4] = u8TxPktCnt & 0xFF;
-    u8Pkt[5] = u8RxPktCnt & 0xFF;
-    u8Pkt[6] = 0x00;
-    u8Pkt[10] = 0x01;
-    u8Pkt[11] = 0x00;
-    u8Pkt[12] = 0x1D;
+    u8Pkt[0] = BleConstants.sot;
+    u8Pkt[1] = BleConstants.des;
+    u8Pkt[2] = BleConstants.ori;
+    u8Pkt[3] = BleConstants.type.nrm;
+    u8Pkt[4] = u8TxPktCnt & BleConstants.base;
+    u8Pkt[5] = u8RxPktCnt & BleConstants.base;
+    u8Pkt[6] = BleConstants.network.radio;
+    u8Pkt[10] = BleConstants.mode.request.dbSetup;
+    u8Pkt[11] = BleConstants.socket.radio;
+    u8Pkt[12] = BleConstants.command.radioSetup;
 
     int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
-    u8Pkt[213] = (checksum >> 8) & 0xFF;
-    u8Pkt[214] = checksum & 0xFF;
-    u8Pkt[215] = 0xFD;
+    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
+    u8Pkt[214] = checksum & BleConstants.base;
+    u8Pkt[215] = BleConstants.eot;
 
-    print(
+    Logger(
       "TX/RX: TRANSMIT: Radio Setup Fetch Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+      type: LogType.ble,
     );
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
@@ -3954,54 +3615,70 @@ class BleManager {
     }
 
     final String radioNoText = radioSetupNo.value.trim();
-    print("radioNoText: $radioNoText");
 
-    // Convert each character to actual numeric value
     final List<int> radioNoTextBytes =
         radioNoText.split('').map((e) => int.parse(e)).toList();
-
-    print("radioNoTextBytes (numeric): $radioNoTextBytes");
 
     final radioNoTextLength = radioNoTextBytes.length;
 
     final initialSetupNoindex = 37;
     for (int i = 0; i < 8; i++) {
       if (i < radioNoTextLength) {
-        u8Pkt[initialSetupNoindex + i] = radioNoTextBytes[i] & 0xFF;
+        u8Pkt[initialSetupNoindex + i] =
+            radioNoTextBytes[i] & BleConstants.base;
       } else {
-        u8Pkt[initialSetupNoindex + i] = 0x00; // pad with 0
+        u8Pkt[initialSetupNoindex + i] = BleConstants.init;
       }
     }
-    // Update global counters
+
     u8TxPktCnt += 1;
 
-    u8Pkt[0] = 0xFE;
-    u8Pkt[1] = 0x01;
-    u8Pkt[2] = 0x00;
-    u8Pkt[3] = 0x01;
-    u8Pkt[4] = u8TxPktCnt & 0xFF;
-    u8Pkt[5] = u8RxPktCnt & 0xFF;
-    u8Pkt[6] = 0x00;
-    u8Pkt[10] = 0x81;
-    u8Pkt[11] = 0x00;
-    u8Pkt[12] = 0x1D;
-    u8Pkt[13] = isRadioSetupEnabled.value ? 0x01 : 0x00;
-    u8Pkt[14] = radioSetupModule.value & 0xFF;
-    u8Pkt[15] = isRadioSetupAdvertised.value ? 0x01 : 0x00;
-    u8Pkt[16] = isRadioSetupConnected.value ? 0x01 : 0x00;
-    u8Pkt[17] = isRadioSetupProgrammed.value ? 0x01 : 0x00;
-    u8Pkt[18] = isRadioSetupBooted.value ? 0x01 : 0x00;
-    u8Pkt[19] = isRadioSetupServiced.value ? 0x01 : 0x00;
-    u8Pkt[20] = radioNameTextLength & 0xFF;
+    u8Pkt[0] = BleConstants.sot;
+    u8Pkt[1] = BleConstants.des;
+    u8Pkt[2] = BleConstants.ori;
+    u8Pkt[3] = BleConstants.type.nrm;
+    u8Pkt[4] = u8TxPktCnt & BleConstants.base;
+    u8Pkt[5] = u8RxPktCnt & BleConstants.base;
+    u8Pkt[6] = BleConstants.network.radio;
+    u8Pkt[10] = BleConstants.mode.instruction.dbSetup;
+    u8Pkt[11] = BleConstants.socket.radio;
+    u8Pkt[12] = BleConstants.command.radioSetup;
+    u8Pkt[13] =
+        isRadioSetupEnabled.value
+            ? BleConstants.radioSetupEnabled
+            : BleConstants.radioSetupDisabled;
+    u8Pkt[14] = radioSetupModule.value & BleConstants.base;
+    u8Pkt[15] =
+        isRadioSetupAdvertised.value
+            ? BleConstants.radioSetupAdvertised
+            : BleConstants.radioSetupNotAdvertised;
+    u8Pkt[16] =
+        isRadioSetupConnected.value
+            ? BleConstants.radioSetupConnected
+            : BleConstants.radioSetupNotConnected;
+    u8Pkt[17] =
+        isRadioSetupProgrammed.value
+            ? BleConstants.radioSetupProgrammed
+            : BleConstants.radioSetupNotProgrammed;
+    u8Pkt[18] =
+        isRadioSetupBooted.value
+            ? BleConstants.radioSetupBooted
+            : BleConstants.radioSetupNotBooted;
+    u8Pkt[19] =
+        isRadioSetupServiced.value
+            ? BleConstants.radioSetupServiced
+            : BleConstants.radioSetupNotServiced;
+    u8Pkt[20] = radioNameTextLength & BleConstants.base;
 
     int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
-    u8Pkt[213] = (checksum >> 8) & 0xFF;
-    u8Pkt[214] = checksum & 0xFF;
-    u8Pkt[215] = 0xFD;
+    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
+    u8Pkt[214] = checksum & BleConstants.base;
+    u8Pkt[215] = BleConstants.eot;
 
-    print(
+    Logger(
       "TX/RX: TRANSMIT: Radio Setup Apply Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+      type: LogType.ble,
     );
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
@@ -4010,28 +3687,28 @@ class BleManager {
   Future<void> sendModuleSetupFetchCmdPkt() async {
     Uint8List u8Pkt = Uint8List(216);
 
-    // Update global counters
     u8TxPktCnt += 1;
 
-    u8Pkt[0] = 0xFE;
-    u8Pkt[1] = 0x01;
-    u8Pkt[2] = 0x00;
-    u8Pkt[3] = 0x01;
-    u8Pkt[4] = u8TxPktCnt & 0xFF;
-    u8Pkt[5] = u8RxPktCnt & 0xFF;
-    u8Pkt[6] = 0x00;
-    u8Pkt[10] = 0x00;
-    u8Pkt[11] = 0x00;
-    u8Pkt[12] = 0x01;
+    u8Pkt[0] = BleConstants.sot;
+    u8Pkt[1] = BleConstants.des;
+    u8Pkt[2] = BleConstants.ori;
+    u8Pkt[3] = BleConstants.type.nrm;
+    u8Pkt[4] = u8TxPktCnt & BleConstants.base;
+    u8Pkt[5] = u8RxPktCnt & BleConstants.base;
+    u8Pkt[6] = BleConstants.network.radio;
+    u8Pkt[10] = BleConstants.mode.request.module;
+    u8Pkt[11] = BleConstants.socket.radio;
+    u8Pkt[12] = BleConstants.command.moduleSetup;
 
     int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
-    u8Pkt[213] = (checksum >> 8) & 0xFF;
-    u8Pkt[214] = checksum & 0xFF;
-    u8Pkt[215] = 0xFD;
+    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
+    u8Pkt[214] = checksum & BleConstants.base;
+    u8Pkt[215] = BleConstants.eot;
 
-    print(
+    Logger(
       "TX/RX: TRANSMIT: Module Setup Fetch Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+      type: LogType.ble,
     );
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
@@ -4042,26 +3719,27 @@ class BleManager {
 
     u8TxPktCnt += 1;
 
-    u8Pkt[0] = 0xFE;
-    u8Pkt[1] = 0x01;
-    u8Pkt[2] = 0x00;
-    u8Pkt[3] = 0x01;
-    u8Pkt[4] = u8TxPktCnt & 0xFF;
-    u8Pkt[5] = u8RxPktCnt & 0xFF;
-    u8Pkt[6] = 0x00;
-    u8Pkt[10] = 0x01;
-    u8Pkt[11] = 0x00;
-    u8Pkt[12] = 0x10;
+    u8Pkt[0] = BleConstants.sot;
+    u8Pkt[1] = BleConstants.des;
+    u8Pkt[2] = BleConstants.ori;
+    u8Pkt[3] = BleConstants.type.nrm;
+    u8Pkt[4] = u8TxPktCnt & BleConstants.base;
+    u8Pkt[5] = u8RxPktCnt & BleConstants.base;
+    u8Pkt[6] = BleConstants.network.radio;
+    u8Pkt[10] = BleConstants.mode.request.dbSetup;
+    u8Pkt[11] = BleConstants.socket.radio;
+    u8Pkt[12] = BleConstants.command.lBusSetup;
     u8Pkt[13] = lBusNo;
 
     int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
-    u8Pkt[213] = (checksum >> 8) & 0xFF;
-    u8Pkt[214] = checksum & 0xFF;
-    u8Pkt[215] = 0xFD;
+    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
+    u8Pkt[214] = checksum & BleConstants.base;
+    u8Pkt[215] = BleConstants.eot;
 
-    print(
-      "TX/RX: TRANSMIT: L-Bus $lBusNo Setup Fetch Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+    Logger(
+      "TX/RX: TRANSMIT: L Bus Setup Fetch Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+      type: LogType.ble,
     );
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
@@ -4072,26 +3750,22 @@ class BleManager {
 
     u8TxPktCnt += 1;
 
-    u8Pkt[0] = 0xFE;
-    u8Pkt[1] = 0x01;
-    u8Pkt[2] = 0x00;
-    u8Pkt[3] = 0x01;
-    u8Pkt[4] = u8TxPktCnt & 0xFF;
-    u8Pkt[5] = u8RxPktCnt & 0xFF;
-    u8Pkt[6] = 0x00;
+    u8Pkt[0] = BleConstants.sot;
+    u8Pkt[1] = BleConstants.des;
+    u8Pkt[2] = BleConstants.ori;
+    u8Pkt[3] = BleConstants.type.nrm;
+    u8Pkt[4] = u8TxPktCnt & BleConstants.base;
+    u8Pkt[5] = u8RxPktCnt & BleConstants.base;
+    u8Pkt[6] = BleConstants.network.radio;
     u8Pkt[8] = lBusNo;
-    u8Pkt[11] = 0x00;
-    u8Pkt[12] = 0x01;
+    u8Pkt[11] = BleConstants.socket.radio;
+    u8Pkt[12] = BleConstants.command.lBusEnabledBusData;
 
     int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
-    u8Pkt[213] = (checksum >> 8) & 0xFF;
-    u8Pkt[214] = checksum & 0xFF;
-    u8Pkt[215] = 0xFD;
-
-    print(
-      "TX/RX: TRANSMIT: L-Bus Enabled Bus $lBusNo Data Fetch Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
-    );
+    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
+    u8Pkt[214] = checksum & BleConstants.base;
+    u8Pkt[215] = BleConstants.eot;
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
@@ -4104,8 +3778,6 @@ class BleManager {
     final List<int> lBusDeviceTextBytes = lBusDeviceText.codeUnits;
     final lBusDeviceTextLength = lBusDeviceTextBytes.length;
 
-    print("lBusDeviceText: $lBusDeviceText");
-    print("lBusProduct: ${data.product}");
     final initialindex = 23;
 
     for (int i = 0; i < lBusDeviceTextLength; i++) {
@@ -4124,16 +3796,16 @@ class BleManager {
 
     u8TxPktCnt += 1;
 
-    u8Pkt[0] = 0xFE;
-    u8Pkt[1] = 0x01;
-    u8Pkt[2] = 0x00;
-    u8Pkt[3] = 0x01;
-    u8Pkt[4] = u8TxPktCnt & 0xFF;
-    u8Pkt[5] = u8RxPktCnt & 0xFF;
-    u8Pkt[6] = 0x00;
-    u8Pkt[10] = 0x81;
-    u8Pkt[11] = 0x00;
-    u8Pkt[12] = 0x10;
+    u8Pkt[0] = BleConstants.sot;
+    u8Pkt[1] = BleConstants.des;
+    u8Pkt[2] = BleConstants.ori;
+    u8Pkt[3] = BleConstants.type.nrm;
+    u8Pkt[4] = u8TxPktCnt & BleConstants.base;
+    u8Pkt[5] = u8RxPktCnt & BleConstants.base;
+    u8Pkt[6] = BleConstants.network.radio;
+    u8Pkt[10] = BleConstants.mode.instruction.dbSetup;
+    u8Pkt[11] = BleConstants.socket.radio;
+    u8Pkt[12] = BleConstants.command.lBusSetup;
     u8Pkt[13] = lBusNo;
     u8Pkt[14] =
         lBusSetupDataList.value[lBusNo - 1].product == 'Rhino103R'
@@ -4144,17 +3816,13 @@ class BleManager {
     u8Pkt[19] = 0x64;
     u8Pkt[20] = lBusNo == 1 ? 0x00 : 0x02;
     u8Pkt[21] = lBusNo == 1 ? 0x50 : 0x58;
-    u8Pkt[22] = lBusDeviceTextLength & 0xFF;
+    u8Pkt[22] = lBusDeviceTextLength & BleConstants.base;
 
     int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
-    u8Pkt[213] = (checksum >> 8) & 0xFF;
-    u8Pkt[214] = checksum & 0xFF;
-    u8Pkt[215] = 0xFD;
-
-    print(
-      "TX/RX: TRANSMIT: L-Bus Setup Apply Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
-    );
+    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
+    u8Pkt[214] = checksum & BleConstants.base;
+    u8Pkt[215] = BleConstants.eot;
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
@@ -4166,28 +3834,24 @@ class BleManager {
 
     u8TxPktCnt += 1;
 
-    u8Pkt[0] = 0xFE;
-    u8Pkt[1] = 0x01;
-    u8Pkt[2] = 0x00;
-    u8Pkt[3] = 0x01;
-    u8Pkt[4] = u8TxPktCnt & 0xFF;
-    u8Pkt[5] = u8RxPktCnt & 0xFF;
-    u8Pkt[6] = 0x00;
-    u8Pkt[10] = 0x01;
-    u8Pkt[11] = 0x00;
-    u8Pkt[12] = 0x07;
-    u8Pkt[13] = 0x00;
+    u8Pkt[0] = BleConstants.sot;
+    u8Pkt[1] = BleConstants.des;
+    u8Pkt[2] = BleConstants.ori;
+    u8Pkt[3] = BleConstants.type.nrm;
+    u8Pkt[4] = u8TxPktCnt & BleConstants.base;
+    u8Pkt[5] = u8RxPktCnt & BleConstants.base;
+    u8Pkt[6] = BleConstants.network.radio;
+    u8Pkt[10] = BleConstants.mode.request.dbSetup;
+    u8Pkt[11] = BleConstants.socket.radio;
+    u8Pkt[12] = BleConstants.command.sounderSetupRelay;
+    u8Pkt[13] = BleConstants.firstOutputNoHigh;
     u8Pkt[14] = outputMaxZone;
 
     int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
-    u8Pkt[213] = (checksum >> 8) & 0xFF;
-    u8Pkt[214] = checksum & 0xFF;
+    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
+    u8Pkt[214] = checksum & BleConstants.base;
     u8Pkt[215] = 0xFD;
-
-    print(
-      "TX/RX: TRANSMIT: Sounder Setup Relay $outputMaxZone Fetch Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
-    );
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
@@ -4197,26 +3861,22 @@ class BleManager {
 
     u8TxPktCnt += 1;
 
-    u8Pkt[0] = 0xFE;
-    u8Pkt[1] = 0x01;
-    u8Pkt[2] = 0x00;
-    u8Pkt[3] = 0x01;
-    u8Pkt[4] = u8TxPktCnt & 0xFF;
-    u8Pkt[5] = u8RxPktCnt & 0xFF;
-    u8Pkt[6] = 0x00;
-    u8Pkt[10] = 0x01;
-    u8Pkt[11] = 0x00;
-    u8Pkt[12] = 0x14;
+    u8Pkt[0] = BleConstants.sot;
+    u8Pkt[1] = BleConstants.des;
+    u8Pkt[2] = BleConstants.ori;
+    u8Pkt[3] = BleConstants.type.nrm;
+    u8Pkt[4] = u8TxPktCnt & BleConstants.base;
+    u8Pkt[5] = u8RxPktCnt & BleConstants.base;
+    u8Pkt[6] = BleConstants.network.radio;
+    u8Pkt[10] = BleConstants.mode.request.dbSetup;
+    u8Pkt[11] = BleConstants.socket.radio;
+    u8Pkt[12] = BleConstants.command.sounderSetupGeneral;
 
     int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
-    u8Pkt[213] = (checksum >> 8) & 0xFF;
-    u8Pkt[214] = checksum & 0xFF;
-    u8Pkt[215] = 0xFD;
-
-    print(
-      "TX/RX: TRANSMIT: Sounder Setup General Fetch Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
-    );
+    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
+    u8Pkt[214] = checksum & BleConstants.base;
+    u8Pkt[215] = BleConstants.eot;
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
@@ -4228,27 +3888,23 @@ class BleManager {
 
     u8TxPktCnt += 1;
 
-    u8Pkt[0] = 0xFE;
-    u8Pkt[1] = 0x01;
-    u8Pkt[2] = 0x00;
-    u8Pkt[3] = 0x01;
-    u8Pkt[4] = u8TxPktCnt & 0xFF;
-    u8Pkt[5] = u8RxPktCnt & 0xFF;
-    u8Pkt[6] = 0x00;
-    u8Pkt[10] = 0x01;
-    u8Pkt[11] = 0x00;
-    u8Pkt[12] = 0x19;
+    u8Pkt[0] = BleConstants.sot;
+    u8Pkt[1] = BleConstants.des;
+    u8Pkt[2] = BleConstants.ori;
+    u8Pkt[3] = BleConstants.type.nrm;
+    u8Pkt[4] = u8TxPktCnt & BleConstants.base;
+    u8Pkt[5] = u8RxPktCnt & BleConstants.base;
+    u8Pkt[6] = BleConstants.network.radio;
+    u8Pkt[10] = BleConstants.mode.request.dbSetup;
+    u8Pkt[11] = BleConstants.socket.radio;
+    u8Pkt[12] = BleConstants.command.sounderSetupZone;
     u8Pkt[13] = zoneMaxZone;
 
     int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
-    u8Pkt[213] = (checksum >> 8) & 0xFF;
-    u8Pkt[214] = checksum & 0xFF;
-    u8Pkt[215] = 0xFD;
-
-    print(
-      "TX/RX: TRANSMIT: Sounder Setup Zone $zoneMaxZone Fetch Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
-    );
+    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
+    u8Pkt[214] = checksum & BleConstants.base;
+    u8Pkt[215] = BleConstants.eot;
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
@@ -4260,28 +3916,24 @@ class BleManager {
 
     u8TxPktCnt += 1;
 
-    u8Pkt[0] = 0xFE;
-    u8Pkt[1] = 0x01;
-    u8Pkt[2] = 0x00;
-    u8Pkt[3] = 0x01;
-    u8Pkt[4] = u8TxPktCnt & 0xFF;
-    u8Pkt[5] = u8RxPktCnt & 0xFF;
-    u8Pkt[6] = 0x00;
-    u8Pkt[10] = 0x01;
-    u8Pkt[11] = 0x00;
-    u8Pkt[12] = 0x1B;
-    u8Pkt[13] = 0x01;
+    u8Pkt[0] = BleConstants.sot;
+    u8Pkt[1] = BleConstants.des;
+    u8Pkt[2] = BleConstants.ori;
+    u8Pkt[3] = BleConstants.type.nrm;
+    u8Pkt[4] = u8TxPktCnt & BleConstants.base;
+    u8Pkt[5] = u8RxPktCnt & BleConstants.base;
+    u8Pkt[6] = BleConstants.network.radio;
+    u8Pkt[10] = BleConstants.mode.request.dbSetup;
+    u8Pkt[11] = BleConstants.socket.radio;
+    u8Pkt[12] = BleConstants.command.sounderSetupExtOut;
+    u8Pkt[13] = BleConstants.firstExtOutNoLow;
     u8Pkt[14] = extMaxZone;
 
     int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
-    u8Pkt[213] = (checksum >> 8) & 0xFF;
-    u8Pkt[214] = checksum & 0xFF;
-    u8Pkt[215] = 0xFD;
-
-    print(
-      "TX/RX: TRANSMIT: Sounder Setup Ext Out $extMaxZone Fetch Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
-    );
+    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
+    u8Pkt[214] = checksum & BleConstants.base;
+    u8Pkt[215] = BleConstants.eot;
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
@@ -4301,7 +3953,6 @@ class BleManager {
       outputNo = sounderOneFunctionNo.value;
       function = sounderOneRelayFunction.value;
       group = sounderOneRelayFunctionGroup.value;
-      print("Sounder One Function No: $outputNo");
     } else if (outputMaxZone == 2) {
       outputText = sounderTwoOutputText.value;
       outputNo = sounderTwoFunctionNo.value;
@@ -4324,12 +3975,12 @@ class BleManager {
 
     u8TxPktCnt += 1;
 
-    u8Pkt[0] = 0xFE;
+    u8Pkt[0] = BleConstants.sot;
     u8Pkt[1] = 0x01;
     u8Pkt[2] = 0x00;
     u8Pkt[3] = 0x01;
-    u8Pkt[4] = u8TxPktCnt & 0xFF;
-    u8Pkt[5] = u8RxPktCnt & 0xFF;
+    u8Pkt[4] = u8TxPktCnt & BleConstants.base;
+    u8Pkt[5] = u8RxPktCnt & BleConstants.base;
     u8Pkt[6] = 0x00;
     u8Pkt[10] = 0x81;
     u8Pkt[11] = 0x00;
@@ -4345,17 +3996,13 @@ class BleManager {
     u8Pkt[22] = outputNo;
     u8Pkt[23] = group;
     u8Pkt[24] = function;
-    u8Pkt[25] = outputTextLength & 0xFF;
+    u8Pkt[25] = outputTextLength & BleConstants.base;
 
     int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
-    u8Pkt[213] = (checksum >> 8) & 0xFF;
-    u8Pkt[214] = checksum & 0xFF;
+    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
+    u8Pkt[214] = checksum & BleConstants.base;
     u8Pkt[215] = 0xFD;
-
-    print(
-      "TX/RX: TRANSMIT: Sounder Setup Relay $outputMaxZone Apply Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
-    );
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
@@ -4365,12 +4012,12 @@ class BleManager {
 
     u8TxPktCnt += 1;
 
-    u8Pkt[0] = 0xFE;
+    u8Pkt[0] = BleConstants.sot;
     u8Pkt[1] = 0x01;
     u8Pkt[2] = 0x00;
     u8Pkt[3] = 0x01;
-    u8Pkt[4] = u8TxPktCnt & 0xFF;
-    u8Pkt[5] = u8RxPktCnt & 0xFF;
+    u8Pkt[4] = u8TxPktCnt & BleConstants.base;
+    u8Pkt[5] = u8RxPktCnt & BleConstants.base;
     u8Pkt[6] = 0x00;
     u8Pkt[10] = 0x81;
     u8Pkt[11] = 0x00;
@@ -4378,18 +4025,14 @@ class BleManager {
     u8Pkt[13] = 0x00;
     u8Pkt[14] = _sounderGeneralEquipmentModeByteForApply();
     u8Pkt[15] = sounderGeneralAction.value;
-    u8Pkt[18] = (sounderGeneralDelay.value >> 8) & 0xFF;
-    u8Pkt[19] = sounderGeneralDelay.value & 0xFF;
+    u8Pkt[18] = (sounderGeneralDelay.value >> 8) & BleConstants.base;
+    u8Pkt[19] = sounderGeneralDelay.value & BleConstants.base;
 
     int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
-    u8Pkt[213] = (checksum >> 8) & 0xFF;
-    u8Pkt[214] = checksum & 0xFF;
+    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
+    u8Pkt[214] = checksum & BleConstants.base;
     u8Pkt[215] = 0xFD;
-
-    print(
-      "TX/RX: TRANSMIT: Sounder Setup General Apply Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
-    );
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
@@ -4411,12 +4054,12 @@ class BleManager {
 
     u8TxPktCnt += 1;
 
-    u8Pkt[0] = 0xFE;
+    u8Pkt[0] = BleConstants.sot;
     u8Pkt[1] = 0x01;
     u8Pkt[2] = 0x00;
     u8Pkt[3] = 0x01;
-    u8Pkt[4] = u8TxPktCnt & 0xFF;
-    u8Pkt[5] = u8RxPktCnt & 0xFF;
+    u8Pkt[4] = u8TxPktCnt & BleConstants.base;
+    u8Pkt[5] = u8RxPktCnt & BleConstants.base;
     u8Pkt[6] = 0x00;
     u8Pkt[10] = 0x81;
     u8Pkt[11] = 0x00;
@@ -4425,18 +4068,14 @@ class BleManager {
     u8Pkt[14] = 0x00;
     u8Pkt[15] = _sounderZoneModeByteForApply(zoneMaxZone: zoneMaxZone);
     u8Pkt[16] = zoneAction;
-    u8Pkt[19] = (sounderGeneralDelay.value >> 8) & 0xFF;
-    u8Pkt[20] = sounderGeneralDelay.value & 0xFF;
+    u8Pkt[19] = (sounderGeneralDelay.value >> 8) & BleConstants.base;
+    u8Pkt[20] = sounderGeneralDelay.value & BleConstants.base;
 
     int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
-    u8Pkt[213] = (checksum >> 8) & 0xFF;
-    u8Pkt[214] = checksum & 0xFF;
+    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
+    u8Pkt[214] = checksum & BleConstants.base;
     u8Pkt[215] = 0xFD;
-
-    print(
-      "TX/RX: TRANSMIT: Sounder Setup Zone $zoneMaxZone Apply Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
-    );
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
@@ -4466,12 +4105,12 @@ class BleManager {
 
     u8TxPktCnt += 1;
 
-    u8Pkt[0] = 0xFE;
+    u8Pkt[0] = BleConstants.sot;
     u8Pkt[1] = 0x01;
     u8Pkt[2] = 0x00;
     u8Pkt[3] = 0x01;
-    u8Pkt[4] = u8TxPktCnt & 0xFF;
-    u8Pkt[5] = u8RxPktCnt & 0xFF;
+    u8Pkt[4] = u8TxPktCnt & BleConstants.base;
+    u8Pkt[5] = u8RxPktCnt & BleConstants.base;
     u8Pkt[6] = 0x00;
     u8Pkt[10] = 0x81;
     u8Pkt[11] = 0x00;
@@ -4485,13 +4124,9 @@ class BleManager {
 
     int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
-    u8Pkt[213] = (checksum >> 8) & 0xFF;
-    u8Pkt[214] = checksum & 0xFF;
+    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
+    u8Pkt[214] = checksum & BleConstants.base;
     u8Pkt[215] = 0xFD;
-
-    print(
-      "TX/RX: TRANSMIT: Sounder Setup Ext Out $extMaxZone Apply Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
-    );
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
@@ -4501,12 +4136,12 @@ class BleManager {
 
     u8TxPktCnt += 1;
 
-    u8Pkt[0] = 0xFE;
+    u8Pkt[0] = BleConstants.sot;
     u8Pkt[1] = 0x01;
     u8Pkt[2] = 0x00;
     u8Pkt[3] = 0x01;
-    u8Pkt[4] = u8TxPktCnt & 0xFF;
-    u8Pkt[5] = u8RxPktCnt & 0xFF;
+    u8Pkt[4] = u8TxPktCnt & BleConstants.base;
+    u8Pkt[5] = u8RxPktCnt & BleConstants.base;
     u8Pkt[6] = 0x00;
     u8Pkt[10] = 0x01;
     u8Pkt[11] = 0x00;
@@ -4514,13 +4149,9 @@ class BleManager {
 
     int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
-    u8Pkt[213] = (checksum >> 8) & 0xFF;
-    u8Pkt[214] = checksum & 0xFF;
+    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
+    u8Pkt[214] = checksum & BleConstants.base;
     u8Pkt[215] = 0xFD;
-
-    print(
-      "TX/RX: TRANSMIT: Service due fetch Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
-    );
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
@@ -4551,35 +4182,31 @@ class BleManager {
 
     u8TxPktCnt += 1;
 
-    u8Pkt[0] = 0xFE;
+    u8Pkt[0] = BleConstants.sot;
     u8Pkt[1] = 0x01;
     u8Pkt[2] = 0x00;
     u8Pkt[3] = 0x01;
-    u8Pkt[4] = u8TxPktCnt & 0xFF;
-    u8Pkt[5] = u8RxPktCnt & 0xFF;
+    u8Pkt[4] = u8TxPktCnt & BleConstants.base;
+    u8Pkt[5] = u8RxPktCnt & BleConstants.base;
     u8Pkt[6] = 0x00;
     u8Pkt[10] = 0x81;
     u8Pkt[11] = 0x00;
     u8Pkt[12] = 0x18;
-    u8Pkt[13] = (serviceDueYear.value >> 8) & 0xFF;
-    u8Pkt[14] = serviceDueYear.value & 0xFF;
-    u8Pkt[15] = serviceDueMonth.value & 0xFF;
-    u8Pkt[16] = serviceDueDay.value & 0xFF;
-    u8Pkt[17] = serviceDueHour.value & 0xFF;
-    u8Pkt[18] = serviceDueMinute.value & 0xFF;
+    u8Pkt[13] = (serviceDueYear.value >> 8) & BleConstants.base;
+    u8Pkt[14] = serviceDueYear.value & BleConstants.base;
+    u8Pkt[15] = serviceDueMonth.value & BleConstants.base;
+    u8Pkt[16] = serviceDueDay.value & BleConstants.base;
+    u8Pkt[17] = serviceDueHour.value & BleConstants.base;
+    u8Pkt[18] = serviceDueMinute.value & BleConstants.base;
     u8Pkt[19] = serviceDueReminder.value;
-    u8Pkt[20] = serviceDueCompanyTextLength & 0xFF;
-    u8Pkt[34] = serviceDueContactTextLength & 0xFF;
+    u8Pkt[20] = serviceDueCompanyTextLength & BleConstants.base;
+    u8Pkt[34] = serviceDueContactTextLength & BleConstants.base;
 
     int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
-    u8Pkt[213] = (checksum >> 8) & 0xFF;
-    u8Pkt[214] = checksum & 0xFF;
+    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
+    u8Pkt[214] = checksum & BleConstants.base;
     u8Pkt[215] = 0xFD;
-
-    print(
-      "TX/RX: TRANSMIT: Service due Apply Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
-    );
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
@@ -4591,12 +4218,12 @@ class BleManager {
 
     u8TxPktCnt += 1;
 
-    u8Pkt[0] = 0xFE;
+    u8Pkt[0] = BleConstants.sot;
     u8Pkt[1] = 0x01;
     u8Pkt[2] = 0x00;
     u8Pkt[3] = 0x01;
-    u8Pkt[4] = u8TxPktCnt & 0xFF;
-    u8Pkt[5] = u8RxPktCnt & 0xFF;
+    u8Pkt[4] = u8TxPktCnt & BleConstants.base;
+    u8Pkt[5] = u8RxPktCnt & BleConstants.base;
     u8Pkt[6] = 0x00;
     u8Pkt[10] = 0x01;
     u8Pkt[11] = 0x00;
@@ -4605,13 +4232,9 @@ class BleManager {
 
     int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
-    u8Pkt[213] = (checksum >> 8) & 0xFF;
-    u8Pkt[214] = checksum & 0xFF;
+    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
+    u8Pkt[214] = checksum & BleConstants.base;
     u8Pkt[215] = 0xFD;
-
-    print(
-      "TX/RX: TRANSMIT: Access Code $accessCodeNo Setup Fetch Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
-    );
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
@@ -4626,9 +4249,6 @@ class BleManager {
     final List<int> accessCodeTextBytes = accessCodeText.codeUnits;
     final accessCodeTextLength = accessCodeTextBytes.length;
 
-    print("accessCodeText: $accessCodeText");
-    print("accessCodeNo: ${data.accessCodeNo}");
-
     final initialindex = 16;
 
     for (int i = 0; i < accessCodeTextLength; i++) {
@@ -4639,29 +4259,25 @@ class BleManager {
 
     u8TxPktCnt += 1;
 
-    u8Pkt[0] = 0xFE;
+    u8Pkt[0] = BleConstants.sot;
     u8Pkt[1] = 0x01;
     u8Pkt[2] = 0x00;
     u8Pkt[3] = 0x01;
-    u8Pkt[4] = u8TxPktCnt & 0xFF;
-    u8Pkt[5] = u8RxPktCnt & 0xFF;
+    u8Pkt[4] = u8TxPktCnt & BleConstants.base;
+    u8Pkt[5] = u8RxPktCnt & BleConstants.base;
     u8Pkt[6] = 0x00;
     u8Pkt[10] = 0x81;
     u8Pkt[11] = 0x00;
     u8Pkt[12] = 0x03;
     u8Pkt[13] = data.accessCodeNo;
     u8Pkt[14] = data.accessLevel;
-    u8Pkt[15] = accessCodeTextLength & 0xFF;
+    u8Pkt[15] = accessCodeTextLength & BleConstants.base;
 
     int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
-    u8Pkt[213] = (checksum >> 8) & 0xFF;
-    u8Pkt[214] = checksum & 0xFF;
+    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
+    u8Pkt[214] = checksum & BleConstants.base;
     u8Pkt[215] = 0xFD;
-
-    print(
-      "TX/RX: TRANSMIT: Access Code $accessCodeNo Setup Apply Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
-    );
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
@@ -4671,12 +4287,12 @@ class BleManager {
 
     u8TxPktCnt += 1;
 
-    u8Pkt[0] = 0xFE;
+    u8Pkt[0] = BleConstants.sot;
     u8Pkt[1] = 0x01;
     u8Pkt[2] = 0x00;
     u8Pkt[3] = 0x01;
-    u8Pkt[4] = u8TxPktCnt & 0xFF;
-    u8Pkt[5] = u8RxPktCnt & 0xFF;
+    u8Pkt[4] = u8TxPktCnt & BleConstants.base;
+    u8Pkt[5] = u8RxPktCnt & BleConstants.base;
     u8Pkt[6] = 0x00;
     u8Pkt[10] = 0x01;
     u8Pkt[11] = 0x00;
@@ -4684,13 +4300,9 @@ class BleManager {
 
     int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
-    u8Pkt[213] = (checksum >> 8) & 0xFF;
-    u8Pkt[214] = checksum & 0xFF;
+    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
+    u8Pkt[214] = checksum & BleConstants.base;
     u8Pkt[215] = 0xFD;
-
-    print(
-      "TX/RX: TRANSMIT: Panel info fetch Panel ID Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
-    );
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
@@ -4700,12 +4312,12 @@ class BleManager {
 
     u8TxPktCnt += 1;
 
-    u8Pkt[0] = 0xFE;
+    u8Pkt[0] = BleConstants.sot;
     u8Pkt[1] = 0x01;
     u8Pkt[2] = 0x00;
     u8Pkt[3] = 0x01;
-    u8Pkt[4] = u8TxPktCnt & 0xFF;
-    u8Pkt[5] = u8RxPktCnt & 0xFF;
+    u8Pkt[4] = u8TxPktCnt & BleConstants.base;
+    u8Pkt[5] = u8RxPktCnt & BleConstants.base;
     u8Pkt[6] = 0x00;
     u8Pkt[10] = 0x03;
     u8Pkt[11] = 0x00;
@@ -4713,13 +4325,9 @@ class BleManager {
 
     int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
-    u8Pkt[213] = (checksum >> 8) & 0xFF;
-    u8Pkt[214] = checksum & 0xFF;
+    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
+    u8Pkt[214] = checksum & BleConstants.base;
     u8Pkt[215] = 0xFD;
-
-    print(
-      "TX/RX: TRANSMIT: Panel info fetch DateTime Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
-    );
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
@@ -4729,12 +4337,12 @@ class BleManager {
 
     u8TxPktCnt += 1;
 
-    u8Pkt[0] = 0xFE;
+    u8Pkt[0] = BleConstants.sot;
     u8Pkt[1] = 0x01;
     u8Pkt[2] = 0x00;
     u8Pkt[3] = 0x01;
-    u8Pkt[4] = u8TxPktCnt & 0xFF;
-    u8Pkt[5] = u8RxPktCnt & 0xFF;
+    u8Pkt[4] = u8TxPktCnt & BleConstants.base;
+    u8Pkt[5] = u8RxPktCnt & BleConstants.base;
     u8Pkt[6] = 0x00;
     u8Pkt[10] = 0x01;
     u8Pkt[11] = 0x00;
@@ -4743,13 +4351,9 @@ class BleManager {
 
     int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
-    u8Pkt[213] = (checksum >> 8) & 0xFF;
-    u8Pkt[214] = checksum & 0xFF;
+    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
+    u8Pkt[214] = checksum & BleConstants.base;
     u8Pkt[215] = 0xFD;
-
-    print(
-      "TX/RX: TRANSMIT: Panel info fetch Event Reminder Delay Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
-    );
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
@@ -4770,28 +4374,24 @@ class BleManager {
 
     u8TxPktCnt += 1;
 
-    u8Pkt[0] = 0xFE;
+    u8Pkt[0] = BleConstants.sot;
     u8Pkt[1] = 0x01;
     u8Pkt[2] = 0x00;
     u8Pkt[3] = 0x01;
-    u8Pkt[4] = u8TxPktCnt & 0xFF;
-    u8Pkt[5] = u8RxPktCnt & 0xFF;
+    u8Pkt[4] = u8TxPktCnt & BleConstants.base;
+    u8Pkt[5] = u8RxPktCnt & BleConstants.base;
     u8Pkt[6] = 0x00;
     u8Pkt[10] = 0x81;
     u8Pkt[11] = 0x00;
     u8Pkt[12] = 0x08;
     u8Pkt[16] = panelInfoPanelNo.value;
-    u8Pkt[18] = panelNameTextLength & 0xFF;
+    u8Pkt[18] = panelNameTextLength & BleConstants.base;
 
     int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
-    u8Pkt[213] = (checksum >> 8) & 0xFF;
-    u8Pkt[214] = checksum & 0xFF;
+    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
+    u8Pkt[214] = checksum & BleConstants.base;
     u8Pkt[215] = 0xFD;
-
-    print(
-      "TX/RX: TRANSMIT: Panel info Apply Panel ID Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
-    );
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
@@ -4801,33 +4401,29 @@ class BleManager {
 
     u8TxPktCnt += 1;
 
-    u8Pkt[0] = 0xFE;
+    u8Pkt[0] = BleConstants.sot;
     u8Pkt[1] = 0x01;
     u8Pkt[2] = 0x00;
     u8Pkt[3] = 0x01;
-    u8Pkt[4] = u8TxPktCnt & 0xFF;
-    u8Pkt[5] = u8RxPktCnt & 0xFF;
+    u8Pkt[4] = u8TxPktCnt & BleConstants.base;
+    u8Pkt[5] = u8RxPktCnt & BleConstants.base;
     u8Pkt[6] = 0x00;
     u8Pkt[10] = 0x83;
     u8Pkt[11] = 0x00;
     u8Pkt[12] = 0x01;
-    u8Pkt[13] = (panelInfoYear.value >> 8) & 0xFF;
-    u8Pkt[14] = panelInfoYear.value & 0xFF;
-    u8Pkt[15] = panelInfoMonth.value & 0xFF;
-    u8Pkt[16] = panelInfoDay.value & 0xFF;
-    u8Pkt[17] = panelInfoHour.value & 0xFF;
-    u8Pkt[18] = panelInfoMinute.value & 0xFF;
-    u8Pkt[19] = panelInfoSecond.value & 0xFF;
+    u8Pkt[13] = (panelInfoYear.value >> 8) & BleConstants.base;
+    u8Pkt[14] = panelInfoYear.value & BleConstants.base;
+    u8Pkt[15] = panelInfoMonth.value & BleConstants.base;
+    u8Pkt[16] = panelInfoDay.value & BleConstants.base;
+    u8Pkt[17] = panelInfoHour.value & BleConstants.base;
+    u8Pkt[18] = panelInfoMinute.value & BleConstants.base;
+    u8Pkt[19] = panelInfoSecond.value & BleConstants.base;
 
     int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
-    u8Pkt[213] = (checksum >> 8) & 0xFF;
-    u8Pkt[214] = checksum & 0xFF;
+    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
+    u8Pkt[214] = checksum & BleConstants.base;
     u8Pkt[215] = 0xFD;
-
-    print(
-      "TX/RX: TRANSMIT: Panel info apply DateTime Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
-    );
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
@@ -4837,30 +4433,26 @@ class BleManager {
 
     u8TxPktCnt += 1;
 
-    u8Pkt[0] = 0xFE;
+    u8Pkt[0] = BleConstants.sot;
     u8Pkt[1] = 0x01;
     u8Pkt[2] = 0x00;
     u8Pkt[3] = 0x01;
-    u8Pkt[4] = u8TxPktCnt & 0xFF;
-    u8Pkt[5] = u8RxPktCnt & 0xFF;
+    u8Pkt[4] = u8TxPktCnt & BleConstants.base;
+    u8Pkt[5] = u8RxPktCnt & BleConstants.base;
     u8Pkt[6] = 0x00;
     u8Pkt[10] = 0x81;
     u8Pkt[11] = 0x00;
     u8Pkt[12] = 0x09;
     u8Pkt[13] = 0x04;
     u8Pkt[14] = 0x01;
-    u8Pkt[15] = (panelInfoEventReminderDelay.value >> 8) & 0xFF;
-    u8Pkt[16] = panelInfoEventReminderDelay.value & 0xFF;
+    u8Pkt[15] = (panelInfoEventReminderDelay.value >> 8) & BleConstants.base;
+    u8Pkt[16] = panelInfoEventReminderDelay.value & BleConstants.base;
 
     int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
-    u8Pkt[213] = (checksum >> 8) & 0xFF;
-    u8Pkt[214] = checksum & 0xFF;
+    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
+    u8Pkt[214] = checksum & BleConstants.base;
     u8Pkt[215] = 0xFD;
-
-    print(
-      "TX/RX: TRANSMIT: Panel info apply Event Reminder Delay Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
-    );
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
@@ -4870,12 +4462,12 @@ class BleManager {
 
     u8TxPktCnt += 1;
 
-    u8Pkt[0] = 0xFE;
+    u8Pkt[0] = BleConstants.sot;
     u8Pkt[1] = 0x01;
     u8Pkt[2] = 0x00;
     u8Pkt[3] = 0x01;
-    u8Pkt[4] = u8TxPktCnt & 0xFF;
-    u8Pkt[5] = u8RxPktCnt & 0xFF;
+    u8Pkt[4] = u8TxPktCnt & BleConstants.base;
+    u8Pkt[5] = u8RxPktCnt & BleConstants.base;
     u8Pkt[6] = 0x00;
     u8Pkt[10] = 0x01;
     u8Pkt[11] = 0x00;
@@ -4883,13 +4475,9 @@ class BleManager {
 
     int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
-    u8Pkt[213] = (checksum >> 8) & 0xFF;
-    u8Pkt[214] = checksum & 0xFF;
+    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
+    u8Pkt[214] = checksum & BleConstants.base;
     u8Pkt[215] = 0xFD;
-
-    print(
-      "TX/RX: TRANSMIT: General module fetch LVL Time-out Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
-    );
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
@@ -4899,12 +4487,12 @@ class BleManager {
 
     u8TxPktCnt += 1;
 
-    u8Pkt[0] = 0xFE;
+    u8Pkt[0] = BleConstants.sot;
     u8Pkt[1] = 0x01;
     u8Pkt[2] = 0x00;
     u8Pkt[3] = 0x01;
-    u8Pkt[4] = u8TxPktCnt & 0xFF;
-    u8Pkt[5] = u8RxPktCnt & 0xFF;
+    u8Pkt[4] = u8TxPktCnt & BleConstants.base;
+    u8Pkt[5] = u8RxPktCnt & BleConstants.base;
     u8Pkt[6] = 0x00;
     u8Pkt[10] = 0x01;
     u8Pkt[11] = 0x00;
@@ -4913,13 +4501,9 @@ class BleManager {
 
     int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
-    u8Pkt[213] = (checksum >> 8) & 0xFF;
-    u8Pkt[214] = checksum & 0xFF;
+    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
+    u8Pkt[214] = checksum & BleConstants.base;
     u8Pkt[215] = 0xFD;
-
-    print(
-      "TX/RX: TRANSMIT: General module fetch Silence Buzzer LVL Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
-    );
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
@@ -4929,12 +4513,12 @@ class BleManager {
 
     u8TxPktCnt += 1;
 
-    u8Pkt[0] = 0xFE;
+    u8Pkt[0] = BleConstants.sot;
     u8Pkt[1] = 0x01;
     u8Pkt[2] = 0x00;
     u8Pkt[3] = 0x01;
-    u8Pkt[4] = u8TxPktCnt & 0xFF;
-    u8Pkt[5] = u8RxPktCnt & 0xFF;
+    u8Pkt[4] = u8TxPktCnt & BleConstants.base;
+    u8Pkt[5] = u8RxPktCnt & BleConstants.base;
     u8Pkt[6] = 0x00;
     u8Pkt[10] = 0x01;
     u8Pkt[11] = 0x00;
@@ -4943,13 +4527,9 @@ class BleManager {
 
     int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
-    u8Pkt[213] = (checksum >> 8) & 0xFF;
-    u8Pkt[214] = checksum & 0xFF;
+    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
+    u8Pkt[214] = checksum & BleConstants.base;
     u8Pkt[215] = 0xFD;
-
-    print(
-      "TX/RX: TRANSMIT: General module fetch Silence Sounder LVL Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
-    );
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
@@ -4959,12 +4539,12 @@ class BleManager {
 
     u8TxPktCnt += 1;
 
-    u8Pkt[0] = 0xFE;
+    u8Pkt[0] = BleConstants.sot;
     u8Pkt[1] = 0x01;
     u8Pkt[2] = 0x00;
     u8Pkt[3] = 0x01;
-    u8Pkt[4] = u8TxPktCnt & 0xFF;
-    u8Pkt[5] = u8RxPktCnt & 0xFF;
+    u8Pkt[4] = u8TxPktCnt & BleConstants.base;
+    u8Pkt[5] = u8RxPktCnt & BleConstants.base;
     u8Pkt[6] = 0x00;
     u8Pkt[10] = 0x01;
     u8Pkt[11] = 0x00;
@@ -4973,13 +4553,9 @@ class BleManager {
 
     int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
-    u8Pkt[213] = (checksum >> 8) & 0xFF;
-    u8Pkt[214] = checksum & 0xFF;
+    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
+    u8Pkt[214] = checksum & BleConstants.base;
     u8Pkt[215] = 0xFD;
-
-    print(
-      "TX/RX: TRANSMIT: General module fetch Reset LVL Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
-    );
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
@@ -4989,12 +4565,12 @@ class BleManager {
 
     u8TxPktCnt += 1;
 
-    u8Pkt[0] = 0xFE;
+    u8Pkt[0] = BleConstants.sot;
     u8Pkt[1] = 0x01;
     u8Pkt[2] = 0x00;
     u8Pkt[3] = 0x01;
-    u8Pkt[4] = u8TxPktCnt & 0xFF;
-    u8Pkt[5] = u8RxPktCnt & 0xFF;
+    u8Pkt[4] = u8TxPktCnt & BleConstants.base;
+    u8Pkt[5] = u8RxPktCnt & BleConstants.base;
     u8Pkt[6] = 0x00;
     u8Pkt[10] = 0x01;
     u8Pkt[11] = 0x00;
@@ -5003,13 +4579,9 @@ class BleManager {
 
     int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
-    u8Pkt[213] = (checksum >> 8) & 0xFF;
-    u8Pkt[214] = checksum & 0xFF;
+    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
+    u8Pkt[214] = checksum & BleConstants.base;
     u8Pkt[215] = 0xFD;
-
-    print(
-      "TX/RX: TRANSMIT: General module fetch Fault Latching Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
-    );
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
@@ -5019,29 +4591,25 @@ class BleManager {
 
     u8TxPktCnt += 1;
 
-    u8Pkt[0] = 0xFE;
+    u8Pkt[0] = BleConstants.sot;
     u8Pkt[1] = 0x01;
     u8Pkt[2] = 0x00;
     u8Pkt[3] = 0x01;
-    u8Pkt[4] = u8TxPktCnt & 0xFF;
-    u8Pkt[5] = u8RxPktCnt & 0xFF;
+    u8Pkt[4] = u8TxPktCnt & BleConstants.base;
+    u8Pkt[5] = u8RxPktCnt & BleConstants.base;
     u8Pkt[6] = 0x00;
     u8Pkt[10] = 0x81;
     u8Pkt[11] = 0x00;
     u8Pkt[12] = 0x09;
     u8Pkt[14] = 0x01;
-    u8Pkt[15] = (generalModuleLvlTimeOut.value >> 8) & 0xFF;
-    u8Pkt[16] = generalModuleLvlTimeOut.value & 0xFF;
+    u8Pkt[15] = (generalModuleLvlTimeOut.value >> 8) & BleConstants.base;
+    u8Pkt[16] = generalModuleLvlTimeOut.value & BleConstants.base;
 
     int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
-    u8Pkt[213] = (checksum >> 8) & 0xFF;
-    u8Pkt[214] = checksum & 0xFF;
+    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
+    u8Pkt[214] = checksum & BleConstants.base;
     u8Pkt[215] = 0xFD;
-
-    print(
-      "TX/RX: TRANSMIT: General module apply LVL Time-out Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
-    );
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
@@ -5051,12 +4619,12 @@ class BleManager {
 
     u8TxPktCnt += 1;
 
-    u8Pkt[0] = 0xFE;
+    u8Pkt[0] = BleConstants.sot;
     u8Pkt[1] = 0x01;
     u8Pkt[2] = 0x00;
     u8Pkt[3] = 0x01;
-    u8Pkt[4] = u8TxPktCnt & 0xFF;
-    u8Pkt[5] = u8RxPktCnt & 0xFF;
+    u8Pkt[4] = u8TxPktCnt & BleConstants.base;
+    u8Pkt[5] = u8RxPktCnt & BleConstants.base;
     u8Pkt[6] = 0x00;
     u8Pkt[10] = 0x81;
     u8Pkt[11] = 0x00;
@@ -5066,13 +4634,9 @@ class BleManager {
 
     int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
-    u8Pkt[213] = (checksum >> 8) & 0xFF;
-    u8Pkt[214] = checksum & 0xFF;
+    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
+    u8Pkt[214] = checksum & BleConstants.base;
     u8Pkt[215] = 0xFD;
-
-    print(
-      "TX/RX: TRANSMIT: General module apply Silence Buzzer LVL Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
-    );
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
@@ -5082,12 +4646,12 @@ class BleManager {
 
     u8TxPktCnt += 1;
 
-    u8Pkt[0] = 0xFE;
+    u8Pkt[0] = BleConstants.sot;
     u8Pkt[1] = 0x01;
     u8Pkt[2] = 0x00;
     u8Pkt[3] = 0x01;
-    u8Pkt[4] = u8TxPktCnt & 0xFF;
-    u8Pkt[5] = u8RxPktCnt & 0xFF;
+    u8Pkt[4] = u8TxPktCnt & BleConstants.base;
+    u8Pkt[5] = u8RxPktCnt & BleConstants.base;
     u8Pkt[6] = 0x00;
     u8Pkt[10] = 0x81;
     u8Pkt[11] = 0x00;
@@ -5097,13 +4661,9 @@ class BleManager {
 
     int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
-    u8Pkt[213] = (checksum >> 8) & 0xFF;
-    u8Pkt[214] = checksum & 0xFF;
+    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
+    u8Pkt[214] = checksum & BleConstants.base;
     u8Pkt[215] = 0xFD;
-
-    print(
-      "TX/RX: TRANSMIT: General module apply Silence Sounder LVL Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
-    );
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
@@ -5113,12 +4673,12 @@ class BleManager {
 
     u8TxPktCnt += 1;
 
-    u8Pkt[0] = 0xFE;
+    u8Pkt[0] = BleConstants.sot;
     u8Pkt[1] = 0x01;
     u8Pkt[2] = 0x00;
     u8Pkt[3] = 0x01;
-    u8Pkt[4] = u8TxPktCnt & 0xFF;
-    u8Pkt[5] = u8RxPktCnt & 0xFF;
+    u8Pkt[4] = u8TxPktCnt & BleConstants.base;
+    u8Pkt[5] = u8RxPktCnt & BleConstants.base;
     u8Pkt[6] = 0x00;
     u8Pkt[10] = 0x81;
     u8Pkt[11] = 0x00;
@@ -5128,13 +4688,9 @@ class BleManager {
 
     int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
-    u8Pkt[213] = (checksum >> 8) & 0xFF;
-    u8Pkt[214] = checksum & 0xFF;
+    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
+    u8Pkt[214] = checksum & BleConstants.base;
     u8Pkt[215] = 0xFD;
-
-    print(
-      "TX/RX: TRANSMIT: General module apply Reset LVL Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
-    );
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
@@ -5144,12 +4700,12 @@ class BleManager {
 
     u8TxPktCnt += 1;
 
-    u8Pkt[0] = 0xFE;
+    u8Pkt[0] = BleConstants.sot;
     u8Pkt[1] = 0x01;
     u8Pkt[2] = 0x00;
     u8Pkt[3] = 0x01;
-    u8Pkt[4] = u8TxPktCnt & 0xFF;
-    u8Pkt[5] = u8RxPktCnt & 0xFF;
+    u8Pkt[4] = u8TxPktCnt & BleConstants.base;
+    u8Pkt[5] = u8RxPktCnt & BleConstants.base;
     u8Pkt[6] = 0x00;
     u8Pkt[10] = 0x81;
     u8Pkt[11] = 0x00;
@@ -5159,13 +4715,9 @@ class BleManager {
 
     int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
-    u8Pkt[213] = (checksum >> 8) & 0xFF;
-    u8Pkt[214] = checksum & 0xFF;
+    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
+    u8Pkt[214] = checksum & BleConstants.base;
     u8Pkt[215] = 0xFD;
-
-    print(
-      "TX/RX: TRANSMIT: General module apply Fault Latching Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
-    );
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
@@ -5175,12 +4727,12 @@ class BleManager {
 
     u8TxPktCnt += 1;
 
-    u8Pkt[0] = 0xFE;
+    u8Pkt[0] = BleConstants.sot;
     u8Pkt[1] = 0x01;
     u8Pkt[2] = 0x00;
     u8Pkt[3] = 0x01;
-    u8Pkt[4] = u8TxPktCnt & 0xFF;
-    u8Pkt[5] = u8RxPktCnt & 0xFF;
+    u8Pkt[4] = u8TxPktCnt & BleConstants.base;
+    u8Pkt[5] = u8RxPktCnt & BleConstants.base;
     u8Pkt[6] = 0x00;
     u8Pkt[10] = 0x00;
     u8Pkt[11] = 0x00;
@@ -5188,13 +4740,9 @@ class BleManager {
 
     int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
-    u8Pkt[213] = (checksum >> 8) & 0xFF;
-    u8Pkt[214] = checksum & 0xFF;
+    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
+    u8Pkt[214] = checksum & BleConstants.base;
     u8Pkt[215] = 0xFD;
-
-    print(
-      "TX/RX: TRANSMIT: Diagnostics Setup Fetch Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
-    );
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }

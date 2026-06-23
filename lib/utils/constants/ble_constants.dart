@@ -27,7 +27,7 @@ abstract final class BleConstants {
 
   // General Constants
   static const int base = 0xFF;
-  static const int baseFF = 0xFF;
+  static const int baseFF = 0xFFFF;
   static const int extZoneNo = 0x01;
   static const int extZoneTriggerArea = 0x01;
   static const int extZoneValveDelay = 0x1E;
@@ -64,6 +64,8 @@ abstract final class BleConstants {
   static const int radioSetupNotBooted = 0x00;
   static const int radioSetupServiced = 0x01;
   static const int radioSetupNotServiced = 0x00;
+  static const int firstExtOutNoHigh = 0x00;
+  static const int firstExtOutNoLow = 0x01;
 }
 
 class _BleType {
@@ -142,6 +144,11 @@ class _BleCommand {
   final int radioSetup = 0x1D;
   final int moduleSetup = 0x01;
   final int lBusSetup = 0x10;
+  final int lBusEnabledBusData = 0x01;
+  final int sounderSetupGeneral = 0x14;
+  final int sounderSetupRelay = 0x07;
+  final int sounderSetupZone = 0x19;
+  final int sounderSetupExtOut = 0x1B;
 }
 
 class _BleFirmware {
