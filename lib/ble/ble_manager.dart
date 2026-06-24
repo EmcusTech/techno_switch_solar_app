@@ -4288,21 +4288,21 @@ class BleManager {
     u8TxPktCnt += 1;
 
     u8Pkt[0] = BleConstants.sot;
-    u8Pkt[1] = 0x01;
-    u8Pkt[2] = 0x00;
-    u8Pkt[3] = 0x01;
+    u8Pkt[1] = BleConstants.des;
+    u8Pkt[2] = BleConstants.ori;
+    u8Pkt[3] = BleConstants.type.nrm;
     u8Pkt[4] = u8TxPktCnt & BleConstants.base;
     u8Pkt[5] = u8RxPktCnt & BleConstants.base;
-    u8Pkt[6] = 0x00;
-    u8Pkt[10] = 0x01;
-    u8Pkt[11] = 0x00;
-    u8Pkt[12] = 0x08;
+    u8Pkt[6] = BleConstants.network.radio;
+    u8Pkt[10] = BleConstants.mode.request.dbSetup;
+    u8Pkt[11] = BleConstants.socket.radio;
+    u8Pkt[12] = BleConstants.command.panelInfoPanelId;
 
     int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
     u8Pkt[213] = (checksum >> 8) & BleConstants.base;
     u8Pkt[214] = checksum & BleConstants.base;
-    u8Pkt[215] = 0xFD;
+    u8Pkt[215] = BleConstants.eot;
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
@@ -4313,21 +4313,21 @@ class BleManager {
     u8TxPktCnt += 1;
 
     u8Pkt[0] = BleConstants.sot;
-    u8Pkt[1] = 0x01;
-    u8Pkt[2] = 0x00;
-    u8Pkt[3] = 0x01;
+    u8Pkt[1] = BleConstants.des;
+    u8Pkt[2] = BleConstants.ori;
+    u8Pkt[3] = BleConstants.type.nrm;
     u8Pkt[4] = u8TxPktCnt & BleConstants.base;
     u8Pkt[5] = u8RxPktCnt & BleConstants.base;
-    u8Pkt[6] = 0x00;
-    u8Pkt[10] = 0x03;
-    u8Pkt[11] = 0x00;
-    u8Pkt[12] = 0x01;
+    u8Pkt[6] = BleConstants.network.radio;
+    u8Pkt[10] = BleConstants.mode.request.ctrl;
+    u8Pkt[11] = BleConstants.socket.radio;
+    u8Pkt[12] = BleConstants.command.panelInfoDateTime;
 
     int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
     u8Pkt[213] = (checksum >> 8) & BleConstants.base;
     u8Pkt[214] = checksum & BleConstants.base;
-    u8Pkt[215] = 0xFD;
+    u8Pkt[215] = BleConstants.eot;
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
@@ -4338,22 +4338,22 @@ class BleManager {
     u8TxPktCnt += 1;
 
     u8Pkt[0] = BleConstants.sot;
-    u8Pkt[1] = 0x01;
-    u8Pkt[2] = 0x00;
-    u8Pkt[3] = 0x01;
+    u8Pkt[1] = BleConstants.des;
+    u8Pkt[2] = BleConstants.ori;
+    u8Pkt[3] = BleConstants.type.nrm;
     u8Pkt[4] = u8TxPktCnt & BleConstants.base;
     u8Pkt[5] = u8RxPktCnt & BleConstants.base;
-    u8Pkt[6] = 0x00;
-    u8Pkt[10] = 0x01;
-    u8Pkt[11] = 0x00;
-    u8Pkt[12] = 0x09;
-    u8Pkt[13] = 0x04;
+    u8Pkt[6] = BleConstants.network.radio;
+    u8Pkt[10] = BleConstants.mode.request.dbSetup;
+    u8Pkt[11] = BleConstants.socket.radio;
+    u8Pkt[12] = BleConstants.command.panelInfoEventReminderDelay;
+    u8Pkt[13] = BleConstants.adcInput;
 
     int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
     u8Pkt[213] = (checksum >> 8) & BleConstants.base;
     u8Pkt[214] = checksum & BleConstants.base;
-    u8Pkt[215] = 0xFD;
+    u8Pkt[215] = BleConstants.eot;
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
@@ -4375,15 +4375,15 @@ class BleManager {
     u8TxPktCnt += 1;
 
     u8Pkt[0] = BleConstants.sot;
-    u8Pkt[1] = 0x01;
-    u8Pkt[2] = 0x00;
-    u8Pkt[3] = 0x01;
+    u8Pkt[1] = BleConstants.des;
+    u8Pkt[2] = BleConstants.ori;
+    u8Pkt[3] = BleConstants.type.nrm;
     u8Pkt[4] = u8TxPktCnt & BleConstants.base;
     u8Pkt[5] = u8RxPktCnt & BleConstants.base;
-    u8Pkt[6] = 0x00;
-    u8Pkt[10] = 0x81;
-    u8Pkt[11] = 0x00;
-    u8Pkt[12] = 0x08;
+    u8Pkt[6] = BleConstants.network.radio;
+    u8Pkt[10] = BleConstants.mode.instruction.dbSetup;
+    u8Pkt[11] = BleConstants.socket.radio;
+    u8Pkt[12] = BleConstants.command.panelInfoPanelId;
     u8Pkt[16] = panelInfoPanelNo.value;
     u8Pkt[18] = panelNameTextLength & BleConstants.base;
 
@@ -4391,7 +4391,7 @@ class BleManager {
 
     u8Pkt[213] = (checksum >> 8) & BleConstants.base;
     u8Pkt[214] = checksum & BleConstants.base;
-    u8Pkt[215] = 0xFD;
+    u8Pkt[215] = BleConstants.eot;
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
@@ -4402,15 +4402,15 @@ class BleManager {
     u8TxPktCnt += 1;
 
     u8Pkt[0] = BleConstants.sot;
-    u8Pkt[1] = 0x01;
-    u8Pkt[2] = 0x00;
-    u8Pkt[3] = 0x01;
+    u8Pkt[1] = BleConstants.des;
+    u8Pkt[2] = BleConstants.ori;
+    u8Pkt[3] = BleConstants.type.nrm;
     u8Pkt[4] = u8TxPktCnt & BleConstants.base;
     u8Pkt[5] = u8RxPktCnt & BleConstants.base;
-    u8Pkt[6] = 0x00;
-    u8Pkt[10] = 0x83;
-    u8Pkt[11] = 0x00;
-    u8Pkt[12] = 0x01;
+    u8Pkt[6] = BleConstants.network.radio;
+    u8Pkt[10] = BleConstants.mode.instruction.ctrl;
+    u8Pkt[11] = BleConstants.socket.radio;
+    u8Pkt[12] = BleConstants.command.panelInfoDateTime;
     u8Pkt[13] = (panelInfoYear.value >> 8) & BleConstants.base;
     u8Pkt[14] = panelInfoYear.value & BleConstants.base;
     u8Pkt[15] = panelInfoMonth.value & BleConstants.base;
@@ -4423,7 +4423,7 @@ class BleManager {
 
     u8Pkt[213] = (checksum >> 8) & BleConstants.base;
     u8Pkt[214] = checksum & BleConstants.base;
-    u8Pkt[215] = 0xFD;
+    u8Pkt[215] = BleConstants.eot;
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
@@ -4434,17 +4434,17 @@ class BleManager {
     u8TxPktCnt += 1;
 
     u8Pkt[0] = BleConstants.sot;
-    u8Pkt[1] = 0x01;
-    u8Pkt[2] = 0x00;
-    u8Pkt[3] = 0x01;
+    u8Pkt[1] = BleConstants.des;
+    u8Pkt[2] = BleConstants.ori;
+    u8Pkt[3] = BleConstants.type.nrm;
     u8Pkt[4] = u8TxPktCnt & BleConstants.base;
     u8Pkt[5] = u8RxPktCnt & BleConstants.base;
-    u8Pkt[6] = 0x00;
-    u8Pkt[10] = 0x81;
-    u8Pkt[11] = 0x00;
-    u8Pkt[12] = 0x09;
-    u8Pkt[13] = 0x04;
-    u8Pkt[14] = 0x01;
+    u8Pkt[6] = BleConstants.network.radio;
+    u8Pkt[10] = BleConstants.mode.instruction.dbSetup;
+    u8Pkt[11] = BleConstants.socket.radio;
+    u8Pkt[12] = BleConstants.command.panelInfoEventReminderDelay;
+    u8Pkt[13] = BleConstants.adcInput;
+    u8Pkt[14] = BleConstants.adcInputPage;
     u8Pkt[15] = (panelInfoEventReminderDelay.value >> 8) & BleConstants.base;
     u8Pkt[16] = panelInfoEventReminderDelay.value & BleConstants.base;
 
@@ -4452,7 +4452,7 @@ class BleManager {
 
     u8Pkt[213] = (checksum >> 8) & BleConstants.base;
     u8Pkt[214] = checksum & BleConstants.base;
-    u8Pkt[215] = 0xFD;
+    u8Pkt[215] = BleConstants.eot;
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
@@ -4463,21 +4463,21 @@ class BleManager {
     u8TxPktCnt += 1;
 
     u8Pkt[0] = BleConstants.sot;
-    u8Pkt[1] = 0x01;
-    u8Pkt[2] = 0x00;
-    u8Pkt[3] = 0x01;
+    u8Pkt[1] = BleConstants.des;
+    u8Pkt[2] = BleConstants.ori;
+    u8Pkt[3] = BleConstants.type.nrm;
     u8Pkt[4] = u8TxPktCnt & BleConstants.base;
     u8Pkt[5] = u8RxPktCnt & BleConstants.base;
-    u8Pkt[6] = 0x00;
-    u8Pkt[10] = 0x01;
-    u8Pkt[11] = 0x00;
-    u8Pkt[12] = 0x09;
+    u8Pkt[6] = BleConstants.network.radio;
+    u8Pkt[10] = BleConstants.mode.request.dbSetup;
+    u8Pkt[11] = BleConstants.socket.radio;
+    u8Pkt[12] = BleConstants.command.generalModuleLvlTimeOut;
 
     int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
     u8Pkt[213] = (checksum >> 8) & BleConstants.base;
     u8Pkt[214] = checksum & BleConstants.base;
-    u8Pkt[215] = 0xFD;
+    u8Pkt[215] = BleConstants.eot;
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
@@ -4488,22 +4488,22 @@ class BleManager {
     u8TxPktCnt += 1;
 
     u8Pkt[0] = BleConstants.sot;
-    u8Pkt[1] = 0x01;
-    u8Pkt[2] = 0x00;
-    u8Pkt[3] = 0x01;
+    u8Pkt[1] = BleConstants.des;
+    u8Pkt[2] = BleConstants.ori;
+    u8Pkt[3] = BleConstants.type.nrm;
     u8Pkt[4] = u8TxPktCnt & BleConstants.base;
     u8Pkt[5] = u8RxPktCnt & BleConstants.base;
-    u8Pkt[6] = 0x00;
-    u8Pkt[10] = 0x01;
-    u8Pkt[11] = 0x00;
-    u8Pkt[12] = 0x15;
-    u8Pkt[13] = 0x09;
+    u8Pkt[6] = BleConstants.network.radio;
+    u8Pkt[10] = BleConstants.mode.request.dbSetup;
+    u8Pkt[11] = BleConstants.socket.radio;
+    u8Pkt[12] = BleConstants.command.generalModuleSilenceBuzzerLvl;
+    u8Pkt[13] = BleConstants.buzzerState;
 
     int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
     u8Pkt[213] = (checksum >> 8) & BleConstants.base;
     u8Pkt[214] = checksum & BleConstants.base;
-    u8Pkt[215] = 0xFD;
+    u8Pkt[215] = BleConstants.eot;
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
@@ -4514,22 +4514,22 @@ class BleManager {
     u8TxPktCnt += 1;
 
     u8Pkt[0] = BleConstants.sot;
-    u8Pkt[1] = 0x01;
-    u8Pkt[2] = 0x00;
-    u8Pkt[3] = 0x01;
+    u8Pkt[1] = BleConstants.des;
+    u8Pkt[2] = BleConstants.ori;
+    u8Pkt[3] = BleConstants.type.nrm;
     u8Pkt[4] = u8TxPktCnt & BleConstants.base;
     u8Pkt[5] = u8RxPktCnt & BleConstants.base;
-    u8Pkt[6] = 0x00;
-    u8Pkt[10] = 0x01;
-    u8Pkt[11] = 0x00;
-    u8Pkt[12] = 0x15;
-    u8Pkt[13] = 0x0A;
+    u8Pkt[6] = BleConstants.network.radio;
+    u8Pkt[10] = BleConstants.mode.request.dbSetup;
+    u8Pkt[11] = BleConstants.socket.radio;
+    u8Pkt[12] = BleConstants.command.generalModuleSilenceSounderLvl;
+    u8Pkt[13] = BleConstants.sounderState;
 
     int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
     u8Pkt[213] = (checksum >> 8) & BleConstants.base;
     u8Pkt[214] = checksum & BleConstants.base;
-    u8Pkt[215] = 0xFD;
+    u8Pkt[215] = BleConstants.eot;
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
@@ -4540,22 +4540,22 @@ class BleManager {
     u8TxPktCnt += 1;
 
     u8Pkt[0] = BleConstants.sot;
-    u8Pkt[1] = 0x01;
-    u8Pkt[2] = 0x00;
-    u8Pkt[3] = 0x01;
+    u8Pkt[1] = BleConstants.des;
+    u8Pkt[2] = BleConstants.ori;
+    u8Pkt[3] = BleConstants.type.nrm;
     u8Pkt[4] = u8TxPktCnt & BleConstants.base;
     u8Pkt[5] = u8RxPktCnt & BleConstants.base;
-    u8Pkt[6] = 0x00;
-    u8Pkt[10] = 0x01;
-    u8Pkt[11] = 0x00;
-    u8Pkt[12] = 0x15;
-    u8Pkt[13] = 0x0C;
+    u8Pkt[6] = BleConstants.network.radio;
+    u8Pkt[10] = BleConstants.mode.request.dbSetup;
+    u8Pkt[11] = BleConstants.socket.radio;
+    u8Pkt[12] = BleConstants.command.generalModuleResetLvl;
+    u8Pkt[13] = BleConstants.resetState;
 
     int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
     u8Pkt[213] = (checksum >> 8) & BleConstants.base;
     u8Pkt[214] = checksum & BleConstants.base;
-    u8Pkt[215] = 0xFD;
+    u8Pkt[215] = BleConstants.eot;
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
@@ -4566,22 +4566,22 @@ class BleManager {
     u8TxPktCnt += 1;
 
     u8Pkt[0] = BleConstants.sot;
-    u8Pkt[1] = 0x01;
-    u8Pkt[2] = 0x00;
-    u8Pkt[3] = 0x01;
+    u8Pkt[1] = BleConstants.des;
+    u8Pkt[2] = BleConstants.ori;
+    u8Pkt[3] = BleConstants.type.nrm;
     u8Pkt[4] = u8TxPktCnt & BleConstants.base;
     u8Pkt[5] = u8RxPktCnt & BleConstants.base;
-    u8Pkt[6] = 0x00;
-    u8Pkt[10] = 0x01;
-    u8Pkt[11] = 0x00;
-    u8Pkt[12] = 0x15;
-    u8Pkt[13] = 0x12;
+    u8Pkt[6] = BleConstants.network.radio;
+    u8Pkt[10] = BleConstants.mode.request.dbSetup;
+    u8Pkt[11] = BleConstants.socket.radio;
+    u8Pkt[12] = BleConstants.command.generalModuleFaultLatching;
+    u8Pkt[13] = BleConstants.faultLatchingState;
 
     int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
     u8Pkt[213] = (checksum >> 8) & BleConstants.base;
     u8Pkt[214] = checksum & BleConstants.base;
-    u8Pkt[215] = 0xFD;
+    u8Pkt[215] = BleConstants.eot;
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
@@ -4592,16 +4592,16 @@ class BleManager {
     u8TxPktCnt += 1;
 
     u8Pkt[0] = BleConstants.sot;
-    u8Pkt[1] = 0x01;
-    u8Pkt[2] = 0x00;
-    u8Pkt[3] = 0x01;
+    u8Pkt[1] = BleConstants.des;
+    u8Pkt[2] = BleConstants.ori;
+    u8Pkt[3] = BleConstants.type.nrm;
     u8Pkt[4] = u8TxPktCnt & BleConstants.base;
     u8Pkt[5] = u8RxPktCnt & BleConstants.base;
-    u8Pkt[6] = 0x00;
-    u8Pkt[10] = 0x81;
-    u8Pkt[11] = 0x00;
-    u8Pkt[12] = 0x09;
-    u8Pkt[14] = 0x01;
+    u8Pkt[6] = BleConstants.network.radio;
+    u8Pkt[10] = BleConstants.mode.instruction.dbSetup;
+    u8Pkt[11] = BleConstants.socket.radio;
+    u8Pkt[12] = BleConstants.command.generalModuleLvlTimeOut;
+    u8Pkt[14] = BleConstants.adcInputPage;
     u8Pkt[15] = (generalModuleLvlTimeOut.value >> 8) & BleConstants.base;
     u8Pkt[16] = generalModuleLvlTimeOut.value & BleConstants.base;
 
@@ -4609,7 +4609,7 @@ class BleManager {
 
     u8Pkt[213] = (checksum >> 8) & BleConstants.base;
     u8Pkt[214] = checksum & BleConstants.base;
-    u8Pkt[215] = 0xFD;
+    u8Pkt[215] = BleConstants.eot;
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
@@ -4620,23 +4620,23 @@ class BleManager {
     u8TxPktCnt += 1;
 
     u8Pkt[0] = BleConstants.sot;
-    u8Pkt[1] = 0x01;
-    u8Pkt[2] = 0x00;
-    u8Pkt[3] = 0x01;
+    u8Pkt[1] = BleConstants.des;
+    u8Pkt[2] = BleConstants.ori;
+    u8Pkt[3] = BleConstants.type.nrm;
     u8Pkt[4] = u8TxPktCnt & BleConstants.base;
     u8Pkt[5] = u8RxPktCnt & BleConstants.base;
-    u8Pkt[6] = 0x00;
-    u8Pkt[10] = 0x81;
-    u8Pkt[11] = 0x00;
-    u8Pkt[12] = 0x15;
-    u8Pkt[13] = 0x09;
+    u8Pkt[6] = BleConstants.network.radio;
+    u8Pkt[10] = BleConstants.mode.instruction.dbSetup;
+    u8Pkt[11] = BleConstants.socket.radio;
+    u8Pkt[12] = BleConstants.command.generalModuleSilenceBuzzerLvl;
+    u8Pkt[13] = BleConstants.buzzerState;
     u8Pkt[14] = generalModuleSilenceBuzzerLvl.value + 1;
 
     int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
     u8Pkt[213] = (checksum >> 8) & BleConstants.base;
     u8Pkt[214] = checksum & BleConstants.base;
-    u8Pkt[215] = 0xFD;
+    u8Pkt[215] = BleConstants.eot;
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
@@ -4647,23 +4647,23 @@ class BleManager {
     u8TxPktCnt += 1;
 
     u8Pkt[0] = BleConstants.sot;
-    u8Pkt[1] = 0x01;
-    u8Pkt[2] = 0x00;
-    u8Pkt[3] = 0x01;
+    u8Pkt[1] = BleConstants.des;
+    u8Pkt[2] = BleConstants.ori;
+    u8Pkt[3] = BleConstants.type.nrm;
     u8Pkt[4] = u8TxPktCnt & BleConstants.base;
     u8Pkt[5] = u8RxPktCnt & BleConstants.base;
-    u8Pkt[6] = 0x00;
-    u8Pkt[10] = 0x81;
-    u8Pkt[11] = 0x00;
-    u8Pkt[12] = 0x15;
-    u8Pkt[13] = 0x0A;
+    u8Pkt[6] = BleConstants.network.radio;
+    u8Pkt[10] = BleConstants.mode.instruction.dbSetup;
+    u8Pkt[11] = BleConstants.socket.radio;
+    u8Pkt[12] = BleConstants.command.generalModuleSilenceSounderLvl;
+    u8Pkt[13] = BleConstants.sounderState;
     u8Pkt[14] = generalModuleSilenceSounderLvl.value + 2;
 
     int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
     u8Pkt[213] = (checksum >> 8) & BleConstants.base;
     u8Pkt[214] = checksum & BleConstants.base;
-    u8Pkt[215] = 0xFD;
+    u8Pkt[215] = BleConstants.eot;
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
@@ -4674,23 +4674,23 @@ class BleManager {
     u8TxPktCnt += 1;
 
     u8Pkt[0] = BleConstants.sot;
-    u8Pkt[1] = 0x01;
-    u8Pkt[2] = 0x00;
-    u8Pkt[3] = 0x01;
+    u8Pkt[1] = BleConstants.des;
+    u8Pkt[2] = BleConstants.ori;
+    u8Pkt[3] = BleConstants.type.nrm;
     u8Pkt[4] = u8TxPktCnt & BleConstants.base;
     u8Pkt[5] = u8RxPktCnt & BleConstants.base;
-    u8Pkt[6] = 0x00;
-    u8Pkt[10] = 0x81;
-    u8Pkt[11] = 0x00;
-    u8Pkt[12] = 0x15;
-    u8Pkt[13] = 0x0C;
+    u8Pkt[6] = BleConstants.network.radio;
+    u8Pkt[10] = BleConstants.mode.instruction.dbSetup;
+    u8Pkt[11] = BleConstants.socket.radio;
+    u8Pkt[12] = BleConstants.command.generalModuleResetLvl;
+    u8Pkt[13] = BleConstants.resetState;
     u8Pkt[14] = generalModuleResetLvl.value + 2;
 
     int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
     u8Pkt[213] = (checksum >> 8) & BleConstants.base;
     u8Pkt[214] = checksum & BleConstants.base;
-    u8Pkt[215] = 0xFD;
+    u8Pkt[215] = BleConstants.eot;
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
@@ -4701,23 +4701,23 @@ class BleManager {
     u8TxPktCnt += 1;
 
     u8Pkt[0] = BleConstants.sot;
-    u8Pkt[1] = 0x01;
-    u8Pkt[2] = 0x00;
-    u8Pkt[3] = 0x01;
+    u8Pkt[1] = BleConstants.des;
+    u8Pkt[2] = BleConstants.ori;
+    u8Pkt[3] = BleConstants.type.nrm;
     u8Pkt[4] = u8TxPktCnt & BleConstants.base;
     u8Pkt[5] = u8RxPktCnt & BleConstants.base;
-    u8Pkt[6] = 0x00;
-    u8Pkt[10] = 0x81;
-    u8Pkt[11] = 0x00;
-    u8Pkt[12] = 0x15;
-    u8Pkt[13] = 0x12;
+    u8Pkt[6] = BleConstants.network.radio;
+    u8Pkt[10] = BleConstants.mode.instruction.dbSetup;
+    u8Pkt[11] = BleConstants.socket.radio;
+    u8Pkt[12] = BleConstants.command.generalModuleFaultLatching;
+    u8Pkt[13] = BleConstants.faultLatchingState;
     u8Pkt[14] = generalModuleFaultLatching.value;
 
     int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
     u8Pkt[213] = (checksum >> 8) & BleConstants.base;
     u8Pkt[214] = checksum & BleConstants.base;
-    u8Pkt[215] = 0xFD;
+    u8Pkt[215] = BleConstants.eot;
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
@@ -4728,21 +4728,21 @@ class BleManager {
     u8TxPktCnt += 1;
 
     u8Pkt[0] = BleConstants.sot;
-    u8Pkt[1] = 0x01;
-    u8Pkt[2] = 0x00;
-    u8Pkt[3] = 0x01;
+    u8Pkt[1] = BleConstants.des;
+    u8Pkt[2] = BleConstants.ori;
+    u8Pkt[3] = BleConstants.type.nrm;
     u8Pkt[4] = u8TxPktCnt & BleConstants.base;
     u8Pkt[5] = u8RxPktCnt & BleConstants.base;
-    u8Pkt[6] = 0x00;
-    u8Pkt[10] = 0x00;
-    u8Pkt[11] = 0x00;
-    u8Pkt[12] = 0x09;
+    u8Pkt[6] = BleConstants.network.radio;
+    u8Pkt[10] = BleConstants.mode.request.module;
+    u8Pkt[11] = BleConstants.socket.radio;
+    u8Pkt[12] = BleConstants.command.diagnosticsSetupFetch;
 
     int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
     u8Pkt[213] = (checksum >> 8) & BleConstants.base;
     u8Pkt[214] = checksum & BleConstants.base;
-    u8Pkt[215] = 0xFD;
+    u8Pkt[215] = BleConstants.eot;
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }

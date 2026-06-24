@@ -74,6 +74,12 @@ abstract final class BleConstants {
   static const int sounderSetupZoneNoLow = 0x01;
   static const int sounderSetupExtOutNoHigh = 0x00;
   static const int sounderSetupExtOutNoLow = 0x01;
+  static const int adcInput = 0x04;
+  static const int adcInputPage = 0x01;
+  static const int buzzerState = 0x09;
+  static const int sounderState = 0x0A;
+  static const int resetState = 0x0C;
+  static const int faultLatchingState = 0x12;
 }
 
 class _BleType {
@@ -159,6 +165,15 @@ class _BleCommand {
   final int sounderSetupExtOut = 0x1B;
   final int serviceDue = 0x18;
   final int accessCodeSetup = 0x03;
+  final int panelInfoPanelId = 0x08;
+  final int panelInfoDateTime = 0x01;
+  final int panelInfoEventReminderDelay = 0x09;
+  final int generalModuleLvlTimeOut = 0x09;
+  final int generalModuleSilenceBuzzerLvl = 0x15;
+  final int generalModuleSilenceSounderLvl = 0x15;
+  final int generalModuleResetLvl = 0x15;
+  final int generalModuleFaultLatching = 0x15;
+  final int diagnosticsSetupFetch = 0x09;
 }
 
 class _BleFirmware {
