@@ -589,8 +589,6 @@ class PeripheralConfigSnapshot {
     ];
   }
 
-  static const int _maxDiffLinesPerSection = 50;
-
   static const Set<String> _panelInfoDateTimeKeys = {
     'year',
     'month',
@@ -649,10 +647,6 @@ class PeripheralConfigSnapshot {
           panelSlice,
           localSlice,
         );
-        // if (lines.length > _maxDiffLinesPerSection) {
-        //   final extra = lines.length - _maxDiffLinesPerSection;
-        //   lines = [...lines.take(_maxDiffLinesPerSection), '… $extra more'];
-        // }
         diffs[k] = lines;
       }
     }

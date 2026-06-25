@@ -131,19 +131,14 @@ class ProjectReportPdfUtil {
               _sectionHeader('ZONES'),
               _zoneBlock(zone),
               _sectionHeader('INPUTS'),
-              // _inputBlock(input),
               _newInputBlock(input),
               _sectionHeader('RELAYS'),
-              // _relayBlock(relay),
               _newRelayBlock(relay),
               _sectionHeader('EXTINGUISHING OUTPUT'),
-              // _extOutBlock(extOut),
               _newExtOutBlock(extOut),
               _sectionHeader('SOUNDER'),
-              // _sounderBlock(sounder),
               _newSounderBlock(sounder),
               _sectionHeader('L-BUS'),
-              // _lBusBlock(lBus),
               _newLBusBlock(lBus),
               _sectionHeader('WALK TEST RESULTS'),
               _commissioningTestResultsBlock(
@@ -658,21 +653,6 @@ class ProjectReportPdfUtil {
     );
   }
 
-  static pw.Widget _inputBlock(Map<String, dynamic>? input) {
-    if (input == null) {
-      return _missing('No cached input setup for this device.');
-    }
-    return pw.Text(
-      'Group: ${_scalar('input', 'group', input['group'], input)} · '
-      'Function: ${_scalar('input', 'function', input['function'], input)} · '
-      'Enabled: ${_scalar('input', 'enabled', input['enabled'], input)} · '
-      'Test: ${_scalar('input', 'test', input['test'], input)} · '
-      'Inverted: ${_scalar('input', 'inverted', input['inverted'], input)} · '
-      'Text: ${_scalar('input', 'text', input['text'], input)}',
-      style: const pw.TextStyle(fontSize: 8),
-    );
-  }
-
   static pw.Widget _newRelayBlock(Map<String, dynamic>? relay) {
     if (relay == null) {
       return _missing('No cached zone setup for this device.');
@@ -771,72 +751,6 @@ class ProjectReportPdfUtil {
     return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [headerRow, ...dataRows],
-    );
-  }
-
-  static pw.Widget _relayBlock(Map<String, dynamic>? relay) {
-    if (relay == null) {
-      return _missing('No cached relay setup for this device.');
-    }
-    final children = <pw.Widget>[];
-    for (final key in ['r1', 'r2', 'r3']) {
-      final r = _asMap(relay[key]);
-      if (r == null) continue;
-      final n = key.substring(1);
-      print(
-        "The dynamic text is: ${_scalar('relay', '$key.dynamicText', r['dynamicText'], relay).contains("0")}",
-      );
-      children.add(
-        pw.Padding(
-          padding: const pw.EdgeInsets.only(bottom: 6),
-          child:
-              _scalar(
-                    'relay',
-                    '$key.dynamicText',
-                    r['dynamicText'],
-                    relay,
-                  ).contains("0")
-                  ? pw.Text(
-                    'Relay $n - '
-                    'Enabled: ${_scalar('relay', '$key.enabled', r['enabled'], relay)} · '
-                    'Test: ${_scalar('relay', '$key.test', r['test'], relay)} · '
-                    'Group: ${_scalar('relay', '$key.group', r['group'], relay)} · '
-                    'Function: ${_scalar('relay', '$key.function', r['function'], relay)} · '
-                    'Output text: ${_scalar('relay', '$key.outputText', r['outputText'], relay)} · ',
-                    style: const pw.TextStyle(fontSize: 7),
-                  )
-                  : _scalar(
-                    'relay',
-                    '$key.group',
-                    r['group'],
-                    relay,
-                  ).contains("Zone")
-                  ? pw.Text(
-                    'Relay $n - '
-                    'Enabled: ${_scalar('relay', '$key.enabled', r['enabled'], relay)} · '
-                    'Test: ${_scalar('relay', '$key.test', r['test'], relay)} · '
-                    'Group: ${_scalar('relay', '$key.group', r['group'], relay)} · '
-                    'Function: ${_scalar('relay', '$key.function', r['function'], relay)} · '
-                    'Output text: ${_scalar('relay', '$key.outputText', r['outputText'], relay)} · '
-                    'Zone: ${_scalar('relay', '$key.dynamicText', r['dynamicText'], relay)}',
-                    style: const pw.TextStyle(fontSize: 7),
-                  )
-                  : pw.Text(
-                    'Relay $n - '
-                    'Enabled: ${_scalar('relay', '$key.enabled', r['enabled'], relay)} · '
-                    'Test: ${_scalar('relay', '$key.test', r['test'], relay)} · '
-                    'Group: ${_scalar('relay', '$key.group', r['group'], relay)} · '
-                    'Function: ${_scalar('relay', '$key.function', r['function'], relay)} · '
-                    'Output text: ${_scalar('relay', '$key.outputText', r['outputText'], relay)} · '
-                    'Ext.Out: ${_scalar('relay', '$key.dynamicText', r['dynamicText'], relay)}',
-                    style: const pw.TextStyle(fontSize: 7),
-                  ),
-        ),
-      );
-    }
-    return pw.Column(
-      crossAxisAlignment: pw.CrossAxisAlignment.start,
-      children: children,
     );
   }
 
@@ -959,26 +873,6 @@ class ProjectReportPdfUtil {
     );
   }
 
-  static pw.Widget _extOutBlock(Map<String, dynamic>? ext) {
-    if (ext == null) {
-      return _missing('No cached extinguishing output setup for this device.');
-    }
-    return pw.Text(
-      'Enabled: ${_scalar('ext_out', 'enabled', ext['enabled'], ext)} · '
-      'Actuator: ${_scalar('ext_out', 'actuatorType', ext['actuatorType'], ext)} · '
-      'Function: ${_scalar('ext_out', 'function', ext['function'], ext)} · '
-      'Reset in count: ${_scalar('ext_out', 'resetAllowed', ext['resetAllowed'], ext)} · '
-      'Hold: ${_scalar('ext_out', 'holdMode', ext['holdMode'], ext)} · '
-      'Action: ${_scalar('ext_out', 'action', ext['action'], ext)} · '
-      'Countdown auto: ${_scalar('ext_out', 'countdownAuto', ext['countdownAuto'], ext)} · '
-      'Countdown man: ${_scalar('ext_out', 'countdownMan', ext['countdownMan'], ext)} · '
-      'Release time: ${_scalar('ext_out', 'releaseTime', ext['releaseTime'], ext)} · '
-      'Reset delay: ${_scalar('ext_out', 'resetDelay', ext['resetDelay'], ext)} · '
-      'Text: ${_scalar('ext_out', 'text', ext['text'], ext)}',
-      style: const pw.TextStyle(fontSize: 7),
-    );
-  }
-
   static pw.Widget _newLBusBlock(List<Map<String, dynamic>>? buses) {
     if (buses == null) {
       return _missing('No cached L-Bus setup for this device.');
@@ -1055,74 +949,6 @@ class ProjectReportPdfUtil {
     return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [headerRow, ...dataRows],
-    );
-  }
-
-  static pw.Widget _lBusBlock(List<Map<String, dynamic>>? buses) {
-    if (buses == null || buses.isEmpty) {
-      return _missing('No cached L-Bus setup for this device.');
-    }
-    final rows = <pw.Widget>[];
-    rows.add(
-      pw.Container(
-        color: PdfColor.fromInt(0xFFF0F0F0),
-        padding: const pw.EdgeInsets.symmetric(vertical: 4, horizontal: 2),
-        child: pw.Row(
-          children: [
-            _lCell('No', 16),
-            _lCell('En', 18),
-            _lCell('LED', 18),
-            _lCell('Prod', 38),
-            _lCell('Device text', 72),
-            _lCell('Id', 18),
-            _lCell('Rev', 16),
-            _lCell('HW', 40),
-            _lCell('FW', 40),
-            _lCell('Date', 38),
-            _lCell('Proto', 22),
-          ],
-        ),
-      ),
-    );
-    for (var i = 0; i < buses.length; i++) {
-      final d = LBusSetupData.fromJson(buses[i]);
-      final isEven = i % 2 == 0;
-      rows.add(
-        pw.Container(
-          color: isEven ? PdfColor.fromInt(0xFFF9F9F9) : PdfColors.white,
-          padding: const pw.EdgeInsets.symmetric(vertical: 2, horizontal: 2),
-          child: pw.Row(
-            crossAxisAlignment: pw.CrossAxisAlignment.start,
-            children: [
-              _lCell('${i + 1}', 16),
-              _lCell(d.enabled, 18),
-              _lCell(d.idLed, 18),
-              _lCell(d.product, 38),
-              _lCell(d.deviceText, 72),
-              _lCell('${d.id}', 18),
-              _lCell('${d.revision}', 16),
-              _lCell(d.hardware, 40),
-              _lCell(d.firmware, 40),
-              _lCell(d.date, 38),
-              _lCell('${d.protocol}', 22),
-            ],
-          ),
-        ),
-      );
-    }
-    return pw.Column(
-      crossAxisAlignment: pw.CrossAxisAlignment.start,
-      children: rows,
-    );
-  }
-
-  static pw.Widget _lCell(String t, double w) {
-    return pw.Container(
-      width: w,
-      child: pw.Text(
-        t.isEmpty ? 'N/A' : t,
-        style: const pw.TextStyle(fontSize: 5.5),
-      ),
     );
   }
 
@@ -1418,90 +1244,6 @@ class ProjectReportPdfUtil {
         generalDelayHeaderRow,
         ...generalDelayDataRow,
       ],
-    );
-  }
-
-  static pw.Widget _sounderBlock(Map<String, dynamic>? s) {
-    if (s == null) {
-      return _missing('No cached sounder setup for this device.');
-    }
-    final lines = <pw.Widget>[];
-
-    void addLine(String title, String text) {
-      lines.add(
-        pw.Padding(
-          padding: const pw.EdgeInsets.only(bottom: 4),
-          child: pw.Column(
-            crossAxisAlignment: pw.CrossAxisAlignment.start,
-            children: [
-              pw.Text(
-                title,
-                style: pw.TextStyle(
-                  fontSize: 8,
-                  fontWeight: pw.FontWeight.bold,
-                ),
-              ),
-              pw.Text(text, style: const pw.TextStyle(fontSize: 7)),
-            ],
-          ),
-        ),
-      );
-    }
-
-    for (final key in ['s1', 's2', 's3']) {
-      final block = _asMap(s[key]);
-      if (block == null) continue;
-      final n = key.substring(1);
-      addLine(
-        'Sounder output $n',
-        'Enabled: ${_scalar('sounder', '$key.enabled', block['enabled'], s)} · '
-            'Test: ${_scalar('sounder', '$key.test', block['test'], s)} · '
-            'Type: ${_scalar('sounder', '$key.normal', block['normal'], s)} · '
-            'Output text: ${_scalar('sounder', '$key.outputText', block['outputText'], s)} · '
-            'Group: ${_scalar('sounder', '$key.group', block['group'], s)} · '
-            'Function: ${_scalar('sounder', '$key.function', block['function'], s)} · '
-            'Function no: ${_scalar('sounder', '$key.functionNo', block['functionNo'], s)}',
-      );
-    }
-    for (final key in ['z1', 'z2', 'z3']) {
-      final block = _asMap(s[key]);
-      if (block == null) continue;
-      final n = key.substring(1);
-      addLine(
-        'Sounder · Zone $n',
-        'Enabled: ${_scalar('sounder', '$key.enabled', block['enabled'], s)} · '
-            'Test: ${_scalar('sounder', '$key.test', block['test'], s)} · '
-            'Action: ${_scalar('sounder', '$key.action', block['action'], s)}',
-      );
-    }
-    for (final key in ['e1', 'e2', 'e3']) {
-      final block = _asMap(s[key]);
-      if (block == null) continue;
-      final n = key.substring(1);
-      addLine(
-        'Sounder · Ext. out $n',
-        'Enabled: ${_scalar('sounder', '$key.enabled', block['enabled'], s)} · '
-            'Test: ${_scalar('sounder', '$key.test', block['test'], s)} · '
-            'Countdown: ${_scalar('sounder', '$key.countdownAction', block['countdownAction'], s)} · '
-            'Hold: ${_scalar('sounder', '$key.holdAction', block['holdAction'], s)} · '
-            'Release: ${_scalar('sounder', '$key.releaseAction', block['releaseAction'], s)}',
-      );
-    }
-    final g = _asMap(s['general']);
-    if (g != null) {
-      addLine(
-        'Sounder · General delay',
-        'Enabled: ${_scalar('sounder', 'general.enabled', g['enabled'], s)} · '
-            'Test: ${_scalar('sounder', 'general.test', g['test'], s)} · '
-            'Delayed: ${_scalar('sounder', 'general.delayed', g['delayed'], s)} · '
-            'Action: ${_scalar('sounder', 'general.action', g['action'], s)} · '
-            'Delay (s): ${_scalar('sounder', 'general.delay', g['delay'], s)}',
-      );
-    }
-
-    return pw.Column(
-      crossAxisAlignment: pw.CrossAxisAlignment.start,
-      children: lines,
     );
   }
 

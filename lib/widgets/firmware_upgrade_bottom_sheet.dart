@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:math';
 import 'dart:typed_data';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:file_picker/file_picker.dart';
@@ -50,8 +49,7 @@ class FirmwareUpgradeBottomSheet extends StatefulWidget {
       _FirmwareUpgradeBottomSheetState();
 }
 
-class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
-    with SingleTickerProviderStateMixin {
+class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet> {
   final UpdatesController _controller = Get.find<UpdatesController>();
   FirmwareUpgradeStep _currentStep = FirmwareUpgradeStep.essentialSteps;
   FirmwareType? _selectedFirmwareType;
@@ -59,8 +57,6 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
   bool _isUploading = false;
   bool _isUpgrading = false;
   bool _isValidating = false;
-  bool _isValidatingSuccess = false;
-  bool _testMode = false;
   String? _errorMessage;
   String? _currentBleStateMessage;
   fw.FirmwareValidationResult? _validationResult;
@@ -181,10 +177,6 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
   Future<void> _sendPacketsOverBleImpl({
     bool? isChipInBootLoader = false,
   }) async {
-    // if (_bleHandler.currentBleState.value != BleStateMachine.connected) {
-    //   throw Exception('Device not connected. Complete BLE handshake first.');
-    // }
-
     // Try to get BleManager via BleLogController if registered
     BleManager? manager;
     if (Get.isRegistered<BleLogController>()) {
@@ -537,7 +529,6 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
           // End command: expect [0,2] for success, [0,1] for failed
           // Update message to show we're validating
           setState(() {
-            _isValidatingSuccess = true;
             _currentBleStateMessage = 'Validating firmware upgrade success...';
           });
 
@@ -576,7 +567,6 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
       // Connect to the device using BleLogController
       final bleController = Get.find<BleLogController>();
       final bleManager = bleController.bleManager;
-      final bool fastReconnect = true; // Opt-in for firmware upgrade flow
 
       // Check if already connected to avoid duplicate connections
       if (bleManager.isConnected &&
@@ -604,18 +594,15 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
           await bleController.connectToDevice(
             device: device!,
             manufacturerDataOverride: manufacturerDataToUse,
-            fastReconnect: fastReconnect,
+            fastReconnect: true,
             skipConnectionHandshake:
                 true, // Bootloader reconnect - auth done via registerNotifyHandlerForFirmwareUpgrade
           );
 
           // Wait for connection to be fully established
           int waitCount = 0;
-          final int maxWaitCycles = fastReconnect ? 15 : 30;
-          final Duration waitStep =
-              fastReconnect
-                  ? const Duration(milliseconds: 150)
-                  : const Duration(milliseconds: 200);
+          const int maxWaitCycles = 15;
+          const Duration waitStep = Duration(milliseconds: 150);
           while (!bleManager.isConnected && waitCount < maxWaitCycles) {
             await Future.delayed(waitStep);
             waitCount++;
@@ -707,7 +694,6 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
 
         // Update message to show we're validating
         setState(() {
-          _isValidatingSuccess = true;
           _currentBleStateMessage = 'Validating firmware upgrade success...';
         });
 
@@ -810,8 +796,6 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     _buildHeader(),
-                    // SizedBox(height: 24),
-                    // _buildStepIndicator(),
                     SizedBox(height: 24),
                     _buildStepContent(),
                   ],
@@ -846,108 +830,7 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
             ),
           ],
         ),
-        // Test Mode Toggle
-        // Container(
-        //   margin: EdgeInsets.only(top: 8),
-        //   padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        //   decoration: BoxDecoration(
-        //     color:
-        //         _testMode
-        //             ? Color(0xFFEC1D24).withOpacity(0.1)
-        //             : Color(0xFFD9D9D9).withOpacity(0.3),
-        //     borderRadius: BorderRadius.circular(8),
-        //   ),
-        //   child: Row(
-        //     mainAxisSize: MainAxisSize.min,
-        //     children: [
-        //       Icon(
-        //         Icons.bug_report,
-        //         size: 16,
-        //         color: _testMode ? Color(0xFFEC1D24) : Color(0xFF979797),
-        //       ),
-        //       SizedBox(width: 8),
-        //       Text(
-        //         'Test Mode',
-        //         style: GoogleFonts.inter(
-        //           fontSize: 12,
-        //           fontWeight: FontWeight.w500,
-        //           color: _testMode ? Color(0xFFEC1D24) : Color(0xFF979797),
-        //         ),
-        //       ),
-        //       SizedBox(width: 8),
-        //       Switch(
-        //         value: _testMode,
-        //         onChanged: (value) {
-        //           setState(() {
-        //             _testMode = value;
-        //           });
-        //         },
-        //         activeColor: Color(0xFFEC1D24),
-        //         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-        //       ),
-        //     ],
-        //   ),
-        // ),
       ],
-    );
-  }
-
-  Widget _buildStepIndicator() {
-    final steps = [
-      'Steps',
-      'Connect',
-      'Type',
-      'Upload',
-      'Details',
-      'Progress',
-      'Result',
-    ];
-    final currentIndex = FirmwareUpgradeStep.values.indexOf(_currentStep);
-
-    return Row(
-      children: List.generate(steps.length, (index) {
-        final isActive = index <= currentIndex;
-        final isCurrent = index == currentIndex;
-        return Expanded(
-          child: Column(
-            children: [
-              Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color:
-                      isActive
-                          ? (isCurrent ? Color(0xFFEC1D24) : Color(0xFF00A706))
-                          : Color(0xFFD9D9D9),
-                ),
-                child: Center(
-                  child: Text(
-                    '${index + 1}',
-                    style: GoogleFonts.inter(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: isActive ? Colors.white : Color(0xFF979797),
-                    ),
-                  ),
-                ),
-              ),
-              SizedBox(height: 4),
-              Text(
-                steps[index],
-                style: GoogleFonts.inter(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w500,
-                  color: isActive ? Color(0xFF1B1F26) : Color(0xFF979797),
-                ),
-                textAlign: TextAlign.center,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
-          ),
-        );
-      }),
     );
   }
 
@@ -982,8 +865,6 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
     return FutureBuilder<bool>(
       future: _checkBleConnection(),
       builder: (context, snapshot) {
-        final isConnected = snapshot.data ?? false;
-
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -1088,93 +969,6 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
       logger.Logger('Error checking BLE connection: $e');
       return false;
     }
-  }
-
-  void _showBluetoothOffDialog({
-    // kept for signature compatibility
-    required BuildContext context,
-  }) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (dialogContext) {
-        return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 64,
-                  height: 64,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFFBDEE1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Center(
-                    child: Icon(
-                      Icons.bluetooth_disabled,
-                      size: 32,
-                      color: Color(0xFFEC1D24),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Turn on Bluetooth',
-                  style: GoogleFonts.inter(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF3D3D3D),
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Bluetooth is off. Please enable Bluetooth to continue scanning.',
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w400,
-                    color: Color(0xFF918F8F),
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 16),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFEC1D24),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(24.5),
-                      ),
-                    ),
-                    onPressed: () {
-                      Navigator.of(dialogContext).pop();
-                    },
-                    child: Text(
-                      'OK',
-                      style: GoogleFonts.inter(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
   }
 
   // Removed _buildConnectDevice and all scanning UI methods - device is already connected
@@ -1838,11 +1632,6 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
   Widget _buildResult() {
     final isSuccess =
         _controller.downloadingStatus.value == fw.DownloadStatus.completed;
-    final message =
-        _errorMessage ??
-        (isSuccess
-            ? 'Firmware upgrade completed successfully!'
-            : 'Firmware upgrade failed');
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -2437,23 +2226,6 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
       return;
     }
 
-    // Test mode: skip BLE, just simulate
-    if (_testMode) {
-      setState(() {
-        _currentBleStateMessage = 'Simulating packet sends...';
-      });
-      await _controller.simulateUpgradeProgress();
-      final bool isSuccess =
-          _controller.downloadingStatus.value == fw.DownloadStatus.completed;
-      setState(() {
-        _isUpgrading = false;
-        _currentStep = FirmwareUpgradeStep.result;
-        _errorMessage = isSuccess ? null : 'Upgrade simulation failed.';
-        _currentBleStateMessage = null;
-      });
-      return;
-    }
-
     // Real BLE path: send packets
     try {
       await _sendPacketsOverBle(isChipInBootLoader: isChipInBootLoader);
@@ -2475,73 +2247,6 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
       _controller.downloadingStatus.value = fw.DownloadStatus.failed;
     }
   }
-}
-
-// Radar painters (from scanning_screen.dart)
-class _RadarPainter extends CustomPainter {
-  final Animation<double> sweepAnimation;
-  _RadarPainter({required this.sweepAnimation})
-    : super(repaint: sweepAnimation);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2);
-    final paint =
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 1;
-
-    final int rings = 4;
-    for (int i = 1; i <= rings; i++) {
-      paint.color = Colors.green.withOpacity(0.12 + i * 0.03);
-      canvas.drawCircle(center, (size.width / 2) * (i / (rings + 1)), paint);
-    }
-
-    final centerPaint = Paint()..color = Colors.greenAccent;
-    canvas.drawCircle(center, 3, centerPaint);
-  }
-
-  @override
-  bool shouldRepaint(covariant _RadarPainter oldDelegate) => true;
-}
-
-class _SweepPainter extends CustomPainter {
-  final double progress;
-  _SweepPainter({required this.progress});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2);
-    final radius = size.width / 2;
-    final sweepPaint =
-        Paint()
-          ..shader = RadialGradient(
-            colors: [
-              Colors.green.withOpacity(0.22),
-              Colors.green.withOpacity(0.02),
-              Colors.transparent,
-            ],
-            stops: const [0.0, 0.6, 1.0],
-          ).createShader(Rect.fromCircle(center: center, radius: radius))
-          ..style = PaintingStyle.fill;
-
-    final angle = progress * 2 * pi;
-    final double sweep = pi / 6;
-    final path = Path()..moveTo(center.dx, center.dy);
-    path.arcTo(
-      Rect.fromCircle(center: center, radius: radius),
-      angle - sweep / 2,
-      sweep,
-      false,
-    );
-    path.close();
-
-    canvas.drawPath(path, sweepPaint);
-  }
-
-  @override
-  bool shouldRepaint(covariant _SweepPainter oldDelegate) =>
-      oldDelegate.progress != progress;
 }
 
 class _AnimatedGridCard extends StatefulWidget {

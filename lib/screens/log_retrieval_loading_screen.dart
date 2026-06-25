@@ -35,11 +35,7 @@ class LogRetrievalLoadingScreen extends StatefulWidget {
       _LogRetrievalLoadingScreenState();
 }
 
-class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _animation;
-  double _progress = 0.0;
+class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen> {
   bool _hasNavigatedToEventLog = false;
   bool _allowExit = false;
 
@@ -48,18 +44,6 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
   @override
   void initState() {
     super.initState();
-
-    _controller = AnimationController(
-      duration: const Duration(seconds: 5),
-      vsync: this,
-    );
-
-    _animation = Tween<double>(begin: 0, end: 1).animate(_controller)
-      ..addListener(() {
-        setState(() {
-          _progress = _animation.value;
-        });
-      });
 
     _hasNavigatedToEventLog = false;
 
@@ -408,8 +392,6 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
                       builder: (context, readCount, _) {
                         final percent =
                             (readCount / 1000.0).clamp(0.0, 1.0).toDouble();
-                        final displayProgress =
-                            readCount == 0 ? _progress : percent;
                         return Column(
                           children: [
                             Text(
@@ -424,7 +406,7 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
                             SizedBox(height: 23),
                             LinearPercentIndicator(
                               lineHeight: 11.0,
-                              percent: displayProgress,
+                              percent: percent,
                               backgroundColor: Color(0xFFD9D9D9),
                               progressColor: Color(0xFFEC1D24),
                               barRadius: Radius.circular(20),
@@ -484,7 +466,6 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
 
   @override
   void dispose() {
-    _controller.dispose();
     ble.bleProcess.read1000LogsCount.removeListener(_onLogRetrievalCompleted);
     super.dispose();
   }

@@ -20,7 +20,7 @@ if (AppServices.isConnected) {
 
 ### AppState (`lib/services/app_state.dart`)
 
-Holds global `ValueNotifier`s used for session reset on navigation. Call `AppState.reset()` when leaving a BLE flow; call `AppState.dispose()` on app shutdown.
+Placeholder for session cleanup hooks. Call `AppState.reset()` when leaving a BLE flow; call `AppState.dispose()` on app shutdown.
 
 ### BleManager (`lib/ble/ble_manager.dart`)
 
