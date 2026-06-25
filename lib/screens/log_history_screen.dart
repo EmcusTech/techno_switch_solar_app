@@ -46,17 +46,14 @@ class LogHistoryScreenState extends State<LogHistoryScreen> {
     }
 
     try {
-      print('DEBUG: Loading log history for siteId: ${widget.siteId}');
       final retrievals = await _logRetrievalService.getLogRetrievalsForSite(
         widget.siteId!,
       );
-      print('DEBUG: Found ${retrievals.length} log retrieval sessions');
       setState(() {
         _logRetrievals = retrievals;
         _isLoading = false;
       });
     } catch (error) {
-      print('Error loading log history: $error');
       setState(() {
         _logRetrievals = [];
         _isLoading = false;

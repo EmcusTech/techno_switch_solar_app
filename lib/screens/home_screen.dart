@@ -202,7 +202,6 @@ class _HomeContentState extends State<_HomeContent> with RouteAware {
       setState(() {
         _isLoading = false;
       });
-      print('Error loading sites: $error');
     }
   }
 
@@ -271,7 +270,6 @@ class _HomeContentState extends State<_HomeContent> with RouteAware {
                   child: InkWell(
                     onTap: () async {
                       if (ble.isConnected) {
-                        print("Disconnecting device...");
                         await ble.disconnectConnectedDevice();
                       }
                       await Navigator.of(context).push(

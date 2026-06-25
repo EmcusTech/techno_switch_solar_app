@@ -51,9 +51,6 @@ class _SimpleSiteCreationScreenState extends State<SimpleSiteCreationScreen> {
   @override
   void initState() {
     super.initState();
-    print(
-      "DEBUG: SimpleSiteCreationScreen initialized with panel ID: ${widget.panelId}",
-    );
     _siteNameController = TextEditingController();
     _installerNameController = TextEditingController();
     _companyNameController = TextEditingController();
@@ -87,7 +84,6 @@ class _SimpleSiteCreationScreenState extends State<SimpleSiteCreationScreen> {
 
     try {
       final panelIdToCheck = widget.panelId;
-      print('DEBUG: SimpleSiteCreation - Checking panel ID: $panelIdToCheck');
 
       if (panelIdToCheck != null) {
         final existingPanel = await _panelService.getPanelByPanelId(

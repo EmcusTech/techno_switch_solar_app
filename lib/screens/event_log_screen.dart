@@ -444,7 +444,6 @@ class _EventLogContentState extends State<_EventLogContent> {
         final resolvedName = _resolvedPanelName();
         final displayName = _panelDisplayName(resolvedName);
         final resolvedPanelId = _resolvedPanelId();
-        print('displayName: $displayName, panelId: $resolvedPanelId');
 
         if (shouldCreateSite == true) {
           if (widget.connectedDevice != null) {

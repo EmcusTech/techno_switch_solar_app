@@ -118,9 +118,6 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
   void initState() {
     super.initState();
     BleSessionIdlePolicy.suppressIdleDisconnect.value = false;
-    print(
-      'DEBUG: ProjectDashboardScreen initState: ${widget.selectedDevice.manufacturerData}',
-    );
   }
 
   @override

@@ -21,9 +21,6 @@ class BleCrypto {
         'Encryption key response too short: ${payload.length} bytes',
       );
     }
-    print(
-      "extractKeyFromHandshakePayload: ${payload.sublist(kBleEncryKeyPayloadOffset, end).map((e) => e.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
-    );
     return Uint8List.fromList(payload.sublist(kBleEncryKeyPayloadOffset, end));
   }
 
