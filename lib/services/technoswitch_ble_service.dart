@@ -31,6 +31,6 @@ class TechnoswitchBleService {
     _bleHandler.currentBleState(BleStateMachine.none);
   }
 
-  Future<void> submitPasskey(String passkey) =>
-      _bleHandler.submitPasskey(passkey);
+  // Future<void> submitPasskey(String passkey) =>
+  //     _bleHandler.submitPasskey(passkey);
 }

@@ -58,7 +58,6 @@ class NavigationService {
     const routesToDisconnect = [
       'EventLogScreen',
       'LogRetrievalLoadingScreen',
-      'AccessCodeScreen',
       'ProjectDashboardScreen',
       'TestModeScreen',
       'ScannedScreen',

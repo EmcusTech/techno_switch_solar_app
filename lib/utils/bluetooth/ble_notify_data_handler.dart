@@ -39,50 +39,50 @@ class BleNotifyDataHandler extends GetxController {
 
   Stream<BleHandshakeEvent> get handshakeEvents => _handshakeController.stream;
 
-  Future<void> submitPasskey(String passkey) async {
-    logger.Logger('========================================');
-    logger.Logger('SUBMITTING PASSKEY');
-    logger.Logger('========================================');
-    logger.Logger('Passkey value: "$passkey"');
-    logger.Logger('Passkey length: ${passkey.length} characters');
+  // Future<void> submitPasskey(String passkey) async {
+  //   logger.Logger('========================================');
+  //   logger.Logger('SUBMITTING PASSKEY');
+  //   logger.Logger('========================================');
+  //   logger.Logger('Passkey value: "$passkey"');
+  //   logger.Logger('Passkey length: ${passkey.length} characters');
 
-    if (passkey.isEmpty) {
-      logger.Logger('Passkey submission - ERROR: Passkey cannot be empty');
-      _emitEvent(BleHandshakeEvent.error('Passkey cannot be empty'));
-      return;
-    }
+  //   if (passkey.isEmpty) {
+  //     logger.Logger('Passkey submission - ERROR: Passkey cannot be empty');
+  //     _emitEvent(BleHandshakeEvent.error('Passkey cannot be empty'));
+  //     return;
+  //   }
 
-    pollPacketCount = 0;
-    passkeyAccepted = false;
-    _pktTxCnt = _lastFeaturePacketCounter + 1;
-    _lastFeaturePacketCounter = _pktTxCnt;
+  //   pollPacketCount = 0;
+  //   passkeyAccepted = false;
+  //   _pktTxCnt = _lastFeaturePacketCounter + 1;
+  //   _lastFeaturePacketCounter = _pktTxCnt;
 
-    logger.Logger('Passkey submission - Calling sendingPasskeyToBle()');
-    logger.Logger(
-      'Passkey submission - TX Counter: $_pktTxCnt (from last feature packet), RX Counter: $_pktRxCnt',
-    );
+  //   logger.Logger('Passkey submission - Calling sendingPasskeyToBle()');
+  //   logger.Logger(
+  //     'Passkey submission - TX Counter: $_pktTxCnt (from last feature packet), RX Counter: $_pktRxCnt',
+  //   );
 
-    currentBleState(BleStateMachine.sendingPasskeyPacket);
-    _dataTransferManager.sendingPasskeyToBle(
-      passkey,
-      pktTxCnt: _pktTxCnt,
-      pktRxCnt: _pktRxCnt,
-      dataWritten: (bool isWritten) {
-        if (isWritten) {
-          logger.Logger('Passkey submission - Frame written successfully');
-          logger.Logger('Passkey submission - State: sendingPasskeyPacket');
-          logger.Logger(
-            'Passkey submission - Waiting for acknowledgment response...',
-          );
-        } else {
-          logger.Logger(
-            'Passkey submission - WARNING: Frame write may have failed',
-          );
-        }
-      },
-    );
-    logger.Logger('========================================\n');
-  }
+  //   currentBleState(BleStateMachine.sendingPasskeyPacket);
+  //   _dataTransferManager.sendingPasskeyToBle(
+  //     passkey,
+  //     pktTxCnt: _pktTxCnt,
+  //     pktRxCnt: _pktRxCnt,
+  //     dataWritten: (bool isWritten) {
+  //       if (isWritten) {
+  //         logger.Logger('Passkey submission - Frame written successfully');
+  //         logger.Logger('Passkey submission - State: sendingPasskeyPacket');
+  //         logger.Logger(
+  //           'Passkey submission - Waiting for acknowledgment response...',
+  //         );
+  //       } else {
+  //         logger.Logger(
+  //           'Passkey submission - WARNING: Frame write may have failed',
+  //         );
+  //       }
+  //     },
+  //   );
+  //   logger.Logger('========================================\n');
+  // }
 
   void resetRetryCount() {
     retryCount = 1;
