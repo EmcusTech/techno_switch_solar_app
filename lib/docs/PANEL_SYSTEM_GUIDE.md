@@ -67,7 +67,7 @@ sites (1) ←→ (0..∞) logs
 
 ### Connecting to Panel
 ```dart
-// Automatic - happens in SerialCommunicationService
+// Panel registration uses BleManager after scan/connect
 final panel = await panelService.registerPanelFromDevice(
   device: bluetoothDevice,
   scanType: 'bluetooth',
@@ -76,11 +76,7 @@ final panel = await panelService.registerPanelFromDevice(
 
 ### Site Creation with Panel (Retrieve Log Flow)
 ```dart
-// In EventLogScreen - store panel ID before disconnect
-final currentPanelId = AppServices.serialService.currentPanelId;
-AppServices.serialService.disconnect();
-
-// Pass panel ID to SimpleSiteCreationScreen
+// Pass panel ID from the connected device / navigation args
 Navigator.pushReplacement(context, MaterialPageRoute(
   builder: (context) => SimpleSiteCreationScreen(
     retrievedLogs: logs,

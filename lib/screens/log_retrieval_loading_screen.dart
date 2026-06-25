@@ -6,19 +6,11 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
-import 'package:techno_switch_solar_app/models/log_model.dart';
 import 'dart:async';
 import 'package:techno_switch_solar_app/screens/log_retreival_completed_screen.dart';
-import 'package:techno_switch_solar_app/utils/bluetooth/ble_notify_data_handler.dart';
-import 'package:techno_switch_solar_app/utils/bluetooth/data_handler.dart';
-import 'package:techno_switch_solar_app/utils/bluetooth/data_helper.dart';
-import 'package:techno_switch_solar_app/utils/bluetooth_constants.dart';
-import 'package:techno_switch_solar_app/utils/event_constants.dart';
-import 'package:techno_switch_solar_app/services/app_services.dart';
 import 'package:techno_switch_solar_app/screens/scanning_screen.dart';
-import 'package:techno_switch_solar_app/utils/serial_communication_service.dart';
-import 'package:techno_switch_solar_app/utils/timestamp_converter.dart';
-import 'package:techno_switch_solar_app/models/frame_data.dart';
+import 'package:techno_switch_solar_app/utils/ble_msd_utils.dart';
+import 'package:techno_switch_solar_app/utils/ble_name_utils.dart';
 
 final BleManager ble = Get.find<BleManager>();
 
@@ -27,12 +19,15 @@ class LogRetrievalLoadingScreen extends StatefulWidget {
   final ScanType scanType;
   final bool? isLiveEvent;
   final DiscoveredDevice? connectedDevice;
+  final String? panelId;
+
   const LogRetrievalLoadingScreen({
     super.key,
     this.selectedDevice,
     required this.scanType,
     this.isLiveEvent = false,
     this.connectedDevice,
+    this.panelId,
   });
 
   @override
@@ -42,53 +37,17 @@ class LogRetrievalLoadingScreen extends StatefulWidget {
 
 class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
     with SingleTickerProviderStateMixin {
-  late TextEditingController _accessCodeController;
   late AnimationController _controller;
   late Animation<double> _animation;
   double _progress = 0.0;
-  Timer? _timer;
-  String connectionStatus = "Initializing...";
-  bool connectionFailed = false;
-  String? _errorMessage;
-  StreamSubscription<BleHandshakeEvent>? _handshakeSubscription;
-  StreamSubscription<DeviceConnectionState>? _connectionSub;
-  Uuid primaryServiceGuid = BleUuids.primaryService;
-  Uuid primaryReadCharGuid = BleUuids.primaryReadChar;
-  Uuid primaryWriteCharGuid = BleUuids.primaryWriteChar;
-  QualifiedCharacteristic? readCharacteristic;
-  QualifiedCharacteristic? writeCharacteristic;
-  bool _maxBleConnectionRetriesReached = false;
-  bool _maxOtherPacketsRetriesReached = false;
-  bool firstLogReceived = false;
   bool _hasNavigatedToEventLog = false;
   bool _allowExit = false;
 
-  late SerialCommunicationService _serialService;
-  final List<LogModel> _retrievedLogs = [];
-  int _logsCount = 0;
-  StreamSubscription? _logSubscription;
-  StreamSubscription? _statusSubscription;
-  StreamSubscription? _bleNotificationSubscription;
-  String? _capturedPanelId;
-  static const int totalExpectedLogs = 1000;
-
-  BleNotifyDataHandler? _bleHandler;
-  DiscoveredDevice? _connectedBleDevice;
-  bool _isReceivingLogs = false;
-  int _logEvtSearchNumber = 999;
-  Timer? _logRetrievalTimeout;
   final BleManager _bleManager = Get.find<BleManager>();
 
   @override
   void initState() {
     super.initState();
-    _accessCodeController = TextEditingController();
-    _accessCodeController.addListener(() {
-      setState(() {});
-    });
-
-    _serialService = AppServices.serialService;
-    _capturedPanelId = _serialService.currentPanelId;
 
     _controller = AnimationController(
       duration: const Duration(seconds: 5),
@@ -102,53 +61,9 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
         });
       });
 
-    firstLogReceived = false;
     _hasNavigatedToEventLog = false;
 
-    ble.bleProcess.isValidLogRecieved.addListener(_onFirstValidLogReceived);
-
     ble.bleProcess.read1000LogsCount.addListener(_onLogRetrievalCompleted);
-
-    ble.maxBleConnectionRetriesReached.addListener(
-      _onMaxBleConnectionRetriesReached,
-    );
-
-    ble.maxOtherPacketsRetriesReached.addListener(
-      _onMaxOtherPacketsRetriesReached,
-    );
-
-    final _ = _handleBleNotification;
-  }
-
-  void _onMaxBleConnectionRetriesReached() {
-    setState(() {
-      _maxBleConnectionRetriesReached =
-          ble.maxBleConnectionRetriesReached.value;
-      if (_maxBleConnectionRetriesReached) {
-        connectionFailed = true;
-        _errorMessage = "Maximum BLE connection retries reached";
-        connectionStatus = _errorMessage!;
-      }
-    });
-  }
-
-  void _onMaxOtherPacketsRetriesReached() {
-    setState(() {
-      _maxOtherPacketsRetriesReached = ble.maxOtherPacketsRetriesReached.value;
-      if (_maxOtherPacketsRetriesReached) {
-        connectionFailed = true;
-        _errorMessage = "Maximum packet retries reached";
-        connectionStatus = _errorMessage!;
-      }
-    });
-  }
-
-  void _onFirstValidLogReceived() {
-    if (ble.bleProcess.isValidLogRecieved.value && mounted) {
-      setState(() {
-        firstLogReceived = true;
-      });
-    }
   }
 
   void _onLogRetrievalCompleted() {
@@ -176,14 +91,33 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
       MaterialPageRoute(
         builder:
             (context) => LogRetrievalCompletedScreen(
-              logs: _retrievedLogs,
-              panelId: _capturedPanelId ?? '',
+              logs: List.from(ble.bleProcess.validEventLogs.value),
+              panelId: _resolvePanelId(),
               panelName: _getDeviceName(),
               connectedDevice: widget.connectedDevice,
               isDirectLogRet: widget.isLiveEvent,
             ),
       ),
     );
+  }
+
+  String _resolvePanelId() {
+    if ((widget.panelId ?? '').isNotEmpty) {
+      return widget.panelId!;
+    }
+
+    final device = widget.connectedDevice ?? widget.selectedDevice;
+    if (device is DiscoveredDevice) {
+      final msdPanelId = BleMsdUtils.panelId(device.manufacturerData);
+      if (msdPanelId != null) {
+        return msdPanelId.toString();
+      }
+      if (device.name.isNotEmpty) {
+        return BleNameUtils.getDisplayPrefixFromBleName(device.name);
+      }
+    }
+
+    return _getDeviceName();
   }
 
   Future<void> _sendStopControlCommand() async {
@@ -333,7 +267,7 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
   }
 
   String _getDeviceName() {
-    final device = widget.selectedDevice ?? _connectedBleDevice;
+    final device = widget.selectedDevice ?? widget.connectedDevice;
 
     if (device == null) {
       return "Unknown Device";
@@ -350,210 +284,6 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
     }
 
     return "Unknown Device";
-  }
-
-  void _handleBleNotification(List<int> rxData) async {
-    if (rxData.isEmpty || !_isReceivingLogs) return;
-
-    try {
-      final bool shouldDecrypt =
-          _bleHandler != null &&
-          _bleHandler!.encryptionDecryptionState.value ==
-              EncryptionDecryptionState.enabled;
-
-      FrameData? frame;
-      if (shouldDecrypt) {
-        try {
-          frame = await DataHandler().decryptTheDataPacketWithoutConversion(
-            rxData,
-          );
-        } catch (e) {
-          print("DEBUG: LogRetrieval - Failed to decrypt frame: $e");
-          return;
-        }
-      } else {
-        frame = DataHandler().parseRxFrame(rxData);
-      }
-
-      if (frame == null) {
-        print("DEBUG: LogRetrieval - Failed to parse frame");
-        return;
-      }
-
-      List<int> technoswitchFrameBytes = convertStringListToHex(
-        frame.payloadData,
-      );
-
-      if (technoswitchFrameBytes.length != 216) {
-        print(
-          "DEBUG: LogRetrieval - Invalid frame length: ${technoswitchFrameBytes.length}",
-        );
-        return;
-      }
-
-      const int frameSot = 0xFE;
-      const int frameEot = 0xFD;
-      if (technoswitchFrameBytes[0] != frameSot ||
-          technoswitchFrameBytes[215] != frameEot) {
-        print("DEBUG: LogRetrieval - Invalid frame markers");
-        return;
-      }
-
-      int pktTyp = technoswitchFrameBytes[3];
-      int mode = technoswitchFrameBytes[10];
-      int cmd = technoswitchFrameBytes[12];
-
-      const int packetTypeNrm = 1;
-      const int dbSetupReq = 2;
-      const int eventStatusCmd = 2;
-
-      if (pktTyp == packetTypeNrm &&
-          mode == dbSetupReq &&
-          cmd == eventStatusCmd) {
-        print("DEBUG: LogRetrieval - Log packet received");
-        _processLogPacket(technoswitchFrameBytes);
-
-        if (_logEvtSearchNumber > 0) {
-          _logEvtSearchNumber--;
-        } else {
-          _completeLogRetrieval();
-        }
-      } else {
-        print(
-          "DEBUG: LogRetrieval - Non-log packet: pktTyp=$pktTyp, mode=$mode, cmd=$cmd",
-        );
-      }
-    } catch (e) {
-      print("DEBUG: LogRetrieval - Error processing notification: $e");
-    }
-  }
-
-  void _processLogPacket(List<int> evtData) {
-    try {
-      List<int> timestamp = evtData.sublist(12, 16);
-      int timestampDecimal =
-          timestamp[3] |
-          (timestamp[2] << 8) |
-          (timestamp[1] << 16) |
-          (timestamp[0] << 24);
-
-      DateTime eventTime =
-          timestampDecimal != 0x00
-              ? TimestampConverter.clockTimeFromTimeStamp(timestampDecimal)
-              : DateTime.now();
-
-      int eventId =
-          (evtData[126] << 24) |
-          (evtData[127] << 16) |
-          (evtData[128] << 8) |
-          (evtData[129] << 0);
-
-      String evtTextAscii;
-      List<int> evtText = evtData.sublist(42, 124);
-      if (evtText.length > 1 && evtText[1] != 0x00) {
-        int textLen = evtText[1];
-        List<int> evtTextValue = evtText.sublist(2, 2 + textLen);
-        evtTextAscii = String.fromCharCodes(evtTextValue);
-      } else {
-        evtTextAscii = "NO-TEXT";
-      }
-
-      String panelSource;
-      if (evtData[9] == EventConstants.evtTypeNetworkAddress) {
-        panelSource =
-            evtData[29] == 0
-                ? "Module"
-                : evtData[29] == 1
-                ? "Panel No. ${evtData[30]}"
-                : evtData[29] == 2
-                ? "Repeater No. ${evtData[30]}"
-                : evtData[29] == 3
-                ? "SOLAR"
-                : evtData[29] == 4
-                ? "Server No. ${evtData[30]}"
-                : "";
-      } else if (evtData[9] == EventConstants.evtTypeAccess) {
-        panelSource =
-            evtData[29] == 0
-                ? "Control"
-                : evtData[29] == 1
-                ? "Keyboard"
-                : evtData[29] == 2
-                ? "SOLAR"
-                : evtData[29] == 3
-                ? "Server"
-                : "";
-      } else {
-        panelSource = "";
-      }
-
-      if (eventId != 0) {
-        LogModel logModel = LogModel(
-          panelText: panelSource,
-          eventId: (eventId + 1).toString(),
-          eventDateTime: eventTime,
-          panelNo: evtData[0].toString(),
-          lBusNo: evtData[1].toString(),
-          moduleNo: evtData[2].toString(),
-          eventStatus: EventConstants.getEventStatusValue(evtData[10]),
-          eventClass: EventConstants.getEventClassValue(evtData[7]),
-          eventSource: panelSource,
-          eventType: EventConstants.getEventType(evtData[9]),
-          eventSubType: EventConstants.getEventDescription(
-            evtData[9],
-            evtData[11],
-          ),
-          identifier: EventConstants.getEventIdentifier(
-            evtData[9],
-            evtData[29],
-            evtData[30],
-            evtData[31],
-            evtData[16],
-            evtData[18],
-            evtData[20],
-          ),
-          text: evtTextAscii,
-          isValid: timestampDecimal != 0x00,
-          retrievedAt: DateTime.now(),
-        );
-
-        if (mounted) {
-          setState(() {
-            _retrievedLogs.add(logModel);
-            _logsCount = _retrievedLogs.length;
-            _progress = (_logsCount / totalExpectedLogs).clamp(0.0, 1.0);
-            connectionStatus =
-                "Receiving logs... $_logsCount logs received (${(_progress * 100).toInt()}%)";
-          });
-        }
-
-        print(
-          "DEBUG: LogRetrieval - Log $_logsCount received: ${logModel.eventType}",
-        );
-      }
-    } catch (e) {
-      print("DEBUG: LogRetrieval - Error processing log packet: $e");
-    }
-  }
-
-  void _completeLogRetrieval() {
-    if (!_isReceivingLogs) return;
-
-    _isReceivingLogs = false;
-    _logRetrievalTimeout?.cancel();
-
-    if (mounted) {
-      setState(() {
-        _progress = 1.0;
-        connectionStatus = "Log retrieval completed. Total: $_logsCount logs";
-      });
-
-      Future.delayed(Duration(milliseconds: 500), () {
-        if (mounted) {
-          _navigateToEventLogScreen();
-        }
-      });
-    }
   }
 
   @override
@@ -652,9 +382,8 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
               child: ValueListenableBuilder<String>(
                 valueListenable: ble.processDesc,
                 builder: (context, value, _) {
-                  final statusText = value;
                   return Text(
-                    statusText,
+                    value,
                     style: GoogleFonts.inter(
                       fontSize: 12,
                       fontWeight: FontWeight.w400,
@@ -755,23 +484,8 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
 
   @override
   void dispose() {
-    _accessCodeController.dispose();
     _controller.dispose();
-    _timer?.cancel();
-    _logSubscription?.cancel();
-    _statusSubscription?.cancel();
-    _handshakeSubscription?.cancel();
-    _bleNotificationSubscription?.cancel();
-    _logRetrievalTimeout?.cancel();
-    _connectionSub?.cancel();
-    ble.bleProcess.isValidLogRecieved.removeListener(_onFirstValidLogReceived);
     ble.bleProcess.read1000LogsCount.removeListener(_onLogRetrievalCompleted);
-    ble.maxBleConnectionRetriesReached.removeListener(
-      _onMaxBleConnectionRetriesReached,
-    );
-    ble.maxOtherPacketsRetriesReached.removeListener(
-      _onMaxOtherPacketsRetriesReached,
-    );
     super.dispose();
   }
 }

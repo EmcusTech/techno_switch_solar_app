@@ -20,7 +20,6 @@ import '../ble/controller/ble_log_controller.dart';
 import '../controllers/updates_controller.dart';
 import 'package:techno_switch_solar_app/services/firmware_upgrade_service.dart'
     as fw;
-import '../utils/bluetooth/ble_notify_data_handler.dart';
 import 'package:techno_switch_solar_app/utils/bluetooth_service.dart'
     as app_bluetooth;
 import 'package:techno_switch_solar_app/utils/ble_name_utils.dart';
@@ -54,7 +53,6 @@ class FirmwareUpgradeBottomSheet extends StatefulWidget {
 class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
     with SingleTickerProviderStateMixin {
   final UpdatesController _controller = Get.find<UpdatesController>();
-  late final BleNotifyDataHandler _bleHandler;
   FirmwareUpgradeStep _currentStep = FirmwareUpgradeStep.essentialSteps;
   FirmwareType? _selectedFirmwareType;
   PlatformFile? _selectedFile;
@@ -107,18 +105,6 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
   @override
   void initState() {
     super.initState();
-
-    // Get BLE handler if available
-    try {
-      if (Get.isRegistered<BleNotifyDataHandler>()) {
-        _bleHandler = Get.find<BleNotifyDataHandler>();
-      } else {
-        _bleHandler = Get.put(BleNotifyDataHandler());
-      }
-    } catch (e) {
-      logger.Logger('BleNotifyDataHandler not available: $e');
-      _bleHandler = Get.put(BleNotifyDataHandler());
-    }
 
     // Get connected device from widget parameter or from BleManager
     if (widget.connectedDevice != null) {
@@ -177,45 +163,6 @@ class _FirmwareUpgradeBottomSheetState extends State<FirmwareUpgradeBottomSheet>
       }
     });
 
-    // Listen to BLE state changes for better feedback
-    _bleHandler.currentBleState.listen((state) {
-      if (mounted) {
-        // Ignore disconnection events during internal reconnect phases
-        if (_isWaitingForJumpReconnect || _isWaitingForEndReconnect) {
-          return;
-        }
-
-        if (_isUpgrading) {
-          setState(() {
-            switch (state) {
-              case BleStateMachine.mcuSelection:
-                _currentBleStateMessage = 'Selecting MCU...';
-                break;
-              case BleStateMachine.eofImageData:
-                _currentBleStateMessage = 'Sending EOF image data...';
-                break;
-              case BleStateMachine.dataSyncRequest:
-                _currentBleStateMessage = 'Synchronizing data...';
-                break;
-              case BleStateMachine.sendingLargePacketOnGoing:
-                _currentBleStateMessage = 'Sending firmware packets...';
-                break;
-              case BleStateMachine.dataEndRequest:
-                _currentBleStateMessage = 'Finalizing upgrade...';
-                break;
-              case BleStateMachine.respondToEndPacket:
-                _currentBleStateMessage = 'Upgrade completed!';
-                break;
-              default:
-                // Don't update message for non-firmware states
-                break;
-            }
-          });
-        }
-      }
-    });
-
-    // No need to check initial connection - device is already connected
   }
 
   Future<void> _sendPacketsOverBle({bool? isChipInBootLoader = false}) async {

@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
-import 'package:techno_switch_solar_app/utils/serial_communication_service.dart';
 import 'package:techno_switch_solar_app/models/log_model.dart';
+
+enum PanelConnectionState { notConnected, connected, processing }
 
 class AppState {
   AppState._internal();
@@ -26,50 +27,6 @@ class AppState {
   static final ValueNotifier<double> logRetrievalProgress = ValueNotifier(0.0);
 
   static final ValueNotifier<bool> isRetrievingLogs = ValueNotifier(false);
-
-  static void updateConnectionState(PanelConnectionState state) {
-    connectionState.value = state;
-  }
-
-  static void updateLogsCount(int count) {
-    logsCount.value = count;
-  }
-
-  static void addLog(LogModel log) {
-    final currentLogsList = List<LogModel>.from(currentLogs.value);
-    currentLogsList.insert(0, log);
-    currentLogs.value = currentLogsList;
-    updateLogsCount(currentLogsList.length);
-  }
-
-  static void setLogs(List<LogModel> logs) {
-    currentLogs.value = logs;
-    updateLogsCount(logs.length);
-  }
-
-  static void clearLogs() {
-    currentLogs.value = [];
-    updateLogsCount(0);
-  }
-
-  static void updateConnectionStatus(String status) {
-    connectionStatus.value = status;
-  }
-
-  static void updateConnectedDeviceName(String? deviceName) {
-    connectedDeviceName.value = deviceName;
-  }
-
-  static void updateLogRetrievalProgress(double progress) {
-    logRetrievalProgress.value = progress;
-  }
-
-  static void setLogRetrievalStatus(bool isRetrieving) {
-    isRetrievingLogs.value = isRetrieving;
-    if (!isRetrieving) {
-      logRetrievalProgress.value = 0.0;
-    }
-  }
 
   static void reset() {
     connectionState.value = PanelConnectionState.notConnected;

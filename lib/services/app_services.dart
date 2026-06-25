@@ -1,8 +1,6 @@
-import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
-import 'package:techno_switch_solar_app/utils/serial_communication_service.dart';
+import 'package:get/get.dart';
+import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/services/app_state.dart';
-import 'package:techno_switch_solar_app/services/technoswitch_ble_service.dart';
-import 'dart:async';
 
 class AppServices {
   AppServices._internal();
@@ -11,51 +9,23 @@ class AppServices {
 
   factory AppServices() => _instance;
 
-  static SerialCommunicationService get serialService =>
-      SerialCommunicationService.instance;
+  static BleManager get _bleManager => Get.find<BleManager>();
 
-  static TechnoswitchBleService get bleService =>
-      TechnoswitchBleService.instance;
+  static bool get isConnected => _bleManager.isConnected;
 
-  static bool get isConnected =>
-      serialService.isConnected || bleService.isConnected;
-
-  static PanelConnectionState get connectionState =>
-      serialService.connectionState;
-
-  static DiscoveredDevice? get connectedDevice => serialService.connectedDevice;
-
-  static Future<void> initialize() async {
-    _setupStateListeners();
-  }
-
-  static void _setupStateListeners() {
-    final service = serialService;
-
-    service.statusStream.listen((status) {
-      AppState.updateConnectionStatus(status);
-      AppState.updateConnectionState(service.connectionState);
-
-      if (service.connectedDevice != null) {
-        AppState.updateConnectedDeviceName(service.connectedDevice!.name);
-      } else {
-        AppState.updateConnectedDeviceName(null);
-      }
-    });
-
-    service.logStream.listen((log) {
-      AppState.addLog(log);
-    });
-  }
+  static Future<void> initialize() async {}
 
   static Future<void> dispose() async {
-    serialService.dispose();
-    await bleService.disconnect();
+    if (_bleManager.isConnected) {
+      await _bleManager.disconnectConnectedDevice();
+    }
     AppState.dispose();
   }
 
   static Future<void> disconnect() async {
-    await bleService.disconnect();
+    if (_bleManager.isConnected) {
+      await _bleManager.disconnectConnectedDevice();
+    }
     AppState.reset();
   }
 }

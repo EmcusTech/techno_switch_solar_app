@@ -4,7 +4,6 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import '../models/log_model.dart';
-import '../services/app_services.dart';
 import '../services/site_service.dart';
 import '../services/panel_service.dart';
 import '../screens/create_project/pages/site_creation_page.dart';
@@ -87,8 +86,7 @@ class _SimpleSiteCreationScreenState extends State<SimpleSiteCreationScreen> {
     });
 
     try {
-      final panelIdToCheck =
-          widget.panelId ?? AppServices.serialService.currentPanelId;
+      final panelIdToCheck = widget.panelId;
       print('DEBUG: SimpleSiteCreation - Checking panel ID: $panelIdToCheck');
 
       if (panelIdToCheck != null) {
@@ -175,10 +173,9 @@ class _SimpleSiteCreationScreenState extends State<SimpleSiteCreationScreen> {
 
       await _siteService.storeLogs(widget.retrievedLogs, siteId: site.id!);
 
-      final panelIdToAssociate =
-          widget.panelId ?? AppServices.serialService.currentPanelId;
+      final panelIdToAssociate = widget.panelId;
       print(
-        'DEBUG: Panel ID to associate: $panelIdToAssociate (from widget: ${widget.panelId}, from service: ${AppServices.serialService.currentPanelId})',
+        'DEBUG: Panel ID to associate: $panelIdToAssociate (from widget: ${widget.panelId})',
       );
       print('DEBUG: Site ID: ${site.id}');
 
