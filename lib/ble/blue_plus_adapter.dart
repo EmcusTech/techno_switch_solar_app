@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart' as fbp;
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
 class Uuid {
   const Uuid._(this.value);
@@ -90,9 +91,6 @@ class DiscoveredDevice {
   factory DiscoveredDevice.fromScanResult(fbp.ScanResult result) {
     final serviceData = <Uuid, List<int>>{};
 
-    print(
-      "DEBUG ADAPTER: Service data: ${result.advertisementData.serviceData}",
-    );
     try {
       result.advertisementData.serviceData.forEach((key, value) {
         serviceData[Uuid.fromGuid(key)] = List<int>.from(value);
@@ -103,41 +101,19 @@ class DiscoveredDevice {
     try {
       final ad = result.advertisementData;
 
-      print(
-        "DEBUG ADAPTER: Full advertisement data for ${result.device.platformName}:",
-      );
-      print("  - msd list length: ${ad.msd.length}");
-
       if (ad.msd.isNotEmpty) {
         final msdData = ad.msd.first;
-        print(
-          "DEBUG ADAPTER: MSD entry type: ${msdData.runtimeType}, data: $msdData, data length: ${msdData.length}",
-        );
 
         manufacturerData.addAll(msdData);
-        print(
-          "DEBUG ADAPTER: Extracted MSD data array: $manufacturerData, Length: ${manufacturerData.length}",
-        );
       } else {
-        print(
-          "DEBUG ADAPTER: MSD is EMPTY for ${result.device.platformName}, trying fallback to manufacturerData",
-        );
-
         final manuDataMap = ad.manufacturerData;
         if (manuDataMap.isNotEmpty) {
           for (final entry in manuDataMap.entries) {
             manufacturerData.addAll(entry.value);
           }
-          print(
-            "DEBUG ADAPTER: Fallback - Extracted manufacturer data array: $manufacturerData, Length: ${manufacturerData.length}",
-          );
         }
       }
-    } catch (e, stackTrace) {
-      print("Warning: Could not extract MSD/manufacturer data: $e");
-      print("DEBUG ADAPTER: Exception details: $e");
-      print("DEBUG ADAPTER: Stack trace: $stackTrace");
-    }
+    } catch (_) {}
 
     final serviceUuids = <Uuid>[];
     try {
@@ -206,7 +182,6 @@ class FlutterReactiveBle {
 
     final sub = fbp.FlutterBluePlus.scanResults.listen((results) {
       for (final result in results) {
-        print("DEBUG ADAPTER: Scan result: ${result.advertisementData}");
         controller.add(DiscoveredDevice.fromScanResult(result));
       }
     }, onError: controller.addError);
@@ -402,7 +377,7 @@ class FlutterReactiveBle {
       if (candidate is fbp.Guid) return Uuid.fromGuid(candidate);
     } catch (_) {}
 
-    throw StateError("Unable to read service UUID");
+    throw StateError(StringConstants.unableToReadServiceUuid);
   }
 
   Uuid _characteristicUuid(fbp.BluetoothCharacteristic characteristic) {
@@ -416,7 +391,7 @@ class FlutterReactiveBle {
       if (candidate is fbp.Guid) return Uuid.fromGuid(candidate);
     } catch (_) {}
 
-    throw StateError("Unable to read characteristic UUID");
+    throw StateError(StringConstants.unableToReadCharacteristicUuid);
   }
 
   bool _uuidsEqual(Uuid a, Uuid b) =>

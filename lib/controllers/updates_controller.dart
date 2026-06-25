@@ -84,17 +84,9 @@ class UpdatesController extends GetxController {
     final packets = packetResult!.packets;
     final logicalTotal = packetResult!.totalLogicalPackets;
 
-    int logicalIndex = 0;
-
-    for (final packet in packets) {
-      print("Sending packet: ${packet.sequence}");
-      print(
-        "Packet: ${packet.bytes.map((e) => e.toRadixString(16).padLeft(2, '0')).join(' ')}",
-      );
-      logicalIndex++;
-
-      progressbarIndex.value = logicalIndex;
-      progressbarCount.value = logicalIndex / logicalTotal;
+    for (int i = 0; i < packets.length; i++) {
+      progressbarIndex.value = i;
+      progressbarCount.value = i / logicalTotal;
 
       await Future.delayed(packetDelay);
     }

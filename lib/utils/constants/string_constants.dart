@@ -49,6 +49,9 @@ abstract final class StringConstants {
       "Access Code Setup Fetch Completed";
   static const String accessCodeSetupApplyCompleted =
       "Access Code Setup Apply Completed";
+  static const String unableToReadServiceUuid = "Unable to read service UUID";
+  static const String unableToReadCharacteristicUuid =
+      "Unable to read characteristic UUID";
 
   //Process
   static const String regNotifyHand = "Register notify handler";
@@ -110,6 +113,11 @@ abstract final class StringConstants {
   static const String noResponseFromDevice = "No response from device";
   static const String deviceNotResponding = "Device not responding.";
   static const String sendingNetworkPacket = "Sending Network Packet";
+  static const String siteNameRequired = "Site Name is required";
+  static const String saqccRegNumberRequired =
+      "SAQCC Registration Number is required";
+  static const String panelNameRequired = "Panel Name is required";
+  static const String panelTypeRequired = "Panel Type is required";
 
   //BLE
   static const String bleAuthMsg = "TECHNOSWITCH-AUTH-APP";

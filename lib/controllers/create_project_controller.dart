@@ -9,6 +9,7 @@ import 'package:techno_switch_solar_app/models/create_project/relay_data.dart';
 import 'package:techno_switch_solar_app/models/create_project/input_data.dart';
 import 'package:techno_switch_solar_app/models/create_project/lbus_data.dart';
 import 'package:techno_switch_solar_app/models/panel_type_config.dart';
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
 class CreateProjectController extends ChangeNotifier {
   final TextEditingController siteNameController = TextEditingController(
@@ -272,18 +273,18 @@ class CreateProjectController extends ChangeNotifier {
 
     if (step == 1) {
       if (siteNameController.text.trim().isEmpty) {
-        validationErrors['siteName'] = 'Site Name is required';
+        validationErrors['siteName'] = StringConstants.siteNameRequired;
       }
       if (saqccRegNumberController.text.trim().isEmpty) {
         validationErrors['saqccRegNumber'] =
-            'SAQCC Registration Number is required';
+            StringConstants.saqccRegNumberRequired;
       }
     } else if (step == 2) {
       if (panelNameController.text.trim().isEmpty) {
-        validationErrors['panelName'] = 'Panel Name is required';
+        validationErrors['panelName'] = StringConstants.panelNameRequired;
       }
       if (panelData.selectedPanelType == null) {
-        validationErrors['panelType'] = 'Panel Type is required';
+        validationErrors['panelType'] = StringConstants.panelTypeRequired;
       }
     }
 
