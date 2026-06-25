@@ -4,8 +4,9 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
-import 'package:techno_switch_solar_app/screens/device_connecting_screen.dart';
 import 'package:techno_switch_solar_app/utils/ble_name_utils.dart';
+
+final BleManager ble = Get.find<BleManager>();
 
 class SettingsScreen extends StatefulWidget {
   final String panelName;

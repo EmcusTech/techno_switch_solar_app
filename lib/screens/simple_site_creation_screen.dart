@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:techno_switch_solar_app/screens/device_connecting_screen.dart';
+import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import '../models/log_model.dart';
 import '../services/app_services.dart';
 import '../services/site_service.dart';
@@ -9,6 +10,8 @@ import '../services/panel_service.dart';
 import '../screens/create_project/pages/site_creation_page.dart';
 import '../screens/home_screen.dart';
 import '../screens/site_screen.dart';
+
+final BleManager ble = Get.find<BleManager>();
 
 class SimpleSiteCreationScreen extends StatefulWidget {
   final List<LogModel> retrievedLogs;

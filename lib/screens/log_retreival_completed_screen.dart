@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
+import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
 import 'package:techno_switch_solar_app/models/log_model.dart';
-import 'package:techno_switch_solar_app/screens/device_connecting_screen.dart';
 import 'package:techno_switch_solar_app/screens/event_log_screen.dart';
 import 'package:techno_switch_solar_app/screens/simple_site_creation_screen.dart';
 import 'package:techno_switch_solar_app/services/navigation_service.dart';
@@ -12,6 +13,8 @@ import 'package:techno_switch_solar_app/services/panel_service.dart';
 import 'package:techno_switch_solar_app/services/site_service.dart';
 import 'package:techno_switch_solar_app/widgets/site_creation_dialog.dart';
 import 'package:techno_switch_solar_app/utils/ble_name_utils.dart';
+
+final BleManager ble = Get.find<BleManager>();
 
 class LogRetrievalCompletedScreen extends StatefulWidget {
   final List<LogModel> logs;

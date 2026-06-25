@@ -3,11 +3,14 @@ import 'dart:math' show min;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:techno_switch_solar_app/screens/device_connecting_screen.dart';
+import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/utils/peripheral_config_diff_labels.dart';
 import 'package:techno_switch_solar_app/utils/peripheral_config_snapshot.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/widgets/dropdown.dart';
+
+final BleManager ble = Get.find<BleManager>();
 
 /// [bottomSheet] - rounded top only (e.g. dashboard modal).
 /// [dialog] - same content in a centered [Dialog] (e.g. post connect compare).
@@ -143,7 +146,9 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
 
   void _syncSelectedLBusFromResult(ConfigCompareResult? result) {
     if (result == null) return;
-    final lines = _lBusFieldDiffLines(result.diffLinesFor(PeripheralConfigSection.lBus));
+    final lines = _lBusFieldDiffLines(
+      result.diffLinesFor(PeripheralConfigSection.lBus),
+    );
     for (final line in lines) {
       final index = _listIndexFromDiffLine(line);
       if (index != null) {
@@ -174,7 +179,9 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
       decoration: BoxDecoration(
         color: const Color(0xFFFFEBEE),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFFEC1D24).withValues(alpha: 0.35)),
+        border: Border.all(
+          color: const Color(0xFFEC1D24).withValues(alpha: 0.35),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -718,7 +725,8 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
     final isLBus = s == PeripheralConfigSection.lBus;
     final lBusCommsFaults =
         isLBus ? result.lBusCommsFaultBusNumbers : const <String>[];
-    final lBusFieldDiffLines = isLBus ? _lBusFieldDiffLines(diffLines) : diffLines;
+    final lBusFieldDiffLines =
+        isLBus ? _lBusFieldDiffLines(diffLines) : diffLines;
     final hasLBusFieldDiffs = lBusFieldDiffLines.isNotEmpty;
     final hasLBusCommsFaults = lBusCommsFaults.isNotEmpty;
     final visibleDiffLines =

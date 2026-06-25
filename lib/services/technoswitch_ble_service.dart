@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
 import 'package:get/get.dart';
 import 'package:techno_switch_solar_app/utils/bluetooth/ble_notify_data_handler.dart';
 import 'package:techno_switch_solar_app/utils/bluetooth/bt_utils.dart';
@@ -25,38 +24,6 @@ class TechnoswitchBleService {
   BleNotifyDataHandler get controller => _bleHandler;
   Stream<BleHandshakeEvent> get handshakeEvents => _bleHandler.handshakeEvents;
   bool get isConnected => _isConnected;
-
-  Future<List<DiscoveredDevice>> scanForDevices({
-    Duration duration = const Duration(seconds: 15),
-  }) async {
-    final List<DiscoveredDevice> devices = [];
-
-    final StreamSubscription sub = _btUtils.scanResultsStream.listen((results) {
-      devices
-        ..clear()
-        ..addAll(results);
-    });
-
-    await Future.delayed(duration);
-
-    await sub.cancel();
-
-    return List.unmodifiable(devices);
-  }
-
-  Stream<DeviceConnectionState> connectToDevice(
-    DiscoveredDevice device,
-  ) async* {
-    final stream = _btUtils.connectToDevice(device);
-
-    await for (final state in stream) {
-      if (state == DeviceConnectionState.connected) {
-        await _bleHandler.enableNotifyForCallBack(device: device);
-        _isConnected = true;
-      }
-      yield state;
-    }
-  }
 
   Future<void> disconnect() async {
     await _btUtils.disconnect();

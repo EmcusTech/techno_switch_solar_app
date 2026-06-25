@@ -70,10 +70,6 @@ class FirmwareBinTrailer {
     final d = trailer.sublist(o, o + FirmwareBinFormat.dateLength);
     o += FirmwareBinFormat.dateLength;
     final pid = trailer.sublist(o, o + FirmwareBinFormat.productIdLength);
-    print("firnware data: fw: ${_fieldToString(fw)}");
-    print("firnware data: hw: ${_fieldToString(hw)}");
-    print("firnware data: d: ${_fieldToString(d)}");
-    print("firnware data: pid: ${_fieldToString(pid)}");
     return FirmwareBinTrailer(
       firmwareVersion: _fieldToString(fw),
       hardwareVersion: _fieldToString(hw),

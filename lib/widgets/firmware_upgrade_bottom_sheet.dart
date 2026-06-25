@@ -14,7 +14,6 @@ import 'package:lottie/lottie.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 import 'package:techno_switch_solar_app/ble/ble_session_idle_policy.dart';
 import 'package:techno_switch_solar_app/models/ble/firmware/firmware_packet_model.dart';
-import 'package:techno_switch_solar_app/screens/device_connecting_screen.dart';
 import 'package:techno_switch_solar_app/widgets/common/common_cta_button.dart';
 import '../ble/ble_manager.dart';
 import '../ble/controller/ble_log_controller.dart';
@@ -27,6 +26,8 @@ import 'package:techno_switch_solar_app/utils/bluetooth_service.dart'
 import 'package:techno_switch_solar_app/utils/ble_name_utils.dart';
 import 'package:techno_switch_solar_app/utils/ble_msd_utils.dart';
 import 'package:techno_switch_solar_app/utils/logger.dart' as logger;
+
+final BleManager ble = Get.find<BleManager>();
 
 enum FirmwareType { mainPanel, bleChip }
 

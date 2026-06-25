@@ -9,7 +9,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/controllers/updates_controller.dart';
-import 'package:techno_switch_solar_app/screens/device_connecting_screen.dart';
 import 'package:techno_switch_solar_app/screens/log_history_screen.dart';
 import 'package:techno_switch_solar_app/screens/log_retrieval_loading_screen.dart'
     hide ble;
@@ -53,6 +52,8 @@ import 'package:techno_switch_solar_app/widgets/firmware_upgrade_bottom_sheet.da
 import 'package:techno_switch_solar_app/widgets/panel_access_code_dialog.dart';
 import 'package:techno_switch_solar_app/widgets/bootloader_connect_flow.dart';
 import 'package:techno_switch_solar_app/widgets/ble_connecting_dialog.dart';
+
+final BleManager ble = Get.find<BleManager>();
 
 class ProjectDashboardScreen extends StatefulWidget {
   final String panelVersionNo;

@@ -1,11 +1,8 @@
 library;
 
-import 'dart:convert';
-
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:techno_switch_solar_app/models/frame_data.dart';
-import 'package:techno_switch_solar_app/utils/bluetooth/ble_frame_utils.dart';
 import 'package:techno_switch_solar_app/utils/bluetooth/ble_notify_data_handler.dart';
 import 'package:techno_switch_solar_app/utils/bluetooth/data_transfer_manager.dart';
 import 'package:techno_switch_solar_app/utils/encryption_utils.dart';
@@ -23,135 +20,135 @@ String _bytesToAscii(List<int> bytes) {
 }
 
 class DataHandler {
-  List<List<int>> generateChunksForConfigPayload(List<int> payload) {
-    List<List<int>> payloadChunkList = <List<int>>[];
+  // List<List<int>> generateChunksForConfigPayload(List<int> payload) {
+  //   List<List<int>> payloadChunkList = <List<int>>[];
 
-    int chunkSize =
-        Get.find<BleNotifyDataHandler>().currentLargePacketModule.value ==
-                LargePacketModule.devices
-            ? enBLE_PAYLOAD_SIZE_PER_PACKET_BASED_ON_DEVICE
-            : Get.find<BleNotifyDataHandler>().currentLargePacketModule.value ==
-                LargePacketModule.sendingZoneData
-            ? enBLE_PAYLOAD_SIZE_PER_PACKET_BASED_ON_ZONE
-            : enBLE_PAYLOAD_SIZE_PER_PACKET;
+  //   int chunkSize =
+  //       Get.find<BleNotifyDataHandler>().currentLargePacketModule.value ==
+  //               LargePacketModule.devices
+  //           ? enBLE_PAYLOAD_SIZE_PER_PACKET_BASED_ON_DEVICE
+  //           : Get.find<BleNotifyDataHandler>().currentLargePacketModule.value ==
+  //               LargePacketModule.sendingZoneData
+  //           ? enBLE_PAYLOAD_SIZE_PER_PACKET_BASED_ON_ZONE
+  //           : enBLE_PAYLOAD_SIZE_PER_PACKET;
 
-    Logger(
-      "State : ${Get.find<BleNotifyDataHandler>().currentLargePacketModule.value.name} , Chunk size = $chunkSize , TotalPayload size: ${payload.length}",
-    );
+  //   Logger(
+  //     "State : ${Get.find<BleNotifyDataHandler>().currentLargePacketModule.value.name} , Chunk size = $chunkSize , TotalPayload size: ${payload.length}",
+  //   );
 
-    for (int i = 0; i < payload.length; i += chunkSize) {
-      List<int> tempSubList = payload.sublist(
-        i,
-        i + chunkSize > payload.length ? payload.length : i + chunkSize,
-      );
+  //   for (int i = 0; i < payload.length; i += chunkSize) {
+  //     List<int> tempSubList = payload.sublist(
+  //       i,
+  //       i + chunkSize > payload.length ? payload.length : i + chunkSize,
+  //     );
 
-      payloadChunkList.add(tempSubList);
-    }
+  //     payloadChunkList.add(tempSubList);
+  //   }
 
-    for (int j = 0; j < payloadChunkList.length; j++) {
-      List<int> sequenceNumber = intToBytesLittleEndian(j + 1);
+  //   for (int j = 0; j < payloadChunkList.length; j++) {
+  //     List<int> sequenceNumber = intToBytesLittleEndian(j + 1);
 
-      payloadChunkList[j].insertAll(0, sequenceNumber);
-    }
+  //     payloadChunkList[j].insertAll(0, sequenceNumber);
+  //   }
 
-    return payloadChunkList;
-  }
+  //   return payloadChunkList;
+  // }
 
-  Future<List<List<int>>> generateChunksForFirmwareUpgradePayload(
-    List<int> payload,
-  ) async {
-    List<List<int>> payloadChunkList = <List<int>>[];
-    int chunkSize = 256;
+  // Future<List<List<int>>> generateChunksForFirmwareUpgradePayload(
+  //   List<int> payload,
+  // ) async {
+  //   List<List<int>> payloadChunkList = <List<int>>[];
+  //   int chunkSize = 256;
 
-    Logger(
-      'Firmware Upgrade: Using chunk size ${chunkSize} bytes (no sequence number)',
-    );
+  //   Logger(
+  //     'Firmware Upgrade: Using chunk size ${chunkSize} bytes (no sequence number)',
+  //   );
 
-    for (int i = 0; i < payload.length - 100; i += chunkSize) {
-      List<int> tempSubList = payload.sublist(
-        i,
-        i + chunkSize > payload.length - 100
-            ? payload.length - 100
-            : i + chunkSize,
-      );
+  //   for (int i = 0; i < payload.length - 100; i += chunkSize) {
+  //     List<int> tempSubList = payload.sublist(
+  //       i,
+  //       i + chunkSize > payload.length - 100
+  //           ? payload.length - 100
+  //           : i + chunkSize,
+  //     );
 
-      if (tempSubList.every((int e) => e == 0xFF)) {
-        continue;
-      }
+  //     if (tempSubList.every((int e) => e == 0xFF)) {
+  //       continue;
+  //     }
 
-      payloadChunkList.add(tempSubList);
-    }
+  //     payloadChunkList.add(tempSubList);
+  //   }
 
-    return payloadChunkList;
-  }
+  //   return payloadChunkList;
+  // }
 
-  Future<List<List<int>>> generateChunksForFirmwareUpgradeWithFullPayload(
-    List<int> payload,
-  ) async {
-    List<List<int>> payloadChunkList = <List<int>>[];
-    int chunkSize = 256;
+  // Future<List<List<int>>> generateChunksForFirmwareUpgradeWithFullPayload(
+  //   List<int> payload,
+  // ) async {
+  //   List<List<int>> payloadChunkList = <List<int>>[];
+  //   int chunkSize = 256;
 
-    Logger(
-      'Firmware Upgrade: Using chunk size $chunkSize bytes (no sequence number)',
-    );
+  //   Logger(
+  //     'Firmware Upgrade: Using chunk size $chunkSize bytes (no sequence number)',
+  //   );
 
-    for (int i = 0; i < payload.length; i += chunkSize) {
-      List<int> tempSubList = payload.sublist(
-        i,
-        i + chunkSize > payload.length ? payload.length : i + chunkSize,
-      );
+  //   for (int i = 0; i < payload.length; i += chunkSize) {
+  //     List<int> tempSubList = payload.sublist(
+  //       i,
+  //       i + chunkSize > payload.length ? payload.length : i + chunkSize,
+  //     );
 
-      if (tempSubList.every((int e) => e == 0xFF)) {
-        continue;
-      }
+  //     if (tempSubList.every((int e) => e == 0xFF)) {
+  //       continue;
+  //     }
 
-      payloadChunkList.add(tempSubList);
-    }
+  //     payloadChunkList.add(tempSubList);
+  //   }
 
-    return payloadChunkList;
-  }
+  //   return payloadChunkList;
+  // }
 
-  Uint8List formatDataToFixedLength({
-    required String dataValue,
-    required int lengthOfTheString,
-  }) {
-    Uint8List? trimmedDataValue;
-    lengthOfTheString = lengthOfTheString - 1;
+  // Uint8List formatDataToFixedLength({
+  //   required String dataValue,
+  //   required int lengthOfTheString,
+  // }) {
+  //   Uint8List? trimmedDataValue;
+  //   lengthOfTheString = lengthOfTheString - 1;
 
-    if (utf8.encode(dataValue).length > lengthOfTheString) {
-      trimmedDataValue = utf8.encode(dataValue.padRight(lengthOfTheString));
-    } else {
-      trimmedDataValue = Uint8List.fromList(
-        utf8
-            .encode(dataValue)
-            .followedBy(
-              List<int>.filled(lengthOfTheString - dataValue.length, 0x00),
-            )
-            .toList(),
-      );
-    }
+  //   if (utf8.encode(dataValue).length > lengthOfTheString) {
+  //     trimmedDataValue = utf8.encode(dataValue.padRight(lengthOfTheString));
+  //   } else {
+  //     trimmedDataValue = Uint8List.fromList(
+  //       utf8
+  //           .encode(dataValue)
+  //           .followedBy(
+  //             List<int>.filled(lengthOfTheString - dataValue.length, 0x00),
+  //           )
+  //           .toList(),
+  //     );
+  //   }
 
-    if (trimmedDataValue.length > lengthOfTheString) {
-      Uint8List tempDeviceNameList = Uint8List.fromList(
-        trimmedDataValue.sublist(0, lengthOfTheString),
-      );
+  //   if (trimmedDataValue.length > lengthOfTheString) {
+  //     Uint8List tempDeviceNameList = Uint8List.fromList(
+  //       trimmedDataValue.sublist(0, lengthOfTheString),
+  //     );
 
-      trimmedDataValue = tempDeviceNameList;
-    }
+  //     trimmedDataValue = tempDeviceNameList;
+  //   }
 
-    trimmedDataValue = Uint8List.fromList(
-      trimmedDataValue
-          .followedBy(
-            List<int>.filled(
-              (lengthOfTheString + 1) - trimmedDataValue.length,
-              0x00,
-            ),
-          )
-          .toList(),
-    );
+  //   trimmedDataValue = Uint8List.fromList(
+  //     trimmedDataValue
+  //         .followedBy(
+  //           List<int>.filled(
+  //             (lengthOfTheString + 1) - trimmedDataValue.length,
+  //             0x00,
+  //           ),
+  //         )
+  //         .toList(),
+  //   );
 
-    return trimmedDataValue;
-  }
+  //   return trimmedDataValue;
+  // }
 
   Future<FrameData?> decryptTheDataPacketWithoutConversion(
     List<int> dataPacket,
@@ -305,11 +302,11 @@ class DataHandler {
     return isValid;
   }
 
-  int getExpanderAddress(int index) {
-    int baseIndex = 200;
+  // int getExpanderAddress(int index) {
+  //   int baseIndex = 200;
 
-    int expanderAddress = baseIndex + (index + 1);
+  //   int expanderAddress = baseIndex + (index + 1);
 
-    return expanderAddress;
-  }
+  //   return expanderAddress;
+  // }
 }

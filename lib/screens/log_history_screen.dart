@@ -5,7 +5,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/models/log_model.dart';
 import 'package:techno_switch_solar_app/models/log_retrieval_model.dart';
-import 'package:techno_switch_solar_app/screens/device_connecting_screen.dart';
 import 'package:techno_switch_solar_app/screens/event_log_screen.dart';
 import 'package:techno_switch_solar_app/services/log_retrieval_service.dart';
 import 'package:techno_switch_solar_app/utils/ble_name_utils.dart';

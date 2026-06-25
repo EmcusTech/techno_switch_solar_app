@@ -55,33 +55,33 @@ class AppServices {
     AppState.dispose();
   }
 
-  static Future<bool> connectToDevice({String? deviceName}) async {
-    return await BluetoothConnectionManager.ensureConnection(
-      deviceName: deviceName,
-    );
-  }
+  // static Future<bool> connectToDevice({String? deviceName}) async {
+  //   return await BluetoothConnectionManager.ensureConnection(
+  //     deviceName: deviceName,
+  //   );
+  // }
 
-  static Future<bool> reconnectToDevice(String deviceName) async {
-    return await BluetoothConnectionManager.reconnectToDevice(deviceName);
-  }
+  // static Future<bool> reconnectToDevice(String deviceName) async {
+  //   return await BluetoothConnectionManager.reconnectToDevice(deviceName);
+  // }
 
   static Future<void> disconnect() async {
-    await BluetoothConnectionManager.safeDisconnect();
+    // await BluetoothConnectionManager.safeDisconnect();
     await bleService.disconnect();
     AppState.reset();
   }
 
-  static void startLogRetrieval() {
-    AppState.setLogRetrievalStatus(true);
-    AppState.clearLogs();
-    serialService.startLogRetrieval();
-  }
+  // static void startLogRetrieval() {
+  //   AppState.setLogRetrievalStatus(true);
+  //   AppState.clearLogs();
+  //   serialService.startLogRetrieval();
+  // }
 
-  static Future<List<DiscoveredDevice>> scanForDevices() async {
-    return await serialService.scanForDevices();
-  }
+  // static Future<List<DiscoveredDevice>> scanForDevices() async {
+  //   return await serialService.scanForDevices();
+  // }
 
-  static bool get isConnecting => BluetoothConnectionManager.isConnecting;
+  // static bool get isConnecting => BluetoothConnectionManager.isConnecting;
 
-  static bool get isReconnecting => BluetoothConnectionManager.isReconnecting;
+  // static bool get isReconnecting => BluetoothConnectionManager.isReconnecting;
 }

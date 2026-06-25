@@ -253,10 +253,6 @@ class FlutterReactiveBle {
     } catch (_) {}
   }
 
-  void evictCachedDevice(String id) {
-    _deviceCache.remove(id);
-  }
-
   Future<int> requestMtu({required String deviceId, required int mtu}) async {
     final device = _deviceCache.putIfAbsent(
       deviceId,

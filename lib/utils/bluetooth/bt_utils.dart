@@ -234,5 +234,3 @@ enum BluetoothWriteError {
   busyOnProcess,
   none,
 }
-
-enum BleBondingStates { bondingDone, bondingOngoing, none }
