@@ -12,7 +12,6 @@ import 'package:techno_switch_solar_app/screens/log_retreival_completed_screen.d
 import 'package:techno_switch_solar_app/utils/bluetooth/ble_notify_data_handler.dart';
 import 'package:techno_switch_solar_app/utils/bluetooth/data_handler.dart';
 import 'package:techno_switch_solar_app/utils/bluetooth/data_helper.dart';
-import 'package:techno_switch_solar_app/utils/bluetooth/data_transfer_manager.dart';
 import 'package:techno_switch_solar_app/utils/bluetooth_constants.dart';
 import 'package:techno_switch_solar_app/utils/event_constants.dart';
 import 'package:techno_switch_solar_app/services/app_services.dart';
@@ -373,7 +372,7 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen>
           return;
         }
       } else {
-        frame = DataTransferManager().parseRxFrame(rxData);
+        frame = DataHandler().parseRxFrame(rxData);
       }
 
       if (frame == null) {

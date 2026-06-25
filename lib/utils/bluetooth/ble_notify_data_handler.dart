@@ -1,15 +1,8 @@
 import 'dart:async';
 import 'dart:typed_data';
 import 'package:get/get.dart';
-import 'package:techno_switch_solar_app/utils/bluetooth/data_transfer_manager.dart';
-import 'package:techno_switch_solar_app/utils/logger.dart' as logger;
 
 class BleNotifyDataHandler extends GetxController {
-  final DataTransferManager _dataTransferManager = DataTransferManager();
-
-  int _pktTxCnt = 0;
-  final int _pktRxCnt = 0;
-  int _lastFeaturePacketCounter = 0;
   int pollPacketCount = 0;
   bool passkeyAccepted = false;
   Timer? _continuousPollTimer;
@@ -39,51 +32,6 @@ class BleNotifyDataHandler extends GetxController {
 
   Stream<BleHandshakeEvent> get handshakeEvents => _handshakeController.stream;
 
-  // Future<void> submitPasskey(String passkey) async {
-  //   logger.Logger('========================================');
-  //   logger.Logger('SUBMITTING PASSKEY');
-  //   logger.Logger('========================================');
-  //   logger.Logger('Passkey value: "$passkey"');
-  //   logger.Logger('Passkey length: ${passkey.length} characters');
-
-  //   if (passkey.isEmpty) {
-  //     logger.Logger('Passkey submission - ERROR: Passkey cannot be empty');
-  //     _emitEvent(BleHandshakeEvent.error('Passkey cannot be empty'));
-  //     return;
-  //   }
-
-  //   pollPacketCount = 0;
-  //   passkeyAccepted = false;
-  //   _pktTxCnt = _lastFeaturePacketCounter + 1;
-  //   _lastFeaturePacketCounter = _pktTxCnt;
-
-  //   logger.Logger('Passkey submission - Calling sendingPasskeyToBle()');
-  //   logger.Logger(
-  //     'Passkey submission - TX Counter: $_pktTxCnt (from last feature packet), RX Counter: $_pktRxCnt',
-  //   );
-
-  //   currentBleState(BleStateMachine.sendingPasskeyPacket);
-  //   _dataTransferManager.sendingPasskeyToBle(
-  //     passkey,
-  //     pktTxCnt: _pktTxCnt,
-  //     pktRxCnt: _pktRxCnt,
-  //     dataWritten: (bool isWritten) {
-  //       if (isWritten) {
-  //         logger.Logger('Passkey submission - Frame written successfully');
-  //         logger.Logger('Passkey submission - State: sendingPasskeyPacket');
-  //         logger.Logger(
-  //           'Passkey submission - Waiting for acknowledgment response...',
-  //         );
-  //       } else {
-  //         logger.Logger(
-  //           'Passkey submission - WARNING: Frame write may have failed',
-  //         );
-  //       }
-  //     },
-  //   );
-  //   logger.Logger('========================================\n');
-  // }
-
   void resetRetryCount() {
     retryCount = 1;
     update();
@@ -95,13 +43,6 @@ class BleNotifyDataHandler extends GetxController {
   }
 
   bool checkIfRetryReached() => retryCount >= maxRetryCount;
-
-  void _emitEvent(BleHandshakeEvent event) {
-    if (_handshakeController.isClosed) {
-      return;
-    }
-    _handshakeController.add(event);
-  }
 
   @override
   void onClose() {

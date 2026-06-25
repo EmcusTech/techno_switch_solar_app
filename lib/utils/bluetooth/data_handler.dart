@@ -3,7 +3,6 @@ library;
 import 'package:get/get.dart';
 import 'package:techno_switch_solar_app/models/frame_data.dart';
 import 'package:techno_switch_solar_app/utils/bluetooth/ble_notify_data_handler.dart';
-import 'package:techno_switch_solar_app/utils/bluetooth/data_transfer_manager.dart';
 import 'package:techno_switch_solar_app/utils/encryption_utils.dart';
 import 'package:techno_switch_solar_app/utils/logger.dart';
 import 'data_helper.dart';
@@ -19,6 +18,30 @@ String _bytesToAscii(List<int> bytes) {
 }
 
 class DataHandler {
+  FrameData parseRxFrame(List<int> rxData) {
+    List<String> hexValues =
+        rxData
+            .map(
+              (int byte) =>
+                  byte.toRadixString(16).toUpperCase().padLeft(2, '0'),
+            )
+            .toList();
+    Logger("From list ::::>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+    Logger(hexValues.sublist(7, hexValues.length - 4).toString());
+    return FrameData(
+      preambleByte: hexValues.sublist(0, 2),
+      commandByte: hexValues.sublist(2, 4),
+      frameTypeByte: hexValues[4],
+      payloadLength: hexValues.sublist(5, 7),
+      payloadData: hexValues.sublist(7, hexValues.length - 4),
+      calculatedCrc: hexValues.sublist(
+        hexValues.length - 4,
+        hexValues.length - 2,
+      ),
+      endFrame: hexValues.sublist(hexValues.length - 2),
+    );
+  }
+
   Future<FrameData?> decryptTheDataPacketWithoutConversion(
     List<int> dataPacket,
   ) async {
@@ -85,7 +108,7 @@ class DataHandler {
       Logger('TX/RX Logs - Hex: $rxHex');
       Logger('TX/RX Logs - ASCII: $rxAscii');
 
-      FrameData parsedFrame = DataTransferManager().parseRxFrame(decryptedData);
+      FrameData parsedFrame = parseRxFrame(decryptedData);
 
       if (parsedFrame.commandByte.isNotEmpty &&
           parsedFrame.commandByte.length >= 2) {
