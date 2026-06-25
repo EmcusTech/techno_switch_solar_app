@@ -5,9 +5,11 @@ import 'package:get/get.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/models/access_code_mode_model.dart';
 import 'package:techno_switch_solar_app/models/adc_domain_values_model.dart';
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 import 'package:techno_switch_solar_app/utils/ext_out_equipment_mode_util.dart';
 import 'package:techno_switch_solar_app/utils/general_quipment_mode_util.dart';
 import 'package:techno_switch_solar_app/utils/input_mode_util.dart';
+import 'package:techno_switch_solar_app/utils/logger.dart';
 import 'package:techno_switch_solar_app/utils/relay_mode_util.dart';
 import 'package:techno_switch_solar_app/utils/ext_zone_mode_util.dart';
 import 'package:techno_switch_solar_app/utils/zone_equipment_mode_util.dart';
@@ -638,12 +640,13 @@ class BleProcess {
 
     bleManager.u8RxPktCnt = rx.payload[4];
 
-    print(
+    Logger(
       "Rx pkt count: $bleManager.u8RxPktCnt (STATE: ${bleManager.otaProcessState.name}",
+      type: LogType.ble,
     );
 
     if (rx.payload[3] == 0x03) {
-      print("the received packet is a nack packet");
+      Logger(StringConstants.nackPacket, type: LogType.ble);
       isOtaCompleted = true;
       processNextOtaFrame = false;
       bleManager.otaProcessState = OtaProcessState.notInUse;
@@ -656,10 +659,10 @@ class BleProcess {
         rx.payload[12] == 0x02 &&
         rx.payload[13] == 0x0A &&
         !isNetworkPacketProcess.value) {
-      print("Wrong password. Try again.");
+      Logger(StringConstants.wrongPassword, type: LogType.ble);
       clearSessionAccessCode();
       resetProcessState();
-      processDesc.value = "Wrong password. Try again.";
+      processDesc.value = StringConstants.wrongPassword;
       isAccessKeyValid.value = false;
       return;
     }
@@ -669,14 +672,12 @@ class BleProcess {
         checkForNetworkPacketRsp = 1;
 
       case OtaProcessState.sendPollPacket:
-        print("NEXT: ACCESS PACKET");
         bleManager.otaProcessState = OtaProcessState.sendAccessKeyPacket;
         startRxTimeout();
         await bleManager.sendAccessKeyPkt();
         break;
 
       case OtaProcessState.sendAccessKeyPacket:
-        print("NEXT: CONTINUOUS POLL PACKET");
         bleManager.otaProcessState = OtaProcessState.sendContinuousPollPacket;
         checkForAccessKeyCmdRsp = 1;
         startAccessKeyPollDeadline();
@@ -687,7 +688,6 @@ class BleProcess {
         break;
 
       case OtaProcessState.sendControlCmdPacket:
-        print("Control cmd received → Next continuous poll");
         if (logRetreivalEnded) {
           bleManager.otaProcessState = OtaProcessState.notInUse;
           cancelOperationDeadline();
@@ -698,7 +698,6 @@ class BleProcess {
         break;
 
       case OtaProcessState.sendStopCntrlCmdPkt:
-        print("Sending Stop Control Command");
         if (checkForCtrlCmdRsp == 1) {
           logRetreivalEnded = true;
           isEventLogRetrievalFetchCommandActive.value = false;
@@ -716,131 +715,105 @@ class BleProcess {
         break;
 
       case OtaProcessState.sendExtOutSetupFetchCmdPkt:
-        print("Sending Ext Out Setup Fetch Command");
         checkForExtCmdFetchRes = 1;
         break;
 
       case OtaProcessState.sendExtOutSetupApplyCmdPkt:
-        print("Sending Ext Out Setup Apply Command");
         checkForExtCmdApplyRes = 1;
 
       case OtaProcessState.sendDipSettingFetchCmd:
-        print("Sending Dip setting fetch cmd");
         checkDipSetCmdRsp = 1;
 
       case OtaProcessState.sendInputSetupFetchCmdPkt:
-        print("Sending Input Setup Fetch Command");
         checkForInputSetupFetchRes = 1;
         break;
 
       case OtaProcessState.sendInputSetupApplyCmdPkt:
-        print("Sending Input Setup Apply Command");
         checkForInputSetupApplyRes = 1;
         break;
 
       case OtaProcessState.sendRelaySetupFetchCmdPkt:
-        print("Sending Relay Setup Fetch Command");
         checkForRelaySetupFetchRes = 1;
         break;
 
       case OtaProcessState.sendRelaySetupApplyCmdPkt:
-        print("Sending Relay Setup Apply Command");
         checkForRelaySetupApplyRes = 1;
         break;
 
       case OtaProcessState.sendZoneSetupFetchCmdPkt:
-        print("Sending Zone Setup Fetch Command");
         checkForZoneSetupFetchRes = 1;
         break;
 
       case OtaProcessState.sendZoneSetupApplyCmdPkt:
-        print("Sending Zone Setup Apply Command");
         checkForZoneSetupApplyRes = 1;
         break;
 
       case OtaProcessState.sendRadioSetupFetchCmdPkt:
-        print("Sending Radio Setup Fetch Command");
         checkForRadioSetupFetchRes = 1;
         break;
 
       case OtaProcessState.sendRadioSetupApplyCmdPkt:
-        print("Sending Radio Setup Apply Command");
         checkForRadioSetupApplyRes = 1;
         break;
 
       case OtaProcessState.sendModuleSetupFetchCmdPkt:
-        print("Sending Module Setup Fetch Command");
         checkForModuleSetupFetchRes = 1;
         break;
 
       case OtaProcessState.sendLBusSetupFetchCmdPkt:
-        print("Sending L-Bus Setup Fetch Command");
         checkForLBusSetupFetchRes = 1;
         break;
 
       case OtaProcessState.sendLBusSetupApplyCmdPkt:
-        print("Sending L-Bus Setup Apply Command");
         checkForLBusSetupApplyRes = 1;
         break;
 
       case OtaProcessState.sendSounderSetupFetchCmdPkt:
-        print("Sending Sounder Setup Fetch Command");
         checkForSounderSetupFetchRes = 1;
         break;
 
       case OtaProcessState.sendSounderSetupApplyCmdPkt:
-        print("Sending Sounder Setup Apply Command");
         checkForSounderSetupApplyRes = 1;
         break;
 
       case OtaProcessState.sendServiceDueFetchCmdPkt:
-        print("Sending Service Due Fetch Command");
         checkForServiceDueFetchRes = 1;
         break;
 
       case OtaProcessState.sendServiceDueApplyCmdPkt:
-        print("Sending Service Due Apply Command");
         checkForServiceDueApplyRes = 1;
         break;
 
       case OtaProcessState.sendAccessCodeSetupFetchCmdPkt:
-        print("Sending Access Code Setup Fetch Command");
         checkForAccessCodeSetupFetchRes = 1;
         break;
 
       case OtaProcessState.sendAccessCodeSetupApplyCmdPkt:
-        print("Sending Access Code Setup Apply Command");
         checkForAccessCodeSetupApplyRes = 1;
         break;
 
       case OtaProcessState.sendPanelInfoSetupFetchCmdPkt:
-        print("Sending Panel Info Setup Fetch Command");
         checkForPanelInfoSetupFetchRes = 1;
         break;
 
       case OtaProcessState.sendPanelInfoSetupApplyCmdPkt:
-        print("Sending Panel Info Setup Apply Command");
         checkForPanelInfoSetupApplyRes = 1;
         break;
 
       case OtaProcessState.sendGeneralModuleSetupFetchCmdPkt:
-        print("Sending General Module Setup Fetch Command");
         checkForGeneralModuleSetupFetchRes = 1;
         break;
 
       case OtaProcessState.sendGeneralModuleSetupApplyCmdPkt:
-        print("Sending General Module Setup Apply Command");
         checkForGeneralModuleSetupApplyRes = 1;
         break;
 
       case OtaProcessState.sendLiveEventsRetrievalFetchCmdPkt:
-        print("Sending Live Events Retrieval Fetch Command");
         checkForLiveEventsRetrievalRes = 1;
         bleManager.otaProcessState = OtaProcessState.sendContinuousPollPacket;
         break;
 
       case OtaProcessState.sendAdcSetupFetchCmdPkt:
-        print("Sending Adc Setup Fetch Command");
         checkForAdcSetupFetchRes = 1;
         break;
 
@@ -850,9 +823,6 @@ class BleProcess {
 
     if (checkForNetworkPacketRsp == 1) {
       if (receivedPanelName.value.isEmpty) {
-        print(
-          "The network packet is: ${rx.payload.map((e) => e.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
-        );
         receivedPanelName.value = extractStringFromPayload(
           rx.payload,
           startIndex: 16,
@@ -860,7 +830,6 @@ class BleProcess {
         _applyNetworkPacketVersionFields(rx.payload);
       }
 
-      print("The received panel name is: ${receivedPanelName.value}");
       bleManager.otaProcessState = OtaProcessState.sendPollPacket;
       isNetworkPacketProcess.value = false;
       checkForNetworkPacketRsp = 0;
@@ -871,7 +840,6 @@ class BleProcess {
     }
 
     if (checkForLiveEventsRetrievalRes == 1) {
-      print("Checking Live Events Retrieval Fetch CMD RSP");
       if (rx.payload[10] == 0x02 && rx.payload[12] == 0x02) {
         int rxLastEvtLogNum =
             rx.payload[19] |
@@ -884,17 +852,12 @@ class BleProcess {
             rxLastEvtLogNum,
           );
           if (parsedLog != null && parsedLog.eventId != "0") {
-            print(
-              "Valid Log Packet ${rx.payload.map((b) => b.toRadixString(16).padLeft(2, '0')).join(" ")}",
-            );
             isValidLogRecieved.value = true;
             final currentLogs = List<LogModel>.from(validEventLogs.value);
             currentLogs.add(parsedLog);
             validEventLogs.value = currentLogs;
           }
-        } catch (e) {
-          print("Error parsing event log: $e");
-        }
+        } catch (_) {}
       }
 
       await Future.delayed(Duration(milliseconds: 300));
@@ -904,45 +867,38 @@ class BleProcess {
     }
 
     if (checkForAccessKeyCmdRsp == 1) {
-      print("Checking ACCESS KEY CMD RSP...");
-
-      print(
-        "The access key is : ${String.fromCharCodes(rx.payload.sublist(14, 14 + accessKeyLength.value))}",
-      );
-
       if (rx.payload[13] != 0x0a &&
           String.fromCharCodes(
                 rx.payload.sublist(14, 14 + accessKeyLength.value),
               ) ==
               accessKey.value) {
         cancelAccessKeyPollDeadline();
-        print("ACCESS KEY RECEIVED → NEXT CONTROL CMD");
         if (isInputSetupFetchCommandActive.value) {
           bleManager.otaProcessState =
               OtaProcessState.sendInputSetupFetchCmdPkt;
           checkForAccessKeyCmdRsp = 0;
-          processDesc.value = "Downloading Input Setup";
+          processDesc.value = StringConstants.downloadInputSetup;
           startRxTimeout();
           await bleManager.sendInputSetupFetchCmdPkt();
         } else if (isExtOutCommandFetchActive.value) {
           bleManager.otaProcessState =
               OtaProcessState.sendExtOutSetupFetchCmdPkt;
           checkForAccessKeyCmdRsp = 0;
-          processDesc.value = "Downloading Ext Out Setup";
+          processDesc.value = StringConstants.downloadExtOutSetup;
           startRxTimeout();
           await bleManager.sendExtOutSetupFetchCmdPkt();
         } else if (isExtOutCommandApplyActive.value) {
           bleManager.otaProcessState =
               OtaProcessState.sendExtOutSetupApplyCmdPkt;
           checkForAccessKeyCmdRsp = 0;
-          processDesc.value = "Applying Ext Out Setup";
+          processDesc.value = StringConstants.applyingExtOutSetup;
           startRxTimeout();
           await bleManager.sendExtOutSetupApplyCmdPkt();
         } else if (isInputSetupApplyActive.value) {
           bleManager.otaProcessState =
               OtaProcessState.sendInputSetupApplyCmdPkt;
           checkForAccessKeyCmdRsp = 0;
-          processDesc.value = "Applying Input Setup";
+          processDesc.value = StringConstants.applyingInputSetup;
           startRxTimeout();
           await bleManager.sendInputSetupApplyCmdPkt();
         } else if (isRelaySetupFetchCommandActive.value) {
@@ -950,7 +906,7 @@ class BleProcess {
               OtaProcessState.sendRelaySetupFetchCmdPkt;
           checkForAccessKeyCmdRsp = 0;
           relaySetupFetchCommandStep = 1;
-          processDesc.value = "Downloading Relay 1/3";
+          processDesc.value = "${StringConstants.downloadingRelay} 1/3";
           startRxTimeout();
           await bleManager.sendRelaySetupFetchFirstCmdPkt();
         } else if (isRelaySetupCommandApplyActive.value) {
@@ -958,42 +914,42 @@ class BleProcess {
               OtaProcessState.sendRelaySetupApplyCmdPkt;
           checkForAccessKeyCmdRsp = 0;
           relaySetupApplyCommandStep = 1;
-          processDesc.value = "Applying Relay 1/3";
+          processDesc.value = "${StringConstants.applyingRelay} 1/3";
           startRxTimeout();
           await bleManager.sendRelaySetupApplyFirstCmdPkt();
         } else if (isZoneSetupFetchCommandActive.value) {
           bleManager.otaProcessState = OtaProcessState.sendZoneSetupFetchCmdPkt;
           checkForAccessKeyCmdRsp = 0;
           zoneSetupFetchCommandStep = 1;
-          processDesc.value = "Downloading Zone 1/3";
+          processDesc.value = "${StringConstants.downloadingZone} 1/3";
           startRxTimeout();
           await bleManager.sendZoneSetupFetchFirstCmdPkt();
         } else if (isZoneSetupCommandApplyActive.value) {
           bleManager.otaProcessState = OtaProcessState.sendZoneSetupApplyCmdPkt;
           checkForAccessKeyCmdRsp = 0;
           zoneSetupApplyCommandStep = 1;
-          processDesc.value = "Applying Zone 1/3";
+          processDesc.value = "${StringConstants.applyingZone} 1/3";
           startRxTimeout();
           await bleManager.sendZoneSetupApplyFirstCmdPkt();
         } else if (isRadioSetupFetchCommandActive.value) {
           bleManager.otaProcessState =
               OtaProcessState.sendRadioSetupFetchCmdPkt;
           checkForAccessKeyCmdRsp = 0;
-          processDesc.value = "Downloading Radio";
+          processDesc.value = StringConstants.downloadingRadio;
           startRxTimeout();
           await bleManager.sendRadioSetupFetchCmdPkt();
         } else if (isRadioSetupCommandApplyActive.value) {
           bleManager.otaProcessState =
               OtaProcessState.sendRadioSetupApplyCmdPkt;
           checkForAccessKeyCmdRsp = 0;
-          processDesc.value = "Applying Radio";
+          processDesc.value = StringConstants.applyingRadio;
           startRxTimeout();
           await bleManager.sendRadioSetupApplyCmdPkt();
         } else if (isModuleSetupFetchCommandActive.value) {
           bleManager.otaProcessState =
               OtaProcessState.sendModuleSetupFetchCmdPkt;
           checkForAccessKeyCmdRsp = 0;
-          processDesc.value = "Downloading Module";
+          processDesc.value = StringConstants.downloadingModule;
           startRxTimeout();
           await bleManager.sendModuleSetupFetchCmdPkt();
         } else if (isLBusSetupFetchCommandActive.value) {
@@ -1001,14 +957,14 @@ class BleProcess {
           checkForAccessKeyCmdRsp = 0;
           lBusSetupFetchCommandStep = 1;
           lBusSetupDataFetchCommandStep = 1;
-          processDesc.value = "Downloading L-Bus 1/31";
+          processDesc.value = "${StringConstants.downloadingLBus} 1/31";
           startRxTimeout();
           await bleManager.sendLBusSetupFetchCmdPkt(lBusNo: 1);
         } else if (isLBusSetupApplyCommandActive.value) {
           bleManager.otaProcessState = OtaProcessState.sendLBusSetupApplyCmdPkt;
           checkForAccessKeyCmdRsp = 0;
           lBusSetupApplyCommandStep = 1;
-          processDesc.value = "Applying L-Bus 1/31";
+          processDesc.value = "${StringConstants.applyingLBus} 1/31";
           startRxTimeout();
           await bleManager.sendLBusSetupApplyCmdPkt(lBusNo: 1);
         } else if (isSounderSetupFetchCommandActive.value) {
@@ -1018,7 +974,7 @@ class BleProcess {
           sounderSetupFetchRelayCommandStep = 1;
           sounderSetupFetchZoneCommandStep = 1;
           sounderSetupFetchExtOutCommandStep = 1;
-          processDesc.value = "Downloading Sounder (Relays) 1/3";
+          processDesc.value = "${StringConstants.downloadingSounderRelays} 1/3";
           startRxTimeout();
           await bleManager.sendSounderSetupRelayFetchCmdPkt(outputMaxZone: 1);
         } else if (isSounderSetupApplyCommandActive.value) {
@@ -1029,21 +985,21 @@ class BleProcess {
           sounderSetupApplyZoneCommandStep = 1;
           sounderSetupApplyExtOutCommandStep = 1;
           sounderSetupApplyGeneralCommandStep = 1;
-          processDesc.value = "Applying Sounder (Relays) 1/3";
+          processDesc.value = "${StringConstants.applyingSounderRelays} 1/3";
           startRxTimeout();
           await bleManager.sendSounderSetupRelayApplyCmdPkt(outputMaxZone: 1);
         } else if (isServiceDueFetchCommandActive.value) {
           bleManager.otaProcessState =
               OtaProcessState.sendServiceDueFetchCmdPkt;
           checkForAccessKeyCmdRsp = 0;
-          processDesc.value = "Downloading Service Due";
+          processDesc.value = StringConstants.downloadingServiceDue;
           startRxTimeout();
           await bleManager.sendServiceDueFetchCmdPkt();
         } else if (isServiceDueApplyCommandActive.value) {
           bleManager.otaProcessState =
               OtaProcessState.sendServiceDueApplyCmdPkt;
           checkForAccessKeyCmdRsp = 0;
-          processDesc.value = "Applying Service Due";
+          processDesc.value = StringConstants.applyingServiceDue;
           startRxTimeout();
           await bleManager.sendServiceDueApplyCmdPkt();
         } else if (isAccessCodeSetupFetchCommandActive.value) {
@@ -1051,7 +1007,7 @@ class BleProcess {
               OtaProcessState.sendAccessCodeSetupFetchCmdPkt;
           checkForAccessKeyCmdRsp = 0;
           accessCodeSetupFetchCommandStep = 1;
-          processDesc.value = "Downloading Access Code 1/8";
+          processDesc.value = "${StringConstants.downloadingAccessCodeOne} 1/8";
           startRxTimeout();
           await bleManager.sendAccessCodeSetupFetchCmdPkt(accessCodeNo: 1);
         } else if (isAccessCodeSetupApplyCommandActive.value) {
@@ -1059,14 +1015,14 @@ class BleProcess {
               OtaProcessState.sendAccessCodeSetupApplyCmdPkt;
           checkForAccessKeyCmdRsp = 0;
           accessCodeSetupApplyCommandStep = 1;
-          processDesc.value = "Applying Access Code 1/8";
+          processDesc.value = "${StringConstants.applyingAccessCodeOne} 1/8";
           startRxTimeout();
           await bleManager.sendAccessCodeSetupApplyCmdPkt(accessCodeNo: 1);
         } else if (isPanelInfoSetupFetchCommandActive.value) {
           bleManager.otaProcessState =
               OtaProcessState.sendPanelInfoSetupFetchCmdPkt;
           checkForAccessKeyCmdRsp = 0;
-          processDesc.value = "Downloading Panel Info";
+          processDesc.value = StringConstants.downloadingPanelInfo;
           startRxTimeout();
           await bleManager.sendPanelInfoPanelIdFetchCmdPkt();
         } else if (isPanelInfoSetupApplyCommandActive.value) {
@@ -1074,14 +1030,14 @@ class BleProcess {
               OtaProcessState.sendPanelInfoSetupApplyCmdPkt;
           panelInfoSetupApplyCommandStep = 1;
           checkForAccessKeyCmdRsp = 0;
-          processDesc.value = "Applying Panel Info";
+          processDesc.value = StringConstants.applyingPanelInfo;
           startRxTimeout();
           await bleManager.sendPanelInfoPanelIdApplyCmdPkt();
         } else if (isGeneralModuleSetupFetchCommandActive.value) {
           bleManager.otaProcessState =
               OtaProcessState.sendGeneralModuleSetupFetchCmdPkt;
           checkForAccessKeyCmdRsp = 0;
-          processDesc.value = "Downloading General Module";
+          processDesc.value = StringConstants.downloadingGeneralModule;
           startRxTimeout();
           await bleManager.sendGeneralModuleLvlTimeOutFetchCmdPkt();
         } else if (isGeneralModuleSetupApplyCommandActive.value) {
@@ -1089,13 +1045,13 @@ class BleProcess {
               OtaProcessState.sendGeneralModuleSetupApplyCmdPkt;
           generalModuleSetupApplyCommandStep = 1;
           checkForAccessKeyCmdRsp = 0;
-          processDesc.value = "Applying General Module Level Time-out";
+          processDesc.value = StringConstants.applyingGeneralModuleTimeOut;
           startRxTimeout();
           await bleManager.sendGeneralModuleLvlTimeOutApplyCmdPkt();
         } else if (isAdcSetupFetchCommandActive.value) {
           bleManager.otaProcessState = OtaProcessState.sendAdcSetupFetchCmdPkt;
           checkForAccessKeyCmdRsp = 0;
-          processDesc.value = "Downloading Adc Setup";
+          processDesc.value = StringConstants.downloadingAdcSetup;
           startRxTimeout();
           await bleManager.sendDiagnosticsSetupFetchCmdPkt();
         } else if (isEventLogRetrievalFetchCommandActive.value) {
@@ -1117,7 +1073,7 @@ class BleProcess {
         cancelAccessKeyPollDeadline();
         clearSessionAccessCode();
         resetProcessState();
-        processDesc.value = "Wrong password. Try again.";
+        processDesc.value = StringConstants.wrongPassword;
         isAccessKeyValid.value = false;
         return;
       } else {
@@ -1127,175 +1083,139 @@ class BleProcess {
           _onAccessKeyPollTimeout();
           return;
         }
-        print("ACCESS KEY not found, polling again");
         startRxTimeout(bumpOperationDeadline: false);
         await bleManager.sendPollPacket();
       }
     }
 
     if (checkDipSetCmdRsp == 1) {
-      print("Checking Dip Setting cmd resp");
       if (rx.payload[12] == 0x1C) {
-        print("We got dip fetch response");
-        print(
-          "The Dip Setting Response: ${rx.payload.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
-        );
         bleManager.otaProcessState = OtaProcessState.notInUse;
         cancelOperationDeadline();
         checkDipSetCmdRsp = 0;
-        print(rx.payload[14]);
         if (rx.payload[14] == 0x00) {
-          print("The setup source is solar");
           isExtOutApplyButtonActive.value = true;
         } else {
           isExtOutApplyButtonActive.value = false;
         }
         isExtOutCommandFetchActive.value = false;
       } else {
-        print("Dip setting Cmd Response not found, polling again");
         startRxTimeout();
         await bleManager.sendPollPacket();
       }
     }
 
     if (checkForAdcSetupFetchRes == 1) {
-      print("Checking Adc Setup Fetch CMD RSP");
       if (rx.payload[12] == 0x09) {
-        print("We got adc setup fetch response");
         isAccessKeyValid.value = true;
         try {
           final parsed = AdcParser.parse(rx.payload);
           final adc = AdcValues.fromList(parsed);
           updateNotifiers(adc);
-        } catch (e, st) {
-          print("ADC parse/update failed: $e\n$st");
-        }
+        } catch (_) {}
 
         if (!isAdcSetupFetchCommandActive.value) {
           bleManager.otaProcessState = OtaProcessState.notInUse;
           cancelOperationDeadline();
           checkForAdcSetupFetchRes = 0;
-          processDesc.value = "Adc Setup Fetch Completed";
+          processDesc.value = StringConstants.adcSetupFetchCompleted;
         } else {
           startRxTimeout();
           await bleManager.sendDiagnosticsSetupFetchCmdPkt();
         }
       } else {
-        print("Adc Setup Fetch Cmd Response not found, polling again");
         startRxTimeout();
         await bleManager.sendPollPacket();
       }
     }
 
     if (checkForGeneralModuleSetupFetchRes == 1) {
-      print("Checking General Module Setup Fetch CMD RSP");
       if (rx.payload[12] == 0x09) {
-        print("We got general module lvl time out fetch response");
-        processDesc.value = "Downloading General Module Silence Buzzer LVL";
+        processDesc.value =
+            StringConstants.downloadingGeneralModuleSilenceBuzzerLvl;
         generalModuleLvlTimeOut.value = rx.payload[15] << 8 | rx.payload[16];
-        print("General Module LVL Time-out: ${generalModuleLvlTimeOut.value}");
         startRxTimeout();
         await bleManager.sendGeneralModuleSilenceBuzzerLvlFetchCmdPkt();
       } else if (rx.payload[12] == 0x15 && rx.payload[13] == 0x09) {
-        print("We got general module silence buzzer lvl fetch response");
-        processDesc.value = "Downloading General Module Silence Sounder LVL";
+        processDesc.value =
+            StringConstants.downloadingGeneralModuleSilenceSounderLvl;
         generalModuleSilenceBuzzerLvl.value = rx.payload[14] - 1;
-        print(
-          "General Module Silence Buzzer LVL: ${generalModuleSilenceBuzzerLvl.value}",
-        );
         startRxTimeout();
         await bleManager.sendGeneralModuleSilenceSounderLvlFetchCmdPkt();
       } else if (rx.payload[12] == 0x15 && rx.payload[13] == 0x0A) {
-        print("We got general module silence sounder lvl fetch response");
-        processDesc.value = "Downloading General Module Reset LVL";
+        processDesc.value = StringConstants.downloadingGeneralModuleResetLvl;
         generalModuleSilenceSounderLvl.value = rx.payload[14] - 2;
-        print(
-          "General Module Silence Sounder LVL: ${generalModuleSilenceSounderLvl.value}",
-        );
         startRxTimeout();
         await bleManager.sendGeneralModuleResetLvlFetchCmdPkt();
       } else if (rx.payload[12] == 0x15 && rx.payload[13] == 0x0C) {
-        print("We got general module reset lvl fetch response");
-        processDesc.value = "Downloading General Module Fault Latching";
+        processDesc.value =
+            StringConstants.downloadingGeneralModuleFaultLatching;
         generalModuleResetLvl.value = rx.payload[14] - 2;
-        print("General Module Reset LVL: ${generalModuleResetLvl.value}");
         startRxTimeout();
         await bleManager.sendGeneralModuleFaultLatchingFetchCmdPkt();
       } else if (rx.payload[12] == 0x15 && rx.payload[13] == 0x12) {
-        print("We got general module fault latching fetch response");
         generalModuleFaultLatching.value = rx.payload[14];
-        print(
-          "General Module Fault Latching: ${generalModuleFaultLatching.value}",
-        );
         bleManager.otaProcessState = OtaProcessState.notInUse;
         cancelOperationDeadline();
         checkForGeneralModuleSetupFetchRes = 0;
         isGeneralModuleSetupFetchCommandActive.value = false;
         isAccessKeyValid.value = true;
-        processDesc.value = "General Module Setup Fetch Completed";
+        processDesc.value = StringConstants.generalModuleSetupFetchCompleted;
       } else {
-        print(
-          "General Module Setup Fetch Cmd Response not found, polling again",
-        );
         startRxTimeout();
         await bleManager.sendPollPacket();
       }
     }
 
     if (checkForGeneralModuleSetupApplyRes == 1) {
-      print("Checking General Module Setup Apply CMD RSP");
       if (rx.payload[10] == 0x83 &&
           rx.payload[12] == 0x02 &&
           generalModuleSetupApplyCommandStep == 1) {
         generalModuleSetupApplyCommandStep = 2;
-        processDesc.value = "Applying General Module Silence Buzzer LVL";
+        processDesc.value =
+            StringConstants.applyingGeneralModuleSilenceBuzzerLvl;
         startRxTimeout();
         await bleManager.sendGeneralModuleSilenceBuzzerLvlApplyCmdPkt();
       } else if (rx.payload[10] == 0x83 &&
           rx.payload[12] == 0x02 &&
           generalModuleSetupApplyCommandStep == 2) {
         generalModuleSetupApplyCommandStep = 3;
-        processDesc.value = "Applying General Module Silence Sounder LVL";
+        processDesc.value =
+            StringConstants.applyingGeneralModuleSilenceSounderLvl;
         startRxTimeout();
         await bleManager.sendGeneralModuleSilenceSounderLvlApplyCmdPkt();
       } else if (rx.payload[10] == 0x83 &&
           rx.payload[12] == 0x02 &&
           generalModuleSetupApplyCommandStep == 3) {
         generalModuleSetupApplyCommandStep = 4;
-        processDesc.value = "Applying General Module Reset LVL";
+        processDesc.value = StringConstants.applyingGeneralModuleResetLvl;
         startRxTimeout();
         await bleManager.sendGeneralModuleResetLvlApplyCmdPkt();
       } else if (rx.payload[10] == 0x83 &&
           rx.payload[12] == 0x02 &&
           generalModuleSetupApplyCommandStep == 4) {
         generalModuleSetupApplyCommandStep = 5;
-        processDesc.value = "Applying General Module Fault Latching";
+        processDesc.value = StringConstants.applyingGeneralModuleFaultLatching;
         startRxTimeout();
         await bleManager.sendGeneralModuleFaultLatchingApplyCmdPkt();
       } else if (rx.payload[10] == 0x83 &&
           rx.payload[12] == 0x02 &&
           generalModuleSetupApplyCommandStep == 5) {
-        print("We got general module setup apply response");
         bleManager.otaProcessState = OtaProcessState.notInUse;
         cancelOperationDeadline();
         checkForGeneralModuleSetupApplyRes = 0;
         isGeneralModuleSetupApplyCommandActive.value = false;
         isGeneralModuleSetupApplyDone.value = true;
         isAccessKeyValid.value = true;
-        processDesc.value = "General Module Setup Apply Completed";
+        processDesc.value = StringConstants.generalModuleSetupApplyCompleted;
       } else {
-        print(
-          "General Module Setup Apply Cmd Response not found, polling again",
-        );
         startRxTimeout();
         await bleManager.sendPollPacket();
       }
     }
 
     if (checkForPanelInfoSetupFetchRes == 1) {
-      print("Checking Panel Info Setup Fetch CMD RSP");
       if (rx.payload[12] == 0x08) {
-        print("We got panel info setup fetch response");
         panelInfoPanelNo.value = rx.payload[16];
         panelInfoPanelName.value = extractStringFromPayload(
           rx.payload,
@@ -1315,22 +1235,19 @@ class BleProcess {
       } else if (rx.payload[12] == 0x09) {
         panelInfoEventReminderDelay.value =
             (rx.payload[15] << 8) | rx.payload[16];
-        print("We got the response for panel info event reminder delay fetch");
         bleManager.otaProcessState = OtaProcessState.notInUse;
         cancelOperationDeadline();
         checkForPanelInfoSetupFetchRes = 0;
         isPanelInfoSetupFetchCommandActive.value = false;
         isAccessKeyValid.value = true;
-        processDesc.value = "Panel Info Setup Fetch Completed";
+        processDesc.value = StringConstants.panelInfoSetupFetchCompleted;
       } else {
-        print("Panel Info Setup Fetch Cmd Response not found, polling again");
         startRxTimeout();
         await bleManager.sendPollPacket();
       }
     }
 
     if (checkForPanelInfoSetupApplyRes == 1) {
-      print("Checking Panel Info Setup Apply CMD RSP");
       if (rx.payload[10] == 0x83 &&
           rx.payload[12] == 0x02 &&
           panelInfoSetupApplyCommandStep == 1) {
@@ -1346,23 +1263,20 @@ class BleProcess {
       } else if (rx.payload[10] == 0x83 &&
           rx.payload[12] == 0x02 &&
           panelInfoSetupApplyCommandStep == 3) {
-        print("We got panel info setup apply response");
         bleManager.otaProcessState = OtaProcessState.notInUse;
         cancelOperationDeadline();
         checkForPanelInfoSetupApplyRes = 0;
         isPanelInfoSetupApplyCommandActive.value = false;
         isPanelInfoSetupApplyDone.value = true;
         isAccessKeyValid.value = true;
-        processDesc.value = "Panel Info Setup Apply Completed";
+        processDesc.value = StringConstants.panelInfoSetupApplyCompleted;
       } else {
-        print("Panel Info Setup Apply Cmd Response not found, polling again");
         startRxTimeout();
         await bleManager.sendPollPacket();
       }
     }
 
     if (checkForAccessCodeSetupFetchRes == 1) {
-      print("Checking Access Code Setup Fetch CMD RSP");
       if (rx.payload[12] == 0x03) {
         final accessCodeIndex = accessCodeSetupFetchCommandStep - 1;
         if (accessCodeIndex >= 0 && accessCodeIndex < 8) {
@@ -1377,10 +1291,8 @@ class BleProcess {
         if (accessCodeSetupFetchCommandStep >= 1 &&
             accessCodeSetupFetchCommandStep < 8) {
           final nextAccessCodeNo = accessCodeSetupFetchCommandStep + 1;
-          processDesc.value = "Downloading Access Code $nextAccessCodeNo/8";
-          print(
-            "CMD $accessCodeSetupFetchCommandStep Validated -> send CMD$nextAccessCodeNo, keep polling",
-          );
+          processDesc.value =
+              "${StringConstants.downloadingAccessCodeOne} $nextAccessCodeNo/8";
           accessCodeSetupFetchCommandStep = nextAccessCodeNo;
           startRxTimeout();
           await bleManager.sendAccessCodeSetupFetchCmdPkt(
@@ -1392,27 +1304,21 @@ class BleProcess {
           checkForAccessCodeSetupFetchRes = 0;
           isAccessCodeSetupFetchCommandActive.value = false;
           isAccessKeyValid.value = true;
-          processDesc.value = "Access Code Setup Fetch Completed";
+          processDesc.value = StringConstants.accessCodeSetupFetchCompleted;
         }
       } else {
-        print("Access Code Setup Fetch Cmd Response not found, polling again");
         startRxTimeout();
         await bleManager.sendPollPacket();
       }
     }
 
     if (checkForAccessCodeSetupApplyRes == 1) {
-      print(
-        "Checking Access Code Setup Apply CMD RSP Value ${rx.payload[12]}:::::${rx.payload[12] == 0x02} ",
-      );
       if (rx.payload[10] == 0x83 && rx.payload[12] == 0x02) {
         if (accessCodeSetupApplyCommandStep >= 1 &&
             accessCodeSetupApplyCommandStep < 8) {
           final nextAccessCodeNo = accessCodeSetupApplyCommandStep + 1;
-          processDesc.value = "Applying Access Code $nextAccessCodeNo/8";
-          print(
-            "CMD $accessCodeSetupApplyCommandStep Validated -> send CMD$nextAccessCodeNo, keep polling",
-          );
+          processDesc.value =
+              "${StringConstants.applyingAccessCodeOne} $nextAccessCodeNo/8";
           accessCodeSetupApplyCommandStep = nextAccessCodeNo;
           startRxTimeout();
           await bleManager.sendAccessCodeSetupApplyCmdPkt(
@@ -1425,20 +1331,16 @@ class BleProcess {
           isAccessCodeSetupApplyCommandActive.value = false;
           isAccessCodeSetupApplyDone.value = true;
           isAccessKeyValid.value = true;
-          processDesc.value = "Access Code Setup Apply Completed";
-          print("We got the response for access code setup apply");
+          processDesc.value = StringConstants.accessCodeSetupApplyCompleted;
         }
       } else {
-        print("Access Code Setup Apply Cmd Response not found, polling again");
         startRxTimeout();
         await bleManager.sendPollPacket();
       }
     }
 
     if (checkForServiceDueFetchRes == 1) {
-      print("Checking Service Due Fetch CMD RSP");
       if (rx.payload[12] == 0x18) {
-        print("We got service due fetch response");
         serviceDueYear.value = (rx.payload[13] << 8) | rx.payload[14];
         serviceDueMonth.value = rx.payload[15];
         serviceDueDay.value = rx.payload[16];
@@ -1458,45 +1360,35 @@ class BleProcess {
         checkForServiceDueFetchRes = 0;
         isServiceDueFetchCommandActive.value = false;
         isAccessKeyValid.value = true;
-        processDesc.value = "Service Due Fetch Completed";
-        print("We got the response for service due fetch");
+        processDesc.value = StringConstants.serviceDueFetchCompleted;
       } else {
-        print("Service Due Fetch Cmd Response not found, polling again");
         startRxTimeout();
         await bleManager.sendPollPacket();
       }
     }
 
     if (checkForServiceDueApplyRes == 1) {
-      print("Checking Service Due Apply CMD RSP");
       if (rx.payload[10] == 0x83 && rx.payload[12] == 0x02) {
-        print("We got service due apply response");
         bleManager.otaProcessState = OtaProcessState.notInUse;
         cancelOperationDeadline();
         checkForServiceDueApplyRes = 0;
         isServiceDueApplyCommandActive.value = false;
         isServiceDueApplyDone.value = true;
         isAccessKeyValid.value = true;
-        processDesc.value = "Service Due Apply Completed";
+        processDesc.value = StringConstants.serviceDueApplyCompleted;
       } else {
-        print("Service Due Apply Cmd Response not found, polling again");
         startRxTimeout();
         await bleManager.sendPollPacket();
       }
     }
 
     if (checkForSounderSetupFetchRes == 1) {
-      print(
-        "Checking Sounder Setup Fetch CMD RSP Value ${rx.payload[12]}:::::${rx.payload[12] == 0x07} ",
-      );
       if (rx.payload[12] == 0x07) {
         if (sounderSetupFetchRelayCommandStep >= 1 &&
             sounderSetupFetchRelayCommandStep <= 3) {
           final nextRelayNo = sounderSetupFetchRelayCommandStep + 1;
-          processDesc.value = "Downloading Sounder (Relays) $nextRelayNo/3";
-          print(
-            "CMD $sounderSetupFetchRelayCommandStep Validated -> send CMD$nextRelayNo, keep polling",
-          );
+          processDesc.value =
+              "${StringConstants.downloadingSounderRelays} $nextRelayNo/3";
 
           if (sounderSetupFetchRelayCommandStep == 1) {
             final OutputModeConfig config = OutputModeCodec.fromHex(
@@ -1525,9 +1417,6 @@ class BleProcess {
             final OutputModeConfig config = OutputModeCodec.fromHex(
               rx.payload[15].toRadixString(16),
             );
-            print(
-              "The second sounder setup fetch relay response: ${rx.payload[15].toRadixString(16)}",
-            );
             final bool outputEnabled =
                 config.outputEnable == OutputEnable.enabled;
             final bool outputMode = config.outputMode == OutputMode.test;
@@ -1541,9 +1430,6 @@ class BleProcess {
                 .toUpperCase()
                 .padLeft(2, '0');
             sounderTwoRelayFunctionGroup.value = rx.payload[23];
-            print(
-              "Sounder Two Relay Function Group: ${sounderTwoRelayFunctionGroup.value}",
-            );
             sounderTwoRelayFunction.value = rx.payload[24];
             sounderTwoFunctionNo.value = rx.payload[22];
             sounderTwoOutputText.value = extractStringFromPayload(
@@ -1567,13 +1453,7 @@ class BleProcess {
                 .toUpperCase()
                 .padLeft(2, '0');
             sounderThreeRelayFunctionGroup.value = rx.payload[23];
-            print(
-              "Sounder Three Relay Function Group: ${sounderThreeRelayFunctionGroup.value}",
-            );
             sounderThreeRelayFunction.value = rx.payload[24];
-            print(
-              "Sounder Three Relay Function: ${sounderThreeRelayFunction.value}",
-            );
             sounderThreeFunctionNo.value = rx.payload[22];
             sounderThreeOutputText.value = extractStringFromPayload(
               rx.payload,
@@ -1587,13 +1467,12 @@ class BleProcess {
               outputMaxZone: nextRelayNo,
             );
           } else {
-            processDesc.value = "Downloading Sounder (General)";
+            processDesc.value = StringConstants.downloadingSounderGeneral;
             startRxTimeout();
             await bleManager.sendSounderSetupGeneralFetchCmdPkt();
           }
         }
       } else if (rx.payload[12] == 0x14) {
-        print("We got the response for sounder setup fetch General Equipment");
         final GeneralEquipmentModeConfig config =
             GeneralEquipmentModeCodec.fromHex(rx.payload[14].toRadixString(16));
         final bool equipmentEnabled =
@@ -1609,18 +1488,15 @@ class BleProcess {
             .padLeft(2, '0');
         sounderGeneralAction.value = rx.payload[15];
         sounderGeneralDelay.value = rx.payload[18] << 8 | rx.payload[19];
-        processDesc.value = "Downloading Sounder (Zones) 1/3";
+        processDesc.value = "${StringConstants.downloadingSounderZones} 1/3";
         startRxTimeout();
         await bleManager.sendSounderSetupZoneFetchCmdPkt(zoneMaxZone: 1);
       } else if (rx.payload[12] == 0x19) {
-        print("We got the response for sounder setup fetch Zone");
         if (sounderSetupFetchZoneCommandStep >= 1 &&
             sounderSetupFetchZoneCommandStep <= 3) {
           final nextZoneNo = sounderSetupFetchZoneCommandStep + 1;
-          processDesc.value = "Downloading Sounder (Zones) $nextZoneNo/3";
-          print(
-            "CMD $sounderSetupFetchZoneCommandStep Validated -> send CMD$nextZoneNo, keep polling",
-          );
+          processDesc.value =
+              "${StringConstants.downloadingSounderZones} $nextZoneNo/3";
           if (sounderSetupFetchZoneCommandStep == 1) {
             final ZoneEquipmentModeConfig config =
                 ZoneEquipmentModeCodec.fromHex(
@@ -1637,7 +1513,6 @@ class BleProcess {
                 .toUpperCase()
                 .padLeft(2, '0');
             zoneOneAction.value = rx.payload[16];
-            print("zone one action: ${zoneOneAction.value}");
           } else if (sounderSetupFetchZoneCommandStep == 2) {
             final ZoneEquipmentModeConfig config =
                 ZoneEquipmentModeCodec.fromHex(
@@ -1676,20 +1551,18 @@ class BleProcess {
               zoneMaxZone: nextZoneNo,
             );
           } else {
-            processDesc.value = "Downloading Sounder (Ext Out) 1/3";
+            processDesc.value =
+                "${StringConstants.downloadingSounderExtOut} 1/3";
             startRxTimeout();
             await bleManager.sendSounderSetupExtOutFetchCmdPkt(extMaxZone: 1);
           }
         }
       } else if (rx.payload[12] == 0x1B) {
-        print("We got the response for sounder setup fetch Ext Out");
         if (sounderSetupFetchExtOutCommandStep >= 1 &&
             sounderSetupFetchExtOutCommandStep <= 3) {
           final nextExtOutNo = sounderSetupFetchExtOutCommandStep + 1;
-          processDesc.value = "Downloading Sounder (Ext Out) $nextExtOutNo/3";
-          print(
-            "CMD $sounderSetupFetchExtOutCommandStep Validated -> send CMD$nextExtOutNo, keep polling",
-          );
+          processDesc.value =
+              "${StringConstants.downloadingSounderExtOut} $nextExtOutNo/3";
           if (sounderSetupFetchExtOutCommandStep == 1) {
             final ExtZoneEquipmentModeConfig config =
                 ExtZoneEquipmentModeCodec.fromHex(
@@ -1755,8 +1628,7 @@ class BleProcess {
             checkForSounderSetupFetchRes = 0;
             isSounderSetupFetchCommandActive.value = false;
             isAccessKeyValid.value = true;
-            processDesc.value = "Sounder Setup Fetch Completed";
-            print("We got the response for sounder setup fetch");
+            processDesc.value = StringConstants.sounderSetupFetchCompleted;
           }
         } else {
           bleManager.otaProcessState = OtaProcessState.notInUse;
@@ -1764,47 +1636,35 @@ class BleProcess {
           checkForSounderSetupFetchRes = 0;
           isSounderSetupFetchCommandActive.value = false;
           isAccessKeyValid.value = true;
-          processDesc.value = "Sounder Setup Fetch Completed";
-          print("We got the response for sounder setup fetch");
+          processDesc.value = StringConstants.sounderSetupFetchCompleted;
         }
       } else {
-        print("Sounder Setup Fetch Cmd Response not found, polling again");
         startRxTimeout();
         await bleManager.sendPollPacket();
       }
     }
 
     if (checkForSounderSetupApplyRes == 1) {
-      print(
-        "Checking Sounder Setup Apply CMD RSP Value ${rx.payload[12]}:::::${rx.payload[12] == 0x02} ",
-      );
       if (rx.payload[10] == 0x83 && rx.payload[12] == 0x02) {
         if (sounderSetupApplyRelayCommandStep >= 1 &&
             sounderSetupApplyRelayCommandStep <= 3) {
           final nextRelayNo = sounderSetupApplyRelayCommandStep + 1;
-          // if (nextRelayNo >= 3) {
-          //   processDesc.value = "Applying Sounder (Relays) $nextRelayNo/3";
-          // }
-          print(
-            "CMD $sounderSetupApplyRelayCommandStep Validated -> send CMD$nextRelayNo, keep polling",
-          );
           sounderSetupApplyRelayCommandStep = nextRelayNo;
           if (sounderSetupApplyRelayCommandStep <= 3) {
             startRxTimeout();
-            processDesc.value = "Applying Sounder (Relays) $nextRelayNo/3";
+            processDesc.value =
+                "${StringConstants.applyingSounderRelays} $nextRelayNo/3";
             await bleManager.sendSounderSetupRelayApplyCmdPkt(
               outputMaxZone: nextRelayNo,
             );
           } else {
-            print("end reached (inner), $sounderSetupApplyRelayCommandStep");
-            processDesc.value = "Applying Sounder (General)";
+            processDesc.value = StringConstants.applyingSounderGeneral;
             sounderSetupApplyGeneralCommandStep = 1;
             startRxTimeout();
             await bleManager.sendSounderSetupGeneralApplyCmdPkt();
           }
         } else if (sounderSetupApplyGeneralCommandStep == 1) {
-          processDesc.value = "Applying Sounder (Zones) 1/3";
-          print("Entered Zone Apply phase");
+          processDesc.value = "${StringConstants.applyingSounderZones} 1/3";
           sounderSetupApplyGeneralCommandStep = 0;
           sounderSetupApplyZoneCommandStep = 1;
           startRxTimeout();
@@ -1812,40 +1672,32 @@ class BleProcess {
         } else if (sounderSetupApplyZoneCommandStep >= 1 &&
             sounderSetupApplyZoneCommandStep <= 3) {
           final nextZoneNo = sounderSetupApplyZoneCommandStep + 1;
-          // if (nextZoneNo >= 3) {
-          //   processDesc.value = "Applying Sounder (Zones) $nextZoneNo/3";
-          // }
-          print(
-            "CMD $sounderSetupApplyZoneCommandStep Validated -> send Zone $nextZoneNo, keep polling",
-          );
           sounderSetupApplyZoneCommandStep = nextZoneNo;
           if (sounderSetupApplyZoneCommandStep <= 3) {
-            processDesc.value = "Applying Sounder (Zones) $nextZoneNo/3";
+            processDesc.value =
+                "${StringConstants.applyingSounderZones} $nextZoneNo/3";
             startRxTimeout();
             await bleManager.sendSounderSetupZoneApplyCmdPkt(
               zoneMaxZone: nextZoneNo,
             );
           } else {
             sounderSetupApplyExtOutCommandStep = 1;
-            processDesc.value = "Applying Sounder (Ext Out) 1/3";
+            processDesc.value = "${StringConstants.applyingSounderExtOut} 1/3";
             startRxTimeout();
             await bleManager.sendSounderSetupExtOutApplyCmdPkt(extMaxZone: 1);
           }
         } else if (sounderSetupApplyExtOutCommandStep >= 1 &&
             sounderSetupApplyExtOutCommandStep <= 3) {
           final nextExtOutNo = sounderSetupApplyExtOutCommandStep + 1;
-          print(
-            "CMD $sounderSetupApplyExtOutCommandStep Validated -> send Ext Out $nextExtOutNo, keep polling",
-          );
           sounderSetupApplyExtOutCommandStep = nextExtOutNo;
           if (sounderSetupApplyExtOutCommandStep <= 3) {
-            processDesc.value = "Applying Sounder (Ext Out) $nextExtOutNo/3";
+            processDesc.value =
+                "${StringConstants.applyingSounderExtOut} $nextExtOutNo/3";
             startRxTimeout();
             await bleManager.sendSounderSetupExtOutApplyCmdPkt(
               extMaxZone: nextExtOutNo,
             );
           } else {
-            print("Ext Out apply phase complete");
             bleManager.otaProcessState = OtaProcessState.notInUse;
             cancelOperationDeadline();
             checkForSounderSetupApplyRes = 0;
@@ -1854,25 +1706,17 @@ class BleProcess {
             isAccessKeyValid.value = true;
           }
         }
-        print("We got the response for sounder setup apply");
       } else {
-        print("Sounder Setup Apply Cmd Response not found, polling again");
         startRxTimeout();
         await bleManager.sendPollPacket();
       }
     }
 
     if (checkForLBusSetupApplyRes == 1) {
-      print(
-        "Checking L-Bus Setup Apply CMD RSP Value ${rx.payload[12]}:::::${rx.payload[12] == 0x02} ",
-      );
       if (rx.payload[10] == 0x83 && rx.payload[12] == 0x02) {
         if (lBusSetupApplyCommandStep >= 1 && lBusSetupApplyCommandStep < 31) {
           final nextBusNo = lBusSetupApplyCommandStep + 1;
-          processDesc.value = "Applying L-Bus $nextBusNo/31";
-          print(
-            "CMD $lBusSetupApplyCommandStep Validated -> send CMD$nextBusNo, keep polling",
-          );
+          processDesc.value = "${StringConstants.applyingLBus} $nextBusNo/31";
           lBusSetupApplyCommandStep = nextBusNo;
           startRxTimeout();
           await bleManager.sendLBusSetupApplyCmdPkt(lBusNo: nextBusNo);
@@ -1883,19 +1727,14 @@ class BleProcess {
           isLBusSetupApplyCommandActive.value = false;
           isLBusSetupApplyDone.value = true;
           isAccessKeyValid.value = true;
-          print("We got the response for l-bus setup apply");
         }
       } else {
-        print("L-Bus Setup Apply Cmd Response not found, polling again");
         startRxTimeout();
         await bleManager.sendPollPacket();
       }
     }
 
     if (checkForLBusSetupFetchRes == 1) {
-      print(
-        "Checking L-Bus Setup Fetch CMD RSP Value ${rx.payload[12]}:::::${rx.payload[12] == 0x10} ",
-      );
       if (rx.payload[12] == 0x10) {
         final busIndex = lBusSetupFetchCommandStep - 1;
         if (busIndex >= 0 && busIndex < 31) {
@@ -1907,10 +1746,8 @@ class BleProcess {
 
         if (lBusSetupFetchCommandStep >= 1 && lBusSetupFetchCommandStep < 31) {
           final nextBusNo = lBusSetupFetchCommandStep + 1;
-          processDesc.value = "Downloading L-Bus $nextBusNo/31";
-          print(
-            "CMD $lBusSetupFetchCommandStep Validated -> send CMD$nextBusNo, keep polling",
-          );
+          processDesc.value =
+              "${StringConstants.downloadingLBus} $nextBusNo/31";
           lBusSetupFetchCommandStep = nextBusNo;
           startRxTimeout();
           await bleManager.sendLBusSetupFetchCmdPkt(lBusNo: nextBusNo);
@@ -1920,11 +1757,10 @@ class BleProcess {
               if (lBusSetupDataList.value[i].enabled == 'Yes') i + 1,
           ];
 
-          print("enabledLBusNumbers count: ${enabledLBusNumbers.value.length}");
-
           if (enabledLBusNumbers.value.isNotEmpty) {
             lBusSetupDataFetchCommandStep = 0;
-            processDesc.value = "Downloading Enabled L-Bus 1/31";
+            processDesc.value =
+                "${StringConstants.downloadingEnabledLBus} 1/31";
             startRxTimeout();
             await bleManager.sendLBusEnabledBusDataFetchCmdPkt(
               lBusNo: enabledLBusNumbers.value[0],
@@ -1935,7 +1771,6 @@ class BleProcess {
             checkForLBusSetupFetchRes = 0;
             isLBusSetupFetchCommandActive.value = false;
             isAccessKeyValid.value = true;
-            print("We got the response for l-bus setup fetch");
           }
         }
       } else if ((rx.payload[12] == 0x02 || rx.payload[12] == 0x01) &&
@@ -1959,13 +1794,13 @@ class BleProcess {
           lbusFetchErrors.value.add(
             (lBusSetupDataFetchCommandStep + 1).toString(),
           );
-          print("L-Bus Setup Fetch Error: $lBusSetupDataFetchCommandStep");
         }
         final nextIndex = lBusSetupDataFetchCommandStep + 1;
         if (nextIndex < enabledLBusNumbers.value.length) {
           lBusSetupDataFetchCommandStep = nextIndex;
           final nextBusNo = enabledLBusNumbers.value[nextIndex];
-          processDesc.value = "Downloading Enabled L-Bus $nextBusNo/31";
+          processDesc.value =
+              "${StringConstants.downloadingEnabledLBus} $nextBusNo/31";
           startRxTimeout();
           await bleManager.sendLBusEnabledBusDataFetchCmdPkt(lBusNo: nextBusNo);
         } else {
@@ -1974,21 +1809,14 @@ class BleProcess {
           checkForLBusSetupFetchRes = 0;
           isLBusSetupFetchCommandActive.value = false;
           isAccessKeyValid.value = true;
-          print(
-            "We got the response for l-bus setup fetch (enabled bus data complete)",
-          );
         }
       } else {
-        print("L-Bus Setup Fetch Cmd Response not found, polling again");
         startRxTimeout();
         await bleManager.sendPollPacket();
       }
     }
 
     if (checkForModuleSetupFetchRes == 1) {
-      print(
-        "Checking Module Setup Fetch CMD RSP Value ${rx.payload[12]}:::::${rx.payload[12] == 0x01} ",
-      );
       if (rx.payload[12] == 0x01) {
         bleManager.otaProcessState = OtaProcessState.notInUse;
         cancelOperationDeadline();
@@ -2021,18 +1849,13 @@ class BleProcess {
         moduleProtocol.value = rx.payload[43];
         isAccessKeyValid.value = true;
         isModuleSetupFetchCommandActive.value = false;
-        print("We got the response for module setup fetch");
       } else {
-        print("Module Setup Fetch Cmd Response not found, polling again");
         startRxTimeout();
         await bleManager.sendPollPacket();
       }
     }
 
     if (checkForRadioSetupFetchRes == 1) {
-      print(
-        "Checking Radio Setup Fetch CMD RSP Value ${rx.payload[12]}:::::${rx.payload[12] == 0x1D} ",
-      );
       if (rx.payload[12] == 0x1D) {
         bleManager.otaProcessState = OtaProcessState.notInUse;
         cancelOperationDeadline();
@@ -2054,21 +1877,15 @@ class BleProcess {
         isRadioSetupServiced.value = rx.payload[19] == 0x01;
         isRadioSetupAdvertised.value = rx.payload[15] == 0x01;
         isRadioSetupConnected.value = rx.payload[15] == 0x01;
-        print(rx.payload[37]);
         isAccessKeyValid.value = true;
         isRadioSetupFetchCommandActive.value = false;
-        print("We got the response for radio setup fetch");
       } else {
-        print("Radio Setup Fetch Cmd Response not found, polling again");
         startRxTimeout();
         await bleManager.sendPollPacket();
       }
     }
 
     if (checkForRadioSetupApplyRes == 1) {
-      print(
-        "Checking Radio Setup Apply CMD RSP Value ${rx.payload[12]}:::::${rx.payload[12] == 0x1D} ",
-      );
       if (rx.payload[10] == 0x83) {
         bleManager.otaProcessState = OtaProcessState.notInUse;
         cancelOperationDeadline();
@@ -2076,47 +1893,33 @@ class BleProcess {
         isAccessKeyValid.value = true;
         isRadioSetupCommandApplyActive.value = false;
         isRadioSetupApplyDone.value = true;
-        print("We got the response for radio setup apply");
       } else {
-        print("Radio Setup Apply Cmd Response not found, polling again");
         startRxTimeout();
         await bleManager.sendPollPacket();
       }
     }
 
     if (checkForExtCmdApplyRes == 1) {
-      print(
-        "Checking EXT Apply CMD RSP Value ${rx.payload[12]}:::::${rx.payload[12] == 0x16} ",
-      );
       if (rx.payload[10] == 0x83) {
         bleManager.otaProcessState = OtaProcessState.notInUse;
         cancelOperationDeadline();
-        print("Found a control message");
         isAccessKeyValid.value = true;
         checkForExtCmdApplyRes = 0;
         isExtOutCommandApplyActive.value = false;
         isExtOutApplyDone.value = true;
-        print("We got the response for ext apply");
       } else {
-        print("EXT Apply Cmd Response not found, polling again");
         startRxTimeout();
         await bleManager.sendPollPacket();
       }
     }
 
     if (checkForInputSetupFetchRes == 1) {
-      print(
-        "Checking Input Setup Fetch CMD RSP Value ${rx.payload[12]}:::::${rx.payload[12] == 0x06} ",
-      );
       if (rx.payload[12] == 0x06) {
         bleManager.otaProcessState = OtaProcessState.notInUse;
         cancelOperationDeadline();
         checkForInputSetupFetchRes = 0;
         isInputSetupFetchCommandActive.value = false;
         isAccessKeyValid.value = true;
-        print(
-          "We got the response for input setup fetch, ${rx.payload[23]}, ${rx.payload[24]}",
-        );
         final InputModeConfig config = InputModeCodec.fromHex(
           rx.payload[15].toRadixString(16),
         );
@@ -2128,75 +1931,56 @@ class BleProcess {
         inputMode.value = InputModeCodec.encodeHex(config);
         inputSetupText.value = extractStringFromPayload(rx.payload);
       } else {
-        print("Input Setup Fetch Cmd Response not found, polling again");
         startRxTimeout();
         await bleManager.sendPollPacket();
       }
     }
 
     if (checkForInputSetupApplyRes == 1) {
-      print(
-        "Checking Input Setup Apply CMD RSP Value ${rx.payload[12]}:::::${rx.payload[12] == 0x16} ",
-      );
       if (rx.payload[10] == 0x83) {
         isAccessKeyValid.value = true;
         bleManager.otaProcessState = OtaProcessState.notInUse;
         cancelOperationDeadline();
-        print("Found a control message");
         checkForInputSetupApplyRes = 0;
         isInputSetupApplyActive.value = false;
         isInputSetupApplyDone.value = true;
-        print("We got the response for ext apply");
       } else {
-        print("EXT Apply Cmd Response not found, polling again");
         startRxTimeout();
         await bleManager.sendPollPacket();
       }
     }
 
     if (checkForRelaySetupApplyRes == 1) {
-      print(
-        "Checking Relay Setup Apply CMD RSP Value ${rx.payload[12]}:::::${rx.payload[12] == 0x16} ",
-      );
       if (rx.payload[10] == 0x83) {
         if (relaySetupApplyCommandStep == 1) {
-          print("CMD 1 Validated -> send CMD2, keep polling");
-          processDesc.value = "Applying Relay 2/3";
+          processDesc.value = "${StringConstants.applyingRelay} 2/3";
           relaySetupApplyCommandStep = 2;
           startRxTimeout();
           await bleManager.sendRelaySetupApplySecondCmdPkt();
         } else if (relaySetupApplyCommandStep == 2) {
-          print("CMD 2 Validated -> send CMD3, keep polling");
-          processDesc.value = "Applying Relay 3/3";
+          processDesc.value = "${StringConstants.applyingRelay} 3/3";
           relaySetupApplyCommandStep = 3;
           startRxTimeout();
           await bleManager.sendRelaySetupApplyThirdCmdPkt();
         } else if (relaySetupApplyCommandStep == 3) {
-          print("CMD3 Validated -> done");
           isAccessKeyValid.value = true;
           bleManager.otaProcessState = OtaProcessState.notInUse;
           cancelOperationDeadline();
           checkForRelaySetupApplyRes = 0;
           isRelaySetupCommandApplyActive.value = false;
           isRelaySetupApplyDone.value = true;
-          print("We got the response for relay setup apply");
         }
       } else {
-        print("Relay Setup Apply Cmd Response not found, polling again");
         startRxTimeout();
         await bleManager.sendPollPacket();
       }
     }
 
     if (checkForExtCmdFetchRes == 1) {
-      print(
-        "Checking EXT Fetch CMD RSP Value ${rx.payload[12]}:::::${rx.payload[12] == 0x16} ",
-      );
       if (rx.payload[12] == 0x16) {
         bleManager.otaProcessState = OtaProcessState.sendDipSettingFetchCmd;
         checkForExtCmdFetchRes = 0;
         isAccessKeyValid.value = true;
-        print("We got the response for ext fetch");
         final ExtZoneModeConfig config = ExtZoneModeCodec.fromHex(
           rx.payload[14].toRadixString(16),
         );
@@ -2216,20 +2000,15 @@ class BleProcess {
         startRxTimeout();
         await bleManager.sendFetchDipSettingPkt();
       } else {
-        print("EXT Fetch Cmd Response not found, polling again");
         startRxTimeout();
         await bleManager.sendPollPacket();
       }
     }
 
     if (checkForRelaySetupFetchRes == 1) {
-      print(
-        "Checking Relay Setup Fetch CMD RSP Value ${rx.payload[12]}:::::${rx.payload[12] == 0x07} ",
-      );
       if (rx.payload[12] == 0x07) {
         if (relaySetupFetchCommandStep == 1) {
-          processDesc.value = "Downloading Relay 2/3";
-          print("CMD 1 Validated -> send CMD2, keep polling");
+          processDesc.value = "${StringConstants.downloadingRelay} 2/3";
 
           final OutputModeConfig config = OutputModeCodec.fromHex(
             rx.payload[15].toRadixString(16),
@@ -2252,8 +2031,7 @@ class BleProcess {
           startRxTimeout();
           await bleManager.sendRelaySetupFetchSecondCmdPkt();
         } else if (relaySetupFetchCommandStep == 2) {
-          processDesc.value = "Downloading Relay 3/3";
-          print("CMD 2 Validated -> send CMD3, keep polling");
+          processDesc.value = "${StringConstants.downloadingRelay} 3/3";
 
           final OutputModeConfig config = OutputModeCodec.fromHex(
             rx.payload[15].toRadixString(16),
@@ -2276,8 +2054,6 @@ class BleProcess {
           startRxTimeout();
           await bleManager.sendRelaySetupFetchThirdCmdPkt();
         } else if (relaySetupFetchCommandStep == 3) {
-          print("CMD3 Validated -> done");
-
           final OutputModeConfig config = OutputModeCodec.fromHex(
             rx.payload[15].toRadixString(16),
           );
@@ -2302,58 +2078,43 @@ class BleProcess {
           checkForRelaySetupFetchRes = 0;
           isRelaySetupFetchCommandActive.value = false;
           isAccessKeyValid.value = true;
-          print("We got the response for relay setup fetch");
         }
       } else {
-        print("Relay Setup Fetch Cmd Response not found, polling again");
         startRxTimeout();
         await bleManager.sendPollPacket();
       }
     }
 
     if (checkForZoneSetupApplyRes == 1) {
-      print(
-        "Checking Zone Setup Apply CMD RSP Value ${rx.payload[10]}:::::${rx.payload[10] == 0x83} ",
-      );
       if (rx.payload[10] == 0x83) {
         if (zoneSetupApplyCommandStep == 1) {
-          print("CMD 1 Validated -> send CMD2, keep polling");
-          processDesc.value = "Applying Zone 2/3";
+          processDesc.value = "${StringConstants.applyingZone} 2/3";
           zoneSetupApplyCommandStep = 2;
           startRxTimeout();
           await bleManager.sendZoneSetupApplySecondCmdPkt();
         } else if (zoneSetupApplyCommandStep == 2) {
-          print("CMD 2 Validated -> send CMD3, keep polling");
-          processDesc.value = "Applying Zone 3/3";
+          processDesc.value = "${StringConstants.applyingZone} 3/3";
           zoneSetupApplyCommandStep = 3;
           startRxTimeout();
           await bleManager.sendZoneSetupApplyThirdCmdPkt();
         } else if (zoneSetupApplyCommandStep == 3) {
-          print("CMD3 Validated -> done");
           bleManager.otaProcessState = OtaProcessState.notInUse;
           cancelOperationDeadline();
           checkForZoneSetupApplyRes = 0;
           isZoneSetupCommandApplyActive.value = false;
           isZoneSetupApplyDone.value = true;
           isAccessKeyValid.value = true;
-          print("We got the response for zone setup apply");
         }
       } else {
-        print("Zone Setup Apply Cmd Response not found, polling again");
         startRxTimeout();
         await bleManager.sendPollPacket();
       }
     }
 
     if (checkForZoneSetupFetchRes == 1) {
-      print(
-        "Checking Zone Setup Fetch CMD RSP Value ${rx.payload[12]}:::::${rx.payload[12] == 0x04} ",
-      );
       if (rx.payload[12] == 0x04) {
-        print("We got the response for zone setup fetch");
         if (zoneSetupFetchCommandStep == 1) {
-          print("CMD 1 Validated -> send CMD2, keep polling");
-          processDesc.value = "Downloading Zone 2/3";
+          processDesc.value = "${StringConstants.downloadingZone} 2/3";
           final ZoneModeConfig config = ZoneModeCodec.fromHex(
             rx.payload[14].toRadixString(16),
           );
@@ -2370,12 +2131,10 @@ class BleProcess {
           );
           zoneOneSetupVerificationTime.value = rx.payload[16].toString();
           zoneSetupFetchCommandStep = 2;
-          // zoneOneSetupDetectionMode.value = config.flowDetectionUsed ? 1 : 0;
           startRxTimeout();
           await bleManager.sendZoneSetupFetchSecondCmdPkt();
         } else if (zoneSetupFetchCommandStep == 2) {
-          print("CMD 2 Validated -> send CMD3, keep polling");
-          processDesc.value = "Downloading Zone 3/3";
+          processDesc.value = "${StringConstants.downloadingZone} 3/3";
           final ZoneModeConfig config = ZoneModeCodec.fromHex(
             rx.payload[14].toRadixString(16),
           );
@@ -2395,7 +2154,6 @@ class BleProcess {
           startRxTimeout();
           await bleManager.sendZoneSetupFetchThirdCmdPkt();
         } else if (zoneSetupFetchCommandStep == 3) {
-          print("CMD3 Validated -> done");
           final ZoneModeConfig config = ZoneModeCodec.fromHex(
             rx.payload[14].toRadixString(16),
           );
@@ -2416,24 +2174,18 @@ class BleProcess {
           checkForZoneSetupFetchRes = 0;
           isZoneSetupFetchCommandActive.value = false;
           isAccessKeyValid.value = true;
-          print("We got the response for zone setup fetch");
         }
       } else {
-        print("Zone Setup Fetch Cmd Response not found, polling again");
         startRxTimeout();
         await bleManager.sendPollPacket();
       }
     }
 
     if (checkForCtrlCmdRsp == 1) {
-      print(
-        "Checking CONTROL CMD RSP Value ${rx.payload[10]}:::::${rx.payload[10] == 0x83} ",
-      );
       if (rx.payload[3] == 0x03 && nackRetryCount < 3) {
         Get.find<BleLogController>().restartNetworkFlow();
       } else if (rx.payload[10] == 0x83) {
         isAccessKeyValid.value = true;
-        print("CONTROL CMD RESPONSE RECEIVED");
         if (isSessionAccessCodeValidationOnly) {
           isSessionAccessCodeValidationOnly = false;
           bleManager.otaProcessState = OtaProcessState.notInUse;
@@ -2455,15 +2207,11 @@ class BleProcess {
         cancelOperationDeadline();
         cancelRxTimeout();
       } else {
-        print("CONTROL CMD RSP not found, polling again");
         startRxTimeout();
         await bleManager.sendPollPacket();
       }
     } else if (checkForCtrlCmdRsp == 2) {
       receivedPollCount++;
-      print(
-        "Total Received logs after control cmd response found: $receivedPollCount",
-      );
       int rxLastEvtLogNum =
           rx.payload[19] |
           (rx.payload[18] << 8) |
@@ -2481,30 +2229,18 @@ class BleProcess {
             rxLastEvtLogNum,
           );
           if (parsedLog != null && parsedLog.eventId != "0") {
-            print(
-              "Valid Log Packet ${rx.payload.map((b) => b.toRadixString(16).padLeft(2, '0')).join(" ")}",
-            );
             isValidLogRecieved.value = true;
             final currentLogs = List<LogModel>.from(validEventLogs.value);
             currentLogs.add(parsedLog);
             validEventLogs.value = currentLogs;
           }
-        } catch (e) {
-          print("Error parsing event log: $e");
-        }
+        } catch (_) {}
       }
 
       if (rx.payload[12] == 0x02) {
         read1000Logs++;
         read1000LogsCount.value = read1000Logs;
       }
-
-      print(
-        "EventLog: 0x${rxLastEvtLogNum.toRadixString(16)} "
-        "Valid: $validEventLogNum  "
-        "Read1000: $read1000Logs"
-        "time: ${DateTime.now().toIso8601String()}",
-      );
 
       if (read1000Logs != 1000) {
         startRxTimeout();
@@ -2515,8 +2251,6 @@ class BleProcess {
     processNextOtaFrame = true;
 
     if (read1000Logs >= 1000 && !isOtaCompleted) {
-      print("<<<<<< COMPLETED 1000 EVENT LOGS >>>>>>>");
-
       isOtaCompleted = true;
       processNextOtaFrame = false;
 
@@ -2527,17 +2261,10 @@ class BleProcess {
       processDesc.value = "";
 
       logEndTime = DateTime.now();
-      print(
-        "Time Taken for 1000 logs ${formatDuration(logEndTime!.difference(logStartingTime!))}",
-      );
 
       await bleManager.sendStopCntrlCmdPkt();
       return;
     }
-
-    print(
-      "__________--------------------_________________------------------_________________-----------------_________________--------------_____________----------",
-    );
   }
 
   void setIfChanged(ValueNotifier<double> notifier, double newValue) {
@@ -2593,30 +2320,21 @@ class BleProcess {
 
   String extractStringFromPayload(List<int> payload, {int startIndex = 25}) {
     if (startIndex < 0 || startIndex >= payload.length) {
-      debugPrint(
-        'extractStringFromPayload: startIndex $startIndex out of range (len ${payload.length})',
-      );
       return '';
     }
     final int declared = payload[startIndex];
     final int stringStart = startIndex + 1;
     final int endExclusive = stringStart + declared;
     if (declared < 0 || endExclusive > payload.length) {
-      debugPrint(
-        'extractStringFromPayload: invalid length $declared at $startIndex '
-        '(need end $endExclusive, payload len ${payload.length})',
-      );
       return '';
     }
     if (declared == 0) {
       return '';
     }
-    print('Length: $declared');
     final List<int> stringBytes = payload.sublist(stringStart, endExclusive);
     try {
       return utf8.decode(stringBytes);
     } catch (e) {
-      debugPrint('extractStringFromPayload: utf8 decode failed: $e');
       return '';
     }
   }
@@ -2632,10 +2350,6 @@ class BleProcess {
       off++;
     }
     if (off + 14 > payload.length) {
-      debugPrint(
-        '_applyNetworkPacketVersionFields: need ${off + 14} bytes, '
-        'len ${payload.length}',
-      );
       return;
     }
     receivedHardwareVersion.value =
@@ -2649,11 +2363,6 @@ class BleProcess {
         '${day.toString().padLeft(2, '0')}-${month.toString().padLeft(2, '0')}-$year';
     final int proto = (payload[off + 12] << 8) | payload[off + 13];
     receivedProtocolVersion.value = proto.toString();
-
-    print("The received hardware version is: ${receivedHardwareVersion.value}");
-    print("The received firmware version is: ${receivedFirmwareVersion.value}");
-    print("The received firmware date is: ${receivedFirmwareDate.value}");
-    print("The received protocol version is: ${receivedProtocolVersion.value}");
   }
 
   void resetProcessState() {
@@ -3389,7 +3098,6 @@ class BleProcess {
         break;
 
       case BleStates.PROCESS_WAIT_RSP:
-        print("Waiting state");
         break;
 
       case BleStates.IDLE:
@@ -3405,7 +3113,6 @@ class BleProcess {
   }
 
   requestENCKey() async {
-    print("Send encry req frame");
     bleCurrentState = BleStates.REQ_ENCY_KEY;
     bleManager.bleStateMachineState = BleStates.PROCESS_WAIT_RSP;
     await bleManager.sendAesKeyReq();
@@ -3418,7 +3125,7 @@ class BleProcess {
   }
 
   sendExtOutApplyPacket() async {
-    processDesc.value = "Sending Ext Out Packet";
+    processDesc.value = StringConstants.sendingExtOutPacket;
     await bleManager.sendExtOutSetupApplyCmdPkt();
     bleManager.bleStateMachineState =
         BleStates.SEND_EXT_OUT_SETUP_CMD_FETCH_PACKET;
@@ -3443,7 +3150,6 @@ class BleProcess {
       bleOperationDeadlineDuration,
       _onOperationDeadlineExceeded,
     );
-    print("Operation deadline timer started");
   }
 
   void _onOperationDeadlineExceeded() {
@@ -3455,10 +3161,7 @@ class BleProcess {
       return;
     }
 
-    print(
-      'BLE operation deadline exceeded (${bleOperationDeadlineDuration.inSeconds}s)',
-    );
-    processDesc.value = 'Operation timed out.';
+    processDesc.value = StringConstants.operationTimedOut;
     unawaited(handleNetworkFlowNoResponse());
   }
 
@@ -3470,9 +3173,6 @@ class BleProcess {
     _accessKeyPollDeadlineTimer = Timer(
       accessKeyPollTimeoutDuration,
       _onAccessKeyPollTimeout,
-    );
-    print(
-      'Access key poll deadline started (${accessKeyPollTimeoutDuration.inSeconds}s)',
     );
   }
 
@@ -3487,10 +3187,6 @@ class BleProcess {
     final sessionValidation = isSessionAccessCodeValidationOnly;
     if (!duringAccessKeyPoll && !sessionValidation) return;
 
-    print(
-      'Access key poll deadline exceeded (${accessKeyPollTimeoutDuration.inSeconds}s)',
-    );
-
     cancelAccessKeyPollDeadline();
     _rxTimeoutTimer?.cancel();
     _rxTimeoutTimer = null;
@@ -3504,7 +3200,7 @@ class BleProcess {
     isSessionAccessCodeValidationOnly = false;
     processNextOtaFrame = false;
 
-    processDesc.value = 'Something went wrong, please try again.';
+    processDesc.value = StringConstants.somethingWentWrong;
     isAccessKeyValid.value = false;
   }
 
@@ -3517,7 +3213,6 @@ class BleProcess {
   LogModel? _parseEventLogFromPayload(List<int> payload, int eventLogNum) {
     try {
       if (payload.length < 130) {
-        print("Payload too short for event log parsing");
         return null;
       }
 
@@ -3576,14 +3271,9 @@ class BleProcess {
                   ? "Bluetooth"
                   : "";
         } else {
-          panelSource = "Panel No. 1";
+          panelSource = StringConstants.panelNo1;
         }
       }
-
-      print("Event log number: $eventLogNum");
-      print("I/O number type: ${payload[29]}");
-      print("I/O number: ${payload[30] - payload[31]}");
-      print("I/O type: ${payload[33]}");
 
       return LogModel(
         panelText: panelSource,
@@ -3631,7 +3321,6 @@ class BleProcess {
         retrievedAt: DateTime.now(),
       );
     } catch (e) {
-      print("Error parsing event log from payload: $e");
       return null;
     }
   }
@@ -3665,14 +3354,11 @@ class BleProcess {
 
       rxTimeoutRetryCount++;
 
-      print("RX timeout [$rxTimeoutRetryCount / $maxRxRetries] - no response");
-
       processDesc.value =
-          "No response from device ($rxTimeoutRetryCount/$maxRxRetries)";
+          "${StringConstants.noResponseFromDevice} ($rxTimeoutRetryCount/$maxRxRetries)";
 
       if (rxTimeoutRetryCount >= maxRxRetries) {
-        print("RX retry limit reached.");
-        processDesc.value = "Device not responding.";
+        processDesc.value = StringConstants.deviceNotResponding;
         unawaited(handleNetworkFlowNoResponse());
         return;
       }
@@ -3693,25 +3379,19 @@ class BleProcess {
     if (_networkFlowFailureHandling || isOtaCompleted) return;
 
     if (checkForAccessKeyCmdRsp == 1 || isSessionAccessCodeValidationOnly) {
-      print('Other Packets: No response during access code validation');
       _onAccessKeyPollTimeout();
       return;
     }
 
     networkFlowRestartCount++;
     processDesc.value =
-        'No response from device ($networkFlowRestartCount/$maxNetworkFlowRestarts)';
+        '${StringConstants.noResponseFromDevice} ($networkFlowRestartCount/$maxNetworkFlowRestarts)';
 
     if (networkFlowRestartCount < maxNetworkFlowRestarts) {
-      print(
-        'Other Packets: No response, network flow restart '
-        '$networkFlowRestartCount/$maxNetworkFlowRestarts',
-      );
       restartInitialNetworkFlow();
       return;
     }
 
-    print('Network flow restart limit reached ($maxNetworkFlowRestarts)');
     _networkFlowFailureHandling = true;
     maxOtherPacketsRetriesReached.value = true;
     cancelRxTimeout();
@@ -3734,7 +3414,6 @@ class BleProcess {
     _otherPacketsRxTimeoutTimer = Timer(
       timeout ?? const Duration(seconds: 12),
       () {
-        print('Other Packets: No response from device');
         unawaited(handleNetworkFlowNoResponse());
       },
     );
@@ -3752,7 +3431,7 @@ class BleProcess {
 
       switch (bleManager.otaProcessState) {
         case OtaProcessState.sendNetworkPacket:
-          processDesc.value = "Sending Network Packet";
+          processDesc.value = StringConstants.sendingNetworkPacket;
           await bleManager.sendNetworkPacket();
           break;
         case OtaProcessState.sendPollPacket:
@@ -3843,14 +3522,11 @@ class BleProcess {
         await bleProcess();
         await Future.delayed(const Duration(milliseconds: 5));
       } catch (e) {
-        print("Exception in state machine: $e");
         break;
       }
     }
 
     _isStateMachineRunning = false;
     _restartRequested = false;
-
-    print("BLE State Machine exited cleanly");
   }
 }
