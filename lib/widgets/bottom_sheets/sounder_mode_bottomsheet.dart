@@ -13,6 +13,8 @@ import 'package:techno_switch_solar_app/utils/zone_equipment_mode_util.dart';
 import 'package:techno_switch_solar_app/panel_config/panel_config_cache_sync.dart';
 import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/widgets/dropdown.dart';
+import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
 class SounderModeBottomSheet extends StatefulWidget {
   final String deviceId;
@@ -41,35 +43,35 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
   final ScrollController sounderBottomSheetController = ScrollController();
   late final List<GlobalKey> _tileKeys;
 
-  final List<String> groupOptions = ['None', 'General', 'Zone', 'Ext. Out'];
+  final List<String> groupOptions = ['None', 'General', StringConstants.zone, StringConstants.extOut];
 
   final Map<String, List<String>> functionOptionsMap = {
     'None': ['None'],
-    'General': ['Fire Snd'],
-    'Zone': ['Fire Snd'],
-    'Ext. Out': ['Ext. Snd 1', 'Ext. Snd 2', 'Man. Release Snd'],
+    'General': [StringConstants.fireSnd],
+    StringConstants.zone: [StringConstants.fireSnd],
+    StringConstants.extOut: [StringConstants.extSnd1, 'Ext. Snd 2', StringConstants.manReleaseSnd],
   };
 
-  final List<String> yesNoOptions = ['No', 'Yes'];
+  final List<String> yesNoOptions = ['No', StringConstants.yes];
 
-  final List<String> typeOptions = ['Normal', 'IS (MTL5525)'];
+  final List<String> typeOptions = [StringConstants.none, StringConstants.isMTL5525];
 
   final List<String> actionOptions = [
     'Continuous',
-    'Pulsing 1s on, 1s off',
-    'Pulsing 1s on, 4s off',
-    'Pulsing 2s on, 500ms off',
+    StringConstants.pulsing1sOn1sOff,
+    StringConstants.pulsing1sOn4sOff,
+    StringConstants.pulsing2sOn500msOff,
   ];
 
   final List<String> extOutActionOptions = [
     'Continuous',
-    'Pulsing 1s on, 1s off',
-    'Pulsing 1s on, 4s off',
-    'Pulsing 2s on, 500ms off',
-    'Off',
+    StringConstants.pulsing1sOn1sOff,
+    StringConstants.pulsing1sOn4sOff,
+    StringConstants.pulsing2sOn500msOff,
+    StringConstants.off,
   ];
 
-  final functions = ['Ext. Snd 1', 'Ext. Snd 2', 'Man. Release Snd'];
+  final functions = [StringConstants.extSnd1, 'Ext. Snd 2', StringConstants.manReleaseSnd];
 
   late List<SounderConfig> sounders;
   late List<ZoneConfig> zones;
@@ -83,7 +85,7 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
 
   String delayed = 'No';
 
-  final String _delayError = "Delay must be between 0 and 600 seconds";
+  final String _delayError = StringConstants.delayMustBeBetween0And600Seconds;
 
   bool _isDelayValid() {
     final val = int.tryParse(delayController.text);
@@ -94,7 +96,7 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
   //   final val = int.tryParse(delayController.text);
 
   //   if (val == null || val < 0 || val > 600) {
-  //     _delayError = 'Delay must be between 0 and 600 seconds';
+  //     _delayError = StringConstants.delayMustBeBetween0And600Seconds;
   //   } else {
   //     _delayError = null;
   //   }
@@ -108,9 +110,9 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
 
     delayFocusNode.addListener(() {
       if (delayFocusNode.hasFocus) {
-        debugPrint("Delay field is focused");
+        debugPrint(StringConstants.delayFieldIsFocused);
       } else {
-        debugPrint("Delay field lost focus");
+        debugPrint(StringConstants.delayFieldLostFocus);
       }
     });
 
@@ -121,7 +123,7 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
 
       if (i == 0) {
         config.group = 'General';
-        config.function = 'Fire Snd';
+        config.function = StringConstants.fireSnd;
         config.groupLocked = true;
         config.functionLocked = true;
       }
@@ -166,19 +168,19 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
 
   void _applyCachedData(Map<String, dynamic> data) {
     final s1 = data['s1'] as Map<String, dynamic>?;
-    final s2 = data['s2'] as Map<String, dynamic>?;
-    final s3 = data['s3'] as Map<String, dynamic>?;
-    final z1 = data['z1'] as Map<String, dynamic>?;
-    final z2 = data['z2'] as Map<String, dynamic>?;
-    final z3 = data['z3'] as Map<String, dynamic>?;
-    final e1 = data['e1'] as Map<String, dynamic>?;
-    final e2 = data['e2'] as Map<String, dynamic>?;
+    final s2 = data[StringConstants.s2] as Map<String, dynamic>?;
+    final s3 = data[StringConstants.s3] as Map<String, dynamic>?;
+    final z1 = data[StringConstants.z1] as Map<String, dynamic>?;
+    final z2 = data[StringConstants.z2] as Map<String, dynamic>?;
+    final z3 = data[StringConstants.z3] as Map<String, dynamic>?;
+    final e1 = data[StringConstants.e1] as Map<String, dynamic>?;
+    final e2 = data[StringConstants.e2] as Map<String, dynamic>?;
     final e3 = data['e3'] as Map<String, dynamic>?;
 
     if (s1 != null) {
-      sounders[0].enabled = (s1['enabled'] as bool?) ?? false ? 'Yes' : 'No';
+      sounders[0].enabled = (s1['enabled'] as bool?) ?? false ? StringConstants.yes : 'No';
       sounders[0].type =
-          (s1['normal'] as bool?) ?? true ? 'Normal' : 'IS (MTL5525)';
+          (s1['normal'] as bool?) ?? true ? StringConstants.none : StringConstants.isMTL5525;
       sounders[0].outputController.text = (s1['outputText'] as String?) ?? '';
       sounders[0].group =
           groupOptions[((s1['group'] as int?) ?? 0).clamp(
@@ -190,9 +192,9 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
               .clamp(0, functionOptionsMap[sounders[0].group]!.length - 1)];
     }
     if (s2 != null) {
-      sounders[1].enabled = (s2['enabled'] as bool?) ?? false ? 'Yes' : 'No';
+      sounders[1].enabled = (s2['enabled'] as bool?) ?? false ? StringConstants.yes : 'No';
       sounders[1].type =
-          (s2['normal'] as bool?) ?? true ? 'Normal' : 'IS (MTL5525)';
+          (s2['normal'] as bool?) ?? true ? StringConstants.none : StringConstants.isMTL5525;
       sounders[1].outputController.text = (s2['outputText'] as String?) ?? '';
       sounders[1].group =
           groupOptions[((s2['group'] as int?) ?? 0).clamp(
@@ -203,12 +205,12 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
           functionOptionsMap[sounders[1].group]![((s2['function'] as int?) ?? 0)
               .clamp(0, functionOptionsMap[sounders[1].group]!.length - 1)];
       sounders[1].dynamicController.text =
-          (s2['functionNo'] as int?)?.toString() ?? '0';
+          (s2[StringConstants.functionno] as int?)?.toString() ?? '0';
     }
     if (s3 != null) {
-      sounders[2].enabled = (s3['enabled'] as bool?) ?? false ? 'Yes' : 'No';
+      sounders[2].enabled = (s3['enabled'] as bool?) ?? false ? StringConstants.yes : 'No';
       sounders[2].type =
-          (s3['normal'] as bool?) ?? true ? 'Normal' : 'IS (MTL5525)';
+          (s3['normal'] as bool?) ?? true ? StringConstants.none : StringConstants.isMTL5525;
       sounders[2].outputController.text = (s3['outputText'] as String?) ?? '';
       sounders[2].group =
           groupOptions[((s3['group'] as int?) ?? 0).clamp(
@@ -219,11 +221,11 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
           functionOptionsMap[sounders[2].group]![((s3['function'] as int?) ?? 0)
               .clamp(0, functionOptionsMap[sounders[2].group]!.length - 1)];
       sounders[2].dynamicController.text =
-          (s3['functionNo'] as int?)?.toString() ?? '0';
+          (s3[StringConstants.functionno] as int?)?.toString() ?? '0';
     }
     if (z1 != null) {
-      zones[0].enabled = (z1['enabled'] as bool?) ?? false ? 'Yes' : 'No';
-      zones[0].test = (z1['test'] as bool?) ?? false ? 'Yes' : 'No';
+      zones[0].enabled = (z1['enabled'] as bool?) ?? false ? StringConstants.yes : 'No';
+      zones[0].test = (z1['test'] as bool?) ?? false ? StringConstants.yes : 'No';
       zones[0].action =
           actionOptions[((z1['action'] as int?) ?? 0).clamp(
             0,
@@ -231,8 +233,8 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
           )];
     }
     if (z2 != null) {
-      zones[1].enabled = (z2['enabled'] as bool?) ?? false ? 'Yes' : 'No';
-      zones[1].test = (z2['test'] as bool?) ?? false ? 'Yes' : 'No';
+      zones[1].enabled = (z2['enabled'] as bool?) ?? false ? StringConstants.yes : 'No';
+      zones[1].test = (z2['test'] as bool?) ?? false ? StringConstants.yes : 'No';
       zones[1].action =
           actionOptions[((z2['action'] as int?) ?? 0).clamp(
             0,
@@ -240,8 +242,8 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
           )];
     }
     if (z3 != null) {
-      zones[2].enabled = (z3['enabled'] as bool?) ?? false ? 'Yes' : 'No';
-      zones[2].test = (z3['test'] as bool?) ?? false ? 'Yes' : 'No';
+      zones[2].enabled = (z3['enabled'] as bool?) ?? false ? StringConstants.yes : 'No';
+      zones[2].test = (z3['test'] as bool?) ?? false ? StringConstants.yes : 'No';
       zones[2].action =
           actionOptions[((z3['action'] as int?) ?? 0).clamp(
             0,
@@ -249,63 +251,63 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
           )];
     }
     if (e1 != null) {
-      extOuts[0].enabled = (e1['enabled'] as bool?) ?? false ? 'Yes' : 'No';
-      extOuts[0].test = (e1['test'] as bool?) ?? false ? 'Yes' : 'No';
+      extOuts[0].enabled = (e1['enabled'] as bool?) ?? false ? StringConstants.yes : 'No';
+      extOuts[0].test = (e1['test'] as bool?) ?? false ? StringConstants.yes : 'No';
       extOuts[0].countdownAction =
-          extOutActionOptions[((e1['countdownAction'] as int?) ?? 0).clamp(
+          extOutActionOptions[((e1[StringConstants.countdownaction] as int?) ?? 0).clamp(
             0,
             extOutActionOptions.length - 1,
           )];
       extOuts[0].holdAction =
-          extOutActionOptions[((e1['holdAction'] as int?) ?? 0).clamp(
+          extOutActionOptions[((e1[StringConstants.holdaction] as int?) ?? 0).clamp(
             0,
             extOutActionOptions.length - 1,
           )];
       extOuts[0].releaseAction =
-          extOutActionOptions[((e1['releaseAction'] as int?) ?? 0).clamp(
+          extOutActionOptions[((e1[StringConstants.releaseaction] as int?) ?? 0).clamp(
             0,
             extOutActionOptions.length - 1,
           )];
     }
     if (e2 != null) {
-      extOuts[1].enabled = (e2['enabled'] as bool?) ?? false ? 'Yes' : 'No';
-      extOuts[1].test = (e2['test'] as bool?) ?? false ? 'Yes' : 'No';
+      extOuts[1].enabled = (e2['enabled'] as bool?) ?? false ? StringConstants.yes : 'No';
+      extOuts[1].test = (e2['test'] as bool?) ?? false ? StringConstants.yes : 'No';
       extOuts[1].countdownAction =
-          extOutActionOptions[((e2['countdownAction'] as int?) ?? 0).clamp(
+          extOutActionOptions[((e2[StringConstants.countdownaction] as int?) ?? 0).clamp(
             0,
             extOutActionOptions.length - 1,
           )];
       extOuts[1].holdAction =
-          extOutActionOptions[((e2['holdAction'] as int?) ?? 0).clamp(
+          extOutActionOptions[((e2[StringConstants.holdaction] as int?) ?? 0).clamp(
             0,
             extOutActionOptions.length - 1,
           )];
       extOuts[1].releaseAction =
-          extOutActionOptions[((e2['releaseAction'] as int?) ?? 0).clamp(
+          extOutActionOptions[((e2[StringConstants.releaseaction] as int?) ?? 0).clamp(
             0,
             extOutActionOptions.length - 1,
           )];
     }
     if (e3 != null) {
-      extOuts[2].enabled = (e3['enabled'] as bool?) ?? false ? 'Yes' : 'No';
-      extOuts[2].test = (e3['test'] as bool?) ?? false ? 'Yes' : 'No';
+      extOuts[2].enabled = (e3['enabled'] as bool?) ?? false ? StringConstants.yes : 'No';
+      extOuts[2].test = (e3['test'] as bool?) ?? false ? StringConstants.yes : 'No';
       extOuts[2].countdownAction =
-          extOutActionOptions[((e3['countdownAction'] as int?) ?? 0).clamp(
+          extOutActionOptions[((e3[StringConstants.countdownaction] as int?) ?? 0).clamp(
             0,
             extOutActionOptions.length - 1,
           )];
       extOuts[2].holdAction =
-          extOutActionOptions[((e3['holdAction'] as int?) ?? 0).clamp(
+          extOutActionOptions[((e3[StringConstants.holdaction] as int?) ?? 0).clamp(
             0,
             extOutActionOptions.length - 1,
           )];
       extOuts[2].releaseAction =
-          extOutActionOptions[((e3['releaseAction'] as int?) ?? 0).clamp(
+          extOutActionOptions[((e3[StringConstants.releaseaction] as int?) ?? 0).clamp(
             0,
             extOutActionOptions.length - 1,
           )];
     }
-    final gen = data['general'] as Map<String, dynamic>?;
+    final gen = data[StringConstants.s123] as Map<String, dynamic>?;
     if (gen != null) {
       delayController.text = (gen['delay'] as int?)?.toString() ?? '0';
     }
@@ -320,15 +322,15 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
     final sounderTwo = sounders[1];
     final sounderThree = sounders[2];
 
-    sounderOne.enabled = manager!.isSounderOneEnabled.value ? 'Yes' : 'No';
+    sounderOne.enabled = manager!.isSounderOneEnabled.value ? StringConstants.yes : 'No';
     sounderOne.type =
-        manager!.isSounderOneNormal.value ? 'Normal' : 'IS (MTL5525)';
-    sounderTwo.enabled = manager!.isSounderTwoEnabled.value ? 'Yes' : 'No';
+        manager!.isSounderOneNormal.value ? StringConstants.none : StringConstants.isMTL5525;
+    sounderTwo.enabled = manager!.isSounderTwoEnabled.value ? StringConstants.yes : 'No';
     sounderTwo.type =
-        manager!.isSounderTwoNormal.value ? 'Normal' : 'IS (MTL5525)';
-    sounderThree.enabled = manager!.isSounderThreeEnabled.value ? 'Yes' : 'No';
+        manager!.isSounderTwoNormal.value ? StringConstants.none : StringConstants.isMTL5525;
+    sounderThree.enabled = manager!.isSounderThreeEnabled.value ? StringConstants.yes : 'No';
     sounderThree.type =
-        manager!.isSounderThreeNormal.value ? 'Normal' : 'IS (MTL5525)';
+        manager!.isSounderThreeNormal.value ? StringConstants.none : StringConstants.isMTL5525;
     sounderOne.outputController.text = manager!.sounderOneOutputText.value;
     sounderTwo.outputController.text = manager!.sounderTwoOutputText.value;
     sounderThree.outputController.text = manager!.sounderThreeOutputText.value;
@@ -363,38 +365,38 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
     final zoneTwo = zones[1];
     final zoneThree = zones[2];
 
-    zoneOne.enabled = manager!.isZoneOneEnabled.value ? 'Yes' : 'No';
-    zoneOne.test = manager!.isZoneOneTest.value ? 'Yes' : 'No';
+    zoneOne.enabled = manager!.isZoneOneEnabled.value ? StringConstants.yes : 'No';
+    zoneOne.test = manager!.isZoneOneTest.value ? StringConstants.yes : 'No';
     zoneOne.action = actionOptions[manager!.zoneOneAction.value];
-    zoneTwo.enabled = manager!.isZoneTwoEnabled.value ? 'Yes' : 'No';
-    zoneTwo.test = manager!.isZoneTwoTest.value ? 'Yes' : 'No';
+    zoneTwo.enabled = manager!.isZoneTwoEnabled.value ? StringConstants.yes : 'No';
+    zoneTwo.test = manager!.isZoneTwoTest.value ? StringConstants.yes : 'No';
     zoneTwo.action = actionOptions[manager!.zoneTwoAction.value];
-    zoneThree.enabled = manager!.isZoneThreeEnabled.value ? 'Yes' : 'No';
-    zoneThree.test = manager!.isZoneThreeTest.value ? 'Yes' : 'No';
+    zoneThree.enabled = manager!.isZoneThreeEnabled.value ? StringConstants.yes : 'No';
+    zoneThree.test = manager!.isZoneThreeTest.value ? StringConstants.yes : 'No';
     zoneThree.action = actionOptions[manager!.zoneThreeAction.value];
 
     final extOutOne = extOuts[0];
     final extOutTwo = extOuts[1];
     final extOutThree = extOuts[2];
 
-    extOutOne.enabled = manager!.isExtOutOneEnabled.value ? 'Yes' : 'No';
-    extOutOne.test = manager!.isExtOutOneTest.value ? 'Yes' : 'No';
+    extOutOne.enabled = manager!.isExtOutOneEnabled.value ? StringConstants.yes : 'No';
+    extOutOne.test = manager!.isExtOutOneTest.value ? StringConstants.yes : 'No';
     extOutOne.countdownAction =
         extOutActionOptions[manager!.extoutOneCountdownAction.value];
     extOutOne.holdAction =
         extOutActionOptions[manager!.extoutOneHoldAction.value];
     extOutOne.releaseAction =
         extOutActionOptions[manager!.extoutOneReleaseAction.value];
-    extOutTwo.enabled = manager!.isExtOutTwoEnabled.value ? 'Yes' : 'No';
-    extOutTwo.test = manager!.isExtOutTwoTest.value ? 'Yes' : 'No';
+    extOutTwo.enabled = manager!.isExtOutTwoEnabled.value ? StringConstants.yes : 'No';
+    extOutTwo.test = manager!.isExtOutTwoTest.value ? StringConstants.yes : 'No';
     extOutTwo.countdownAction =
         extOutActionOptions[manager!.extoutTwoCountdownAction.value];
     extOutTwo.holdAction =
         extOutActionOptions[manager!.extoutTwoHoldAction.value];
     extOutTwo.releaseAction =
         extOutActionOptions[manager!.extoutTwoReleaseAction.value];
-    extOutThree.enabled = manager!.isExtOutThreeEnabled.value ? 'Yes' : 'No';
-    extOutThree.test = manager!.isExtOutThreeTest.value ? 'Yes' : 'No';
+    extOutThree.enabled = manager!.isExtOutThreeEnabled.value ? StringConstants.yes : 'No';
+    extOutThree.test = manager!.isExtOutThreeTest.value ? StringConstants.yes : 'No';
     extOutThree.countdownAction =
         extOutActionOptions[manager!.extoutThreeCountdownAction.value];
     extOutThree.holdAction =
@@ -418,7 +420,7 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
         physics: const BouncingScrollPhysics(),
         child: Column(
           children: [
-            if (widget.embedInCreateFlow) _title('Sounder Mode Configuration'),
+            if (widget.embedInCreateFlow) _title(StringConstants.sounderModeConfiguration),
             ...List.generate(3, (i) => _sounderTile(i)),
             const SizedBox(height: 24),
             _advancedHeader(),
@@ -449,7 +451,7 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
           constraints: BoxConstraints(maxHeight: maxHeight),
           child: Container(
             decoration: const BoxDecoration(
-              color: Color(0xFFE31C23),
+              color: ColorConstants.primaryVariant,
               borderRadius: BorderRadius.vertical(top: Radius.circular(50)),
             ),
             child: Padding(
@@ -457,7 +459,7 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
               child: Container(
                 clipBehavior: Clip.hardEdge,
                 decoration: const BoxDecoration(
-                  color: Colors.white,
+                  color: ColorConstants.white,
                   borderRadius: BorderRadius.vertical(top: Radius.circular(50)),
                 ),
                 // padding: EdgeInsets.only(
@@ -481,7 +483,7 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
                               width: 38,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: Colors.black.withValues(alpha: 0.06),
+                                color: ColorConstants.blackMaterial.withValues(alpha: 0.06),
                               ),
                               child: const Icon(Icons.close, size: 20),
                             ),
@@ -561,21 +563,21 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
               style: GoogleFonts.inter(
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
-                color: const Color(0xFF3D3D3D),
+                color: ColorConstants.textDark,
               ),
             ),
             children: [
               _disabledField('Output', 'SNDR ${index + 1}'),
 
               _textField(
-                label: 'Output Text',
+                label: StringConstants.outputText,
                 controller: sounder.outputController,
                 maxLength: 21,
               ),
 
               if (!sounder.groupLocked)
                 DropdownWidget(
-                  label: 'Group',
+                  label: StringConstants.group,
                   value: sounder.group,
                   items: groupOptions,
                   onChanged: (v) {
@@ -594,9 +596,9 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
                   onChanged: (v) => setState(() => sounder.function = v),
                 ),
 
-              if (sounder.group == 'Zone')
+              if (sounder.group == StringConstants.zone)
                 _textField(
-                  label: 'Zone',
+                  label: StringConstants.zone,
                   controller: sounder.dynamicController,
                   keyboardType: TextInputType.number,
                   inputFormatters: [
@@ -605,16 +607,16 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
                   ],
                 ),
 
-              if (sounder.group == 'Ext. Out')
+              if (sounder.group == StringConstants.extOut)
                 _textField(
-                  label: 'Ext. Out',
+                  label: StringConstants.extOut,
                   controller: sounder.dynamicController,
                   enabled: false,
                 ),
 
-              if (sounder.group != 'Ext. Out')
+              if (sounder.group != StringConstants.extOut)
                 DropdownWidget(
-                  label: 'Enabled',
+                  label: StringConstants.enabled,
                   value: sounder.enabled,
                   items: yesNoOptions,
                   onChanged: (v) {
@@ -628,7 +630,7 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
                 ),
 
               DropdownWidget(
-                label: 'Type',
+                label: StringConstants.type,
                 value: sounder.type,
                 items: typeOptions,
                 onChanged: (v) => setState(() => sounder.type = v),
@@ -651,11 +653,11 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
         const Divider(thickness: 1.2),
         const SizedBox(height: 16),
         Text(
-          'Advanced Configuration',
+          StringConstants.advancedConfiguration,
           style: GoogleFonts.inter(
             fontSize: 16,
             fontWeight: FontWeight.w700,
-            color: const Color(0xFF3D3D3D),
+            color: ColorConstants.textDark,
           ),
         ),
         const SizedBox(height: 16),
@@ -670,16 +672,16 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
           height: 48,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
-            color: const Color(0xFFF8F8F8),
+            color: ColorConstants.surfaceLight,
           ),
           child: TabBar(
             controller: _tabController,
             indicatorSize: TabBarIndicatorSize.tab,
             indicator: const UnderlineTabIndicator(
-              borderSide: BorderSide(width: 2.5, color: Color(0xFFEC1D24)),
+              borderSide: BorderSide(width: 2.5, color: ColorConstants.primary),
             ),
-            labelColor: const Color(0xFFEC1D24),
-            unselectedLabelColor: const Color(0xFF6E6E6E),
+            labelColor: ColorConstants.primary,
+            unselectedLabelColor: ColorConstants.textSubtle,
             labelStyle: GoogleFonts.inter(
               fontSize: 13,
               fontWeight: FontWeight.w600,
@@ -690,8 +692,8 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
             ),
             tabs: const [
               Tab(text: 'General'),
-              Tab(text: 'Zone'),
-              Tab(text: 'Ext Out'),
+              Tab(text: StringConstants.zone),
+              Tab(text: StringConstants.extOut2),
               Tab(text: 'Delay'),
             ],
             onTap: (_) {
@@ -718,21 +720,21 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
   Widget _generalTab() {
     return Column(
       children: [
-        _disabledField('Function', 'Fire Snd'),
+        _disabledField('Function', StringConstants.fireSnd),
         DropdownWidget(
-          label: 'Enabled',
+          label: StringConstants.enabled,
           value: yesNoOptions[manager!.isSounderGeneralEnabled.value ? 1 : 0],
           items: yesNoOptions,
           onChanged: (_) {},
         ),
         DropdownWidget(
-          label: 'Test',
+          label: StringConstants.test,
           value: yesNoOptions[manager!.isSounderGeneralTest.value ? 1 : 0],
           items: yesNoOptions,
           onChanged: (_) {},
         ),
         DropdownWidget(
-          label: 'Action',
+          label: StringConstants.action,
           value: actionOptions[manager!.sounderGeneralAction.value],
           items: actionOptions,
           onChanged: (_) {},
@@ -755,22 +757,22 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
             style: GoogleFonts.inter(fontWeight: FontWeight.w600),
           ),
           children: [
-            _disabledField('Function', 'Fire Snd'),
-            _disabledField('Zone', '${index + 1}'),
+            _disabledField('Function', StringConstants.fireSnd),
+            _disabledField(StringConstants.zone, '${index + 1}'),
             DropdownWidget(
-              label: 'Enabled',
+              label: StringConstants.enabled,
               value: zone.enabled,
               items: yesNoOptions,
               onChanged: (v) => setState(() => zone.enabled = v),
             ),
             DropdownWidget(
-              label: 'Test',
+              label: StringConstants.test,
               value: zone.test,
               items: yesNoOptions,
               onChanged: (v) => setState(() => zone.test = v),
             ),
             DropdownWidget(
-              label: 'Action',
+              label: StringConstants.action,
               value: zone.action,
               items: actionOptions,
               onChanged: (v) => setState(() => zone.action = v),
@@ -806,13 +808,13 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
           children: [
             _disabledField('Function', functions[index]),
             DropdownWidget(
-              label: 'Enabled',
+              label: StringConstants.enabled,
               value: extOut.enabled,
               items: yesNoOptions,
               onChanged: (v) => setState(() => extOut.enabled = v),
             ),
             DropdownWidget(
-              label: 'Test',
+              label: StringConstants.test,
               value: extOut.test,
               items: yesNoOptions,
               onChanged: (v) => setState(() => extOut.test = v),
@@ -856,7 +858,7 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
     return Column(
       children: [
         _textField(
-          label: 'Delay (s)',
+          label: StringConstants.delayS,
           controller: delayController,
           keyboardType: TextInputType.number,
           inputFormatters: [
@@ -876,7 +878,7 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
           ),
         const SizedBox(height: 14),
         DropdownWidget(
-          label: 'Delayed',
+          label: StringConstants.delayed,
           value: yesNoOptions[manager!.isSounderGeneralDelay.value ? 1 : 0],
           items: yesNoOptions,
           onChanged: (_) {},
@@ -891,10 +893,10 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFDCDCDC)),
+        border: Border.all(color: ColorConstants.borderMuted),
       ),
       child: Theme(
-        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        data: Theme.of(context).copyWith(dividerColor: ColorConstants.transparent),
         child: child,
       ),
     );
@@ -920,7 +922,7 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
         style: GoogleFonts.inter(
           fontSize: 20,
           fontWeight: FontWeight.w700,
-          color: const Color(0xFF3D3D3D),
+          color: ColorConstants.textDark,
         ),
       ),
     );
@@ -986,7 +988,7 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
                             fontSize: 12,
                             color:
                                 currentLength == max
-                                    ? const Color(0xFFEC1D24)
+                                    ? ColorConstants.primary
                                     : Colors.grey,
                           ),
                         ),
@@ -1012,18 +1014,18 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
       style: GoogleFonts.inter(
         fontSize: 13,
         fontWeight: FontWeight.w600,
-        color: const Color(0xFF3D3D3D),
+        color: ColorConstants.textDark,
       ),
     );
   }
 
   InputDecoration _inputDecoration({bool hasError = false}) {
     final borderColor =
-        hasError ? const Color(0xFFEC1D24) : const Color(0xFFD0D0D0);
+        hasError ? ColorConstants.primary : ColorConstants.borderLight;
 
     return InputDecoration(
       filled: true,
-      fillColor: const Color(0xFFF8F8F8),
+      fillColor: ColorConstants.surfaceLight,
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
@@ -1035,7 +1037,7 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
       ),
       focusedBorder: const OutlineInputBorder(
         borderRadius: BorderRadius.all(Radius.circular(12)),
-        borderSide: BorderSide(color: Color(0xFFEC1D24), width: 2),
+        borderSide: BorderSide(color: ColorConstants.primary, width: 2),
       ),
     );
   }
@@ -1054,9 +1056,9 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
     for (int i = 0; i < 3; i++) {
       final sounder = sounders[i];
 
-      bool isEnabled = sounder.enabled == 'Yes';
+      bool isEnabled = sounder.enabled == StringConstants.yes;
       bool isTest = isEnabled && snapshotTest[i];
-      bool isNormal = sounder.type == 'Normal';
+      bool isNormal = sounder.type == StringConstants.none;
       String outputText = sounder.outputController.text;
       int functionNo = int.tryParse(sounder.dynamicController.text) ?? 0;
       int groupIndex = returnIndex(sounder.group, groupOptions);
@@ -1118,8 +1120,8 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
 
     for (int i = 0; i < 3; i++) {
       final zone = zones[i];
-      bool isEnabled = zone.enabled == 'Yes';
-      bool isTest = zone.test == 'Yes';
+      bool isEnabled = zone.enabled == StringConstants.yes;
+      bool isTest = zone.test == StringConstants.yes;
       int actionIndex = returnIndex(zone.action, actionOptions);
       final zoneConfig = ZoneEquipmentModeConfig(
         zoneEnable:
@@ -1155,8 +1157,8 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
 
     for (int i = 0; i < 3; i++) {
       final extOut = extOuts[i];
-      bool isEnabled = extOut.enabled == 'Yes';
-      bool isTest = extOut.test == 'Yes';
+      bool isEnabled = extOut.enabled == StringConstants.yes;
+      bool isTest = extOut.test == StringConstants.yes;
       int countdownIndex = returnIndex(
         extOut.countdownAction,
         extOutActionOptions,
@@ -1222,8 +1224,8 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
       height: 48,
       child: OutlinedButton(
         style: OutlinedButton.styleFrom(
-          foregroundColor: const Color(0xFFEC1D24),
-          side: const BorderSide(color: Color(0xFFEC1D24)),
+          foregroundColor: ColorConstants.primary,
+          side: const BorderSide(color: ColorConstants.primary),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24),
           ),
@@ -1233,7 +1235,7 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
           widget.onDownload();
         },
         child: Text(
-          'Download',
+          StringConstants.download,
           style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600),
         ),
       ),
@@ -1246,7 +1248,7 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
       height: 48,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFFEC1D24),
+          backgroundColor: ColorConstants.primary,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24),
           ),
@@ -1260,11 +1262,11 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
                 }
                 : null,
         child: Text(
-          'Apply',
+          StringConstants.apply,
           style: GoogleFonts.inter(
             fontSize: 16,
             fontWeight: FontWeight.w600,
-            color: Colors.white,
+            color: ColorConstants.white,
           ),
         ),
       ),
@@ -1280,7 +1282,7 @@ class SounderConfig {
   String group = 'None';
   String function = 'None';
   String enabled = 'No';
-  String type = 'Normal';
+  String type = StringConstants.none;
 
   bool groupLocked = false;
   bool functionLocked = false;

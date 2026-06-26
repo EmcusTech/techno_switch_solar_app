@@ -13,6 +13,8 @@ import 'package:techno_switch_solar_app/services/panel_service.dart';
 import 'package:techno_switch_solar_app/services/site_service.dart';
 import 'package:techno_switch_solar_app/widgets/site_creation_dialog.dart';
 import 'package:techno_switch_solar_app/utils/ble_name_utils.dart';
+import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
 final BleManager ble = Get.find<BleManager>();
 
@@ -56,7 +58,7 @@ class _LogRetrievalCompletedScreenState
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [Color(0xFFF6EBEB), Colors.white],
+              colors: [ColorConstants.scaffoldGradientTop, ColorConstants.white],
             ),
           ),
           child: Stack(
@@ -82,7 +84,7 @@ class _LogRetrievalCompletedScreenState
                           ),
                           SizedBox(width: 8),
                           Text(
-                            'Event Log',
+                            StringConstants.eventLog,
                             style: GoogleFonts.inter(
                               fontSize: 20,
                               fontWeight: FontWeight.w700,
@@ -192,7 +194,7 @@ class _LogRetrievalCompletedScreenState
     return Expanded(
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: ColorConstants.white,
           borderRadius: BorderRadius.circular(35),
         ),
         child: Stack(
@@ -211,7 +213,7 @@ class _LogRetrievalCompletedScreenState
                   style: GoogleFonts.inter(
                     fontSize: 24,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFF00A706),
+                    color: ColorConstants.success,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -236,7 +238,7 @@ class _LogRetrievalCompletedScreenState
                       },
                       child: Container(
                         decoration: BoxDecoration(
-                          color: Color(0xffEFEEEE),
+                          color: ColorConstants.buttonSecondaryBackground,
                           borderRadius: BorderRadius.circular(28.5),
                         ),
                         child: Padding(
@@ -248,14 +250,14 @@ class _LogRetrievalCompletedScreenState
                           ),
                           child: Row(
                             children: [
-                              Icon(Icons.arrow_back, color: Color(0xFF49454F)),
+                              Icon(Icons.arrow_back, color: ColorConstants.labelText),
                               SizedBox(width: 6),
                               Text(
-                                "Back",
+                                StringConstants.back,
                                 style: GoogleFonts.inter(
                                   fontSize: 14,
                                   fontWeight: FontWeight.bold,
-                                  color: Color(0xFF49454F),
+                                  color: ColorConstants.labelText,
                                 ),
                               ),
                             ],
@@ -271,7 +273,7 @@ class _LogRetrievalCompletedScreenState
                                 (context) => EventLogScreen(
                                   logDataList: widget.logs,
                                   panelName: widget.panelName,
-                                  panelVersionNo: '0.98',
+                                  panelVersionNo: StringConstants.s098,
                                   isStandalone: true,
                                   panelId: widget.panelId,
                                   connectedDevice: widget.connectedDevice,
@@ -282,7 +284,7 @@ class _LogRetrievalCompletedScreenState
                       },
                       child: Container(
                         decoration: BoxDecoration(
-                          color: Color(0xffEC1D24),
+                          color: ColorConstants.primary,
                           borderRadius: BorderRadius.circular(28.5),
                         ),
                         child: Padding(
@@ -295,15 +297,15 @@ class _LogRetrievalCompletedScreenState
                           child: Row(
                             children: [
                               Text(
-                                "Next",
+                                StringConstants.thisWillUpdateThePanelSettingsWithTheValuesYouConfiguredInThisSetup,
                                 style: GoogleFonts.inter(
                                   fontSize: 14,
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.white,
+                                  color: ColorConstants.white,
                                 ),
                               ),
                               SizedBox(width: 6),
-                              Icon(Icons.arrow_forward, color: Colors.white),
+                              Icon(Icons.arrow_forward, color: ColorConstants.white),
                             ],
                           ),
                         ),

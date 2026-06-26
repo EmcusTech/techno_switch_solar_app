@@ -18,6 +18,8 @@ import 'package:techno_switch_solar_app/utils/pdf_report_util.dart';
 import 'package:techno_switch_solar_app/widgets/site_creation_dialog.dart';
 import 'package:techno_switch_solar_app/screens/simple_site_creation_screen.dart';
 import 'package:techno_switch_solar_app/utils/ble_name_utils.dart';
+import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
 final BleManager ble = Get.find<BleManager>();
 
@@ -211,7 +213,7 @@ class _EventLogContentState extends State<_EventLogContent> {
           child: Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: ColorConstants.white,
               borderRadius: BorderRadius.circular(16),
             ),
             child: Column(
@@ -221,7 +223,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                   width: 64,
                   height: 64,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFBDEE1),
+                    color: ColorConstants.errorIconBackground,
                     shape: BoxShape.circle,
                   ),
                   child: Center(
@@ -234,21 +236,21 @@ class _EventLogContentState extends State<_EventLogContent> {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Clear logs?',
+                  StringConstants.clearLogs,
                   style: GoogleFonts.inter(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
-                    color: const Color(0xFF3D3D3D),
+                    color: ColorConstants.textDark,
                   ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'This will remove all entries from the list. This cannot be undone.',
+                  StringConstants.thisWillRemoveAllEntriesFromTheListThisCannotBeUndone,
                   style: GoogleFonts.inter(
                     fontSize: 14,
                     fontWeight: FontWeight.w400,
-                    color: const Color(0xFF666666),
+                    color: ColorConstants.textGray,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -261,20 +263,20 @@ class _EventLogContentState extends State<_EventLogContent> {
                         child: Container(
                           height: 48,
                           decoration: BoxDecoration(
-                            color: const Color(0xFFEFEEEE),
+                            color: ColorConstants.buttonSecondaryBackground,
                             borderRadius: BorderRadius.circular(24),
                             border: Border.all(
-                              color: const Color(0xFFD0D0D0),
+                              color: ColorConstants.borderLight,
                               width: 1,
                             ),
                           ),
                           child: Center(
                             child: Text(
-                              'Cancel',
+                              StringConstants.cancel,
                               style: GoogleFonts.inter(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
-                                color: const Color(0xFF666666),
+                                color: ColorConstants.textGray,
                               ),
                             ),
                           ),
@@ -288,11 +290,11 @@ class _EventLogContentState extends State<_EventLogContent> {
                         child: Container(
                           height: 48,
                           decoration: BoxDecoration(
-                            color: const Color(0xFFEC1D24),
+                            color: ColorConstants.primary,
                             borderRadius: BorderRadius.circular(24),
                             boxShadow: [
                               BoxShadow(
-                                color: const Color(0xFFEC1D24).withOpacity(0.3),
+                                color: ColorConstants.primary.withOpacity(0.3),
                                 blurRadius: 8,
                                 offset: const Offset(0, 4),
                               ),
@@ -304,7 +306,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                               style: GoogleFonts.inter(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
-                                color: Colors.white,
+                                color: ColorConstants.white,
                               ),
                             ),
                           ),
@@ -477,12 +479,12 @@ class _EventLogContentState extends State<_EventLogContent> {
   void _showExportBottomSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.transparent,
+      backgroundColor: ColorConstants.transparent,
       isScrollControlled: false,
       builder: (_) {
         return Container(
           decoration: const BoxDecoration(
-            color: Colors.white,
+            color: ColorConstants.white,
             borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
           ),
           padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
@@ -506,13 +508,13 @@ class _EventLogContentState extends State<_EventLogContent> {
                 style: GoogleFonts.inter(
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
-                  color: const Color(0xFF3A3A3A),
+                  color: ColorConstants.textBodyDark,
                 ),
               ),
               const SizedBox(height: 12),
               ExportTile(
                 iconPath: "assets/svgs/share_icon_red.svg",
-                title: 'Export as PDF',
+                title: StringConstants.exportAsPDF,
                 onTap: () async {
                   Navigator.pop(context);
                   final logs = _applyEventIdQuickFilter(
@@ -703,7 +705,7 @@ class _EventLogContentState extends State<_EventLogContent> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Color(0xFFF6EBEB), Colors.white],
+            colors: [ColorConstants.scaffoldGradientTop, ColorConstants.white],
           ),
         ),
         child: Stack(
@@ -727,7 +729,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          'Event Log',
+                          StringConstants.eventLog,
                           style: GoogleFonts.inter(
                             fontSize: 20,
                             fontWeight: FontWeight.w700,
@@ -778,7 +780,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                   Expanded(
                     child: Container(
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: ColorConstants.white,
                         borderRadius: BorderRadius.circular(35),
                       ),
                       child: logsSection,
@@ -796,14 +798,14 @@ class _EventLogContentState extends State<_EventLogContent> {
   void _showFilterBottomSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.transparent,
+      backgroundColor: ColorConstants.transparent,
       isScrollControlled: true,
       builder: (_) {
         return StatefulBuilder(
           builder: (context, sheetSetState) {
             return Container(
               decoration: const BoxDecoration(
-                color: Colors.white,
+                color: ColorConstants.white,
                 borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
               ),
 
@@ -813,7 +815,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                 children: [
                   Container(
                     decoration: BoxDecoration(
-                      color: Color(0xffEFEEEE),
+                      color: ColorConstants.buttonSecondaryBackground,
                       borderRadius: BorderRadius.vertical(
                         top: Radius.circular(32),
                       ),
@@ -842,11 +844,11 @@ class _EventLogContentState extends State<_EventLogContent> {
                           child: Align(
                             alignment: Alignment.centerLeft,
                             child: Text(
-                              'Filter',
+                              StringConstants.filter,
                               style: GoogleFonts.inter(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
-                                color: Color(0xFF3A3A3A),
+                                color: ColorConstants.textBodyDark,
                               ),
                             ),
                           ),
@@ -861,11 +863,11 @@ class _EventLogContentState extends State<_EventLogContent> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Select Date',
+                          StringConstants.selectDate,
                           style: GoogleFonts.inter(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFF3A3A3A),
+                            color: ColorConstants.textBodyDark,
                           ),
                         ),
                         SizedBox(height: 12),
@@ -883,7 +885,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      "From",
+                                      StringConstants.from,
                                       style: GoogleFonts.inter(fontSize: 14),
                                     ),
                                     SizedBox(height: 10),
@@ -894,7 +896,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                                       ),
                                       decoration: BoxDecoration(
                                         border: Border.all(
-                                          color: Color(0xFFE0E0E0),
+                                          color: ColorConstants.borderGray,
                                         ),
                                         borderRadius: BorderRadius.circular(4),
                                       ),
@@ -903,12 +905,12 @@ class _EventLogContentState extends State<_EventLogContent> {
                                           Text(
                                             _fromDate != null
                                                 ? DateFormat(
-                                                  'dd/MM/yyyy',
+                                                  StringConstants.ddMMYyyyHHMmSs,
                                                 ).format(_fromDate!)
-                                                : 'From',
+                                                : StringConstants.from,
                                             style: GoogleFonts.inter(
                                               fontSize: 14,
-                                              color: Color(0xFF918F8F),
+                                              color: ColorConstants.textMuted,
                                             ),
                                           ),
                                           Spacer(),
@@ -935,7 +937,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      "To",
+                                      StringConstants.to,
                                       style: GoogleFonts.inter(fontSize: 14),
                                     ),
                                     SizedBox(height: 10),
@@ -946,7 +948,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                                       ),
                                       decoration: BoxDecoration(
                                         border: Border.all(
-                                          color: Color(0xFFE0E0E0),
+                                          color: ColorConstants.borderGray,
                                         ),
                                         borderRadius: BorderRadius.circular(4),
                                       ),
@@ -955,12 +957,12 @@ class _EventLogContentState extends State<_EventLogContent> {
                                           Text(
                                             _toDate != null
                                                 ? DateFormat(
-                                                  'dd/MM/yyyy',
+                                                  StringConstants.ddMMYyyyHHMmSs,
                                                 ).format(_toDate!)
-                                                : 'To',
+                                                : StringConstants.to,
                                             style: GoogleFonts.inter(
                                               fontSize: 14,
-                                              color: Color(0xFF918F8F),
+                                              color: ColorConstants.textMuted,
                                             ),
                                           ),
                                           Spacer(),
@@ -978,11 +980,11 @@ class _EventLogContentState extends State<_EventLogContent> {
                         ),
                         SizedBox(height: 21),
                         Text(
-                          'Status:',
+                          StringConstants.status2,
                           style: GoogleFonts.inter(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFF3A3A3A),
+                            color: ColorConstants.textBodyDark,
                           ),
                         ),
                         SizedBox(height: 12),
@@ -1068,11 +1070,11 @@ class _EventLogContentState extends State<_EventLogContent> {
                         ),
                         SizedBox(height: 24),
                         Text(
-                          'Event Class:',
+                          StringConstants.eventClass,
                           style: GoogleFonts.inter(
                             fontSize: 16,
                             fontWeight: FontWeight.w700,
-                            color: Color(0xFF3A3A3A),
+                            color: ColorConstants.textBodyDark,
                           ),
                         ),
                         SizedBox(height: 12),
@@ -1084,11 +1086,11 @@ class _EventLogContentState extends State<_EventLogContent> {
                                 eventClass,
                               ) {
                                 String displayName = eventClass;
-                                if (eventClass == "Release") {
-                                  displayName = "Ext. Release";
+                                if (eventClass == StringConstants.release) {
+                                  displayName = StringConstants.extRelease;
                                 }
-                                if (eventClass == "Evacuation") {
-                                  displayName = "Fire";
+                                if (eventClass == StringConstants.evacuation) {
+                                  displayName = StringConstants.fire;
                                 }
 
                                 return SizedBox(
@@ -1154,7 +1156,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                                               overflow: TextOverflow.ellipsis,
                                               style: GoogleFonts.inter(
                                                 fontSize: 14,
-                                                color: const Color(0xFF918F8F),
+                                                color: ColorConstants.textMuted,
                                               ),
                                             ),
                                           ),
@@ -1179,17 +1181,17 @@ class _EventLogContentState extends State<_EventLogContent> {
                                   vertical: 12,
                                   horizontal: 32,
                                 ),
-                                side: BorderSide(color: Colors.transparent),
+                                side: BorderSide(color: ColorConstants.transparent),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                               ),
                               child: Text(
-                                'Reset',
+                                StringConstants.reset,
                                 style: GoogleFonts.inter(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
-                                  color: Color(0xFF3A3A3A),
+                                  color: ColorConstants.textBodyDark,
                                 ),
                               ),
                             ),
@@ -1202,7 +1204,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                               },
                               child: Container(
                                 decoration: BoxDecoration(
-                                  color: Color(0xffEC1D24),
+                                  color: ColorConstants.primary,
                                   borderRadius: BorderRadius.circular(28.5),
                                 ),
                                 child: Center(
@@ -1212,11 +1214,11 @@ class _EventLogContentState extends State<_EventLogContent> {
                                       horizontal: 13,
                                     ),
                                     child: Text(
-                                      "Apply Now",
+                                      StringConstants.applyNow,
                                       style: GoogleFonts.inter(
                                         fontSize: 14,
                                         fontWeight: FontWeight.bold,
-                                        color: Colors.white,
+                                        color: ColorConstants.white,
                                       ),
                                     ),
                                   ),
@@ -1265,7 +1267,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                       style: GoogleFonts.inter(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
-                        color: Color(0xff3D3D3D),
+                        color: ColorConstants.textDark,
                       ),
                     ),
                     Text(
@@ -1273,7 +1275,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                       style: GoogleFonts.inter(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
-                        color: Color(0xFF979797),
+                        color: ColorConstants.textDisabled,
                       ),
                     ),
 
@@ -1284,23 +1286,23 @@ class _EventLogContentState extends State<_EventLogContent> {
                           text: TextSpan(
                             children: [
                               TextSpan(
-                                text: 'Status : ',
+                                text: StringConstants.status3,
                                 style: GoogleFonts.inter(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w500,
-                                  color: Color(0xFF979797),
+                                  color: ColorConstants.textDisabled,
                                 ),
                               ),
                               TextSpan(
                                 text:
-                                    isConnected ? 'Connected' : 'Disconnected',
+                                    isConnected ? StringConstants.connected : StringConstants.disconnected,
                                 style: GoogleFonts.inter(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w500,
                                   color:
                                       isConnected
-                                          ? Color(0xFF00A706)
-                                          : Color(0xFFEC1D24),
+                                          ? ColorConstants.success
+                                          : ColorConstants.primary,
                                 ),
                               ),
                             ],
@@ -1314,18 +1316,18 @@ class _EventLogContentState extends State<_EventLogContent> {
             ],
           ),
           SizedBox(height: 15),
-          Divider(color: Color(0xFF000000).withAlpha(46), thickness: 1),
+          Divider(color: ColorConstants.black.withAlpha(46), thickness: 1),
 
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Text(
-                "Log View",
+                StringConstants.logView,
                 style: GoogleFonts.inter(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
-                  color: Color(0xFF3A3A3A),
+                  color: ColorConstants.textBodyDark,
                 ),
               ),
               Row(
@@ -1343,13 +1345,13 @@ class _EventLogContentState extends State<_EventLogContent> {
                       style: GoogleFonts.inter(
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
-                        color: Color(0xFF3A3A3A),
+                        color: ColorConstants.textBodyDark,
                       ),
                       decoration: InputDecoration(
-                        hintText: 'ID',
+                        hintText: StringConstants.id,
                         hintStyle: GoogleFonts.inter(
                           fontSize: 12,
-                          color: Color(0xFFBDBDBD),
+                          color: ColorConstants.divider,
                         ),
                         isDense: true,
                         contentPadding: const EdgeInsets.symmetric(
@@ -1358,16 +1360,16 @@ class _EventLogContentState extends State<_EventLogContent> {
                         ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(4),
-                          borderSide: BorderSide(color: Color(0xFFD7D7D7)),
+                          borderSide: BorderSide(color: ColorConstants.borderMedium),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(4),
-                          borderSide: BorderSide(color: Color(0xFFD7D7D7)),
+                          borderSide: BorderSide(color: ColorConstants.borderMedium),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(4),
                           borderSide: BorderSide(
-                            color: Color(0xFFEC1D24),
+                            color: ColorConstants.primary,
                             width: 2,
                           ),
                         ),
@@ -1383,7 +1385,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                                   icon: Icon(
                                     Icons.close,
                                     size: 16,
-                                    color: Color(0xFF918F8F),
+                                    color: ColorConstants.textMuted,
                                   ),
                                   onPressed: () {
                                     _eventIdFilterController.clear();
@@ -1407,7 +1409,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                               height: 28,
                               width: 28,
                               decoration: BoxDecoration(
-                                color: Color(0xFFEC1D24),
+                                color: ColorConstants.primary,
                                 borderRadius: BorderRadius.circular(5),
                               ),
                               child: Padding(
@@ -1415,7 +1417,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                                 child: SvgPicture.asset(
                                   'assets/svgs/list_deselected_icon.svg',
                                   colorFilter: ColorFilter.mode(
-                                    Colors.white,
+                                    ColorConstants.white,
                                     BlendMode.srcIn,
                                   ),
                                 ),
@@ -1441,7 +1443,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                               height: 28,
                               width: 28,
                               decoration: BoxDecoration(
-                                color: Color(0xFFEC1D24),
+                                color: ColorConstants.primary,
                                 borderRadius: BorderRadius.circular(5),
                               ),
                               child: Padding(
@@ -1449,7 +1451,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                                 child: SvgPicture.asset(
                                   'assets/svgs/table_deselected_icon.svg',
                                   colorFilter: ColorFilter.mode(
-                                    Colors.white,
+                                    ColorConstants.white,
                                     BlendMode.srcIn,
                                   ),
                                 ),
@@ -1559,12 +1561,12 @@ class _LogListViewState extends State<_LogListView>
             int comparison = 0;
 
             switch (_sortColumn) {
-              case 'eventId':
+              case StringConstants.eventid:
                 final aId = int.tryParse(a.eventId ?? '0') ?? 0;
                 final bId = int.tryParse(b.eventId ?? '0') ?? 0;
                 comparison = aId.compareTo(bId);
                 break;
-              case 'dateTime':
+              case StringConstants.datetime:
                 if (a.eventDateTime != null && b.eventDateTime != null) {
                   comparison = a.eventDateTime!.compareTo(b.eventDateTime!);
                 } else if (a.eventDateTime != null) {
@@ -1584,7 +1586,7 @@ class _LogListViewState extends State<_LogListView>
               case 'type':
                 comparison = (a.eventType ?? '').compareTo(b.eventType ?? '');
                 break;
-              case 'subType':
+              case StringConstants.subtype:
                 comparison = (a.eventSubType ?? '').compareTo(
                   b.eventSubType ?? '',
                 );
@@ -1600,13 +1602,13 @@ class _LogListViewState extends State<_LogListView>
               case 'text':
                 comparison = (a.text ?? '').compareTo(b.text ?? '');
                 break;
-              case 'panelNo':
+              case StringConstants.panelno:
                 comparison = (a.panelNo ?? '').compareTo(b.panelNo ?? '');
                 break;
-              case 'moduleNo':
+              case StringConstants.moduleno:
                 comparison = (a.moduleNo ?? '').compareTo(b.moduleNo ?? '');
                 break;
-              case 'lBusNo':
+              case StringConstants.lbusno:
                 comparison = (a.lBusNo ?? '').compareTo(b.lBusNo ?? '');
                 break;
             }
@@ -1646,12 +1648,12 @@ class _LogListViewState extends State<_LogListView>
         int comparison = 0;
 
         switch (column) {
-          case 'eventId':
+          case StringConstants.eventid:
             final aId = int.tryParse(a.eventId ?? '0') ?? 0;
             final bId = int.tryParse(b.eventId ?? '0') ?? 0;
             comparison = aId.compareTo(bId);
             break;
-          case 'dateTime':
+          case StringConstants.datetime:
             if (a.eventDateTime != null && b.eventDateTime != null) {
               comparison = a.eventDateTime!.compareTo(b.eventDateTime!);
             } else if (a.eventDateTime != null) {
@@ -1669,7 +1671,7 @@ class _LogListViewState extends State<_LogListView>
           case 'type':
             comparison = (a.eventType ?? '').compareTo(b.eventType ?? '');
             break;
-          case 'subType':
+          case StringConstants.subtype:
             comparison = (a.eventSubType ?? '').compareTo(b.eventSubType ?? '');
             break;
           case 'source':
@@ -1681,13 +1683,13 @@ class _LogListViewState extends State<_LogListView>
           case 'text':
             comparison = (a.text ?? '').compareTo(b.text ?? '');
             break;
-          case 'panelNo':
+          case StringConstants.panelno:
             comparison = (a.panelNo ?? '').compareTo(b.panelNo ?? '');
             break;
-          case 'moduleNo':
+          case StringConstants.moduleno:
             comparison = (a.moduleNo ?? '').compareTo(b.moduleNo ?? '');
             break;
-          case 'lBusNo':
+          case StringConstants.lbusno:
             comparison = (a.lBusNo ?? '').compareTo(b.lBusNo ?? '');
             break;
         }
@@ -1701,21 +1703,21 @@ class _LogListViewState extends State<_LogListView>
     return Container(
       height: _headerHeight,
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-      color: Colors.white,
+      color: ColorConstants.white,
       child: Row(
         children: [
-          _buildHeaderCell('ID', wEventId, 'eventId'),
-          _buildHeaderCell('Date & Time', wDateTime, 'dateTime'),
+          _buildHeaderCell(StringConstants.id, wEventId, StringConstants.eventid),
+          _buildHeaderCell(StringConstants.dateTime, wDateTime, StringConstants.datetime),
           _buildHeaderCell('Status', wEventStatus, 'status'),
-          _buildHeaderCell('Class', wEventClass, 'class'),
-          _buildHeaderCell('Type', wEventType, 'type'),
-          _buildHeaderCell('Sub Type', wEventSubType, 'subType'),
-          _buildHeaderCell('Source', wEventSource, 'source'),
+          _buildHeaderCell(StringConstants.classLabel, wEventClass, 'class'),
+          _buildHeaderCell(StringConstants.type, wEventType, 'type'),
+          _buildHeaderCell(StringConstants.subType, wEventSubType, StringConstants.subtype),
+          _buildHeaderCell(StringConstants.source, wEventSource, 'source'),
           _buildHeaderCell('Identifier', wIdentifier, 'identifier'),
-          _buildHeaderCell('Text', wText, 'text'),
-          _buildHeaderCell('Panel no', wPanelNo, 'panelNo'),
-          _buildHeaderCell('Module no', wModuleNo, 'moduleNo'),
-          _buildHeaderCell('L-Bus no', wLbusNo, 'lBusNo'),
+          _buildHeaderCell(StringConstants.text, wText, 'text'),
+          _buildHeaderCell('Panel no', wPanelNo, StringConstants.panelno),
+          _buildHeaderCell('Module no', wModuleNo, StringConstants.moduleno),
+          _buildHeaderCell('L-Bus no', wLbusNo, StringConstants.lbusno),
         ],
       ),
     );
@@ -1737,7 +1739,7 @@ class _LogListViewState extends State<_LogListView>
                 style: GoogleFonts.inter(
                   fontWeight: FontWeight.w600,
                   fontSize: 12,
-                  color: isActive ? Color(0xFFEC1D24) : Color(0xFF3A3A3A),
+                  color: isActive ? ColorConstants.primary : ColorConstants.textBodyDark,
                 ),
               ),
             ),
@@ -1746,10 +1748,10 @@ class _LogListViewState extends State<_LogListView>
               Icon(
                 _sortAscending ? Icons.arrow_upward : Icons.arrow_downward,
                 size: 12,
-                color: Color(0xFFEC1D24),
+                color: ColorConstants.primary,
               )
             else
-              Icon(Icons.unfold_more, size: 16, color: Color(0xFF999999)),
+              Icon(Icons.unfold_more, size: 16, color: ColorConstants.textPlaceholder),
           ],
         ),
       ),
@@ -1762,12 +1764,12 @@ class _LogListViewState extends State<_LogListView>
       textStyle = GoogleFonts.inter(
         fontSize: 13,
         fontWeight: FontWeight.bold,
-        color: Color(0xff696969),
+        color: ColorConstants.textSecondary,
       );
     } else if (dataType == DataType.dateTime) {
-      textStyle = GoogleFonts.inter(fontSize: 12, color: Color(0xff696969));
+      textStyle = GoogleFonts.inter(fontSize: 12, color: ColorConstants.textSecondary);
     } else {
-      textStyle = GoogleFonts.inter(fontSize: 13, color: Color(0xff696969));
+      textStyle = GoogleFonts.inter(fontSize: 13, color: ColorConstants.textSecondary);
     }
     return Container(
       width: width,
@@ -1812,8 +1814,8 @@ class _LogListViewState extends State<_LogListView>
                           Container(
                             color:
                                 index % 2 == 0
-                                    ? Colors.white
-                                    : const Color(0xFFFAFAFA),
+                                    ? ColorConstants.white
+                                    : ColorConstants.surfaceOffWhite,
                             height: _rowHeight,
                             padding: const EdgeInsets.symmetric(
                               vertical: 6,
@@ -1943,8 +1945,8 @@ class _LogTableViewState extends State<_LogTableView>
           return Container(
             width: double.infinity,
             decoration: BoxDecoration(
-              color: Color(0xFFF9F9F9),
-              border: Border.all(color: Color(0xFFD7D7D7), width: 1),
+              color: ColorConstants.zebraStripeLight,
+              border: Border.all(color: ColorConstants.borderMedium, width: 1),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Padding(
@@ -1961,19 +1963,19 @@ class _LogTableViewState extends State<_LogTableView>
                       Text(
                         log.eventDateTime != null
                             ? DateFormat(
-                              'dd/MM/yyyy - hh:mm:ss a',
+                              StringConstants.ddMMYyyyHhMmSsA,
                             ).format(log.eventDateTime!.toLocal())
-                            : 'N/A',
+                            : StringConstants.nA,
                         style: GoogleFonts.inter(
                           fontSize: 12,
                           fontWeight: FontWeight.w400,
-                          color: Color(0xFF696969),
+                          color: ColorConstants.textSecondary,
                         ),
                       ),
                       Spacer(),
                       Container(
                         decoration: BoxDecoration(
-                          color: Color(0xFF0F72E9),
+                          color: ColorConstants.accentBlue,
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Padding(
@@ -1986,7 +1988,7 @@ class _LogTableViewState extends State<_LogTableView>
                             style: GoogleFonts.inter(
                               fontSize: 13,
                               fontWeight: FontWeight.w700,
-                              color: Colors.white,
+                              color: ColorConstants.white,
                             ),
                           ),
                         ),
@@ -1996,7 +1998,7 @@ class _LogTableViewState extends State<_LogTableView>
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 13),
                     child: Divider(
-                      color: Color(0xFF000000).withAlpha(43),
+                      color: ColorConstants.black.withAlpha(43),
                       thickness: 1,
                     ),
                   ),
@@ -2004,15 +2006,15 @@ class _LogTableViewState extends State<_LogTableView>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      _buildInfoColumn('Panel No', log.panelNo ?? ''),
-                      _buildInfoColumn('L-Bus No', log.lBusNo ?? ''),
-                      _buildInfoColumn('Module No', log.moduleNo ?? ''),
+                      _buildInfoColumn(StringConstants.panelNo, log.panelNo ?? ''),
+                      _buildInfoColumn(StringConstants.lBusNo, log.lBusNo ?? ''),
+                      _buildInfoColumn(StringConstants.moduleNo, log.moduleNo ?? ''),
                     ],
                   ),
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 13),
                     child: Divider(
-                      color: Color(0xFF000000).withAlpha(43),
+                      color: ColorConstants.black.withAlpha(43),
                       thickness: 1,
                     ),
                   ),
@@ -2022,13 +2024,13 @@ class _LogTableViewState extends State<_LogTableView>
                     children: [
                       _buildInfoColumn('Status', log.eventStatus ?? ''),
                       _buildInfoColumn('Event Class', log.eventClass ?? ''),
-                      _buildInfoColumn('Source', log.eventSource ?? ''),
+                      _buildInfoColumn(StringConstants.source, log.eventSource ?? ''),
                     ],
                   ),
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 13),
                     child: Divider(
-                      color: Color(0xFF000000).withAlpha(43),
+                      color: ColorConstants.black.withAlpha(43),
                       thickness: 1,
                     ),
                   ),
@@ -2037,13 +2039,13 @@ class _LogTableViewState extends State<_LogTableView>
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       _buildInfoColumn('Event Type', log.eventType ?? ''),
-                      _buildInfoColumn('Event', log.eventSubType ?? ''),
+                      _buildInfoColumn(StringConstants.eventType, log.eventSubType ?? ''),
                     ],
                   ),
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 13),
                     child: Divider(
-                      color: Color(0xFF000000).withAlpha(43),
+                      color: ColorConstants.black.withAlpha(43),
                       thickness: 1,
                     ),
                   ),
@@ -2052,7 +2054,7 @@ class _LogTableViewState extends State<_LogTableView>
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       _buildInfoColumn('Identifier', log.identifier ?? ''),
-                      _buildInfoColumn('Text', log.text ?? ''),
+                      _buildInfoColumn(StringConstants.text, log.text ?? ''),
                     ],
                   ),
                 ],
@@ -2075,7 +2077,7 @@ class _LogTableViewState extends State<_LogTableView>
             style: GoogleFonts.inter(
               fontSize: 14,
               fontWeight: FontWeight.w700,
-              color: Color(0xFF3A3A3A),
+              color: ColorConstants.textBodyDark,
             ),
           ),
           Text(
@@ -2083,7 +2085,7 @@ class _LogTableViewState extends State<_LogTableView>
             style: GoogleFonts.inter(
               fontSize: 14,
               fontWeight: FontWeight.w400,
-              color: Color(0xFF696969),
+              color: ColorConstants.textSecondary,
             ),
           ),
         ],

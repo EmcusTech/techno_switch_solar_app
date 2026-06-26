@@ -8,6 +8,8 @@ import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/widgets/dropdown.dart';
+import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
 class GeneralModuleBottomSheet extends StatefulWidget {
   final String deviceId;
@@ -39,18 +41,18 @@ class GeneralModuleBottomSheetState extends State<GeneralModuleBottomSheet> {
 
   final FocusNode lvlTimeoutFocusNode = FocusNode();
 
-  String silenceBuzzerLevel = "Access Level 1";
-  String silenceSoundersLevel = "Access Level 2";
-  String resetLevel = "Access Level 2";
-  String faultLatching = "No";
+  String silenceBuzzerLevel = StringConstants.accessLevel1;
+  String silenceSoundersLevel = StringConstants.accessLevel2;
+  String resetLevel = StringConstants.accessLevel2;
+  String faultLatching = StringConstants.no;
 
-  final List<String> buzzerOptions = ["Access Level 1", "Access Level 2"];
+  final List<String> buzzerOptions = [StringConstants.accessLevel1, StringConstants.accessLevel2];
 
-  final List<String> sounderOptions = ["Access Level 2", "Access Level 3"];
+  final List<String> sounderOptions = [StringConstants.accessLevel2, StringConstants.accessLevel3];
 
-  final List<String> resetOptions = ["Access Level 2", "Access Level 3"];
+  final List<String> resetOptions = [StringConstants.accessLevel2, StringConstants.accessLevel3];
 
-  final List<String> yesNoOptions = ["No", "Yes"];
+  final List<String> yesNoOptions = [StringConstants.no, StringConstants.yes];
 
   @override
   void initState() {
@@ -58,9 +60,9 @@ class GeneralModuleBottomSheetState extends State<GeneralModuleBottomSheet> {
 
     lvlTimeoutFocusNode.addListener(() {
       if (lvlTimeoutFocusNode.hasFocus) {
-        debugPrint("LVL Time-out field is focused");
+        debugPrint(StringConstants.lvlTimeOutFieldIsFocused);
       } else {
-        debugPrint("LVL Time-out field lost focus");
+        debugPrint(StringConstants.lvlTimeOutFieldLostFocus);
       }
     });
 
@@ -99,11 +101,11 @@ class GeneralModuleBottomSheetState extends State<GeneralModuleBottomSheet> {
   void _applyCachedData(Map<String, dynamic> data) {
     lvlTimeoutController.text = (data['lvlTimeout'] as num?)?.toString() ?? '0';
     silenceBuzzerLevel =
-        (data['silenceBuzzerLevel'] as String?) ?? buzzerOptions.first;
+        (data[StringConstants.silencebuzzerlevel] as String?) ?? buzzerOptions.first;
     silenceSoundersLevel =
         (data['silenceSoundersLevel'] as String?) ?? sounderOptions.first;
     resetLevel = (data['resetLevel'] as String?) ?? resetOptions.first;
-    faultLatching = (data['faultLatching'] as String?) ?? yesNoOptions.first;
+    faultLatching = (data[StringConstants.silencesounderslevel] as String?) ?? yesNoOptions.first;
   }
 
   void _loadFromManager() {
@@ -159,10 +161,10 @@ class GeneralModuleBottomSheetState extends State<GeneralModuleBottomSheet> {
   Future<void> _saveToCache() async {
     await PeripheralSetupCache.saveGeneralModuleSetup(widget.deviceId, {
       'lvlTimeout': int.tryParse(lvlTimeoutController.text) ?? 0,
-      'silenceBuzzerLevel': silenceBuzzerLevel,
+      StringConstants.silencebuzzerlevel: silenceBuzzerLevel,
       'silenceSoundersLevel': silenceSoundersLevel,
       'resetLevel': resetLevel,
-      'faultLatching': faultLatching,
+      StringConstants.silencesounderslevel: faultLatching,
     });
   }
 
@@ -179,33 +181,33 @@ class GeneralModuleBottomSheetState extends State<GeneralModuleBottomSheet> {
   Widget _fieldsColumn() {
     return Column(
       children: [
-        if (widget.embedInCreateFlow) _title('General Module'),
+        if (widget.embedInCreateFlow) _title(StringConstants.generalModule),
         _numberField(
-          'LVL Time-out (s)',
+          StringConstants.lvlTimeOutS,
           lvlTimeoutController,
           maxLength: 3,
           focusNode: lvlTimeoutFocusNode,
         ),
         DropdownWidget(
-          label: 'Silence Buzzer Level',
+          label: StringConstants.silenceBuzzerLevel2,
           value: silenceBuzzerLevel,
           items: buzzerOptions,
           onChanged: (v) => setState(() => silenceBuzzerLevel = v),
         ),
         DropdownWidget(
-          label: 'Silence Sounders Level',
+          label: StringConstants.silenceSoundersLevel2,
           value: silenceSoundersLevel,
           items: sounderOptions,
           onChanged: (v) => setState(() => silenceSoundersLevel = v),
         ),
         DropdownWidget(
-          label: 'Reset Level',
+          label: StringConstants.resetLevel2,
           value: resetLevel,
           items: resetOptions,
           onChanged: (v) => setState(() => resetLevel = v),
         ),
         DropdownWidget(
-          label: 'Fault Latching',
+          label: StringConstants.faultLatching,
           value: faultLatching,
           items: yesNoOptions,
           onChanged: (v) => setState(() => faultLatching = v),
@@ -244,7 +246,7 @@ class GeneralModuleBottomSheetState extends State<GeneralModuleBottomSheet> {
         constraints: BoxConstraints(maxHeight: maxHeight),
         child: Container(
           decoration: const BoxDecoration(
-            color: Color(0xFFE31C23),
+            color: ColorConstants.primaryVariant,
             borderRadius: BorderRadius.vertical(top: Radius.circular(50)),
           ),
           child: Padding(
@@ -252,7 +254,7 @@ class GeneralModuleBottomSheetState extends State<GeneralModuleBottomSheet> {
             child: Container(
               clipBehavior: Clip.hardEdge,
               decoration: const BoxDecoration(
-                color: Colors.white,
+                color: ColorConstants.white,
                 borderRadius: BorderRadius.vertical(top: Radius.circular(50)),
               ),
               // padding: EdgeInsets.only(
@@ -276,7 +278,7 @@ class GeneralModuleBottomSheetState extends State<GeneralModuleBottomSheet> {
                             width: 38,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              color: Colors.black.withValues(alpha: 0.06),
+                              color: ColorConstants.blackMaterial.withValues(alpha: 0.06),
                             ),
                             child: const Icon(Icons.close, size: 20),
                           ),
@@ -294,7 +296,7 @@ class GeneralModuleBottomSheetState extends State<GeneralModuleBottomSheet> {
                     child: Column(
                       children: [
                         _dragHandle(),
-                        _title('General Mode'),
+                        _title(StringConstants.generalMode),
                         Expanded(child: scroll),
                         const SizedBox(height: 12),
                         Row(
@@ -350,7 +352,7 @@ class GeneralModuleBottomSheetState extends State<GeneralModuleBottomSheet> {
               child: Padding(
                 padding: const EdgeInsets.only(top: 4),
                 child: Text(
-                  "LVL Time-out must be between 30 and 300 seconds",
+                  StringConstants.lvlTimeOutMustBeBetween30And300Seconds,
                   style: GoogleFonts.inter(fontSize: 12, color: Colors.orange),
                 ),
               ),
@@ -366,7 +368,7 @@ class GeneralModuleBottomSheetState extends State<GeneralModuleBottomSheet> {
       style: GoogleFonts.inter(
         fontSize: 13,
         fontWeight: FontWeight.w600,
-        color: const Color(0xFF3D3D3D),
+        color: ColorConstants.textDark,
       ),
     );
   }
@@ -374,19 +376,19 @@ class GeneralModuleBottomSheetState extends State<GeneralModuleBottomSheet> {
   InputDecoration _inputDecoration() {
     return InputDecoration(
       filled: true,
-      fillColor: const Color(0xFFF8F8F8),
+      fillColor: ColorConstants.surfaceLight,
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFFD0D0D0)),
+        borderSide: const BorderSide(color: ColorConstants.borderLight),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFFD0D0D0)),
+        borderSide: const BorderSide(color: ColorConstants.borderLight),
       ),
       focusedBorder: const OutlineInputBorder(
         borderRadius: BorderRadius.all(Radius.circular(12)),
-        borderSide: BorderSide(color: Color(0xFFEC1D24), width: 2),
+        borderSide: BorderSide(color: ColorConstants.primary, width: 2),
       ),
     );
   }
@@ -420,8 +422,8 @@ class GeneralModuleBottomSheetState extends State<GeneralModuleBottomSheet> {
       height: 48,
       child: OutlinedButton(
         style: OutlinedButton.styleFrom(
-          foregroundColor: const Color(0xFFEC1D24),
-          side: const BorderSide(color: Color(0xFFEC1D24)),
+          foregroundColor: ColorConstants.primary,
+          side: const BorderSide(color: ColorConstants.primary),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24),
           ),
@@ -431,7 +433,7 @@ class GeneralModuleBottomSheetState extends State<GeneralModuleBottomSheet> {
           widget.onDownload();
         },
         child: Text(
-          'Download',
+          StringConstants.download,
           style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600),
         ),
       ),
@@ -443,7 +445,7 @@ class GeneralModuleBottomSheetState extends State<GeneralModuleBottomSheet> {
       height: 48,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFFEC1D24),
+          backgroundColor: ColorConstants.primary,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24),
           ),
@@ -457,11 +459,11 @@ class GeneralModuleBottomSheetState extends State<GeneralModuleBottomSheet> {
                 }
                 : null,
         child: Text(
-          'Apply',
+          StringConstants.apply,
           style: GoogleFonts.inter(
             fontSize: 16,
             fontWeight: FontWeight.w600,
-            color: Colors.white,
+            color: ColorConstants.white,
           ),
         ),
       ),

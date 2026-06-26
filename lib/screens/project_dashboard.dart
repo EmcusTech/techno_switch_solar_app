@@ -52,6 +52,8 @@ import 'package:techno_switch_solar_app/widgets/firmware_upgrade_bottom_sheet.da
 import 'package:techno_switch_solar_app/widgets/panel_access_code_dialog.dart';
 import 'package:techno_switch_solar_app/widgets/bootloader_connect_flow.dart';
 import 'package:techno_switch_solar_app/widgets/ble_connecting_dialog.dart';
+import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
 final BleManager ble = Get.find<BleManager>();
 
@@ -128,7 +130,7 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
       if (disabledIndexes.contains(index)) {
         return Colors.grey;
       }
-      return _selectedIndex == index ? Colors.white : Colors.black;
+      return _selectedIndex == index ? ColorConstants.white : ColorConstants.blackMaterial;
     }
 
     Widget navItem({
@@ -170,7 +172,7 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
         decoration: BoxDecoration(
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
+              color: ColorConstants.blackMaterial.withValues(alpha: 0.1),
               blurRadius: 10,
               offset: const Offset(0, -5),
             ),
@@ -182,7 +184,7 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
             topRight: Radius.circular(32),
           ),
           child: BottomNavigationBar(
-            backgroundColor: const Color(0xffEC1D24),
+            backgroundColor: ColorConstants.primary,
             elevation: 0,
             type: BottomNavigationBarType.fixed,
             currentIndex: _selectedIndex,
@@ -196,7 +198,7 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
               BottomNavigationBarItem(
                 icon: navItem(
                   index: 0,
-                  label: 'Dashboard',
+                  label: StringConstants.dashboard,
                   asset: 'assets/svgs/dashboard_icon.svg',
                 ),
                 label: '',
@@ -204,7 +206,7 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
               BottomNavigationBarItem(
                 icon: navItem(
                   index: 1,
-                  label: 'Settings',
+                  label: StringConstants.settings,
                   asset: 'assets/svgs/setting_icon.svg',
                 ),
                 label: '',
@@ -212,7 +214,7 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
               BottomNavigationBarItem(
                 icon: navItem(
                   index: 2,
-                  label: 'Test Mode',
+                  label: StringConstants.testMode,
                   asset: 'assets/svgs/test_mode_icon.svg',
                 ),
                 label: '',
@@ -220,7 +222,7 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
               BottomNavigationBarItem(
                 icon: navItem(
                   index: 3,
-                  label: 'Log History',
+                  label: StringConstants.logHistory,
                   asset: 'assets/svgs/log_history_icon.svg',
                 ),
                 label: '',
@@ -310,7 +312,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
             child: Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: ColorConstants.white,
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Column(
@@ -320,34 +322,34 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                     width: 64,
                     height: 64,
                     decoration: const BoxDecoration(
-                      color: Color(0xFFFBDEE1),
+                      color: ColorConstants.errorIconBackground,
                       shape: BoxShape.circle,
                     ),
                     child: const Center(
                       child: Icon(
                         Icons.bluetooth_disabled,
-                        color: Color(0xFFEC1D24),
+                        color: ColorConstants.primary,
                         size: 32,
                       ),
                     ),
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Bluetooth disconnected',
+                    StringConstants.bluetoothDisconnected,
                     style: GoogleFonts.inter(
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
-                      color: const Color(0xFF3D3D3D),
+                      color: ColorConstants.textDark,
                     ),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'The connection to the device was lost. Any open panels were closed. Use Connect when you are ready to reconnect.',
+                    StringConstants.theConnectionToTheDeviceWasLostAnyOpenPanelsWereClosedUseConnectWhenYouAreReadyToReconnect,
                     style: GoogleFonts.inter(
                       fontSize: 14,
                       fontWeight: FontWeight.w400,
-                      color: const Color(0xFF666666),
+                      color: ColorConstants.textGray,
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -362,16 +364,16 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                       child: Container(
                         height: 48,
                         decoration: BoxDecoration(
-                          color: const Color(0xFFEC1D24),
+                          color: ColorConstants.primary,
                           borderRadius: BorderRadius.circular(24),
                         ),
                         child: Center(
                           child: Text(
-                            'OK',
+                            StringConstants.ok,
                             style: GoogleFonts.inter(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
-                              color: Colors.white,
+                              color: ColorConstants.white,
                             ),
                           ),
                         ),
@@ -453,7 +455,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
           child: Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: ColorConstants.white,
               borderRadius: BorderRadius.circular(16),
             ),
             child: Column(
@@ -463,34 +465,34 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                   width: 64,
                   height: 64,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFBDEE1),
+                    color: ColorConstants.errorIconBackground,
                     shape: BoxShape.circle,
                   ),
                   child: const Center(
                     child: Icon(
                       Icons.link_off,
-                      color: Color(0xFFEC1D24),
+                      color: ColorConstants.primary,
                       size: 32,
                     ),
                   ),
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Disconnect device?',
+                  StringConstants.disconnectDevice,
                   style: GoogleFonts.inter(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
-                    color: const Color(0xFF3D3D3D),
+                    color: ColorConstants.textDark,
                   ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Going back will disconnect the device. Are you sure?',
+                  StringConstants.goingBackWillDisconnectTheDeviceAreYouSure,
                   style: GoogleFonts.inter(
                     fontSize: 14,
                     fontWeight: FontWeight.w400,
-                    color: const Color(0xFF666666),
+                    color: ColorConstants.textGray,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -503,20 +505,20 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                         child: Container(
                           height: 48,
                           decoration: BoxDecoration(
-                            color: const Color(0xFFEFEEEE),
+                            color: ColorConstants.buttonSecondaryBackground,
                             borderRadius: BorderRadius.circular(24),
                             border: Border.all(
-                              color: const Color(0xFFD0D0D0),
+                              color: ColorConstants.borderLight,
                               width: 1,
                             ),
                           ),
                           child: Center(
                             child: Text(
-                              'Cancel',
+                              StringConstants.cancel,
                               style: GoogleFonts.inter(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
-                                color: const Color(0xFF666666),
+                                color: ColorConstants.textGray,
                               ),
                             ),
                           ),
@@ -530,11 +532,11 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                         child: Container(
                           height: 48,
                           decoration: BoxDecoration(
-                            color: const Color(0xFFEC1D24),
+                            color: ColorConstants.primary,
                             borderRadius: BorderRadius.circular(24),
                             boxShadow: [
                               BoxShadow(
-                                color: const Color(0xFFEC1D24).withOpacity(0.3),
+                                color: ColorConstants.primary.withOpacity(0.3),
                                 blurRadius: 8,
                                 offset: const Offset(0, 4),
                               ),
@@ -546,7 +548,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                               style: GoogleFonts.inter(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
-                                color: Colors.white,
+                                color: ColorConstants.white,
                               ),
                             ),
                           ),
@@ -646,7 +648,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
               child: Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: ColorConstants.white,
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Column(
@@ -660,7 +662,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                         color:
                             handshakeComplete && !maxBleConnectionRetriesReached
                                 ? Colors.green.withValues(alpha: 0.1)
-                                : Color(0xFFFBDEE1),
+                                : ColorConstants.errorIconBackground,
                         shape: BoxShape.circle,
                       ),
                       child: Center(
@@ -680,16 +682,16 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                     SizedBox(height: 16),
                     Text(
                       maxBleConnectionRetriesReached
-                          ? 'Max Connection Retries Reached!'
+                          ? StringConstants.maxConnectionRetriesReached
                           : handshakeComplete
                           ? 'Device Connected!'
                           : isConnected
                           ? 'Establishing secure connection...'
-                          : 'Connecting...',
+                          : StringConstants.establishingSecureConnection,
                       style: GoogleFonts.inter(
                         fontSize: 20,
                         fontWeight: FontWeight.w700,
-                        color: Color(0xFF3D3D3D),
+                        color: ColorConstants.textDark,
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -697,16 +699,16 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                     // Subtitle
                     Text(
                       handshakeComplete && !maxBleConnectionRetriesReached
-                          ? 'Ready'
+                          ? StringConstants.ready
                           : maxBleConnectionRetriesReached
-                          ? 'Please try connecting again'
+                          ? StringConstants.pleaseTryConnectingAgain
                           : isConnected
-                          ? 'Encrypting and authenticating...'
+                          ? StringConstants.encryptingAndAuthenticating
                           : 'Please wait while we connect to ${device.name}',
                       style: GoogleFonts.inter(
                         fontSize: 14,
                         fontWeight: FontWeight.w400,
-                        color: Color(0xFF918F8F),
+                        color: ColorConstants.textMuted,
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -716,7 +718,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                         width: double.infinity,
                         child: ElevatedButton(
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFFEC1D24),
+                            backgroundColor: ColorConstants.primary,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(24.5),
                             ),
@@ -725,11 +727,11 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                             Navigator.of(dialogContext).pop();
                           },
                           child: Text(
-                            'OK',
+                            StringConstants.ok,
                             style: GoogleFonts.inter(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
-                              color: Colors.white,
+                              color: ColorConstants.white,
                             ),
                           ),
                         ),
@@ -758,7 +760,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     try {
       final deviceName = widget.selectedDevice.name;
       if (deviceName.isEmpty) {
-        throw Exception('Device name is empty');
+        throw Exception(StringConstants.deviceNameIsEmpty);
       }
 
       _showConnectingDialog(device: widget.selectedDevice, context: context);
@@ -767,7 +769,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
       await _bluetoothService.requestPermissions();
       final poweredOn = await _bluetoothService.ensurePoweredOn();
       if (!poweredOn) {
-        throw Exception('Bluetooth is not enabled');
+        throw Exception(StringConstants.bluetoothIsNotEnabled);
       }
 
       await _bluetoothService.startScanning();
@@ -947,7 +949,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Color(0xFFF6EBEB), Colors.white],
+            colors: [ColorConstants.scaffoldGradientTop, ColorConstants.white],
           ),
         ),
         child: Stack(
@@ -978,11 +980,11 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                             width: 40,
                             height: 40,
                             decoration: BoxDecoration(
-                              color: Colors.white,
+                              color: ColorConstants.white,
                               shape: BoxShape.circle,
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.1),
+                                  color: ColorConstants.blackMaterial.withOpacity(0.1),
                                   blurRadius: 8,
                                   offset: const Offset(0, 2),
                                 ),
@@ -990,7 +992,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                             ),
                             child: const Icon(
                               Icons.arrow_back_ios_new,
-                              color: Color(0xFF3D3D3D),
+                              color: ColorConstants.textDark,
                               size: 18,
                             ),
                           ),
@@ -998,7 +1000,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                         SizedBox(width: 12),
                         Expanded(
                           child: Text(
-                            'Project Dashboard',
+                            StringConstants.projectDashboard,
                             style: GoogleFonts.inter(
                               fontSize: 20,
                               fontWeight: FontWeight.w700,
@@ -1031,12 +1033,12 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
   void _showExportBottomSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.transparent,
+      backgroundColor: ColorConstants.transparent,
       isScrollControlled: false,
       builder: (_) {
         return Container(
           decoration: const BoxDecoration(
-            color: Colors.white,
+            color: ColorConstants.white,
             borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
           ),
           padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
@@ -1061,7 +1063,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 style: GoogleFonts.inter(
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
-                  color: const Color(0xFF3A3A3A),
+                  color: ColorConstants.textBodyDark,
                 ),
               ),
 
@@ -1069,7 +1071,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
 
               ExportTile(
                 iconPath: "assets/svgs/share_icon_red.svg",
-                title: 'Export as PDF',
+                title: StringConstants.exportAsPDF,
                 onTap: () async {
                   Navigator.pop(context);
                   _exportProjectPdf();
@@ -1118,7 +1120,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text(
-              'Device not found after firmware upgrade. Please reconnect.',
+              StringConstants.deviceNotFoundAfterFirmwareUpgradePleaseReconnect,
             ),
           ),
         );
@@ -1150,7 +1152,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
           child: Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: ColorConstants.white,
               borderRadius: BorderRadius.circular(16),
             ),
             child: Column(
@@ -1160,34 +1162,34 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                   width: 64,
                   height: 64,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFBDEE1),
+                    color: ColorConstants.errorIconBackground,
                     shape: BoxShape.circle,
                   ),
                   child: const Center(
                     child: Icon(
                       Icons.bluetooth_disabled,
-                      color: Color(0xFFEC1D24),
+                      color: ColorConstants.primary,
                       size: 32,
                     ),
                   ),
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Device not connected',
+                  StringConstants.deviceNotConnected,
                   style: GoogleFonts.inter(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
-                    color: const Color(0xFF3D3D3D),
+                    color: ColorConstants.textDark,
                   ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'BLE device is not connected. Tap on Connect to connect again.',
+                  StringConstants.bleDeviceIsNotConnectedTapOnConnectToConnectAgain,
                   style: GoogleFonts.inter(
                     fontSize: 14,
                     fontWeight: FontWeight.w400,
-                    color: const Color(0xFF666666),
+                    color: ColorConstants.textGray,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -1202,10 +1204,10 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                         child: Container(
                           height: 48,
                           decoration: BoxDecoration(
-                            color: const Color(0xFFEFEEEE),
+                            color: ColorConstants.buttonSecondaryBackground,
                             borderRadius: BorderRadius.circular(24),
                             border: Border.all(
-                              color: const Color(0xFFD0D0D0),
+                              color: ColorConstants.borderLight,
                               width: 1,
                             ),
                           ),
@@ -1215,7 +1217,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                               style: GoogleFonts.inter(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
-                                color: const Color(0xFF666666),
+                                color: ColorConstants.textGray,
                               ),
                             ),
                           ),
@@ -1233,11 +1235,11 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                         child: Container(
                           height: 48,
                           decoration: BoxDecoration(
-                            color: const Color(0xFFEC1D24),
+                            color: ColorConstants.primary,
                             borderRadius: BorderRadius.circular(24),
                             boxShadow: [
                               BoxShadow(
-                                color: const Color(0xFFEC1D24).withOpacity(0.3),
+                                color: ColorConstants.primary.withOpacity(0.3),
                                 blurRadius: 8,
                                 offset: const Offset(0, 4),
                               ),
@@ -1249,7 +1251,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                               style: GoogleFonts.inter(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
-                                color: Colors.white,
+                                color: ColorConstants.white,
                               ),
                             ),
                           ),
@@ -1291,7 +1293,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
           child: Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: ColorConstants.white,
               borderRadius: BorderRadius.circular(16),
             ),
             child: Column(
@@ -1301,7 +1303,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                   width: 64,
                   height: 64,
                   decoration: BoxDecoration(
-                    color: Color(0xFFE8F5E9),
+                    color: ColorConstants.successBackgroundLight,
                     shape: BoxShape.circle,
                   ),
                   child: Center(
@@ -1315,13 +1317,13 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 ),
                 SizedBox(height: 16),
                 Text(
-                  message == "Diagnostics"
+                  message == StringConstants.liveDataIsBeingStreamedFromTheDeviceInRealTime
                       ? "Live Diagnostics Active"
                       : "$message Downloaded",
                   style: GoogleFonts.inter(
                     fontSize: 20,
                     fontWeight: FontWeight.w700,
-                    color: Color(0xFF3D3D3D),
+                    color: ColorConstants.textDark,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -1329,13 +1331,13 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 Visibility(
                   visible: !ble.bleProcess.isLbusFetchHasErrors.value,
                   child: Text(
-                    message == "Diagnostics"
-                        ? 'Live data is being streamed from the device in real time.'
+                    message == StringConstants.liveDataIsBeingStreamedFromTheDeviceInRealTime
+                        ? StringConstants.theMessageHasBeenSuccessfullyDownloadedFromTheDevice
                         : 'The $message has been successfully downloaded from the device.',
                     style: GoogleFonts.inter(
                       fontSize: 14,
                       fontWeight: FontWeight.w400,
-                      color: Color(0xFF918F8F),
+                      color: ColorConstants.textMuted,
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -1343,11 +1345,11 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 Visibility(
                   visible: ble.bleProcess.isLbusFetchHasErrors.value,
                   child: Text(
-                    'There was an error downloading',
+                    StringConstants.thereWasAnErrorDownloading,
                     style: GoogleFonts.inter(
                       fontSize: 14,
                       fontWeight: FontWeight.w400,
-                      color: Color(0xFF918F8F),
+                      color: ColorConstants.textMuted,
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -1359,7 +1361,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                     style: GoogleFonts.inter(
                       fontSize: 14,
                       fontWeight: FontWeight.w400,
-                      color: Color(0xFFEC1D24),
+                      color: ColorConstants.primary,
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -1384,7 +1386,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
           child: Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: ColorConstants.white,
               borderRadius: BorderRadius.circular(16),
             ),
             child: Column(
@@ -1394,7 +1396,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                   width: 64,
                   height: 64,
                   decoration: BoxDecoration(
-                    color: Color(0xFFE8F5E9),
+                    color: ColorConstants.successBackgroundLight,
                     shape: BoxShape.circle,
                   ),
                   child: Center(
@@ -1408,21 +1410,21 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 ),
                 SizedBox(height: 16),
                 Text(
-                  'Live Diagnostics Stopped',
+                  StringConstants.liveDiagnosticsStopped,
                   style: GoogleFonts.inter(
                     fontSize: 20,
                     fontWeight: FontWeight.w700,
-                    color: Color(0xFF3D3D3D),
+                    color: ColorConstants.textDark,
                   ),
                   textAlign: TextAlign.center,
                 ),
                 SizedBox(height: 8),
                 Text(
-                  'Live data streaming from the device has been stopped.',
+                  StringConstants.liveDataStreamingFromTheDeviceHasBeenStopped,
                   style: GoogleFonts.inter(
                     fontSize: 14,
                     fontWeight: FontWeight.w400,
-                    color: Color(0xFF918F8F),
+                    color: ColorConstants.textMuted,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -1457,7 +1459,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
       mode: 'bottomsheet_download',
       isConfigLogBulk: true,
       showDetailedConfigLogBulkBleProgressInAccessDialog: false,
-      downloadSuccessMessage: 'Configuration',
+      downloadSuccessMessage: StringConstants.configuration,
       onDownloadComplete: () async {
         try {
           await PanelConfigBulkSync.runConfigLogFetchRemaining(
@@ -1473,7 +1475,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
         } catch (e, _) {
           _configLogCompareResult.value = ConfigCompareResult.withError(
             e is TimeoutException
-                ? 'Operation timed out. Stay close to the device and try again.'
+                ? StringConstants.operationTimedOutStayCloseToTheDeviceAndTryAgain
                 : e.toString(),
           );
         }
@@ -1502,8 +1504,8 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      barrierColor: Colors.black.withOpacity(0.4),
+      backgroundColor: ColorConstants.transparent,
+      barrierColor: ColorConstants.blackMaterial.withOpacity(0.4),
       builder:
           (_) => ConfigLogBottomSheet(
             deviceId: _selectedDevice.id,
@@ -1592,9 +1594,9 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                     if (!mounted) return;
                     showApplySuccessDialog(
                       context,
-                      'Configuration',
+                      StringConstants.configuration,
                       subtitle:
-                          'Your saved setup has been applied to the panel.',
+                          StringConstants.yourSavedSetupHasBeenAppliedToThePanel,
                     );
                   } finally {
                     _bleManager.bleProcess.clearPeripheralApplyDoneFlags();
@@ -1657,7 +1659,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     return Expanded(
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: ColorConstants.white,
           borderRadius: BorderRadius.circular(35),
         ),
         child: Column(
@@ -1709,7 +1711,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
-                  color: Color(0xFF979797),
+                  color: ColorConstants.textDisabled,
                 ),
                 overflow: TextOverflow.ellipsis,
               ),
@@ -1718,11 +1720,11 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 builder: (context, isConnected, child) {
                   if (isConnected) {
                     return Text(
-                      'Connected',
+                      StringConstants.connected,
                       style: GoogleFonts.inter(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
-                        color: Color(0xFF00A706),
+                        color: ColorConstants.success,
                       ),
                     );
                   } else {
@@ -1733,11 +1735,11 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                             text: TextSpan(
                               children: [
                                 TextSpan(
-                                  text: 'Disconnected',
+                                  text: StringConstants.disconnected,
                                   style: GoogleFonts.inter(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w500,
-                                    color: Color(0xFFEC1D24),
+                                    color: ColorConstants.primary,
                                   ),
                                 ),
                               ],
@@ -1764,7 +1766,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
                       valueColor: AlwaysStoppedAnimation<Color>(
-                        Color(0xFFEC1D24),
+                        ColorConstants.primary,
                       ),
                     ),
                   )
@@ -1776,7 +1778,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: Color(0xFFEC1D24),
+                        color: ColorConstants.primary,
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
@@ -1784,7 +1786,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                         style: GoogleFonts.inter(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
-                          color: Colors.white,
+                          color: ColorConstants.white,
                         ),
                       ),
                     ),
@@ -1803,7 +1805,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Peripheral Overview',
+          StringConstants.peripheralOverview,
           style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700),
         ),
         SizedBox(height: 8),
@@ -1821,7 +1823,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
             physics: NeverScrollableScrollPhysics(),
             children: [
               _peripheralTile(
-                peripheralName: 'Relays',
+                peripheralName: StringConstants.relays,
                 iconPath: 'assets/svgs/peripheral_relay_icon.svg',
                 onTap: () {
                   if (BleMsdUtils.isBootloader(
@@ -1861,7 +1863,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 },
               ),
               _peripheralTile(
-                peripheralName: 'Inputs',
+                peripheralName: StringConstants.inputs,
                 iconPath: 'assets/svgs/peripheral_input_icon.svg',
                 onTap: () {
                   if (BleMsdUtils.isBootloader(
@@ -1900,7 +1902,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 },
               ),
               _peripheralTile(
-                peripheralName: 'Zones',
+                peripheralName: StringConstants.zones,
                 iconPath: 'assets/svgs/peripheral_zones_icon.svg',
                 onTap: () {
                   if (BleMsdUtils.isBootloader(
@@ -1940,7 +1942,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 },
               ),
               _peripheralTile(
-                peripheralName: 'Sounders',
+                peripheralName: StringConstants.sounders,
                 iconPath: 'assets/svgs/peripheral_sounder_icon.svg',
                 onTap: () {
                   if (BleMsdUtils.isBootloader(
@@ -1985,7 +1987,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 },
               ),
               _peripheralTile(
-                peripheralName: 'Radio',
+                peripheralName: StringConstants.radio,
                 iconPath: 'assets/svgs/peripheral_prog_hold_icon.svg',
                 isDisabled: true,
                 onTap: () {
@@ -2008,7 +2010,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                         isZoneSetup: true,
                         mode: 'bottomsheet_download',
                         onDownloadComplete: _saveRadioCacheAndNotifyRefresh,
-                        downloadSuccessMessage: 'Radio',
+                        downloadSuccessMessage: StringConstants.radio,
                       );
                     },
                     onApply: () {
@@ -2027,7 +2029,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 },
               ),
               _peripheralTile(
-                peripheralName: 'Module Info',
+                peripheralName: StringConstants.moduleInfo,
                 iconPath: 'assets/svgs/peripheral_aux_icon.svg',
                 onTap: () {
                   if (BleMsdUtils.isBootloader(
@@ -2055,7 +2057,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 },
               ),
               _peripheralTile(
-                peripheralName: 'L-Bus',
+                peripheralName: StringConstants.lBus,
                 iconPath: 'assets/svgs/peripheral_l_bus_icon.svg',
                 onTap: () {
                   if (BleMsdUtils.isBootloader(
@@ -2076,7 +2078,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                         },
                         mode: 'bottomsheet_download',
                         onDownloadComplete: _saveLBusCacheAndNotifyRefresh,
-                        downloadSuccessMessage: 'L-Bus',
+                        downloadSuccessMessage: StringConstants.lBus,
                       );
                     },
                     onApply: () {
@@ -2088,7 +2090,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                         },
                         isLBusSetup: true,
                         mode: 'bottomsheet_apply',
-                        downloadSuccessMessage: 'L-Bus',
+                        downloadSuccessMessage: StringConstants.lBus,
                       );
                     },
                     refreshTrigger: _zoneRefreshTrigger,
@@ -2096,7 +2098,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 },
               ),
               _peripheralTile(
-                peripheralName: 'Ext Out',
+                peripheralName: StringConstants.extOut2,
                 iconPath: 'assets/svgs/peripheral_ext_out_icon.svg',
                 onTap: () {
                   if (BleMsdUtils.isBootloader(
@@ -2152,8 +2154,8 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      barrierColor: Colors.black.withOpacity(0.4),
+      backgroundColor: ColorConstants.transparent,
+      barrierColor: ColorConstants.blackMaterial.withOpacity(0.4),
       builder:
           (_) => LBusBottomSheet(
             deviceId: deviceId,
@@ -2174,8 +2176,8 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      barrierColor: Colors.black.withOpacity(0.4),
+      backgroundColor: ColorConstants.transparent,
+      barrierColor: ColorConstants.blackMaterial.withOpacity(0.4),
       builder:
           (_) => SounderModeBottomSheet(
             deviceId: deviceId,
@@ -2196,8 +2198,8 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      barrierColor: Colors.black.withOpacity(0.4),
+      backgroundColor: ColorConstants.transparent,
+      barrierColor: ColorConstants.blackMaterial.withOpacity(0.4),
       builder:
           (_) => ServiceDueBottomSheet(
             deviceId: deviceId,
@@ -2218,8 +2220,8 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      barrierColor: Colors.black.withOpacity(0.4),
+      backgroundColor: ColorConstants.transparent,
+      barrierColor: ColorConstants.blackMaterial.withOpacity(0.4),
       builder:
           (_) => AccessCodesBottomSheet(
             deviceId: deviceId,
@@ -2240,8 +2242,8 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      barrierColor: Colors.black.withOpacity(0.4),
+      backgroundColor: ColorConstants.transparent,
+      barrierColor: ColorConstants.blackMaterial.withOpacity(0.4),
       builder:
           (_) => PanelInfoBottomSheet(
             deviceId: deviceId,
@@ -2262,8 +2264,8 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      barrierColor: Colors.black.withOpacity(0.4),
+      backgroundColor: ColorConstants.transparent,
+      barrierColor: ColorConstants.blackMaterial.withOpacity(0.4),
       builder:
           (_) => GeneralModuleBottomSheet(
             deviceId: deviceId,
@@ -2283,8 +2285,8 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      barrierColor: Colors.black.withOpacity(0.4),
+      backgroundColor: ColorConstants.transparent,
+      barrierColor: ColorConstants.blackMaterial.withOpacity(0.4),
       builder:
           (_) => DiagnosticInfoBottomSheet(
             deviceId: deviceId,
@@ -2305,8 +2307,8 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      barrierColor: Colors.black.withOpacity(0.4),
+      backgroundColor: ColorConstants.transparent,
+      barrierColor: ColorConstants.blackMaterial.withOpacity(0.4),
       builder:
           (_) =>
               ModuleInfoBottomSheet(deviceId: deviceId, onDownload: onDownload),
@@ -2323,8 +2325,8 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      barrierColor: Colors.black.withOpacity(0.4),
+      backgroundColor: ColorConstants.transparent,
+      barrierColor: ColorConstants.blackMaterial.withOpacity(0.4),
       builder:
           (_) => ExtOutBottomSheet(
             deviceId: deviceId,
@@ -2345,8 +2347,8 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      barrierColor: Colors.black.withOpacity(0.4),
+      backgroundColor: ColorConstants.transparent,
+      barrierColor: ColorConstants.blackMaterial.withOpacity(0.4),
       builder:
           (_) => InputModeBottomSheet(
             deviceId: deviceId,
@@ -2367,8 +2369,8 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      barrierColor: Colors.black.withOpacity(0.4),
+      backgroundColor: ColorConstants.transparent,
+      barrierColor: ColorConstants.blackMaterial.withOpacity(0.4),
       builder:
           (_) => RelayModeBottomSheet(
             deviceId: deviceId,
@@ -2389,8 +2391,8 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      barrierColor: Colors.black.withOpacity(0.4),
+      backgroundColor: ColorConstants.transparent,
+      barrierColor: ColorConstants.blackMaterial.withOpacity(0.4),
       builder:
           (_) => ZoneBottomSheet(
             deviceId: deviceId,
@@ -2411,8 +2413,8 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      barrierColor: Colors.black.withOpacity(0.4),
+      backgroundColor: ColorConstants.transparent,
+      barrierColor: ColorConstants.blackMaterial.withOpacity(0.4),
       builder:
           (_) => WalkTestZoneBottomSheet(
             deviceId: deviceId,
@@ -2433,8 +2435,8 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      barrierColor: Colors.black.withOpacity(0.4),
+      backgroundColor: ColorConstants.transparent,
+      barrierColor: ColorConstants.blackMaterial.withOpacity(0.4),
       builder:
           (_) => TestModeSounderBottomSheet(
             deviceId: deviceId,
@@ -2455,8 +2457,8 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      barrierColor: Colors.black.withOpacity(0.4),
+      backgroundColor: ColorConstants.transparent,
+      barrierColor: ColorConstants.blackMaterial.withOpacity(0.4),
       builder:
           (_) => TestModeRelayBottomSheet(
             deviceId: deviceId,
@@ -2480,8 +2482,8 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      barrierColor: Colors.black.withOpacity(0.4),
+      backgroundColor: ColorConstants.transparent,
+      barrierColor: ColorConstants.blackMaterial.withOpacity(0.4),
       builder: (sheetContext) {
         return TestModeChoiceBottomSheet(
           onSounders: () {
@@ -2519,8 +2521,8 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      barrierColor: Colors.black.withOpacity(0.4),
+      backgroundColor: ColorConstants.transparent,
+      barrierColor: ColorConstants.blackMaterial.withOpacity(0.4),
       builder:
           (_) => RadioModeBottomSheet(
             deviceId: deviceId,
@@ -2660,8 +2662,8 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
           Expanded(
             child: Container(
               decoration: BoxDecoration(
-                color: Color(0xFFF4F4F4),
-                border: Border.all(color: Color(0xFFD7D7D7)),
+                color: ColorConstants.backgroundSubtle,
+                border: Border.all(color: ColorConstants.borderMedium),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Center(
@@ -2669,8 +2671,8 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                   iconPath,
                   colorFilter: ColorFilter.mode(
                     isDisabled == true
-                        ? Color(0xFF666666).withValues(alpha: 0.2)
-                        : Color(0xFFEC1D24),
+                        ? ColorConstants.textGray.withValues(alpha: 0.2)
+                        : ColorConstants.primary,
                     BlendMode.srcIn,
                   ),
                   height:
@@ -2699,7 +2701,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
             style: GoogleFonts.inter(
               fontSize: 10,
               fontWeight: FontWeight.w500,
-              color: Color(0xFF696969),
+              color: ColorConstants.textSecondary,
             ),
           ),
         ],
@@ -2712,7 +2714,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Panel Actions',
+          StringConstants.panelActions,
           style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700),
         ),
         SizedBox(height: 8),
@@ -2731,7 +2733,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
             physics: NeverScrollableScrollPhysics(),
             children: [
               _peripheralTile(
-                peripheralName: 'Event Log',
+                peripheralName: StringConstants.eventLog,
                 iconPath: 'assets/svgs/panel_action_event_log_icon.svg',
                 onTap: () {
                   if (BleMsdUtils.isBootloader(
@@ -2752,7 +2754,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 },
               ),
               _peripheralTile(
-                peripheralName: 'FW Upgrade',
+                peripheralName: StringConstants.fwUpgrade,
                 iconPath: 'assets/svgs/firmware_icon.svg',
                 onTap: () {
                   if (!Get.isRegistered<UpdatesController>()) {
@@ -2761,7 +2763,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                   showModalBottomSheet(
                     context: context,
                     isScrollControlled: true,
-                    backgroundColor: Colors.transparent,
+                    backgroundColor: ColorConstants.transparent,
                     isDismissible: false,
                     enableDrag: false,
                     builder:
@@ -2772,7 +2774,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 },
               ),
               _peripheralTile(
-                peripheralName: 'Service Due',
+                peripheralName: StringConstants.serviceDue,
                 iconPath: 'assets/svgs/panel_action_service_due_icon.svg',
                 onTap: () {
                   if (BleMsdUtils.isBootloader(
@@ -2795,7 +2797,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                         mode: 'bottomsheet_download',
                         onDownloadComplete:
                             _saveServiceDueCacheAndNotifyRefresh,
-                        downloadSuccessMessage: 'Service Due',
+                        downloadSuccessMessage: StringConstants.serviceDue,
                       );
                     },
                     onApply: () {
@@ -2814,7 +2816,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 },
               ),
               _peripheralTile(
-                peripheralName: 'Access Code',
+                peripheralName: StringConstants.accessCode,
                 iconPath: 'assets/svgs/panel_action_access_code_icon.svg',
                 onTap: () {
                   if (BleMsdUtils.isBootloader(
@@ -2840,7 +2842,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                         mode: 'bottomsheet_download',
                         onDownloadComplete:
                             _saveAccessCodeCacheAndNotifyRefresh,
-                        downloadSuccessMessage: 'Access Code',
+                        downloadSuccessMessage: StringConstants.accessCode,
                       );
                     },
                     onApply: () {
@@ -2861,7 +2863,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 },
               ),
               _peripheralTile(
-                peripheralName: 'Panel Info',
+                peripheralName: StringConstants.panelInfo,
                 iconPath: 'assets/svgs/panel_action_panel_info_icon.svg',
                 onTap: () {
                   showPanelInfoSetupBottomSheet(
@@ -2879,7 +2881,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                         isPanelInfoSetup: true,
                         mode: 'bottomsheet_download',
                         onDownloadComplete: _savePanelInfoCacheAndNotifyRefresh,
-                        downloadSuccessMessage: 'Panel Info',
+                        downloadSuccessMessage: StringConstants.panelInfo,
                       );
                     },
                     onApply: () {
@@ -2919,7 +2921,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                         mode: 'bottomsheet_download',
                         onDownloadComplete:
                             _saveGeneralModuleCacheAndNotifyRefresh,
-                        downloadSuccessMessage: 'General Module',
+                        downloadSuccessMessage: StringConstants.generalModule,
                       );
                     },
                     onApply: () {
@@ -2940,7 +2942,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 },
               ),
               _peripheralTile(
-                peripheralName: 'Diagnostics',
+                peripheralName: StringConstants.liveDataIsBeingStreamedFromTheDeviceInRealTime,
                 iconPath: 'assets/svgs/diagnostic_icon.svg',
                 onTap: () {
                   if (BleMsdUtils.isBootloader(
@@ -2961,7 +2963,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                         },
                         mode: 'bottomsheet_download',
                         onDownloadComplete: _saveModuleCacheAndNotifyRefresh,
-                        downloadSuccessMessage: 'Diagnostics',
+                        downloadSuccessMessage: StringConstants.liveDataIsBeingStreamedFromTheDeviceInRealTime,
                       );
                     },
                     onStop: () {
@@ -2972,7 +2974,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 },
               ),
               _peripheralTile(
-                peripheralName: 'Walk Test',
+                peripheralName: StringConstants.walkTest,
                 iconPath: 'assets/svgs/walk_test_icon.svg',
                 onTap: () {
                   if (BleMsdUtils.isBootloader(
@@ -3013,7 +3015,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 },
               ),
               _peripheralTile(
-                peripheralName: 'Config Log',
+                peripheralName: StringConstants.configLog,
                 iconPath: 'assets/svgs/panel_action_config_log_icon.svg',
                 onTap: () {
                   if (BleMsdUtils.isBootloader(
@@ -3026,7 +3028,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 },
               ),
               _peripheralTile(
-                peripheralName: 'Test Mode',
+                peripheralName: StringConstants.testMode,
                 iconPath: 'assets/svgs/peripheral_prog_hold_icon.svg',
                 onTap: () {
                   if (BleMsdUtils.isBootloader(

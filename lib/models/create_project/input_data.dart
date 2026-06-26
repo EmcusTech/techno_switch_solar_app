@@ -1,3 +1,4 @@
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 class InputData {
   String inputText;
   String inverted;
@@ -8,22 +9,22 @@ class InputData {
 
   InputData({
     this.inputText = 'Input 1',
-    this.inverted = 'No',
-    this.test = 'No',
-    this.input1 = 'Enable',
-    this.group = 'Group A',
+    this.inverted = StringConstants.no,
+    this.test = StringConstants.no,
+    this.input1 = StringConstants.enable,
+    this.group = StringConstants.groupA,
     this.function = 'Function 1A',
   });
 
   void updateField(String label, String value) {
     switch (label) {
-      case 'Input Text':
+      case StringConstants.inputText:
         inputText = value;
         break;
-      case 'Inverted':
+      case StringConstants.inverted:
         inverted = value;
         break;
-      case 'Test':
+      case StringConstants.test:
         test = value;
         break;
       case 'Input 1':
@@ -32,7 +33,7 @@ class InputData {
       case 'Group':
         group = value;
         break;
-      case 'Function':
+      case StringConstants.function:
         function = value;
         break;
     }

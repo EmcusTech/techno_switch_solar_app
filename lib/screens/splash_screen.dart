@@ -3,6 +3,8 @@ import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:techno_switch_solar_app/screens/home_screen.dart';
+import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -35,7 +37,7 @@ class _SplashScreenState extends State<SplashScreen> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Color(0xFFF6EBEB), Colors.white],
+            colors: [ColorConstants.scaffoldGradientTop, ColorConstants.white],
           ),
         ),
         child: Stack(
@@ -73,11 +75,11 @@ class _SplashScreenState extends State<SplashScreen> {
                     child: Image.asset('assets/images/full_logo.png'),
                   ),
                   Text(
-                    'Panel Configuration Tool',
+                    StringConstants.panelConfigurationTool,
                     style: GoogleFonts.inter(
                       fontSize: 22,
                       // fontWeight: FontWeight.w700,
-                      color: const Color(0xFF3D3D3D),
+                      color: ColorConstants.textDark,
                     ),
                   ),
                   const SizedBox(height: 10),
@@ -89,9 +91,9 @@ class _SplashScreenState extends State<SplashScreen> {
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [
-                            Colors.white,
-                            Color(0xFFEC1D24),
-                            Colors.white,
+                            ColorConstants.white,
+                            ColorConstants.primary,
+                            ColorConstants.white,
                           ],
                         ),
                       ),
@@ -99,16 +101,16 @@ class _SplashScreenState extends State<SplashScreen> {
                   ),
                   SizedBox(height: 10),
                   Text(
-                    'v0.0.49 -- testing version',
+                    StringConstants.v0049TestingVersion,
                     style: GoogleFonts.inter(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: const Color(0xFFEC1D24),
+                      color: ColorConstants.primary,
                     ),
                   ),
                   const SizedBox(height: 24),
                   LoadingAnimationWidget.waveDots(
-                    color: const Color(0xFFEC1D24),
+                    color: ColorConstants.primary,
                     size: 54,
                   ),
                 ],

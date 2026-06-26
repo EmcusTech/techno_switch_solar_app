@@ -9,6 +9,7 @@ import 'package:techno_switch_solar_app/utils/relay_mode_util.dart';
 import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
 import 'package:techno_switch_solar_app/utils/zone_equipment_mode_util.dart';
 import 'package:techno_switch_solar_app/utils/zone_setup_manager_sync.dart';
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
 class PeripheralCacheToBle {
   PeripheralCacheToBle._();
@@ -16,76 +17,76 @@ class PeripheralCacheToBle {
   static const List<String> _relayGroups = [
     'None',
     'General',
-    'Zone',
-    'Ext. Out',
+    StringConstants.zone,
+    StringConstants.extOut,
   ];
 
   static const Map<String, List<String>> _relayFunctions = {
     'None': ['None'],
     'General': [
       'Fault',
-      'Extnl. Fault',
-      'Supply Fault',
-      'Extnl. Supply Fault',
-      'Sounder Fault',
-      'Sounder Silenced',
-      'Sounder Activated',
-      'Sounder Disabled',
-      'Disablement',
-      'Test',
+      StringConstants.extnlFault,
+      StringConstants.supplyFault,
+      StringConstants.extnlSupplyFault,
+      StringConstants.sounderFault,
+      StringConstants.sounderSilenced,
+      StringConstants.sounderActivated,
+      StringConstants.sounderDisabled,
+      StringConstants.disablement,
+      StringConstants.test,
       'Fire',
       'Reset',
-      'Controls Enabled',
-      'Supervisory',
-      'Fire Snd',
+      StringConstants.controlsEnabled,
+      StringConstants.supervisory,
+      StringConstants.fireSnd,
     ],
-    'Zone': ['Fault', 'Fire', 'Disablement', 'Fire Snd'],
-    'Ext. Out': [
-      'Release Initiated',
-      'Ext. Agent Released',
-      'Release Hold',
-      'Manual Mode',
-      'Manual Release',
-      'Extnl. Ext. Fault',
-      'Ext. Snd 1',
+    StringConstants.zone: ['Fault', 'Fire', StringConstants.disablement, StringConstants.fireSnd],
+    StringConstants.extOut: [
+      StringConstants.releaseInitiated,
+      StringConstants.extAgentReleased,
+      StringConstants.releaseHold,
+      StringConstants.manualMode,
+      StringConstants.manualRelease,
+      StringConstants.extnlExtFault,
+      StringConstants.extSnd1,
       'Ext. Snd 2',
-      'Man. Release Snd',
+      StringConstants.manReleaseSnd,
     ],
   };
 
   static const List<String> _sounderGroups = [
     'None',
     'General',
-    'Zone',
-    'Ext. Out',
+    StringConstants.zone,
+    StringConstants.extOut,
   ];
 
   static const Map<String, List<String>> _sounderFunctions = {
     'None': ['None'],
-    'General': ['Fire Snd'],
-    'Zone': ['Fire Snd'],
-    'Ext. Out': ['Ext. Snd 1', 'Ext. Snd 2', 'Man. Release Snd'],
+    'General': [StringConstants.fireSnd],
+    StringConstants.zone: [StringConstants.fireSnd],
+    StringConstants.extOut: [StringConstants.extSnd1, 'Ext. Snd 2', StringConstants.manReleaseSnd],
   };
 
   static const List<String> _zoneModes = [
-    'Immediate',
-    'Normal',
-    'Verified',
-    'Confirmed',
+    StringConstants.normal,
+    StringConstants.none,
+    StringConstants.verified,
+    StringConstants.immediate,
   ];
 
   static const List<String> _sounderActions = [
     'Continuous',
-    'Pulsing 1s on, 1s off',
-    'Pulsing 1s on, 4s off',
-    'Pulsing 2s on, 500ms off',
+    StringConstants.pulsing1sOn1sOff,
+    StringConstants.pulsing1sOn4sOff,
+    StringConstants.pulsing2sOn500msOff,
   ];
 
   static const List<String> _sounderExtActions = [
     'Continuous',
-    'Pulsing 1s on, 1s off',
-    'Pulsing 1s on, 4s off',
-    'Pulsing 2s on, 500ms off',
+    StringConstants.pulsing1sOn1sOff,
+    StringConstants.pulsing1sOn4sOff,
+    StringConstants.pulsing2sOn500msOff,
     'Off',
   ];
 
@@ -136,8 +137,8 @@ class PeripheralCacheToBle {
   }
 
   static void _applyPanelInfo(BleManager m, Map<String, dynamic> data) {
-    m.panelInfoPanelNo.value = (data['panelId'] as num?)?.toInt() ?? 0;
-    m.panelInfoPanelName.value = (data['panelName'] as String?) ?? '';
+    m.panelInfoPanelNo.value = (data[StringConstants.offlineprovisioned] as num?)?.toInt() ?? 0;
+    m.panelInfoPanelName.value = (data[StringConstants.panelname] as String?) ?? '';
     m.panelInfoYear.value = (data['year'] as num?)?.toInt() ?? 0;
     m.panelInfoMonth.value = (data['month'] as num?)?.toInt() ?? 0;
     m.panelInfoDay.value = (data['day'] as num?)?.toInt() ?? 0;
@@ -152,15 +153,15 @@ class PeripheralCacheToBle {
     bp.generalModuleLvlTimeOut.value =
         (data['lvlTimeout'] as num?)?.toInt() ?? 0;
 
-    const buzzer = ['Access Level 1', 'Access Level 2'];
-    const sounder = ['Access Level 2', 'Access Level 3'];
-    const reset = ['Access Level 2', 'Access Level 3'];
-    const yn = ['No', 'Yes'];
+    const buzzer = [StringConstants.accessLevel1, StringConstants.accessLevel2];
+    const sounder = [StringConstants.accessLevel2, StringConstants.accessLevel3];
+    const reset = [StringConstants.accessLevel2, StringConstants.accessLevel3];
+    const yn = ['No', StringConstants.yes];
 
-    final sb = (data['silenceBuzzerLevel'] as String?) ?? buzzer.first;
+    final sb = (data[StringConstants.silencebuzzerlevel] as String?) ?? buzzer.first;
     final ss = (data['silenceSoundersLevel'] as String?) ?? sounder.first;
     final rl = (data['resetLevel'] as String?) ?? reset.first;
-    final fl = (data['faultLatching'] as String?) ?? yn.first;
+    final fl = (data[StringConstants.silencesounderslevel] as String?) ?? yn.first;
 
     bp.generalModuleSilenceBuzzerLvl.value =
         buzzer.contains(sb) ? buzzer.indexOf(sb) : 0;
@@ -181,27 +182,27 @@ class PeripheralCacheToBle {
     m.serviceDueReminder.value = (data['reminder'] as num?)?.toInt() ?? 0;
   }
 
-  static const List<String> _inputGroups = ['None', 'General', 'Ext. Out'];
+  static const List<String> _inputGroups = ['None', 'General', StringConstants.extOut];
 
   static const Map<String, List<String>> _inputFunctions = {
     'None': ['None'],
     'General': [
-      'Extnl. Fault',
+      StringConstants.extnlFault,
       'Reset',
-      'Extnl. Controls Enabled',
-      'Silence Alarm',
-      'Sound Alarm',
-      'Silence Buzzer',
-      'Mute',
-      'Extnl. Supervisory',
-      'Extnl. Supply Fault',
+      StringConstants.extnlControlsEnabled,
+      StringConstants.silenceAlarm,
+      StringConstants.soundAlarm,
+      StringConstants.silenceBuzzer,
+      StringConstants.mute,
+      StringConstants.extnlSupervisory,
+      StringConstants.extnlSupplyFault,
     ],
-    'Ext. Out': [
-      'Manual Trigger',
-      'Manual Mode',
+    StringConstants.extOut: [
+      StringConstants.manualTrigger,
+      StringConstants.manualMode,
       'Hold',
-      'Extnl. Disable Gas',
-      'Extnl. Ext. Fault',
+      StringConstants.extnlDisableGas,
+      StringConstants.extnlExtFault,
     ],
   };
 
@@ -254,8 +255,8 @@ class PeripheralCacheToBle {
       );
       final hex = OutputModeCodec.encodeHex(cfg);
 
-      var dyn = (r['dynamicText'] as String?) ?? '';
-      if (group == 'Ext. Out') dyn = '1';
+      var dyn = (r[StringConstants.outputtext] as String?) ?? '';
+      if (group == StringConstants.extOut) dyn = '1';
 
       switch (i) {
         case 0:
@@ -299,10 +300,10 @@ class PeripheralCacheToBle {
       final typeIdx = (z['type'] as num?)?.toInt() ?? 0;
       final enabled = z['enabled'] == true;
       final dm = _clampInt(
-        (z['detectionMode'] as num?)?.toInt() ?? 0,
+        (z[StringConstants.isMTL5561] as num?)?.toInt() ?? 0,
         _zoneModes.length - 1,
       );
-      final vTime = (z['verificationTime'] as String?) ?? '0';
+      final vTime = (z[StringConstants.verificationtime] as String?) ?? '0';
       final text = (z['text'] as String?) ?? '';
 
       switch (i) {
@@ -347,7 +348,7 @@ class PeripheralCacheToBle {
       final isTest = s['test'] == true;
       final isNormal = s['normal'] != false;
       final outText = (s['outputText'] as String?) ?? '';
-      final fn = (s['functionNo'] as num?)?.toInt() ?? 0;
+      final fn = (s[StringConstants.functionno] as num?)?.toInt() ?? 0;
 
       final cfg = OutputModeConfig(
         outputEnable: isEnabled ? OutputEnable.enabled : OutputEnable.disabled,
@@ -435,15 +436,15 @@ class PeripheralCacheToBle {
       final isEnabled = e['enabled'] == true;
       final isTest = e['test'] == true;
       final ci = _clampInt(
-        (e['countdownAction'] as num?)?.toInt() ?? 0,
+        (e[StringConstants.countdownaction] as num?)?.toInt() ?? 0,
         _sounderExtActions.length - 1,
       );
       final hi = _clampInt(
-        (e['holdAction'] as num?)?.toInt() ?? 0,
+        (e[StringConstants.holdaction] as num?)?.toInt() ?? 0,
         _sounderExtActions.length - 1,
       );
       final ri = _clampInt(
-        (e['releaseAction'] as num?)?.toInt() ?? 0,
+        (e[StringConstants.releaseaction] as num?)?.toInt() ?? 0,
         _sounderExtActions.length - 1,
       );
       final ecfg = ExtZoneEquipmentModeConfig(
@@ -482,7 +483,7 @@ class PeripheralCacheToBle {
       }
     }
 
-    final gen = data['general'] as Map<String, dynamic>?;
+    final gen = data[StringConstants.s123] as Map<String, dynamic>?;
     if (gen != null) {
       final ge = gen['enabled'] == true;
       final gt = gen['test'] == true;
@@ -506,16 +507,16 @@ class PeripheralCacheToBle {
   static void _applyExtOut(BleManager m, Map<String, dynamic> data) {
     final en = _clampInt((data['enabled'] as num?)?.toInt() ?? 0, 1);
     final holdRestart = _clampInt(
-      (data['holdMode'] as num?)?.toInt() ?? 0,
+      (data[StringConstants.holdmode] as num?)?.toInt() ?? 0,
       HoldMode.values.length - 1,
     );
     final resetAllowedInt = _clampInt(
-      (data['resetAllowed'] as num?)?.toInt() ?? 0,
+      (data[StringConstants.resetallowed] as num?)?.toInt() ?? 0,
       1,
     );
     final functionInt = _clampInt((data['function'] as num?)?.toInt() ?? 0, 8);
     final actuaturTypeInt = _clampInt(
-      (data['actuatorType'] as num?)?.toInt() ?? 0,
+      (data[StringConstants.actuatortype] as num?)?.toInt() ?? 0,
       3,
     );
     final resetAllowed = resetAllowedInt == 0;
@@ -535,7 +536,7 @@ class PeripheralCacheToBle {
         (data['countdownAuto'] as num?)?.toInt() ?? 0;
     m.extZoneCountdownMan.value = (data['countdownMan'] as num?)?.toInt() ?? 0;
     m.extZoneReleaseTime.value = (data['releaseTime'] as num?)?.toInt() ?? 0;
-    m.extZoneResetDelay.value = (data['resetDelay'] as num?)?.toInt() ?? 0;
+    m.extZoneResetDelay.value = (data[StringConstants.resetdelay] as num?)?.toInt() ?? 0;
     m.extZoneAction.value = _clampInt(
       (data['action'] as num?)?.toInt() ?? 0,
       9,
@@ -546,7 +547,7 @@ class PeripheralCacheToBle {
     m.extZoneHoldMode.value = holdRestart;
     m.extZoneText.value = (data['text'] as String?) ?? '';
 
-    final solar = data['isSolar'] == true;
+    final solar = data[StringConstants.issolar] == true;
     m.bleProcess.isExtOutApplyButtonActive.value = solar;
   }
 }

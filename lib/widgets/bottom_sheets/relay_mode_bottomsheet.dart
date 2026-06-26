@@ -10,6 +10,8 @@ import 'package:techno_switch_solar_app/utils/peripheral_test_mode_sync.dart';
 import 'package:techno_switch_solar_app/panel_config/panel_config_cache_sync.dart';
 import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/widgets/dropdown.dart';
+import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
 class RelayModeBottomSheet extends StatefulWidget {
   final String deviceId;
@@ -38,7 +40,7 @@ class RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
 
   final ScrollController _scrollController = ScrollController();
 
-  final List<String> groupOptions = ['None', 'General', 'Zone', 'Ext. Out'];
+  final List<String> groupOptions = ['None', 'General', 'Zone', StringConstants.extOut];
 
   late final List<GlobalKey> _tileKeys;
 
@@ -46,36 +48,36 @@ class RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
     'None': ['None'],
     'General': [
       'Fault',
-      'Extnl. Fault',
-      'Supply Fault',
-      'Extnl. Supply Fault',
-      'Sounder Fault',
-      'Sounder Silenced',
-      'Sounder Activated',
-      'Sounder Disabled',
-      'Disablement',
-      'Test',
+      StringConstants.extnlFault,
+      StringConstants.supplyFault,
+      StringConstants.extnlSupplyFault,
+      StringConstants.sounderFault,
+      StringConstants.sounderSilenced,
+      StringConstants.sounderActivated,
+      StringConstants.sounderDisabled,
+      StringConstants.disablement,
+      StringConstants.test,
       'Fire',
-      'Reset',
-      'Controls Enabled',
-      'Supervisory',
-      'Fire Snd',
+      StringConstants.reset,
+      StringConstants.controlsEnabled,
+      StringConstants.supervisory,
+      StringConstants.fireSnd,
     ],
-    'Zone': ['Fault', 'Fire', 'Disablement', 'Fire Snd'],
-    'Ext. Out': [
-      'Release Initiated',
-      'Ext. Agent Released',
-      'Release Hold',
-      'Manual Mode',
-      'Manual Release',
-      'Extnl. Ext. Fault',
-      'Ext. Snd 1',
+    'Zone': ['Fault', 'Fire', StringConstants.disablement, StringConstants.fireSnd],
+    StringConstants.extOut: [
+      StringConstants.releaseInitiated,
+      StringConstants.extAgentReleased,
+      StringConstants.releaseHold,
+      StringConstants.manualMode,
+      StringConstants.manualRelease,
+      StringConstants.extnlExtFault,
+      StringConstants.extSnd1,
       'Ext. Snd 2',
-      'Man. Release Snd',
+      StringConstants.manReleaseSnd,
     ],
   };
 
-  final List<String> yesNoOptions = ['No', 'Yes'];
+  final List<String> yesNoOptions = [StringConstants.no, StringConstants.yes];
 
   late List<RelayConfig> relays;
 
@@ -106,7 +108,7 @@ class RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
       if (relay.group == 'Zone') {
         final val = int.tryParse(relay.dynamicController.text);
         if (val == null || val < 1 || val > 3) {
-          _dynamicFieldErrors[i] = 'Zone must be between 1 and 3';
+          _dynamicFieldErrors[i] = StringConstants.zoneMustBeBetween1And3;
         }
       }
     }
@@ -156,17 +158,17 @@ class RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
       final key = 'r${i + 1}';
       final r = data[key] as Map<String, dynamic>?;
       if (r == null) continue;
-      relays[i].enabled = (r['enabled'] as bool?) == true ? 'Yes' : 'No';
+      relays[i].enabled = (r['enabled'] as bool?) == true ? StringConstants.yes : StringConstants.no;
       final g = (r['group'] as int?) ?? 0;
       relays[i].group = groupOptions[g.clamp(0, groupOptions.length - 1)];
       final f = (r['function'] as int?) ?? 0;
       final opts = functionOptionsMap[relays[i].group]!;
       relays[i].function = opts[f.clamp(0, opts.length - 1)];
       relays[i].outputTextController.text = (r['outputText'] as String?) ?? '';
-      relays[i].dynamicController.text = (r['dynamicText'] as String?) ?? '';
+      relays[i].dynamicController.text = (r[StringConstants.outputtext] as String?) ?? '';
     }
     for (int i = 0; i < 3; i++) {
-      if (relays[i].group == 'Ext. Out') {
+      if (relays[i].group == StringConstants.extOut) {
         relays[i].dynamicController.text = '1';
       }
     }
@@ -179,7 +181,7 @@ class RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
     if (!Get.isRegistered<BleLogController>()) return;
     manager = Get.find<BleLogController>().bleManager;
 
-    relays[0].enabled = manager!.isRelayOneSetupEnabled.value ? 'Yes' : 'No';
+    relays[0].enabled = manager!.isRelayOneSetupEnabled.value ? StringConstants.yes : StringConstants.no;
     relays[0].group = groupOptions[manager!.relayOneSetupGroup.value];
     relays[0].function =
         functionOptionsMap[relays[0].group]![manager!
@@ -189,7 +191,7 @@ class RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
         manager!.relayOneSetupOutputText.value;
     relays[0].dynamicController.text = manager!.relayOneSetupDynamicText.value;
 
-    relays[1].enabled = manager!.isRelayTwoSetupEnabled.value ? 'Yes' : 'No';
+    relays[1].enabled = manager!.isRelayTwoSetupEnabled.value ? StringConstants.yes : StringConstants.no;
     relays[1].group = groupOptions[manager!.relayTwoSetupGroup.value];
     relays[1].function =
         functionOptionsMap[relays[1].group]![manager!
@@ -199,7 +201,7 @@ class RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
         manager!.relayTwoSetupOutputText.value;
     relays[1].dynamicController.text = manager!.relayTwoSetupDynamicText.value;
 
-    relays[2].enabled = manager!.isRelayThreeSetupEnabled.value ? 'Yes' : 'No';
+    relays[2].enabled = manager!.isRelayThreeSetupEnabled.value ? StringConstants.yes : StringConstants.no;
     relays[2].group = groupOptions[manager!.relayThreeSetupGroup.value];
     relays[2].function =
         functionOptionsMap[relays[2].group]![manager!
@@ -211,7 +213,7 @@ class RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
         manager!.relayThreeSetupDynamicText.value;
 
     for (int i = 0; i < 3; i++) {
-      if (relays[i].group == 'Ext. Out') {
+      if (relays[i].group == StringConstants.extOut) {
         relays[i].dynamicController.text = '1';
       }
     }
@@ -228,7 +230,7 @@ class RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
     for (int i = 0; i < 3; i++) {
       final relay = relays[i];
 
-      final isEnabled = relay.enabled == 'Yes';
+      final isEnabled = relay.enabled == StringConstants.yes;
       final isTest = isEnabled && snapshotTest[i];
 
       final groupIndex = returnIndex(relay.group, groupOptions);
@@ -301,11 +303,11 @@ class RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            'Relay Mode Configuration',
+            StringConstants.relayModeConfiguration,
             style: GoogleFonts.inter(
               fontSize: 20,
               fontWeight: FontWeight.w700,
-              color: const Color(0xFF3D3D3D),
+              color: ColorConstants.textDark,
             ),
           ),
           const SizedBox(height: 12),
@@ -337,7 +339,7 @@ class RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
           constraints: BoxConstraints(maxHeight: maxHeight),
           child: Container(
             decoration: const BoxDecoration(
-              color: Color(0xFFE31C23),
+              color: ColorConstants.primaryVariant,
               borderRadius: BorderRadius.vertical(top: Radius.circular(50)),
             ),
             child: Padding(
@@ -345,7 +347,7 @@ class RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
               child: Container(
                 clipBehavior: Clip.hardEdge,
                 decoration: const BoxDecoration(
-                  color: Colors.white,
+                  color: ColorConstants.white,
                   borderRadius: BorderRadius.vertical(top: Radius.circular(50)),
                 ),
                 child: Stack(
@@ -363,7 +365,7 @@ class RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
                               width: 38,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: Colors.black.withValues(alpha: 0.06),
+                                color: ColorConstants.blackMaterial.withValues(alpha: 0.06),
                               ),
                               child: const Icon(Icons.close, size: 20),
                             ),
@@ -435,17 +437,17 @@ class RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
     final relay = relays[index];
 
     return Container(
-      color: Colors.white,
+      color: ColorConstants.white,
       key: _tileKeys[index],
       child: Padding(
         padding: const EdgeInsets.only(bottom: 16),
         child: Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: const Color(0xFFDCDCDC)),
+            border: Border.all(color: ColorConstants.borderMuted),
           ),
           child: Theme(
-            data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+            data: Theme.of(context).copyWith(dividerColor: ColorConstants.transparent),
             child: ExpansionTile(
               onExpansionChanged: (expanded) async {
                 setState(() {
@@ -474,21 +476,21 @@ class RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
                 style: GoogleFonts.inter(
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
-                  color: const Color(0xFF3D3D3D),
+                  color: ColorConstants.textDark,
                 ),
               ),
               children: [
                 _outputTextField(relay: relay, relayIndex: index),
 
                 DropdownWidget(
-                  label: 'Group',
+                  label: StringConstants.group,
                   value: relay.group,
                   items: groupOptions,
                   onChanged: (v) {
                     setState(() {
                       relay.group = v;
                       relay.function = functionOptionsMap[v]!.first;
-                      if (v == 'Ext. Out') {
+                      if (v == StringConstants.extOut) {
                         relay.dynamicController.text = '1';
                       }
                     });
@@ -496,7 +498,7 @@ class RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
                 ),
 
                 DropdownWidget(
-                  label: 'Function',
+                  label: StringConstants.function,
                   value: relay.function,
                   items: functionOptionsMap[relay.group]!,
                   onChanged: (v) => setState(() => relay.function = v),
@@ -505,17 +507,17 @@ class RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
                 if (relay.group == 'Zone')
                   _zoneDynamicField(relay: relay, relayIndex: index),
 
-                if (relay.group == 'Ext. Out')
+                if (relay.group == StringConstants.extOut)
                   _extOutDynamicField(relay: relay),
 
                 DropdownWidget(
-                  label: 'Enabled',
+                  label: StringConstants.enabled,
                   value: relay.enabled,
                   items: yesNoOptions,
                   onChanged: (v) {
                     setState(() {
                       relay.enabled = v;
-                      if (v == 'No' && manager != null) {
+                      if (v == StringConstants.no && manager != null) {
                         clearRelayTestOnManager(manager!, index);
                       }
                     });
@@ -551,7 +553,7 @@ class RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
         style: GoogleFonts.inter(
           fontSize: 20,
           fontWeight: FontWeight.w700,
-          color: const Color(0xFF3D3D3D),
+          color: ColorConstants.textDark,
         ),
       ),
     );
@@ -563,7 +565,7 @@ class RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
       style: GoogleFonts.inter(
         fontSize: 13,
         fontWeight: FontWeight.w600,
-        color: const Color(0xFF3D3D3D),
+        color: ColorConstants.textDark,
       ),
     );
   }
@@ -579,7 +581,7 @@ class RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _label('Output Text'),
+          _label(StringConstants.outputText),
           const SizedBox(height: 6),
           TextField(
             controller: relay.outputTextController,
@@ -600,7 +602,7 @@ class RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
                     fontSize: 12,
                     color:
                         currentLength == 21
-                            ? const Color(0xFFEC1D24)
+                            ? ColorConstants.primary
                             : Colors.grey,
                   ),
                 ),
@@ -611,7 +613,7 @@ class RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
             style: GoogleFonts.inter(
               fontSize: 14,
               fontWeight: FontWeight.w500,
-              color: const Color(0xFF3D3D3D),
+              color: ColorConstants.textDark,
             ),
           ),
           if (errorMsg != null) ...[
@@ -621,7 +623,7 @@ class RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
               style: GoogleFonts.inter(
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
-                color: const Color(0xFFEC1D24),
+                color: ColorConstants.primary,
               ),
             ),
           ],
@@ -660,7 +662,7 @@ class RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
               style: GoogleFonts.inter(
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
-                color: const Color(0xFFEC1D24),
+                color: ColorConstants.primary,
               ),
             ),
           ],
@@ -675,7 +677,7 @@ class RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _label('Ext. Out'),
+          _label(StringConstants.extOut),
           const SizedBox(height: 6),
           TextField(
             controller: relay.dynamicController,
@@ -690,11 +692,11 @@ class RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
 
   InputDecoration _inputDecoration({bool hasError = false}) {
     final borderColor =
-        hasError ? const Color(0xFFEC1D24) : const Color(0xFFD0D0D0);
+        hasError ? ColorConstants.primary : ColorConstants.borderLight;
 
     return InputDecoration(
       filled: true,
-      fillColor: const Color(0xFFF8F8F8),
+      fillColor: ColorConstants.surfaceLight,
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
@@ -708,7 +710,7 @@ class RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
 
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFFEC1D24), width: 2),
+        borderSide: const BorderSide(color: ColorConstants.primary, width: 2),
       ),
     );
   }
@@ -722,8 +724,8 @@ class RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
       height: 48,
       child: OutlinedButton(
         style: OutlinedButton.styleFrom(
-          foregroundColor: const Color(0xFFEC1D24),
-          side: const BorderSide(color: Color(0xFFEC1D24)),
+          foregroundColor: ColorConstants.primary,
+          side: const BorderSide(color: ColorConstants.primary),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24),
           ),
@@ -733,7 +735,7 @@ class RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
           widget.onDownload();
         },
         child: Text(
-          'Download',
+          StringConstants.download,
           style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600),
         ),
       ),
@@ -745,7 +747,7 @@ class RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
       height: 48,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFFEC1D24),
+          backgroundColor: ColorConstants.primary,
           disabledBackgroundColor: Colors.grey.shade400,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24),
@@ -760,11 +762,11 @@ class RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
                 }
                 : null,
         child: Text(
-          'Apply',
+          StringConstants.apply,
           style: GoogleFonts.inter(
             fontSize: 16,
             fontWeight: FontWeight.w600,
-            color: Colors.white,
+            color: ColorConstants.white,
           ),
         ),
       ),
@@ -775,7 +777,7 @@ class RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
 class RelayConfig {
   String group = 'None';
   String function = 'None';
-  String enabled = 'No';
+  String enabled = StringConstants.no;
 
   TextEditingController outputTextController = TextEditingController();
   TextEditingController dynamicController = TextEditingController();

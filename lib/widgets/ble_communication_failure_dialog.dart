@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
 /// Shown when the panel does not respond after repeated network-flow retries.
 class BleCommunicationFailureDialog {
   BleCommunicationFailureDialog._();
 
   static const String defaultMessage =
-      'The panel did not respond. Please scan and connect again.';
+      StringConstants.thePanelDidNotRespondPleaseScanAndConnectAgain;
 
   static Future<void> show({
     required BuildContext context,
     String message = defaultMessage,
-    String title = 'Connection problem',
+    String title = StringConstants.connectionProblem,
   }) {
     return showDialog<void>(
       context: context,
@@ -26,7 +28,7 @@ class BleCommunicationFailureDialog {
             style: GoogleFonts.inter(
               fontSize: 18,
               fontWeight: FontWeight.w700,
-              color: const Color(0xFF3D3D3D),
+              color: ColorConstants.textDark,
             ),
           ),
           content: Text(
@@ -34,7 +36,7 @@ class BleCommunicationFailureDialog {
             style: GoogleFonts.inter(
               fontSize: 14,
               fontWeight: FontWeight.w400,
-              color: const Color(0xFF918F8F),
+              color: ColorConstants.textMuted,
             ),
           ),
           actions: [
@@ -42,18 +44,18 @@ class BleCommunicationFailureDialog {
               width: double.infinity,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFEC1D24),
+                  backgroundColor: ColorConstants.primary,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(24.5),
                   ),
                 ),
                 onPressed: () => Navigator.of(dialogContext).pop(),
                 child: Text(
-                  'OK',
+                  StringConstants.ok,
                   style: GoogleFonts.inter(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: Colors.white,
+                    color: ColorConstants.white,
                   ),
                 ),
               ),

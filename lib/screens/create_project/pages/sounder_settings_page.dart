@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
 class SounderSettingsPage extends StatefulWidget {
   final String fireSoundTone;
@@ -37,11 +39,11 @@ class _SounderSettingsPageState extends State<SounderSettingsPage> {
           child: Row(
             children: [
               Text(
-                'Sounder Settings',
+                StringConstants.sounderSettings,
                 style: GoogleFonts.inter(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
-                  color: Color(0xFF3A3A3A),
+                  color: ColorConstants.textBodyDark,
                 ),
               ),
               Spacer(),
@@ -52,8 +54,8 @@ class _SounderSettingsPageState extends State<SounderSettingsPage> {
                 child: Container(
                   width: 24,
                   height: 24,
-                  decoration: BoxDecoration(color: Colors.transparent),
-                  child: Icon(Icons.close, color: Color(0xFF1D1B20), size: 20),
+                  decoration: BoxDecoration(color: ColorConstants.transparent),
+                  child: Icon(Icons.close, color: ColorConstants.textPrimaryMaterial, size: 20),
                 ),
               ),
             ],
@@ -74,30 +76,30 @@ class _SounderSettingsPageState extends State<SounderSettingsPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Sounder Tone',
+                        StringConstants.sounderTone,
                         style: GoogleFonts.inter(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
-                          color: Color(0xFF3A3A3A),
+                          color: ColorConstants.textBodyDark,
                         ),
                       ),
                       SizedBox(height: 20),
                       _buildDropdownField('Fire Sound', widget.fireSoundTone, [
                         'Pulsing 1s ON, 4s OFF',
-                        'Pulsing 2s ON, 2s OFF',
+                        StringConstants.pulsing2sON2sOFF,
                         'Continuous',
-                        'Warble',
+                        StringConstants.warble,
                       ]),
                       SizedBox(height: 20),
                       _buildDropdownField(
-                        'Sounder Delay',
+                        StringConstants.sounderDelay,
                         widget.fireSounderDelay,
-                        ['300 Sec', '600 Sec', '900 Sec', '1200 Sec'],
+                        [StringConstants.s300Sec, StringConstants.s600Sec, StringConstants.s900Sec, StringConstants.s1200Sec],
                       ),
                     ],
                   ),
                 ),
-                Divider(color: Color(0xFFBDBDBD), thickness: 1),
+                Divider(color: ColorConstants.divider, thickness: 1),
                 SizedBox(height: 16),
                 Padding(
                   padding: const EdgeInsets.symmetric(
@@ -108,52 +110,52 @@ class _SounderSettingsPageState extends State<SounderSettingsPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Ext Sound 1/Ext Sound 2/Man Release Sound',
+                        StringConstants.extSound1ExtSound2ManReleaseSound,
                         style: GoogleFonts.inter(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
-                          color: Color(0xFF3A3A3A),
+                          color: ColorConstants.textBodyDark,
                         ),
                       ),
                       SizedBox(height: 20),
                       _buildDropdownField(
-                        'Count Down Action',
+                        StringConstants.countDownAction,
                         widget.countDownAction,
                         [
                           'Pulsing 1s ON, 4s OFF',
-                          'Pulsing 2s ON, 2s OFF',
+                          StringConstants.pulsing2sON2sOFF,
                           'Continuous',
-                          'Warble',
+                          StringConstants.warble,
                         ],
                       ),
                       SizedBox(height: 20),
                       _buildDropdownField('Hold Action', widget.holdAction, [
                         'Pulsing 1s ON, 4s OFF',
-                        'Pulsing 2s ON, 2s OFF',
+                        StringConstants.pulsing2sON2sOFF,
                         'Continuous',
-                        'Warble',
+                        StringConstants.warble,
                       ]),
                       SizedBox(height: 20),
                       _buildDropdownField(
-                        'Release Action',
+                        StringConstants.releaseAction,
                         widget.releaseAction,
                         [
                           'Pulsing 1s ON, 4s OFF',
-                          'Pulsing 2s ON, 2s OFF',
+                          StringConstants.pulsing2sON2sOFF,
                           'Continuous',
-                          'Warble',
+                          StringConstants.warble,
                         ],
                       ),
                       SizedBox(height: 20),
                       _buildDropdownField(
-                        'Sounder Delay',
+                        StringConstants.sounderDelay,
                         widget.extSounderDelay,
-                        ['300 Sec', '600 Sec', '900 Sec', '1200 Sec'],
+                        [StringConstants.s300Sec, StringConstants.s600Sec, StringConstants.s900Sec, StringConstants.s1200Sec],
                       ),
                     ],
                   ),
                 ),
-                Divider(color: Color(0xFFBDBDBD), thickness: 1),
+                Divider(color: ColorConstants.divider, thickness: 1),
               ],
             ),
           ),
@@ -173,7 +175,7 @@ class _SounderSettingsPageState extends State<SounderSettingsPage> {
               style: GoogleFonts.inter(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: Color(0xFF696969),
+                color: ColorConstants.textSecondary,
               ),
             ),
             Spacer(),
@@ -186,7 +188,7 @@ class _SounderSettingsPageState extends State<SounderSettingsPage> {
                     style: GoogleFonts.inter(
                       fontSize: 13,
                       fontWeight: FontWeight.w400,
-                      color: Color(0xFF918F8F),
+                      color: ColorConstants.textMuted,
                     ),
                   ),
                   SizedBox(width: 2),
@@ -219,7 +221,7 @@ class _SounderSettingsPageState extends State<SounderSettingsPage> {
             style: GoogleFonts.inter(
               fontSize: 18,
               fontWeight: FontWeight.w600,
-              color: Color(0xFF3A3A3A),
+              color: ColorConstants.textBodyDark,
             ),
           ),
           content: Column(
@@ -232,12 +234,12 @@ class _SounderSettingsPageState extends State<SounderSettingsPage> {
                       style: GoogleFonts.inter(
                         fontSize: 14,
                         fontWeight: FontWeight.w400,
-                        color: Color(0xFF3D3D3D),
+                        color: ColorConstants.textDark,
                       ),
                     ),
                     value: option,
                     groupValue: selectedValue,
-                    activeColor: Color(0xFFEC1D24),
+                    activeColor: ColorConstants.primary,
                     onChanged: (String? value) {
                       selectedValue = value!;
                       Navigator.of(context).pop();
@@ -252,11 +254,11 @@ class _SounderSettingsPageState extends State<SounderSettingsPage> {
                 Navigator.of(context).pop();
               },
               child: Text(
-                'Cancel',
+                StringConstants.cancel,
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: Color(0xFF696969),
+                  color: ColorConstants.textSecondary,
                 ),
               ),
             ),

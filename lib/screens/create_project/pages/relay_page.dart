@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
 class RelayPage extends StatefulWidget {
   final String? expandedRelay;
@@ -41,7 +43,7 @@ class _RelayPageState extends State<RelayPage> {
             style: GoogleFonts.inter(
               fontSize: 18,
               fontWeight: FontWeight.w600,
-              color: Color(0xFF3A3A3A),
+              color: ColorConstants.textBodyDark,
             ),
           ),
         ),
@@ -76,7 +78,7 @@ class _RelayPageState extends State<RelayPage> {
         widget.onRelayExpanded(isExpanded ? null : relayName);
       },
       child: Container(
-        decoration: BoxDecoration(color: Color(0xFFF5F5F5)),
+        decoration: BoxDecoration(color: ColorConstants.backgroundGray),
         child: Column(
           children: [
             Padding(
@@ -93,7 +95,7 @@ class _RelayPageState extends State<RelayPage> {
                     style: GoogleFonts.inter(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: Color(0xFF3A3A3A),
+                      color: ColorConstants.textBodyDark,
                     ),
                   ),
                   Spacer(),
@@ -101,7 +103,7 @@ class _RelayPageState extends State<RelayPage> {
                     isExpanded
                         ? Icons.keyboard_arrow_up
                         : Icons.keyboard_arrow_down,
-                    color: Color(0xFF696969),
+                    color: ColorConstants.textSecondary,
                     size: 20,
                   ),
                 ],
@@ -109,26 +111,26 @@ class _RelayPageState extends State<RelayPage> {
             ),
             if (isExpanded) ...[
               Container(
-                color: Colors.white,
+                color: ColorConstants.white,
                 child: Padding(
                   padding: EdgeInsets.symmetric(horizontal: 20, vertical: 24),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Relay Text',
+                        StringConstants.relayText,
                         style: GoogleFonts.inter(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
-                          color: Color(0xFF696969),
+                          color: ColorConstants.textSecondary,
                         ),
                       ),
                       SizedBox(height: 8),
                       Container(
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: ColorConstants.white,
                           borderRadius: BorderRadius.circular(4),
-                          border: Border.all(color: Color(0xFFE0E0E0)),
+                          border: Border.all(color: ColorConstants.borderGray),
                         ),
                         child: TextField(
                           controller: TextEditingController(
@@ -143,7 +145,7 @@ class _RelayPageState extends State<RelayPage> {
                           onChanged: (value) {
                             widget.onRelayFieldChanged(
                               relayName,
-                              'relayText',
+                              StringConstants.relaytext,
                               value,
                             );
                           },
@@ -153,24 +155,24 @@ class _RelayPageState extends State<RelayPage> {
                           decoration: InputDecoration(
                             contentPadding: EdgeInsets.all(12),
                             border: InputBorder.none,
-                            hintText: 'Enter Relay Text',
+                            hintText: StringConstants.enterRelayText,
                             hintStyle: GoogleFonts.inter(
                               fontSize: 13,
                               fontWeight: FontWeight.w400,
-                              color: Color(0xFFBDBDBD),
+                              color: ColorConstants.divider,
                             ),
                           ),
                         ),
                       ),
                       SizedBox(height: 20),
                       _buildRelayDropdownField(
-                        'Test',
+                        StringConstants.test,
                         widget.relayTests[relayName]!,
-                        ['No', 'Yes'],
+                        [StringConstants.no, StringConstants.yes],
                         (value) {
                           widget.onRelayFieldChanged(
                             relayName,
-                            'relayTest',
+                            StringConstants.relaytest,
                             value,
                           );
                         },
@@ -179,33 +181,33 @@ class _RelayPageState extends State<RelayPage> {
                       _buildRelayDropdownField(
                         'Relay',
                         widget.relayStates[relayName]!,
-                        ['Enable', 'Disable'],
+                        [StringConstants.enable, StringConstants.disable],
                         (value) {
                           widget.onRelayFieldChanged(
                             relayName,
-                            'relayState',
+                            StringConstants.relaystate,
                             value,
                           );
                         },
                       ),
                       SizedBox(height: 24),
                       Text(
-                        'Programming Group',
+                        StringConstants.programmingGroup,
                         style: GoogleFonts.inter(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
-                          color: Color(0xFF3A3A3A),
+                          color: ColorConstants.textBodyDark,
                         ),
                       ),
                       SizedBox(height: 20),
                       _buildRelayDropdownField(
                         'Group',
                         widget.relayGroups[relayName]!,
-                        ['Group A', 'Group B', 'Group C', 'Group D'],
+                        [StringConstants.groupA, StringConstants.groupB, StringConstants.groupC, StringConstants.groupD],
                         (value) {
                           widget.onRelayFieldChanged(
                             relayName,
-                            'relayGroup',
+                            StringConstants.relaygroup,
                             value,
                           );
                         },
@@ -216,16 +218,16 @@ class _RelayPageState extends State<RelayPage> {
                         widget.relayFunctions[relayName]!,
                         [
                           'Function 1A',
-                          'Function 1B',
-                          'Function 2A',
-                          'Function 2B',
-                          'Function 3A',
-                          'Function 3B',
+                          StringConstants.function1B,
+                          StringConstants.function2A,
+                          StringConstants.function2B,
+                          StringConstants.function3A,
+                          StringConstants.function3B,
                         ],
                         (value) {
                           widget.onRelayFieldChanged(
                             relayName,
-                            'relayFunction',
+                            StringConstants.relayfunction,
                             value,
                           );
                         },
@@ -254,7 +256,7 @@ class _RelayPageState extends State<RelayPage> {
           style: GoogleFonts.inter(
             fontSize: 13,
             fontWeight: FontWeight.w600,
-            color: Color(0xFF696969),
+            color: ColorConstants.textSecondary,
           ),
         ),
         Spacer(),
@@ -268,7 +270,7 @@ class _RelayPageState extends State<RelayPage> {
                 style: GoogleFonts.inter(
                   fontSize: 13,
                   fontWeight: FontWeight.w400,
-                  color: Color(0xFF3D3D3D),
+                  color: ColorConstants.textDark,
                 ),
               ),
               SizedBox(width: 2),
@@ -300,7 +302,7 @@ class _RelayPageState extends State<RelayPage> {
             style: GoogleFonts.inter(
               fontSize: 18,
               fontWeight: FontWeight.w600,
-              color: Color(0xFF3A3A3A),
+              color: ColorConstants.textBodyDark,
             ),
           ),
           content: Column(
@@ -313,12 +315,12 @@ class _RelayPageState extends State<RelayPage> {
                       style: GoogleFonts.inter(
                         fontSize: 14,
                         fontWeight: FontWeight.w400,
-                        color: Color(0xFF3D3D3D),
+                        color: ColorConstants.textDark,
                       ),
                     ),
                     value: option,
                     groupValue: selectedValue,
-                    activeColor: Color(0xFFEC1D24),
+                    activeColor: ColorConstants.primary,
                     onChanged: (String? value) {
                       selectedValue = value!;
                       Navigator.of(context).pop();
@@ -333,11 +335,11 @@ class _RelayPageState extends State<RelayPage> {
                 Navigator.of(context).pop();
               },
               child: Text(
-                'Cancel',
+                StringConstants.cancel,
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: Color(0xFF696969),
+                  color: ColorConstants.textSecondary,
                 ),
               ),
             ),

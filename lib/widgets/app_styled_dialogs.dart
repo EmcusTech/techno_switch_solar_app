@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
 /// Decision dialogs matching the app pattern (rounded [Dialog], icon circle, two actions).
 Future<T?> showAppStyledTwoActionDialog<T>({
@@ -11,8 +13,8 @@ Future<T?> showAppStyledTwoActionDialog<T>({
   required T leadingValue,
   required T trailingValue,
   IconData icon = Icons.info_outline_rounded,
-  Color iconColor = const Color(0xFFEC1D24),
-  Color iconCircleColor = const Color(0xFFFBDEE1),
+  Color iconColor = ColorConstants.primary,
+  Color iconCircleColor = ColorConstants.errorIconBackground,
 }) {
   return showDialog<T>(
     context: context,
@@ -23,7 +25,7 @@ Future<T?> showAppStyledTwoActionDialog<T>({
         child: Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: ColorConstants.white,
             borderRadius: BorderRadius.circular(16),
           ),
           child: Column(
@@ -46,7 +48,7 @@ Future<T?> showAppStyledTwoActionDialog<T>({
                 style: GoogleFonts.inter(
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
-                  color: const Color(0xFF3D3D3D),
+                  color: ColorConstants.textDark,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -56,7 +58,7 @@ Future<T?> showAppStyledTwoActionDialog<T>({
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   fontWeight: FontWeight.w400,
-                  color: const Color(0xFF666666),
+                  color: ColorConstants.textGray,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -69,10 +71,10 @@ Future<T?> showAppStyledTwoActionDialog<T>({
                       child: Container(
                         height: 48,
                         decoration: BoxDecoration(
-                          color: const Color(0xFFEFEEEE),
+                          color: ColorConstants.buttonSecondaryBackground,
                           borderRadius: BorderRadius.circular(24),
                           border: Border.all(
-                            color: const Color(0xFFD0D0D0),
+                            color: ColorConstants.borderLight,
                             width: 1,
                           ),
                         ),
@@ -82,7 +84,7 @@ Future<T?> showAppStyledTwoActionDialog<T>({
                             style: GoogleFonts.inter(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
-                              color: const Color(0xFF666666),
+                              color: ColorConstants.textGray,
                             ),
                           ),
                         ),
@@ -97,11 +99,11 @@ Future<T?> showAppStyledTwoActionDialog<T>({
                       child: Container(
                         height: 48,
                         decoration: BoxDecoration(
-                          color: const Color(0xFFEC1D24),
+                          color: ColorConstants.primary,
                           borderRadius: BorderRadius.circular(24),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFFEC1D24).withValues(
+                              color: ColorConstants.primary.withValues(
                                 alpha: 0.3,
                               ),
                               blurRadius: 8,
@@ -115,7 +117,7 @@ Future<T?> showAppStyledTwoActionDialog<T>({
                             style: GoogleFonts.inter(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
-                              color: Colors.white,
+                              color: ColorConstants.white,
                             ),
                           ),
                         ),
@@ -137,10 +139,10 @@ Future<void> showAppStyledOneActionDialog({
   required BuildContext context,
   required String title,
   required String message,
-  String actionLabel = 'OK',
+  String actionLabel = StringConstants.ok,
   IconData icon = Icons.info_outline_rounded,
-  Color iconColor = const Color(0xFFEC1D24),
-  Color iconCircleColor = const Color(0xFFFBDEE1),
+  Color iconColor = ColorConstants.primary,
+  Color iconCircleColor = ColorConstants.errorIconBackground,
 }) {
   return showDialog<void>(
     context: context,
@@ -151,7 +153,7 @@ Future<void> showAppStyledOneActionDialog({
         child: Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: ColorConstants.white,
             borderRadius: BorderRadius.circular(16),
           ),
           child: Column(
@@ -174,7 +176,7 @@ Future<void> showAppStyledOneActionDialog({
                 style: GoogleFonts.inter(
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
-                  color: const Color(0xFF3D3D3D),
+                  color: ColorConstants.textDark,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -184,7 +186,7 @@ Future<void> showAppStyledOneActionDialog({
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   fontWeight: FontWeight.w400,
-                  color: const Color(0xFF666666),
+                  color: ColorConstants.textGray,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -195,11 +197,11 @@ Future<void> showAppStyledOneActionDialog({
                   height: 48,
                   width: double.infinity,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFEC1D24),
+                    color: ColorConstants.primary,
                     borderRadius: BorderRadius.circular(24),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFFEC1D24).withValues(alpha: 0.3),
+                        color: ColorConstants.primary.withValues(alpha: 0.3),
                         blurRadius: 8,
                         offset: const Offset(0, 4),
                       ),
@@ -211,7 +213,7 @@ Future<void> showAppStyledOneActionDialog({
                       style: GoogleFonts.inter(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
-                        color: Colors.white,
+                        color: ColorConstants.white,
                       ),
                     ),
                   ),
@@ -231,8 +233,8 @@ Future<String?> showAppStyledTextInputDialog({
   required String title,
   required String message,
   required String hintText,
-  String confirmLabel = 'Continue',
-  String cancelLabel = 'Cancel',
+  String confirmLabel = StringConstants.disabled,
+  String cancelLabel = StringConstants.cancel,
   String? initialValue,
   String? Function(String value)? validator,
 }) {
@@ -311,7 +313,7 @@ class _AppStyledTextInputDialogState extends State<_AppStyledTextInputDialog> {
         child: Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: ColorConstants.white,
             borderRadius: BorderRadius.circular(16),
           ),
           child: Column(
@@ -321,13 +323,13 @@ class _AppStyledTextInputDialogState extends State<_AppStyledTextInputDialog> {
                 width: 64,
                 height: 64,
                 decoration: const BoxDecoration(
-                  color: Color(0xFFFBDEE1),
+                  color: ColorConstants.errorIconBackground,
                   shape: BoxShape.circle,
                 ),
                 child: const Center(
                   child: Icon(
                     Icons.tag,
-                    color: Color(0xFFEC1D24),
+                    color: ColorConstants.primary,
                     size: 32,
                   ),
                 ),
@@ -338,7 +340,7 @@ class _AppStyledTextInputDialogState extends State<_AppStyledTextInputDialog> {
                 style: GoogleFonts.inter(
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
-                  color: const Color(0xFF3D3D3D),
+                  color: ColorConstants.textDark,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -348,7 +350,7 @@ class _AppStyledTextInputDialogState extends State<_AppStyledTextInputDialog> {
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   fontWeight: FontWeight.w400,
-                  color: const Color(0xFF666666),
+                  color: ColorConstants.textGray,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -368,7 +370,7 @@ class _AppStyledTextInputDialogState extends State<_AppStyledTextInputDialog> {
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: const BorderSide(
-                      color: Color(0xFFEC1D24),
+                      color: ColorConstants.primary,
                       width: 1.5,
                     ),
                   ),
@@ -383,10 +385,10 @@ class _AppStyledTextInputDialogState extends State<_AppStyledTextInputDialog> {
                       child: Container(
                         height: 48,
                         decoration: BoxDecoration(
-                          color: const Color(0xFFEFEEEE),
+                          color: ColorConstants.buttonSecondaryBackground,
                           borderRadius: BorderRadius.circular(24),
                           border: Border.all(
-                            color: const Color(0xFFD0D0D0),
+                            color: ColorConstants.borderLight,
                             width: 1,
                           ),
                         ),
@@ -396,7 +398,7 @@ class _AppStyledTextInputDialogState extends State<_AppStyledTextInputDialog> {
                             style: GoogleFonts.inter(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
-                              color: const Color(0xFF666666),
+                              color: ColorConstants.textGray,
                             ),
                           ),
                         ),
@@ -410,7 +412,7 @@ class _AppStyledTextInputDialogState extends State<_AppStyledTextInputDialog> {
                       child: Container(
                         height: 48,
                         decoration: BoxDecoration(
-                          color: const Color(0xFFEC1D24),
+                          color: ColorConstants.primary,
                           borderRadius: BorderRadius.circular(24),
                           boxShadow: [
                             BoxShadow(
@@ -428,7 +430,7 @@ class _AppStyledTextInputDialogState extends State<_AppStyledTextInputDialog> {
                             style: GoogleFonts.inter(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
-                              color: Colors.white,
+                              color: ColorConstants.white,
                             ),
                           ),
                         ),

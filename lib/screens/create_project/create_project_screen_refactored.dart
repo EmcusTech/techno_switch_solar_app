@@ -27,6 +27,8 @@ import 'package:techno_switch_solar_app/widgets/bottom_sheets/setting_bottom_she
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/sounder_mode_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/zone_mode_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/app_styled_dialogs.dart';
+import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
 class CreateSiteScreenRefactored extends StatefulWidget {
   const CreateSiteScreenRefactored({super.key});
@@ -90,7 +92,7 @@ class _CreateSiteScreenRefactoredState
   Future<void> _dismissKeyboardFully() async {
     if (!mounted) return;
     FocusManager.instance.primaryFocus?.unfocus();
-    await SystemChannels.textInput.invokeMethod<Object>('TextInput.hide');
+    await SystemChannels.textInput.invokeMethod<Object>(StringConstants.textinputHide);
     if (!mounted) return;
     FocusScope.of(context).unfocus();
     await WidgetsBinding.instance.endOfFrame;
@@ -117,8 +119,8 @@ class _CreateSiteScreenRefactoredState
         title: 'Create site',
         message:
             'This will save the site and panel ID. Configuration will be stored locally and can be applied when you connect the panel later.',
-        leadingActionLabel: 'Cancel',
-        trailingActionLabel: 'Create',
+        leadingActionLabel: StringConstants.cancel,
+        trailingActionLabel: StringConstants.thisWillSaveTheSiteAndPanelIDConfigurationWillBeStoredLocallyAndCanBeAppliedWhenYouConnectThePanelLater,
         leadingValue: false,
         trailingValue: true,
       );
@@ -129,11 +131,11 @@ class _CreateSiteScreenRefactoredState
 
     final proceed = await showAppStyledTwoActionDialog<bool>(
       context: context,
-      title: 'Update panel settings',
+      title: StringConstants.updatePanelSettings,
       message:
           'This will update the panel settings with the values you configured in this setup.',
-      leadingActionLabel: 'Cancel',
-      trailingActionLabel: 'Next',
+      leadingActionLabel: StringConstants.cancel,
+      trailingActionLabel: StringConstants.thisWillUpdateThePanelSettingsWithTheValuesYouConfiguredInThisSetup,
       leadingValue: false,
       trailingValue: true,
     );
@@ -198,7 +200,7 @@ class _CreateSiteScreenRefactoredState
           child: Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: ColorConstants.white,
               borderRadius: BorderRadius.circular(16),
             ),
             child: Column(
@@ -208,34 +210,34 @@ class _CreateSiteScreenRefactoredState
                   width: 64,
                   height: 64,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFBDEE1),
+                    color: ColorConstants.errorIconBackground,
                     shape: BoxShape.circle,
                   ),
                   child: const Center(
                     child: Icon(
                       Icons.link_off,
-                      color: Color(0xFFEC1D24),
+                      color: ColorConstants.primary,
                       size: 32,
                     ),
                   ),
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Disconnect device?',
+                  StringConstants.disconnectDevice,
                   style: GoogleFonts.inter(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
-                    color: const Color(0xFF3D3D3D),
+                    color: ColorConstants.textDark,
                   ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Going back will disconnect the device. Are you sure?',
+                  StringConstants.goingBackWillDisconnectTheDeviceAreYouSure,
                   style: GoogleFonts.inter(
                     fontSize: 14,
                     fontWeight: FontWeight.w400,
-                    color: const Color(0xFF666666),
+                    color: ColorConstants.textGray,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -248,20 +250,20 @@ class _CreateSiteScreenRefactoredState
                         child: Container(
                           height: 48,
                           decoration: BoxDecoration(
-                            color: const Color(0xFFEFEEEE),
+                            color: ColorConstants.buttonSecondaryBackground,
                             borderRadius: BorderRadius.circular(24),
                             border: Border.all(
-                              color: const Color(0xFFD0D0D0),
+                              color: ColorConstants.borderLight,
                               width: 1,
                             ),
                           ),
                           child: Center(
                             child: Text(
-                              'Cancel',
+                              StringConstants.cancel,
                               style: GoogleFonts.inter(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
-                                color: const Color(0xFF666666),
+                                color: ColorConstants.textGray,
                               ),
                             ),
                           ),
@@ -275,11 +277,11 @@ class _CreateSiteScreenRefactoredState
                         child: Container(
                           height: 48,
                           decoration: BoxDecoration(
-                            color: const Color(0xFFEC1D24),
+                            color: ColorConstants.primary,
                             borderRadius: BorderRadius.circular(24),
                             boxShadow: [
                               BoxShadow(
-                                color: const Color(0xFFEC1D24).withOpacity(0.3),
+                                color: ColorConstants.primary.withOpacity(0.3),
                                 blurRadius: 8,
                                 offset: const Offset(0, 4),
                               ),
@@ -291,7 +293,7 @@ class _CreateSiteScreenRefactoredState
                               style: GoogleFonts.inter(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
-                                color: Colors.white,
+                                color: ColorConstants.white,
                               ),
                             ),
                           ),
@@ -338,7 +340,7 @@ class _CreateSiteScreenRefactoredState
       SnackBar(
         content: Text(message),
         backgroundColor:
-            isError ? const Color(0xFFEC1D24) : const Color(0xFF00A706),
+            isError ? ColorConstants.primary : ColorConstants.success,
         duration: const Duration(seconds: 2),
       ),
     );
@@ -361,11 +363,11 @@ class _CreateSiteScreenRefactoredState
     if (!mounted) return false;
     final choice = await showAppStyledTwoActionDialog<String>(
       context: context,
-      title: 'Panel already on a site',
+      title: StringConstants.panelAlreadyOnASite,
       message:
           'This panel is assigned to another site. Move it to the new site you are creating, or skip and return home.',
       leadingActionLabel: 'Skip',
-      trailingActionLabel: 'Replace',
+      trailingActionLabel: StringConstants.replace,
       leadingValue: 'skip',
       trailingValue: 'move',
     );
@@ -400,11 +402,11 @@ class _CreateSiteScreenRefactoredState
 
     final download = await showAppStyledTwoActionDialog<bool>(
       context: context,
-      title: 'Download panel configuration?',
+      title: StringConstants.downloadPanelConfiguration,
       message:
           'Download the full configuration from the panel now? This matches the dashboard “download all” flow and fills local caches before you edit.',
       leadingActionLabel: 'No',
-      trailingActionLabel: 'Yes',
+      trailingActionLabel: StringConstants.yes,
       leadingValue: false,
       trailingValue: true,
     );
@@ -450,13 +452,13 @@ class _CreateSiteScreenRefactoredState
   Future<void> _finishCreateSiteBulkApplyAndOpenDashboard() async {
     final device = _controller.connectedDevice ?? _bleManager.selectedDevice;
     if (device == null) {
-      _showSnackBar('No connected panel', isError: true);
+      _showSnackBar(StringConstants.noConnectedPanel, isError: true);
       return;
     }
 
     final panelState = _panelInfoSheetKey.currentState;
     if (panelState == null || !(await panelState.commitLocal())) {
-      _showSnackBar('Fix panel information fields', isError: true);
+      _showSnackBar(StringConstants.fixPanelInformationFields, isError: true);
       return;
     }
 
@@ -471,7 +473,7 @@ class _CreateSiteScreenRefactoredState
       siteDescription: _controller.siteDescriptionController.text,
     );
     if (errors.isNotEmpty) {
-      _showSnackBar('Please fix the site form (step 1)', isError: true);
+      _showSnackBar(StringConstants.pleaseFixTheSiteFormStep1, isError: true);
       return;
     }
 
@@ -490,7 +492,7 @@ class _CreateSiteScreenRefactoredState
 
       final siteId = site.id;
       if (siteId == null) {
-        _showSnackBar('Site created but missing id', isError: true);
+        _showSnackBar(StringConstants.siteCreatedButMissingId, isError: true);
         return;
       }
 
@@ -506,7 +508,7 @@ class _CreateSiteScreenRefactoredState
         panelName: bleName.isNotEmpty ? bleName : null,
       );
       if (!assigned) {
-        _showSnackBar('Could not assign panel to site', isError: true);
+        _showSnackBar(StringConstants.couldNotAssignPanelToSite, isError: true);
         return;
       }
 
@@ -527,7 +529,7 @@ class _CreateSiteScreenRefactoredState
 
       if (!mounted) return;
 
-      _showSnackBar('Site ready - opening dashboard', isError: false);
+      _showSnackBar(StringConstants.siteReadyOpeningDashboard, isError: false);
 
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
@@ -549,7 +551,7 @@ class _CreateSiteScreenRefactoredState
   Future<void> _finishCreateSiteWithoutPanel() async {
     final panelState = _panelInfoSheetKey.currentState;
     if (panelState == null || !(await panelState.commitLocal())) {
-      _showSnackBar('Fix panel information fields', isError: true);
+      _showSnackBar(StringConstants.fixPanelInformationFields, isError: true);
       return;
     }
 
@@ -557,7 +559,7 @@ class _CreateSiteScreenRefactoredState
       _controller.manualPanelId,
     );
     if (manualPanelId.isEmpty) {
-      _showSnackBar('Panel ID is missing', isError: true);
+      _showSnackBar(StringConstants.panelIDIsMissing, isError: true);
       return;
     }
 
@@ -572,7 +574,7 @@ class _CreateSiteScreenRefactoredState
       siteDescription: _controller.siteDescriptionController.text,
     );
     if (errors.isNotEmpty) {
-      _showSnackBar('Please fix the site form (step 1)', isError: true);
+      _showSnackBar(StringConstants.pleaseFixTheSiteFormStep1, isError: true);
       return;
     }
 
@@ -591,7 +593,7 @@ class _CreateSiteScreenRefactoredState
 
       final siteId = site.id;
       if (siteId == null) {
-        _showSnackBar('Site created but missing id', isError: true);
+        _showSnackBar(StringConstants.siteCreatedButMissingId, isError: true);
         return;
       }
 
@@ -605,13 +607,13 @@ class _CreateSiteScreenRefactoredState
         offlineProvisioned: true,
       );
       if (!assigned) {
-        _showSnackBar('Could not assign panel to site', isError: true);
+        _showSnackBar(StringConstants.couldNotAssignPanelToSite, isError: true);
         return;
       }
 
       if (!mounted) return;
 
-      _showSnackBar('Site created successfully', isError: false);
+      _showSnackBar(StringConstants.siteCreatedSuccessfully, isError: false);
 
       final sitesWithLogCount = await _siteService.getSitesWithLogCount();
       final siteWithLogCount = sitesWithLogCount.firstWhere(
@@ -639,7 +641,7 @@ class _CreateSiteScreenRefactoredState
 
   Future<void> _skipPanelConnectAndContinue() async {
     if (!_controller.validateStep(2)) {
-      _showSnackBar('Please fill in all required fields', isError: true);
+      _showSnackBar(StringConstants.pleaseFillInAllRequiredFields, isError: true);
       return;
     }
 
@@ -651,14 +653,14 @@ class _CreateSiteScreenRefactoredState
     );
     final entered = await showAppStyledTextInputDialog(
       context: context,
-      title: 'Enter panel ID',
+      title: StringConstants.enterPanelID,
       message:
           'Enter the panel ID for this site (e.g. AB12). It should match the ID in the panel BLE name TECHNOSWITCH_XXXX when you connect later.',
       hintText: 'Panel ID',
       initialValue: existingId.isNotEmpty ? existingId : null,
       validator: (value) {
         if (!BleNameUtils.isValidManualPanelId(value)) {
-          return 'Enter a valid panel ID (letters, numbers, - or _)';
+          return StringConstants.enterAValidPanelIDLettersNumbersOr;
         }
         return null;
       },
@@ -672,9 +674,9 @@ class _CreateSiteScreenRefactoredState
       if (!mounted) return;
       await showAppStyledOneActionDialog(
         context: context,
-        title: 'Panel already assigned',
+        title: StringConstants.panelAlreadyAssigned,
         message:
-            'This panel ID is already linked to a site. Use a different ID or connect to the panel instead.',
+            StringConstants.thisPanelIDIsAlreadyLinkedToASiteUseADifferentIDOrConnectToThePanelInstead,
       );
       return;
     }
@@ -704,7 +706,7 @@ class _CreateSiteScreenRefactoredState
     }
 
     if (_currentStep <= 2 && !_controller.validateStep(_currentStep)) {
-      _showSnackBar('Please fill in all required fields', isError: true);
+      _showSnackBar(StringConstants.pleaseFillInAllRequiredFields, isError: true);
       return;
     }
 
@@ -728,7 +730,7 @@ class _CreateSiteScreenRefactoredState
 
       final device = _bleManager.selectedDevice;
       if (device == null) {
-        _showSnackBar('Connection lost - no device', isError: true);
+        _showSnackBar(StringConstants.connectionLostNoDevice, isError: true);
         return;
       }
 
@@ -757,7 +759,7 @@ class _CreateSiteScreenRefactoredState
       final ok = await _commitConfigStepForCurrentPage();
       if (!ok) {
         _showSnackBar(
-          'Fix the fields on this step before continuing',
+          StringConstants.fixTheFieldsOnThisStepBeforeContinuing,
           isError: true,
         );
         return;
@@ -824,7 +826,7 @@ class _CreateSiteScreenRefactoredState
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [Color(0xFFF6EBEB), Colors.white],
+              colors: [ColorConstants.scaffoldGradientTop, ColorConstants.white],
             ),
           ),
           child: Stack(
@@ -840,7 +842,7 @@ class _CreateSiteScreenRefactoredState
                     Expanded(
                       child: Container(
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: ColorConstants.white,
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: Padding(
@@ -875,11 +877,11 @@ class _CreateSiteScreenRefactoredState
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: ColorConstants.white,
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
+                  color: ColorConstants.blackMaterial.withOpacity(0.1),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -887,29 +889,29 @@ class _CreateSiteScreenRefactoredState
             ),
             child: const Icon(
               Icons.arrow_back_ios_new,
-              color: Color(0xFF3D3D3D),
+              color: ColorConstants.textDark,
               size: 18,
             ),
           ),
         ),
         const SizedBox(width: 12),
         Text(
-          'Create Site',
+          StringConstants.createSite,
           style: GoogleFonts.inter(
             fontSize: 20,
             fontWeight: FontWeight.w700,
-            color: const Color(0xFF3A3A3A),
+            color: ColorConstants.textBodyDark,
           ),
         ),
         const Spacer(),
         Text(
-          'Step',
+          StringConstants.step,
           style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w500),
         ),
         const SizedBox(width: 8),
         Container(
           decoration: BoxDecoration(
-            color: const Color(0xFFEC1D24),
+            color: ColorConstants.primary,
             borderRadius: BorderRadius.circular(4),
           ),
           child: Padding(
@@ -924,7 +926,7 @@ class _CreateSiteScreenRefactoredState
               style: GoogleFonts.inter(
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
-                color: Colors.white,
+                color: ColorConstants.white,
                 fontFeatures: const [FontFeature.tabularFigures()],
               ),
             ),
@@ -976,10 +978,10 @@ class _CreateSiteScreenRefactoredState
             if (id.isEmpty) {
               return Center(
                 child: Text(
-                  'Connect a panel to configure peripherals.',
+                  StringConstants.connectAPanelToConfigurePeripherals,
                   style: GoogleFonts.inter(
                     fontSize: 14,
-                    color: const Color(0xFF666666),
+                    color: ColorConstants.textGray,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -1098,10 +1100,10 @@ class _CreateSiteScreenRefactoredState
   Widget _buildNavigation() {
     final nextLabel =
         _currentStep == 2
-            ? 'Connect panel'
+            ? StringConstants.connectPanel
             : _currentStep == 11
-            ? (_controller.skippedPanelConnect ? 'Create site' : 'Finish')
-            : 'Next';
+            ? (_controller.skippedPanelConnect ? 'Create site' : StringConstants.finish)
+            : StringConstants.thisWillUpdateThePanelSettingsWithTheValuesYouConfiguredInThisSetup;
 
     return Column(
       children: [
@@ -1111,11 +1113,11 @@ class _CreateSiteScreenRefactoredState
             child: GestureDetector(
               onTap: _skipPanelConnectAndContinue,
               child: Text(
-                'Skip connection — enter panel ID manually',
+                StringConstants.skipConnectionEnterPanelIDManually,
                 style: GoogleFonts.inter(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
-                  color: const Color(0xFFEC1D24),
+                  color: ColorConstants.primary,
                   decoration: TextDecoration.underline,
                 ),
                 textAlign: TextAlign.center,
@@ -1130,7 +1132,7 @@ class _CreateSiteScreenRefactoredState
                 onTap: _goToPreviousStep,
                 child: Container(
                   decoration: BoxDecoration(
-                    color: const Color(0xFFEFEEEE),
+                    color: ColorConstants.buttonSecondaryBackground,
                     borderRadius: BorderRadius.circular(28.5),
                   ),
                   child: Padding(
@@ -1142,14 +1144,14 @@ class _CreateSiteScreenRefactoredState
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.arrow_back, color: Color(0xFF49454F)),
+                        const Icon(Icons.arrow_back, color: ColorConstants.labelText),
                         const SizedBox(width: 6),
                         Text(
-                          'Back',
+                          StringConstants.back,
                           style: GoogleFonts.inter(
                             fontSize: 14,
                             fontWeight: FontWeight.w700,
-                            color: const Color(0xFF49454F),
+                            color: ColorConstants.labelText,
                           ),
                         ),
                       ],
@@ -1163,7 +1165,7 @@ class _CreateSiteScreenRefactoredState
               onTap: () => _goToNextStep(),
               child: Container(
                 decoration: BoxDecoration(
-                  color: const Color(0xFFEC1D24),
+                  color: ColorConstants.primary,
                   borderRadius: BorderRadius.circular(28.5),
                 ),
                 child: Padding(
@@ -1180,11 +1182,11 @@ class _CreateSiteScreenRefactoredState
                         style: GoogleFonts.inter(
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
-                          color: Colors.white,
+                          color: ColorConstants.white,
                         ),
                       ),
                       const SizedBox(width: 6),
-                      const Icon(Icons.arrow_forward, color: Colors.white),
+                      const Icon(Icons.arrow_forward, color: ColorConstants.white),
                     ],
                   ),
                 ),

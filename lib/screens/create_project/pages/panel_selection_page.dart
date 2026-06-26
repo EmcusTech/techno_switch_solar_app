@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/models/panel_type_config.dart';
+import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
 class PanelSelectionPage extends StatefulWidget {
   final String? selectedPanelType;
@@ -30,11 +32,11 @@ class _PanelSelectionPageState extends State<PanelSelectionPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Panel Selection',
+            StringConstants.panelSelection,
             style: GoogleFonts.inter(
               fontSize: 18,
               fontWeight: FontWeight.w600,
-              color: Color(0xFF3A3A3A),
+              color: ColorConstants.textBodyDark,
             ),
           ),
           SizedBox(height: 32),
@@ -50,25 +52,25 @@ class _PanelSelectionPageState extends State<PanelSelectionPage> {
                     text: TextSpan(
                       children: [
                         TextSpan(
-                          text: 'Panel Name',
+                          text: StringConstants.panelName,
                           style: GoogleFonts.inter(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
                             color:
                                 widget.validationErrors?.containsKey(
-                                          'panelName',
+                                          StringConstants.panelname,
                                         ) ==
                                         true
-                                    ? Color(0xFFEC1D24)
-                                    : Color(0xFF696969),
+                                    ? ColorConstants.primary
+                                    : ColorConstants.textSecondary,
                           ),
                         ),
                         TextSpan(
-                          text: ' *',
+                          text: StringConstants.strb411bc68,
                           style: GoogleFonts.inter(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
-                            color: Color(0xFFEC1D24),
+                            color: ColorConstants.primary,
                           ),
                         ),
                       ],
@@ -77,16 +79,16 @@ class _PanelSelectionPageState extends State<PanelSelectionPage> {
                   SizedBox(height: 8),
                   Container(
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: ColorConstants.white,
                       borderRadius: BorderRadius.circular(4),
                       border: Border.all(
                         color:
-                            widget.validationErrors?.containsKey('panelName') ==
+                            widget.validationErrors?.containsKey(StringConstants.panelname) ==
                                     true
-                                ? Color(0xFFEC1D24)
-                                : Color(0xFFE0E0E0),
+                                ? ColorConstants.primary
+                                : ColorConstants.borderGray,
                         width:
-                            widget.validationErrors?.containsKey('panelName') ==
+                            widget.validationErrors?.containsKey(StringConstants.panelname) ==
                                     true
                                 ? 2
                                 : 1,
@@ -102,24 +104,24 @@ class _PanelSelectionPageState extends State<PanelSelectionPage> {
                       decoration: InputDecoration(
                         contentPadding: EdgeInsets.all(12),
                         border: InputBorder.none,
-                        hintText: 'Enter Panel Name',
+                        hintText: StringConstants.enterPanelName,
                         hintStyle: GoogleFonts.inter(
                           fontSize: 13,
                           fontWeight: FontWeight.w400,
-                          color: Color(0xFFBDBDBD),
+                          color: ColorConstants.divider,
                         ),
                       ),
                     ),
                   ),
-                  if (widget.validationErrors?.containsKey('panelName') ==
+                  if (widget.validationErrors?.containsKey(StringConstants.panelname) ==
                       true) ...[
                     SizedBox(height: 4),
                     Text(
-                      widget.validationErrors!['panelName']!,
+                      widget.validationErrors![StringConstants.panelname]!,
                       style: GoogleFonts.inter(
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
-                        color: Color(0xFFEC1D24),
+                        color: ColorConstants.primary,
                       ),
                     ),
                   ],
@@ -128,39 +130,39 @@ class _PanelSelectionPageState extends State<PanelSelectionPage> {
                     text: TextSpan(
                       children: [
                         TextSpan(
-                          text: 'Panel Type',
+                          text: StringConstants.panelType,
                           style: GoogleFonts.inter(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
                             color:
                                 widget.validationErrors?.containsKey(
-                                          'panelType',
+                                          StringConstants.paneltype,
                                         ) ==
                                         true
-                                    ? Color(0xFFEC1D24)
-                                    : Color(0xFF696969),
+                                    ? ColorConstants.primary
+                                    : ColorConstants.textSecondary,
                           ),
                         ),
                         TextSpan(
-                          text: ' *',
+                          text: StringConstants.strb411bc68,
                           style: GoogleFonts.inter(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
-                            color: Color(0xFFEC1D24),
+                            color: ColorConstants.primary,
                           ),
                         ),
                       ],
                     ),
                   ),
-                  if (widget.validationErrors?.containsKey('panelType') ==
+                  if (widget.validationErrors?.containsKey(StringConstants.paneltype) ==
                       true) ...[
                     SizedBox(height: 4),
                     Text(
-                      widget.validationErrors!['panelType']!,
+                      widget.validationErrors![StringConstants.paneltype]!,
                       style: GoogleFonts.inter(
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
-                        color: Color(0xFFEC1D24),
+                        color: ColorConstants.primary,
                       ),
                     ),
                   ],
@@ -210,9 +212,9 @@ class _PanelSelectionPageState extends State<PanelSelectionPage> {
       },
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: ColorConstants.white,
           borderRadius: BorderRadius.circular(4),
-          border: Border.all(color: Color(0xFFE0E0E0), width: 1),
+          border: Border.all(color: ColorConstants.borderGray, width: 1),
         ),
         child: Padding(
           padding: const EdgeInsets.all(12),
@@ -224,7 +226,7 @@ class _PanelSelectionPageState extends State<PanelSelectionPage> {
                 onChanged: (value) {
                   widget.onPanelTypeChanged(value);
                 },
-                activeColor: Color(0xFFEC1D24),
+                activeColor: ColorConstants.primary,
                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 visualDensity: VisualDensity.compact,
               ),
@@ -234,14 +236,14 @@ class _PanelSelectionPageState extends State<PanelSelectionPage> {
                 style: GoogleFonts.inter(
                   fontSize: 13,
                   fontWeight: FontWeight.w400,
-                  color: Color(0xFF3D3D3D),
+                  color: ColorConstants.textDark,
                 ),
               ),
               Spacer(),
               SvgPicture.asset(
                 'assets/svgs/panel_type_icon_1.svg',
                 colorFilter: ColorFilter.mode(
-                  zoneCount == '0' ? Color(0xFFBDBDBD) : Color(0xFFEC1D24),
+                  zoneCount == '0' ? ColorConstants.divider : ColorConstants.primary,
                   BlendMode.srcIn,
                 ),
               ),
@@ -255,8 +257,8 @@ class _PanelSelectionPageState extends State<PanelSelectionPage> {
                     fontWeight: FontWeight.w400,
                     color:
                         zoneCount == '0'
-                            ? Color(0xFFBDBDBD)
-                            : Color(0xFFEC1D24),
+                            ? ColorConstants.divider
+                            : ColorConstants.primary,
                   ),
                 ),
               ),
@@ -264,7 +266,7 @@ class _PanelSelectionPageState extends State<PanelSelectionPage> {
               SvgPicture.asset(
                 'assets/svgs/panel_type_icon_2.svg',
                 colorFilter: ColorFilter.mode(
-                  sounderCount == '0' ? Color(0xFFBDBDBD) : Color(0xFFEC1D24),
+                  sounderCount == '0' ? ColorConstants.divider : ColorConstants.primary,
                   BlendMode.srcIn,
                 ),
               ),
@@ -278,8 +280,8 @@ class _PanelSelectionPageState extends State<PanelSelectionPage> {
                     fontWeight: FontWeight.w400,
                     color:
                         sounderCount == '0'
-                            ? Color(0xFFBDBDBD)
-                            : Color(0xFFEC1D24),
+                            ? ColorConstants.divider
+                            : ColorConstants.primary,
                   ),
                 ),
               ),
@@ -287,7 +289,7 @@ class _PanelSelectionPageState extends State<PanelSelectionPage> {
               SvgPicture.asset(
                 'assets/svgs/panel_type_icon_3.svg',
                 colorFilter: ColorFilter.mode(
-                  relaysCount == '0' ? Color(0xFFBDBDBD) : Color(0xFFEC1D24),
+                  relaysCount == '0' ? ColorConstants.divider : ColorConstants.primary,
                   BlendMode.srcIn,
                 ),
               ),
@@ -301,8 +303,8 @@ class _PanelSelectionPageState extends State<PanelSelectionPage> {
                     fontWeight: FontWeight.w400,
                     color:
                         relaysCount == '0'
-                            ? Color(0xFFBDBDBD)
-                            : Color(0xFFEC1D24),
+                            ? ColorConstants.divider
+                            : ColorConstants.primary,
                   ),
                 ),
               ),
@@ -311,8 +313,8 @@ class _PanelSelectionPageState extends State<PanelSelectionPage> {
                 'assets/svgs/panel_type_icon_4.svg',
                 colorFilter: ColorFilter.mode(
                   panelFireExtinguisherCount == '0'
-                      ? Color(0xFFBDBDBD)
-                      : Color(0xFFEC1D24),
+                      ? ColorConstants.divider
+                      : ColorConstants.primary,
                   BlendMode.srcIn,
                 ),
               ),
@@ -326,8 +328,8 @@ class _PanelSelectionPageState extends State<PanelSelectionPage> {
                     fontWeight: FontWeight.w400,
                     color:
                         panelFireExtinguisherCount == '0'
-                            ? Color(0xFFBDBDBD)
-                            : Color(0xFFEC1D24),
+                            ? ColorConstants.divider
+                            : ColorConstants.primary,
                   ),
                 ),
               ),

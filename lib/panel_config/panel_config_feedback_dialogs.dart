@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/ble/ble_process.dart';
+import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 
 void showPanelApplySuccessDialog(
   BuildContext context,
@@ -42,7 +43,7 @@ void showPanelApplySuccessDialog(
         child: Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: ColorConstants.white,
             borderRadius: BorderRadius.circular(16),
           ),
           child: Column(
@@ -52,7 +53,7 @@ void showPanelApplySuccessDialog(
                 width: 64,
                 height: 64,
                 decoration: const BoxDecoration(
-                  color: Color(0xFFE8F5E9),
+                  color: ColorConstants.successBackgroundLight,
                   shape: BoxShape.circle,
                 ),
                 child: Center(
@@ -70,7 +71,7 @@ void showPanelApplySuccessDialog(
                 style: GoogleFonts.inter(
                   fontSize: 20,
                   fontWeight: FontWeight.w700,
-                  color: const Color(0xFF3D3D3D),
+                  color: ColorConstants.textDark,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -80,7 +81,7 @@ void showPanelApplySuccessDialog(
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   fontWeight: FontWeight.w400,
-                  color: const Color(0xFF918F8F),
+                  color: ColorConstants.textMuted,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -104,7 +105,7 @@ void showPanelDownloadSuccessDialog(BuildContext context, String message) {
         child: Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: ColorConstants.white,
             borderRadius: BorderRadius.circular(16),
           ),
           child: Column(
@@ -114,7 +115,7 @@ void showPanelDownloadSuccessDialog(BuildContext context, String message) {
                 width: 64,
                 height: 64,
                 decoration: const BoxDecoration(
-                  color: Color(0xFFE8F5E9),
+                  color: ColorConstants.successBackgroundLight,
                   shape: BoxShape.circle,
                 ),
                 child: Center(
@@ -132,7 +133,7 @@ void showPanelDownloadSuccessDialog(BuildContext context, String message) {
                 style: GoogleFonts.inter(
                   fontSize: 20,
                   fontWeight: FontWeight.w700,
-                  color: const Color(0xFF3D3D3D),
+                  color: ColorConstants.textDark,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -142,7 +143,7 @@ void showPanelDownloadSuccessDialog(BuildContext context, String message) {
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   fontWeight: FontWeight.w400,
-                  color: const Color(0xFF918F8F),
+                  color: ColorConstants.textMuted,
                 ),
                 textAlign: TextAlign.center,
               ),

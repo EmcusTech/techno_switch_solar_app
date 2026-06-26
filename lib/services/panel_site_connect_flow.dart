@@ -5,6 +5,7 @@ import 'package:techno_switch_solar_app/services/site_service.dart';
 import 'package:techno_switch_solar_app/utils/ble_name_utils.dart';
 import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
 import 'package:techno_switch_solar_app/widgets/app_styled_dialogs.dart';
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
 class PanelSiteConnectFlow {
   PanelSiteConnectFlow._();
@@ -44,12 +45,12 @@ class PanelSiteConnectFlow {
 
     final choice = await showAppStyledTwoActionDialog<String>(
       context: context,
-      title: 'Site found for this panel',
+      title: StringConstants.siteFoundForThisPanel,
       message:
           'A site "${site.siteName}" was created for panel ID $logicalId. '
           'Assign this panel to that site, or create or choose a different site?',
       leadingActionLabel: 'New site',
-      trailingActionLabel: 'Use site',
+      trailingActionLabel: StringConstants.aSiteSiteSiteNameWasCreatedForPanelIDLogicalId,
       leadingValue: 'new',
       trailingValue: 'assign',
       icon: Icons.location_city,

@@ -1,3 +1,4 @@
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 class LBusData {
   String? expandedLBus;
   Map<String, String> lbusInputs;
@@ -19,23 +20,23 @@ class LBusData {
     Map<String, String>? lbusEnabled,
     Map<String, String>? lbusTests,
     Map<String, String>? lbusInverted,
-  }) : lbusInputs = lbusInputs ?? {'L-BUS 1': '', 'L-BUS 2': ''},
-       lbusInputTexts = lbusInputTexts ?? {'L-BUS 1': '', 'L-BUS 2': ''},
+  }) : lbusInputs = lbusInputs ?? {StringConstants.lBUS1: '', StringConstants.lBUS2: ''},
+       lbusInputTexts = lbusInputTexts ?? {StringConstants.lBUS1: '', StringConstants.lBUS2: ''},
        lbusProducts =
-           lbusProducts ?? {'L-BUS 1': 'ONYX202', 'L-BUS 2': 'ONYX202'},
-       lbusGroups = lbusGroups ?? {'L-BUS 1': 'Group A', 'L-BUS 2': 'Group A'},
+           lbusProducts ?? {StringConstants.lBUS1: StringConstants.onyx202, StringConstants.lBUS2: StringConstants.onyx202},
+       lbusGroups = lbusGroups ?? {StringConstants.lBUS1: StringConstants.groupA, StringConstants.lBUS2: StringConstants.groupA},
        lbusFunctions =
-           lbusFunctions ?? {'L-BUS 1': 'Function A', 'L-BUS 2': 'Function A'},
-       lbusEnabled = lbusEnabled ?? {'L-BUS 1': 'Yes', 'L-BUS 2': 'Yes'},
-       lbusTests = lbusTests ?? {'L-BUS 1': 'No', 'L-BUS 2': 'No'},
-       lbusInverted = lbusInverted ?? {'L-BUS 1': 'No', 'L-BUS 2': 'No'};
+           lbusFunctions ?? {StringConstants.lBUS1: StringConstants.functionA, StringConstants.lBUS2: StringConstants.functionA},
+       lbusEnabled = lbusEnabled ?? {StringConstants.lBUS1: StringConstants.yes, StringConstants.lBUS2: StringConstants.yes},
+       lbusTests = lbusTests ?? {StringConstants.lBUS1: StringConstants.no, StringConstants.lBUS2: StringConstants.no},
+       lbusInverted = lbusInverted ?? {StringConstants.lBUS1: StringConstants.no, StringConstants.lBUS2: StringConstants.no};
 
   void updateLBusField(String lbusName, String fieldType, String value) {
     switch (fieldType) {
       case 'input':
         lbusInputs[lbusName] = value;
         break;
-      case 'inputText':
+      case StringConstants.inputtext:
         lbusInputTexts[lbusName] = value;
         break;
       case 'product':
@@ -72,44 +73,44 @@ class ExtinguishingData {
   String action;
 
   ExtinguishingData({
-    this.enabled = 'Yes',
-    this.actuatorType = 'Type B',
-    this.function = 'Function B',
-    this.autoCountdown = '15 Sec',
-    this.manualCountdown = '30 Sec',
-    this.releaseTime = '45 Sec',
-    this.resetInCount = 'Yes',
-    this.holdCount = '5 Sec',
-    this.action = 'Extinguish',
+    this.enabled = StringConstants.yes,
+    this.actuatorType = StringConstants.typeB,
+    this.function = StringConstants.functionB,
+    this.autoCountdown = StringConstants.s15Sec,
+    this.manualCountdown = StringConstants.s30Sec,
+    this.releaseTime = StringConstants.s45Sec,
+    this.resetInCount = StringConstants.yes,
+    this.holdCount = StringConstants.s5Sec,
+    this.action = StringConstants.extinguish,
   });
 
   void updateField(String label, String value) {
     switch (label) {
-      case 'Enabled':
+      case StringConstants.enabled:
         enabled = value;
         break;
-      case 'Actuator Type':
+      case StringConstants.actuatorType:
         actuatorType = value;
         break;
       case 'Function':
         function = value;
         break;
-      case 'Auto Countdown':
+      case StringConstants.autoCountdown:
         autoCountdown = value;
         break;
-      case 'Manual Countdown':
+      case StringConstants.manualCountdown:
         manualCountdown = value;
         break;
-      case 'Release Time':
+      case StringConstants.releaseTime:
         releaseTime = value;
         break;
-      case 'Reset in Count':
+      case StringConstants.resetInCount:
         resetInCount = value;
         break;
-      case 'Hold / Count':
+      case StringConstants.holdCount:
         holdCount = value;
         break;
-      case 'Action':
+      case StringConstants.action:
         action = value;
         break;
     }

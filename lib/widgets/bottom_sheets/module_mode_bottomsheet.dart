@@ -5,6 +5,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
+import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
 class ModuleInfoBottomSheet extends StatefulWidget {
   final String deviceId;
@@ -42,7 +44,7 @@ class _ModuleInfoBottomSheetState extends State<ModuleInfoBottomSheet> {
 
   void _applyCachedData(Map<String, dynamic> data) {
     if (manager == null) return;
-    manager!.moduleNo.value = (data['moduleNo'] as num?)?.toInt() ?? 0;
+    manager!.moduleNo.value = (data[StringConstants.moduleno] as num?)?.toInt() ?? 0;
     manager!.moduleEnabled.value = (data['enabled'] as bool?) ?? false;
     manager!.moduleProduct.value = (data['product'] as String?) ?? '';
     manager!.moduleId.value = (data['id'] as num?)?.toInt() ?? 0;
@@ -66,7 +68,7 @@ class _ModuleInfoBottomSheetState extends State<ModuleInfoBottomSheet> {
         constraints: BoxConstraints(maxHeight: maxHeight),
         child: Container(
           decoration: const BoxDecoration(
-            color: Color(0xFFE31C23),
+            color: ColorConstants.primaryVariant,
             borderRadius: BorderRadius.vertical(top: Radius.circular(50)),
           ),
           child: Padding(
@@ -74,7 +76,7 @@ class _ModuleInfoBottomSheetState extends State<ModuleInfoBottomSheet> {
             child: Container(
               clipBehavior: Clip.hardEdge,
               decoration: const BoxDecoration(
-                color: Colors.white,
+                color: ColorConstants.white,
                 borderRadius: BorderRadius.vertical(top: Radius.circular(50)),
               ),
               // padding: EdgeInsets.only(
@@ -98,7 +100,7 @@ class _ModuleInfoBottomSheetState extends State<ModuleInfoBottomSheet> {
                             width: 38,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              color: Colors.black.withValues(alpha: 0.06),
+                              color: ColorConstants.blackMaterial.withValues(alpha: 0.06),
                             ),
                             child: const Icon(Icons.close, size: 20),
                           ),
@@ -130,11 +132,11 @@ class _ModuleInfoBottomSheetState extends State<ModuleInfoBottomSheet> {
                         Padding(
                           padding: const EdgeInsets.only(bottom: 16),
                           child: Text(
-                            'Module Info',
+                            StringConstants.moduleInfo,
                             style: GoogleFonts.inter(
                               fontSize: 20,
                               fontWeight: FontWeight.w700,
-                              color: const Color(0xFF3D3D3D),
+                              color: ColorConstants.textDark,
                             ),
                           ),
                         ),
@@ -159,34 +161,34 @@ class _ModuleInfoBottomSheetState extends State<ModuleInfoBottomSheet> {
                                     )
                                   else
                                     _disabledField('BLE Firmware Version', '-'),
-                                  _reactiveTile('Module No', manager!.moduleNo),
+                                  _reactiveTile(StringConstants.moduleNo, manager!.moduleNo),
                                   _reactiveTileBool(
-                                    'Enabled',
+                                    StringConstants.enabled,
                                     manager!.moduleEnabled,
                                   ),
                                   _reactiveTile(
-                                    'Product',
+                                    StringConstants.product,
                                     manager!.moduleProduct,
                                   ),
-                                  _reactiveTile('ID', manager!.moduleId),
+                                  _reactiveTile(StringConstants.id, manager!.moduleId),
                                   _reactiveTile(
-                                    'Revision',
+                                    StringConstants.revision,
                                     manager!.moduleRevision,
                                   ),
                                   _reactiveTile(
-                                    'Hardware Version',
+                                    StringConstants.hardwareVersion,
                                     manager!.moduleHardware,
                                   ),
                                   _reactiveTile(
-                                    'Firmware Version',
+                                    StringConstants.firmwareVersion,
                                     manager!.moduleFirmware,
                                   ),
                                   _reactiveTile(
-                                    'Manufacturing Date',
+                                    StringConstants.manufacturingDate,
                                     manager!.moduleDate,
                                   ),
                                   _reactiveTile(
-                                    'Protocol No',
+                                    StringConstants.protocolNo,
                                     manager!.moduleProtocol,
                                   ),
                                 ],
@@ -203,15 +205,15 @@ class _ModuleInfoBottomSheetState extends State<ModuleInfoBottomSheet> {
                           width: double.infinity,
                           child: OutlinedButton(
                             style: OutlinedButton.styleFrom(
-                              foregroundColor: const Color(0xFFEC1D24),
-                              side: const BorderSide(color: Color(0xFFEC1D24)),
+                              foregroundColor: ColorConstants.primary,
+                              side: const BorderSide(color: ColorConstants.primary),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(24),
                               ),
                             ),
                             onPressed: widget.onDownload,
                             child: Text(
-                              'Download',
+                              StringConstants.download,
                               style: GoogleFonts.inter(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
@@ -250,9 +252,9 @@ class _ModuleInfoBottomSheetState extends State<ModuleInfoBottomSheet> {
             height: 48,
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
             decoration: BoxDecoration(
-              color: const Color(0xFFF8F8F8),
+              color: ColorConstants.surfaceLight,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFD0D0D0)),
+              border: Border.all(color: ColorConstants.borderLight),
             ),
             alignment: Alignment.centerLeft,
             child: Text(
@@ -260,7 +262,7 @@ class _ModuleInfoBottomSheetState extends State<ModuleInfoBottomSheet> {
               style: GoogleFonts.inter(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
-                color: const Color(0xFF3D3D3D),
+                color: ColorConstants.textDark,
               ),
             ),
           ),
@@ -288,7 +290,7 @@ class _ModuleInfoBottomSheetState extends State<ModuleInfoBottomSheet> {
     return ValueListenableBuilder<bool>(
       valueListenable: notifier,
       builder: (_, value, __) {
-        return _infoTile(label, value ? 'Yes' : 'No');
+        return _infoTile(label, value ? StringConstants.yes : StringConstants.no);
       },
     );
   }
@@ -306,7 +308,7 @@ class _ModuleInfoBottomSheetState extends State<ModuleInfoBottomSheet> {
             style: GoogleFonts.inter(
               fontSize: 13,
               fontWeight: FontWeight.w600,
-              color: const Color(0xFF3D3D3D),
+              color: ColorConstants.textDark,
             ),
           ),
           const SizedBox(height: 6),
@@ -314,16 +316,16 @@ class _ModuleInfoBottomSheetState extends State<ModuleInfoBottomSheet> {
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
             decoration: BoxDecoration(
-              color: const Color(0xFFF8F8F8),
+              color: ColorConstants.surfaceLight,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFD0D0D0)),
+              border: Border.all(color: ColorConstants.borderLight),
             ),
             child: Text(
               value.isEmpty ? '-' : value,
               style: GoogleFonts.inter(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
-                color: const Color(0xFF3D3D3D),
+                color: ColorConstants.textDark,
               ),
             ),
           ),

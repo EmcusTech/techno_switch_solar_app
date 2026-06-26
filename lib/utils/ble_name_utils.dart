@@ -1,7 +1,8 @@
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 class BleNameUtils {
   BleNameUtils._();
 
-  static const String technoswitchBlePrefix = 'TECHNOSWITCH_';
+  static const String technoswitchBlePrefix = StringConstants.technoswitch;
 
   static final RegExp _technoswitchPanelIdPattern = RegExp(
     r'^TECHNOSWITCH_(.+)$',

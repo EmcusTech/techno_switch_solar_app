@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
 class LBusDevicesPage extends StatefulWidget {
   final String? expandedLBus;
@@ -41,7 +43,7 @@ class _LBusDevicesPageState extends State<LBusDevicesPage> {
   @override
   void initState() {
     super.initState();
-    for (String lbus in ['L-BUS 1', 'L-BUS 2']) {
+    for (String lbus in [StringConstants.lBUS1, StringConstants.lBUS2]) {
       _inputControllers[lbus] = TextEditingController(
         text: widget.lbusInputs[lbus] ?? '',
       );
@@ -72,11 +74,11 @@ class _LBusDevicesPageState extends State<LBusDevicesPage> {
           child: Row(
             children: [
               Text(
-                'L-Bus Devices',
+                StringConstants.lBusDevices,
                 style: GoogleFonts.inter(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
-                  color: Color(0xFF3A3A3A),
+                  color: ColorConstants.textBodyDark,
                 ),
               ),
               Spacer(),
@@ -99,9 +101,9 @@ class _LBusDevicesPageState extends State<LBusDevicesPage> {
           child: SingleChildScrollView(
             child: Column(
               children: [
-                _buildLBusSection('L-BUS 1'),
+                _buildLBusSection(StringConstants.lBUS1),
                 SizedBox(height: 10),
-                _buildLBusSection('L-BUS 2'),
+                _buildLBusSection(StringConstants.lBUS2),
               ],
             ),
           ),
@@ -121,7 +123,7 @@ class _LBusDevicesPageState extends State<LBusDevicesPage> {
           },
           child: Container(
             padding: EdgeInsets.all(16),
-            decoration: BoxDecoration(color: Color(0xFFF5F5F5)),
+            decoration: BoxDecoration(color: ColorConstants.backgroundGray),
             child: Row(
               children: [
                 Text(
@@ -129,7 +131,7 @@ class _LBusDevicesPageState extends State<LBusDevicesPage> {
                   style: GoogleFonts.inter(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFF3A3A3A),
+                    color: ColorConstants.textBodyDark,
                   ),
                 ),
                 Spacer(),
@@ -137,7 +139,7 @@ class _LBusDevicesPageState extends State<LBusDevicesPage> {
                   isExpanded
                       ? Icons.keyboard_arrow_up
                       : Icons.keyboard_arrow_down,
-                  color: Color(0xFF696969),
+                  color: ColorConstants.textSecondary,
                 ),
               ],
             ),
@@ -150,19 +152,19 @@ class _LBusDevicesPageState extends State<LBusDevicesPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Input',
+                  StringConstants.inputModeConfiguration,
                   style: GoogleFonts.inter(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFF696969),
+                    color: ColorConstants.textSecondary,
                   ),
                 ),
                 SizedBox(height: 8),
                 Container(
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: ColorConstants.white,
                     borderRadius: BorderRadius.circular(4),
-                    border: Border.all(color: Color(0xFFE0E0E0)),
+                    border: Border.all(color: ColorConstants.borderGray),
                   ),
                   child: TextField(
                     controller: _inputControllers[lbusName],
@@ -175,35 +177,35 @@ class _LBusDevicesPageState extends State<LBusDevicesPage> {
                     decoration: InputDecoration(
                       contentPadding: EdgeInsets.all(12),
                       border: InputBorder.none,
-                      hintText: 'Enter Input Text',
+                      hintText: StringConstants.enterInputText,
                       hintStyle: GoogleFonts.inter(
                         fontSize: 13,
                         fontWeight: FontWeight.w400,
-                        color: Color(0xFFBDBDBD),
+                        color: ColorConstants.divider,
                       ),
                     ),
                   ),
                 ),
                 SizedBox(height: 16),
                 Text(
-                  'Input Text',
+                  StringConstants.inputText,
                   style: GoogleFonts.inter(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFF696969),
+                    color: ColorConstants.textSecondary,
                   ),
                 ),
                 SizedBox(height: 8),
                 Container(
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: ColorConstants.white,
                     borderRadius: BorderRadius.circular(4),
-                    border: Border.all(color: Color(0xFFE0E0E0)),
+                    border: Border.all(color: ColorConstants.borderGray),
                   ),
                   child: TextField(
                     controller: _inputTextControllers[lbusName],
                     onChanged: (value) {
-                      widget.onLBusFieldChanged(lbusName, 'inputText', value);
+                      widget.onLBusFieldChanged(lbusName, StringConstants.inputtext, value);
                     },
                     onTapOutside: (value) {
                       FocusScope.of(context).unfocus();
@@ -211,11 +213,11 @@ class _LBusDevicesPageState extends State<LBusDevicesPage> {
                     decoration: InputDecoration(
                       contentPadding: EdgeInsets.all(12),
                       border: InputBorder.none,
-                      hintText: 'Enter Input Text',
+                      hintText: StringConstants.enterInputText,
                       hintStyle: GoogleFonts.inter(
                         fontSize: 13,
                         fontWeight: FontWeight.w400,
-                        color: Color(0xFFBDBDBD),
+                        color: ColorConstants.divider,
                       ),
                     ),
                   ),
@@ -223,49 +225,49 @@ class _LBusDevicesPageState extends State<LBusDevicesPage> {
                 SizedBox(height: 24),
                 _buildDropdownField(
                   lbusName,
-                  'Product',
-                  widget.lbusProducts[lbusName] ?? 'ONYX202',
-                  ['ONYX202', 'ONYX204', 'ONYX205', 'ONYX206'],
+                  StringConstants.product,
+                  widget.lbusProducts[lbusName] ?? StringConstants.onyx202,
+                  [StringConstants.onyx202, StringConstants.onyx204, StringConstants.onyx205, StringConstants.onyx206],
                 ),
                 SizedBox(height: 20),
                 _buildDropdownField(
                   lbusName,
                   'Group',
-                  widget.lbusGroups[lbusName] ?? 'Group A',
-                  ['Group A', 'Group B', 'Group C', 'Group D'],
+                  widget.lbusGroups[lbusName] ?? StringConstants.groupA,
+                  [StringConstants.groupA, StringConstants.groupB, StringConstants.groupC, StringConstants.groupD],
                 ),
                 SizedBox(height: 20),
                 _buildDropdownField(
                   lbusName,
                   'Function',
-                  widget.lbusFunctions[lbusName] ?? 'Function A',
-                  ['Function A', 'Function B', 'Function C', 'Function D'],
+                  widget.lbusFunctions[lbusName] ?? StringConstants.functionA,
+                  [StringConstants.functionA, StringConstants.functionB, StringConstants.functionC, StringConstants.functionD],
                 ),
                 SizedBox(height: 20),
                 _buildDropdownField(
                   lbusName,
-                  'Enabled',
-                  widget.lbusEnabled[lbusName] ?? 'Yes',
-                  ['Yes', 'No'],
+                  StringConstants.enabled,
+                  widget.lbusEnabled[lbusName] ?? StringConstants.yes,
+                  [StringConstants.yes, StringConstants.no],
                 ),
                 SizedBox(height: 20),
                 _buildDropdownField(
                   lbusName,
-                  'Test',
-                  widget.lbusTests[lbusName] ?? 'No',
-                  ['No', 'Yes'],
+                  StringConstants.test,
+                  widget.lbusTests[lbusName] ?? StringConstants.no,
+                  [StringConstants.no, StringConstants.yes],
                 ),
                 SizedBox(height: 20),
                 _buildDropdownField(
                   lbusName,
-                  'Inverted',
-                  widget.lbusInverted[lbusName] ?? 'No',
-                  ['No', 'Yes'],
+                  StringConstants.inverted,
+                  widget.lbusInverted[lbusName] ?? StringConstants.no,
+                  [StringConstants.no, StringConstants.yes],
                 ),
               ],
             ),
           ),
-          Divider(color: Color(0xFFBDBDBD), thickness: 1),
+          Divider(color: ColorConstants.divider, thickness: 1),
         ],
       ],
     );
@@ -285,7 +287,7 @@ class _LBusDevicesPageState extends State<LBusDevicesPage> {
           style: GoogleFonts.inter(
             fontSize: 13,
             fontWeight: FontWeight.w600,
-            color: Color(0xFF696969),
+            color: ColorConstants.textSecondary,
           ),
         ),
         Spacer(),
@@ -298,7 +300,7 @@ class _LBusDevicesPageState extends State<LBusDevicesPage> {
                 style: GoogleFonts.inter(
                   fontSize: 13,
                   fontWeight: FontWeight.w400,
-                  color: Color(0xFF3D3D3D),
+                  color: ColorConstants.textDark,
                 ),
               ),
               SizedBox(width: 2),
@@ -330,7 +332,7 @@ class _LBusDevicesPageState extends State<LBusDevicesPage> {
             style: GoogleFonts.inter(
               fontSize: 18,
               fontWeight: FontWeight.w600,
-              color: Color(0xFF3A3A3A),
+              color: ColorConstants.textBodyDark,
             ),
           ),
           content: Column(
@@ -343,12 +345,12 @@ class _LBusDevicesPageState extends State<LBusDevicesPage> {
                       style: GoogleFonts.inter(
                         fontSize: 14,
                         fontWeight: FontWeight.w400,
-                        color: Color(0xFF3D3D3D),
+                        color: ColorConstants.textDark,
                       ),
                     ),
                     value: option,
                     groupValue: selectedValue,
-                    activeColor: Color(0xFFEC1D24),
+                    activeColor: ColorConstants.primary,
                     onChanged: (String? value) {
                       selectedValue = value!;
                       Navigator.of(context).pop();
@@ -371,11 +373,11 @@ class _LBusDevicesPageState extends State<LBusDevicesPage> {
                 Navigator.of(context).pop();
               },
               child: Text(
-                'Cancel',
+                StringConstants.cancel,
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: Color(0xFF696969),
+                  color: ColorConstants.textSecondary,
                 ),
               ),
             ),

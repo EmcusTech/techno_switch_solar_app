@@ -5,6 +5,8 @@ import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/screens/log_retrieval_loading_screen.dart';
 import 'package:techno_switch_solar_app/screens/scanning_screen.dart';
 import 'package:techno_switch_solar_app/widgets/common/common_numeric_keypad_widget.dart';
+import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
 Future<bool> _showPanelAccessCodeBottomSheet({
   required BuildContext context,
@@ -17,7 +19,7 @@ Future<bool> _showPanelAccessCodeBottomSheet({
   final bleController = Get.find<BleLogController>();
   final bleProcess = bleController.bleProcess;
 
-  // Always reset UI/BLE flags so a prior "Validating" does not hide the keypad.
+  // Always reset UI/BLE flags so a prior StringConstants.validating does not hide the keypad.
   bleProcess.isAccessKeyValid.value = null;
   bleProcess.processDesc.value = '';
   if (clearSessionAccessCode) {
@@ -31,8 +33,8 @@ Future<bool> _showPanelAccessCodeBottomSheet({
     isScrollControlled: true,
     isDismissible: false,
     enableDrag: false,
-    backgroundColor: Colors.transparent,
-    barrierColor: Colors.black.withValues(alpha: 0.4),
+    backgroundColor: ColorConstants.transparent,
+    barrierColor: ColorConstants.blackMaterial.withValues(alpha: 0.4),
     builder: (sheetContext) {
       return CommonNumericKeypadWidget(
         bleProcess: bleProcess,
@@ -50,7 +52,7 @@ Future<bool> _showPanelAccessCodeBottomSheet({
   return result ?? false;
 }
 
-/// Shared "Enter Access Code" bottom sheet. On successful panel validation, calls
+/// Shared StringConstants.enterAccessCode bottom sheet. On successful panel validation, calls
 /// [BleProcess.setSessionAccessCode] and pops `true`.
 Future<bool> showPanelAccessCodeGatewayDialog({
   required BuildContext context,

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
 class SiteCreationDialog extends StatelessWidget {
   final VoidCallback onCreateSite;
@@ -21,7 +23,7 @@ class SiteCreationDialog extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: ColorConstants.white,
           borderRadius: BorderRadius.circular(16),
         ),
         child: Column(
@@ -32,7 +34,7 @@ class SiteCreationDialog extends StatelessWidget {
               width: 64,
               height: 64,
               decoration: BoxDecoration(
-                color: Color(0xFFFBDEE1),
+                color: ColorConstants.errorIconBackground,
                 shape: BoxShape.circle,
               ),
               child: Center(
@@ -41,7 +43,7 @@ class SiteCreationDialog extends StatelessWidget {
                   height: 32,
                   width: 32,
                   colorFilter: ColorFilter.mode(
-                    Color(0xFFEC1D24),
+                    ColorConstants.primary,
                     BlendMode.srcIn,
                   ),
                 ),
@@ -52,11 +54,11 @@ class SiteCreationDialog extends StatelessWidget {
 
             // Title
             Text(
-              'Create Site for Logs?',
+              StringConstants.createSiteForLogs,
               style: GoogleFonts.inter(
                 fontSize: 20,
                 fontWeight: FontWeight.w700,
-                color: Color(0xFF3D3D3D),
+                color: ColorConstants.textDark,
               ),
               textAlign: TextAlign.center,
             ),
@@ -70,16 +72,16 @@ class SiteCreationDialog extends StatelessWidget {
                 style: GoogleFonts.inter(
                   fontSize: 16,
                   fontWeight: FontWeight.w400,
-                  color: Color(0xFF666666),
+                  color: ColorConstants.textGray,
                   height: 1.4,
                 ),
                 children: [
-                  TextSpan(text: 'You retrieved '),
+                  TextSpan(text: StringConstants.youRetrieved),
                   TextSpan(
                     text: '$logCount log${logCount == 1 ? '' : 's'}',
                     style: GoogleFonts.inter(
                       fontWeight: FontWeight.w600,
-                      color: Color(0xFFEC1D24),
+                      color: ColorConstants.primary,
                     ),
                   ),
                   TextSpan(
@@ -88,13 +90,13 @@ class SiteCreationDialog extends StatelessWidget {
                   ),
                   TextSpan(
                     text:
-                        'Would you like to create a site to save these logs? ',
+                        StringConstants.wouldYouLikeToCreateASiteToSaveTheseLogs,
                   ),
                   TextSpan(
-                    text: 'If you skip this step, the logs will be lost.',
+                    text: StringConstants.ifYouSkipThisStepTheLogsWillBeLost,
                     style: GoogleFonts.inter(
                       fontWeight: FontWeight.w600,
-                      color: Color(0xFFEC1D24),
+                      color: ColorConstants.primary,
                     ),
                   ),
                 ],
@@ -113,17 +115,17 @@ class SiteCreationDialog extends StatelessWidget {
                     child: Container(
                       height: 48,
                       decoration: BoxDecoration(
-                        color: Color(0xFFEFEEEE),
+                        color: ColorConstants.buttonSecondaryBackground,
                         borderRadius: BorderRadius.circular(24),
-                        border: Border.all(color: Color(0xFFD0D0D0), width: 1),
+                        border: Border.all(color: ColorConstants.borderLight, width: 1),
                       ),
                       child: Center(
                         child: Text(
-                          'Skip',
+                          StringConstants.skip,
                           style: GoogleFonts.inter(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
-                            color: Color(0xFF666666),
+                            color: ColorConstants.textGray,
                           ),
                         ),
                       ),
@@ -140,11 +142,11 @@ class SiteCreationDialog extends StatelessWidget {
                     child: Container(
                       height: 48,
                       decoration: BoxDecoration(
-                        color: Color(0xFFEC1D24),
+                        color: ColorConstants.primary,
                         borderRadius: BorderRadius.circular(24),
                         boxShadow: [
                           BoxShadow(
-                            color: Color(0xFFEC1D24).withValues(alpha: 0.3),
+                            color: ColorConstants.primary.withValues(alpha: 0.3),
                             blurRadius: 8,
                             offset: Offset(0, 4),
                           ),
@@ -156,7 +158,7 @@ class SiteCreationDialog extends StatelessWidget {
                           style: GoogleFonts.inter(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
-                            color: Colors.white,
+                            color: ColorConstants.white,
                           ),
                         ),
                       ),

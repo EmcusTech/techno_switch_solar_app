@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:techno_switch_solar_app/models/adc_input_model.dart';
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
 class AdcParser {
   static const int commandIndex = 12;
@@ -10,11 +11,11 @@ class AdcParser {
     final data = ByteData.sublistView(Uint8List.fromList(bytes));
 
     if (bytes.length < 20) {
-      throw Exception("Invalid payload");
+      throw Exception(StringConstants.invalidPayload);
     }
 
     if (bytes[commandIndex] != command) {
-      throw Exception("Invalid ADC response");
+      throw Exception(StringConstants.invalidADCResponse);
     }
 
     final start = commandIndex - 6;

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
 class ZoneSettingsPage extends StatefulWidget {
   final String? expandedZone;
@@ -39,11 +41,11 @@ class _ZoneSettingsPageState extends State<ZoneSettingsPage> {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 19),
           child: Text(
-            'Zone Settings',
+            StringConstants.zoneSettings,
             style: GoogleFonts.inter(
               fontSize: 18,
               fontWeight: FontWeight.w600,
-              color: Color(0xFF3A3A3A),
+              color: ColorConstants.textBodyDark,
             ),
           ),
         ),
@@ -78,7 +80,7 @@ class _ZoneSettingsPageState extends State<ZoneSettingsPage> {
         widget.onZoneExpanded(isExpanded ? null : zoneName);
       },
       child: Container(
-        decoration: BoxDecoration(color: Color(0xFFF5F5F5)),
+        decoration: BoxDecoration(color: ColorConstants.backgroundGray),
         child: Column(
           children: [
             Padding(
@@ -95,7 +97,7 @@ class _ZoneSettingsPageState extends State<ZoneSettingsPage> {
                     style: GoogleFonts.inter(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: Color(0xFF3A3A3A),
+                      color: ColorConstants.textBodyDark,
                     ),
                   ),
                   Spacer(),
@@ -103,7 +105,7 @@ class _ZoneSettingsPageState extends State<ZoneSettingsPage> {
                     isExpanded
                         ? Icons.keyboard_arrow_up
                         : Icons.keyboard_arrow_down,
-                    color: Color(0xFF696969),
+                    color: ColorConstants.textSecondary,
                     size: 20,
                   ),
                 ],
@@ -111,26 +113,26 @@ class _ZoneSettingsPageState extends State<ZoneSettingsPage> {
             ),
             if (isExpanded) ...[
               Container(
-                color: Colors.white,
+                color: ColorConstants.white,
                 child: Padding(
                   padding: EdgeInsets.symmetric(horizontal: 20, vertical: 24),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Zone Text',
+                        StringConstants.zoneText,
                         style: GoogleFonts.inter(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
-                          color: Color(0xFF696969),
+                          color: ColorConstants.textSecondary,
                         ),
                       ),
                       SizedBox(height: 8),
                       Container(
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: ColorConstants.white,
                           borderRadius: BorderRadius.circular(4),
-                          border: Border.all(color: Color(0xFFE0E0E0)),
+                          border: Border.all(color: ColorConstants.borderGray),
                         ),
                         child: TextField(
                           controller: TextEditingController(
@@ -144,7 +146,7 @@ class _ZoneSettingsPageState extends State<ZoneSettingsPage> {
                           onChanged: (value) {
                             widget.onZoneFieldChanged(
                               zoneName,
-                              'zoneText',
+                              StringConstants.zonetext,
                               value,
                             );
                           },
@@ -154,24 +156,24 @@ class _ZoneSettingsPageState extends State<ZoneSettingsPage> {
                           decoration: InputDecoration(
                             contentPadding: EdgeInsets.all(12),
                             border: InputBorder.none,
-                            hintText: 'Enter Zone Text',
+                            hintText: StringConstants.enterZoneText,
                             hintStyle: GoogleFonts.inter(
                               fontSize: 13,
                               fontWeight: FontWeight.w400,
-                              color: Color(0xFFBDBDBD),
+                              color: ColorConstants.divider,
                             ),
                           ),
                         ),
                       ),
                       SizedBox(height: 20),
                       _buildZoneDropdownField(
-                        'Zone Type',
+                        StringConstants.zoneType,
                         widget.zoneTypes[zoneName]!,
-                        ['Double Knock', 'Single Knock', 'Manual'],
+                        [StringConstants.doubleKnock, StringConstants.singleKnock, StringConstants.manual],
                         (value) {
                           widget.onZoneFieldChanged(
                             zoneName,
-                            'zoneType',
+                            StringConstants.zonetype,
                             value,
                           );
                         },
@@ -180,50 +182,50 @@ class _ZoneSettingsPageState extends State<ZoneSettingsPage> {
                       _buildZoneDropdownField(
                         'Zone',
                         widget.zoneStates[zoneName]!,
-                        ['Enable', 'Disable'],
+                        [StringConstants.enable, StringConstants.disable],
                         (value) {
                           widget.onZoneFieldChanged(
                             zoneName,
-                            'zoneState',
+                            StringConstants.zonestate,
                             value,
                           );
                         },
                       ),
                       SizedBox(height: 20),
                       _buildZoneDropdownField(
-                        'Zone Test',
+                        StringConstants.zoneTest,
                         widget.zoneTests[zoneName]!,
-                        ['Yes', 'No'],
+                        [StringConstants.yes, StringConstants.no],
                         (value) {
                           widget.onZoneFieldChanged(
                             zoneName,
-                            'zoneTest',
+                            StringConstants.zonetest,
                             value,
                           );
                         },
                       ),
                       SizedBox(height: 20),
                       _buildZoneDropdownField(
-                        'Zone Mode',
+                        StringConstants.zoneMode,
                         widget.zoneModes[zoneName]!,
-                        ['Yes', 'No'],
+                        [StringConstants.yes, StringConstants.no],
                         (value) {
                           widget.onZoneFieldChanged(
                             zoneName,
-                            'zoneMode',
+                            StringConstants.zonemode,
                             value,
                           );
                         },
                       ),
                       SizedBox(height: 20),
                       _buildZoneDropdownField(
-                        'Zone Verification Time',
+                        StringConstants.zoneVerificationTime,
                         widget.zoneVerificationTimes[zoneName]!,
-                        ['300 Sec', '500 Sec', '1000 Sec'],
+                        [StringConstants.s300Sec, StringConstants.s500Sec, StringConstants.s1000Sec],
                         (value) {
                           widget.onZoneFieldChanged(
                             zoneName,
-                            'zoneVerificationTime',
+                            StringConstants.zoneverificationtime,
                             value,
                           );
                         },
@@ -252,7 +254,7 @@ class _ZoneSettingsPageState extends State<ZoneSettingsPage> {
           style: GoogleFonts.inter(
             fontSize: 13,
             fontWeight: FontWeight.w600,
-            color: Color(0xFF696969),
+            color: ColorConstants.textSecondary,
           ),
         ),
         Spacer(),
@@ -266,7 +268,7 @@ class _ZoneSettingsPageState extends State<ZoneSettingsPage> {
                 style: GoogleFonts.inter(
                   fontSize: 13,
                   fontWeight: FontWeight.w400,
-                  color: Color(0xFF918F8F),
+                  color: ColorConstants.textMuted,
                 ),
               ),
               SizedBox(width: 2),
@@ -298,7 +300,7 @@ class _ZoneSettingsPageState extends State<ZoneSettingsPage> {
             style: GoogleFonts.inter(
               fontSize: 18,
               fontWeight: FontWeight.w600,
-              color: Color(0xFF3A3A3A),
+              color: ColorConstants.textBodyDark,
             ),
           ),
           content: Column(
@@ -311,12 +313,12 @@ class _ZoneSettingsPageState extends State<ZoneSettingsPage> {
                       style: GoogleFonts.inter(
                         fontSize: 14,
                         fontWeight: FontWeight.w400,
-                        color: Color(0xFF3D3D3D),
+                        color: ColorConstants.textDark,
                       ),
                     ),
                     value: option,
                     groupValue: selectedValue,
-                    activeColor: Color(0xFFEC1D24),
+                    activeColor: ColorConstants.primary,
                     onChanged: (String? value) {
                       selectedValue = value!;
                       Navigator.of(context).pop();
@@ -331,11 +333,11 @@ class _ZoneSettingsPageState extends State<ZoneSettingsPage> {
                 Navigator.of(context).pop();
               },
               child: Text(
-                'Cancel',
+                StringConstants.cancel,
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: Color(0xFF696969),
+                  color: ColorConstants.textSecondary,
                 ),
               ),
             ),

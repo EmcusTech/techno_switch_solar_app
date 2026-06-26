@@ -25,6 +25,7 @@ import 'package:techno_switch_solar_app/utils/bluetooth_service.dart'
 import 'package:techno_switch_solar_app/utils/ble_name_utils.dart';
 import 'package:techno_switch_solar_app/utils/ble_msd_utils.dart';
 import 'package:techno_switch_solar_app/utils/logger.dart' as logger;
+import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 
 final BleManager ble = Get.find<BleManager>();
 
@@ -138,7 +139,7 @@ class _FirmwareUpgradeBottomSheetState
           setState(() {
             _currentStep = FirmwareUpgradeStep.result;
             _isUpgrading = false;
-            _errorMessage = _errorMessage ?? 'Firmware upgrade failed';
+            _errorMessage = _errorMessage ?? StringConstants.firmwareUpgradeFailed;
           });
         }
       }
@@ -148,7 +149,7 @@ class _FirmwareUpgradeBottomSheetState
   Future<void> _sendPacketsOverBle({bool? isChipInBootLoader = false}) async {
     if (_controller.packetResult == null ||
         _controller.packetResult!.packets.isEmpty) {
-      throw Exception('No packets prepared');
+      throw Exception(StringConstants.noPacketsPrepared);
     }
 
     _beginFirmwareSession();
@@ -191,11 +192,11 @@ class _FirmwareUpgradeBottomSheetState
 
       if (isChipInBootLoader != true) {
         if (!manager.isConnected) {
-          throw Exception('Device not connected. Cannot send jump command.');
+          throw Exception(StringConstants.deviceNotConnectedCannotSendJumpCommand);
         }
         if (!manager.handshakeCompleteNotifier.value) {
           throw Exception(
-            'BLE handshake not complete. Cannot start firmware upgrade.',
+            StringConstants.bleHandshakeNotCompleteCannotStartFirmwareUpgrade,
           );
         }
 
@@ -214,7 +215,7 @@ class _FirmwareUpgradeBottomSheetState
         // Start internal reconnect after jump command
         setState(() {
           _isWaitingForJumpReconnect = true;
-          _currentBleStateMessage = 'Checking device status...';
+          _currentBleStateMessage = StringConstants.checkingDeviceStatus;
         });
         await _reconnectAndCheckStatus(isJumpCommand: true);
 
@@ -246,7 +247,7 @@ class _FirmwareUpgradeBottomSheetState
         if (!manager.isConnected && _originalDeviceName != null) {
           setState(() {
             _isWaitingForJumpReconnect = true;
-            _currentBleStateMessage = 'Checking device status...';
+            _currentBleStateMessage = StringConstants.checkingDeviceStatus;
           });
           await _reconnectAndCheckStatus(isJumpCommand: true);
           await Future.delayed(const Duration(seconds: 2));
@@ -292,7 +293,7 @@ class _FirmwareUpgradeBottomSheetState
 
       setState(() {
         _isWaitingForEndReconnect = true;
-        _currentBleStateMessage = 'Fetching Firmware Upgrade status...';
+        _currentBleStateMessage = StringConstants.fetchingFirmwareUpgradeStatus;
       });
 
       // Send end packet - expect it to fail when device disconnects
@@ -317,7 +318,7 @@ class _FirmwareUpgradeBottomSheetState
       //       logicalTotal == 0 ? 0 : logicalIndex / logicalTotal;
       //   await Future.delayed(const Duration(milliseconds: 20));
       // }
-      throw Exception('BLE manager not found');
+      throw Exception(StringConstants.bleManagerNotFound);
     }
 
     _controller.downloadingStatus.value = fw.DownloadStatus.completed;
@@ -326,11 +327,11 @@ class _FirmwareUpgradeBottomSheetState
   /// Internal method to reconnect and check firmware upgrade status
   Future<void> _reconnectAndCheckStatus({required bool isJumpCommand}) async {
     if (_originalDeviceName == null || _originalDeviceName!.isEmpty) {
-      logger.Logger('No device name stored for reconnection');
+      logger.Logger(StringConstants.noDeviceNameStoredForReconnection);
       setState(() {
         _isWaitingForJumpReconnect = false;
         _isWaitingForEndReconnect = false;
-        _errorMessage = 'Unable to reconnect: Device name not found';
+        _errorMessage = StringConstants.unableToReconnectDeviceNameNotFound;
       });
       return;
     }
@@ -350,7 +351,7 @@ class _FirmwareUpgradeBottomSheetState
         setState(() {
           _isWaitingForJumpReconnect = false;
           _isWaitingForEndReconnect = false;
-          _errorMessage = 'Bluetooth is not enabled';
+          _errorMessage = StringConstants.bluetoothIsNotEnabled;
         });
         return;
       }
@@ -472,7 +473,7 @@ class _FirmwareUpgradeBottomSheetState
             setState(() {
               _isWaitingForJumpReconnect = false;
               _selectedDevice = device;
-              _currentBleStateMessage = 'Device ready. Continuing upgrade...';
+              _currentBleStateMessage = StringConstants.deviceReadyContinuingUpgrade;
             });
           } else {
             logger.Logger(
@@ -497,7 +498,7 @@ class _FirmwareUpgradeBottomSheetState
           } else if (scanLastByte == BleMsdUtils.statusBootloader) {
             setState(() {
               _isWaitingForEndReconnect = false;
-              _errorMessage = 'Firmware upgrade failed';
+              _errorMessage = StringConstants.firmwareUpgradeFailed;
             });
             _controller.downloadingStatus.value = fw.DownloadStatus.failed;
             logger.Logger('Firmware upgrade FAILED confirmed from MSD [0,1]');
@@ -554,7 +555,7 @@ class _FirmwareUpgradeBottomSheetState
           }
 
           if (!bleManager.isConnected) {
-            throw Exception('Connection not established after reconnect');
+            throw Exception(StringConstants.connectionNotEstablishedAfterReconnect);
           }
 
           if (scanLastByte != null) {
@@ -603,7 +604,7 @@ class _FirmwareUpgradeBottomSheetState
         if (manufacturerDataValue == BleMsdUtils.statusBootloader) {
           setState(() {
             _selectedDevice = device;
-            _currentBleStateMessage = 'Device ready. Continuing upgrade...';
+            _currentBleStateMessage = StringConstants.deviceReadyContinuingUpgrade;
           });
         } else {
           logger.Logger(
@@ -612,7 +613,7 @@ class _FirmwareUpgradeBottomSheetState
           setState(() {
             _selectedDevice = device;
             _currentBleStateMessage =
-                'Device reconnected. Continuing upgrade...';
+                StringConstants.deviceReconnectedContinuingUpgrade;
           });
         }
       } else {
@@ -636,7 +637,7 @@ class _FirmwareUpgradeBottomSheetState
         } else if (manufacturerDataValue == BleMsdUtils.statusBootloader) {
           // Failed
           setState(() {
-            _errorMessage = 'Firmware upgrade failed';
+            _errorMessage = StringConstants.firmwareUpgradeFailed;
           });
           _controller.downloadingStatus.value = fw.DownloadStatus.failed;
         } else {
@@ -652,7 +653,7 @@ class _FirmwareUpgradeBottomSheetState
           } else if (scanLastByte == BleMsdUtils.statusBootloader) {
             // Failed (from scan data)
             setState(() {
-              _errorMessage = 'Firmware upgrade failed';
+              _errorMessage = StringConstants.firmwareUpgradeFailed;
             });
             _controller.downloadingStatus.value = fw.DownloadStatus.failed;
           } else {
@@ -704,7 +705,7 @@ class _FirmwareUpgradeBottomSheetState
       },
       child: Container(
         decoration: const BoxDecoration(
-          color: Color(0xFFE31C23),
+          color: ColorConstants.primaryVariant,
           borderRadius: BorderRadius.vertical(top: Radius.circular(50)),
         ),
         child: Padding(
@@ -712,7 +713,7 @@ class _FirmwareUpgradeBottomSheetState
           child: Container(
             clipBehavior: Clip.hardEdge,
             decoration: const BoxDecoration(
-              color: Colors.white,
+              color: ColorConstants.white,
               borderRadius: BorderRadius.vertical(top: Radius.circular(50)),
             ),
             child: SingleChildScrollView(
@@ -816,13 +817,13 @@ class _FirmwareUpgradeBottomSheetState
                       height: 24,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: Color(0xFFEC1D24).withOpacity(0.1),
+                        color: ColorConstants.primary.withOpacity(0.1),
                       ),
                       child: Center(
                         child: Icon(
                           Icons.check_circle,
                           size: 16,
-                          color: Color(0xFFEC1D24),
+                          color: ColorConstants.primary,
                         ),
                       ),
                     ),
@@ -833,7 +834,7 @@ class _FirmwareUpgradeBottomSheetState
                         style: GoogleFonts.inter(
                           fontSize: 14,
                           fontWeight: FontWeight.w400,
-                          color: Color(0xFF1B1F26),
+                          color: ColorConstants.textHeading,
                         ),
                       ),
                     ),
@@ -850,11 +851,11 @@ class _FirmwareUpgradeBottomSheetState
                 });
               },
               child: Text(
-                'Continue',
+                StringConstants.disabled,
                 style: GoogleFonts.inter(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
-                  color: Colors.white,
+                  color: ColorConstants.white,
                 ),
               ),
             ),
@@ -868,18 +869,18 @@ class _FirmwareUpgradeBottomSheetState
             // });
             //   },
             //   style: ElevatedButton.styleFrom(
-            //     backgroundColor: Color(0xFFEC1D24),
+            //     backgroundColor: ColorConstants.primary,
             //     padding: EdgeInsets.symmetric(vertical: 16),
             //     shape: RoundedRectangleBorder(
             //       borderRadius: BorderRadius.circular(8),
             //     ),
             //   ),
             //   child: Text(
-            //     'Continue',
+            //     StringConstants.disabled,
             //     style: GoogleFonts.inter(
             //       fontSize: 16,
             //       fontWeight: FontWeight.w600,
-            //       color: Colors.white,
+            //       color: ColorConstants.white,
             //     ),
             //   ),
             // ),
@@ -933,13 +934,13 @@ class _FirmwareUpgradeBottomSheetState
                     _currentStep = FirmwareUpgradeStep.essentialSteps;
                   });
                 },
-                color: Color(0xFFEFEEEE),
+                color: ColorConstants.buttonSecondaryBackground,
                 child: Text(
-                  'Back',
+                  StringConstants.back,
                   style: GoogleFonts.inter(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFF49454F),
+                    color: ColorConstants.labelText,
                   ),
                 ),
               ),
@@ -957,11 +958,11 @@ class _FirmwareUpgradeBottomSheetState
                         },
                 isDisabled: _selectedFirmwareType == null,
                 child: Text(
-                  'Continue',
+                  StringConstants.disabled,
                   style: GoogleFonts.inter(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
-                    color: Colors.white,
+                    color: ColorConstants.white,
                   ),
                 ),
               ),
@@ -995,10 +996,10 @@ class _FirmwareUpgradeBottomSheetState
               !enabled
                   ? Colors.grey.shade200
                   : (isSelected
-                      ? Color(0xFFEC1D24).withOpacity(0.1)
-                      : Colors.white),
+                      ? ColorConstants.primary.withOpacity(0.1)
+                      : ColorConstants.white),
           border: Border.all(
-            color: isSelected ? Color(0xFFEC1D24) : Color(0xFFD9D9D9),
+            color: isSelected ? ColorConstants.primary : ColorConstants.progressTrack,
             width: isSelected ? 2 : 1,
           ),
           borderRadius: BorderRadius.circular(8),
@@ -1011,7 +1012,7 @@ class _FirmwareUpgradeBottomSheetState
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: isSelected ? Color(0xFFEC1D24) : Color(0xFFD9D9D9),
+                  color: isSelected ? ColorConstants.primary : ColorConstants.progressTrack,
                   width: 2,
                 ),
               ),
@@ -1023,7 +1024,7 @@ class _FirmwareUpgradeBottomSheetState
                           height: 12,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: Color(0xFFEC1D24),
+                            color: ColorConstants.primary,
                           ),
                         ),
                       )
@@ -1039,7 +1040,7 @@ class _FirmwareUpgradeBottomSheetState
                     style: GoogleFonts.inter(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      color: Color(0xFF1B1F26),
+                      color: ColorConstants.textHeading,
                     ),
                   ),
                   SizedBox(height: 4),
@@ -1048,7 +1049,7 @@ class _FirmwareUpgradeBottomSheetState
                     style: GoogleFonts.inter(
                       fontSize: 14,
                       fontWeight: FontWeight.w400,
-                      color: Color(0xFF979797),
+                      color: ColorConstants.textDisabled,
                     ),
                   ),
                 ],
@@ -1074,7 +1075,7 @@ class _FirmwareUpgradeBottomSheetState
           child: DottedBorder(
             // childOnTop: false,
             options: RoundedRectDottedBorderOptions(
-              color: Color(0xFFEC1D24).withOpacity(0.3),
+              color: ColorConstants.primary.withOpacity(0.3),
               radius: Radius.circular(12),
               dashPattern: [5, 5],
               strokeWidth: 2,
@@ -1084,9 +1085,9 @@ class _FirmwareUpgradeBottomSheetState
             child: Container(
               padding: EdgeInsets.all(32),
               decoration: BoxDecoration(
-                color: Color(0xFFF6EBEB),
+                color: ColorConstants.scaffoldGradientTop,
                 // border: Border.all(
-                //   color: Color(0xFFEC1D24).withOpacity(0.3),
+                //   color: ColorConstants.primary.withOpacity(0.3),
                 //   width: 2,
                 //   style: BorderStyle.solid,
                 // ),
@@ -1107,7 +1108,7 @@ class _FirmwareUpgradeBottomSheetState
                     style: GoogleFonts.inter(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      color: Color(0xFF1B1F26),
+                      color: ColorConstants.textHeading,
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -1118,7 +1119,7 @@ class _FirmwareUpgradeBottomSheetState
                       style: GoogleFonts.inter(
                         fontSize: 14,
                         fontWeight: FontWeight.w400,
-                        color: Color(0xFF979797),
+                        color: ColorConstants.textDisabled,
                       ),
                     ),
                   ],
@@ -1130,8 +1131,8 @@ class _FirmwareUpgradeBottomSheetState
         if (_isUploading) ...[
           SizedBox(height: 16),
           LinearProgressIndicator(
-            backgroundColor: Color(0xFFD9D9D9),
-            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFEC1D24)),
+            backgroundColor: ColorConstants.progressTrack,
+            valueColor: AlwaysStoppedAnimation<Color>(ColorConstants.primary),
           ),
         ],
         SizedBox(height: 32),
@@ -1144,13 +1145,13 @@ class _FirmwareUpgradeBottomSheetState
                     _currentStep = FirmwareUpgradeStep.chooseType;
                   });
                 },
-                color: Color(0xFFEFEEEE),
+                color: ColorConstants.buttonSecondaryBackground,
                 child: Text(
-                  'Back',
+                  StringConstants.back,
                   style: GoogleFonts.inter(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFF49454F),
+                    color: ColorConstants.labelText,
                   ),
                 ),
               ),
@@ -1167,14 +1168,14 @@ class _FirmwareUpgradeBottomSheetState
             //       shape: RoundedRectangleBorder(
             //         borderRadius: BorderRadius.circular(8),
             //       ),
-            //       side: BorderSide(color: Color(0xFFEC1D24)),
+            //       side: BorderSide(color: ColorConstants.primary),
             //     ),
             //     child: Text(
-            //       'Back',
+            //       StringConstants.back,
             //       style: GoogleFonts.inter(
             //         fontSize: 16,
             //         fontWeight: FontWeight.w600,
-            //         color: Color(0xFFEC1D24),
+            //         color: ColorConstants.primary,
             //       ),
             //     ),
             //   ),
@@ -1188,11 +1189,11 @@ class _FirmwareUpgradeBottomSheetState
                         : _goToFileDetails,
                 isDisabled: _selectedFile == null || _isUploading,
                 child: Text(
-                  'Continue',
+                  StringConstants.disabled,
                   style: GoogleFonts.inter(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
-                    color: Colors.white,
+                    color: ColorConstants.white,
                   ),
                 ),
               ),
@@ -1204,19 +1205,19 @@ class _FirmwareUpgradeBottomSheetState
             //             ? null
             //             : _goToFileDetails,
             //     style: ElevatedButton.styleFrom(
-            //       backgroundColor: Color(0xFFEC1D24),
+            //       backgroundColor: ColorConstants.primary,
             //       padding: EdgeInsets.symmetric(vertical: 16),
             //       shape: RoundedRectangleBorder(
             //         borderRadius: BorderRadius.circular(8),
             //       ),
-            //       disabledBackgroundColor: Color(0xFFD9D9D9),
+            //       disabledBackgroundColor: ColorConstants.progressTrack,
             //     ),
             //     child: Text(
-            //       'Continue',
+            //       StringConstants.disabled,
             //       style: GoogleFonts.inter(
             //         fontSize: 16,
             //         fontWeight: FontWeight.w600,
-            //         color: Colors.white,
+            //         color: ColorConstants.white,
             //       ),
             //     ),
             //   ),
@@ -1259,12 +1260,12 @@ class _FirmwareUpgradeBottomSheetState
         if (result != null) ...[
           SizedBox(height: 12),
           _buildDetailRow(
-            'Firmware version',
+            StringConstants.firmwareVersion2,
             _emptyToDash(result.firmwareVersion),
           ),
           SizedBox(height: 12),
           _buildDetailRow(
-            'Hardware version',
+            StringConstants.hardwareVersion2,
             _emptyToDash(result.hardwareVersion),
           ),
           SizedBox(height: 12),
@@ -1287,16 +1288,16 @@ class _FirmwareUpgradeBottomSheetState
         _buildDetailRow(
           'Status',
           _isValidating
-              ? 'Validating...'
+              ? StringConstants.validating2
               : isCrcMatched
               ? 'Valid'
               : 'Invalid',
           valueColor:
               _isValidating
-                  ? Color(0xFF979797)
+                  ? ColorConstants.textDisabled
                   : isCrcMatched
-                  ? Color(0xFF00A706)
-                  : Color(0xFFEC1D24),
+                  ? ColorConstants.success
+                  : ColorConstants.primary,
         ),
         if (_isValidating) ...[
           SizedBox(height: 16),
@@ -1307,12 +1308,12 @@ class _FirmwareUpgradeBottomSheetState
             margin: EdgeInsets.only(top: 24),
             padding: EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Color(0xFFEC1D24).withOpacity(0.1),
+              color: ColorConstants.primary.withOpacity(0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
               children: [
-                Icon(Icons.warning, color: Color(0xFFEC1D24)),
+                Icon(Icons.warning, color: ColorConstants.primary),
                 SizedBox(width: 12),
                 Expanded(
                   child: Text(
@@ -1321,7 +1322,7 @@ class _FirmwareUpgradeBottomSheetState
                     style: GoogleFonts.inter(
                       fontSize: 14,
                       fontWeight: FontWeight.w400,
-                      color: Color(0xFFEC1D24),
+                      color: ColorConstants.primary,
                     ),
                   ),
                 ),
@@ -1333,7 +1334,7 @@ class _FirmwareUpgradeBottomSheetState
           children: [
             Expanded(
               child: CommonCtaButton(
-                color: Color(0xFFEFEEEE),
+                color: ColorConstants.buttonSecondaryBackground,
                 onTap:
                     _isValidating
                         ? null
@@ -1344,11 +1345,11 @@ class _FirmwareUpgradeBottomSheetState
                         },
                 isDisabled: _isValidating,
                 child: Text(
-                  'Back',
+                  StringConstants.back,
                   style: GoogleFonts.inter(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFF49454F),
+                    color: ColorConstants.labelText,
                   ),
                 ),
               ),
@@ -1368,14 +1369,14 @@ class _FirmwareUpgradeBottomSheetState
             //       shape: RoundedRectangleBorder(
             //         borderRadius: BorderRadius.circular(8),
             //       ),
-            //       side: BorderSide(color: Color(0xFFEC1D24)),
+            //       side: BorderSide(color: ColorConstants.primary),
             //     ),
             //     child: Text(
-            //       'Back',
+            //       StringConstants.back,
             //       style: GoogleFonts.inter(
             //         fontSize: 16,
             //         fontWeight: FontWeight.w600,
-            //         color: Color(0xFFEC1D24),
+            //         color: ColorConstants.primary,
             //       ),
             //     ),
             //   ),
@@ -1391,11 +1392,11 @@ class _FirmwareUpgradeBottomSheetState
                         },
                 isDisabled: _isValidating || !isCrcMatched,
                 child: Text(
-                  'Continue',
+                  StringConstants.disabled,
                   style: GoogleFonts.inter(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
-                    color: Colors.white,
+                    color: ColorConstants.white,
                   ),
                 ),
               ),
@@ -1413,19 +1414,19 @@ class _FirmwareUpgradeBottomSheetState
             //               );
             //             },
             //     style: ElevatedButton.styleFrom(
-            //       backgroundColor: Color(0xFFEC1D24),
+            //       backgroundColor: ColorConstants.primary,
             //       padding: EdgeInsets.symmetric(vertical: 16),
             //       shape: RoundedRectangleBorder(
             //         borderRadius: BorderRadius.circular(8),
             //       ),
-            //       disabledBackgroundColor: Color(0xFFD9D9D9),
+            //       disabledBackgroundColor: ColorConstants.progressTrack,
             //     ),
             //     child: Text(
-            //       'Continue',
+            //       StringConstants.disabled,
             //       style: GoogleFonts.inter(
             //         fontSize: 16,
             //         fontWeight: FontWeight.w600,
-            //         color: Colors.white,
+            //         color: ColorConstants.white,
             //       ),
             //     ),
             //   ),
@@ -1447,7 +1448,7 @@ class _FirmwareUpgradeBottomSheetState
           style: GoogleFonts.inter(
             fontSize: 14,
             fontWeight: FontWeight.w400,
-            color: Color(0xFF979797),
+            color: ColorConstants.textDisabled,
           ),
         ),
         SizedBox(
@@ -1457,7 +1458,7 @@ class _FirmwareUpgradeBottomSheetState
             style: GoogleFonts.inter(
               fontSize: 14,
               fontWeight: FontWeight.w600,
-              color: valueColor ?? Color(0xFF1B1F26),
+              color: valueColor ?? ColorConstants.textHeading,
             ),
             maxLines: 3,
             overflow: TextOverflow.ellipsis,
@@ -1496,8 +1497,8 @@ class _FirmwareUpgradeBottomSheetState
                       center: Lottie.asset(
                         'assets/jsons/firmware_upgrade.json',
                       ),
-                      progressColor: Color(0xFFEC1D24),
-                      backgroundColor: Color(0xFFD9D9D9),
+                      progressColor: ColorConstants.primary,
+                      backgroundColor: ColorConstants.progressTrack,
                       circularStrokeCap: CircularStrokeCap.round,
                     ),
           ),
@@ -1512,7 +1513,7 @@ class _FirmwareUpgradeBottomSheetState
                 style: GoogleFonts.inter(
                   fontSize: 24,
                   fontWeight: FontWeight.w700,
-                  // color: Color(0xFFEC1D24),
+                  // color: ColorConstants.primary,
                   fontFeatures: [FontFeature.tabularFigures()],
                 ),
               ),
@@ -1524,7 +1525,7 @@ class _FirmwareUpgradeBottomSheetState
           //     style: GoogleFonts.inter(
           //       fontSize: 14,
           //       fontWeight: FontWeight.w400,
-          //       color: Color(0xFF979797),
+          //       color: ColorConstants.textDisabled,
           //     ),
           //     textAlign: TextAlign.center,
           //   ),
@@ -1532,8 +1533,8 @@ class _FirmwareUpgradeBottomSheetState
           // LinearPercentIndicator(
           //   lineHeight: 8,
           //   percent: progress.clamp(0.0, 1.0),
-          //   backgroundColor: Color(0xFFD9D9D9),
-          //   progressColor: Color(0xFFEC1D24),
+          //   backgroundColor: ColorConstants.progressTrack,
+          //   progressColor: ColorConstants.primary,
           //   barRadius: Radius.circular(4),
           // ),
           SizedBox(height: 12),
@@ -1545,7 +1546,7 @@ class _FirmwareUpgradeBottomSheetState
             style: GoogleFonts.inter(
               fontSize: 14,
               fontWeight: FontWeight.w400,
-              color: Color(0xFF979797),
+              color: ColorConstants.textDisabled,
             ),
             textAlign: TextAlign.center,
           ),
@@ -1571,11 +1572,11 @@ class _FirmwareUpgradeBottomSheetState
         ),
         SizedBox(height: 24),
         Text(
-          isSuccess ? 'Success!' : 'Failed',
+          isSuccess ? StringConstants.strf910c9ffFailed : 'Failed',
           style: GoogleFonts.inter(
             fontSize: 24,
             fontWeight: FontWeight.w700,
-            color: isSuccess ? Color(0xFF00A706) : Color(0xFFEC1D24),
+            color: isSuccess ? ColorConstants.success : ColorConstants.primary,
           ),
           textAlign: TextAlign.center,
         ),
@@ -1585,7 +1586,7 @@ class _FirmwareUpgradeBottomSheetState
         //   style: GoogleFonts.inter(
         //     fontSize: 16,
         //     fontWeight: FontWeight.w400,
-        //     color: Color(0xFF1B1F26),
+        //     color: ColorConstants.textHeading,
         //   ),
         //   textAlign: TextAlign.center,
         // ),
@@ -1606,7 +1607,7 @@ class _FirmwareUpgradeBottomSheetState
             style: GoogleFonts.inter(
               fontSize: 16,
               fontWeight: FontWeight.w600,
-              color: Colors.white,
+              color: ColorConstants.white,
             ),
           ),
         ),
@@ -1622,7 +1623,7 @@ class _FirmwareUpgradeBottomSheetState
         //     _controller.totalPacketLength.value = 0;
         //   },
         //   style: ElevatedButton.styleFrom(
-        //     backgroundColor: Color(0xFFEC1D24),
+        //     backgroundColor: ColorConstants.primary,
         //     padding: EdgeInsets.symmetric(vertical: 16),
         //     shape: RoundedRectangleBorder(
         //       borderRadius: BorderRadius.circular(8),
@@ -1633,7 +1634,7 @@ class _FirmwareUpgradeBottomSheetState
         //     style: GoogleFonts.inter(
         //       fontSize: 16,
         //       fontWeight: FontWeight.w600,
-        //       color: Colors.white,
+        //       color: ColorConstants.white,
         //     ),
         //   ),
         // ),
@@ -1765,7 +1766,7 @@ class _FirmwareUpgradeBottomSheetState
           child: Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: ColorConstants.white,
               borderRadius: BorderRadius.circular(16),
             ),
             child: Column(
@@ -1775,24 +1776,24 @@ class _FirmwareUpgradeBottomSheetState
                   width: 64,
                   height: 64,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFBDEE1),
+                    color: ColorConstants.errorIconBackground,
                     shape: BoxShape.circle,
                   ),
                   child: const Center(
                     child: Icon(
                       Icons.link_off,
-                      color: Color(0xFFEC1D24),
+                      color: ColorConstants.primary,
                       size: 32,
                     ),
                   ),
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Firmware Update',
+                  StringConstants.firmwareUpdate,
                   style: GoogleFonts.inter(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
-                    color: const Color(0xFF3D3D3D),
+                    color: ColorConstants.textDark,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -1802,7 +1803,7 @@ class _FirmwareUpgradeBottomSheetState
                   style: GoogleFonts.inter(
                     fontSize: 14,
                     fontWeight: FontWeight.w400,
-                    color: const Color(0xFF666666),
+                    color: ColorConstants.textGray,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -1812,11 +1813,11 @@ class _FirmwareUpgradeBottomSheetState
                   child: Container(
                     height: 48,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFEC1D24),
+                      color: ColorConstants.primary,
                       borderRadius: BorderRadius.circular(24),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFFEC1D24).withOpacity(0.3),
+                          color: ColorConstants.primary.withOpacity(0.3),
                           blurRadius: 8,
                           offset: const Offset(0, 4),
                         ),
@@ -1824,11 +1825,11 @@ class _FirmwareUpgradeBottomSheetState
                     ),
                     child: Center(
                       child: Text(
-                        'Okay',
+                        StringConstants.okay,
                         style: GoogleFonts.inter(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: Colors.white,
+                          color: ColorConstants.white,
                         ),
                       ),
                     ),
@@ -1854,7 +1855,7 @@ class _FirmwareUpgradeBottomSheetState
           child: Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: ColorConstants.white,
               borderRadius: BorderRadius.circular(16),
             ),
             child: Column(
@@ -1864,24 +1865,24 @@ class _FirmwareUpgradeBottomSheetState
                   width: 64,
                   height: 64,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFBDEE1),
+                    color: ColorConstants.errorIconBackground,
                     shape: BoxShape.circle,
                   ),
                   child: const Center(
                     child: Icon(
                       Icons.link_off,
-                      color: Color(0xFFEC1D24),
+                      color: ColorConstants.primary,
                       size: 32,
                     ),
                   ),
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Firmware Update',
+                  StringConstants.firmwareUpdate,
                   style: GoogleFonts.inter(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
-                    color: const Color(0xFF3D3D3D),
+                    color: ColorConstants.textDark,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -1891,7 +1892,7 @@ class _FirmwareUpgradeBottomSheetState
                   style: GoogleFonts.inter(
                     fontSize: 14,
                     fontWeight: FontWeight.w400,
-                    color: const Color(0xFF666666),
+                    color: ColorConstants.textGray,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -1902,7 +1903,7 @@ class _FirmwareUpgradeBottomSheetState
                   style: GoogleFonts.inter(
                     fontSize: 14,
                     fontWeight: FontWeight.w400,
-                    color: const Color(0xFF666666),
+                    color: ColorConstants.textGray,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -1912,11 +1913,11 @@ class _FirmwareUpgradeBottomSheetState
                   child: Container(
                     height: 48,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFEC1D24),
+                      color: ColorConstants.primary,
                       borderRadius: BorderRadius.circular(24),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFFEC1D24).withOpacity(0.3),
+                          color: ColorConstants.primary.withOpacity(0.3),
                           blurRadius: 8,
                           offset: const Offset(0, 4),
                         ),
@@ -1924,11 +1925,11 @@ class _FirmwareUpgradeBottomSheetState
                     ),
                     child: Center(
                       child: Text(
-                        'Cancel',
+                        StringConstants.cancel,
                         style: GoogleFonts.inter(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: Colors.white,
+                          color: ColorConstants.white,
                         ),
                       ),
                     ),
@@ -1954,7 +1955,7 @@ class _FirmwareUpgradeBottomSheetState
           child: Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: ColorConstants.white,
               borderRadius: BorderRadius.circular(16),
             ),
             child: Column(
@@ -1964,24 +1965,24 @@ class _FirmwareUpgradeBottomSheetState
                   width: 64,
                   height: 64,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFBDEE1),
+                    color: ColorConstants.errorIconBackground,
                     shape: BoxShape.circle,
                   ),
                   child: const Center(
                     child: Icon(
                       Icons.link_off,
-                      color: Color(0xFFEC1D24),
+                      color: ColorConstants.primary,
                       size: 32,
                     ),
                   ),
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Firmware Update',
+                  StringConstants.firmwareUpdate,
                   style: GoogleFonts.inter(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
-                    color: const Color(0xFF3D3D3D),
+                    color: ColorConstants.textDark,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -1991,7 +1992,7 @@ class _FirmwareUpgradeBottomSheetState
                   style: GoogleFonts.inter(
                     fontSize: 14,
                     fontWeight: FontWeight.w400,
-                    color: const Color(0xFF666666),
+                    color: ColorConstants.textGray,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -2004,20 +2005,20 @@ class _FirmwareUpgradeBottomSheetState
                         child: Container(
                           height: 48,
                           decoration: BoxDecoration(
-                            color: const Color(0xFFEFEEEE),
+                            color: ColorConstants.buttonSecondaryBackground,
                             borderRadius: BorderRadius.circular(24),
                             border: Border.all(
-                              color: const Color(0xFFD0D0D0),
+                              color: ColorConstants.borderLight,
                               width: 1,
                             ),
                           ),
                           child: Center(
                             child: Text(
-                              'Cancel',
+                              StringConstants.cancel,
                               style: GoogleFonts.inter(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
-                                color: const Color(0xFF666666),
+                                color: ColorConstants.textGray,
                               ),
                             ),
                           ),
@@ -2031,11 +2032,11 @@ class _FirmwareUpgradeBottomSheetState
                         child: Container(
                           height: 48,
                           decoration: BoxDecoration(
-                            color: const Color(0xFFEC1D24),
+                            color: ColorConstants.primary,
                             borderRadius: BorderRadius.circular(24),
                             boxShadow: [
                               BoxShadow(
-                                color: const Color(0xFFEC1D24).withOpacity(0.3),
+                                color: ColorConstants.primary.withOpacity(0.3),
                                 blurRadius: 8,
                                 offset: const Offset(0, 4),
                               ),
@@ -2043,11 +2044,11 @@ class _FirmwareUpgradeBottomSheetState
                           ),
                           child: Center(
                             child: Text(
-                              'Continue',
+                              StringConstants.disabled,
                               style: GoogleFonts.inter(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
-                                color: Colors.white,
+                                color: ColorConstants.white,
                               ),
                             ),
                           ),
@@ -2132,7 +2133,7 @@ class _FirmwareUpgradeBottomSheetState
     setState(() {
       _isUpgrading = true;
       _currentStep = FirmwareUpgradeStep.progress;
-      _currentBleStateMessage = 'Preparing Firmware Upgrade...';
+      _currentBleStateMessage = StringConstants.preparingFirmwareUpgrade;
       _errorMessage = null;
     });
 
@@ -2143,7 +2144,7 @@ class _FirmwareUpgradeBottomSheetState
         _currentStep = FirmwareUpgradeStep.result;
         _errorMessage =
             _controller.validationError ??
-            'No packets to process. Please re-upload the file.';
+            StringConstants.noPacketsToProcessPleaseReUploadTheFile;
       });
       _controller.downloadingStatus.value = fw.DownloadStatus.failed;
       return;
@@ -2157,7 +2158,7 @@ class _FirmwareUpgradeBottomSheetState
       setState(() {
         _isUpgrading = false;
         _currentStep = FirmwareUpgradeStep.result;
-        _errorMessage = isSuccess ? null : 'Firmware transfer failed.';
+        _errorMessage = isSuccess ? null : StringConstants.firmwareTransferFailed;
         _currentBleStateMessage = null;
       });
     } catch (e) {

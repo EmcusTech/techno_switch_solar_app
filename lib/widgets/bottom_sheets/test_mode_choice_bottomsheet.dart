@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
 /// First step: user picks Sounders or Relays for test configuration.
 class TestModeChoiceBottomSheet extends StatelessWidget {
@@ -18,7 +20,7 @@ class TestModeChoiceBottomSheet extends StatelessWidget {
     return SafeArea(
       child: Container(
         decoration: const BoxDecoration(
-          color: Color(0xFFE31C23),
+          color: ColorConstants.primaryVariant,
           borderRadius: BorderRadius.vertical(top: Radius.circular(50)),
         ),
         child: Padding(
@@ -26,7 +28,7 @@ class TestModeChoiceBottomSheet extends StatelessWidget {
           child: Container(
             clipBehavior: Clip.hardEdge,
             decoration: const BoxDecoration(
-              color: Colors.white,
+              color: ColorConstants.white,
               borderRadius: BorderRadius.vertical(top: Radius.circular(50)),
             ),
             // padding: EdgeInsets.only(
@@ -50,7 +52,7 @@ class TestModeChoiceBottomSheet extends StatelessWidget {
                           width: 38,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: Colors.black.withValues(alpha: 0.06),
+                            color: ColorConstants.blackMaterial.withValues(alpha: 0.06),
                           ),
                           child: const Icon(Icons.close, size: 20),
                         ),
@@ -73,11 +75,11 @@ class TestModeChoiceBottomSheet extends StatelessWidget {
                       Align(
                         alignment: Alignment.centerLeft,
                         child: Text(
-                          'Test Mode',
+                          StringConstants.testMode,
                           style: GoogleFonts.inter(
                             fontSize: 20,
                             fontWeight: FontWeight.w700,
-                            color: const Color(0xFF3D3D3D),
+                            color: ColorConstants.textDark,
                           ),
                         ),
                       ),
@@ -85,18 +87,18 @@ class TestModeChoiceBottomSheet extends StatelessWidget {
                       Align(
                         alignment: Alignment.centerLeft,
                         child: Text(
-                          'Choose what to test',
+                          StringConstants.chooseWhatToTest,
                           style: GoogleFonts.inter(
                             fontSize: 13,
                             fontWeight: FontWeight.w500,
-                            color: const Color(0xFF6E6E6E),
+                            color: ColorConstants.textSubtle,
                           ),
                         ),
                       ),
                       const SizedBox(height: 16),
-                      _optionTile(title: 'Sounders', onTap: onSounders),
+                      _optionTile(title: StringConstants.sounders, onTap: onSounders),
                       const SizedBox(height: 12),
-                      _optionTile(title: 'Relays', onTap: onRelays),
+                      _optionTile(title: StringConstants.relays, onTap: onRelays),
                     ],
                   ),
                 ),
@@ -110,7 +112,7 @@ class TestModeChoiceBottomSheet extends StatelessWidget {
 
   Widget _optionTile({required String title, required VoidCallback onTap}) {
     return Material(
-      color: Colors.transparent,
+      color: ColorConstants.transparent,
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(14),
@@ -118,7 +120,7 @@ class TestModeChoiceBottomSheet extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: const Color(0xFFDCDCDC)),
+            border: Border.all(color: ColorConstants.borderMuted),
           ),
           child: Row(
             children: [
@@ -128,7 +130,7 @@ class TestModeChoiceBottomSheet extends StatelessWidget {
                   style: GoogleFonts.inter(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
-                    color: const Color(0xFF3D3D3D),
+                    color: ColorConstants.textDark,
                   ),
                 ),
               ),

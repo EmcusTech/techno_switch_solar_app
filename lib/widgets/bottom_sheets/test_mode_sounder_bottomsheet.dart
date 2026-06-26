@@ -8,6 +8,8 @@ import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/utils/peripheral_test_mode_sync.dart';
 import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/widgets/dropdown.dart';
+import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
 class TestModeSounderBottomSheet extends StatefulWidget {
   final String deviceId;
@@ -32,7 +34,7 @@ class _TestModeSounderBottomSheetState
     extends State<TestModeSounderBottomSheet> {
   BleManager? manager;
 
-  final List<String> yesNoOptions = ['No', 'Yes'];
+  final List<String> yesNoOptions = [StringConstants.no, StringConstants.yes];
 
   @override
   void initState() {
@@ -79,7 +81,7 @@ class _TestModeSounderBottomSheetState
         ),
         child: Container(
           decoration: const BoxDecoration(
-            color: Color(0xFFE31C23),
+            color: ColorConstants.primaryVariant,
             borderRadius: BorderRadius.vertical(top: Radius.circular(50)),
           ),
           child: Padding(
@@ -87,7 +89,7 @@ class _TestModeSounderBottomSheetState
             child: Container(
               clipBehavior: Clip.hardEdge,
               decoration: const BoxDecoration(
-                color: Colors.white,
+                color: ColorConstants.white,
                 borderRadius: BorderRadius.vertical(top: Radius.circular(50)),
               ),
               // padding: EdgeInsets.only(
@@ -111,7 +113,7 @@ class _TestModeSounderBottomSheetState
                             width: 38,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              color: Colors.black.withValues(alpha: 0.06),
+                              color: ColorConstants.blackMaterial.withValues(alpha: 0.06),
                             ),
                             child: const Icon(Icons.close, size: 20),
                           ),
@@ -129,7 +131,7 @@ class _TestModeSounderBottomSheetState
                     child: Column(
                       children: [
                         _dragHandle(),
-                        _title('Sounder Test'),
+                        _title(StringConstants.sounderTest),
                         Expanded(
                           child: NotificationListener<UserScrollNotification>(
                             onNotification: (notification) {
@@ -155,48 +157,48 @@ class _TestModeSounderBottomSheetState
                                           return Column(
                                             children: [
                                               DropdownWidget(
-                                                label: 'Sounder 1 Test',
+                                                label: StringConstants.sounder1Test,
                                                 value:
                                                     manager!
                                                             .isSounderOneTest
                                                             .value
-                                                        ? 'Yes'
-                                                        : 'No',
+                                                        ? StringConstants.yes
+                                                        : StringConstants.no,
                                                 items: yesNoOptions,
                                                 onChanged:
                                                     (v) => _onTestChanged(
                                                       0,
-                                                      v == 'Yes',
+                                                      v == StringConstants.yes,
                                                     ),
                                               ),
                                               DropdownWidget(
-                                                label: 'Sounder 2 Test',
+                                                label: StringConstants.sounder2Test,
                                                 value:
                                                     manager!
                                                             .isSounderTwoTest
                                                             .value
-                                                        ? 'Yes'
-                                                        : 'No',
+                                                        ? StringConstants.yes
+                                                        : StringConstants.no,
                                                 items: yesNoOptions,
                                                 onChanged:
                                                     (v) => _onTestChanged(
                                                       1,
-                                                      v == 'Yes',
+                                                      v == StringConstants.yes,
                                                     ),
                                               ),
                                               DropdownWidget(
-                                                label: 'Sounder 3 Test',
+                                                label: StringConstants.sounder3Test,
                                                 value:
                                                     manager!
                                                             .isSounderThreeTest
                                                             .value
-                                                        ? 'Yes'
-                                                        : 'No',
+                                                        ? StringConstants.yes
+                                                        : StringConstants.no,
                                                 items: yesNoOptions,
                                                 onChanged:
                                                     (v) => _onTestChanged(
                                                       2,
-                                                      v == 'Yes',
+                                                      v == StringConstants.yes,
                                                     ),
                                               ),
                                             ],
@@ -238,8 +240,8 @@ class _TestModeSounderBottomSheetState
       height: 48,
       child: OutlinedButton(
         style: OutlinedButton.styleFrom(
-          foregroundColor: const Color(0xFFEC1D24),
-          side: const BorderSide(color: Color(0xFFEC1D24)),
+          foregroundColor: ColorConstants.primary,
+          side: const BorderSide(color: ColorConstants.primary),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24),
           ),
@@ -249,7 +251,7 @@ class _TestModeSounderBottomSheetState
           widget.onDownload();
         },
         child: Text(
-          'Download',
+          StringConstants.download,
           style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600),
         ),
       ),
@@ -261,7 +263,7 @@ class _TestModeSounderBottomSheetState
       height: 48,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFFEC1D24),
+          backgroundColor: ColorConstants.primary,
           disabledBackgroundColor: Colors.grey.shade400,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24),
@@ -276,11 +278,11 @@ class _TestModeSounderBottomSheetState
                 }
                 : null,
         child: Text(
-          'Apply',
+          StringConstants.apply,
           style: GoogleFonts.inter(
             fontSize: 16,
             fontWeight: FontWeight.w600,
-            color: Colors.white,
+            color: ColorConstants.white,
           ),
         ),
       ),
@@ -307,7 +309,7 @@ class _TestModeSounderBottomSheetState
         style: GoogleFonts.inter(
           fontSize: 20,
           fontWeight: FontWeight.w700,
-          color: const Color(0xFF3D3D3D),
+          color: ColorConstants.textDark,
         ),
       ),
     );

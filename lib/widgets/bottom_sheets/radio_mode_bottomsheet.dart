@@ -7,6 +7,8 @@ import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/widgets/dropdown.dart';
+import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
 class RadioModeBottomSheet extends StatefulWidget {
   final String deviceId;
@@ -29,8 +31,8 @@ class RadioModeBottomSheet extends StatefulWidget {
 class _RadioModeBottomSheetState extends State<RadioModeBottomSheet> {
   BleManager? manager;
 
-  final List<String> yesNoOptions = ['No', 'Yes'];
-  final List<String> moduleOptions = ['None', 'BLUENRG-MB'];
+  final List<String> yesNoOptions = [StringConstants.no, StringConstants.yes];
+  final List<String> moduleOptions = ['None', StringConstants.bluenrgMB];
 
   late RadioConfig radio;
 
@@ -60,11 +62,11 @@ class _RadioModeBottomSheetState extends State<RadioModeBottomSheet> {
     }
 
     if (radio.numberController.text.isEmpty) {
-      _numberError = 'Number cannot be empty';
+      _numberError = StringConstants.numberCannotBeEmpty;
     } else {
       final number = int.tryParse(radio.numberController.text);
       if (number == null) {
-        _numberError = 'Invalid number';
+        _numberError = StringConstants.invalidNumber;
       }
     }
   }
@@ -103,16 +105,16 @@ class _RadioModeBottomSheetState extends State<RadioModeBottomSheet> {
   }
 
   void _applyCachedData(Map<String, dynamic> data) {
-    radio.enabled = (data['enabled'] as bool?) == true ? 'Yes' : 'No';
+    radio.enabled = (data['enabled'] as bool?) == true ? StringConstants.yes : StringConstants.no;
     final module = (data['module'] as int?) ?? 0;
-    radio.module = module == 0 ? 'None' : 'BLUENRG-MB';
+    radio.module = module == 0 ? 'None' : StringConstants.bluenrgMB;
     radio.nameController.text = (data['name'] as String?) ?? '';
     radio.numberController.text = (data['number'] as String?) ?? '';
-    radio.advertise = (data['advertise'] as bool?) == true ? 'Yes' : 'No';
-    radio.connection = (data['connection'] as bool?) == true ? 'Yes' : 'No';
-    radio.service = (data['service'] as bool?) == true ? 'Yes' : 'No';
-    radio.programming = (data['programming'] as bool?) == true ? 'Yes' : 'No';
-    radio.boot = (data['boot'] as bool?) == true ? 'Yes' : 'No';
+    radio.advertise = (data['advertise'] as bool?) == true ? StringConstants.yes : StringConstants.no;
+    radio.connection = (data['connection'] as bool?) == true ? StringConstants.yes : StringConstants.no;
+    radio.service = (data['service'] as bool?) == true ? StringConstants.yes : StringConstants.no;
+    radio.programming = (data['programming'] as bool?) == true ? StringConstants.yes : StringConstants.no;
+    radio.boot = (data['boot'] as bool?) == true ? StringConstants.yes : StringConstants.no;
   }
 
   void _loadFromManager() {
@@ -120,15 +122,15 @@ class _RadioModeBottomSheetState extends State<RadioModeBottomSheet> {
 
     manager = Get.find<BleLogController>().bleManager;
 
-    radio.enabled = manager!.isRadioSetupEnabled.value ? 'Yes' : 'No';
-    radio.module = manager!.radioSetupModule.value == 0 ? 'None' : 'BLUENRG-MB';
+    radio.enabled = manager!.isRadioSetupEnabled.value ? StringConstants.yes : StringConstants.no;
+    radio.module = manager!.radioSetupModule.value == 0 ? 'None' : StringConstants.bluenrgMB;
     radio.nameController.text = manager!.radioSetupName.value;
     radio.numberController.text = manager!.radioSetupNo.value;
-    radio.advertise = manager!.isRadioSetupAdvertised.value ? 'Yes' : 'No';
-    radio.connection = manager!.isRadioSetupConnected.value ? 'Yes' : 'No';
-    radio.service = manager!.isRadioSetupServiced.value ? 'Yes' : 'No';
-    radio.programming = manager!.isRadioSetupProgrammed.value ? 'Yes' : 'No';
-    radio.boot = manager!.isRadioSetupBooted.value ? 'Yes' : 'No';
+    radio.advertise = manager!.isRadioSetupAdvertised.value ? StringConstants.yes : StringConstants.no;
+    radio.connection = manager!.isRadioSetupConnected.value ? StringConstants.yes : StringConstants.no;
+    radio.service = manager!.isRadioSetupServiced.value ? StringConstants.yes : StringConstants.no;
+    radio.programming = manager!.isRadioSetupProgrammed.value ? StringConstants.yes : StringConstants.no;
+    radio.boot = manager!.isRadioSetupBooted.value ? StringConstants.yes : StringConstants.no;
 
     if (mounted) setState(() {});
   }
@@ -150,7 +152,7 @@ class _RadioModeBottomSheetState extends State<RadioModeBottomSheet> {
           constraints: BoxConstraints(maxHeight: screenHeight * 0.75),
           child: Container(
             decoration: const BoxDecoration(
-              color: Colors.white,
+              color: ColorConstants.white,
               borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
             ),
             padding: EdgeInsets.only(
@@ -162,7 +164,7 @@ class _RadioModeBottomSheetState extends State<RadioModeBottomSheet> {
             child: Column(
               children: [
                 _dragHandle(),
-                _title('Radio Configuration'),
+                _title(StringConstants.radioConfiguration),
                 Expanded(
                   child: NotificationListener<UserScrollNotification>(
                     onNotification: (notification) {
@@ -200,22 +202,22 @@ class _RadioModeBottomSheetState extends State<RadioModeBottomSheet> {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFDCDCDC)),
+        border: Border.all(color: ColorConstants.borderMuted),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       child: Column(
         children: [
-          _disabledField('Enabled', 'Yes'),
+          _disabledField(StringConstants.enabled, StringConstants.yes),
 
           DropdownWidget(
-            label: 'Module',
+            label: StringConstants.module,
             value: radio.module,
             items: moduleOptions,
             onChanged: (v) => setState(() => radio.module = v),
           ),
 
           _textField(
-            label: 'Name',
+            label: StringConstants.name,
             controller: radio.nameController,
             error: _nameError,
             maxLength: 21,
@@ -230,35 +232,35 @@ class _RadioModeBottomSheetState extends State<RadioModeBottomSheet> {
           ),
 
           DropdownWidget(
-            label: 'Advertise',
+            label: StringConstants.advertise,
             value: radio.advertise,
             items: yesNoOptions,
             onChanged: (v) => setState(() => radio.advertise = v),
           ),
 
           DropdownWidget(
-            label: 'Connection',
+            label: StringConstants.connection,
             value: radio.connection,
             items: yesNoOptions,
             onChanged: (v) => setState(() => radio.connection = v),
           ),
 
           DropdownWidget(
-            label: 'Service',
+            label: StringConstants.service,
             value: radio.service,
             items: yesNoOptions,
             onChanged: (v) => setState(() => radio.service = v),
           ),
 
           DropdownWidget(
-            label: 'Programming',
+            label: StringConstants.programming,
             value: radio.programming,
             items: yesNoOptions,
             onChanged: (v) => setState(() => radio.programming = v),
           ),
 
           DropdownWidget(
-            label: 'Boot',
+            label: StringConstants.boot,
             value: radio.boot,
             items: yesNoOptions,
             onChanged: (v) => setState(() => radio.boot = v),
@@ -275,7 +277,7 @@ class _RadioModeBottomSheetState extends State<RadioModeBottomSheet> {
       height: 48,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFFEC1D24),
+          backgroundColor: ColorConstants.primary,
           disabledBackgroundColor: Colors.grey.shade400,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24),
@@ -291,23 +293,23 @@ class _RadioModeBottomSheetState extends State<RadioModeBottomSheet> {
                   manager!.radioSetupName.value = radio.nameController.text;
                   manager!.radioSetupNo.value = radio.numberController.text;
                   manager!.isRadioSetupAdvertised.value =
-                      radio.advertise == 'Yes';
+                      radio.advertise == StringConstants.yes;
                   manager!.isRadioSetupConnected.value =
-                      radio.connection == 'Yes';
-                  manager!.isRadioSetupServiced.value = radio.service == 'Yes';
+                      radio.connection == StringConstants.yes;
+                  manager!.isRadioSetupServiced.value = radio.service == StringConstants.yes;
                   manager!.isRadioSetupProgrammed.value =
-                      radio.programming == 'Yes';
-                  manager!.isRadioSetupBooted.value = radio.boot == 'Yes';
+                      radio.programming == StringConstants.yes;
+                  manager!.isRadioSetupBooted.value = radio.boot == StringConstants.yes;
 
                   widget.onApply();
                 }
                 : null,
         child: Text(
-          'Apply',
+          StringConstants.apply,
           style: GoogleFonts.inter(
             fontSize: 16,
             fontWeight: FontWeight.w600,
-            color: Colors.white,
+            color: ColorConstants.white,
           ),
         ),
       ),
@@ -320,14 +322,14 @@ class _RadioModeBottomSheetState extends State<RadioModeBottomSheet> {
       child: OutlinedButton(
         onPressed: widget.onDownload,
         style: OutlinedButton.styleFrom(
-          foregroundColor: const Color(0xFFEC1D24),
-          side: const BorderSide(color: Color(0xFFEC1D24)),
+          foregroundColor: ColorConstants.primary,
+          side: const BorderSide(color: ColorConstants.primary),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24),
           ),
         ),
         child: Text(
-          'Download',
+          StringConstants.download,
           style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600),
         ),
       ),
@@ -365,7 +367,7 @@ class _RadioModeBottomSheetState extends State<RadioModeBottomSheet> {
                 error,
                 style: GoogleFonts.inter(
                   fontSize: 12,
-                  color: const Color(0xFFEC1D24),
+                  color: ColorConstants.primary,
                 ),
               ),
             ),
@@ -408,9 +410,9 @@ class _RadioModeBottomSheetState extends State<RadioModeBottomSheet> {
             height: 48,
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
             decoration: BoxDecoration(
-              color: const Color(0xFFF8F8F8),
+              color: ColorConstants.surfaceLight,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFD0D0D0)),
+              border: Border.all(color: ColorConstants.borderLight),
             ),
             alignment: Alignment.centerLeft,
             child: Text(
@@ -418,7 +420,7 @@ class _RadioModeBottomSheetState extends State<RadioModeBottomSheet> {
               style: GoogleFonts.inter(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
-                color: const Color(0xFF3D3D3D),
+                color: ColorConstants.textDark,
               ),
             ),
           ),
@@ -436,11 +438,11 @@ class _RadioModeBottomSheetState extends State<RadioModeBottomSheet> {
 
   InputDecoration _inputDecoration({bool hasError = false}) {
     final borderColor =
-        hasError ? const Color(0xFFEC1D24) : const Color(0xFFD0D0D0);
+        hasError ? ColorConstants.primary : ColorConstants.borderLight;
 
     return InputDecoration(
       filled: true,
-      fillColor: const Color(0xFFF8F8F8),
+      fillColor: ColorConstants.surfaceLight,
       contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
@@ -452,7 +454,7 @@ class _RadioModeBottomSheetState extends State<RadioModeBottomSheet> {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFFEC1D24), width: 2),
+        borderSide: const BorderSide(color: ColorConstants.primary, width: 2),
       ),
     );
   }
@@ -461,13 +463,13 @@ class _RadioModeBottomSheetState extends State<RadioModeBottomSheet> {
 // ───────────────── MODEL ─────────────────
 
 class RadioConfig {
-  String enabled = 'No';
+  String enabled = StringConstants.no;
   String module = 'None';
-  String advertise = 'No';
-  String connection = 'No';
-  String service = 'No';
-  String programming = 'No';
-  String boot = 'No';
+  String advertise = StringConstants.no;
+  String connection = StringConstants.no;
+  String service = StringConstants.no;
+  String programming = StringConstants.no;
+  String boot = StringConstants.no;
 
   TextEditingController nameController = TextEditingController();
   TextEditingController numberController = TextEditingController();

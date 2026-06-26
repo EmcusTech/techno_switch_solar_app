@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
 class CommissioningTestItem {
   const CommissioningTestItem({required this.id, required this.label});
@@ -79,7 +81,7 @@ class _CommissioningTestResultDialogState
         ),
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: ColorConstants.white,
           borderRadius: BorderRadius.circular(16),
         ),
         child: Column(
@@ -89,13 +91,13 @@ class _CommissioningTestResultDialogState
               width: 64,
               height: 64,
               decoration: const BoxDecoration(
-                color: Color(0xFFFBDEE1),
+                color: ColorConstants.errorIconBackground,
                 shape: BoxShape.circle,
               ),
               child: const Center(
                 child: Icon(
                   Icons.fact_check_outlined,
-                  color: Color(0xFFEC1D24),
+                  color: ColorConstants.primary,
                   size: 32,
                 ),
               ),
@@ -106,7 +108,7 @@ class _CommissioningTestResultDialogState
               style: GoogleFonts.inter(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
-                color: const Color(0xFF3D3D3D),
+                color: ColorConstants.textDark,
               ),
               textAlign: TextAlign.center,
             ),
@@ -116,7 +118,7 @@ class _CommissioningTestResultDialogState
               style: GoogleFonts.inter(
                 fontSize: 14,
                 fontWeight: FontWeight.w400,
-                color: const Color(0xFF666666),
+                color: ColorConstants.textGray,
               ),
               textAlign: TextAlign.center,
             ),
@@ -142,20 +144,20 @@ class _CommissioningTestResultDialogState
                     child: Container(
                       height: 48,
                       decoration: BoxDecoration(
-                        color: const Color(0xFFEFEEEE),
+                        color: ColorConstants.buttonSecondaryBackground,
                         borderRadius: BorderRadius.circular(24),
                         border: Border.all(
-                          color: const Color(0xFFD0D0D0),
+                          color: ColorConstants.borderLight,
                           width: 1,
                         ),
                       ),
                       child: Center(
                         child: Text(
-                          'Skip',
+                          StringConstants.skip,
                           style: GoogleFonts.inter(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
-                            color: const Color(0xFF666666),
+                            color: ColorConstants.textGray,
                           ),
                         ),
                       ),
@@ -183,17 +185,17 @@ class _CommissioningTestResultDialogState
                       decoration: BoxDecoration(
                         color:
                             _allSelected
-                                ? const Color(0xFFEC1D24)
+                                ? ColorConstants.primary
                                 : Colors.grey.shade400,
                         borderRadius: BorderRadius.circular(24),
                       ),
                       child: Center(
                         child: Text(
-                          'Save',
+                          StringConstants.save,
                           style: GoogleFonts.inter(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
-                            color: Colors.white,
+                            color: ColorConstants.white,
                           ),
                         ),
                       ),
@@ -213,9 +215,9 @@ class _CommissioningTestResultDialogState
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8F8F8),
+        color: ColorConstants.surfaceLight,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE8E8E8)),
+        border: Border.all(color: ColorConstants.dividerLight),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -225,7 +227,7 @@ class _CommissioningTestResultDialogState
             style: GoogleFonts.inter(
               fontSize: 14,
               fontWeight: FontWeight.w600,
-              color: const Color(0xFF3D3D3D),
+              color: ColorConstants.textDark,
             ),
           ),
           const SizedBox(height: 8),
@@ -233,20 +235,20 @@ class _CommissioningTestResultDialogState
             children: [
               Expanded(
                 child: _resultChip(
-                  label: 'Pass',
+                  label: StringConstants.pass,
                   isSelected: selected == 'pass',
-                  selectedColor: const Color(0xFFE8F5E9),
-                  selectedBorder: const Color(0xFF4CAF50),
+                  selectedColor: ColorConstants.successBackgroundLight,
+                  selectedBorder: ColorConstants.successMaterial,
                   onTap: () => _setResult(item.id, 'pass'),
                 ),
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: _resultChip(
-                  label: 'Fail',
+                  label: StringConstants.fail,
                   isSelected: selected == 'fail',
-                  selectedColor: const Color(0xFFFDECEA),
-                  selectedBorder: const Color(0xFFEC1D24),
+                  selectedColor: ColorConstants.errorSurface,
+                  selectedBorder: ColorConstants.primary,
                   onTap: () => _setResult(item.id, 'fail'),
                 ),
               ),
@@ -269,10 +271,10 @@ class _CommissioningTestResultDialogState
       child: Container(
         height: 40,
         decoration: BoxDecoration(
-          color: isSelected ? selectedColor : Colors.white,
+          color: isSelected ? selectedColor : ColorConstants.white,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? selectedBorder : const Color(0xFFD0D0D0),
+            color: isSelected ? selectedBorder : ColorConstants.borderLight,
             width: isSelected ? 1.5 : 1,
           ),
         ),
@@ -283,7 +285,7 @@ class _CommissioningTestResultDialogState
               fontSize: 14,
               fontWeight: FontWeight.w600,
               color:
-                  isSelected ? selectedBorder : const Color(0xFF666666),
+                  isSelected ? selectedBorder : ColorConstants.textGray,
             ),
           ),
         ),

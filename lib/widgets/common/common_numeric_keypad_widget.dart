@@ -7,6 +7,8 @@ import 'package:techno_switch_solar_app/widgets/common/access_code_success_lotti
 import 'package:techno_switch_solar_app/widgets/common/access_code_verifying_lottie_widget.dart';
 import 'package:techno_switch_solar_app/widgets/common/common_cta_button.dart';
 import 'package:techno_switch_solar_app/widgets/common/common_numeric_keypad_tile_widget.dart';
+import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
 enum ValidatingStatus { empty, verifying, success, error }
 
@@ -85,11 +87,11 @@ class _CommonNumericKeypadWidgetState extends State<CommonNumericKeypadWidget> {
     if (_controller.text.trim().isEmpty) return;
 
     bleProcess.isAccessKeyValid.value = null;
-    bleProcess.processDesc.value = 'Validating';
+    bleProcess.processDesc.value = StringConstants.validating;
     bleProcess.accessKey.value = _controller.text;
     await onStartValidation();
     if (bleProcess.processDesc.value.isEmpty) {
-      bleProcess.processDesc.value = 'Validating';
+      bleProcess.processDesc.value = StringConstants.validating;
     }
   }
 
@@ -237,7 +239,7 @@ class _CommonNumericKeypadWidgetState extends State<CommonNumericKeypadWidget> {
                   status =
                       processDescValue.isNotEmpty
                           ? processDescValue
-                          : 'Wrong password. Try again.';
+                          : StringConstants.wrongPassword;
                 }
                 if (!commFailed &&
                     isAccessKeyValidValue == false &&
@@ -285,7 +287,7 @@ class _CommonNumericKeypadWidgetState extends State<CommonNumericKeypadWidget> {
             ? MediaQuery.of(context).size.height * 0.85
             : MediaQuery.of(context).size.height * 0.82;
     final borderColor =
-        fieldBorderIsError ? const Color(0xFFEC1D24) : const Color(0xFFD0D0D0);
+        fieldBorderIsError ? ColorConstants.primary : ColorConstants.borderLight;
     final lockSheet = _isSheetLocked(validatingStatus);
 
     return PopScope(
@@ -297,7 +299,7 @@ class _CommonNumericKeypadWidgetState extends State<CommonNumericKeypadWidget> {
         constraints: BoxConstraints(maxHeight: maxHeight),
         child: Container(
           decoration: const BoxDecoration(
-            color: Color(0xFFE31C23),
+            color: ColorConstants.primaryVariant,
             borderRadius: BorderRadius.vertical(top: Radius.circular(50)),
           ),
           child: Padding(
@@ -305,7 +307,7 @@ class _CommonNumericKeypadWidgetState extends State<CommonNumericKeypadWidget> {
             child: Container(
               clipBehavior: Clip.hardEdge,
               decoration: const BoxDecoration(
-                color: Colors.white,
+                color: ColorConstants.white,
                 borderRadius: BorderRadius.vertical(top: Radius.circular(50)),
               ),
               child: Stack(
@@ -351,22 +353,22 @@ class _CommonNumericKeypadWidgetState extends State<CommonNumericKeypadWidget> {
                                         fontSize: 24,
                                         fontWeight: FontWeight.w600,
                                         letterSpacing: 8,
-                                        color: const Color(0xFF3D3D3D),
+                                        color: ColorConstants.textDark,
                                       ),
                                       inputFormatters: [
                                         FilteringTextInputFormatter.digitsOnly,
                                       ],
                                       decoration: InputDecoration(
-                                        hintText: '••••••••',
+                                        hintText: StringConstants.strca4d661a,
                                         hintStyle: GoogleFonts.inter(
                                           fontSize: 24,
                                           fontWeight: FontWeight.w600,
                                           letterSpacing: 8,
-                                          color: const Color(0xFFD0D0D0),
+                                          color: ColorConstants.borderLight,
                                         ),
                                         counterText: '',
                                         filled: true,
-                                        fillColor: const Color(0xFFF8F8F8),
+                                        fillColor: ColorConstants.surfaceLight,
                                         border: OutlineInputBorder(
                                           borderRadius: BorderRadius.circular(
                                             12,
@@ -390,7 +392,7 @@ class _CommonNumericKeypadWidgetState extends State<CommonNumericKeypadWidget> {
                                             12,
                                           ),
                                           borderSide: const BorderSide(
-                                            color: Color(0xFFEC1D24),
+                                            color: ColorConstants.primary,
                                             width: 2,
                                           ),
                                         ),
@@ -425,8 +427,8 @@ class _CommonNumericKeypadWidgetState extends State<CommonNumericKeypadWidget> {
                                             fontWeight: FontWeight.w600,
                                             color:
                                                 isErrorStatus
-                                                    ? const Color(0xFFEC1D24)
-                                                    : const Color(0xFF3D3D3D),
+                                                    ? ColorConstants.primary
+                                                    : ColorConstants.textDark,
                                           ),
                                           textAlign: TextAlign.center,
                                         ),
@@ -497,7 +499,7 @@ class _CommonNumericKeypadWidgetState extends State<CommonNumericKeypadWidget> {
                                                 children: [
                                                   const Icon(
                                                     Icons.verified,
-                                                    color: Colors.white,
+                                                    color: ColorConstants.white,
                                                   ),
                                                   const SizedBox(width: 8),
                                                   Text(
@@ -506,7 +508,7 @@ class _CommonNumericKeypadWidgetState extends State<CommonNumericKeypadWidget> {
                                                       fontSize: 14,
                                                       fontWeight:
                                                           FontWeight.bold,
-                                                      color: Colors.white,
+                                                      color: ColorConstants.white,
                                                     ),
                                                   ),
                                                 ],
@@ -537,7 +539,7 @@ class _CommonNumericKeypadWidgetState extends State<CommonNumericKeypadWidget> {
                               width: 38,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: Colors.black.withValues(alpha: 0.06),
+                                color: ColorConstants.blackMaterial.withValues(alpha: 0.06),
                               ),
                               child: const Icon(Icons.close, size: 20),
                             ),
@@ -575,7 +577,7 @@ class _CommonNumericKeypadWidgetState extends State<CommonNumericKeypadWidget> {
       _digitTile('0'),
       CommonNumericKeypadTileWidget(
         isDelete: true,
-        fillColor: const Color(0xFFFAEFEF),
+        fillColor: ColorConstants.colorFffaefef,
         onTap: () => _updateAccessController(isDelete: true),
       ),
     ];
@@ -610,11 +612,11 @@ class _CommonNumericKeypadWidgetState extends State<CommonNumericKeypadWidget> {
           children: [
             const AccessCodeVerifyingLottieWidget(key: ValueKey('verifying')),
             Text(
-              'Verifying access',
+              StringConstants.verifyingAccess,
               style: GoogleFonts.inter(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: const Color(0xFF3D3D3D),
+                color: ColorConstants.textDark,
               ),
             ),
           ],
@@ -624,11 +626,11 @@ class _CommonNumericKeypadWidgetState extends State<CommonNumericKeypadWidget> {
           children: [
             const AccessCodeSuccessLottieWidget(key: ValueKey('success')),
             Text(
-              'Access granted',
+              StringConstants.accessGranted,
               style: GoogleFonts.inter(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: const Color(0xFF3D3D3D),
+                color: ColorConstants.textDark,
               ),
             ),
           ],
@@ -642,10 +644,10 @@ class _CommonNumericKeypadWidgetState extends State<CommonNumericKeypadWidget> {
             Container(
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: const Color(0xFFEC1D24),
+                color: ColorConstants.primary,
                 boxShadow: <BoxShadow>[
                   BoxShadow(
-                    color: const Color(0xFFEC1D24).withValues(alpha: 0.4),
+                    color: ColorConstants.primary.withValues(alpha: 0.4),
                     blurRadius: 24,
                     spreadRadius: 1,
                     blurStyle: BlurStyle.solid,
@@ -659,7 +661,7 @@ class _CommonNumericKeypadWidgetState extends State<CommonNumericKeypadWidget> {
             ),
             const SizedBox(height: 32),
             Text(
-              isError ? 'Device not responding' : 'Enter Access Code',
+              isError ? StringConstants.deviceNotResponding2 : StringConstants.enterAccessCode,
               textAlign: TextAlign.center,
               style: GoogleFonts.inter(
                 fontSize: 20,

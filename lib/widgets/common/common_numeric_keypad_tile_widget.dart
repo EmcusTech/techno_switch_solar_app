@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 
 class CommonNumericKeypadTileWidget extends StatefulWidget {
   final String? numericValue;
@@ -68,7 +69,7 @@ class _CommonNumericKeypadTileWidgetState
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16.7),
           border: Border.all(
-            color: Colors.black.withOpacity(0.08),
+            color: ColorConstants.blackMaterial.withOpacity(0.08),
             width: 0.696,
           ),
           gradient: LinearGradient(
@@ -82,9 +83,9 @@ class _CommonNumericKeypadTileWidgetState
                       Color.fromARGB(255, 207, 47, 47),
                     ]
                     : [
-                      widget.fillColor ?? Colors.white,
-                      widget.fillColor ?? Colors.white,
-                      widget.fillColor ?? Colors.white,
+                      widget.fillColor ?? ColorConstants.white,
+                      widget.fillColor ?? ColorConstants.white,
+                      widget.fillColor ?? ColorConstants.white,
                     ],
             stops: [0.0, 0.0, 1.0],
           ),
@@ -92,37 +93,37 @@ class _CommonNumericKeypadTileWidgetState
             // inset shadows are not directly supported in BoxDecoration
             // these outer shadows approximate the neumorphic effect
             BoxShadow(
-              color: Color(0x4DFFFFFF), // rgba(255,255,255,0.30)
+              color: ColorConstants.color4Dffffff, // rgba(255,255,255,0.30)
               offset: Offset(1.186, -1.186),
               blurRadius: 2.372,
               spreadRadius: 0,
             ),
             BoxShadow(
-              color: Color(0x80E1E1E1), // rgba(225,225,225,0.50)
+              color: ColorConstants.color80E1E1E1, // rgba(225,225,225,0.50)
               offset: Offset(-1.186, 1.186),
               blurRadius: 2.372,
               spreadRadius: 0,
             ),
             BoxShadow(
-              color: Color(0x33E1E1E1), // rgba(225,225,225,0.20)
+              color: ColorConstants.shadowLight, // rgba(225,225,225,0.20)
               offset: Offset(-1.186, -1.186),
               blurRadius: 2.372,
               spreadRadius: 0,
             ),
             BoxShadow(
-              color: Color(0x33E1E1E1), // rgba(225,225,225,0.20)
+              color: ColorConstants.shadowLight, // rgba(225,225,225,0.20)
               offset: Offset(1.186, 1.186),
               blurRadius: 2.372,
               spreadRadius: 0,
             ),
             BoxShadow(
-              color: Color(0xE6FFFFFF), // rgba(255,255,255,0.90)
+              color: ColorConstants.colorE6Ffffff, // rgba(255,255,255,0.90)
               offset: Offset(-1.186, 1.186),
               blurRadius: 2.372,
               spreadRadius: 0,
             ),
             BoxShadow(
-              color: Color(0xE6E1E1E1), // rgba(225,225,225,0.90)
+              color: ColorConstants.colorE6E1E1E1, // rgba(225,225,225,0.90)
               offset: Offset(1.186, -1.186),
               blurRadius: 3.558,
               spreadRadius: 0,
@@ -136,7 +137,7 @@ class _CommonNumericKeypadTileWidgetState
                     "assets/svgs/keypad_delete_icon.svg",
                     colorFilter: ColorFilter.mode(
                       isPressed
-                          ? Colors.white
+                          ? ColorConstants.white
                           : Color.fromARGB(255, 207, 47, 47),
                       BlendMode.srcIn,
                     ),
@@ -148,7 +149,7 @@ class _CommonNumericKeypadTileWidgetState
                     style: GoogleFonts.inter(
                       fontSize: 25,
                       fontWeight: FontWeight.w500,
-                      color: isPressed ? Colors.white : Color(0xFF3D3D3D),
+                      color: isPressed ? ColorConstants.white : ColorConstants.textDark,
                     ),
                   ),
         ),

@@ -9,6 +9,8 @@ import 'package:techno_switch_solar_app/models/l_bus_setup_data_model.dart';
 import 'package:techno_switch_solar_app/panel_config/panel_config_cache_sync.dart';
 import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/widgets/dropdown.dart';
+import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
 class LBusBottomSheet extends StatefulWidget {
   final String deviceId;
@@ -34,11 +36,11 @@ class LBusBottomSheetState extends State<LBusBottomSheet> {
   BleManager? manager;
   int selectedBus = 1;
 
-  final List<String> yesNoOptions = ['No', 'Yes'];
-  final List<String> productOptions = ['None', 'Rhino103R'];
+  final List<String> yesNoOptions = [StringConstants.no, StringConstants.yes];
+  final List<String> productOptions = ['None', StringConstants.rhino103r];
 
-  String enabled = 'No';
-  String idLed = 'No';
+  String enabled = StringConstants.no;
+  String idLed = StringConstants.no;
   String product = 'None';
 
   final TextEditingController deviceTextController = TextEditingController();
@@ -187,7 +189,7 @@ class LBusBottomSheetState extends State<LBusBottomSheet> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (widget.embedInCreateFlow) _title('L-Bus Configuration'),
+          if (widget.embedInCreateFlow) _title(StringConstants.lBusConfiguration),
           _deviceSelector(),
           const SizedBox(height: 16),
           _sectionContainer(
@@ -195,15 +197,15 @@ class LBusBottomSheetState extends State<LBusBottomSheet> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
               child: Column(
                 children: [
-                  _disabledField('L-Bus No', selectedBus.toString()),
+                  _disabledField(StringConstants.lBusNo, selectedBus.toString()),
                   DropdownWidget(
-                    label: 'Enabled',
+                    label: StringConstants.enabled,
                     value: enabled,
                     items: yesNoOptions,
                     onChanged: (v) => setState(() => enabled = v),
                   ),
                   DropdownWidget(
-                    label: 'ID LED',
+                    label: StringConstants.idLED,
                     value: idLed,
                     items: yesNoOptions,
                     onChanged: (v) => setState(() => idLed = v),
@@ -215,25 +217,25 @@ class LBusBottomSheetState extends State<LBusBottomSheet> {
                     onChanged: (v) => setState(() => product = v),
                   ),
                   _textField(
-                    label: 'L-Bus Device Text',
+                    label: StringConstants.lBusDeviceText2,
                     controller: deviceTextController,
                     maxLength: 21,
                     onChanged: () => setState(() {}),
                   ),
                   _numericField(label: 'ID', controller: idController),
                   _numericField(
-                    label: 'Revision',
+                    label: StringConstants.revision,
                     controller: revisionController,
                   ),
                   _textField(
-                    label: 'Product Rev.',
+                    label: StringConstants.productRev2,
                     controller: productRevController,
                   ),
                   _readOnlyField('Hardware', hardwareController),
-                  _readOnlyField('Firmware', firmwareController),
-                  _textField(label: 'Date', controller: dateController),
+                  _readOnlyField(StringConstants.firmware, firmwareController),
+                  _textField(label: StringConstants.hardware, controller: dateController),
                   _numericField(
-                    label: 'Protocol',
+                    label: StringConstants.protocol,
                     controller: protocolController,
                   ),
                 ],
@@ -261,7 +263,7 @@ class LBusBottomSheetState extends State<LBusBottomSheet> {
         constraints: BoxConstraints(maxHeight: screenHeight * 0.80),
         child: Container(
           decoration: const BoxDecoration(
-            color: Color(0xFFE31C23),
+            color: ColorConstants.primaryVariant,
             borderRadius: BorderRadius.vertical(top: Radius.circular(50)),
           ),
           child: Padding(
@@ -269,7 +271,7 @@ class LBusBottomSheetState extends State<LBusBottomSheet> {
             child: Container(
               clipBehavior: Clip.hardEdge,
               decoration: const BoxDecoration(
-                color: Colors.white,
+                color: ColorConstants.white,
                 borderRadius: BorderRadius.vertical(top: Radius.circular(50)),
               ),
               // padding: EdgeInsets.only(
@@ -293,7 +295,7 @@ class LBusBottomSheetState extends State<LBusBottomSheet> {
                             width: 38,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              color: Colors.black.withValues(alpha: 0.06),
+                              color: ColorConstants.blackMaterial.withValues(alpha: 0.06),
                             ),
                             child: const Icon(Icons.close, size: 20),
                           ),
@@ -311,7 +313,7 @@ class LBusBottomSheetState extends State<LBusBottomSheet> {
                     child: Column(
                       children: [
                         _dragHandle(),
-                        _title('L-Bus Mode'),
+                        _title(StringConstants.lBusMode),
                         Expanded(child: _scrollBody()),
                         const SizedBox(height: 12),
                         Row(
@@ -355,7 +357,7 @@ class LBusBottomSheetState extends State<LBusBottomSheet> {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFDCDCDC)),
+        border: Border.all(color: ColorConstants.borderMuted),
       ),
       child: child,
     );
@@ -381,7 +383,7 @@ class LBusBottomSheetState extends State<LBusBottomSheet> {
         style: GoogleFonts.inter(
           fontSize: 20,
           fontWeight: FontWeight.w700,
-          color: const Color(0xFF3D3D3D),
+          color: ColorConstants.textDark,
         ),
       ),
     );
@@ -422,7 +424,7 @@ class LBusBottomSheetState extends State<LBusBottomSheet> {
                             fontSize: 12,
                             color:
                                 currentLength == max
-                                    ? const Color(0xFFEC1D24)
+                                    ? ColorConstants.primary
                                     : Colors.grey,
                           ),
                         ),
@@ -504,7 +506,7 @@ class LBusBottomSheetState extends State<LBusBottomSheet> {
       style: GoogleFonts.inter(
         fontSize: 13,
         fontWeight: FontWeight.w600,
-        color: const Color(0xFF3D3D3D),
+        color: ColorConstants.textDark,
       ),
     );
   }
@@ -512,19 +514,19 @@ class LBusBottomSheetState extends State<LBusBottomSheet> {
   InputDecoration _inputDecoration() {
     return InputDecoration(
       filled: true,
-      fillColor: const Color(0xFFF8F8F8),
+      fillColor: ColorConstants.surfaceLight,
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFFD0D0D0)),
+        borderSide: const BorderSide(color: ColorConstants.borderLight),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFFD0D0D0)),
+        borderSide: const BorderSide(color: ColorConstants.borderLight),
       ),
       focusedBorder: const OutlineInputBorder(
         borderRadius: BorderRadius.all(Radius.circular(12)),
-        borderSide: BorderSide(color: Color(0xFFEC1D24), width: 2),
+        borderSide: BorderSide(color: ColorConstants.primary, width: 2),
       ),
     );
   }
@@ -534,8 +536,8 @@ class LBusBottomSheetState extends State<LBusBottomSheet> {
       height: 48,
       child: OutlinedButton(
         style: OutlinedButton.styleFrom(
-          foregroundColor: const Color(0xFFEC1D24),
-          side: const BorderSide(color: Color(0xFFEC1D24)),
+          foregroundColor: ColorConstants.primary,
+          side: const BorderSide(color: ColorConstants.primary),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24),
           ),
@@ -545,7 +547,7 @@ class LBusBottomSheetState extends State<LBusBottomSheet> {
           widget.onDownload();
         },
         child: Text(
-          'Download',
+          StringConstants.download,
           style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600),
         ),
       ),
@@ -557,7 +559,7 @@ class LBusBottomSheetState extends State<LBusBottomSheet> {
       height: 48,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFFEC1D24),
+          backgroundColor: ColorConstants.primary,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24),
           ),
@@ -571,11 +573,11 @@ class LBusBottomSheetState extends State<LBusBottomSheet> {
                 }
                 : null,
         child: Text(
-          'Apply',
+          StringConstants.apply,
           style: GoogleFonts.inter(
             fontSize: 16,
             fontWeight: FontWeight.w600,
-            color: Colors.white,
+            color: ColorConstants.white,
           ),
         ),
       ),

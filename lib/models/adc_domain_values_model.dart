@@ -1,4 +1,5 @@
 import 'package:techno_switch_solar_app/models/adc_input_model.dart';
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
 class AdcValues {
   final double sounder1;
@@ -31,7 +32,7 @@ class AdcValues {
 
   factory AdcValues.fromList(List<AdcInputModel> data) {
     if (data.length < 12) {
-      throw Exception("Not enough ADC values");
+      throw Exception(StringConstants.notEnoughADCValues);
     }
 
     return AdcValues(

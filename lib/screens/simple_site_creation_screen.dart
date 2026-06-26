@@ -10,6 +10,8 @@ import '../services/panel_service.dart';
 import '../screens/create_project/pages/site_creation_page.dart';
 import '../screens/home_screen.dart';
 import '../screens/site_screen.dart';
+import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
 final BleManager ble = Get.find<BleManager>();
 
@@ -200,7 +202,7 @@ class _SimpleSiteCreationScreenState extends State<SimpleSiteCreationScreen> {
           content: Text(
             'Site created successfully! ${widget.retrievedLogs.length} logs saved.',
           ),
-          backgroundColor: Color(0xFF00A706),
+          backgroundColor: ColorConstants.success,
         ),
       );
 
@@ -227,7 +229,7 @@ class _SimpleSiteCreationScreenState extends State<SimpleSiteCreationScreen> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Color(0xFFF6EBEB), Colors.white],
+            colors: [ColorConstants.scaffoldGradientTop, ColorConstants.white],
           ),
         ),
         child: Stack(
@@ -252,11 +254,11 @@ class _SimpleSiteCreationScreenState extends State<SimpleSiteCreationScreen> {
                         SizedBox(width: 17),
                         Expanded(
                           child: Text(
-                            'Create Site',
+                            StringConstants.createSite,
                             style: GoogleFonts.inter(
                               fontSize: 20,
                               fontWeight: FontWeight.w700,
-                              color: Color(0xFF3A3A3A),
+                              color: ColorConstants.textBodyDark,
                             ),
                           ),
                         ),
@@ -266,7 +268,7 @@ class _SimpleSiteCreationScreenState extends State<SimpleSiteCreationScreen> {
                     Expanded(
                       child: Container(
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: ColorConstants.white,
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: Padding(
@@ -330,14 +332,14 @@ class _SimpleSiteCreationScreenState extends State<SimpleSiteCreationScreen> {
                                                   ? Color(
                                                     0xFFEFEEEE,
                                                   ).withValues(alpha: 0.5)
-                                                  : Color(0xFFEFEEEE),
+                                                  : ColorConstants.buttonSecondaryBackground,
                                           borderRadius: BorderRadius.circular(
                                             28,
                                           ),
                                         ),
                                         child: Center(
                                           child: Text(
-                                            'Cancel',
+                                            StringConstants.cancel,
                                             style: GoogleFonts.inter(
                                               fontSize: 14,
                                               fontWeight: FontWeight.w700,
@@ -346,7 +348,7 @@ class _SimpleSiteCreationScreenState extends State<SimpleSiteCreationScreen> {
                                                       ? Color(
                                                         0xFF49454F,
                                                       ).withValues(alpha: 0.5)
-                                                      : Color(0xFF49454F),
+                                                      : ColorConstants.labelText,
                                             ),
                                           ),
                                         ),
@@ -368,7 +370,7 @@ class _SimpleSiteCreationScreenState extends State<SimpleSiteCreationScreen> {
                                                   ? Color(
                                                     0xFFEC1D24,
                                                   ).withValues(alpha: 0.5)
-                                                  : Color(0xFFEC1D24),
+                                                  : ColorConstants.primary,
                                           borderRadius: BorderRadius.circular(
                                             28,
                                           ),
@@ -384,16 +386,16 @@ class _SimpleSiteCreationScreenState extends State<SimpleSiteCreationScreen> {
                                                       valueColor:
                                                           AlwaysStoppedAnimation<
                                                             Color
-                                                          >(Colors.white),
+                                                          >(ColorConstants.white),
                                                     ),
                                                   )
                                                   : Text(
-                                                    'Create Site',
+                                                    StringConstants.createSite,
                                                     style: GoogleFonts.inter(
                                                       fontSize: 14,
                                                       fontWeight:
                                                           FontWeight.w700,
-                                                      color: Colors.white,
+                                                      color: ColorConstants.white,
                                                     ),
                                                   ),
                                         ),

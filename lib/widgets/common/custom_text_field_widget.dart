@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 
 /// Reusable text field widget with consistent styling and validation support
 class CustomTextFieldWidget extends StatelessWidget {
@@ -40,16 +41,16 @@ class CustomTextFieldWidget extends StatelessWidget {
           style: GoogleFonts.inter(
             fontSize: 13,
             fontWeight: FontWeight.w600,
-            color: hasError ? Color(0xFFEC1D24) : Color(0xFF696969),
+            color: hasError ? ColorConstants.primary : ColorConstants.textSecondary,
           ),
         ),
         SizedBox(height: 8),
         Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: ColorConstants.white,
             borderRadius: BorderRadius.circular(4),
             border: Border.all(
-              color: hasError ? Color(0xFFEC1D24) : Color(0xFFE0E0E0),
+              color: hasError ? ColorConstants.primary : ColorConstants.borderGray,
               width: hasError ? 2 : 1,
             ),
           ),
@@ -67,7 +68,7 @@ class CustomTextFieldWidget extends StatelessWidget {
               hintStyle: GoogleFonts.inter(
                 fontSize: 13,
                 fontWeight: FontWeight.w400,
-                color: Color(0xFFBDBDBD),
+                color: ColorConstants.divider,
               ),
             ),
           ),
@@ -79,7 +80,7 @@ class CustomTextFieldWidget extends StatelessWidget {
             style: GoogleFonts.inter(
               fontSize: 12,
               fontWeight: FontWeight.w500,
-              color: Color(0xFFEC1D24),
+              color: ColorConstants.primary,
             ),
           ),
         ],

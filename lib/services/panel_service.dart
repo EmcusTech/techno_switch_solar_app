@@ -1,6 +1,7 @@
 import 'dart:convert';
 import '../models/panel_model.dart';
 import 'database_helper.dart';
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
 class PanelService {
   static final PanelService _instance = PanelService._internal();
@@ -26,14 +27,14 @@ class PanelService {
       String deviceName = '';
       int? rssi;
 
-      if (device.runtimeType.toString().contains('ScanResult')) {
+      if (device.runtimeType.toString().contains(StringConstants.scanresult)) {
         final bluetoothDevice = (device as dynamic).device;
         macAddress = bluetoothDevice.remoteId.toString();
-        deviceName = bluetoothDevice.platformName ?? 'BLE Solar Device';
+        deviceName = bluetoothDevice.platformName ?? StringConstants.bleSolarDevice;
         rssi = (device as dynamic).rssi;
       } else {
         macAddress = (device as dynamic).remoteId.toString();
-        deviceName = (device as dynamic).platformName ?? 'BLE Solar Device';
+        deviceName = (device as dynamic).platformName ?? StringConstants.bleSolarDevice;
       }
 
       panelId = PanelModel.generatePanelId(
@@ -42,7 +43,7 @@ class PanelService {
         bluetoothName: deviceName,
       );
 
-      panelName = deviceName.isNotEmpty ? deviceName : 'Solar Panel';
+      panelName = deviceName.isNotEmpty ? deviceName : StringConstants.solarPanel;
       deviceType = 'bluetooth';
       deviceInfo = PanelModel.createBluetoothDeviceInfo(
         macAddress: macAddress,
@@ -69,7 +70,7 @@ class PanelService {
         usbProductName: productName,
       );
 
-      panelName = productName ?? 'USB Solar Device';
+      panelName = productName ?? StringConstants.usbSolarDevice;
       deviceType = 'usb';
       deviceInfo = PanelModel.createUsbDeviceInfo(
         vid: vid,
@@ -122,7 +123,7 @@ class PanelService {
 
     if (panel == null) {
       String deviceType = 'bluetooth';
-      if (panelId.startsWith('BT_') || panelId.startsWith('BLUETOOTH_')) {
+      if (panelId.startsWith(StringConstants.bt) || panelId.startsWith(StringConstants.bluetooth2)) {
         deviceType = 'bluetooth';
       } else if (panelId.startsWith('USB_')) {
         deviceType = 'usb';
@@ -143,7 +144,7 @@ class PanelService {
         deviceInfo: jsonEncode(
           offlineProvisioned
               ? PanelModel.createOfflineProvisionedDeviceInfo(panelId)
-              : {'panelId': panelId},
+              : {StringConstants.offlineprovisioned: panelId},
         ),
         siteId: null,
         createdAt: now,
@@ -174,7 +175,7 @@ class PanelService {
     }
 
     if (panel.siteId != null && panel.siteId != siteId) {
-      throw Exception('Panel is already assigned to another site');
+      throw Exception(StringConstants.panelIsAlreadyAssignedToAnotherSite);
     }
 
     final result = await _databaseHelper.assignPanelToSite(panelId, siteId);
@@ -197,7 +198,7 @@ class PanelService {
       rssi: rssi,
     );
     deviceInfo['offlineProvisioned'] = false;
-    deviceInfo['panelId'] = panelId;
+    deviceInfo[StringConstants.offlineprovisioned] = panelId;
 
     final updatedPanel = panel.copyWith(
       panelName: bleName.trim().isNotEmpty ? bleName.trim() : panel.panelName,
@@ -290,7 +291,7 @@ class PanelWithSiteInfo {
   bool get isAssigned => panel.siteId != null;
 
   String get displaySiteInfo {
-    if (!isAssigned) return 'Unassigned';
+    if (!isAssigned) return StringConstants.unassigned;
     if (siteName != null && siteName!.isNotEmpty) {
       return siteName!;
     }

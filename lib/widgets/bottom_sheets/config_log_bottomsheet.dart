@@ -8,6 +8,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/utils/peripheral_config_diff_labels.dart';
 import 'package:techno_switch_solar_app/utils/peripheral_config_snapshot.dart';
+import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/widgets/dropdown.dart';
 
 final BleManager ble = Get.find<BleManager>();
@@ -49,12 +50,12 @@ class ConfigLogBottomSheet extends StatefulWidget {
 
 class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
     with TickerProviderStateMixin {
-  static const Color _textPrimary = Color(0xFF3D3D3D);
-  static const Color _textMuted = Color(0xFF918F8F);
-  static const Color _textTabUnselected = Color(0xFF6E6E6E);
-  static const Color _brandRed = Color(0xFFEC1D24);
-  static const Color _border = Color(0xFFDCDCDC);
-  static const Color _surfaceMuted = Color(0xFFF8F8F8);
+  static const Color _textPrimary = ColorConstants.textDark;
+  static const Color _textMuted = ColorConstants.textMuted;
+  static const Color _textTabUnselected = ColorConstants.textSubtle;
+  static const Color _brandRed = ColorConstants.primary;
+  static const Color _border = ColorConstants.borderMuted;
+  static const Color _surfaceMuted = ColorConstants.surfaceLight;
 
   static final RegExp _listIndexFromPathRe = RegExp(r'^\[(\d+)\]');
 
@@ -177,10 +178,10 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
       width: double.infinity,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFEBEE),
+        color: ColorConstants.errorBackgroundLight,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: const Color(0xFFEC1D24).withValues(alpha: 0.35),
+          color: ColorConstants.primary.withValues(alpha: 0.35),
         ),
       ),
       child: Column(
@@ -202,7 +203,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
             style: GoogleFonts.inter(
               fontSize: 12,
               fontWeight: FontWeight.w400,
-              color: const Color(0xFF444444),
+              color: ColorConstants.textDarkGray,
               height: 1.35,
             ),
           ),
@@ -397,7 +398,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
           child: Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: ColorConstants.white,
               borderRadius: BorderRadius.circular(16),
             ),
             child: Column(
@@ -407,13 +408,13 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
                   width: 64,
                   height: 64,
                   decoration: const BoxDecoration(
-                    color: Color(0xFFFBDEE1),
+                    color: ColorConstants.errorIconBackground,
                     shape: BoxShape.circle,
                   ),
                   child: const Center(
                     child: Icon(
                       Icons.cloud_upload_rounded,
-                      color: Color(0xFFEC1D24),
+                      color: ColorConstants.primary,
                       size: 32,
                     ),
                   ),
@@ -472,7 +473,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
                         child: ElevatedButton(
                           style: ElevatedButton.styleFrom(
                             backgroundColor: _brandRed,
-                            foregroundColor: Colors.white,
+                            foregroundColor: ColorConstants.white,
                             elevation: 0,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(24),
@@ -525,7 +526,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
               fontSize: 12,
               fontWeight: FontWeight.w400,
               height: 1.4,
-              color: const Color(0xFF444444),
+              color: ColorConstants.textDarkGray,
             ),
           ),
         ),
@@ -641,7 +642,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
               fontSize: 12,
               fontWeight: FontWeight.w400,
               height: 1.4,
-              color: const Color(0xFF444444),
+              color: ColorConstants.textDarkGray,
             ),
           ),
         ],
@@ -678,7 +679,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
               fontSize: 12,
               fontWeight: FontWeight.w400,
               height: 1.4,
-              color: const Color(0xFF444444),
+              color: ColorConstants.textDarkGray,
             ),
           ),
         ],
@@ -690,7 +691,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
       style: GoogleFonts.inter(
         fontSize: 12,
         height: 1.45,
-        color: const Color(0xFF444444),
+        color: ColorConstants.textDarkGray,
       ),
     );
   }
@@ -701,7 +702,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
           backgroundColor: _brandRed,
-          foregroundColor: Colors.white,
+          foregroundColor: ColorConstants.white,
           disabledBackgroundColor: Colors.grey.shade400,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24),
@@ -809,7 +810,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
               style: GoogleFonts.inter(
                 fontSize: 12,
                 height: 1.45,
-                color: const Color(0xFF444444),
+                color: ColorConstants.textDarkGray,
               ),
             )
           else if (isLBus && !hasLBusFieldDiffs)
@@ -822,7 +823,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
               style: GoogleFonts.inter(
                 fontSize: 12,
                 height: 1.45,
-                color: const Color(0xFF444444),
+                color: ColorConstants.textDarkGray,
               ),
             )
           else
@@ -953,9 +954,9 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
             width: double.infinity,
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: const Color(0xFFFFEBEE),
+              color: ColorConstants.errorBackgroundLight,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFFFCDD2)),
+              border: Border.all(color: ColorConstants.errorLightPink),
             ),
             child: Text(
               result.errorMessage!,
@@ -979,9 +980,9 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
             width: double.infinity,
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: const Color(0xFFE3F2FD),
+              color: ColorConstants.infoBackgroundLight,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFF90CAF9)),
+              border: Border.all(color: ColorConstants.infoBlue),
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -997,7 +998,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
                     style: GoogleFonts.inter(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
-                      color: const Color(0xFF1565C0),
+                      color: ColorConstants.colorFf1565C0,
                       height: 1.35,
                     ),
                   ),
@@ -1017,9 +1018,9 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
             width: double.infinity,
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: const Color(0xFFE8F5E9),
+              color: ColorConstants.successBackgroundLight,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFC8E6C9)),
+              border: Border.all(color: ColorConstants.colorFfc8E6C9),
             ),
             child: Row(
               children: [
@@ -1031,7 +1032,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
                     style: GoogleFonts.inter(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
-                      color: const Color(0xFF2E7D32),
+                      color: ColorConstants.successDark,
                       height: 1.35,
                     ),
                   ),
@@ -1087,7 +1088,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: _brandRed,
-                foregroundColor: Colors.white,
+                foregroundColor: ColorConstants.white,
                 disabledBackgroundColor: Colors.grey.shade400,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(24),
@@ -1099,7 +1100,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
                 style: GoogleFonts.inter(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
-                  color: Colors.white,
+                  color: ColorConstants.white,
                 ),
               ),
             ),
@@ -1123,7 +1124,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: _brandRed,
-                foregroundColor: Colors.white,
+                foregroundColor: ColorConstants.white,
                 disabledBackgroundColor: Colors.grey.shade400,
                 elevation: 0,
                 shape: RoundedRectangleBorder(
@@ -1142,7 +1143,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
                 style: GoogleFonts.inter(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
-                  color: Colors.white,
+                  color: ColorConstants.white,
                 ),
               ),
             ),
@@ -1188,7 +1189,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: _brandRed,
-                    foregroundColor: Colors.white,
+                    foregroundColor: ColorConstants.white,
                     disabledBackgroundColor: Colors.grey.shade400,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(24),
@@ -1206,7 +1207,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
                     style: GoogleFonts.inter(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
-                      color: Colors.white,
+                      color: ColorConstants.white,
                     ),
                     textAlign: TextAlign.center,
                     maxLines: 2,
@@ -1236,7 +1237,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
           child: ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: _brandRed,
-              foregroundColor: Colors.white,
+              foregroundColor: ColorConstants.white,
               disabledBackgroundColor: Colors.grey.shade400,
               elevation: 0,
               shape: RoundedRectangleBorder(
@@ -1255,7 +1256,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
               style: GoogleFonts.inter(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
-                color: Colors.white,
+                color: ColorConstants.white,
               ),
             ),
           ),
@@ -1340,7 +1341,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
       ),
       child: Container(
         decoration: const BoxDecoration(
-          color: Color(0xFFE31C23),
+          color: ColorConstants.primaryVariant,
           borderRadius: BorderRadius.vertical(top: Radius.circular(50)),
         ),
         child: Padding(
@@ -1348,7 +1349,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
           child: Container(
             clipBehavior: Clip.hardEdge,
             decoration: const BoxDecoration(
-              color: Colors.white,
+              color: ColorConstants.white,
               borderRadius: BorderRadius.vertical(top: Radius.circular(50)),
             ),
             // padding: EdgeInsets.only(
@@ -1372,7 +1373,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
                           width: 38,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: Colors.black.withValues(alpha: 0.06),
+                            color: ColorConstants.blackMaterial.withValues(alpha: 0.06),
                           ),
                           child: const Icon(Icons.close, size: 20),
                         ),
@@ -1427,7 +1428,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
     if (isDialog) {
       return Dialog(
         insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-        backgroundColor: Colors.transparent,
+        backgroundColor: ColorConstants.transparent,
         elevation: 0,
         child: card,
       );

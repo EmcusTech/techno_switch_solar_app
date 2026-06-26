@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
 class HelpScreen extends StatelessWidget {
   const HelpScreen({super.key});
@@ -11,7 +13,7 @@ class HelpScreen extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [Color(0xFFF6EBEB), Colors.white],
+          colors: [ColorConstants.scaffoldGradientTop, ColorConstants.white],
         ),
       ),
       child: SingleChildScrollView(
@@ -21,11 +23,11 @@ class HelpScreen extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(top: 24, left: 24, right: 24),
               child: Text(
-                'Help & Support',
+                StringConstants.helpSupport,
                 style: GoogleFonts.inter(
                   fontSize: 24,
                   fontWeight: FontWeight.w700,
-                  color: const Color(0xFF3D3D3D),
+                  color: ColorConstants.textDark,
                 ),
               ),
             ),
@@ -43,11 +45,11 @@ class HelpScreen extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: ColorConstants.white,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: ColorConstants.blackMaterial.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -57,25 +59,25 @@ class HelpScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Need Immediate Help?',
+            StringConstants.needImmediateHelp,
             style: GoogleFonts.inter(
               fontSize: 18,
               fontWeight: FontWeight.w600,
-              color: const Color(0xFF3D3D3D),
+              color: ColorConstants.textDark,
             ),
           ),
           const SizedBox(height: 16),
           _buildContactOption(
-            'Call Support',
+            StringConstants.callSupport,
             Icons.phone_outlined,
-            '+1 (800) 123-4567',
+            StringConstants.s18001234567,
             () {},
           ),
           const SizedBox(height: 12),
           _buildContactOption(
-            'Email Support',
+            StringConstants.emailSupport,
             Icons.email_outlined,
-            'support@technoswitch.com',
+            StringConstants.supportTechnoswitchCom,
             () {},
           ),
         ],
@@ -90,25 +92,25 @@ class HelpScreen extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
           child: Text(
-            'Frequently Asked Questions',
+            StringConstants.frequentlyAskedQuestions,
             style: GoogleFonts.inter(
               fontSize: 18,
               fontWeight: FontWeight.w600,
-              color: const Color(0xFF3D3D3D),
+              color: ColorConstants.textDark,
             ),
           ),
         ),
         _buildFAQItem(
           'How do I create a new project?',
-          'To create a new project, tap on the "New Project" quick link on the home screen. Follow the step-by-step wizard to set up your project details.',
+          StringConstants.toCreateANewProjectTapOnTheNewProjectQuickLinkOnTheHomeScreenFollowTheStepByStepWizardToSetUpYourProjectDetails,
         ),
         _buildFAQItem(
           'How can I retrieve project logs?',
-          'You can retrieve project logs by tapping the "Retrieve Log" quick link on the home screen. Select your project and choose the date range for the logs you need.',
+          StringConstants.youCanRetrieveProjectLogsByTappingTheRetrieveLogQuickLinkOnTheHomeScreenSelectYourProjectAndChooseTheDateRangeForTheLogsYouNeed,
         ),
         _buildFAQItem(
           'What maintenance tasks are available?',
-          'The maintenance section provides various tools for system maintenance, including system checks, updates, and troubleshooting guides.',
+          StringConstants.theMaintenanceSectionProvidesVariousToolsForSystemMaintenanceIncludingSystemChecksUpdatesAndTroubleshootingGuides,
         ),
       ],
     );
@@ -121,30 +123,30 @@ class HelpScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Additional Support',
+            StringConstants.additionalSupport,
             style: GoogleFonts.inter(
               fontSize: 18,
               fontWeight: FontWeight.w600,
-              color: const Color(0xFF3D3D3D),
+              color: ColorConstants.textDark,
             ),
           ),
           const SizedBox(height: 16),
           _buildSupportOption(
-            'User Manual',
+            StringConstants.userManual,
             Icons.menu_book_outlined,
-            'Access our comprehensive user manual',
+            StringConstants.accessOurComprehensiveUserManual,
             () {},
           ),
           _buildSupportOption(
-            'Video Tutorials',
+            StringConstants.videoTutorials,
             Icons.play_circle_outline,
-            'Watch step-by-step video guides',
+            StringConstants.watchStepByStepVideoGuides,
             () {},
           ),
           _buildSupportOption(
-            'Community Forum',
+            StringConstants.communityForum,
             Icons.forum_outlined,
-            'Join our community discussions',
+            StringConstants.joinOurCommunityDiscussions,
             () {},
           ),
         ],
@@ -161,7 +163,7 @@ class HelpScreen extends StatelessWidget {
           Icon(
             icon,
             size: 24,
-            color: const Color(0xFFEC1D24),
+            color: ColorConstants.primary,
           ),
           const SizedBox(width: 16),
           Column(
@@ -172,7 +174,7 @@ class HelpScreen extends StatelessWidget {
                 style: GoogleFonts.inter(
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
-                  color: const Color(0xFF3D3D3D),
+                  color: ColorConstants.textDark,
                 ),
               ),
               Text(
@@ -180,7 +182,7 @@ class HelpScreen extends StatelessWidget {
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   fontWeight: FontWeight.w400,
-                  color: const Color(0xFF666666),
+                  color: ColorConstants.textGray,
                 ),
               ),
             ],
@@ -194,11 +196,11 @@ class HelpScreen extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: ColorConstants.white,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: ColorConstants.blackMaterial.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -210,7 +212,7 @@ class HelpScreen extends StatelessWidget {
           style: GoogleFonts.inter(
             fontSize: 16,
             fontWeight: FontWeight.w500,
-            color: const Color(0xFF3D3D3D),
+            color: ColorConstants.textDark,
           ),
         ),
         children: [
@@ -221,7 +223,7 @@ class HelpScreen extends StatelessWidget {
               style: GoogleFonts.inter(
                 fontSize: 14,
                 fontWeight: FontWeight.w400,
-                color: const Color(0xFF666666),
+                color: ColorConstants.textGray,
               ),
             ),
           ),
@@ -238,11 +240,11 @@ class HelpScreen extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: ColorConstants.white,
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
+              color: ColorConstants.blackMaterial.withValues(alpha: 0.05),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -253,7 +255,7 @@ class HelpScreen extends StatelessWidget {
             Icon(
               icon,
               size: 24,
-              color: const Color(0xFFEC1D24),
+              color: ColorConstants.primary,
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -265,7 +267,7 @@ class HelpScreen extends StatelessWidget {
                     style: GoogleFonts.inter(
                       fontSize: 16,
                       fontWeight: FontWeight.w500,
-                      color: const Color(0xFF3D3D3D),
+                      color: ColorConstants.textDark,
                     ),
                   ),
                   Text(
@@ -273,7 +275,7 @@ class HelpScreen extends StatelessWidget {
                     style: GoogleFonts.inter(
                       fontSize: 14,
                       fontWeight: FontWeight.w400,
-                      color: const Color(0xFF666666),
+                      color: ColorConstants.textGray,
                     ),
                   ),
                 ],
@@ -281,7 +283,7 @@ class HelpScreen extends StatelessWidget {
             ),
             const Icon(
               Icons.chevron_right,
-              color: Color(0xFF3D3D3D),
+              color: ColorConstants.textDark,
             ),
           ],
         ),

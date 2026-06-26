@@ -1,3 +1,4 @@
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 class RelayData {
   String? expandedRelay;
   Map<String, String> relayTexts;
@@ -30,28 +31,28 @@ class RelayData {
     for (int i = 1; i <= count; i++) {
       final relayName = 'Relay $i';
       relayTexts[relayName] = relayName;
-      relayTests[relayName] = 'No';
-      relayStates[relayName] = 'Enable';
-      relayGroups[relayName] = 'Group A';
+      relayTests[relayName] = StringConstants.no;
+      relayStates[relayName] = StringConstants.enable;
+      relayGroups[relayName] = StringConstants.groupA;
       relayFunctions[relayName] = 'Function 1A';
     }
   }
 
   void updateRelayField(String relayName, String fieldType, String value) {
     switch (fieldType) {
-      case 'relayText':
+      case StringConstants.relaytext:
         relayTexts[relayName] = value;
         break;
-      case 'relayTest':
+      case StringConstants.relaytest:
         relayTests[relayName] = value;
         break;
-      case 'relayState':
+      case StringConstants.relaystate:
         relayStates[relayName] = value;
         break;
-      case 'relayGroup':
+      case StringConstants.relaygroup:
         relayGroups[relayName] = value;
         break;
-      case 'relayFunction':
+      case StringConstants.relayfunction:
         relayFunctions[relayName] = value;
         break;
     }

@@ -11,6 +11,7 @@ import 'package:techno_switch_solar_app/utils/ble_name_utils.dart';
 import 'package:techno_switch_solar_app/utils/bluetooth_service.dart';
 import 'package:techno_switch_solar_app/widgets/app_styled_dialogs.dart';
 import 'package:techno_switch_solar_app/widgets/ble_connecting_dialog.dart';
+import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/widgets/firmware_upgrade_bottom_sheet.dart';
 
 /// True when scan MSD or post-connect [BleManager.bleManufacturerData] indicates bootloader.
@@ -99,7 +100,7 @@ Future<bool> showFirmwareUpgradeBottomSheetForConnect({
   final result = await showModalBottomSheet<bool>(
     context: context,
     isScrollControlled: true,
-    backgroundColor: Colors.transparent,
+    backgroundColor: ColorConstants.transparent,
     isDismissible: false,
     enableDrag: false,
     builder:

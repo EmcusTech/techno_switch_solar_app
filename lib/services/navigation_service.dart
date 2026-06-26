@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:techno_switch_solar_app/services/app_services.dart';
 import 'package:techno_switch_solar_app/services/app_state.dart';
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
 final RouteObserver<ModalRoute<void>> appRouteObserver =
     RouteObserver<ModalRoute<void>>();
@@ -57,10 +58,10 @@ class NavigationService {
   static bool shouldAutoDisconnectOnPop(String currentRoute) {
     const routesToDisconnect = [
       'EventLogScreen',
-      'LogRetrievalLoadingScreen',
-      'ProjectDashboardScreen',
-      'TestModeScreen',
-      'ScannedScreen',
+      StringConstants.logretrievalloadingscreen,
+      StringConstants.projectdashboardscreen,
+      StringConstants.testmodescreen,
+      StringConstants.scannedscreen,
     ];
 
     return routesToDisconnect.contains(currentRoute);

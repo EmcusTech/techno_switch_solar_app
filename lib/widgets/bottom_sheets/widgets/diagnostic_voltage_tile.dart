@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
 enum DiagnosticVoltageBand { critical, nominal, high }
 
@@ -27,8 +29,8 @@ class DiagnosticVoltageTile extends StatelessWidget {
   final String unit;
   final int decimals;
 
-  static const Color _textMuted = Color(0xFF918F8F);
-  static const Color _border = Color(0xFFDCDCDC);
+  static const Color _textMuted = ColorConstants.textMuted;
+  static const Color _border = ColorConstants.borderMuted;
 
   @override
   Widget build(BuildContext context) {
@@ -127,7 +129,7 @@ class DiagnosticVoltageTile extends StatelessWidget {
       height: 8,
       width: double.infinity,
       decoration: BoxDecoration(
-        color: const Color(0xFFD9D9D9),
+        color: ColorConstants.progressTrack,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Align(
@@ -181,42 +183,42 @@ class DiagnosticVoltageTile extends StatelessWidget {
 
   Color _accentFor(DiagnosticVoltageBand band) {
     if (band == DiagnosticVoltageBand.nominal) {
-      return const Color(0xFF2B8073);
+      return ColorConstants.teal;
     }
     if (band == DiagnosticVoltageBand.high) {
-      return const Color(0xFFEDA145);
+      return ColorConstants.warningAmber;
     }
-    return const Color(0xFFE4626F);
+    return ColorConstants.errorPink;
   }
 
   Color _valueColor(DiagnosticVoltageBand band) {
     if (band == DiagnosticVoltageBand.nominal) {
-      return const Color(0xFF2B8073);
+      return ColorConstants.teal;
     }
     if (band == DiagnosticVoltageBand.high) {
-      return const Color(0xFFEDA145);
+      return ColorConstants.warningAmber;
     }
-    return const Color(0xFFE4626F);
+    return ColorConstants.errorPink;
   }
 
   Color _valueBackgroundColor(DiagnosticVoltageBand band) {
     if (band == DiagnosticVoltageBand.nominal) {
-      return const Color(0xFFDEFFFA);
+      return ColorConstants.colorFfdefffa;
     }
     if (band == DiagnosticVoltageBand.high) {
-      return const Color(0xFFFFF6EB);
+      return ColorConstants.colorFffff6Eb;
     }
-    return const Color(0xFFFFF3F4);
+    return ColorConstants.colorFffff3F4;
   }
 
   String _valueStatus(DiagnosticVoltageBand band) {
     if (band == DiagnosticVoltageBand.nominal) {
-      return "Ok";
+      return StringConstants.ok2;
     }
     if (band == DiagnosticVoltageBand.high) {
-      return "High";
+      return StringConstants.high;
     }
-    return "Critical";
+    return StringConstants.critical;
   }
 }
 

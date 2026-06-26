@@ -7,6 +7,7 @@ import '../models/log_retrieval_model.dart';
 import 'database_helper.dart';
 import 'panel_service.dart';
 import 'log_retrieval_service.dart';
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
 class SiteService {
   static final SiteService _instance = SiteService._internal();
@@ -199,16 +200,16 @@ class SiteService {
     final errors = <String, String>{};
 
     if (siteName.trim().isEmpty) {
-      errors['siteName'] = 'Site name is required';
+      errors[StringConstants.sitename] = StringConstants.siteNameIsRequired;
     }
 
     if (saqccRegNumber.trim().isEmpty) {
-      errors['saqccRegNumber'] = 'SAQCC registration number is required';
+      errors[StringConstants.saqccregnumber] = StringConstants.saqccRegistrationNumberIsRequired;
     }
 
     if (installerEmail.trim().isNotEmpty &&
         !_isValidEmail(installerEmail.trim())) {
-      errors['installerEmail'] = 'Please enter a valid email address';
+      errors[StringConstants.installeremail] = StringConstants.pleaseEnterAValidEmailAddress;
     }
 
     return errors;

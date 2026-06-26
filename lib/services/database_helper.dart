@@ -5,6 +5,7 @@ import '../models/site_model.dart';
 import '../models/log_model.dart';
 import '../models/panel_model.dart';
 import '../models/log_retrieval_model.dart';
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper _instance = DatabaseHelper._internal();
@@ -27,7 +28,7 @@ class DatabaseHelper {
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
       onConfigure: (db) async {
-        await db.execute('PRAGMA foreign_keys = ON');
+        await db.execute(StringConstants.pragmaForeignKeysON);
       },
     );
   }
@@ -102,21 +103,21 @@ class DatabaseHelper {
       )
     ''');
 
-    await db.execute('CREATE INDEX idx_logs_site_id ON logs (site_id)');
+    await db.execute(StringConstants.createINDEXIdxLogsSiteIdONLogsSiteId);
     await db.execute(
-      'CREATE INDEX idx_logs_event_date ON logs (event_date_time)',
+      StringConstants.createINDEXIdxLogsEventDateONLogsEventDateTime,
     );
     await db.execute(
-      'CREATE INDEX idx_logs_retrieval_id ON logs (retrieval_id)',
+      StringConstants.createINDEXIdxLogsRetrievalIdONLogsRetrievalId,
     );
     await db.execute('CREATE INDEX idx_sites_created_at ON sites (created_at)');
     await db.execute('CREATE INDEX idx_panels_panel_id ON panels (panel_id)');
-    await db.execute('CREATE INDEX idx_panels_site_id ON panels (site_id)');
+    await db.execute(StringConstants.createINDEXIdxPanelsSiteIdONPanelsSiteId);
     await db.execute(
-      'CREATE INDEX idx_log_retrievals_site_id ON log_retrievals (site_id)',
+      StringConstants.createINDEXIdxLogRetrievalsSiteIdONLogRetrievalsSiteId,
     );
     await db.execute(
-      'CREATE INDEX idx_log_retrievals_retrieval_date ON log_retrievals (retrieval_date)',
+      StringConstants.createINDEXIdxLogRetrievalsRetrievalDateONLogRetrievalsRetrievalDate,
     );
   }
 
@@ -138,7 +139,7 @@ class DatabaseHelper {
       ''');
 
       await db.execute('CREATE INDEX idx_panels_panel_id ON panels (panel_id)');
-      await db.execute('CREATE INDEX idx_panels_site_id ON panels (site_id)');
+      await db.execute(StringConstants.createINDEXIdxPanelsSiteIdONPanelsSiteId);
     }
 
     if (oldVersion < 3) {
@@ -156,21 +157,21 @@ class DatabaseHelper {
       ''');
 
       await db.execute(
-        'CREATE INDEX idx_log_retrievals_site_id ON log_retrievals (site_id)',
+        StringConstants.createINDEXIdxLogRetrievalsSiteIdONLogRetrievalsSiteId,
       );
       await db.execute(
-        'CREATE INDEX idx_log_retrievals_retrieval_date ON log_retrievals (retrieval_date)',
+        StringConstants.createINDEXIdxLogRetrievalsRetrievalDateONLogRetrievalsRetrievalDate,
       );
     }
 
     if (oldVersion < 4) {
-      await db.execute('ALTER TABLE logs ADD COLUMN is_valid INTEGER');
+      await db.execute(StringConstants.alterTABLELogsADDCOLUMNIsValidINTEGER);
     }
 
     if (oldVersion < 5) {
-      await db.execute('ALTER TABLE logs ADD COLUMN retrieval_id INTEGER');
+      await db.execute(StringConstants.alterTABLELogsADDCOLUMNRetrievalIdINTEGER);
       await db.execute(
-        'CREATE INDEX idx_logs_retrieval_id ON logs (retrieval_id)',
+        StringConstants.createINDEXIdxLogsRetrievalIdONLogsRetrievalId,
       );
     }
   }
@@ -184,7 +185,7 @@ class DatabaseHelper {
     final db = await database;
     final List<Map<String, dynamic>> maps = await db.query(
       'sites',
-      orderBy: 'created_at DESC',
+      orderBy: StringConstants.siteNameLIKEORInstallerNameLIKEORCompanyNameLIKE,
     );
 
     return List.generate(maps.length, (i) {
@@ -221,7 +222,7 @@ class DatabaseHelper {
 
     return await db.transaction((txn) async {
       await txn.delete('logs', where: 'site_id = ?', whereArgs: [id]);
-      await txn.delete('log_retrievals', where: 'site_id = ?', whereArgs: [id]);
+      await txn.delete(StringConstants.id2, where: 'site_id = ?', whereArgs: [id]);
       await txn.update(
         'panels',
         {'site_id': null, 'updated_at': DateTime.now().millisecondsSinceEpoch},
@@ -238,7 +239,7 @@ class DatabaseHelper {
       'sites',
       where: 'site_name LIKE ? OR installer_name LIKE ? OR company_name LIKE ?',
       whereArgs: ['%$searchTerm%', '%$searchTerm%', '%$searchTerm%'],
-      orderBy: 'created_at DESC',
+      orderBy: StringConstants.siteNameLIKEORInstallerNameLIKEORCompanyNameLIKE,
     );
 
     return List.generate(maps.length, (i) {
@@ -268,7 +269,7 @@ class DatabaseHelper {
       'logs',
       where: 'site_id = ?',
       whereArgs: [siteId],
-      orderBy: 'event_date_time DESC, retrieved_at DESC',
+      orderBy: StringConstants.eventDateTimeDESCRetrievedAtDESC,
     );
 
     return List.generate(maps.length, (i) {
@@ -281,7 +282,7 @@ class DatabaseHelper {
     final List<Map<String, dynamic>> maps = await db.query(
       'logs',
       where: 'site_id IS NULL',
-      orderBy: 'retrieved_at DESC',
+      orderBy: StringConstants.retrievedAtDESC,
     );
 
     return List.generate(maps.length, (i) {
@@ -293,9 +294,9 @@ class DatabaseHelper {
     final db = await database;
     final List<Map<String, dynamic>> maps = await db.query(
       'logs',
-      where: 'retrieval_id = ?',
+      where: StringConstants.retrievalId,
       whereArgs: [retrievalId],
-      orderBy: 'event_date_time DESC, retrieved_at DESC',
+      orderBy: StringConstants.eventDateTimeDESCRetrievedAtDESC,
     );
 
     return List.generate(maps.length, (i) {
@@ -311,13 +312,13 @@ class DatabaseHelper {
     final db = await database;
     final List<Map<String, dynamic>> maps = await db.query(
       'logs',
-      where: 'site_id = ? AND retrieved_at >= ? AND retrieved_at < ?',
+      where: StringConstants.siteIdANDRetrievedAtANDRetrievedAt,
       whereArgs: [
         siteId,
         start.millisecondsSinceEpoch,
         end.millisecondsSinceEpoch,
       ],
-      orderBy: 'event_date_time DESC, retrieved_at DESC',
+      orderBy: StringConstants.eventDateTimeDESCRetrievedAtDESC,
     );
 
     return List.generate(maps.length, (i) {
@@ -354,7 +355,7 @@ class DatabaseHelper {
 
     return await db.delete(
       'logs',
-      where: 'site_id IS NULL AND retrieved_at < ?',
+      where: StringConstants.siteIdISNULLANDRetrievedAt,
       whereArgs: [cutoffTime],
     );
   }
@@ -408,7 +409,7 @@ class DatabaseHelper {
     final db = await database;
     final existing = await db.query(
       'panels',
-      where: 'panel_id = ?',
+      where: StringConstants.panelId,
       whereArgs: [panel.panelId],
     );
 
@@ -423,7 +424,7 @@ class DatabaseHelper {
       await db.update(
         'panels',
         updatedPanel.toMap(),
-        where: 'panel_id = ?',
+        where: StringConstants.panelId,
         whereArgs: [panel.panelId],
       );
       return existing.first['id'] as int;
@@ -436,7 +437,7 @@ class DatabaseHelper {
     final db = await database;
     final List<Map<String, dynamic>> maps = await db.query(
       'panels',
-      where: 'panel_id = ?',
+      where: StringConstants.panelId,
       whereArgs: [panelId],
     );
 
@@ -450,7 +451,7 @@ class DatabaseHelper {
     final db = await database;
     final List<Map<String, dynamic>> maps = await db.query(
       'panels',
-      where: 'panel_name = ?',
+      where: StringConstants.panelName2,
       whereArgs: [panelName],
     );
 
@@ -466,7 +467,7 @@ class DatabaseHelper {
       'panels',
       where: 'site_id = ?',
       whereArgs: [siteId],
-      orderBy: 'last_connected DESC, created_at DESC',
+      orderBy: StringConstants.siteIdISNULL,
     );
 
     return List.generate(maps.length, (i) {
@@ -479,7 +480,7 @@ class DatabaseHelper {
     final List<Map<String, dynamic>> maps = await db.query(
       'panels',
       where: 'site_id IS NULL',
-      orderBy: 'last_connected DESC, created_at DESC',
+      orderBy: StringConstants.siteIdISNULL,
     );
 
     return List.generate(maps.length, (i) {
@@ -492,7 +493,7 @@ class DatabaseHelper {
     return await db.update(
       'panels',
       {'site_id': siteId, 'updated_at': DateTime.now().millisecondsSinceEpoch},
-      where: 'panel_id = ?',
+      where: StringConstants.panelId,
       whereArgs: [panelId],
     );
   }
@@ -502,7 +503,7 @@ class DatabaseHelper {
     return await db.update(
       'panels',
       {'site_id': null, 'updated_at': DateTime.now().millisecondsSinceEpoch},
-      where: 'panel_id = ?',
+      where: StringConstants.panelId,
       whereArgs: [panelId],
     );
   }
@@ -515,7 +516,7 @@ class DatabaseHelper {
         'last_connected': DateTime.now().millisecondsSinceEpoch,
         'updated_at': DateTime.now().millisecondsSinceEpoch,
       },
-      where: 'panel_id = ?',
+      where: StringConstants.panelId,
       whereArgs: [panelId],
     );
   }
@@ -524,7 +525,7 @@ class DatabaseHelper {
     final db = await database;
     final List<Map<String, dynamic>> maps = await db.query(
       'panels',
-      orderBy: 'last_connected DESC, created_at DESC',
+      orderBy: StringConstants.siteIdISNULL,
     );
 
     return List.generate(maps.length, (i) {
@@ -536,23 +537,23 @@ class DatabaseHelper {
     final db = await database;
     return await db.delete(
       'panels',
-      where: 'panel_id = ?',
+      where: StringConstants.panelId,
       whereArgs: [panelId],
     );
   }
 
   Future<int> insertLogRetrieval(LogRetrievalModel logRetrieval) async {
     final db = await database;
-    return await db.insert('log_retrievals', logRetrieval.toMap());
+    return await db.insert(StringConstants.id2, logRetrieval.toMap());
   }
 
   Future<List<LogRetrievalModel>> getLogRetrievalsBySite(int siteId) async {
     final db = await database;
     final List<Map<String, dynamic>> maps = await db.query(
-      'log_retrievals',
+      StringConstants.id2,
       where: 'site_id = ?',
       whereArgs: [siteId],
-      orderBy: 'retrieval_date DESC',
+      orderBy: StringConstants.retrievalDateDESC,
     );
 
     return List.generate(maps.length, (i) {
@@ -563,7 +564,7 @@ class DatabaseHelper {
   Future<LogRetrievalModel?> getLogRetrievalById(int id) async {
     final db = await database;
     final List<Map<String, dynamic>> maps = await db.query(
-      'log_retrievals',
+      StringConstants.id2,
       where: 'id = ?',
       whereArgs: [id],
     );
@@ -577,7 +578,7 @@ class DatabaseHelper {
   Future<int> updateLogRetrieval(LogRetrievalModel logRetrieval) async {
     final db = await database;
     return await db.update(
-      'log_retrievals',
+      StringConstants.id2,
       logRetrieval.toMap(),
       where: 'id = ?',
       whereArgs: [logRetrieval.id],
@@ -586,14 +587,14 @@ class DatabaseHelper {
 
   Future<int> deleteLogRetrieval(int id) async {
     final db = await database;
-    return await db.delete('log_retrievals', where: 'id = ?', whereArgs: [id]);
+    return await db.delete(StringConstants.id2, where: 'id = ?', whereArgs: [id]);
   }
 
   Future<int> getLogRetrievalCountBySite(int siteId) async {
     final db = await database;
     return Sqflite.firstIntValue(
           await db.rawQuery(
-            'SELECT COUNT(*) FROM log_retrievals WHERE site_id = ?',
+            StringConstants.selectCOUNTFROMLogRetrievalsWHERESiteId,
             [siteId],
           ),
         ) ??
@@ -603,10 +604,10 @@ class DatabaseHelper {
   Future<LogRetrievalModel?> getMostRecentLogRetrieval(int siteId) async {
     final db = await database;
     final List<Map<String, dynamic>> maps = await db.query(
-      'log_retrievals',
+      StringConstants.id2,
       where: 'site_id = ?',
       whereArgs: [siteId],
-      orderBy: 'retrieval_date DESC',
+      orderBy: StringConstants.retrievalDateDESC,
       limit: 1,
     );
 
@@ -621,7 +622,7 @@ class DatabaseHelper {
 
     final siteCount =
         Sqflite.firstIntValue(
-          await db.rawQuery('SELECT COUNT(*) FROM sites'),
+          await db.rawQuery(StringConstants.selectCOUNTFROMSites),
         ) ??
         0;
 
@@ -631,7 +632,7 @@ class DatabaseHelper {
 
     final orphanedLogCount =
         Sqflite.firstIntValue(
-          await db.rawQuery('SELECT COUNT(*) FROM logs WHERE site_id IS NULL'),
+          await db.rawQuery(StringConstants.selectCOUNTFROMLogsWHERESiteIdISNULL),
         ) ??
         0;
 

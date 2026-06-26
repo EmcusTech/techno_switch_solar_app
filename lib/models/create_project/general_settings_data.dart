@@ -1,3 +1,4 @@
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 class GeneralSettingsData {
   String levelTimeout;
   double timerSettings;
@@ -9,13 +10,13 @@ class GeneralSettingsData {
   String? expandedField;
 
   GeneralSettingsData({
-    this.levelTimeout = '300 Seconds',
+    this.levelTimeout = StringConstants.s300Seconds,
     this.timerSettings = 300,
-    this.faultLatching = 'Yes',
-    this.panelDateTime = '13/05/2025 - 10:31:02',
-    this.serviceDue = '13/09/2025',
-    this.serviceDueReminder = '13/09/2025',
-    this.eventReminder = '13/09/2025',
+    this.faultLatching = StringConstants.yes,
+    this.panelDateTime = StringConstants.s13052025103102,
+    this.serviceDue = StringConstants.s13092025,
+    this.serviceDueReminder = StringConstants.s13092025,
+    this.eventReminder = StringConstants.s13092025,
     this.expandedField,
   });
 

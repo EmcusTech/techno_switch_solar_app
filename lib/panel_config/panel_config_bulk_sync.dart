@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/utils/peripheral_config_snapshot.dart';
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
 class PanelConfigBulkSync {
   PanelConfigBulkSync._();
@@ -20,7 +21,7 @@ class PanelConfigBulkSync {
       await Future<void>.delayed(const Duration(milliseconds: 40));
     }
     throw TimeoutException(
-      'Bluetooth operation timed out',
+      StringConstants.bluetoothOperationTimedOut,
       const Duration(seconds: 120),
     );
   }

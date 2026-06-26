@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
 /// Reusable dropdown field widget with consistent styling
 class CustomDropdownFieldWidget extends StatelessWidget {
@@ -26,7 +28,7 @@ class CustomDropdownFieldWidget extends StatelessWidget {
           style: GoogleFonts.inter(
             fontSize: 13,
             fontWeight: FontWeight.w600,
-            color: Color(0xFF696969),
+            color: ColorConstants.textSecondary,
           ),
         ),
         Spacer(),
@@ -39,7 +41,7 @@ class CustomDropdownFieldWidget extends StatelessWidget {
                 style: GoogleFonts.inter(
                   fontSize: 13,
                   fontWeight: FontWeight.w400,
-                  color: Color(0xFF3D3D3D),
+                  color: ColorConstants.textDark,
                 ),
               ),
               SizedBox(width: 2),
@@ -66,7 +68,7 @@ class CustomDropdownFieldWidget extends StatelessWidget {
             style: GoogleFonts.inter(
               fontSize: 18,
               fontWeight: FontWeight.w600,
-              color: Color(0xFF3A3A3A),
+              color: ColorConstants.textBodyDark,
             ),
           ),
           content: Column(
@@ -79,12 +81,12 @@ class CustomDropdownFieldWidget extends StatelessWidget {
                       style: GoogleFonts.inter(
                         fontSize: 14,
                         fontWeight: FontWeight.w400,
-                        color: Color(0xFF3D3D3D),
+                        color: ColorConstants.textDark,
                       ),
                     ),
                     value: option,
                     groupValue: selectedValue,
-                    activeColor: Color(0xFFEC1D24),
+                    activeColor: ColorConstants.primary,
                     onChanged: (String? value) {
                       selectedValue = value!;
                       Navigator.of(context).pop();
@@ -99,11 +101,11 @@ class CustomDropdownFieldWidget extends StatelessWidget {
                 Navigator.of(context).pop();
               },
               child: Text(
-                'Cancel',
+                StringConstants.cancel,
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: Color(0xFF696969),
+                  color: ColorConstants.textSecondary,
                 ),
               ),
             ),

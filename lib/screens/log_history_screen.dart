@@ -8,6 +8,8 @@ import 'package:techno_switch_solar_app/models/log_retrieval_model.dart';
 import 'package:techno_switch_solar_app/screens/event_log_screen.dart';
 import 'package:techno_switch_solar_app/services/log_retrieval_service.dart';
 import 'package:techno_switch_solar_app/utils/ble_name_utils.dart';
+import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
 class LogHistoryScreen extends StatefulWidget {
   final String panelName;
@@ -66,11 +68,11 @@ class LogHistoryScreenState extends State<LogHistoryScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Log Retrieval History',
+          StringConstants.logRetrievalHistory,
           style: GoogleFonts.inter(
             fontSize: 16,
             fontWeight: FontWeight.w700,
-            color: Color(0xFF3D3D3D),
+            color: ColorConstants.textDark,
           ),
         ),
         SizedBox(height: 16),
@@ -79,31 +81,31 @@ class LogHistoryScreenState extends State<LogHistoryScreen> {
           child:
               _isLoading
                   ? Center(
-                    child: CircularProgressIndicator(color: Color(0xFFEC1D24)),
+                    child: CircularProgressIndicator(color: ColorConstants.primary),
                   )
                   : _logRetrievals.isEmpty
                   ? Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.history, size: 64, color: Color(0xFFE0E0E0)),
+                        Icon(Icons.history, size: 64, color: ColorConstants.borderGray),
                         SizedBox(height: 16),
                         Text(
-                          'No Log History',
+                          StringConstants.noLogHistory,
                           style: GoogleFonts.inter(
                             fontSize: 18,
                             fontWeight: FontWeight.w600,
-                            color: Color(0xFF666666),
+                            color: ColorConstants.textGray,
                           ),
                         ),
                         SizedBox(height: 8),
                         Text(
-                          'Log retrievals will appear here when you retrieve logs for this site.',
+                          StringConstants.logRetrievalsWillAppearHereWhenYouRetrieveLogsForThisSite,
                           textAlign: TextAlign.center,
                           style: GoogleFonts.inter(
                             fontSize: 14,
                             fontWeight: FontWeight.w400,
-                            color: Color(0xFF999999),
+                            color: ColorConstants.textPlaceholder,
                           ),
                         ),
                       ],
@@ -132,12 +134,12 @@ class LogHistoryScreenState extends State<LogHistoryScreen> {
       child: Container(
         padding: EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: ColorConstants.white,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Color(0xFFE9ECEF)),
+          border: Border.all(color: ColorConstants.surfaceCard),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: ColorConstants.blackMaterial.withOpacity(0.05),
               blurRadius: 8,
               offset: Offset(0, 2),
             ),
@@ -149,12 +151,12 @@ class LogHistoryScreenState extends State<LogHistoryScreen> {
               width: 50,
               height: 50,
               decoration: BoxDecoration(
-                color: Color(0xFFDC3545).withOpacity(0.1),
+                color: ColorConstants.danger.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 Icons.description_outlined,
-                color: Color(0xFFDC3545),
+                color: ColorConstants.danger,
                 size: 20,
               ),
             ),
@@ -168,7 +170,7 @@ class LogHistoryScreenState extends State<LogHistoryScreen> {
                     style: GoogleFonts.inter(
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
-                      color: Colors.black,
+                      color: ColorConstants.blackMaterial,
                     ),
                   ),
                   SizedBox(height: 4),
@@ -177,7 +179,7 @@ class LogHistoryScreenState extends State<LogHistoryScreen> {
                     style: GoogleFonts.inter(
                       fontSize: 12,
                       fontWeight: FontWeight.w400,
-                      color: Color(0xFF696969),
+                      color: ColorConstants.textSecondary,
                     ),
                   ),
                   SizedBox(height: 2),
@@ -186,7 +188,7 @@ class LogHistoryScreenState extends State<LogHistoryScreen> {
                     style: GoogleFonts.inter(
                       fontSize: 12,
                       fontWeight: FontWeight.w400,
-                      color: Color(0xFF767676),
+                      color: ColorConstants.textMediumGray,
                     ),
                   ),
                 ],
@@ -202,7 +204,7 @@ class LogHistoryScreenState extends State<LogHistoryScreen> {
     if (logRetrieval.id == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Unable to open this log session (missing id).'),
+          content: Text(StringConstants.unableToOpenThisLogSessionMissingId),
         ),
       );
       return;
@@ -213,7 +215,7 @@ class LogHistoryScreenState extends State<LogHistoryScreen> {
       barrierDismissible: false,
       builder:
           (_) => const Center(
-            child: CircularProgressIndicator(color: Color(0xFFEC1D24)),
+            child: CircularProgressIndicator(color: ColorConstants.primary),
           ),
     );
 
@@ -258,7 +260,7 @@ class LogHistoryScreenState extends State<LogHistoryScreen> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Color(0xFFF6EBEB), Colors.white],
+            colors: [ColorConstants.scaffoldGradientTop, ColorConstants.white],
           ),
         ),
         child: Stack(
@@ -275,7 +277,7 @@ class LogHistoryScreenState extends State<LogHistoryScreen> {
                     child: Row(
                       children: [
                         Text(
-                          'Log History',
+                          StringConstants.logHistory,
                           style: GoogleFonts.inter(
                             fontSize: 20,
                             fontWeight: FontWeight.w700,
@@ -299,7 +301,7 @@ class LogHistoryScreenState extends State<LogHistoryScreen> {
     return Expanded(
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: ColorConstants.white,
           borderRadius: BorderRadius.circular(35),
         ),
         child: SingleChildScrollView(child: _buildDashboard()),
@@ -336,21 +338,21 @@ class LogHistoryScreenState extends State<LogHistoryScreen> {
                     style: GoogleFonts.inter(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
-                      color: Color(0xFF979797),
+                      color: ColorConstants.textDisabled,
                     ),
                   ),
                   ValueListenableBuilder(
                     valueListenable: ble.isConnectedNotifier,
                     builder: (context, isConnected, child) {
                       return Text(
-                        isConnected ? 'Connected' : 'Disconnected',
+                        isConnected ? StringConstants.connected : StringConstants.disconnected,
                         style: GoogleFonts.inter(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
                           color:
                               isConnected
-                                  ? Color(0xFF00A706)
-                                  : Color(0xFFEC1D24),
+                                  ? ColorConstants.success
+                                  : ColorConstants.primary,
                         ),
                       );
                     },
@@ -360,7 +362,7 @@ class LogHistoryScreenState extends State<LogHistoryScreen> {
             ],
           ),
           SizedBox(height: 10),
-          Divider(color: Colors.black.withValues(alpha: 0.18), thickness: 1),
+          Divider(color: ColorConstants.blackMaterial.withValues(alpha: 0.18), thickness: 1),
           SizedBox(height: 10),
           _buildLogHistorySection(),
         ],

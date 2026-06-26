@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
 class ProjectSummaryPage extends StatefulWidget {
   final String enabled;
@@ -49,9 +51,9 @@ class _ProjectSummaryPageState extends State<ProjectSummaryPage> {
                   child: Container(
                     width: double.infinity,
                     decoration: BoxDecoration(
-                      color: Color(0xFFFFFAA4),
+                      color: ColorConstants.highlightYellow,
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: Color(0xFFD2CD7D)),
+                      border: Border.all(color: ColorConstants.highlightGold),
                     ),
                     child: Column(
                       children: [
@@ -70,11 +72,11 @@ class _ProjectSummaryPageState extends State<ProjectSummaryPage> {
                           children: [
                             SizedBox(height: 36),
                             Text(
-                              'EXTINGUISHING OUT',
+                              StringConstants.extinguishingOUT,
                               style: GoogleFonts.inter(
                                 fontSize: 18,
                                 fontWeight: FontWeight.w800,
-                                color: Color(0xFF3A3A3A),
+                                color: ColorConstants.textBodyDark,
                                 letterSpacing: 4.0,
                               ),
                             ),
@@ -85,7 +87,7 @@ class _ProjectSummaryPageState extends State<ProjectSummaryPage> {
                                 horizontal: 20,
                               ),
                               child: Divider(
-                                color: Colors.black.withValues(alpha: 0.17),
+                                color: ColorConstants.blackMaterial.withValues(alpha: 0.17),
                                 thickness: 1,
                               ),
                             ),
@@ -98,57 +100,57 @@ class _ProjectSummaryPageState extends State<ProjectSummaryPage> {
                               child: Column(
                                 children: [
                                   _buildDropdownField(
-                                    'Enabled',
+                                    StringConstants.enabled,
                                     widget.enabled,
-                                    ['Yes', 'No'],
+                                    [StringConstants.yes, StringConstants.no],
                                   ),
                                   SizedBox(height: 20),
                                   _buildDropdownField(
-                                    'Actuator Type',
+                                    StringConstants.actuatorType,
                                     widget.actuatorType,
-                                    ['Type A', 'Type B', 'Type C'],
+                                    [StringConstants.typeA, StringConstants.typeB, StringConstants.typeC],
                                   ),
                                   SizedBox(height: 20),
                                   _buildDropdownField(
                                     'Function',
                                     widget.function,
-                                    ['Function A', 'Function B', 'Function C'],
+                                    [StringConstants.functionA, StringConstants.functionB, StringConstants.functionC],
                                   ),
                                   SizedBox(height: 20),
                                   _buildDropdownField(
-                                    'Auto Countdown',
+                                    StringConstants.autoCountdown,
                                     widget.autoCountdown,
-                                    ['10 Sec', '15 Sec', '20 Sec', '30 Sec'],
+                                    [StringConstants.s10Sec, StringConstants.s15Sec, StringConstants.s20Sec, StringConstants.s30Sec],
                                   ),
                                   SizedBox(height: 20),
                                   _buildDropdownField(
-                                    'Manual Countdown',
+                                    StringConstants.manualCountdown,
                                     widget.manualCountdown,
-                                    ['15 Sec', '30 Sec', '45 Sec', '60 Sec'],
+                                    [StringConstants.s15Sec, StringConstants.s30Sec, StringConstants.s45Sec, StringConstants.s60Sec],
                                   ),
                                   SizedBox(height: 20),
                                   _buildDropdownField(
-                                    'Release Time',
+                                    StringConstants.releaseTime,
                                     widget.releaseTime,
-                                    ['30 Sec', '45 Sec', '60 Sec', '90 Sec'],
+                                    [StringConstants.s30Sec, StringConstants.s45Sec, StringConstants.s60Sec, StringConstants.s90Sec],
                                   ),
                                   SizedBox(height: 20),
                                   _buildDropdownField(
-                                    'Reset in Count',
+                                    StringConstants.resetInCount,
                                     widget.resetInCount,
-                                    ['Yes', 'No'],
+                                    [StringConstants.yes, StringConstants.no],
                                   ),
                                   SizedBox(height: 20),
                                   _buildDropdownField(
-                                    'Hold / Count',
+                                    StringConstants.holdCount,
                                     widget.holdCount,
-                                    ['3 Sec', '5 Sec', '10 Sec', '15 Sec'],
+                                    [StringConstants.s3Sec, StringConstants.s5Sec, StringConstants.s10Sec, StringConstants.s15Sec],
                                   ),
                                   SizedBox(height: 20),
-                                  _buildDropdownField('Action', widget.action, [
+                                  _buildDropdownField(StringConstants.action, widget.action, [
                                     'Extinguish',
-                                    'Alert',
-                                    'Test',
+                                    StringConstants.alert,
+                                    StringConstants.test,
                                   ]),
                                 ],
                               ),
@@ -182,7 +184,7 @@ class _ProjectSummaryPageState extends State<ProjectSummaryPage> {
               _showUploadDialog();
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: Color(0xFFEC1D24),
+              backgroundColor: ColorConstants.primary,
               padding: EdgeInsets.symmetric(vertical: 18),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(28),
@@ -190,11 +192,11 @@ class _ProjectSummaryPageState extends State<ProjectSummaryPage> {
               elevation: 0,
             ),
             child: Text(
-              'Upload to Panel',
+              StringConstants.uploadToPanel,
               style: GoogleFonts.inter(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
-                color: Colors.white,
+                color: ColorConstants.white,
               ),
             ),
           ),
@@ -214,7 +216,7 @@ class _ProjectSummaryPageState extends State<ProjectSummaryPage> {
             style: GoogleFonts.inter(
               fontSize: 13,
               fontWeight: FontWeight.w600,
-              color: Color(0xFF3D3D3D),
+              color: ColorConstants.textDark,
             ),
           ),
         ),
@@ -230,7 +232,7 @@ class _ProjectSummaryPageState extends State<ProjectSummaryPage> {
                   style: GoogleFonts.inter(
                     fontSize: 13,
                     fontWeight: FontWeight.w400,
-                    color: Color(0xFFC00F0C),
+                    color: ColorConstants.criticalRed,
                   ),
                 ),
                 SizedBox(width: 2),
@@ -262,7 +264,7 @@ class _ProjectSummaryPageState extends State<ProjectSummaryPage> {
             style: GoogleFonts.inter(
               fontSize: 18,
               fontWeight: FontWeight.w600,
-              color: Color(0xFF3A3A3A),
+              color: ColorConstants.textBodyDark,
             ),
           ),
           content: Column(
@@ -275,12 +277,12 @@ class _ProjectSummaryPageState extends State<ProjectSummaryPage> {
                       style: GoogleFonts.inter(
                         fontSize: 14,
                         fontWeight: FontWeight.w400,
-                        color: Color(0xFF3D3D3D),
+                        color: ColorConstants.textDark,
                       ),
                     ),
                     value: option,
                     groupValue: selectedValue,
-                    activeColor: Color(0xFFEC1D24),
+                    activeColor: ColorConstants.primary,
                     onChanged: (String? value) {
                       selectedValue = value!;
                       Navigator.of(context).pop();
@@ -298,11 +300,11 @@ class _ProjectSummaryPageState extends State<ProjectSummaryPage> {
                 Navigator.of(context).pop();
               },
               child: Text(
-                'Cancel',
+                StringConstants.cancel,
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: Color(0xFF696969),
+                  color: ColorConstants.textSecondary,
                 ),
               ),
             ),
@@ -321,19 +323,19 @@ class _ProjectSummaryPageState extends State<ProjectSummaryPage> {
             borderRadius: BorderRadius.circular(16),
           ),
           title: Text(
-            'Upload to Panel',
+            StringConstants.uploadToPanel,
             style: GoogleFonts.inter(
               fontSize: 18,
               fontWeight: FontWeight.w600,
-              color: Color(0xFF3A3A3A),
+              color: ColorConstants.textBodyDark,
             ),
           ),
           content: Text(
-            'Are you sure you want to upload this configuration to the panel?',
+            StringConstants.areYouSureYouWantToUploadThisConfigurationToThePanel,
             style: GoogleFonts.inter(
               fontSize: 14,
               fontWeight: FontWeight.w400,
-              color: Color(0xFF696969),
+              color: ColorConstants.textSecondary,
             ),
           ),
           actions: [
@@ -342,11 +344,11 @@ class _ProjectSummaryPageState extends State<ProjectSummaryPage> {
                 Navigator.of(context).pop();
               },
               child: Text(
-                'Cancel',
+                StringConstants.cancel,
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: Color(0xFF696969),
+                  color: ColorConstants.textSecondary,
                 ),
               ),
             ),
@@ -357,7 +359,7 @@ class _ProjectSummaryPageState extends State<ProjectSummaryPage> {
                 _showSuccessDialog();
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFFEC1D24),
+                backgroundColor: ColorConstants.primary,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -367,7 +369,7 @@ class _ProjectSummaryPageState extends State<ProjectSummaryPage> {
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: Colors.white,
+                  color: ColorConstants.white,
                 ),
               ),
             ),
@@ -387,24 +389,24 @@ class _ProjectSummaryPageState extends State<ProjectSummaryPage> {
           ),
           title: Row(
             children: [
-              Icon(Icons.check_circle, color: Color(0xFF4CAF50), size: 24),
+              Icon(Icons.check_circle, color: ColorConstants.successMaterial, size: 24),
               SizedBox(width: 8),
               Text(
-                'Upload Successful',
+                StringConstants.uploadSuccessful,
                 style: GoogleFonts.inter(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
-                  color: Color(0xFF3A3A3A),
+                  color: ColorConstants.textBodyDark,
                 ),
               ),
             ],
           ),
           content: Text(
-            'Configuration has been successfully uploaded to the panel.',
+            StringConstants.configurationHasBeenSuccessfullyUploadedToThePanel,
             style: GoogleFonts.inter(
               fontSize: 14,
               fontWeight: FontWeight.w400,
-              color: Color(0xFF696969),
+              color: ColorConstants.textSecondary,
             ),
           ),
           actions: [
@@ -414,17 +416,17 @@ class _ProjectSummaryPageState extends State<ProjectSummaryPage> {
                 Navigator.of(context).pop();
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFFEC1D24),
+                backgroundColor: ColorConstants.primary,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
               child: Text(
-                'OK',
+                StringConstants.ok,
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: Colors.white,
+                  color: ColorConstants.white,
                 ),
               ),
             ),
@@ -440,7 +442,7 @@ class DiagonalStripesPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final backgroundPaint =
         Paint()
-          ..color = Color(0xFFFFDD00)
+          ..color = ColorConstants.brightYellow
           ..style = PaintingStyle.fill;
 
     canvas.drawRect(
@@ -450,7 +452,7 @@ class DiagonalStripesPainter extends CustomPainter {
 
     final stripePaint =
         Paint()
-          ..color = Color(0xFF000000)
+          ..color = ColorConstants.black
           ..style = PaintingStyle.fill;
 
     const double stripeWidth = 6;

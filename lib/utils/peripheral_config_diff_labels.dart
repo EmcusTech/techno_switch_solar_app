@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:techno_switch_solar_app/models/access_code_mode_model.dart';
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
 class PeripheralConfigDiffLabels {
   PeripheralConfigDiffLabels._();
@@ -8,135 +9,135 @@ class PeripheralConfigDiffLabels {
   static const List<String> _relayGroups = [
     'None',
     'General',
-    'Zone',
-    'Ext. Out',
+    StringConstants.zone,
+    StringConstants.extOut,
   ];
   static const Map<String, List<String>> _relayFunctions = {
     'None': ['None'],
     'General': [
       'Fault',
-      'Extnl. Fault',
-      'Supply Fault',
-      'Extnl. Supply Fault',
-      'Sounder Fault',
-      'Sounder Silenced',
-      'Sounder Activated',
-      'Sounder Disabled',
-      'Disablement',
-      'Test',
+      StringConstants.extnlFault,
+      StringConstants.supplyFault,
+      StringConstants.extnlSupplyFault,
+      StringConstants.sounderFault,
+      StringConstants.sounderSilenced,
+      StringConstants.sounderActivated,
+      StringConstants.sounderDisabled,
+      StringConstants.disablement,
+      StringConstants.test,
       'Fire',
       'Reset',
-      'Controls Enabled',
-      'Supervisory',
-      'Fire Snd',
+      StringConstants.controlsEnabled,
+      StringConstants.supervisory,
+      StringConstants.fireSnd,
     ],
-    'Zone': ['Fault', 'Fire', 'Disablement', 'Fire Snd'],
-    'Ext. Out': [
-      'Release Initiated',
-      'Ext. Agent Released',
-      'Release Hold',
-      'Manual Mode',
-      'Manual Release',
-      'Extnl. Ext. Fault',
-      'Ext. Snd 1',
+    StringConstants.zone: ['Fault', 'Fire', StringConstants.disablement, StringConstants.fireSnd],
+    StringConstants.extOut: [
+      StringConstants.releaseInitiated,
+      StringConstants.extAgentReleased,
+      StringConstants.releaseHold,
+      StringConstants.manualMode,
+      StringConstants.manualRelease,
+      StringConstants.extnlExtFault,
+      StringConstants.extSnd1,
       'Ext. Snd 2',
-      'Man. Release Snd',
+      StringConstants.manReleaseSnd,
     ],
   };
 
-  static const List<String> _inputGroups = ['None', 'General', 'Ext. Out'];
+  static const List<String> _inputGroups = ['None', 'General', StringConstants.extOut];
   static const Map<String, List<String>> _inputFunctions = {
     'None': ['None'],
     'General': [
-      'Extnl. Fault',
+      StringConstants.extnlFault,
       'Reset',
-      'Extnl. Controls Enabled',
-      'Silence Alarm',
-      'Sound Alarm',
+      StringConstants.extnlControlsEnabled,
+      StringConstants.silenceAlarm,
+      StringConstants.soundAlarm,
       'Silence Buzzer',
-      'Mute',
-      'Extnl. Supervisory',
-      'Extnl. Supply Fault',
+      StringConstants.mute,
+      StringConstants.extnlSupervisory,
+      StringConstants.extnlSupplyFault,
     ],
-    'Ext. Out': [
-      'Manual Trigger',
-      'Manual Mode',
+    StringConstants.extOut: [
+      StringConstants.manualTrigger,
+      StringConstants.manualMode,
       'Hold',
-      'Extnl. Disable Gas',
-      'Extnl. Ext. Fault',
+      StringConstants.extnlDisableGas,
+      StringConstants.extnlExtFault,
     ],
   };
 
-  static const List<String> _zoneTypes = ['Normal', 'IS (MTL 5561)'];
+  static const List<String> _zoneTypes = [StringConstants.none, 'IS (MTL 5561)'];
   static const List<String> _zoneModes = [
-    'Immediate',
-    'Normal',
-    'Verified',
-    'Confirmed',
+    StringConstants.normal,
+    StringConstants.none,
+    StringConstants.verified,
+    StringConstants.immediate,
   ];
 
-  static const List<String> _extEnabled = ['No', 'Yes'];
+  static const List<String> _extEnabled = ['No', StringConstants.yes];
   static const List<String> _extActuator = [
     'Not Defined',
-    'Metron',
-    'Solenoid',
-    'Aerosol',
+    StringConstants.metron,
+    StringConstants.solenoid,
+    StringConstants.aerosol,
   ];
   static const List<String> _extFunction = [
     'Z1 and Z2',
-    'Z2 and Z3',
-    'Z1 and Z3',
-    'Z1 and Z2 and Z3',
-    'Z1',
-    'Z2',
-    'Z3',
-    'Any 2 zones',
-    'Any 1 zone',
+    StringConstants.z2AndZ3,
+    StringConstants.z1AndZ3,
+    StringConstants.z1AndZ2AndZ3,
+    StringConstants.z12,
+    StringConstants.z22,
+    StringConstants.z32,
+    StringConstants.any2Zones,
+    StringConstants.any1Zone,
   ];
-  static const List<String> _extResetAllowed = ['Yes', 'No'];
+  static const List<String> _extResetAllowed = [StringConstants.yes, 'No'];
   static const List<String> _extHold = [
     'Disabled',
-    'Restart',
-    'Suspend',
-    'Continue',
+    StringConstants.restart,
+    StringConstants.suspend,
+    StringConstants.disabled,
   ];
   static const List<String> _extAction = [
     'Continous',
-    'Pulse 100ms On',
-    'Pulse 300ms On',
-    'Pulse 600ms On',
-    'Pulse 1s On',
-    'Pulse 5s On',
-    'Pulsing 100ms On, 500ms Off',
-    'Pulsing 300ms On, 1.5s Off',
-    'Pulsing 600ms On, 3s Off',
-    'Pulsing 1s On, 5s Off',
+    StringConstants.pulse100msOn,
+    StringConstants.pulse300msOn,
+    StringConstants.pulse600msOn,
+    StringConstants.pulse1sOn,
+    StringConstants.pulse5sOn,
+    StringConstants.pulsing100msOn500msOff,
+    StringConstants.pulsing300msOn15sOff,
+    StringConstants.pulsing600msOn3sOff,
+    StringConstants.pulsing1sOn5sOff,
   ];
 
   static const List<String> _sounderGroups = [
     'None',
     'General',
-    'Zone',
-    'Ext. Out',
+    StringConstants.zone,
+    StringConstants.extOut,
   ];
   static const Map<String, List<String>> _sounderFunctions = {
     'None': ['None'],
-    'General': ['Fire Snd'],
-    'Zone': ['Fire Snd'],
-    'Ext. Out': ['Ext. Snd 1', 'Ext. Snd 2', 'Man. Release Snd'],
+    'General': [StringConstants.fireSnd],
+    StringConstants.zone: [StringConstants.fireSnd],
+    StringConstants.extOut: [StringConstants.extSnd1, 'Ext. Snd 2', StringConstants.manReleaseSnd],
   };
   static const List<String> _sounderZoneActions = [
     'Continuous',
-    'Pulsing 1s on, 1s off',
-    'Pulsing 1s on, 4s off',
-    'Pulsing 2s on, 500ms off',
+    StringConstants.pulsing1sOn1sOff,
+    StringConstants.pulsing1sOn4sOff,
+    StringConstants.pulsing2sOn500msOff,
   ];
   static const List<String> _sounderExtActions = [
     'Continuous',
-    'Pulsing 1s on, 1s off',
-    'Pulsing 1s on, 4s off',
-    'Pulsing 2s on, 500ms off',
-    'Off',
+    StringConstants.pulsing1sOn1sOff,
+    StringConstants.pulsing1sOn4sOff,
+    StringConstants.pulsing2sOn500msOff,
+    StringConstants.off,
   ];
 
   static Map<String, Object?>? _asMap(Object? o) =>
@@ -155,10 +156,10 @@ class PeripheralConfigDiffLabels {
   }
 
   static String _yesNo(Object? v) {
-    if (v is bool) return v ? 'Yes' : 'No';
+    if (v is bool) return v ? StringConstants.yes : 'No';
     final i = _asInt(v);
     if (i == 0) return 'No';
-    if (i == 1) return 'Yes';
+    if (i == 1) return StringConstants.yes;
     return _rawPreview(v);
   }
 
@@ -188,9 +189,9 @@ class PeripheralConfigDiffLabels {
     if (m == null) return null;
     final n = int.parse(m.group(1)!) + 1;
     switch (sectionKey) {
-      case 'access_code':
+      case StringConstants.lBusDeviceIdx:
         return 'Access code $n';
-      case 'l_bus':
+      case StringConstants.rowIdx:
         return 'L-Bus device $n';
       default:
         return 'Item $n';
@@ -223,40 +224,40 @@ class PeripheralConfigDiffLabels {
   }
 
   static const Map<String, String> _generalModuleFieldLabels = {
-    'lvlTimeout': 'Level timeout',
-    'silenceBuzzerLevel': 'Silence buzzer level',
-    'silenceSoundersLevel': 'Silence sounders level',
-    'resetLevel': 'Reset level',
-    'faultLatching': 'Fault latching',
+    'lvlTimeout': StringConstants.levelTimeout2,
+    StringConstants.silencebuzzerlevel: StringConstants.silenceBuzzerLevel,
+    'silenceSoundersLevel': StringConstants.silenceSoundersLevel,
+    'resetLevel': StringConstants.resetLevel,
+    StringConstants.silencesounderslevel: StringConstants.faultLatching2,
   };
 
   static const Map<String, String> _moduleFieldLabels = {
-    'moduleNo': 'Module No',
-    'enabled': 'Enabled',
+    StringConstants.moduleno: StringConstants.moduleNo,
+    'enabled': StringConstants.enabled,
     'product': 'Product',
     'id': 'ID',
-    'revision': 'Revision',
-    'hardware': 'Hardware Version',
-    'firmware': 'Firmware Version',
-    'date': 'Manufacturing Date',
-    'protocol': 'Protocol No',
+    'revision': StringConstants.revision,
+    'hardware': StringConstants.hardwareVersion,
+    'firmware': StringConstants.firmwareVersion,
+    'date': StringConstants.manufacturingDate,
+    'protocol': StringConstants.protocolNo,
   };
 
   static const Map<String, String> _accessCodeFieldLabels = {
-    'accessCodeNo': 'Access code no',
+    StringConstants.accesscodeno: 'Access code no',
     'accessLevel': 'Access level',
-    'accessLevelName': 'Access level name',
+    StringConstants.accesslevelname: 'Access level name',
     'accessCode': 'Access code',
   };
 
   static const Map<String, String> _lBusFieldLabels = {
-    'enabled': 'Enabled',
-    'idLed': 'ID LED',
+    'enabled': StringConstants.enabled,
+    StringConstants.idled: StringConstants.idLED,
     'product': 'Product',
     'deviceText': 'L-Bus device text',
     'id': 'ID',
-    'revision': 'Revision',
-    'productRev': 'Product rev.',
+    'revision': StringConstants.revision,
+    StringConstants.productrev: 'Product rev.',
     'hardware': 'Hardware',
     'firmware': 'Firmware',
     'date': 'Date',
@@ -269,18 +270,18 @@ class PeripheralConfigDiffLabels {
         final rm = RegExp(r'^r([123])$').firstMatch(segment);
         if (rm != null) return 'Relay ${rm.group(1)}';
         break;
-      case 'zone':
+      case StringConstants.detectionmode:
         final zm = RegExp(r'^z([123])$').firstMatch(segment);
         if (zm != null) return 'Zone ${zm.group(1)}';
         break;
-      case 'sounder':
+      case StringConstants.generalEnabled:
         final sm = RegExp(r'^s([123])$').firstMatch(segment);
         if (sm != null) return 'Sounder ${sm.group(1)}';
         final zm = RegExp(r'^z([123])$').firstMatch(segment);
         if (zm != null) return 'Zone ${zm.group(1)}';
         final em = RegExp(r'^e([123])$').firstMatch(segment);
         if (em != null) return 'Ext. out ${em.group(1)}';
-        if (segment == 'general') return 'General';
+        if (segment == StringConstants.s123) return 'General';
         break;
       default:
         break;
@@ -296,12 +297,12 @@ class PeripheralConfigDiffLabels {
       if (friendly != null) return friendly;
     }
 
-    if (sectionKey == 'access_code') {
+    if (sectionKey == StringConstants.lBusDeviceIdx) {
       final friendly = _accessCodeFieldLabels[segment];
       if (friendly != null) return friendly;
     }
 
-    if (sectionKey == 'l_bus') {
+    if (sectionKey == StringConstants.rowIdx) {
       final friendly = _lBusFieldLabels[segment];
       if (friendly != null) return friendly;
     }
@@ -310,16 +311,16 @@ class PeripheralConfigDiffLabels {
   }
 
   static String humanizeFieldPath(String sectionKey, String path) {
-    if (path.isEmpty || path == '(section root)') {
-      return 'This section';
+    if (path.isEmpty || path == StringConstants.sectionRoot) {
+      return StringConstants.thisSection;
     }
 
     final onlyBracket = RegExp(r'^\[(\d+)\]$').firstMatch(path);
     if (onlyBracket != null) {
       final idx = int.parse(onlyBracket.group(1)!) + 1;
       return switch (sectionKey) {
-        'access_code' => 'Access code $idx',
-        'l_bus' => 'L-Bus device $idx',
+        StringConstants.lBusDeviceIdx => 'Access code $idx',
+        StringConstants.rowIdx => 'L-Bus device $idx',
         _ => 'Row $idx',
       };
     }
@@ -330,8 +331,8 @@ class PeripheralConfigDiffLabels {
       final idx = int.parse(bracketSuffix.group(2)!) + 1;
       if (base.isEmpty) {
         return switch (sectionKey) {
-          'access_code' => 'Access code $idx',
-          'l_bus' => 'L-Bus device $idx',
+          StringConstants.lBusDeviceIdx => 'Access code $idx',
+          StringConstants.rowIdx => 'L-Bus device $idx',
           _ => 'Row $idx',
         };
       }
@@ -376,30 +377,30 @@ class PeripheralConfigDiffLabels {
         final m = _input(rel, value, sideRoot);
         if (m != null) return m;
         break;
-      case 'zone':
+      case StringConstants.detectionmode:
         final m = _zone(rel, value);
         if (m != null) return m;
         break;
-      case 'ext_out':
+      case StringConstants.releasetime:
         final m = _extOut(rel, value);
         if (m != null) return m;
         break;
-      case 'sounder':
+      case StringConstants.generalEnabled:
         final m = _sounder(rel, value, sideRoot);
         if (m != null) return m;
         break;
       case 'service_due':
         if (rel == 'reminder') {
           final i = _asInt(value);
-          if (i == 0) return 'Off';
-          if (i == 1) return 'On';
+          if (i == 0) return StringConstants.off;
+          if (i == 1) return StringConstants.on;
         }
         break;
-      case 'access_code':
+      case StringConstants.lBusDeviceIdx:
         final m = _accessCode(rel, value);
         if (m != null) return m;
         break;
-      case 'l_bus':
+      case StringConstants.rowIdx:
         final m = _lBus(rel, value);
         if (m != null) return m;
         break;
@@ -413,13 +414,13 @@ class PeripheralConfigDiffLabels {
 
   static String? _accessCode(String rel, Object? value) {
     switch (rel) {
-      case 'accessCodeNo':
+      case StringConstants.accesscodeno:
         final i = _asInt(value);
         return i?.toString() ?? _rawPreview(value);
       case 'accessLevel':
         final i = _asInt(value);
         return _pick(AccessCodeSetupData.accessLevelNames, i);
-      case 'accessLevelName':
+      case StringConstants.accesslevelname:
         if (value == null) return '—';
         final s = value.toString();
         return s.isEmpty ? '—' : s;
@@ -435,13 +436,13 @@ class PeripheralConfigDiffLabels {
   static String? _lBus(String rel, Object? value) {
     switch (rel) {
       case 'enabled':
-      case 'idLed':
+      case StringConstants.idled:
       case 'product':
         if (value == null) return '—';
         final s = value.toString();
         return s.isEmpty ? '—' : s;
       case 'deviceText':
-      case 'productRev':
+      case StringConstants.productrev:
       case 'hardware':
       case 'firmware':
       case 'date':
@@ -462,7 +463,7 @@ class PeripheralConfigDiffLabels {
     switch (rel) {
       case 'enabled':
         return _yesNo(value);
-      case 'moduleNo':
+      case StringConstants.moduleno:
       case 'id':
       case 'revision':
       case 'protocol':
@@ -501,7 +502,7 @@ class PeripheralConfigDiffLabels {
       case 'test':
         return _yesNo(value);
       case 'outputText':
-      case 'dynamicText':
+      case StringConstants.outputtext:
         return _rawPreview(value);
       default:
         return null;
@@ -538,12 +539,12 @@ class PeripheralConfigDiffLabels {
     switch (field) {
       case 'type':
         return _pick(_zoneTypes, _asInt(value));
-      case 'detectionMode':
+      case StringConstants.isMTL5561:
         return _pick(_zoneModes, _asInt(value));
       case 'enabled':
       case 'test':
         return _yesNo(value);
-      case 'verificationTime':
+      case StringConstants.verificationtime:
       case 'text':
         return _rawPreview(value);
       default:
@@ -555,20 +556,20 @@ class PeripheralConfigDiffLabels {
     switch (rel) {
       case 'enabled':
         return _pick(_extEnabled, _asInt(value));
-      case 'actuatorType':
+      case StringConstants.actuatortype:
         return _pick(_extActuator, _asInt(value));
       case 'function':
         return _pick(_extFunction, _asInt(value));
-      case 'resetAllowed':
+      case StringConstants.resetallowed:
         return _pick(_extResetAllowed, _asInt(value));
-      case 'holdMode':
+      case StringConstants.holdmode:
         return _pick(_extHold, _asInt(value));
       case 'action':
         return _pick(_extAction, _asInt(value));
       case 'countdownAuto':
       case 'countdownMan':
       case 'releaseTime':
-      case 'resetDelay':
+      case StringConstants.resetdelay:
       case 'text':
         return _rawPreview(value);
       default:
@@ -590,7 +591,7 @@ class PeripheralConfigDiffLabels {
         case 'test':
           return _yesNo(value);
         case 'normal':
-          if (value is bool) return value ? 'Normal' : 'IS (MTL5525)';
+          if (value is bool) return value ? StringConstants.none : StringConstants.isMTL5525;
           return _yesNo(value);
         case 'group':
           return _pick(_sounderGroups, _asInt(value));
@@ -599,7 +600,7 @@ class PeripheralConfigDiffLabels {
           final gName = _pick(_sounderGroups, gIdx);
           final list = _sounderFunctions[gName] ?? const ['None'];
           return _pick(list, _asInt(value));
-        case 'functionNo':
+        case StringConstants.functionno:
         case 'outputText':
           return _rawPreview(value);
         default:
@@ -630,17 +631,17 @@ class PeripheralConfigDiffLabels {
         case 'enabled':
         case 'test':
           return _yesNo(value);
-        case 'countdownAction':
-        case 'holdAction':
-        case 'releaseAction':
+        case StringConstants.countdownaction:
+        case StringConstants.holdaction:
+        case StringConstants.releaseaction:
           return _pick(_sounderExtActions, _asInt(value));
         default:
           return null;
       }
     }
 
-    if (rel.startsWith('general.')) {
-      final sub = rel.substring('general.'.length);
+    if (rel.startsWith(StringConstants.general2)) {
+      final sub = rel.substring(StringConstants.general2.length);
       switch (sub) {
         case 'enabled':
         case 'test':

@@ -2791,7 +2791,7 @@ class BleManager {
     int inputModeByte;
     try {
       final raw = inputMode.value.trim();
-      if (raw.isEmpty) throw FormatException('empty inputMode');
+      if (raw.isEmpty) throw FormatException(StringConstants.emptyInputMode);
       inputModeByte = int.parse(raw, radix: 16);
     } catch (_) {
       final cfg = InputModeConfig(
@@ -2915,7 +2915,7 @@ class BleManager {
   }) {
     try {
       final raw = modeHex.value.trim();
-      if (raw.isEmpty) throw FormatException('empty relay mode');
+      if (raw.isEmpty) throw FormatException(StringConstants.emptyRelayMode);
       return int.parse(raw, radix: 16) & BleConstants.base;
     } catch (_) {
       final cfg = OutputModeConfig(
@@ -2965,7 +2965,7 @@ class BleManager {
   int _sounderGeneralEquipmentModeByteForApply() {
     try {
       final raw = sounderGeneralMode.value.trim();
-      if (raw.isEmpty) throw FormatException('empty sounder general mode');
+      if (raw.isEmpty) throw FormatException(StringConstants.emptySounderGeneralMode);
       return int.parse(raw, radix: 16) & BleConstants.base;
     } catch (_) {
       final cfg = GeneralEquipmentModeConfig(
@@ -3010,7 +3010,7 @@ class BleManager {
     }
     try {
       final raw = modeHex.value.trim();
-      if (raw.isEmpty) throw FormatException('empty zone mode');
+      if (raw.isEmpty) throw FormatException(StringConstants.emptyZoneMode);
       return int.parse(raw, radix: 16) & BleConstants.base;
     } catch (_) {
       final cfg = ZoneEquipmentModeConfig(
@@ -3049,7 +3049,7 @@ class BleManager {
     }
     try {
       final raw = modeHex.value.trim();
-      if (raw.isEmpty) throw FormatException('empty ext out mode');
+      if (raw.isEmpty) throw FormatException(StringConstants.emptyExtOutMode);
       return int.parse(raw, radix: 16) & BleConstants.base;
     } catch (_) {
       final cfg = ExtZoneEquipmentModeConfig(
@@ -3643,10 +3643,10 @@ class BleManager {
 
     final statusConfig = LBusRepeaterStatusConfig(
       enable:
-          data.enabled == 'Yes'
+          data.enabled == StringConstants.yes
               ? LBusRepeaterEnable.enabled
               : LBusRepeaterEnable.disabled,
-      idLed: data.idLed == 'Yes' ? LBusIdLed.on : LBusIdLed.off,
+      idLed: data.idLed == StringConstants.yes ? LBusIdLed.on : LBusIdLed.off,
     );
 
     u8TxPktCnt += 1;
@@ -3663,7 +3663,7 @@ class BleManager {
     u8Pkt[12] = BleConstants.command.lBusSetup;
     u8Pkt[13] = lBusNo;
     u8Pkt[14] =
-        lBusSetupDataList.value[lBusNo - 1].product == 'Rhino103R'
+        lBusSetupDataList.value[lBusNo - 1].product == StringConstants.rhino103r
             ? 0x16
             : 0x00;
     u8Pkt[17] = LBusRepeaterStatusCodec.encode(statusConfig);

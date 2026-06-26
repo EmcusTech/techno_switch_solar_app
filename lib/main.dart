@@ -41,7 +41,7 @@ void main() async {
   FlutterLogs.logInfo(
     "TechnoSwitchLogs",
     "<${DateTime.now()}>",
-    "----------------------setUpLogs: Setting up logs..-----------------",
+    StringConstants.datetimeNow,
   );
 
   Get.put(BleLogController());

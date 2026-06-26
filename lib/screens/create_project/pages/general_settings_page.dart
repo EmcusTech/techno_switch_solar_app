@@ -3,6 +3,8 @@ import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/widgets/custom_slider_thumb_widget.dart';
 import 'package:techno_switch_solar_app/widgets/custom_vertical_tick_mark_shape_widget.dart';
+import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
 class GeneralSettingsPage extends StatefulWidget {
   final String levelTimeout;
@@ -45,11 +47,11 @@ class _GeneralSettingsPageState extends State<GeneralSettingsPage> {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 19),
           child: Text(
-            'General Settings',
+            StringConstants.generalSettings,
             style: GoogleFonts.inter(
               fontSize: 18,
               fontWeight: FontWeight.w600,
-              color: Color(0xFF3A3A3A),
+              color: ColorConstants.textBodyDark,
             ),
           ),
         ),
@@ -60,37 +62,37 @@ class _GeneralSettingsPageState extends State<GeneralSettingsPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _buildDropdownField('Level Timeout', widget.levelTimeout, [
-                  '300 Seconds',
-                  '500 Seconds',
-                  '1000 Seconds',
+                  StringConstants.s300Seconds,
+                  StringConstants.s500Seconds,
+                  StringConstants.s1000Seconds,
                 ]),
                 SizedBox(height: 24),
-                _buildDropdownField('Fault Latching', widget.faultLatching, [
-                  'Yes',
-                  'No',
+                _buildDropdownField(StringConstants.faultLatching, widget.faultLatching, [
+                  StringConstants.yes,
+                  StringConstants.no,
                 ]),
                 SizedBox(height: 24),
                 _buildDropdownField('Panel Date & Time', widget.panelDateTime, [
-                  '13/05/2025 - 10:31:02',
-                  '14/05/2025 - 11:32:03',
+                  StringConstants.s13052025103102,
+                  StringConstants.s14052025113203,
                 ]),
                 SizedBox(height: 24),
                 _buildDropdownField('Service Due', widget.serviceDue, [
-                  '13/09/2025',
-                  '14/09/2025',
-                  '15/09/2025',
+                  StringConstants.s13092025,
+                  StringConstants.s14092025,
+                  StringConstants.s15092025,
                 ]),
                 SizedBox(height: 24),
                 _buildDropdownField(
-                  'Service Due Reminder',
+                  StringConstants.serviceDueReminder,
                   widget.serviceDueReminder,
-                  ['13/09/2025', '14/09/2025', '15/09/2025'],
+                  [StringConstants.s13092025, StringConstants.s14092025, StringConstants.s15092025],
                 ),
                 SizedBox(height: 24),
-                _buildDropdownField('Event Reminder', widget.eventReminder, [
-                  '13/09/2025',
-                  '14/09/2025',
-                  '15/09/2025',
+                _buildDropdownField(StringConstants.eventReminder, widget.eventReminder, [
+                  StringConstants.s13092025,
+                  StringConstants.s14092025,
+                  StringConstants.s15092025,
                 ]),
                 const SizedBox(height: 24),
               ],
@@ -102,7 +104,7 @@ class _GeneralSettingsPageState extends State<GeneralSettingsPage> {
   }
 
   Widget _buildDropdownField(String label, String value, List<String> options) {
-    bool isSliderField = value.contains('Seconds');
+    bool isSliderField = value.contains(StringConstants.seconds);
     bool isExpanded = widget.expandedField == label;
 
     return Column(
@@ -125,7 +127,7 @@ class _GeneralSettingsPageState extends State<GeneralSettingsPage> {
                   style: GoogleFonts.inter(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFF696969),
+                    color: ColorConstants.textSecondary,
                   ),
                 ),
                 Spacer(),
@@ -134,7 +136,7 @@ class _GeneralSettingsPageState extends State<GeneralSettingsPage> {
                   style: GoogleFonts.inter(
                     fontSize: 13,
                     fontWeight: FontWeight.w400,
-                    color: Color(0xFF918F8F),
+                    color: ColorConstants.textMuted,
                   ),
                 ),
                 SizedBox(width: 2),
@@ -147,11 +149,11 @@ class _GeneralSettingsPageState extends State<GeneralSettingsPage> {
           SizedBox(height: 16),
           Container(
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: ColorConstants.white,
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.1),
+                  color: ColorConstants.blackMaterial.withValues(alpha: 0.1),
                   blurRadius: 10,
                   offset: Offset(0, 4),
                 ),
@@ -167,7 +169,7 @@ class _GeneralSettingsPageState extends State<GeneralSettingsPage> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'Timer Settings',
+                          StringConstants.timerSettings,
                           style: GoogleFonts.inter(
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
@@ -178,7 +180,7 @@ class _GeneralSettingsPageState extends State<GeneralSettingsPage> {
                           style: GoogleFonts.inter(
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
-                            color: Color(0xFF3A3A3A),
+                            color: ColorConstants.textBodyDark,
                           ),
                         ),
                       ],
@@ -187,17 +189,17 @@ class _GeneralSettingsPageState extends State<GeneralSettingsPage> {
                   SizedBox(height: 24),
                   SliderTheme(
                     data: SliderTheme.of(context).copyWith(
-                      activeTrackColor: Color(0xFF007AFF),
-                      inactiveTrackColor: Color(0xFFE5E5E7),
-                      thumbColor: Color(0xFF007AFF),
-                      overlayColor: Color(0xFF007AFF).withValues(alpha: 0.2),
+                      activeTrackColor: ColorConstants.linkBlue,
+                      inactiveTrackColor: ColorConstants.surfaceBorder,
+                      thumbColor: ColorConstants.linkBlue,
+                      overlayColor: ColorConstants.linkBlue.withValues(alpha: 0.2),
                       thumbShape: CustomSliderThumbShape(
                         enabledThumbRadius: 7.5,
                       ),
                       trackHeight: 1,
                       tickMarkShape: CustomVerticalTickMarkShape(),
-                      activeTickMarkColor: Color(0xFFE5E5E7),
-                      inactiveTickMarkColor: Color(0xFFE5E5E7),
+                      activeTickMarkColor: ColorConstants.surfaceBorder,
+                      inactiveTickMarkColor: ColorConstants.surfaceBorder,
                       overlayShape: RoundSliderOverlayShape(overlayRadius: 25),
                     ),
                     child: Slider(
@@ -223,7 +225,7 @@ class _GeneralSettingsPageState extends State<GeneralSettingsPage> {
     switch (label) {
       case 'Level Timeout':
         return double.parse(widget.levelTimeout.replaceAll(' Seconds', ''));
-      case 'Timer Settings':
+      case StringConstants.timerSettings:
         return widget.timerSettings;
       default:
         return 300;
@@ -249,7 +251,7 @@ class _GeneralSettingsPageState extends State<GeneralSettingsPage> {
             style: GoogleFonts.inter(
               fontSize: 18,
               fontWeight: FontWeight.w600,
-              color: Color(0xFF3A3A3A),
+              color: ColorConstants.textBodyDark,
             ),
           ),
           content: Column(
@@ -262,12 +264,12 @@ class _GeneralSettingsPageState extends State<GeneralSettingsPage> {
                       style: GoogleFonts.inter(
                         fontSize: 14,
                         fontWeight: FontWeight.w400,
-                        color: Color(0xFF3D3D3D),
+                        color: ColorConstants.textDark,
                       ),
                     ),
                     value: option,
                     groupValue: selectedValue,
-                    activeColor: Color(0xFFEC1D24),
+                    activeColor: ColorConstants.primary,
                     onChanged: (String? value) {
                       selectedValue = value!;
                       Navigator.of(context).pop();
@@ -282,11 +284,11 @@ class _GeneralSettingsPageState extends State<GeneralSettingsPage> {
                 Navigator.of(context).pop();
               },
               child: Text(
-                'Cancel',
+                StringConstants.cancel,
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: Color(0xFF696969),
+                  color: ColorConstants.textSecondary,
                 ),
               ),
             ),

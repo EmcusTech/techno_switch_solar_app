@@ -10,6 +10,8 @@ import 'package:techno_switch_solar_app/panel_config/panel_config_cache_sync.dar
 import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
 import 'package:techno_switch_solar_app/utils/zone_setup_manager_sync.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/widgets/dropdown.dart';
+import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
 class ZoneBottomSheet extends StatefulWidget {
   final String deviceId;
@@ -40,13 +42,13 @@ class ZoneBottomSheetState extends State<ZoneBottomSheet> {
 
   late final List<GlobalKey> _tileKeys;
 
-  final List<String> typeOptions = ['Normal', 'IS (MTL 5561)'];
-  final List<String> yesNoOptions = ['No', 'Yes'];
+  final List<String> typeOptions = [StringConstants.none, 'IS (MTL 5561)'];
+  final List<String> yesNoOptions = ['No', StringConstants.yes];
   final List<String> modeOptions = [
-    'Immediate',
-    'Normal',
-    'Verified',
-    'Confirmed',
+    StringConstants.normal,
+    StringConstants.none,
+    StringConstants.verified,
+    StringConstants.immediate,
   ];
 
   late List<ZoneConfig> zones;
@@ -59,12 +61,12 @@ class ZoneBottomSheetState extends State<ZoneBottomSheet> {
       final zone = zones[i];
       if (zone.zoneTextController.text.length > 21) return false;
       final mode = zone.mode;
-      if (mode == 'Immediate' || mode == 'Normal') {
+      if (mode == StringConstants.normal || mode == StringConstants.none) {
         if (zone.verificationTimeController.text != '0') return false;
-      } else if (mode == 'Verified') {
+      } else if (mode == StringConstants.verified) {
         final val = int.tryParse(zone.verificationTimeController.text);
         if (val == null || val < 10 || val > 60) return false;
-      } else if (mode == 'Confirmed') {
+      } else if (mode == StringConstants.immediate) {
         if (zone.verificationTimeController.text != '30') return false;
       }
     }
@@ -81,19 +83,19 @@ class ZoneBottomSheetState extends State<ZoneBottomSheet> {
             'Zone text must be at most 21 characters (currently ${zone.zoneTextController.text.length})';
       }
       final mode = zone.mode;
-      if (mode == 'Immediate' || mode == 'Normal') {
+      if (mode == StringConstants.normal || mode == StringConstants.none) {
         if (zone.verificationTimeController.text != '0') {
-          _verificationErrors[i] = 'Must be 0 for Immediate/Normal mode';
+          _verificationErrors[i] = StringConstants.mustBe0ForImmediateNormalMode;
         }
-      } else if (mode == 'Verified') {
+      } else if (mode == StringConstants.verified) {
         final val = int.tryParse(zone.verificationTimeController.text);
         if (val == null || val < 10 || val > 60) {
           _verificationErrors[i] =
-              'Must be between 10 and 60 for Verified mode';
+              StringConstants.mustBeBetween10And60ForVerifiedMode;
         }
-      } else if (mode == 'Confirmed') {
+      } else if (mode == StringConstants.immediate) {
         if (zone.verificationTimeController.text != '30') {
-          _verificationErrors[i] = 'Must be 30 for Confirmed mode';
+          _verificationErrors[i] = StringConstants.mustBe30ForConfirmedMode;
         }
       }
     }
@@ -138,12 +140,12 @@ class ZoneBottomSheetState extends State<ZoneBottomSheet> {
       final key = 'z${i + 1}';
       final z = data[key] as Map<String, dynamic>?;
       if (z == null) continue;
-      zones[i].type = (z['type'] as int?) == 1 ? 'IS (MTL 5561)' : 'Normal';
-      zones[i].enabled = (z['enabled'] as bool?) == true ? 'Yes' : 'No';
-      final dm = (z['detectionMode'] as int?) ?? 0;
+      zones[i].type = (z['type'] as int?) == 1 ? 'IS (MTL 5561)' : StringConstants.none;
+      zones[i].enabled = (z['enabled'] as bool?) == true ? StringConstants.yes : 'No';
+      final dm = (z[StringConstants.isMTL5561] as int?) ?? 0;
       zones[i].mode = modeOptions[dm.clamp(0, modeOptions.length - 1)];
       zones[i].verificationTimeController.text =
-          (z['verificationTime'] as String?) ?? '0';
+          (z[StringConstants.verificationtime] as String?) ?? '0';
       zones[i].zoneTextController.text = (z['text'] as String?) ?? '';
     }
     if (manager != null) {
@@ -154,9 +156,9 @@ class ZoneBottomSheetState extends State<ZoneBottomSheet> {
   void _normalizeVerificationTimes() {
     for (int i = 0; i < 3; i++) {
       final z = zones[i];
-      if (z.mode == 'Immediate' || z.mode == 'Normal') {
+      if (z.mode == StringConstants.normal || z.mode == StringConstants.none) {
         z.verificationTimeController.text = '0';
-      } else if (z.mode == 'Confirmed') {
+      } else if (z.mode == StringConstants.immediate) {
         z.verificationTimeController.text = '30';
       }
     }
@@ -167,8 +169,8 @@ class ZoneBottomSheetState extends State<ZoneBottomSheet> {
     manager = Get.find<BleLogController>().bleManager;
 
     zones[0].type =
-        manager!.zoneOneSetupType.value == 0 ? 'Normal' : 'IS (MTL 5561)';
-    zones[0].enabled = manager!.isZoneOneSetupEnabled.value ? 'Yes' : 'No';
+        manager!.zoneOneSetupType.value == 0 ? StringConstants.none : 'IS (MTL 5561)';
+    zones[0].enabled = manager!.isZoneOneSetupEnabled.value ? StringConstants.yes : 'No';
     final int dm1 = manager!.zoneOneSetupDetectionMode.value;
     zones[0].mode =
         (dm1 >= 0 && dm1 < modeOptions.length)
@@ -179,8 +181,8 @@ class ZoneBottomSheetState extends State<ZoneBottomSheet> {
     zones[0].zoneTextController.text = manager!.zoneOneSetupText.value;
 
     zones[1].type =
-        manager!.zoneTwoSetupType.value == 0 ? 'Normal' : 'IS (MTL 5561)';
-    zones[1].enabled = manager!.isZoneTwoSetupEnabled.value ? 'Yes' : 'No';
+        manager!.zoneTwoSetupType.value == 0 ? StringConstants.none : 'IS (MTL 5561)';
+    zones[1].enabled = manager!.isZoneTwoSetupEnabled.value ? StringConstants.yes : 'No';
     final int dm2 = manager!.zoneTwoSetupDetectionMode.value;
     zones[1].mode =
         (dm2 >= 0 && dm2 < modeOptions.length)
@@ -191,8 +193,8 @@ class ZoneBottomSheetState extends State<ZoneBottomSheet> {
     zones[1].zoneTextController.text = manager!.zoneTwoSetupText.value;
 
     zones[2].type =
-        manager!.zoneThreeSetupType.value == 0 ? 'Normal' : 'IS (MTL 5561)';
-    zones[2].enabled = manager!.isZoneThreeSetupEnabled.value ? 'Yes' : 'No';
+        manager!.zoneThreeSetupType.value == 0 ? StringConstants.none : 'IS (MTL 5561)';
+    zones[2].enabled = manager!.isZoneThreeSetupEnabled.value ? StringConstants.yes : 'No';
     final int dm3 = manager!.zoneThreeSetupDetectionMode.value;
     zones[2].mode =
         (dm3 >= 0 && dm3 < modeOptions.length)
@@ -215,13 +217,13 @@ class ZoneBottomSheetState extends State<ZoneBottomSheet> {
     ];
     for (int i = 0; i < 3; i++) {
       final zone = zones[i];
-      final effectiveTest = zone.enabled == 'Yes' && snapshotTest[i];
+      final effectiveTest = zone.enabled == StringConstants.yes && snapshotTest[i];
 
       switch (i) {
         case 0:
           m.zoneOneSetupText.value = zone.zoneTextController.text;
           m.zoneOneSetupType.value = typeOptions.indexOf(zone.type);
-          m.isZoneOneSetupEnabled.value = zone.enabled == 'Yes';
+          m.isZoneOneSetupEnabled.value = zone.enabled == StringConstants.yes;
           m.isZoneOneSetupTest.value = effectiveTest;
           m.zoneOneSetupVerificationTime.value =
               zone.verificationTimeController.text;
@@ -231,7 +233,7 @@ class ZoneBottomSheetState extends State<ZoneBottomSheet> {
         case 1:
           m.zoneTwoSetupText.value = zone.zoneTextController.text;
           m.zoneTwoSetupType.value = typeOptions.indexOf(zone.type);
-          m.isZoneTwoSetupEnabled.value = zone.enabled == 'Yes';
+          m.isZoneTwoSetupEnabled.value = zone.enabled == StringConstants.yes;
           m.isZoneTwoSetupTest.value = effectiveTest;
           m.zoneTwoSetupVerificationTime.value =
               zone.verificationTimeController.text;
@@ -241,7 +243,7 @@ class ZoneBottomSheetState extends State<ZoneBottomSheet> {
         case 2:
           m.zoneThreeSetupText.value = zone.zoneTextController.text;
           m.zoneThreeSetupType.value = typeOptions.indexOf(zone.type);
-          m.isZoneThreeSetupEnabled.value = zone.enabled == 'Yes';
+          m.isZoneThreeSetupEnabled.value = zone.enabled == StringConstants.yes;
           m.isZoneThreeSetupTest.value = effectiveTest;
           m.zoneThreeSetupVerificationTime.value =
               zone.verificationTimeController.text;
@@ -278,11 +280,11 @@ class ZoneBottomSheetState extends State<ZoneBottomSheet> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            'Zone Configuration',
+            StringConstants.zoneConfiguration,
             style: GoogleFonts.inter(
               fontSize: 20,
               fontWeight: FontWeight.w700,
-              color: const Color(0xFF3D3D3D),
+              color: ColorConstants.textDark,
             ),
           ),
           const SizedBox(height: 12),
@@ -314,7 +316,7 @@ class ZoneBottomSheetState extends State<ZoneBottomSheet> {
           constraints: BoxConstraints(maxHeight: maxHeight),
           child: Container(
             decoration: const BoxDecoration(
-              color: Color(0xFFE31C23),
+              color: ColorConstants.primaryVariant,
               borderRadius: BorderRadius.vertical(top: Radius.circular(50)),
             ),
             child: Padding(
@@ -322,7 +324,7 @@ class ZoneBottomSheetState extends State<ZoneBottomSheet> {
               child: Container(
                 clipBehavior: Clip.hardEdge,
                 decoration: const BoxDecoration(
-                  color: Colors.white,
+                  color: ColorConstants.white,
                   borderRadius: BorderRadius.vertical(top: Radius.circular(50)),
                 ),
                 // padding: EdgeInsets.only(
@@ -346,7 +348,7 @@ class ZoneBottomSheetState extends State<ZoneBottomSheet> {
                               width: 38,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: Colors.black.withValues(alpha: 0.06),
+                                color: ColorConstants.blackMaterial.withValues(alpha: 0.06),
                               ),
                               child: const Icon(Icons.close, size: 20),
                             ),
@@ -364,7 +366,7 @@ class ZoneBottomSheetState extends State<ZoneBottomSheet> {
                       child: Column(
                         children: [
                           _dragHandle(),
-                          _title('Zone Mode'),
+                          _title(StringConstants.zoneMode),
 
                           Expanded(
                             child: NotificationListener<UserScrollNotification>(
@@ -422,10 +424,10 @@ class ZoneBottomSheetState extends State<ZoneBottomSheet> {
         child: Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: const Color(0xFFDCDCDC)),
+            border: Border.all(color: ColorConstants.borderMuted),
           ),
           child: Theme(
-            data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+            data: Theme.of(context).copyWith(dividerColor: ColorConstants.transparent),
             child: ExpansionTile(
               onExpansionChanged: (expanded) async {
                 setState(() {
@@ -450,14 +452,14 @@ class ZoneBottomSheetState extends State<ZoneBottomSheet> {
               tilePadding: const EdgeInsets.symmetric(horizontal: 16),
               childrenPadding: EdgeInsets.zero,
 
-              // backgroundColor: const Color(0xFFF8F8F8),
-              // collapsedBackgroundColor: Colors.white,
+              // backgroundColor: ColorConstants.surfaceLight,
+              // collapsedBackgroundColor: ColorConstants.white,
               title: Text(
                 'Zone ${zone.zoneNumber}',
                 style: GoogleFonts.inter(
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
-                  color: const Color(0xFF3D3D3D),
+                  color: ColorConstants.textDark,
                 ),
               ),
               children: [
@@ -466,20 +468,20 @@ class ZoneBottomSheetState extends State<ZoneBottomSheet> {
                     horizontal: 16,
                     vertical: 14,
                   ),
-                  // color: const Color(0xFFF8F8F8),
+                  // color: ColorConstants.surfaceLight,
                   child: Column(
                     children: [
                       _zoneTextField(zone: zone, zoneIndex: index),
 
                       DropdownWidget(
-                        label: 'Type',
+                        label: StringConstants.type,
                         value: zone.type,
                         items: typeOptions,
                         onChanged: (v) => setState(() => zone.type = v),
                       ),
 
                       DropdownWidget(
-                        label: 'Enabled',
+                        label: StringConstants.enabled,
                         value: zone.enabled,
                         items: yesNoOptions,
                         onChanged: (v) {
@@ -493,15 +495,15 @@ class ZoneBottomSheetState extends State<ZoneBottomSheet> {
                       ),
 
                       DropdownWidget(
-                        label: 'Mode',
+                        label: StringConstants.mode,
                         value: zone.mode,
                         items: modeOptions,
                         onChanged: (v) {
                           setState(() {
                             zone.mode = v;
-                            if (v == 'Immediate' || v == 'Normal') {
+                            if (v == StringConstants.normal || v == StringConstants.none) {
                               zone.verificationTimeController.text = '0';
-                            } else if (v == 'Confirmed') {
+                            } else if (v == StringConstants.immediate) {
                               zone.verificationTimeController.text = '30';
                             }
                             _zoneTextErrors.remove(index);
@@ -532,7 +534,7 @@ class ZoneBottomSheetState extends State<ZoneBottomSheet> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _label('Zone Text'),
+          _label(StringConstants.zoneText),
           const SizedBox(height: 6),
           TextField(
             controller: zone.zoneTextController,
@@ -553,7 +555,7 @@ class ZoneBottomSheetState extends State<ZoneBottomSheet> {
                     fontSize: 12,
                     color:
                         currentLength == 21
-                            ? const Color(0xFFEC1D24)
+                            ? ColorConstants.primary
                             : Colors.grey,
                   ),
                 ),
@@ -564,7 +566,7 @@ class ZoneBottomSheetState extends State<ZoneBottomSheet> {
             style: GoogleFonts.inter(
               fontSize: 14,
               fontWeight: FontWeight.w500,
-              color: const Color(0xFF3D3D3D),
+              color: ColorConstants.textDark,
             ),
           ),
           if (errorMsg != null) ...[
@@ -574,7 +576,7 @@ class ZoneBottomSheetState extends State<ZoneBottomSheet> {
               style: GoogleFonts.inter(
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
-                color: const Color(0xFFEC1D24),
+                color: ColorConstants.primary,
               ),
             ),
           ],
@@ -588,9 +590,9 @@ class ZoneBottomSheetState extends State<ZoneBottomSheet> {
     required int zoneIndex,
   }) {
     final isReadOnly =
-        zone.mode == 'Immediate' ||
-        zone.mode == 'Normal' ||
-        zone.mode == 'Confirmed';
+        zone.mode == StringConstants.normal ||
+        zone.mode == StringConstants.none ||
+        zone.mode == StringConstants.immediate;
     final errorMsg = _verificationErrors[zoneIndex];
 
     return Padding(
@@ -598,7 +600,7 @@ class ZoneBottomSheetState extends State<ZoneBottomSheet> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _label('Verification Time (s)'),
+          _label(StringConstants.verificationTimeS),
           const SizedBox(height: 6),
           TextField(
             controller: zone.verificationTimeController,
@@ -619,7 +621,7 @@ class ZoneBottomSheetState extends State<ZoneBottomSheet> {
               style: GoogleFonts.inter(
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
-                color: const Color(0xFFEC1D24),
+                color: ColorConstants.primary,
               ),
             ),
           ],
@@ -633,8 +635,8 @@ class ZoneBottomSheetState extends State<ZoneBottomSheet> {
       height: 48,
       child: OutlinedButton(
         style: OutlinedButton.styleFrom(
-          foregroundColor: const Color(0xFFEC1D24),
-          side: const BorderSide(color: Color(0xFFEC1D24)),
+          foregroundColor: ColorConstants.primary,
+          side: const BorderSide(color: ColorConstants.primary),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24),
           ),
@@ -644,7 +646,7 @@ class ZoneBottomSheetState extends State<ZoneBottomSheet> {
           widget.onDownload();
         },
         child: Text(
-          'Download',
+          StringConstants.download,
           style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600),
         ),
       ),
@@ -656,7 +658,7 @@ class ZoneBottomSheetState extends State<ZoneBottomSheet> {
       height: 48,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFFEC1D24),
+          backgroundColor: ColorConstants.primary,
           disabledBackgroundColor: Colors.grey.shade400,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24),
@@ -671,11 +673,11 @@ class ZoneBottomSheetState extends State<ZoneBottomSheet> {
                 }
                 : null,
         child: Text(
-          'Apply',
+          StringConstants.apply,
           style: GoogleFonts.inter(
             fontSize: 16,
             fontWeight: FontWeight.w600,
-            color: Colors.white,
+            color: ColorConstants.white,
           ),
         ),
       ),
@@ -704,7 +706,7 @@ class ZoneBottomSheetState extends State<ZoneBottomSheet> {
         style: GoogleFonts.inter(
           fontSize: 20,
           fontWeight: FontWeight.w700,
-          color: const Color(0xFF3D3D3D),
+          color: ColorConstants.textDark,
         ),
       ),
     );
@@ -716,7 +718,7 @@ class ZoneBottomSheetState extends State<ZoneBottomSheet> {
       style: GoogleFonts.inter(
         fontSize: 13,
         fontWeight: FontWeight.w600,
-        color: const Color(0xFF3D3D3D),
+        color: ColorConstants.textDark,
       ),
     );
   }
@@ -759,11 +761,11 @@ class ZoneBottomSheetState extends State<ZoneBottomSheet> {
 
   InputDecoration _inputDecoration({bool hasError = false}) {
     final borderColor =
-        hasError ? const Color(0xFFEC1D24) : const Color(0xFFD0D0D0);
+        hasError ? ColorConstants.primary : ColorConstants.borderLight;
 
     return InputDecoration(
       filled: true,
-      fillColor: const Color(0xFFF8F8F8),
+      fillColor: ColorConstants.surfaceLight,
 
       // 🔥 MATCH OTHER SHEETS
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
@@ -780,7 +782,7 @@ class ZoneBottomSheetState extends State<ZoneBottomSheet> {
 
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFFEC1D24), width: 2),
+        borderSide: const BorderSide(color: ColorConstants.primary, width: 2),
       ),
     );
   }
@@ -791,9 +793,9 @@ class ZoneBottomSheetState extends State<ZoneBottomSheet> {
 class ZoneConfig {
   final int zoneNumber;
 
-  String type = 'Normal';
+  String type = StringConstants.none;
   String enabled = 'No';
-  String mode = 'Immediate';
+  String mode = StringConstants.normal;
 
   TextEditingController zoneTextController = TextEditingController();
   TextEditingController verificationTimeController = TextEditingController();

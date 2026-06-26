@@ -10,6 +10,8 @@ import 'package:techno_switch_solar_app/utils/ext_zone_mode_util.dart';
 import 'package:techno_switch_solar_app/panel_config/panel_config_cache_sync.dart';
 import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/widgets/dropdown.dart';
+import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
 class ExtOutBottomSheet extends StatefulWidget {
   final String deviceId;
@@ -32,42 +34,42 @@ class ExtOutBottomSheet extends StatefulWidget {
 }
 
 class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
-  List<String> enabledOptions = ['No', 'Yes'];
+  List<String> enabledOptions = [StringConstants.no, StringConstants.yes];
   List<String> actuatorTypeOptions = [
     'Not Defined',
-    'Metron',
-    'Solenoid',
-    'Aerosol',
+    StringConstants.metron,
+    StringConstants.solenoid,
+    StringConstants.aerosol,
   ];
   List<String> functionOptions = [
     'Z1 and Z2',
-    'Z2 and Z3',
-    'Z1 and Z3',
-    'Z1 and Z2 and Z3',
-    'Z1',
-    'Z2',
-    'Z3',
-    'Any 2 zones',
-    'Any 1 zone',
+    StringConstants.z2AndZ3,
+    StringConstants.z1AndZ3,
+    StringConstants.z1AndZ2AndZ3,
+    StringConstants.z12,
+    StringConstants.z22,
+    StringConstants.z32,
+    StringConstants.any2Zones,
+    StringConstants.any1Zone,
   ];
-  List<String> resetInCountOptions = ['Yes', 'No'];
+  List<String> resetInCountOptions = [StringConstants.yes, StringConstants.no];
   List<String> holdCountOptions = [
     'Disabled',
-    'Restart',
-    'Suspend',
-    'Continue',
+    StringConstants.restart,
+    StringConstants.suspend,
+    StringConstants.disabled,
   ];
   List<String> actionOptions = [
     'Continous',
-    'Pulse 100ms On',
-    'Pulse 300ms On',
-    'Pulse 600ms On',
-    'Pulse 1s On',
-    'Pulse 5s On',
-    'Pulsing 100ms On, 500ms Off',
-    'Pulsing 300ms On, 1.5s Off',
-    'Pulsing 600ms On, 3s Off',
-    'Pulsing 1s On, 5s Off',
+    StringConstants.pulse100msOn,
+    StringConstants.pulse300msOn,
+    StringConstants.pulse600msOn,
+    StringConstants.pulse1sOn,
+    StringConstants.pulse5sOn,
+    StringConstants.pulsing100msOn500msOff,
+    StringConstants.pulsing300msOn15sOff,
+    StringConstants.pulsing600msOn3sOff,
+    StringConstants.pulsing1sOn5sOff,
   ];
 
   late String enabled;
@@ -86,9 +88,9 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
   final FocusNode resetDelayFocusNode = FocusNode();
   BleManager? manager;
   final String _autoError = "Countdown Auto must be between 0 and 60";
-  final String _manError = "Countdown Man must be between 0 and 60";
-  final String _releaseError = "Release Time must be between 10 and 300";
-  final String _resetDelayError = "Reset Delay must be between 0 and 1800";
+  final String _manError = StringConstants.countdownManMustBeBetween0And60;
+  final String _releaseError = StringConstants.releaseTimeMustBeBetween10And300;
+  final String _resetDelayError = StringConstants.resetDelayMustBeBetween0And1800;
 
   bool _computeIsValid() {
     final auto = int.tryParse(autoCtrl.text);
@@ -134,30 +136,30 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
     action = actionOptions[0];
     autoFocusNode.addListener(() {
       if (autoFocusNode.hasFocus) {
-        debugPrint("Auto field is focused");
+        debugPrint(StringConstants.autoFieldIsFocused);
       } else {
-        debugPrint("Auto field lost focus");
+        debugPrint(StringConstants.autoFieldLostFocus);
       }
     });
     manFocusNode.addListener(() {
       if (manFocusNode.hasFocus) {
-        debugPrint("Man field is focused");
+        debugPrint(StringConstants.manFieldIsFocused);
       } else {
-        debugPrint("Man field lost focus");
+        debugPrint(StringConstants.manFieldLostFocus);
       }
     });
     releaseFocusNode.addListener(() {
       if (releaseFocusNode.hasFocus) {
-        debugPrint("Release field is focused");
+        debugPrint(StringConstants.releaseFieldIsFocused);
       } else {
-        debugPrint("Release field lost focus");
+        debugPrint(StringConstants.releaseFieldLostFocus);
       }
     });
     resetDelayFocusNode.addListener(() {
       if (resetDelayFocusNode.hasFocus) {
-        debugPrint("Reset Delay field is focused");
+        debugPrint(StringConstants.resetDelayFieldIsFocused);
       } else {
-        debugPrint("Reset Delay field lost focus");
+        debugPrint(StringConstants.resetDelayFieldLostFocus);
       }
     });
     _loadData();
@@ -188,23 +190,23 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
   void _applyCachedData(Map<String, dynamic> data) {
     final en = (data['enabled'] as int?) ?? 0;
     enabled = enabledOptions[en.clamp(0, enabledOptions.length - 1)];
-    final at = (data['actuatorType'] as int?) ?? 0;
+    final at = (data[StringConstants.actuatortype] as int?) ?? 0;
     actuatorType =
         actuatorTypeOptions[at.clamp(0, actuatorTypeOptions.length - 1)];
     final fn = (data['function'] as int?) ?? 0;
     function = functionOptions[fn.clamp(0, functionOptions.length - 1)];
-    final ra = (data['resetAllowed'] as int?) ?? 0;
+    final ra = (data[StringConstants.resetallowed] as int?) ?? 0;
     resetInCount =
         resetInCountOptions[ra.clamp(0, resetInCountOptions.length - 1)];
-    final hc = (data['holdMode'] as int?) ?? 0;
+    final hc = (data[StringConstants.holdmode] as int?) ?? 0;
     holdCount = holdCountOptions[hc.clamp(0, holdCountOptions.length - 1)];
     final ac = (data['action'] as int?) ?? 0;
     action = actionOptions[ac.clamp(0, actionOptions.length - 1)];
     autoCtrl.text = (data['countdownAuto'] as int?)?.toString() ?? '10';
     manCtrl.text = (data['countdownMan'] as int?)?.toString() ?? '15';
     releaseCtrl.text = (data['releaseTime'] as int?)?.toString() ?? '10';
-    resetDelayCtrl.text = (data['resetDelay'] as int?)?.toString() ?? '5';
-    final solarRaw = data['isSolar'];
+    resetDelayCtrl.text = (data[StringConstants.resetdelay] as int?)?.toString() ?? '5';
+    final solarRaw = data[StringConstants.issolar];
     if (manager != null && solarRaw is bool) {
       manager!.bleProcess.isExtOutApplyButtonActive.value = solarRaw;
     }
@@ -242,17 +244,17 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
       valueListenable: manager!.bleProcess.isExtOutApplyButtonActive,
       builder: (context, isSolar, _) {
         final bgColor =
-            isSolar ? const Color(0xFFE8F5E9) : const Color(0xFFFFEBEE);
+            isSolar ? ColorConstants.successBackgroundLight : ColorConstants.errorBackgroundLight;
 
         final textColor =
-            isSolar ? const Color(0xFF2E7D32) : const Color(0xFFC62828);
+            isSolar ? ColorConstants.successDark : ColorConstants.colorFfc62828;
 
         final icon =
             isSolar
                 ? Icons.wb_sunny_rounded
                 : Icons.settings_input_component_rounded;
 
-        final label = isSolar ? "Solar Mode" : "DIP Mode";
+        final label = isSolar ? StringConstants.solarMode : StringConstants.dipMode;
 
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -284,7 +286,7 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        _title('Ext Out Config'),
+        _title(StringConstants.extOutConfig),
         Padding(
           padding: const EdgeInsets.only(bottom: 12.0),
           child: _modeBadge(),
@@ -297,61 +299,61 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
     return Column(
       children: [
         DropdownWidget(
-          label: 'Enabled',
+          label: StringConstants.enabled,
           value: enabled,
           items: enabledOptions,
           onChanged: (v) => setState(() => enabled = v),
         ),
         DropdownWidget(
-          label: 'Actuator Type',
+          label: StringConstants.actuatorType,
           value: actuatorType,
           items: actuatorTypeOptions,
           onChanged: (v) => setState(() => actuatorType = v),
         ),
         DropdownWidget(
-          label: 'Function',
+          label: StringConstants.function,
           value: function,
           items: functionOptions,
           onChanged: (v) => setState(() => function = v),
         ),
         _numberFieldWithValidation(
-          label: 'Countdown Auto (s)',
+          label: StringConstants.countdownAutoS,
           controller: autoCtrl,
           errorMsg: _autoError,
           focusNode: autoFocusNode,
         ),
         _numberFieldWithValidation(
-          label: 'Countdown Man (s)',
+          label: StringConstants.countdownManS,
           controller: manCtrl,
           errorMsg: _manError,
           focusNode: manFocusNode,
         ),
         _numberFieldWithValidation(
-          label: 'Release Time (s)',
+          label: StringConstants.releaseTimeS,
           controller: releaseCtrl,
           errorMsg: _releaseError,
           focusNode: releaseFocusNode,
         ),
         _numberFieldWithValidation(
-          label: 'Reset Delay (s)',
+          label: StringConstants.resetDelayS,
           controller: resetDelayCtrl,
           errorMsg: _resetDelayError,
           focusNode: resetDelayFocusNode,
         ),
         DropdownWidget(
-          label: 'Reset in Count',
+          label: StringConstants.resetInCount,
           value: resetInCount,
           items: resetInCountOptions,
           onChanged: (v) => setState(() => resetInCount = v),
         ),
         DropdownWidget(
-          label: 'Hold / Count',
+          label: StringConstants.holdCount,
           value: holdCount,
           items: holdCountOptions,
           onChanged: (v) => setState(() => holdCount = v),
         ),
         DropdownWidget(
-          label: 'Action',
+          label: StringConstants.action,
           value: action,
           items: actionOptions,
           onChanged: (v) => setState(() => action = v),
@@ -443,7 +445,7 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
         constraints: BoxConstraints(maxHeight: maxHeight),
         child: Container(
           decoration: const BoxDecoration(
-            color: Color(0xFFE31C23),
+            color: ColorConstants.primaryVariant,
             borderRadius: BorderRadius.vertical(top: Radius.circular(50)),
           ),
           child: Padding(
@@ -451,7 +453,7 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
             child: Container(
               clipBehavior: Clip.hardEdge,
               decoration: const BoxDecoration(
-                color: Colors.white,
+                color: ColorConstants.white,
                 borderRadius: BorderRadius.vertical(top: Radius.circular(50)),
               ),
               child: Stack(
@@ -469,7 +471,7 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
                             width: 38,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              color: Colors.black.withValues(alpha: 0.06),
+                              color: ColorConstants.blackMaterial.withValues(alpha: 0.06),
                             ),
                             child: const Icon(Icons.close, size: 20),
                           ),
@@ -487,7 +489,7 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
                     child: Column(
                       children: [
                         _dragHandle(),
-                        _title('Ext Out Mode'),
+                        _title(StringConstants.extOutMode),
                         const SizedBox(height: 4),
                         _modeBadge(),
                         const SizedBox(height: 8),
@@ -532,7 +534,7 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
         style: GoogleFonts.inter(
           fontSize: 20,
           fontWeight: FontWeight.w700,
-          color: const Color(0xFF3D3D3D),
+          color: ColorConstants.textDark,
         ),
       ),
     );
@@ -581,17 +583,17 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
       style: GoogleFonts.inter(
         fontSize: 13,
         fontWeight: FontWeight.w600,
-        color: const Color(0xFF3D3D3D),
+        color: ColorConstants.textDark,
       ),
     );
   }
 
   InputDecoration _inputDecoration({bool hasError = false}) {
     final borderColor =
-        hasError ? const Color(0xFFEC1D24) : const Color(0xFFD0D0D0);
+        hasError ? ColorConstants.primary : ColorConstants.borderLight;
     return InputDecoration(
       filled: true,
-      fillColor: const Color(0xFFF8F8F8),
+      fillColor: ColorConstants.surfaceLight,
       contentPadding: const EdgeInsets.all(14),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
@@ -603,7 +605,7 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFFEC1D24), width: 2),
+        borderSide: const BorderSide(color: ColorConstants.primary, width: 2),
       ),
     );
   }
@@ -613,8 +615,8 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
       height: 48,
       child: OutlinedButton(
         style: OutlinedButton.styleFrom(
-          foregroundColor: const Color(0xFFEC1D24),
-          side: const BorderSide(color: Color(0xFFEC1D24)),
+          foregroundColor: ColorConstants.primary,
+          side: const BorderSide(color: ColorConstants.primary),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24),
           ),
@@ -624,7 +626,7 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
           widget.onDownload();
         },
         child: Text(
-          'Download',
+          StringConstants.download,
           style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600),
         ),
       ),
@@ -639,7 +641,7 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
       height: 48,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFFEC1D24),
+          backgroundColor: ColorConstants.primary,
           disabledBackgroundColor: Colors.grey.shade400,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24),
@@ -654,11 +656,11 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
                 }
                 : null,
         child: Text(
-          'Apply',
+          StringConstants.apply,
           style: GoogleFonts.inter(
             fontSize: 16,
             fontWeight: FontWeight.w600,
-            color: Colors.white,
+            color: ColorConstants.white,
           ),
         ),
       ),

@@ -155,7 +155,7 @@ class CreateProjectController extends ChangeNotifier {
       case 'Level Timeout':
         generalSettings = generalSettings.copyWith(levelTimeout: value);
         break;
-      case 'Fault Latching':
+      case StringConstants.faultLatching:
         generalSettings = generalSettings.copyWith(faultLatching: value);
         break;
       case 'Panel Date & Time':
@@ -164,10 +164,10 @@ class CreateProjectController extends ChangeNotifier {
       case 'Service Due':
         generalSettings = generalSettings.copyWith(serviceDue: value);
         break;
-      case 'Service Due Reminder':
+      case StringConstants.serviceDueReminder:
         generalSettings = generalSettings.copyWith(serviceDueReminder: value);
         break;
-      case 'Event Reminder':
+      case StringConstants.eventReminder:
         generalSettings = generalSettings.copyWith(eventReminder: value);
         break;
     }
@@ -181,7 +181,7 @@ class CreateProjectController extends ChangeNotifier {
           levelTimeout: '${value.toInt()} Seconds',
         );
         break;
-      case 'Timer Settings':
+      case StringConstants.timerSettings:
         generalSettings = generalSettings.copyWith(timerSettings: value);
         break;
     }
@@ -218,20 +218,20 @@ class CreateProjectController extends ChangeNotifier {
       case 'Fire Sound':
         sounderSettings.fireSoundTone = value;
         break;
-      case 'Sounder Delay':
+      case StringConstants.sounderDelay:
         if (sounderSettings.fireSounderDelay == value) {
           sounderSettings.fireSounderDelay = value;
         } else {
           sounderSettings.extSounderDelay = value;
         }
         break;
-      case 'Count Down Action':
+      case StringConstants.countDownAction:
         sounderSettings.countDownAction = value;
         break;
       case 'Hold Action':
         sounderSettings.holdAction = value;
         break;
-      case 'Release Action':
+      case StringConstants.releaseAction:
         sounderSettings.releaseAction = value;
         break;
     }
@@ -273,18 +273,18 @@ class CreateProjectController extends ChangeNotifier {
 
     if (step == 1) {
       if (siteNameController.text.trim().isEmpty) {
-        validationErrors['siteName'] = StringConstants.siteNameRequired;
+        validationErrors[StringConstants.sitename] = StringConstants.siteNameRequired;
       }
       if (saqccRegNumberController.text.trim().isEmpty) {
-        validationErrors['saqccRegNumber'] =
+        validationErrors[StringConstants.saqccregnumber] =
             StringConstants.saqccRegNumberRequired;
       }
     } else if (step == 2) {
       if (panelNameController.text.trim().isEmpty) {
-        validationErrors['panelName'] = StringConstants.panelNameRequired;
+        validationErrors[StringConstants.panelname] = StringConstants.panelNameRequired;
       }
       if (panelData.selectedPanelType == null) {
-        validationErrors['panelType'] = StringConstants.panelTypeRequired;
+        validationErrors[StringConstants.paneltype] = StringConstants.panelTypeRequired;
       }
     }
 

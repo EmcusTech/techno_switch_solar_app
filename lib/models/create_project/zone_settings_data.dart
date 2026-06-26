@@ -1,3 +1,4 @@
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 class ZoneSettingsData {
   String? expandedZone;
   Map<String, String> zoneTexts;
@@ -34,32 +35,32 @@ class ZoneSettingsData {
     for (int i = 1; i <= count; i++) {
       final zoneName = 'Zone $i';
       zoneTexts[zoneName] = zoneName;
-      zoneTypes[zoneName] = 'Double Knock';
-      zoneStates[zoneName] = 'Enable';
-      zoneTests[zoneName] = 'Yes';
-      zoneModes[zoneName] = 'Yes';
-      zoneVerificationTimes[zoneName] = '300 Sec';
+      zoneTypes[zoneName] = StringConstants.doubleKnock;
+      zoneStates[zoneName] = StringConstants.enable;
+      zoneTests[zoneName] = StringConstants.yes;
+      zoneModes[zoneName] = StringConstants.yes;
+      zoneVerificationTimes[zoneName] = StringConstants.s300Sec;
     }
   }
 
   void updateZoneField(String zoneName, String fieldType, String value) {
     switch (fieldType) {
-      case 'zoneText':
+      case StringConstants.zonetext:
         zoneTexts[zoneName] = value;
         break;
-      case 'zoneType':
+      case StringConstants.zonetype:
         zoneTypes[zoneName] = value;
         break;
-      case 'zoneState':
+      case StringConstants.zonestate:
         zoneStates[zoneName] = value;
         break;
-      case 'zoneTest':
+      case StringConstants.zonetest:
         zoneTests[zoneName] = value;
         break;
-      case 'zoneMode':
+      case StringConstants.zonemode:
         zoneModes[zoneName] = value;
         break;
-      case 'zoneVerificationTime':
+      case StringConstants.zoneverificationtime:
         zoneVerificationTimes[zoneName] = value;
         break;
     }

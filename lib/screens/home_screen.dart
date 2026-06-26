@@ -14,6 +14,8 @@ import 'package:techno_switch_solar_app/services/navigation_service.dart';
 import 'package:intl/intl.dart';
 import 'settings_screen.dart';
 import 'help_screen.dart';
+import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -27,7 +29,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   final List<Widget> _screens = [
     const _HomeContent(),
-    SettingsScreen(panelName: 'RHINO2008', panelVersionNo: '0.98'),
+    SettingsScreen(panelName: StringConstants.rhino2008, panelVersionNo: StringConstants.s098),
     const HelpScreen(),
   ];
 
@@ -57,7 +59,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: ColorConstants.white,
       extendBody: true,
       body: _screens[_selectedIndex],
       bottomNavigationBar: Container(
@@ -65,7 +67,7 @@ class _HomeScreenState extends State<HomeScreen> {
         decoration: BoxDecoration(
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
+              color: ColorConstants.blackMaterial.withValues(alpha: 0.1),
               blurRadius: 10,
               offset: const Offset(0, -5),
             ),
@@ -85,11 +87,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   height: 24,
                   width: 24,
                   colorFilter: ColorFilter.mode(
-                    _selectedIndex == 0 ? Colors.white : Colors.grey,
+                    _selectedIndex == 0 ? ColorConstants.white : Colors.grey,
                     BlendMode.srcIn,
                   ),
                 ),
-                label: 'Home',
+                label: StringConstants.home,
               ),
               BottomNavigationBarItem(
                 icon: SvgPicture.asset(
@@ -97,11 +99,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   height: 24,
                   width: 24,
                   colorFilter: ColorFilter.mode(
-                    _selectedIndex == 1 ? Colors.white : Colors.grey,
+                    _selectedIndex == 1 ? ColorConstants.white : Colors.grey,
                     BlendMode.srcIn,
                   ),
                 ),
-                label: 'Settings',
+                label: StringConstants.settings,
               ),
               BottomNavigationBarItem(
                 icon: SvgPicture.asset(
@@ -109,18 +111,18 @@ class _HomeScreenState extends State<HomeScreen> {
                   height: 24,
                   width: 24,
                   colorFilter: ColorFilter.mode(
-                    _selectedIndex == 2 ? Colors.white : Colors.grey,
+                    _selectedIndex == 2 ? ColorConstants.white : Colors.grey,
                     BlendMode.srcIn,
                   ),
                 ),
-                label: 'Help',
+                label: StringConstants.help,
               ),
             ],
             currentIndex: _selectedIndex,
-            selectedItemColor: Colors.white,
+            selectedItemColor: ColorConstants.white,
             unselectedItemColor: Colors.grey,
             onTap: _onItemTapped,
-            backgroundColor: Color(0xffEC1D24),
+            backgroundColor: ColorConstants.primary,
             elevation: 0,
             type: BottomNavigationBarType.fixed,
             selectedLabelStyle: GoogleFonts.inter(
@@ -219,7 +221,7 @@ class _HomeContentState extends State<_HomeContent> with RouteAware {
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [Color(0xFFF6EBEB), Colors.white],
+          colors: [ColorConstants.scaffoldGradientTop, ColorConstants.white],
         ),
       ),
       child: Stack(
@@ -252,7 +254,7 @@ class _HomeContentState extends State<_HomeContent> with RouteAware {
                 height: 166,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Color(0xffEC1D24).withValues(alpha: 0.5),
+                  color: ColorConstants.primary.withValues(alpha: 0.5),
                 ),
               ),
             ),
@@ -283,7 +285,7 @@ class _HomeContentState extends State<_HomeContent> with RouteAware {
                       height: 106,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: Color(0xFFFBDEE1),
+                        color: ColorConstants.errorIconBackground,
                       ),
                       child: Padding(
                         padding: const EdgeInsets.all(25.0),
@@ -292,7 +294,7 @@ class _HomeContentState extends State<_HomeContent> with RouteAware {
                           height: 59.29,
                           width: 51,
                           colorFilter: ColorFilter.mode(
-                            Color(0xFFEC1D24),
+                            ColorConstants.primary,
                             BlendMode.srcIn,
                           ),
                         ),
@@ -303,11 +305,11 @@ class _HomeContentState extends State<_HomeContent> with RouteAware {
               ),
               SizedBox(height: 15),
               Text(
-                'Tap to connect',
+                StringConstants.tapToConnect,
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   fontWeight: FontWeight.w400,
-                  color: Color(0xFF3D3D3D),
+                  color: ColorConstants.textDark,
                 ),
               ),
             ],
@@ -325,11 +327,11 @@ class _HomeContentState extends State<_HomeContent> with RouteAware {
           Align(
             alignment: Alignment.centerLeft,
             child: Text(
-              'Quick Links',
+              StringConstants.quickLinks,
               style: GoogleFonts.inter(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
-                color: Color(0xFF3D3D3D),
+                color: ColorConstants.textDark,
               ),
             ),
           ),
@@ -347,12 +349,12 @@ class _HomeContentState extends State<_HomeContent> with RouteAware {
                 },
                 child: _buildQuickLinkItem(
                   'assets/svgs/new_project_icon.svg',
-                  'New Site',
+                  StringConstants.newSite,
                 ),
               ),
               _buildQuickLinkItem(
                 'assets/svgs/open_project_icon.svg',
-                'Open Site',
+                StringConstants.openSite,
                 isEnabled: false,
               ),
               GestureDetector(
@@ -366,7 +368,7 @@ class _HomeContentState extends State<_HomeContent> with RouteAware {
                 },
                 child: _buildQuickLinkItem(
                   'assets/svgs/maintenance_icon.svg',
-                  'Live Events',
+                  StringConstants.liveEvents,
                 ),
               ),
               GestureDetector(
@@ -379,7 +381,7 @@ class _HomeContentState extends State<_HomeContent> with RouteAware {
                 },
                 child: _buildQuickLinkItem(
                   'assets/svgs/retrieve_log_icon.svg',
-                  'Retrieve Log',
+                  StringConstants.retrieveLog,
                 ),
               ),
             ],
@@ -401,11 +403,11 @@ class _HomeContentState extends State<_HomeContent> with RouteAware {
           height: 64,
           decoration: BoxDecoration(
             color:
-                isEnabled == true ? Colors.transparent : Colors.grey.shade200,
+                isEnabled == true ? ColorConstants.transparent : Colors.grey.shade200,
             border: Border.all(
               color:
                   isEnabled == true
-                      ? Color(0xFFEC1D24).withValues(alpha: 0.31)
+                      ? ColorConstants.primary.withValues(alpha: 0.31)
                       : Colors.grey.shade200,
               width: 1,
             ),
@@ -419,7 +421,7 @@ class _HomeContentState extends State<_HomeContent> with RouteAware {
                   isEnabled == true
                       ? null
                       : ColorFilter.mode(
-                        Color(0xFFEC1D24).withValues(alpha: 0.31),
+                        ColorConstants.primary.withValues(alpha: 0.31),
                         BlendMode.srcIn,
                       ),
             ),
@@ -431,7 +433,7 @@ class _HomeContentState extends State<_HomeContent> with RouteAware {
           style: GoogleFonts.inter(
             fontSize: 11,
             fontWeight: FontWeight.w400,
-            color: Color(0xFF3D3D3D),
+            color: ColorConstants.textDark,
           ),
         ),
       ],
@@ -448,20 +450,20 @@ class _HomeContentState extends State<_HomeContent> with RouteAware {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Recent Sites',
+                StringConstants.recentSites,
                 style: GoogleFonts.inter(
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
-                  color: Color(0xFF3D3D3D),
+                  color: ColorConstants.textDark,
                 ),
               ),
               if (_sites.isNotEmpty)
                 Text(
-                  'View All',
+                  StringConstants.viewAll,
                   style: GoogleFonts.inter(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
-                    color: Color(0xFF666666).withValues(alpha: 0.2),
+                    color: ColorConstants.textGray.withValues(alpha: 0.2),
                   ),
                 ),
             ],
@@ -515,7 +517,7 @@ class _HomeContentState extends State<_HomeContent> with RouteAware {
             style: GoogleFonts.inter(
               fontSize: 11,
               fontWeight: FontWeight.w400,
-              color: const Color(0xFF918F8F),
+              color: ColorConstants.textMuted,
             ),
           ),
         ],
@@ -528,7 +530,7 @@ class _HomeContentState extends State<_HomeContent> with RouteAware {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(32.0),
-          child: CircularProgressIndicator(color: Color(0xFFEC1D24)),
+          child: CircularProgressIndicator(color: ColorConstants.primary),
         ),
       );
     }
@@ -536,7 +538,7 @@ class _HomeContentState extends State<_HomeContent> with RouteAware {
     return SizedBox(
       height: MediaQuery.sizeOf(context).height - 550,
       child: RefreshIndicator(
-        color: Color(0xFFEC1D24),
+        color: ColorConstants.primary,
         onRefresh: _refreshSites,
         child: ListView.separated(
           physics: AlwaysScrollableScrollPhysics(),
@@ -549,11 +551,11 @@ class _HomeContentState extends State<_HomeContent> with RouteAware {
             if (_sites.isEmpty) {
               return Center(
                 child: Text(
-                  'No Sites Yet',
+                  StringConstants.noSitesYet,
                   style: GoogleFonts.inter(
                     fontSize: 14,
                     fontWeight: FontWeight.w400,
-                    color: Color(0xFF3D3D3D),
+                    color: ColorConstants.textDark,
                   ),
                 ),
               );
@@ -579,9 +581,9 @@ class _HomeContentState extends State<_HomeContent> with RouteAware {
               },
               child: Container(
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: ColorConstants.white,
                   border: Border.all(
-                    color: Color(0xFFB9B9B9).withValues(alpha: 0.31),
+                    color: ColorConstants.iconDisabled.withValues(alpha: 0.31),
                     width: 1,
                   ),
                   borderRadius: BorderRadius.circular(8),
@@ -608,7 +610,7 @@ class _HomeContentState extends State<_HomeContent> with RouteAware {
                               style: GoogleFonts.inter(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w700,
-                                color: Color(0xFF3D3D3D),
+                                color: ColorConstants.textDark,
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -621,7 +623,7 @@ class _HomeContentState extends State<_HomeContent> with RouteAware {
                       Icon(
                         Icons.arrow_forward_ios,
                         size: 16,
-                        color: Color(0xFFEC1D24),
+                        color: ColorConstants.primary,
                       ),
                     ],
                   ),

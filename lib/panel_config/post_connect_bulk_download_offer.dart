@@ -7,6 +7,7 @@ import 'package:techno_switch_solar_app/panel_config/panel_config_cache_sync.dar
 import 'package:techno_switch_solar_app/panel_config/panel_configuration_coordinator.dart';
 import 'package:techno_switch_solar_app/panel_config/post_connect_config_log_compare.dart';
 import 'package:techno_switch_solar_app/widgets/app_styled_dialogs.dart';
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
 PanelConfigRefreshNotifiers _ephemeralPanelRefreshNotifiers() {
   return PanelConfigRefreshNotifiers(
@@ -34,11 +35,11 @@ Future<void> offerOptionalFullConfigDownloadAfterConnect({
 }) async {
   final wantDownload = await showAppStyledTwoActionDialog<bool>(
     context: context,
-    title: 'Download panel configuration?',
+    title: StringConstants.downloadPanelConfiguration,
     message:
         'Download the full configuration from the panel now? This matches the dashboard “download all” flow and fills local caches before you edit.',
-    leadingActionLabel: 'No',
-    trailingActionLabel: 'Yes',
+    leadingActionLabel: StringConstants.no,
+    trailingActionLabel: StringConstants.yes,
     leadingValue: false,
     trailingValue: true,
   );

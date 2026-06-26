@@ -5,6 +5,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/utils/ble_name_utils.dart';
+import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
 final BleManager ble = Get.find<BleManager>();
 
@@ -60,29 +62,29 @@ class _SettingsContentState extends State<_SettingsContent> {
             borderRadius: BorderRadius.circular(16),
           ),
           title: Text(
-            'Disconnect device?',
+            StringConstants.disconnectDevice,
             style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w700),
           ),
           content: Text(
-            'Going back will disconnect the device. Are you sure?',
+            StringConstants.goingBackWillDisconnectTheDeviceAreYouSure,
             style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w400),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(false),
               child: Text(
-                'Cancel',
+                StringConstants.cancel,
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: const Color(0xFF666666),
+                  color: ColorConstants.textGray,
                 ),
               ),
             ),
             ElevatedButton(
               onPressed: () => Navigator.of(dialogContext).pop(true),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFEC1D24),
+                backgroundColor: ColorConstants.primary,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(28.5),
                 ),
@@ -93,7 +95,7 @@ class _SettingsContentState extends State<_SettingsContent> {
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: Colors.white,
+                  color: ColorConstants.white,
                 ),
               ),
             ),
@@ -127,7 +129,7 @@ class _SettingsContentState extends State<_SettingsContent> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Color(0xFFF6EBEB), Colors.white],
+            colors: [ColorConstants.scaffoldGradientTop, ColorConstants.white],
           ),
         ),
         child: Stack(
@@ -160,7 +162,7 @@ class _SettingsContentState extends State<_SettingsContent> {
                         ),
                         SizedBox(width: 8),
                         Text(
-                          'Project Settings',
+                          StringConstants.projectSettings,
                           style: GoogleFonts.inter(
                             fontSize: 20,
                             fontWeight: FontWeight.w700,
@@ -184,7 +186,7 @@ class _SettingsContentState extends State<_SettingsContent> {
     return Expanded(
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: ColorConstants.white,
           borderRadius: BorderRadius.circular(35),
         ),
         child: SingleChildScrollView(child: _buildLogStatus()),
@@ -221,7 +223,7 @@ class _SettingsContentState extends State<_SettingsContent> {
                     style: GoogleFonts.inter(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
-                      color: Color(0xFF979797),
+                      color: ColorConstants.textDisabled,
                     ),
                   ),
                   ValueListenableBuilder(
@@ -231,22 +233,22 @@ class _SettingsContentState extends State<_SettingsContent> {
                         text: TextSpan(
                           children: [
                             TextSpan(
-                              text: 'status : ',
+                              text: StringConstants.status4,
                               style: GoogleFonts.inter(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w500,
-                                color: Color(0xFF979797),
+                                color: ColorConstants.textDisabled,
                               ),
                             ),
                             TextSpan(
-                              text: isConnected ? 'Connected' : 'Disconnected',
+                              text: isConnected ? StringConstants.connected : StringConstants.disconnected,
                               style: GoogleFonts.inter(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w500,
                                 color:
                                     isConnected
-                                        ? Color(0xFF00A706)
-                                        : Color(0xFFEC1D24),
+                                        ? ColorConstants.success
+                                        : ColorConstants.primary,
                               ),
                             ),
                           ],
@@ -259,25 +261,25 @@ class _SettingsContentState extends State<_SettingsContent> {
             ],
           ),
           SizedBox(height: 10),
-          Divider(color: Colors.black.withValues(alpha: 0.18), thickness: 1),
-          _settingTile(title: 'Panel Settings', onTap: () {}),
-          Divider(color: Colors.black.withValues(alpha: 0.18), thickness: 1),
-          _settingTile(title: 'Zone Settings', onTap: () {}),
-          Divider(color: Colors.black.withValues(alpha: 0.18), thickness: 1),
-          _settingTile(title: 'Input Settings', onTap: () {}),
-          Divider(color: Colors.black.withValues(alpha: 0.18), thickness: 1),
-          _settingTile(title: 'Relay Settings', onTap: () {}),
-          Divider(color: Colors.black.withValues(alpha: 0.18), thickness: 1),
-          _settingTile(title: 'Sounder Settings', onTap: () {}),
-          Divider(color: Colors.black.withValues(alpha: 0.18), thickness: 1),
-          _settingTile(title: 'Extinguishing out Settings', onTap: () {}),
-          Divider(color: Colors.black.withValues(alpha: 0.18), thickness: 1),
-          _settingTile(title: 'L-Bus Settings', onTap: () {}),
-          Divider(color: Colors.black.withValues(alpha: 0.18), thickness: 1),
-          _settingTile(title: 'Panel Information', onTap: () {}),
-          Divider(color: Colors.black.withValues(alpha: 0.18), thickness: 1),
-          _settingTile(title: 'Firmware Upgrade', onTap: () {}),
-          Divider(color: Colors.black.withValues(alpha: 0.18), thickness: 1),
+          Divider(color: ColorConstants.blackMaterial.withValues(alpha: 0.18), thickness: 1),
+          _settingTile(title: StringConstants.panelSettings, onTap: () {}),
+          Divider(color: ColorConstants.blackMaterial.withValues(alpha: 0.18), thickness: 1),
+          _settingTile(title: StringConstants.zoneSettings, onTap: () {}),
+          Divider(color: ColorConstants.blackMaterial.withValues(alpha: 0.18), thickness: 1),
+          _settingTile(title: StringConstants.inputSettings, onTap: () {}),
+          Divider(color: ColorConstants.blackMaterial.withValues(alpha: 0.18), thickness: 1),
+          _settingTile(title: StringConstants.relaySettings, onTap: () {}),
+          Divider(color: ColorConstants.blackMaterial.withValues(alpha: 0.18), thickness: 1),
+          _settingTile(title: StringConstants.sounderSettings, onTap: () {}),
+          Divider(color: ColorConstants.blackMaterial.withValues(alpha: 0.18), thickness: 1),
+          _settingTile(title: StringConstants.extinguishingOutSettings, onTap: () {}),
+          Divider(color: ColorConstants.blackMaterial.withValues(alpha: 0.18), thickness: 1),
+          _settingTile(title: StringConstants.lBusSettings, onTap: () {}),
+          Divider(color: ColorConstants.blackMaterial.withValues(alpha: 0.18), thickness: 1),
+          _settingTile(title: StringConstants.panelInformation, onTap: () {}),
+          Divider(color: ColorConstants.blackMaterial.withValues(alpha: 0.18), thickness: 1),
+          _settingTile(title: StringConstants.firmwareUpgrade, onTap: () {}),
+          Divider(color: ColorConstants.blackMaterial.withValues(alpha: 0.18), thickness: 1),
           SizedBox(height: 80),
         ],
       ),
@@ -294,7 +296,7 @@ class _SettingsContentState extends State<_SettingsContent> {
             SvgPicture.asset(
               'assets/svgs/settings_icon.svg',
               colorFilter: ColorFilter.mode(
-                Color(0xFF1B1F26).withValues(alpha: 0.72),
+                ColorConstants.textHeading.withValues(alpha: 0.72),
                 BlendMode.srcIn,
               ),
             ),
@@ -310,7 +312,7 @@ class _SettingsContentState extends State<_SettingsContent> {
             Icon(
               Icons.arrow_forward_ios,
               size: 18,
-              color: Color(0xFF696969).withValues(alpha: 0.47),
+              color: ColorConstants.textSecondary.withValues(alpha: 0.47),
             ),
           ],
         ),

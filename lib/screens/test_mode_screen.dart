@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
 class TestModeScreen extends StatefulWidget {
   const TestModeScreen({super.key});
@@ -19,7 +21,7 @@ class _TestModeScreenState extends State<TestModeScreen> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Color(0xFFF6EBEB), Colors.white],
+            colors: [ColorConstants.scaffoldGradientTop, ColorConstants.white],
           ),
         ),
         child: Stack(
@@ -45,7 +47,7 @@ class _TestModeScreenState extends State<TestModeScreen> {
                         ),
                         SizedBox(width: 8),
                         Text(
-                          'Test Mode',
+                          StringConstants.testMode,
                           style: GoogleFonts.inter(
                             fontSize: 20,
                             fontWeight: FontWeight.w700,
@@ -69,7 +71,7 @@ class _TestModeScreenState extends State<TestModeScreen> {
     return Expanded(
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: ColorConstants.white,
           borderRadius: BorderRadius.circular(35),
         ),
         child: Stack(
@@ -85,19 +87,19 @@ class _TestModeScreenState extends State<TestModeScreen> {
                 child: Column(
                   children: [
                     Text(
-                      'Test Mode',
+                      StringConstants.testMode,
                       style: GoogleFonts.inter(
                         fontSize: 20,
                         fontWeight: FontWeight.w600,
-                        color: Color(0xFF918F8F),
+                        color: ColorConstants.textMuted,
                       ),
                     ),
                     Text(
-                      'Configuration',
+                      StringConstants.configuration,
                       style: GoogleFonts.inter(
                         fontSize: 32,
                         fontWeight: FontWeight.w700,
-                        color: Color(0xFF3A3A3A),
+                        color: ColorConstants.textBodyDark,
                       ),
                     ),
                   ],
@@ -110,7 +112,7 @@ class _TestModeScreenState extends State<TestModeScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   _buildTestModeOption(
-                    'Battery Test',
+                    StringConstants.batteryTest,
                     'assets/svgs/battery_test_icon.svg',
                     () {
                       // Handle battery test
@@ -118,7 +120,7 @@ class _TestModeScreenState extends State<TestModeScreen> {
                   ),
                   SizedBox(height: 16),
                   _buildTestModeOption(
-                    'Solar Panel Test',
+                    StringConstants.solarPanelTest,
                     'assets/svgs/solar_panel_test_icon.svg',
                     () {
                       // Handle solar panel test
@@ -126,7 +128,7 @@ class _TestModeScreenState extends State<TestModeScreen> {
                   ),
                   SizedBox(height: 16),
                   _buildTestModeOption(
-                    'Inverter Test',
+                    StringConstants.inverterTest,
                     'assets/svgs/inverter_test_icon.svg',
                     () {
                       // Handle inverter test
@@ -134,7 +136,7 @@ class _TestModeScreenState extends State<TestModeScreen> {
                   ),
                   SizedBox(height: 16),
                   _buildTestModeOption(
-                    'System Test',
+                    StringConstants.systemTest,
                     'assets/svgs/system_test_icon.svg',
                     () {
                       // Handle system test
@@ -159,12 +161,12 @@ class _TestModeScreenState extends State<TestModeScreen> {
       child: Container(
         width: double.infinity,
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: ColorConstants.white,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Color(0xFFE0E0E0), width: 1),
+          border: Border.all(color: ColorConstants.borderGray, width: 1),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
+              color: ColorConstants.blackMaterial.withValues(alpha: 0.05),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -178,7 +180,7 @@ class _TestModeScreenState extends State<TestModeScreen> {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: Color(0xFFEC1D24).withValues(alpha: 0.08),
+                  color: ColorConstants.primary.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Center(
@@ -187,7 +189,7 @@ class _TestModeScreenState extends State<TestModeScreen> {
                     width: 24,
                     height: 24,
                     colorFilter: ColorFilter.mode(
-                      Color(0xFFEC1D24),
+                      ColorConstants.primary,
                       BlendMode.srcIn,
                     ),
                   ),
@@ -199,11 +201,11 @@ class _TestModeScreenState extends State<TestModeScreen> {
                 style: GoogleFonts.inter(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
-                  color: Color(0xFF3D3D3D),
+                  color: ColorConstants.textDark,
                 ),
               ),
               Spacer(),
-              Icon(Icons.arrow_forward_ios, size: 16, color: Color(0xFF3D3D3D)),
+              Icon(Icons.arrow_forward_ios, size: 16, color: ColorConstants.textDark),
             ],
           ),
         ),

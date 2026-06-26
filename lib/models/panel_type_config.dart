@@ -1,3 +1,4 @@
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 class PanelTypeConfig {
   final String typeName;
   final int zoneCount;
@@ -15,35 +16,35 @@ class PanelTypeConfig {
 
   static const List<PanelTypeConfig> availablePanels = [
     // PanelTypeConfig(
-    //   typeName: 'ORYX202',
+    //   typeName: StringConstants.oryx202,
     //   zoneCount: 2,
     //   sounderCount: 2,
     //   relayCount: 2,
     //   fireExtinguisherCount: 0,
     // ),
     // PanelTypeConfig(
-    //   typeName: 'ORYX204',
+    //   typeName: StringConstants.oryx204,
     //   zoneCount: 4,
     //   sounderCount: 2,
     //   relayCount: 4,
     //   fireExtinguisherCount: 0,
     // ),
     // PanelTypeConfig(
-    //   typeName: 'ORYX208',
+    //   typeName: StringConstants.oryx208,
     //   zoneCount: 8,
     //   sounderCount: 2,
     //   relayCount: 8,
     //   fireExtinguisherCount: 0,
     // ),
     PanelTypeConfig(
-      typeName: 'RHINO103',
+      typeName: StringConstants.rhino103,
       zoneCount: 3,
       sounderCount: 3,
       relayCount: 3,
       fireExtinguisherCount: 1,
     ),
     // PanelTypeConfig(
-    //   typeName: 'RHINO203',
+    //   typeName: StringConstants.rhino203,
     //   zoneCount: 3,
     //   sounderCount: 3,
     //   relayCount: 6,

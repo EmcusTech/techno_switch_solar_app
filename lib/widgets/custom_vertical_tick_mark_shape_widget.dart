@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 
 class CustomVerticalTickMarkShape extends SliderTickMarkShape {
   const CustomVerticalTickMarkShape();
@@ -23,7 +24,7 @@ class CustomVerticalTickMarkShape extends SliderTickMarkShape {
     required bool isEnabled,
   }) {
     final Paint paint = Paint()
-      ..color = sliderTheme.inactiveTickMarkColor ?? Color(0xFF918F8F)
+      ..color = sliderTheme.inactiveTickMarkColor ?? ColorConstants.textMuted
       ..strokeWidth = 1.0;
 
     // Draw vertical line (9px height)

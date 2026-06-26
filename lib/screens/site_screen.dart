@@ -16,6 +16,7 @@ import 'package:techno_switch_solar_app/services/panel_service.dart';
 import 'package:intl/intl.dart';
 import 'package:techno_switch_solar_app/utils/logger.dart';
 import 'package:techno_switch_solar_app/widgets/common/common_cta_button.dart';
+import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/ble_name_utils.dart';
 
 class SiteScreen extends StatefulWidget {
@@ -99,7 +100,7 @@ class _SiteScreenState extends State<SiteScreen> {
           child: Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: ColorConstants.white,
               borderRadius: BorderRadius.circular(16),
             ),
             child: Column(
@@ -109,14 +110,14 @@ class _SiteScreenState extends State<SiteScreen> {
                   width: 64,
                   height: 64,
                   decoration: const BoxDecoration(
-                    color: Color(0xFFFBDEE1),
+                    color: ColorConstants.errorIconBackground,
                     shape: BoxShape.circle,
                   ),
                   child: const Center(
                     child: Icon(
                       Icons.warning_amber_rounded,
                       size: 32,
-                      color: Color(0xFFEC1D24),
+                      color: ColorConstants.primary,
                     ),
                   ),
                 ),
@@ -127,7 +128,7 @@ class _SiteScreenState extends State<SiteScreen> {
                   style: GoogleFonts.inter(
                     fontSize: 20,
                     fontWeight: FontWeight.w700,
-                    color: const Color(0xFF3D3D3D),
+                    color: ColorConstants.textDark,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -139,7 +140,7 @@ class _SiteScreenState extends State<SiteScreen> {
                   style: GoogleFonts.inter(
                     fontSize: 14,
                     fontWeight: FontWeight.w400,
-                    color: const Color(0xFF918F8F),
+                    color: ColorConstants.textMuted,
                     height: 1.4,
                   ),
                   textAlign: TextAlign.center,
@@ -155,7 +156,7 @@ class _SiteScreenState extends State<SiteScreen> {
                             borderRadius: BorderRadius.circular(24),
                           ),
                           side: const BorderSide(
-                            color: Color(0xFFD0D0D0),
+                            color: ColorConstants.borderLight,
                             width: 1,
                           ),
                         ),
@@ -165,7 +166,7 @@ class _SiteScreenState extends State<SiteScreen> {
                           style: GoogleFonts.inter(
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
-                            color: const Color(0xFF666666),
+                            color: ColorConstants.textGray,
                           ),
                         ),
                       ),
@@ -174,7 +175,7 @@ class _SiteScreenState extends State<SiteScreen> {
                     Expanded(
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFEC1D24),
+                          backgroundColor: ColorConstants.primary,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(24),
                           ),
@@ -186,7 +187,7 @@ class _SiteScreenState extends State<SiteScreen> {
                           style: GoogleFonts.inter(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
-                            color: Colors.white,
+                            color: ColorConstants.white,
                           ),
                         ),
                       ),
@@ -218,7 +219,7 @@ class _SiteScreenState extends State<SiteScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Site "${widget.site.siteName}" deleted'),
-            backgroundColor: const Color(0xFFEC1D24),
+            backgroundColor: ColorConstants.primary,
           ),
         );
         Navigator.of(context).pop(true);
@@ -226,7 +227,7 @@ class _SiteScreenState extends State<SiteScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Unable to delete site'),
-            backgroundColor: Color(0xFFEC1D24),
+            backgroundColor: ColorConstants.primary,
           ),
         );
       }
@@ -235,7 +236,7 @@ class _SiteScreenState extends State<SiteScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error deleting site: $error'),
-          backgroundColor: const Color(0xFFEC1D24),
+          backgroundColor: ColorConstants.primary,
         ),
       );
     } finally {
@@ -259,7 +260,7 @@ class _SiteScreenState extends State<SiteScreen> {
           child: Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: ColorConstants.white,
               borderRadius: BorderRadius.circular(16),
             ),
             child: Column(
@@ -269,14 +270,14 @@ class _SiteScreenState extends State<SiteScreen> {
                   width: 64,
                   height: 64,
                   decoration: const BoxDecoration(
-                    color: Color(0xFFFBDEE1),
+                    color: ColorConstants.errorIconBackground,
                     shape: BoxShape.circle,
                   ),
                   child: const Center(
                     child: Icon(
                       Icons.warning_amber_rounded,
                       size: 32,
-                      color: Color(0xFFEC1D24),
+                      color: ColorConstants.primary,
                     ),
                   ),
                 ),
@@ -287,7 +288,7 @@ class _SiteScreenState extends State<SiteScreen> {
                   style: GoogleFonts.inter(
                     fontSize: 20,
                     fontWeight: FontWeight.w700,
-                    color: const Color(0xFF3D3D3D),
+                    color: ColorConstants.textDark,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -299,7 +300,7 @@ class _SiteScreenState extends State<SiteScreen> {
                   style: GoogleFonts.inter(
                     fontSize: 14,
                     fontWeight: FontWeight.w400,
-                    color: const Color(0xFF918F8F),
+                    color: ColorConstants.textMuted,
                     height: 1.4,
                   ),
                   textAlign: TextAlign.center,
@@ -315,7 +316,7 @@ class _SiteScreenState extends State<SiteScreen> {
                             borderRadius: BorderRadius.circular(24),
                           ),
                           side: const BorderSide(
-                            color: Color(0xFFD0D0D0),
+                            color: ColorConstants.borderLight,
                             width: 1,
                           ),
                         ),
@@ -325,7 +326,7 @@ class _SiteScreenState extends State<SiteScreen> {
                           style: GoogleFonts.inter(
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
-                            color: const Color(0xFF666666),
+                            color: ColorConstants.textGray,
                           ),
                         ),
                       ),
@@ -334,7 +335,7 @@ class _SiteScreenState extends State<SiteScreen> {
                     Expanded(
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFEC1D24),
+                          backgroundColor: ColorConstants.primary,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(24),
                           ),
@@ -346,7 +347,7 @@ class _SiteScreenState extends State<SiteScreen> {
                           style: GoogleFonts.inter(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
-                            color: Colors.white,
+                            color: ColorConstants.white,
                           ),
                         ),
                       ),
@@ -378,14 +379,14 @@ class _SiteScreenState extends State<SiteScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Panel "${panel.panelName}" deleted'),
-            backgroundColor: const Color(0xFFEC1D24),
+            backgroundColor: ColorConstants.primary,
           ),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Unable to delete panel'),
-            backgroundColor: Color(0xFFEC1D24),
+            backgroundColor: ColorConstants.primary,
           ),
         );
       }
@@ -394,7 +395,7 @@ class _SiteScreenState extends State<SiteScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error deleting panel: $error'),
-          backgroundColor: const Color(0xFFEC1D24),
+          backgroundColor: ColorConstants.primary,
         ),
       );
     } finally {
@@ -417,7 +418,7 @@ class _SiteScreenState extends State<SiteScreen> {
           style: GoogleFonts.inter(
             fontSize: 11,
             fontWeight: FontWeight.w400,
-            color: Color(0xFF918F8F),
+            color: ColorConstants.textMuted,
           ),
         ),
       );
@@ -425,14 +426,14 @@ class _SiteScreenState extends State<SiteScreen> {
 
     return Row(
       children: [
-        Icon(Icons.timeline, size: 12, color: const Color(0xFF00A706)),
+        Icon(Icons.timeline, size: 12, color: ColorConstants.success),
         const SizedBox(width: 4),
         Text(
           '$lastLogCount log${lastLogCount == 1 ? '' : 's'}',
           style: GoogleFonts.inter(
             fontSize: 11,
             fontWeight: FontWeight.w500,
-            color: const Color(0xFF00A706),
+            color: ColorConstants.success,
           ),
         ),
         if (lastLogDate != null) ...[
@@ -442,7 +443,7 @@ class _SiteScreenState extends State<SiteScreen> {
             style: GoogleFonts.inter(
               fontSize: 11,
               fontWeight: FontWeight.w400,
-              color: const Color(0xFF918F8F),
+              color: ColorConstants.textMuted,
             ),
           ),
         ],
@@ -459,7 +460,7 @@ class _SiteScreenState extends State<SiteScreen> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Color(0xFFF6EBEB), Colors.white],
+            colors: [ColorConstants.scaffoldGradientTop, ColorConstants.white],
           ),
         ),
         child: Stack(children: [_buildHeader(context)]),
@@ -494,11 +495,11 @@ class _SiteScreenState extends State<SiteScreen> {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: ColorConstants.white,
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
+                        color: ColorConstants.blackMaterial.withOpacity(0.1),
                         blurRadius: 8,
                         offset: const Offset(0, 2),
                       ),
@@ -506,7 +507,7 @@ class _SiteScreenState extends State<SiteScreen> {
                   ),
                   child: const Icon(
                     Icons.arrow_back_ios_new,
-                    color: Color(0xFF3D3D3D),
+                    color: ColorConstants.textDark,
                     size: 18,
                   ),
                 ),
@@ -533,11 +534,11 @@ class _SiteScreenState extends State<SiteScreen> {
         children: [
           Container(
             decoration: BoxDecoration(
-              color: Color(0xFFFFE2E2),
+              color: ColorConstants.errorTint,
               borderRadius: BorderRadius.vertical(top: Radius.circular(8)),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
+                  color: ColorConstants.blackMaterial.withOpacity(0.1),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -564,7 +565,7 @@ class _SiteScreenState extends State<SiteScreen> {
                             style: GoogleFonts.inter(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
-                              color: Color(0xFF3A3A3A),
+                              color: ColorConstants.textBodyDark,
                             ),
                           ),
                         ],
@@ -573,7 +574,7 @@ class _SiteScreenState extends State<SiteScreen> {
                         'Site Information',
                         style: GoogleFonts.inter(
                           fontSize: 12,
-                          color: Color(0xFF737373),
+                          color: ColorConstants.textNeutral,
                         ),
                       ),
                     ],
@@ -586,7 +587,7 @@ class _SiteScreenState extends State<SiteScreen> {
                     child: SvgPicture.asset(
                       'assets/svgs/delete_icon.svg',
                       colorFilter: ColorFilter.mode(
-                        Color(0xFFFF6467),
+                        ColorConstants.errorBright,
                         BlendMode.srcIn,
                       ),
                     ),
@@ -598,11 +599,11 @@ class _SiteScreenState extends State<SiteScreen> {
           Container(
             width: double.infinity,
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: ColorConstants.white,
               borderRadius: BorderRadius.vertical(bottom: Radius.circular(8)),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
+                  color: ColorConstants.blackMaterial.withOpacity(0.1),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -624,7 +625,7 @@ class _SiteScreenState extends State<SiteScreen> {
                             'Created',
                             style: GoogleFonts.inter(
                               fontSize: 12,
-                              color: Color(0xFF737373),
+                              color: ColorConstants.textNeutral,
                             ),
                           ),
                           Text(
@@ -634,7 +635,7 @@ class _SiteScreenState extends State<SiteScreen> {
                             style: GoogleFonts.inter(
                               fontSize: 12,
                               fontWeight: FontWeight.w400,
-                              color: Color(0xFF737373),
+                              color: ColorConstants.textNeutral,
                             ),
                           ),
                         ],
@@ -663,7 +664,7 @@ class _SiteScreenState extends State<SiteScreen> {
                           style: GoogleFonts.inter(
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
-                            color: Colors.white,
+                            color: ColorConstants.white,
                           ),
                         ),
                       ],
@@ -689,7 +690,7 @@ class _SiteScreenState extends State<SiteScreen> {
             style: GoogleFonts.inter(
               fontSize: 14,
               fontWeight: FontWeight.w500,
-              color: Color(0xFF3D3D3D),
+              color: ColorConstants.textDark,
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -706,7 +707,7 @@ class _SiteScreenState extends State<SiteScreen> {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(32.0),
-          child: CircularProgressIndicator(color: Color(0xFFEC1D24)),
+          child: CircularProgressIndicator(color: ColorConstants.primary),
         ),
       );
     }
@@ -715,9 +716,9 @@ class _SiteScreenState extends State<SiteScreen> {
       return Container(
         padding: EdgeInsets.all(32),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: ColorConstants.white,
           border: Border.all(
-            color: Color(0xFFB9B9B9).withValues(alpha: 0.31),
+            color: ColorConstants.iconDisabled.withValues(alpha: 0.31),
             width: 1,
           ),
           borderRadius: BorderRadius.circular(8),
@@ -729,7 +730,7 @@ class _SiteScreenState extends State<SiteScreen> {
               height: 48,
               width: 48,
               colorFilter: ColorFilter.mode(
-                Color(0xFFEC1D24).withValues(alpha: 0.5),
+                ColorConstants.primary.withValues(alpha: 0.5),
                 BlendMode.srcIn,
               ),
             ),
@@ -739,7 +740,7 @@ class _SiteScreenState extends State<SiteScreen> {
               style: GoogleFonts.inter(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
-                color: Color(0xFF3D3D3D),
+                color: ColorConstants.textDark,
               ),
             ),
             SizedBox(height: 8),
@@ -748,7 +749,7 @@ class _SiteScreenState extends State<SiteScreen> {
               style: GoogleFonts.inter(
                 fontSize: 14,
                 fontWeight: FontWeight.w400,
-                color: Color(0xFF666666),
+                color: ColorConstants.textGray,
               ),
               textAlign: TextAlign.center,
             ),
@@ -760,7 +761,7 @@ class _SiteScreenState extends State<SiteScreen> {
     return SizedBox(
       height: MediaQuery.sizeOf(context).height * 0.45,
       child: RefreshIndicator(
-        color: Color(0xFFEC1D24),
+        color: ColorConstants.primary,
         onRefresh: _refreshSites,
         child: ListView.separated(
           physics: AlwaysScrollableScrollPhysics(),
@@ -876,7 +877,7 @@ class _PanelListItemWidgetState extends State<_PanelListItemWidget>
                 widget.onDelete();
               },
               backgroundColor: const Color.fromARGB(255, 245, 63, 57),
-              foregroundColor: Colors.white,
+              foregroundColor: ColorConstants.white,
               icon: CupertinoIcons.delete,
               label: 'Delete',
             ),
@@ -886,9 +887,9 @@ class _PanelListItemWidgetState extends State<_PanelListItemWidget>
           onTap: widget.onTap,
           child: Container(
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: ColorConstants.white,
               border: Border.all(
-                color: Color(0xFFB9B9B9).withValues(alpha: 0.31),
+                color: ColorConstants.iconDisabled.withValues(alpha: 0.31),
                 width: 1,
               ),
               borderRadius: BorderRadius.circular(8),
@@ -919,7 +920,7 @@ class _PanelListItemWidgetState extends State<_PanelListItemWidget>
                           style: GoogleFonts.inter(
                             fontSize: 14,
                             fontWeight: FontWeight.w700,
-                            color: Color(0xFF3D3D3D),
+                            color: ColorConstants.textDark,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -933,7 +934,7 @@ class _PanelListItemWidgetState extends State<_PanelListItemWidget>
                           style: GoogleFonts.inter(
                             fontSize: 12,
                             fontWeight: FontWeight.w400,
-                            color: Color(0xFF918F8F),
+                            color: ColorConstants.textMuted,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -946,7 +947,7 @@ class _PanelListItemWidgetState extends State<_PanelListItemWidget>
                   Icon(
                     Icons.arrow_forward_ios,
                     size: 16,
-                    color: Color(0xFFEC1D24),
+                    color: ColorConstants.primary,
                   ),
                 ],
               ),

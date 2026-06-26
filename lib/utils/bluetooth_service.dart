@@ -6,6 +6,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/utils/bluetooth_constants.dart';
 import 'package:techno_switch_solar_app/utils/logger.dart';
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
 class BluetoothService {
   final FlutterReactiveBle _ble = FlutterReactiveBle();
@@ -138,7 +139,7 @@ class BluetoothService {
       }
 
       if (update.connectionState == DeviceConnectionState.disconnected) {
-        Logger("Disconnected.");
+        Logger(StringConstants.disconnected2);
       }
     });
     await _ble.requestMtu(deviceId: device.id, mtu: 247);

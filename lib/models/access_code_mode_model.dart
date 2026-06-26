@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
 class AccessCodeSetupData {
   final int accessCodeNo;
@@ -9,15 +10,15 @@ class AccessCodeSetupData {
   const AccessCodeSetupData({
     this.accessCodeNo = 1,
     this.accessLevel = 0,
-    this.accessLevelName = 'Not Used',
+    this.accessLevelName = StringConstants.notUsed,
     this.accessCode = '',
   });
 
   static const List<String> accessLevelNames = [
-    'Not Used',
-    'Untrained User',
-    'Authorised User',
-    'Commissioning',
+    StringConstants.notUsed,
+    StringConstants.untrainedUser,
+    StringConstants.authorisedUser,
+    StringConstants.commissioning,
   ];
 
   AccessCodeSetupData copyWith({
@@ -69,17 +70,17 @@ class AccessCodeSetupData {
   }
 
   Map<String, dynamic> toJson() => {
-    'accessCodeNo': accessCodeNo,
+    StringConstants.accesscodeno: accessCodeNo,
     'accessLevel': accessLevel,
-    'accessLevelName': accessLevelName,
+    StringConstants.accesslevelname: accessLevelName,
     'accessCode': accessCode,
   };
 
   static AccessCodeSetupData fromJson(Map<String, dynamic> json) {
     return AccessCodeSetupData(
-      accessCodeNo: json['accessCodeNo'] as int? ?? 1,
+      accessCodeNo: json[StringConstants.accesscodeno] as int? ?? 1,
       accessLevel: json['accessLevel'] as int? ?? 0,
-      accessLevelName: json['accessLevelName'] as String? ?? 'Not Used',
+      accessLevelName: json[StringConstants.accesslevelname] as String? ?? StringConstants.notUsed,
       accessCode: json['accessCode'] as String? ?? '',
     );
   }

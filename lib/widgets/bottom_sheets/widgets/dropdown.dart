@@ -1,6 +1,8 @@
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
 class DropdownWidget extends StatefulWidget {
   final String label;
@@ -49,7 +51,7 @@ class _DropdownWidgetState extends State<DropdownWidget> {
       style: GoogleFonts.inter(
         fontSize: 13,
         fontWeight: FontWeight.w600,
-        color: const Color(0xFF3D3D3D),
+        color: ColorConstants.textDark,
       ),
     );
   }
@@ -86,7 +88,7 @@ class _DropdownWidgetState extends State<DropdownWidget> {
                             style: GoogleFonts.inter(
                               fontSize: 14,
                               fontWeight: FontWeight.w500,
-                              color: const Color(0xFF3D3D3D),
+                              color: ColorConstants.textDark,
                             ),
                           ),
                         ),
@@ -103,7 +105,7 @@ class _DropdownWidgetState extends State<DropdownWidget> {
                 height: 48,
                 padding: EdgeInsets.zero,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF8F8F8),
+                  color: ColorConstants.surfaceLight,
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
@@ -113,7 +115,7 @@ class _DropdownWidgetState extends State<DropdownWidget> {
                   padding: EdgeInsets.only(right: 8.0),
                   child: Icon(
                     Icons.keyboard_arrow_down_rounded,
-                    color: Color(0xFF3D3D3D),
+                    color: ColorConstants.textDark,
                   ),
                 ),
                 iconSize: 22,
@@ -122,7 +124,7 @@ class _DropdownWidgetState extends State<DropdownWidget> {
               dropdownStyleData: DropdownStyleData(
                 maxHeight: widget.dropdownListHeight ?? 120,
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: ColorConstants.white,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 elevation: 4,
@@ -149,7 +151,7 @@ class _DropdownWidgetState extends State<DropdownWidget> {
                             decoration: InputDecoration(
                               isDense: true,
 
-                              hintText: 'Search...',
+                              hintText: StringConstants.search,
 
                               hintStyle: GoogleFonts.inter(
                                 fontSize: 14,
@@ -165,14 +167,14 @@ class _DropdownWidgetState extends State<DropdownWidget> {
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(10),
                                 borderSide: const BorderSide(
-                                  color: Color(0xFFD0D0D0),
+                                  color: ColorConstants.borderLight,
                                 ),
                               ),
 
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(10),
                                 borderSide: const BorderSide(
-                                  color: Color(0xFFEC1D24),
+                                  color: ColorConstants.primary,
                                   width: 2,
                                 ),
                               ),
@@ -201,7 +203,7 @@ class _DropdownWidgetState extends State<DropdownWidget> {
 
               decoration: InputDecoration(
                 filled: true,
-                fillColor: const Color(0xFFF8F8F8),
+                fillColor: ColorConstants.surfaceLight,
 
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: 0,
@@ -211,7 +213,7 @@ class _DropdownWidgetState extends State<DropdownWidget> {
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: const BorderSide(
-                    color: Color(0xFFD0D0D0),
+                    color: ColorConstants.borderLight,
                     width: 1,
                   ),
                 ),
@@ -219,7 +221,7 @@ class _DropdownWidgetState extends State<DropdownWidget> {
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: const BorderSide(
-                    color: Color(0xFFEC1D24),
+                    color: ColorConstants.primary,
                     width: 2,
                   ),
                 ),

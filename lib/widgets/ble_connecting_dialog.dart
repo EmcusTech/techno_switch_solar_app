@@ -5,6 +5,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
 import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
+import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
 /// Copy for the shared BLE connecting dialog. Use [afterFirmwareUpgrade] for
 /// post-upgrade reconnect; [standard] matches the default connect flow.
@@ -24,22 +26,22 @@ class BleConnectingDialogMessages {
   });
 
   static final standard = BleConnectingDialogMessages(
-    connectingTitle: 'Connecting...',
+    connectingTitle: StringConstants.establishingSecureConnection,
     connectingSubtitle:
         (device) => 'Please wait while we connect to ${device.name}',
     connectedTitle: 'Device Connected!',
-    connectedSubtitle: 'Encrypting and authenticating...',
-    handshakeCompleteSubtitle: 'Preparing...',
+    connectedSubtitle: StringConstants.encryptingAndAuthenticating,
+    handshakeCompleteSubtitle: StringConstants.preparing,
   );
 
   static final afterFirmwareUpgrade = BleConnectingDialogMessages(
-    connectingTitle: 'Reconnecting...',
+    connectingTitle: StringConstants.reconnecting,
     connectingSubtitle:
         (_) =>
             'Device is restarting. Searching for panel and establishing connection...',
     connectedTitle: 'Device Connected!',
-    connectedSubtitle: 'Encrypting and authenticating...',
-    handshakeCompleteSubtitle: 'Preparing...',
+    connectedSubtitle: StringConstants.encryptingAndAuthenticating,
+    handshakeCompleteSubtitle: StringConstants.preparing,
   );
 }
 
@@ -141,9 +143,9 @@ class _BleConnectingDialogState extends State<BleConnectingDialog> {
 
         final title =
             showNetworkCommError
-                ? 'Connection problem'
+                ? StringConstants.connectionProblem
                 : maxRetries
-                ? 'Max Connection Retries Reached!'
+                ? StringConstants.maxConnectionRetriesReached
                 : handshakeComplete
                 ? messages.connectedTitle
                 : isConnected
@@ -152,7 +154,7 @@ class _BleConnectingDialogState extends State<BleConnectingDialog> {
 
         final subtitle =
             maxRetries
-                ? 'Please scan again and reconnect.'
+                ? StringConstants.pleaseScanAgainAndReconnect
                 : showNetworkCommError
                 ? networkCommMessage
                 : handshakeComplete
@@ -168,7 +170,7 @@ class _BleConnectingDialogState extends State<BleConnectingDialog> {
           child: Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: ColorConstants.white,
               borderRadius: BorderRadius.circular(16),
             ),
             child: Column(
@@ -182,8 +184,8 @@ class _BleConnectingDialogState extends State<BleConnectingDialog> {
                         handshakeComplete && !showConnectionError
                             ? Colors.green.withValues(alpha: 0.1)
                             : showNetworkCommError
-                            ? const Color(0xFFFBDEE1)
-                            : const Color(0xFFFBDEE1),
+                            ? ColorConstants.errorIconBackground
+                            : ColorConstants.errorIconBackground,
                     shape: BoxShape.circle,
                   ),
                   child: Center(
@@ -198,7 +200,7 @@ class _BleConnectingDialogState extends State<BleConnectingDialog> {
                             ? const Icon(
                               Icons.error_outline,
                               size: 32,
-                              color: Color(0xFFEC1D24),
+                              color: ColorConstants.primary,
                             )
                             : Lottie.asset(
                               'assets/jsons/ble_connecting.json',
@@ -212,7 +214,7 @@ class _BleConnectingDialogState extends State<BleConnectingDialog> {
                   style: GoogleFonts.inter(
                     fontSize: 20,
                     fontWeight: FontWeight.w700,
-                    color: const Color(0xFF3D3D3D),
+                    color: ColorConstants.textDark,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -222,7 +224,7 @@ class _BleConnectingDialogState extends State<BleConnectingDialog> {
                   style: GoogleFonts.inter(
                     fontSize: 14,
                     fontWeight: FontWeight.w400,
-                    color: const Color(0xFF918F8F),
+                    color: ColorConstants.textMuted,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -232,7 +234,7 @@ class _BleConnectingDialogState extends State<BleConnectingDialog> {
                     width: double.infinity,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFEC1D24),
+                        backgroundColor: ColorConstants.primary,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(24.5),
                         ),
@@ -245,11 +247,11 @@ class _BleConnectingDialogState extends State<BleConnectingDialog> {
                         Navigator.of(dialogContext).pop();
                       },
                       child: Text(
-                        'OK',
+                        StringConstants.ok,
                         style: GoogleFonts.inter(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
-                          color: Colors.white,
+                          color: ColorConstants.white,
                         ),
                       ),
                     ),

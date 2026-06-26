@@ -9,6 +9,8 @@ import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/panel_config/panel_config_feedback_dialogs.dart';
 import 'package:techno_switch_solar_app/utils/peripheral_cache_to_ble.dart';
+import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
 class PanelAccessPasswordDelegates {
   PanelAccessPasswordDelegates({
@@ -142,7 +144,7 @@ Future<void> showPanelAccessPasswordPopup({
         child: Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: ColorConstants.white,
             borderRadius: BorderRadius.circular(16),
           ),
           child: Column(
@@ -160,12 +162,12 @@ Future<void> showPanelAccessPasswordPopup({
                           isAccessKeyValidValue == true;
                       final Color iconColor =
                           hideInput
-                              ? const Color(0xFF2E7D32)
-                              : const Color(0xFFEC1D24);
+                              ? ColorConstants.successDark
+                              : ColorConstants.primary;
                       final Color circleColor =
                           hideInput
-                              ? const Color(0xFFE8F5E9)
-                              : const Color(0xFFFBDEE1);
+                              ? ColorConstants.successBackgroundLight
+                              : ColorConstants.errorIconBackground;
                       return AnimatedContainer(
                         duration: const Duration(milliseconds: 280),
                         curve: Curves.easeInOutCubic,
@@ -225,26 +227,26 @@ Future<void> showPanelAccessPasswordPopup({
                             final message =
                                 downloadSuccessMessage ??
                                 (isExtOut == true
-                                    ? 'Extinguishing Output'
+                                    ? StringConstants.extinguishingOutput
                                     : isInputSetup == true
-                                    ? 'Inputs'
+                                    ? StringConstants.inputs
                                     : isRelaySetup == true
-                                    ? 'Relays'
+                                    ? StringConstants.relays
                                     : isZoneSetup == true
-                                    ? 'Zones'
+                                    ? StringConstants.zones
                                     : isSounderSetup == true
-                                    ? 'Sounders'
+                                    ? StringConstants.sounders
                                     : isServiceDueSetup == true
-                                    ? 'Service Due'
+                                    ? StringConstants.serviceDue
                                     : isAccessCodeSetup == true
-                                    ? 'Access Code'
+                                    ? StringConstants.accessCode
                                     : isPanelInfoSetup == true
-                                    ? 'Panel Info'
+                                    ? StringConstants.panelInfo
                                     : isGeneralModuleSetup == true
-                                    ? 'General Module'
+                                    ? StringConstants.generalModule
                                     : isAdcSetup == true
-                                    ? 'Diagnostics'
-                                    : 'Configuration');
+                                    ? StringConstants.liveDataIsBeingStreamedFromTheDeviceInRealTime
+                                    : StringConstants.configuration);
                             delegates.showDownloadSuccess(context, message);
                             Future.delayed(const Duration(seconds: 2), () {
                               if (isMounted()) {
@@ -264,42 +266,42 @@ Future<void> showPanelAccessPasswordPopup({
                           await delegates.saveExtOutCache();
                           if (isMounted()) {
                             showApplySuccessWithOptionalFollowUp(
-                              'Extinguishing Output',
+                              StringConstants.extinguishingOutput,
                             );
                           }
                         } else if (isInputSetup &&
                             bleManager.bleProcess.isInputSetupApplyDone.value) {
                           await delegates.saveInputCache();
                           if (isMounted()) {
-                            showApplySuccessWithOptionalFollowUp('Inputs');
+                            showApplySuccessWithOptionalFollowUp(StringConstants.inputs);
                           }
                         } else if (isRelaySetup &&
                             bleManager.bleProcess.isRelaySetupApplyDone.value &&
                             isMounted()) {
                           await delegates.saveRelayCache();
                           if (isMounted()) {
-                            showApplySuccessWithOptionalFollowUp('Relays');
+                            showApplySuccessWithOptionalFollowUp(StringConstants.relays);
                           }
                         } else if (isZoneSetup &&
                             bleManager.bleProcess.isRadioSetupApplyDone.value &&
                             isMounted()) {
                           await delegates.saveRadioCache();
                           if (isMounted()) {
-                            showApplySuccessWithOptionalFollowUp('Radio');
+                            showApplySuccessWithOptionalFollowUp(StringConstants.radio);
                           }
                         } else if (isZoneSetup &&
                             bleManager.bleProcess.isZoneSetupApplyDone.value &&
                             isMounted()) {
                           await delegates.saveZoneCache();
                           if (isMounted()) {
-                            showApplySuccessWithOptionalFollowUp('Zones');
+                            showApplySuccessWithOptionalFollowUp(StringConstants.zones);
                           }
                         } else if (isLBusSetup &&
                             bleManager.bleProcess.isLBusSetupApplyDone.value &&
                             isMounted()) {
                           await delegates.saveLBusCache();
                           if (isMounted()) {
-                            showApplySuccessWithOptionalFollowUp('L-Bus');
+                            showApplySuccessWithOptionalFollowUp(StringConstants.lBus);
                           }
                         } else if (isSounderSetup &&
                             bleManager
@@ -309,14 +311,14 @@ Future<void> showPanelAccessPasswordPopup({
                             isMounted()) {
                           await delegates.saveSounderCache();
                           if (isMounted()) {
-                            showApplySuccessWithOptionalFollowUp('Sounders');
+                            showApplySuccessWithOptionalFollowUp(StringConstants.sounders);
                           }
                         } else if (isServiceDueSetup &&
                             bleManager.bleProcess.isServiceDueApplyDone.value &&
                             isMounted()) {
                           await delegates.saveServiceDueCache();
                           if (isMounted()) {
-                            showApplySuccessWithOptionalFollowUp('Service Due');
+                            showApplySuccessWithOptionalFollowUp(StringConstants.serviceDue);
                           }
                         } else if (isAccessCodeSetup &&
                             bleManager
@@ -326,7 +328,7 @@ Future<void> showPanelAccessPasswordPopup({
                             isMounted()) {
                           await delegates.saveAccessCodeCache();
                           if (isMounted()) {
-                            showApplySuccessWithOptionalFollowUp('Access Code');
+                            showApplySuccessWithOptionalFollowUp(StringConstants.accessCode);
                           }
                         } else if (isPanelInfoSetup &&
                             bleManager
@@ -336,7 +338,7 @@ Future<void> showPanelAccessPasswordPopup({
                             isMounted()) {
                           await delegates.savePanelInfoCache();
                           if (isMounted()) {
-                            showApplySuccessWithOptionalFollowUp('Panel Info');
+                            showApplySuccessWithOptionalFollowUp(StringConstants.panelInfo);
                           }
                         } else if (isGeneralModuleSetup &&
                             bleManager
@@ -347,7 +349,7 @@ Future<void> showPanelAccessPasswordPopup({
                           await delegates.saveGeneralModuleCache();
                           if (isMounted()) {
                             showApplySuccessWithOptionalFollowUp(
-                              'General Module',
+                              StringConstants.generalModule,
                             );
                           }
                         } else {
@@ -390,7 +392,7 @@ Future<void> showPanelAccessPasswordPopup({
                           await onDownloadComplete?.call();
                           if (isMounted()) {
                             final message =
-                                downloadSuccessMessage ?? 'Configuration';
+                                downloadSuccessMessage ?? StringConstants.configuration;
                             closeAccessDialog();
                             delegates.showDownloadSuccess(context, message);
                             Future.delayed(const Duration(seconds: 2), () {
@@ -457,27 +459,27 @@ Future<void> showPanelAccessPasswordPopup({
 
                           final String dialogTitle =
                               commFailed
-                                  ? 'Connection problem'
+                                  ? StringConstants.connectionProblem
                                   : !hideInput
-                                  ? 'Enter Access Code'
+                                  ? StringConstants.enterAccessCode
                                   : (isAccessKeyValidValue == true
                                       ? mode == 'bottomsheet_download'
-                                          ? 'Downloading...'
+                                          ? StringConstants.downloading
                                           : mode == 'bottomsheet_apply'
                                           ? 'Applying...'
-                                          : 'Validated'
+                                          : StringConstants.validated
                                       : (processDescValue == 'Validating' ||
                                           processDescValue
                                               .toLowerCase()
                                               .contains('validat'))
                                       ? (bleProcess.sessionAccessCodeReady.value
                                           ? 'Initiating'
-                                          : 'Verifying access')
+                                          : StringConstants.verifyingAccess)
                                       : (mode == 'bottomsheet_download'
-                                          ? 'Downloading...'
+                                          ? StringConstants.downloading
                                           : mode == 'bottomsheet_apply'
                                           ? 'Applying...'
-                                          : 'Validated'));
+                                          : StringConstants.validated));
 
                           return Column(
                             mainAxisSize: MainAxisSize.min,
@@ -512,7 +514,7 @@ Future<void> showPanelAccessPasswordPopup({
                                     style: GoogleFonts.inter(
                                       fontSize: 20,
                                       fontWeight: FontWeight.w700,
-                                      color: const Color(0xFF3D3D3D),
+                                      color: ColorConstants.textDark,
                                     ),
                                     textAlign: TextAlign.center,
                                   ),
@@ -542,7 +544,7 @@ Future<void> showPanelAccessPasswordPopup({
                                                 fontSize: 24,
                                                 fontWeight: FontWeight.w600,
                                                 letterSpacing: 8,
-                                                color: const Color(0xFF3D3D3D),
+                                                color: ColorConstants.textDark,
                                               ),
                                               inputFormatters: [
                                                 FilteringTextInputFormatter
@@ -576,7 +578,7 @@ Future<void> showPanelAccessPasswordPopup({
                                                 }
                                               },
                                               decoration: InputDecoration(
-                                                hintText: '••••••••',
+                                                hintText: StringConstants.strca4d661a,
                                                 hintStyle: GoogleFonts.inter(
                                                   fontSize: 24,
                                                   fontWeight: FontWeight.w600,
@@ -640,7 +642,7 @@ Future<void> showPanelAccessPasswordPopup({
                                                   borderRadius:
                                                       BorderRadius.circular(12),
                                                   borderSide: const BorderSide(
-                                                    color: Color(0xFFEC1D24),
+                                                    color: ColorConstants.primary,
                                                     width: 1,
                                                   ),
                                                 ),
@@ -678,7 +680,7 @@ Future<void> showPanelAccessPasswordPopup({
                                     status =
                                         processDescValue.isNotEmpty
                                             ? processDescValue
-                                            : 'Wrong password. Try again.';
+                                            : StringConstants.wrongPassword;
                                   } else if (isAccessKeyValidValue == null &&
                                       (processDescValue.isNotEmpty ||
                                           accessController.text.isNotEmpty)) {
@@ -695,37 +697,37 @@ Future<void> showPanelAccessPasswordPopup({
                                                     validatingLike
                                                 ? ''
                                                 : processDescValue)
-                                            : 'Validating...';
+                                            : StringConstants.validating2;
                                   } else if (isAccessKeyValidValue == true) {
                                     final bool bulkOp =
                                         isConfigLogBulk || isConfigLogBulkApply;
                                     if (bulkOp &&
                                         showDetailedConfigLogBulkBleProgressInAccessDialog) {
                                       if (processDescValue.isNotEmpty &&
-                                          processDescValue != 'Success') {
+                                          processDescValue != StringConstants.success) {
                                         status = processDescValue;
                                       } else {
                                         status =
                                             mode == 'bottomsheet_download'
                                                 ? 'Downloading configuration…'
-                                                : 'Applying configuration to panel…';
+                                                : StringConstants.applyingConfigurationToPanel;
                                       }
                                     } else if (bulkOp &&
                                         !showDetailedConfigLogBulkBleProgressInAccessDialog) {
                                       status =
                                           mode == 'bottomsheet_download'
                                               ? 'Downloading configuration…'
-                                              : 'Applying configuration to panel…';
+                                              : StringConstants.applyingConfigurationToPanel;
                                     } else {
                                       status =
                                           mode == 'bottomsheet_download'
                                               ? 'Processing...'
                                               : mode == 'bottomsheet_apply'
                                               ? 'Processing...'
-                                              : 'Fetching...';
+                                              : StringConstants.fetching;
                                       if (isMounted()) {
                                         bleProcess.processDesc.value =
-                                            'Success';
+                                            StringConstants.success;
                                       }
                                     }
                                   }
@@ -757,8 +759,8 @@ Future<void> showPanelAccessPasswordPopup({
                                                 commFailed ||
                                                         isAccessKeyValidValue ==
                                                             false
-                                                    ? const Color(0xFFEC1D24)
-                                                    : const Color(0xFF3D3D3D),
+                                                    ? ColorConstants.primary
+                                                    : ColorConstants.textDark,
                                           ),
                                           textAlign: TextAlign.center,
                                         ),
@@ -809,7 +811,7 @@ Future<void> showPanelAccessPasswordPopup({
                                                       ).pop();
                                                     },
                                                     child: Text(
-                                                      'Cancel',
+                                                      StringConstants.cancel,
                                                       style: GoogleFonts.inter(
                                                         fontSize: 16,
                                                         fontWeight:

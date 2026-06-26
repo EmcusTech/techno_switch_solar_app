@@ -10,6 +10,8 @@ import 'package:techno_switch_solar_app/panel_config/panel_config_cache_sync.dar
 import 'package:techno_switch_solar_app/panel_config/panel_config_feedback_dialogs.dart';
 import 'package:techno_switch_solar_app/utils/peripheral_config_snapshot.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/config_log_bottomsheet.dart';
+import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
 Future<void> presentPostConnectConfigLogCompareAfterDownload({
   required BuildContext context,
@@ -163,8 +165,8 @@ Future<void> presentPostConnectConfigLogCompareAfterDownload({
               showPanelApplySuccessDialog(
                 context,
                 bleManager.bleProcess,
-                'Configuration',
-                subtitle: 'Your saved setup has been applied to the panel.',
+                StringConstants.configuration,
+                subtitle: StringConstants.yourSavedSetupHasBeenAppliedToThePanel,
               );
             }
             compareResult.value = await buildCompare();
@@ -201,7 +203,7 @@ Future<void> presentPostConnectConfigLogCompareAfterDownload({
       mode: 'bottomsheet_download',
       isConfigLogBulk: true,
       showDetailedConfigLogBulkBleProgressInAccessDialog: false,
-      downloadSuccessMessage: 'Configuration',
+      downloadSuccessMessage: StringConstants.configuration,
       configLogWorking: isWorking,
       onDownloadComplete: () async {
         try {
@@ -219,7 +221,7 @@ Future<void> presentPostConnectConfigLogCompareAfterDownload({
         } catch (e, _) {
           compareResult.value = ConfigCompareResult.withError(
             e is TimeoutException
-                ? 'Operation timed out. Stay close to the device and try again.'
+                ? StringConstants.operationTimedOutStayCloseToTheDeviceAndTryAgain
                 : e.toString(),
           );
         }
@@ -233,8 +235,8 @@ Future<void> presentPostConnectConfigLogCompareAfterDownload({
     context: context,
     isScrollControlled: true,
     isDismissible: true,
-    backgroundColor: Colors.transparent,
-    barrierColor: Colors.black.withValues(alpha: 0.4),
+    backgroundColor: ColorConstants.transparent,
+    barrierColor: ColorConstants.blackMaterial.withValues(alpha: 0.4),
     builder: (_) {
       return ConfigLogBottomSheet(
         deviceId: device.id,

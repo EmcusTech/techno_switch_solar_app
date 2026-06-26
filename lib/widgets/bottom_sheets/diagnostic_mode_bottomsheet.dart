@@ -8,6 +8,8 @@ import 'package:techno_switch_solar_app/ble/ble_process.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/widgets/diagnostic_voltage_tile.dart';
+import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
 enum DiagnosticSectionType { sounder, power, input, zone, other }
 
@@ -34,10 +36,10 @@ String diagnosticSectionIconAsset(
   }
 
   final prefix = switch (type) {
-    DiagnosticSectionType.sounder => 'sounder',
+    DiagnosticSectionType.sounder => StringConstants.generalEnabled,
     DiagnosticSectionType.power => 'power',
     DiagnosticSectionType.input => 'input',
-    DiagnosticSectionType.zone => 'zone',
+    DiagnosticSectionType.zone => StringConstants.detectionmode,
     DiagnosticSectionType.other => 'other',
   };
   final suffix = switch (band) {
@@ -51,7 +53,7 @@ String diagnosticSectionIconAsset(
 String diagnosticSectionSubtitle(Iterable<double> voltages) {
   final voltageList = voltages.toList();
   final channelCount = voltageList.length;
-  final channels = channelCount == 1 ? '1 channel' : '$channelCount channels';
+  final channels = channelCount == 1 ? StringConstants.s1Channel : '$channelCount channels';
 
   final band = aggregateDiagnosticSectionBand(voltageList);
   var bandCount = 0;
@@ -62,8 +64,8 @@ String diagnosticSectionSubtitle(Iterable<double> voltages) {
   }
   final status = switch (band) {
     DiagnosticVoltageBand.nominal => 'All Nominal',
-    DiagnosticVoltageBand.high => 'High',
-    DiagnosticVoltageBand.critical => 'Critical',
+    DiagnosticVoltageBand.high => StringConstants.high,
+    DiagnosticVoltageBand.critical => StringConstants.critical,
   };
   final bandLabel = bandCount == 1 ? '1 $status' : '$bandCount $status';
   return '$channels · $bandLabel';
@@ -139,9 +141,9 @@ class DiagnosticInfoBottomSheet extends StatefulWidget {
 }
 
 class _DiagnosticInfoBottomSheetState extends State<DiagnosticInfoBottomSheet> {
-  static const Color _textPrimary = Color(0xFF3D3D3D);
-  static const Color _brandRed = Color(0xFFEC1D24);
-  static const Color _border = Color(0xFFDCDCDC);
+  static const Color _textPrimary = ColorConstants.textDark;
+  static const Color _brandRed = ColorConstants.primary;
+  static const Color _border = ColorConstants.borderMuted;
   final ScrollController scrollController = ScrollController();
   BleManager? manager;
 
@@ -168,20 +170,20 @@ class _DiagnosticInfoBottomSheetState extends State<DiagnosticInfoBottomSheet> {
     if (manager == null) return;
     final process = manager!.bleProcess;
     process.sounderOneAdcValue.value =
-        (data['sounder1'] as num?)?.toDouble() ?? 0;
+        (data[StringConstants.sounder1] as num?)?.toDouble() ?? 0;
     process.sounderTwoAdcValue.value =
-        (data['sounder2'] as num?)?.toDouble() ?? 0;
+        (data[StringConstants.sounder2] as num?)?.toDouble() ?? 0;
     process.sounderThreeAdcValue.value =
-        (data['sounder3'] as num?)?.toDouble() ?? 0;
+        (data[StringConstants.sounder3] as num?)?.toDouble() ?? 0;
     process.dischargeAdcValue.value =
         (data['discharge'] as num?)?.toDouble() ?? 0;
     process.vauxAdcValue.value = (data['vaux'] as num?)?.toDouble() ?? 0;
     process.vinAdcValue.value = (data['vin'] as num?)?.toDouble() ?? 0;
     process.progInputAdcValue.value =
-        (data['progInput'] as num?)?.toDouble() ?? 0;
+        (data[StringConstants.proginput] as num?)?.toDouble() ?? 0;
     process.holdInputAdcValue.value =
         (data['holdInput'] as num?)?.toDouble() ?? 0;
-    process.zone1AdcValue.value = (data['zone1'] as num?)?.toDouble() ?? 0;
+    process.zone1AdcValue.value = (data[StringConstants.zone12] as num?)?.toDouble() ?? 0;
     process.zone2AdcValue.value = (data['zone2'] as num?)?.toDouble() ?? 0;
     process.zone3AdcValue.value = (data['zone3'] as num?)?.toDouble() ?? 0;
     process.earthAdcValue.value = (data['earth'] as num?)?.toDouble() ?? 0;
@@ -205,7 +207,7 @@ class _DiagnosticInfoBottomSheetState extends State<DiagnosticInfoBottomSheet> {
           constraints: BoxConstraints(maxHeight: maxHeight),
           child: Container(
             decoration: const BoxDecoration(
-              color: Color(0xFFE31C23),
+              color: ColorConstants.primaryVariant,
               borderRadius: BorderRadius.vertical(top: Radius.circular(50)),
             ),
             child: Padding(
@@ -213,7 +215,7 @@ class _DiagnosticInfoBottomSheetState extends State<DiagnosticInfoBottomSheet> {
               child: Container(
                 clipBehavior: Clip.hardEdge,
                 decoration: const BoxDecoration(
-                  color: Colors.white,
+                  color: ColorConstants.white,
                   borderRadius: BorderRadius.vertical(top: Radius.circular(50)),
                 ),
                 // padding: EdgeInsets.only(
@@ -237,7 +239,7 @@ class _DiagnosticInfoBottomSheetState extends State<DiagnosticInfoBottomSheet> {
                               width: 38,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: Colors.black.withValues(alpha: 0.06),
+                                color: ColorConstants.blackMaterial.withValues(alpha: 0.06),
                               ),
                               child: const Icon(Icons.close, size: 20),
                             ),
@@ -255,7 +257,7 @@ class _DiagnosticInfoBottomSheetState extends State<DiagnosticInfoBottomSheet> {
                       child: Column(
                         children: [
                           _dragHandle(),
-                          _title('Diagnostics'),
+                          _title(StringConstants.liveDataIsBeingStreamedFromTheDeviceInRealTime),
                           const SizedBox(height: 16),
                           Expanded(
                             child: ListView(
@@ -267,54 +269,54 @@ class _DiagnosticInfoBottomSheetState extends State<DiagnosticInfoBottomSheet> {
                                 _diagnosticSummaryRow(p),
                                 const SizedBox(height: 16),
                                 _section(
-                                  title: 'Sounders',
+                                  title: StringConstants.sounders,
                                   isLive: p.isAdcSetupFetchCommandActive,
                                   diagnosticSectionType:
                                       DiagnosticSectionType.sounder,
                                   items: [
                                     _VoltRef('SND 1', p.sounderOneAdcValue),
-                                    _VoltRef('SND 2', p.sounderTwoAdcValue),
-                                    _VoltRef('SND 3', p.sounderThreeAdcValue),
+                                    _VoltRef(StringConstants.snd2, p.sounderTwoAdcValue),
+                                    _VoltRef(StringConstants.snd3, p.sounderThreeAdcValue),
                                   ],
                                 ),
                                 _section(
-                                  title: 'Power',
+                                  title: StringConstants.power,
                                   isLive: p.isAdcSetupFetchCommandActive,
                                   diagnosticSectionType:
                                       DiagnosticSectionType.power,
                                   items: [
                                     _VoltRef('Vaux', p.vauxAdcValue),
-                                    _VoltRef('Vin', p.vinAdcValue),
-                                    _VoltRef('EXT', p.dischargeAdcValue),
+                                    _VoltRef(StringConstants.vin, p.vinAdcValue),
+                                    _VoltRef(StringConstants.ext, p.dischargeAdcValue),
                                   ],
                                 ),
                                 _section(
-                                  title: 'Inputs',
+                                  title: StringConstants.inputs,
                                   isLive: p.isAdcSetupFetchCommandActive,
                                   diagnosticSectionType:
                                       DiagnosticSectionType.input,
                                   items: [
                                     _VoltRef('Prog In', p.progInputAdcValue),
-                                    _VoltRef('Hold In', p.holdInputAdcValue),
+                                    _VoltRef(StringConstants.holdIn, p.holdInputAdcValue),
                                   ],
                                 ),
                                 _section(
-                                  title: 'Zones',
+                                  title: StringConstants.zones,
                                   isLive: p.isAdcSetupFetchCommandActive,
                                   diagnosticSectionType:
                                       DiagnosticSectionType.zone,
                                   items: [
                                     _VoltRef('Zone 1', p.zone1AdcValue),
-                                    _VoltRef('Zone 2', p.zone2AdcValue),
-                                    _VoltRef('Zone 3', p.zone3AdcValue),
+                                    _VoltRef(StringConstants.zone22, p.zone2AdcValue),
+                                    _VoltRef(StringConstants.zone32, p.zone3AdcValue),
                                   ],
                                 ),
                                 _section(
-                                  title: 'Other',
+                                  title: StringConstants.other,
                                   isLive: p.isAdcSetupFetchCommandActive,
                                   diagnosticSectionType:
                                       DiagnosticSectionType.other,
-                                  items: [_VoltRef('Earth', p.earthAdcValue)],
+                                  items: [_VoltRef(StringConstants.earth, p.earthAdcValue)],
                                 ),
                               ],
                             ),
@@ -327,7 +329,7 @@ class _DiagnosticInfoBottomSheetState extends State<DiagnosticInfoBottomSheet> {
                                 width: double.infinity,
                                 child: OutlinedButton(
                                   style: OutlinedButton.styleFrom(
-                                    foregroundColor: Colors.white,
+                                    foregroundColor: ColorConstants.white,
                                     backgroundColor: _brandRed,
                                     side: const BorderSide(color: _brandRed),
                                     shape: RoundedRectangleBorder(
@@ -342,7 +344,7 @@ class _DiagnosticInfoBottomSheetState extends State<DiagnosticInfoBottomSheet> {
                                           ? widget.onStop
                                           : widget.onDownload,
                                   child: Text(
-                                    isFetchActive ? 'Stop' : 'Start',
+                                    isFetchActive ? StringConstants.stop : StringConstants.start,
                                     style: GoogleFonts.inter(
                                       fontSize: 15,
                                       fontWeight: FontWeight.w600,
@@ -401,7 +403,7 @@ class _DiagnosticInfoBottomSheetState extends State<DiagnosticInfoBottomSheet> {
             children: [
               Expanded(
                 child: _summaryChip(
-                  label: 'Normal',
+                  label: StringConstants.none,
                   count: counts.nominal,
                   band: DiagnosticVoltageBand.nominal,
                   iconAsset:
@@ -411,7 +413,7 @@ class _DiagnosticInfoBottomSheetState extends State<DiagnosticInfoBottomSheet> {
               const SizedBox(width: 8),
               Expanded(
                 child: _summaryChip(
-                  label: 'High',
+                  label: StringConstants.high,
                   count: counts.high,
                   band: DiagnosticVoltageBand.high,
                   iconAsset:
@@ -421,7 +423,7 @@ class _DiagnosticInfoBottomSheetState extends State<DiagnosticInfoBottomSheet> {
               const SizedBox(width: 8),
               Expanded(
                 child: _summaryChip(
-                  label: 'Critical',
+                  label: StringConstants.critical,
                   count: counts.critical,
                   band: DiagnosticVoltageBand.critical,
                   iconAsset:
@@ -444,25 +446,25 @@ class _DiagnosticInfoBottomSheetState extends State<DiagnosticInfoBottomSheet> {
     final accent = _valueColor(band);
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: ColorConstants.white,
         borderRadius: BorderRadius.circular(8),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.01),
+            color: ColorConstants.blackMaterial.withValues(alpha: 0.01),
             offset: const Offset(3, 6),
             blurRadius: 3,
           ),
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: ColorConstants.blackMaterial.withValues(alpha: 0.05),
             offset: const Offset(2, 3),
             blurRadius: 2,
           ),
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.09),
+            color: ColorConstants.blackMaterial.withValues(alpha: 0.09),
             offset: const Offset(1, 1),
             blurRadius: 2,
           ),
-          BoxShadow(color: Colors.black.withValues(alpha: 0.10), blurRadius: 1),
+          BoxShadow(color: ColorConstants.blackMaterial.withValues(alpha: 0.10), blurRadius: 1),
         ],
       ),
       child: Container(
@@ -497,7 +499,7 @@ class _DiagnosticInfoBottomSheetState extends State<DiagnosticInfoBottomSheet> {
                     style: GoogleFonts.inter(
                       fontSize: 16,
                       fontWeight: FontWeight.w500,
-                      color: Color(0xFF678196),
+                      color: ColorConstants.blueGray,
                     ),
                   ),
                 ],
@@ -568,7 +570,7 @@ class _DiagnosticInfoBottomSheetState extends State<DiagnosticInfoBottomSheet> {
                             style: GoogleFonts.inter(
                               fontSize: 11,
                               fontWeight: FontWeight.w500,
-                              color: const Color(0xff678196),
+                              color: ColorConstants.blueGray,
                             ),
                           ),
                         ],
@@ -634,12 +636,12 @@ class _DiagnosticInfoBottomSheetState extends State<DiagnosticInfoBottomSheet> {
 
   Color _valueColor(DiagnosticVoltageBand band) {
     if (band == DiagnosticVoltageBand.nominal) {
-      return const Color(0xFF2B8073);
+      return ColorConstants.teal;
     }
     if (band == DiagnosticVoltageBand.high) {
-      return const Color(0xFFEDA145);
+      return ColorConstants.warningAmber;
     }
-    return const Color(0xFFE4626F);
+    return ColorConstants.errorPink;
   }
 }
 

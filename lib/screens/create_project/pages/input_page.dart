@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
 class InputPage extends StatefulWidget {
   final String inputText;
@@ -49,11 +51,11 @@ class _InputPageState extends State<InputPage> {
         Padding(
           padding: const EdgeInsets.only(left: 19),
           child: Text(
-            'Input',
+            StringConstants.inputModeConfiguration,
             style: GoogleFonts.inter(
               fontSize: 18,
               fontWeight: FontWeight.w600,
-              color: Color(0xFF3A3A3A),
+              color: ColorConstants.textBodyDark,
             ),
           ),
         ),
@@ -73,24 +75,24 @@ class _InputPageState extends State<InputPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Input Text',
+                        StringConstants.inputText,
                         style: GoogleFonts.inter(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
-                          color: Color(0xFF696969),
+                          color: ColorConstants.textSecondary,
                         ),
                       ),
                       SizedBox(height: 8),
                       Container(
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: ColorConstants.white,
                           borderRadius: BorderRadius.circular(4),
-                          border: Border.all(color: Color(0xFFE0E0E0)),
+                          border: Border.all(color: ColorConstants.borderGray),
                         ),
                         child: TextField(
                           controller: _inputTextController,
                           onChanged: (value) {
-                            widget.onInputSettingChanged('Input Text', value);
+                            widget.onInputSettingChanged(StringConstants.inputText, value);
                           },
                           onTapOutside: (value) {
                             FocusScope.of(context).unfocus();
@@ -98,31 +100,31 @@ class _InputPageState extends State<InputPage> {
                           decoration: InputDecoration(
                             contentPadding: EdgeInsets.all(12),
                             border: InputBorder.none,
-                            hintText: 'Enter Input Text',
+                            hintText: StringConstants.enterInputText,
                             hintStyle: GoogleFonts.inter(
                               fontSize: 13,
                               fontWeight: FontWeight.w400,
-                              color: Color(0xFFBDBDBD),
+                              color: ColorConstants.divider,
                             ),
                           ),
                         ),
                       ),
                       SizedBox(height: 24),
-                      _buildDropdownField('Inverted', widget.inverted, [
-                        'No',
-                        'Yes',
+                      _buildDropdownField(StringConstants.inverted, widget.inverted, [
+                        StringConstants.no,
+                        StringConstants.yes,
                       ]),
                       SizedBox(height: 20),
-                      _buildDropdownField('Test', widget.test, ['No', 'Yes']),
+                      _buildDropdownField(StringConstants.test, widget.test, [StringConstants.no, StringConstants.yes]),
                       SizedBox(height: 20),
                       _buildDropdownField('Input 1', widget.input1, [
-                        'Enable',
-                        'Disable',
+                        StringConstants.enable,
+                        StringConstants.disable,
                       ]),
                     ],
                   ),
                 ),
-                Divider(color: Color(0xFFBDBDBD), thickness: 1),
+                Divider(color: ColorConstants.divider, thickness: 1),
                 SizedBox(height: 16),
                 Padding(
                   padding: const EdgeInsets.symmetric(
@@ -133,33 +135,33 @@ class _InputPageState extends State<InputPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Programming Group',
+                        StringConstants.programmingGroup,
                         style: GoogleFonts.inter(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
-                          color: Color(0xFF3A3A3A),
+                          color: ColorConstants.textBodyDark,
                         ),
                       ),
                       SizedBox(height: 20),
                       _buildDropdownField('Group', widget.group, [
-                        'Group A',
-                        'Group B',
-                        'Group C',
-                        'Group D',
+                        StringConstants.groupA,
+                        StringConstants.groupB,
+                        StringConstants.groupC,
+                        StringConstants.groupD,
                       ]),
                       SizedBox(height: 20),
                       _buildDropdownField('Function', widget.function, [
                         'Function 1A',
-                        'Function 1B',
-                        'Function 2A',
-                        'Function 2B',
-                        'Function 3A',
-                        'Function 3B',
+                        StringConstants.function1B,
+                        StringConstants.function2A,
+                        StringConstants.function2B,
+                        StringConstants.function3A,
+                        StringConstants.function3B,
                       ]),
                     ],
                   ),
                 ),
-                Divider(color: Color(0xFFBDBDBD), thickness: 1),
+                Divider(color: ColorConstants.divider, thickness: 1),
               ],
             ),
           ),
@@ -179,7 +181,7 @@ class _InputPageState extends State<InputPage> {
               style: GoogleFonts.inter(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: Color(0xFF696969),
+                color: ColorConstants.textSecondary,
               ),
             ),
             Spacer(),
@@ -192,7 +194,7 @@ class _InputPageState extends State<InputPage> {
                     style: GoogleFonts.inter(
                       fontSize: 13,
                       fontWeight: FontWeight.w400,
-                      color: Color(0xFF3D3D3D),
+                      color: ColorConstants.textDark,
                     ),
                   ),
                   SizedBox(width: 2),
@@ -225,7 +227,7 @@ class _InputPageState extends State<InputPage> {
             style: GoogleFonts.inter(
               fontSize: 18,
               fontWeight: FontWeight.w600,
-              color: Color(0xFF3A3A3A),
+              color: ColorConstants.textBodyDark,
             ),
           ),
           content: Column(
@@ -238,12 +240,12 @@ class _InputPageState extends State<InputPage> {
                       style: GoogleFonts.inter(
                         fontSize: 14,
                         fontWeight: FontWeight.w400,
-                        color: Color(0xFF3D3D3D),
+                        color: ColorConstants.textDark,
                       ),
                     ),
                     value: option,
                     groupValue: selectedValue,
-                    activeColor: Color(0xFFEC1D24),
+                    activeColor: ColorConstants.primary,
                     onChanged: (String? value) {
                       selectedValue = value!;
                       Navigator.of(context).pop();
@@ -258,11 +260,11 @@ class _InputPageState extends State<InputPage> {
                 Navigator.of(context).pop();
               },
               child: Text(
-                'Cancel',
+                StringConstants.cancel,
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: Color(0xFF696969),
+                  color: ColorConstants.textSecondary,
                 ),
               ),
             ),

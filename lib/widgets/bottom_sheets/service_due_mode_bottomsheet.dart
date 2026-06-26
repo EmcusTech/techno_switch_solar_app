@@ -8,6 +8,8 @@ import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/panel_config/panel_config_cache_sync.dart';
 import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/widgets/dropdown.dart';
+import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
 class ServiceDueBottomSheet extends StatefulWidget {
   final String deviceId;
@@ -40,7 +42,7 @@ class ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
   final FocusNode hourFocusNode = FocusNode();
   final FocusNode minuteFocusNode = FocusNode();
 
-  final List<String> reminderOptions = ['Off', 'On'];
+  final List<String> reminderOptions = [StringConstants.off, StringConstants.on];
 
   @override
   void initState() {
@@ -48,31 +50,31 @@ class ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
 
     yearFocusNode.addListener(() {
       if (yearFocusNode.hasFocus) {
-        debugPrint("Year field is focused");
+        debugPrint(StringConstants.yearFieldIsFocused);
       } else {
-        debugPrint("Year field lost focus");
+        debugPrint(StringConstants.yearFieldLostFocus);
       }
     });
     monthFocusNode.addListener(() {
       if (monthFocusNode.hasFocus) {
-        debugPrint("Month field is focused");
+        debugPrint(StringConstants.monthFieldIsFocused);
       } else {
-        debugPrint("Month field lost focus");
+        debugPrint(StringConstants.monthFieldLostFocus);
       }
     });
     dayFocusNode.addListener(() {
       hourFocusNode.addListener(() {
         if (hourFocusNode.hasFocus) {
-          debugPrint("Hour field is focused");
+          debugPrint(StringConstants.hourFieldIsFocused);
         } else {
-          debugPrint("Hour field lost focus");
+          debugPrint(StringConstants.hourFieldLostFocus);
         }
       });
       minuteFocusNode.addListener(() {
         if (minuteFocusNode.hasFocus) {
-          debugPrint("Minute field is focused");
+          debugPrint(StringConstants.minuteFieldIsFocused);
         } else {
-          debugPrint("Minute field lost focus");
+          debugPrint(StringConstants.minuteFieldLostFocus);
         }
       });
     });
@@ -114,7 +116,7 @@ class ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
     config.minuteController.text = (data['minute'] as num?)?.toString() ?? '0';
     config.companyController.text = (data['company'] as String?) ?? '';
     config.contactController.text = (data['contact'] as String?) ?? '';
-    config.reminder = (data['reminder'] as int?) == 1 ? 'On' : 'Off';
+    config.reminder = (data['reminder'] as int?) == 1 ? StringConstants.on : StringConstants.off;
   }
 
   void _loadFromManager() {
@@ -126,7 +128,7 @@ class ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
     config.minuteController.text = manager!.serviceDueMinute.value.toString();
     config.companyController.text = manager!.serviceDueCompany.value;
     config.contactController.text = manager!.serviceDueContact.value;
-    config.reminder = manager!.serviceDueReminder.value == 0 ? 'Off' : 'On';
+    config.reminder = manager!.serviceDueReminder.value == 0 ? StringConstants.off : StringConstants.on;
     if (mounted) setState(() {});
   }
 
@@ -154,7 +156,7 @@ class ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
         constraints: BoxConstraints(maxHeight: maxHeight),
         child: Container(
           decoration: const BoxDecoration(
-            color: Color(0xFFE31C23),
+            color: ColorConstants.primaryVariant,
             borderRadius: BorderRadius.vertical(top: Radius.circular(50)),
           ),
           child: Padding(
@@ -162,7 +164,7 @@ class ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
             child: Container(
               clipBehavior: Clip.hardEdge,
               decoration: const BoxDecoration(
-                color: Colors.white,
+                color: ColorConstants.white,
                 borderRadius: BorderRadius.vertical(top: Radius.circular(50)),
               ),
               // padding: EdgeInsets.only(
@@ -186,7 +188,7 @@ class ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
                             width: 38,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              color: Colors.black.withValues(alpha: 0.06),
+                              color: ColorConstants.blackMaterial.withValues(alpha: 0.06),
                             ),
                             child: const Icon(Icons.close, size: 20),
                           ),
@@ -204,7 +206,7 @@ class ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
                     child: Column(
                       children: [
                         _dragHandle(),
-                        _title('Service Due Mode'),
+                        _title(StringConstants.serviceDueMode),
                         Expanded(child: scroll),
                         const SizedBox(height: 12),
                         Row(
@@ -248,7 +250,7 @@ class ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
         style: GoogleFonts.inter(
           fontSize: 20,
           fontWeight: FontWeight.w700,
-          color: const Color(0xFF3D3D3D),
+          color: ColorConstants.textDark,
         ),
       ),
     );
@@ -260,7 +262,7 @@ class ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
       style: GoogleFonts.inter(
         fontSize: 13,
         fontWeight: FontWeight.w600,
-        color: const Color(0xFF3D3D3D),
+        color: ColorConstants.textDark,
       ),
     );
   }
@@ -281,7 +283,7 @@ class ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
         '$currentLength / $max',
         style: GoogleFonts.inter(
           fontSize: 12,
-          color: currentLength == max ? const Color(0xFFEC1D24) : Colors.grey,
+          color: currentLength == max ? ColorConstants.primary : Colors.grey,
         ),
       ),
     );
@@ -345,7 +347,7 @@ class ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
     m.serviceDueMinute.value = int.parse(config.minuteController.text);
     m.serviceDueCompany.value = config.companyController.text;
     m.serviceDueContact.value = config.contactController.text;
-    m.serviceDueReminder.value = config.reminder == 'On' ? 1 : 0;
+    m.serviceDueReminder.value = config.reminder == StringConstants.on ? 1 : 0;
   }
 
   Future<bool> commitLocal() async {
@@ -369,11 +371,11 @@ class ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
             child: Align(
               alignment: Alignment.centerLeft,
               child: Text(
-                'Service Due Configuration',
+                StringConstants.serviceDueConfiguration,
                 style: GoogleFonts.inter(
                   fontSize: 20,
                   fontWeight: FontWeight.w700,
-                  color: const Color(0xFF3D3D3D),
+                  color: ColorConstants.textDark,
                 ),
               ),
             ),
@@ -383,7 +385,7 @@ class ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
           controller: config.yearController,
           min: 0,
           max: 9999,
-          errorMessage: 'Year must be between 2010 and 9999',
+          errorMessage: StringConstants.yearMustBeBetween2010And9999,
           focusNode: yearFocusNode,
         ),
         _numberField(
@@ -391,7 +393,7 @@ class ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
           controller: config.monthController,
           min: 1,
           max: 12,
-          errorMessage: 'Month must be between 1 and 12',
+          errorMessage: StringConstants.monthMustBeBetween1And12,
           focusNode: monthFocusNode,
         ),
         _numberField(
@@ -399,7 +401,7 @@ class ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
           controller: config.dayController,
           min: 1,
           max: 31,
-          errorMessage: 'Day must be between 1 and 31',
+          errorMessage: StringConstants.dayMustBeBetween1And31,
           focusNode: dayFocusNode,
         ),
         _numberField(
@@ -407,7 +409,7 @@ class ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
           controller: config.hourController,
           min: 0,
           max: 23,
-          errorMessage: 'Hour must be between 0 and 23',
+          errorMessage: StringConstants.hourMustBeBetween0And23,
           focusNode: hourFocusNode,
         ),
         _numberField(
@@ -415,13 +417,13 @@ class ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
           controller: config.minuteController,
           min: 0,
           max: 59,
-          errorMessage: 'Minute must be between 0 and 59',
+          errorMessage: StringConstants.minuteMustBeBetween0And59,
           focusNode: minuteFocusNode,
         ),
         _textField(label: 'Company', controller: config.companyController),
-        _contactField(label: 'Contact', controller: config.contactController),
+        _contactField(label: StringConstants.contact, controller: config.contactController),
         DropdownWidget(
-          label: 'Reminder',
+          label: StringConstants.reminder,
           value: config.reminder,
           items: reminderOptions,
           onChanged: (v) {
@@ -487,7 +489,7 @@ class ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
   //   if (!RegExp(r'^\d+$').hasMatch(contact)) return false;
 
   //   // // optional: Indian mobile logic
-  //   // if (!RegExp(r'^[6-9]').hasMatch(contact)) return false;
+  //   // if (!RegExp(rStringConstants.s69).hasMatch(contact)) return false;
 
   //   return true;
   // }
@@ -537,19 +539,19 @@ class ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
   InputDecoration _inputDecoration() {
     return InputDecoration(
       filled: true,
-      fillColor: const Color(0xFFF8F8F8),
+      fillColor: ColorConstants.surfaceLight,
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFFD0D0D0)),
+        borderSide: const BorderSide(color: ColorConstants.borderLight),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFFD0D0D0)),
+        borderSide: const BorderSide(color: ColorConstants.borderLight),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFFEC1D24), width: 2),
+        borderSide: const BorderSide(color: ColorConstants.primary, width: 2),
       ),
     );
   }
@@ -561,8 +563,8 @@ class ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
       height: 48,
       child: OutlinedButton(
         style: OutlinedButton.styleFrom(
-          foregroundColor: const Color(0xFFEC1D24),
-          side: const BorderSide(color: Color(0xFFEC1D24)),
+          foregroundColor: ColorConstants.primary,
+          side: const BorderSide(color: ColorConstants.primary),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24),
           ),
@@ -572,7 +574,7 @@ class ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
           widget.onDownload();
         },
         child: Text(
-          'Download',
+          StringConstants.download,
           style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600),
         ),
       ),
@@ -584,7 +586,7 @@ class ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
       height: 48,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFFEC1D24),
+          backgroundColor: ColorConstants.primary,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24),
           ),
@@ -598,11 +600,11 @@ class ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
                   }
                 },
         child: Text(
-          'Apply',
+          StringConstants.apply,
           style: GoogleFonts.inter(
             fontSize: 16,
             fontWeight: FontWeight.w600,
-            color: Colors.white,
+            color: ColorConstants.white,
           ),
         ),
       ),
@@ -613,7 +615,7 @@ class ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
 // ───────────────── MODEL ─────────────────
 
 class ServiceDueConfig {
-  String reminder = 'Off';
+  String reminder = StringConstants.off;
 
   final TextEditingController yearController = TextEditingController();
   final TextEditingController monthController = TextEditingController();

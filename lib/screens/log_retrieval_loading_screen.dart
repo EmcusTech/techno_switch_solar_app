@@ -11,6 +11,8 @@ import 'package:techno_switch_solar_app/screens/log_retreival_completed_screen.d
 import 'package:techno_switch_solar_app/screens/scanning_screen.dart';
 import 'package:techno_switch_solar_app/utils/ble_msd_utils.dart';
 import 'package:techno_switch_solar_app/utils/ble_name_utils.dart';
+import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
 final BleManager ble = Get.find<BleManager>();
 
@@ -132,7 +134,7 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen> {
           child: Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: ColorConstants.white,
               borderRadius: BorderRadius.circular(16),
             ),
             child: Column(
@@ -142,34 +144,34 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen> {
                   width: 64,
                   height: 64,
                   decoration: const BoxDecoration(
-                    color: Color(0xFFFBDEE1),
+                    color: ColorConstants.errorIconBackground,
                     shape: BoxShape.circle,
                   ),
                   child: const Center(
                     child: Icon(
                       Icons.warning_amber_rounded,
-                      color: Color(0xFFEC1D24),
+                      color: ColorConstants.primary,
                       size: 28,
                     ),
                   ),
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Stop Log Retrieval',
+                  StringConstants.stopLogRetrieval,
                   style: GoogleFonts.inter(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
-                    color: const Color(0xFF3D3D3D),
+                    color: ColorConstants.textDark,
                   ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Are you sure you want to stop the log retrieval process? This action cannot be undone.',
+                  StringConstants.areYouSureYouWantToStopTheLogRetrievalProcessThisActionCannotBeUndone,
                   style: GoogleFonts.inter(
                     fontSize: 14,
                     fontWeight: FontWeight.w400,
-                    color: const Color(0xFF666666),
+                    color: ColorConstants.textGray,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -182,20 +184,20 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen> {
                         child: Container(
                           height: 48,
                           decoration: BoxDecoration(
-                            color: const Color(0xFFEFEEEE),
+                            color: ColorConstants.buttonSecondaryBackground,
                             borderRadius: BorderRadius.circular(24),
                             border: Border.all(
-                              color: const Color(0xFFD0D0D0),
+                              color: ColorConstants.borderLight,
                               width: 1,
                             ),
                           ),
                           child: Center(
                             child: Text(
-                              'Cancel',
+                              StringConstants.cancel,
                               style: GoogleFonts.inter(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
-                                color: const Color(0xFF666666),
+                                color: ColorConstants.textGray,
                               ),
                             ),
                           ),
@@ -209,11 +211,11 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen> {
                         child: Container(
                           height: 48,
                           decoration: BoxDecoration(
-                            color: const Color(0xFFEC1D24),
+                            color: ColorConstants.primary,
                             borderRadius: BorderRadius.circular(24),
                             boxShadow: [
                               BoxShadow(
-                                color: const Color(0xFFEC1D24).withOpacity(0.3),
+                                color: ColorConstants.primary.withOpacity(0.3),
                                 blurRadius: 8,
                                 offset: const Offset(0, 4),
                               ),
@@ -221,11 +223,11 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen> {
                           ),
                           child: Center(
                             child: Text(
-                              'Yes, Stop',
+                              StringConstants.yesStop,
                               style: GoogleFonts.inter(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
-                                color: Colors.white,
+                                color: ColorConstants.white,
                               ),
                             ),
                           ),
@@ -254,7 +256,7 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen> {
     final device = widget.selectedDevice ?? widget.connectedDevice;
 
     if (device == null) {
-      return "Unknown Device";
+      return StringConstants.unknownDevice;
     }
 
     if (widget.scanType == ScanType.bluetooth) {
@@ -264,10 +266,10 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen> {
         }
         return "BLE-${device.id.substring(0, 5)}";
       }
-      return "BLE Device";
+      return StringConstants.bleDevice;
     }
 
-    return "Unknown Device";
+    return StringConstants.unknownDevice;
   }
 
   @override
@@ -281,7 +283,7 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen> {
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [Color(0xFFF6EBEB), Colors.white],
+              colors: [ColorConstants.scaffoldGradientTop, ColorConstants.white],
             ),
           ),
           child: Stack(
@@ -307,7 +309,7 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen> {
                           ),
                           SizedBox(width: 8),
                           Text(
-                            'Event Log',
+                            StringConstants.eventLog,
                             style: GoogleFonts.inter(
                               fontSize: 20,
                               fontWeight: FontWeight.w700,
@@ -332,7 +334,7 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen> {
     return Expanded(
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: ColorConstants.white,
           borderRadius: BorderRadius.circular(35),
         ),
         child: Stack(
@@ -347,11 +349,11 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen> {
               child: Padding(
                 padding: const EdgeInsets.only(top: 45),
                 child: Text(
-                  'Retrieving Logs...',
+                  StringConstants.retrievingLogs,
                   style: GoogleFonts.inter(
                     fontSize: 24,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFF918F8F),
+                    color: ColorConstants.textMuted,
                   ),
                 ),
               ),
@@ -371,7 +373,7 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen> {
                     style: GoogleFonts.inter(
                       fontSize: 12,
                       fontWeight: FontWeight.w400,
-                      color: Color(0xFF918F8F),
+                      color: ColorConstants.textMuted,
                     ),
                     textAlign: TextAlign.center,
                     maxLines: 2,
@@ -407,8 +409,8 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen> {
                             LinearPercentIndicator(
                               lineHeight: 11.0,
                               percent: percent,
-                              backgroundColor: Color(0xFFD9D9D9),
-                              progressColor: Color(0xFFEC1D24),
+                              backgroundColor: ColorConstants.progressTrack,
+                              progressColor: ColorConstants.primary,
                               barRadius: Radius.circular(20),
                             ),
                             SizedBox(height: 10),
@@ -440,11 +442,11 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen> {
         height: 55,
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
-          color: Color(0xFFEC1D24),
+          color: ColorConstants.primary,
           borderRadius: BorderRadius.circular(28.5),
           boxShadow: [
             BoxShadow(
-              color: Color(0xFFEC1D24).withOpacity(0.3),
+              color: ColorConstants.primary.withOpacity(0.3),
               blurRadius: 8,
               offset: Offset(0, 4),
             ),
@@ -452,11 +454,11 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen> {
         ),
         child: Center(
           child: Text(
-            'Cancel',
+            StringConstants.cancel,
             style: GoogleFonts.inter(
               fontSize: 16,
               fontWeight: FontWeight.w600,
-              color: Colors.white,
+              color: ColorConstants.white,
             ),
           ),
         ),

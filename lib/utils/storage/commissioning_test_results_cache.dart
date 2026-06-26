@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
 enum CommissioningTestType { walkTest, relayTest, sounderTest }
 
@@ -51,7 +52,7 @@ class CommissioningTestResultsCache {
     final existing = await loadItems(deviceId, type);
     final now = DateTime.now().toIso8601String();
     for (final entry in results.entries) {
-      existing[entry.key] = {'result': entry.value, 'testedAt': now};
+      existing[entry.key] = {StringConstants.testedat: entry.value, 'testedAt': now};
     }
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(
@@ -63,7 +64,7 @@ class CommissioningTestResultsCache {
   static String? resultForItem(Map<String, dynamic> items, String itemId) {
     final item = items[itemId];
     if (item is! Map) return null;
-    final result = item['result'];
+    final result = item[StringConstants.testedat];
     return result is String ? result : null;
   }
 }

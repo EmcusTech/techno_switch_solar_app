@@ -1,6 +1,7 @@
 import '../models/log_retrieval_model.dart';
 import '../models/log_model.dart';
 import 'database_helper.dart';
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
 class LogRetrievalService {
   static final LogRetrievalService _instance = LogRetrievalService._internal();
@@ -78,10 +79,10 @@ class LogRetrievalService {
     if (retrievals.isEmpty) {
       return {
         'totalRetrievals': 0,
-        'totalLogs': 0,
-        'averageLogsPerRetrieval': 0.0,
-        'firstRetrieval': null,
-        'lastRetrieval': null,
+        StringConstants.totallogs: 0,
+        StringConstants.averagelogsperretrieval: 0.0,
+        StringConstants.firstretrieval: null,
+        StringConstants.lastretrieval: null,
       };
     }
 
@@ -96,10 +97,10 @@ class LogRetrievalService {
 
     return {
       'totalRetrievals': retrievals.length,
-      'totalLogs': totalLogs,
-      'averageLogsPerRetrieval': averageLogsPerRetrieval,
-      'firstRetrieval': sortedRetrievals.first.retrievalDate,
-      'lastRetrieval': sortedRetrievals.last.retrievalDate,
+      StringConstants.totallogs: totalLogs,
+      StringConstants.averagelogsperretrieval: averageLogsPerRetrieval,
+      StringConstants.firstretrieval: sortedRetrievals.first.retrievalDate,
+      StringConstants.lastretrieval: sortedRetrievals.last.retrievalDate,
     };
   }
 

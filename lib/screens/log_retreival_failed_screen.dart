@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
 class LogRetrievalFailedScreen extends StatefulWidget {
   const LogRetrievalFailedScreen({super.key});
@@ -30,7 +32,7 @@ class _LogRetrievalFailedScreenState extends State<LogRetrievalFailedScreen> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Color(0xFFF6EBEB), Colors.white],
+            colors: [ColorConstants.scaffoldGradientTop, ColorConstants.white],
           ),
         ),
         child: Stack(
@@ -56,7 +58,7 @@ class _LogRetrievalFailedScreenState extends State<LogRetrievalFailedScreen> {
                         ),
                         SizedBox(width: 8),
                         Text(
-                          'Log Retrieval Failed',
+                          StringConstants.logRetrievalFailed,
                           style: GoogleFonts.inter(
                             fontSize: 20,
                             fontWeight: FontWeight.w700,
@@ -80,7 +82,7 @@ class _LogRetrievalFailedScreenState extends State<LogRetrievalFailedScreen> {
     return Expanded(
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: ColorConstants.white,
           borderRadius: BorderRadius.circular(35),
         ),
         child: Stack(
@@ -99,7 +101,7 @@ class _LogRetrievalFailedScreenState extends State<LogRetrievalFailedScreen> {
                   style: GoogleFonts.inter(
                     fontSize: 24,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFFEC1D24),
+                    color: ColorConstants.primary,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -112,21 +114,21 @@ class _LogRetrievalFailedScreenState extends State<LogRetrievalFailedScreen> {
                 children: [
                   Container(
                     decoration: BoxDecoration(
-                      color: Color(0xFFEC1D24),
+                      color: ColorConstants.primary,
                       shape: BoxShape.circle,
                     ),
                     child: Padding(
                       padding: const EdgeInsets.all(28.0),
                       child: Icon(
                         Icons.close_rounded,
-                        color: Colors.white,
+                        color: ColorConstants.white,
                         size: 56,
                       ),
                     ),
                   ),
                   SizedBox(height: 120),
                   Text(
-                    "Unable to connect to the panel. Please check your connection and try again.",
+                    StringConstants.unableToConnectToThePanelPleaseCheckYourConnectionAndTryAgain,
                     style: GoogleFonts.inter(fontSize: 14),
                     textAlign: TextAlign.center,
                   ),

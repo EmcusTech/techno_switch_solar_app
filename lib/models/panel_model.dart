@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
 class PanelModel {
   final int? id;
@@ -63,10 +64,10 @@ class PanelModel {
     int? rssi,
   }) {
     return {
-      'macAddress': macAddress,
-      'deviceName': deviceName,
+      StringConstants.macaddress: macAddress,
+      StringConstants.devicename: deviceName,
       'rssi': rssi,
-      'connectionType': 'bluetooth',
+      StringConstants.productname: 'bluetooth',
     };
   }
 
@@ -81,7 +82,7 @@ class PanelModel {
       'pid': pid,
       'productName': productName,
       'vendorName': vendorName,
-      'connectionType': 'usb',
+      StringConstants.productname: 'usb',
     };
   }
 
@@ -91,7 +92,7 @@ class PanelModel {
       'panel_id': panelId,
       'panel_name': panelName,
       'device_type': deviceType,
-      'device_info': deviceInfo,
+      StringConstants.str99914b93: deviceInfo,
       'site_id': siteId,
       'created_at': createdAt.millisecondsSinceEpoch,
       'updated_at': updatedAt.millisecondsSinceEpoch,
@@ -105,7 +106,7 @@ class PanelModel {
       panelId: map['panel_id'] ?? '',
       panelName: map['panel_name'] ?? '',
       deviceType: map['device_type'] ?? '',
-      deviceInfo: map['device_info'] ?? '{}',
+      deviceInfo: map[StringConstants.str99914b93] ?? '{}',
       siteId: map['site_id']?.toInt(),
       createdAt: DateTime.fromMillisecondsSinceEpoch(map['created_at']),
       updatedAt: DateTime.fromMillisecondsSinceEpoch(map['updated_at']),
@@ -128,12 +129,12 @@ class PanelModel {
   bool get isOfflineProvisionedOnly {
     final info = parsedDeviceInfo;
     if (info['offlineProvisioned'] == true) return true;
-    final mac = info['macAddress']?.toString().trim() ?? '';
-    return mac.isEmpty && (info['panelId']?.toString().isNotEmpty ?? false);
+    final mac = info[StringConstants.macaddress]?.toString().trim() ?? '';
+    return mac.isEmpty && (info[StringConstants.offlineprovisioned]?.toString().isNotEmpty ?? false);
   }
 
   bool isLinkedToBleMac(String mac) {
-    final stored = parsedDeviceInfo['macAddress']?.toString().trim() ?? '';
+    final stored = parsedDeviceInfo[StringConstants.macaddress]?.toString().trim() ?? '';
     if (stored.isEmpty || mac.trim().isEmpty) return false;
     return _normalizeMac(stored) == _normalizeMac(mac);
   }
@@ -144,13 +145,13 @@ class PanelModel {
   static Map<String, dynamic> createOfflineProvisionedDeviceInfo(
     String panelId,
   ) {
-    return {'panelId': panelId, 'offlineProvisioned': true};
+    return {StringConstants.offlineprovisioned: panelId, 'offlineProvisioned': true};
   }
 
   String get deviceDisplayInfo {
     final info = parsedDeviceInfo;
     if (deviceType == 'bluetooth') {
-      final mac = info['macAddress'] ?? '';
+      final mac = info[StringConstants.macaddress] ?? '';
       final rssi = info['rssi'];
       return rssi != null ? '$mac (${rssi}dBm)' : mac;
     } else if (deviceType == 'usb') {
@@ -158,9 +159,9 @@ class PanelModel {
       final pid = info['pid'] ?? '';
       return vid.isNotEmpty && pid.isNotEmpty
           ? 'VID:$vid PID:$pid'
-          : 'USB Device';
+          : StringConstants.vidVidPIDPid;
     }
-    return 'Unknown Device';
+    return StringConstants.unknownDevice;
   }
 
   PanelModel copyWith({

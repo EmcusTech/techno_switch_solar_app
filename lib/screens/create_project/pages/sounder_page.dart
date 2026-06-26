@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
 class SounderPage extends StatefulWidget {
   final String? expandedSounder;
@@ -47,7 +49,7 @@ class _SounderPageState extends State<SounderPage> {
                 style: GoogleFonts.inter(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
-                  color: Color(0xFF3A3A3A),
+                  color: ColorConstants.textBodyDark,
                 ),
               ),
               Spacer(),
@@ -86,7 +88,7 @@ class _SounderPageState extends State<SounderPage> {
         widget.onSounderExpanded(isExpanded ? null : sounderName);
       },
       child: Container(
-        decoration: BoxDecoration(color: Color(0xFFF5F5F5)),
+        decoration: BoxDecoration(color: ColorConstants.backgroundGray),
         child: Column(
           children: [
             // Sounder header
@@ -99,7 +101,7 @@ class _SounderPageState extends State<SounderPage> {
                     style: GoogleFonts.inter(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: Color(0xFF3A3A3A),
+                      color: ColorConstants.textBodyDark,
                     ),
                   ),
                   Spacer(),
@@ -107,7 +109,7 @@ class _SounderPageState extends State<SounderPage> {
                     isExpanded
                         ? Icons.keyboard_arrow_up
                         : Icons.keyboard_arrow_down,
-                    color: Color(0xFF696969),
+                    color: ColorConstants.textSecondary,
                     size: 20,
                   ),
                 ],
@@ -117,26 +119,26 @@ class _SounderPageState extends State<SounderPage> {
             // Expanded content
             if (isExpanded) ...[
               Container(
-                color: Colors.white,
+                color: ColorConstants.white,
                 child: Padding(
                   padding: EdgeInsets.symmetric(horizontal: 20, vertical: 24),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Sounder Text',
+                        StringConstants.sounderText,
                         style: GoogleFonts.inter(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
-                          color: Color(0xFF696969),
+                          color: ColorConstants.textSecondary,
                         ),
                       ),
                       SizedBox(height: 8),
                       Container(
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: ColorConstants.white,
                           borderRadius: BorderRadius.circular(4),
-                          border: Border.all(color: Color(0xFFE0E0E0)),
+                          border: Border.all(color: ColorConstants.borderGray),
                         ),
                         child: TextField(
                           controller: TextEditingController(
@@ -152,7 +154,7 @@ class _SounderPageState extends State<SounderPage> {
                           onChanged: (value) {
                             widget.onSounderFieldChanged(
                               sounderName,
-                              'sounderText',
+                              StringConstants.soundertext,
                               value,
                             );
                           },
@@ -162,11 +164,11 @@ class _SounderPageState extends State<SounderPage> {
                           decoration: InputDecoration(
                             contentPadding: EdgeInsets.all(12),
                             border: InputBorder.none,
-                            hintText: 'Enter Sounder Text',
+                            hintText: StringConstants.enterSounderText,
                             hintStyle: GoogleFonts.inter(
                               fontSize: 13,
                               fontWeight: FontWeight.w400,
-                              color: Color(0xFFBDBDBD),
+                              color: ColorConstants.divider,
                             ),
                           ),
                         ),
@@ -175,63 +177,63 @@ class _SounderPageState extends State<SounderPage> {
                       _buildSounderDropdownField(
                         'Sounder',
                         widget.sounderStates[sounderName]!,
-                        ['Enable', 'Disable'],
+                        [StringConstants.enable, StringConstants.disable],
                         (value) {
                           widget.onSounderFieldChanged(
                             sounderName,
-                            'sounderState',
+                            StringConstants.sounderstate,
                             value,
                           );
                         },
                       ),
                       SizedBox(height: 20),
                       _buildSounderDropdownField(
-                        'Sounder Test',
+                        StringConstants.sounderTest,
                         widget.sounderTests[sounderName]!,
-                        ['Yes', 'No'],
+                        [StringConstants.yes, StringConstants.no],
                         (value) {
                           widget.onSounderFieldChanged(
                             sounderName,
-                            'sounderTest',
+                            StringConstants.soundertest,
                             value,
                           );
                         },
                       ),
                       SizedBox(height: 20),
                       _buildSounderDropdownField(
-                        'Sounder Type',
+                        StringConstants.sounderType,
                         widget.sounderTypes[sounderName]!,
-                        ['Horn', 'Bell', 'Siren', 'Chime'],
+                        [StringConstants.horn, StringConstants.bell, StringConstants.siren, StringConstants.chime],
                         (value) {
                           widget.onSounderFieldChanged(
                             sounderName,
-                            'sounderType',
+                            StringConstants.soundertype,
                             value,
                           );
                         },
                       ),
                       SizedBox(height: 20),
                       _buildSounderDropdownField(
-                        'Sounder Group',
+                        StringConstants.sounderGroup,
                         widget.sounderGroups[sounderName]!,
                         widget.availableZones ?? ['Zone 1'],
                         (value) {
                           widget.onSounderFieldChanged(
                             sounderName,
-                            'sounderGroup',
+                            StringConstants.soundergroup,
                             value,
                           );
                         },
                       ),
                       SizedBox(height: 20),
                       _buildSounderDropdownField(
-                        'Sounder Function',
+                        StringConstants.sounderFunction,
                         widget.sounderFunctions[sounderName]!,
-                        ['P1', 'P2', 'P3', 'P4'],
+                        [StringConstants.p1, StringConstants.p2, StringConstants.p3, StringConstants.p4],
                         (value) {
                           widget.onSounderFieldChanged(
                             sounderName,
-                            'sounderFunction',
+                            StringConstants.sounderfunction,
                             value,
                           );
                         },
@@ -260,7 +262,7 @@ class _SounderPageState extends State<SounderPage> {
           style: GoogleFonts.inter(
             fontSize: 13,
             fontWeight: FontWeight.w600,
-            color: Color(0xFF696969),
+            color: ColorConstants.textSecondary,
           ),
         ),
         Spacer(),
@@ -275,7 +277,7 @@ class _SounderPageState extends State<SounderPage> {
                 style: GoogleFonts.inter(
                   fontSize: 13,
                   fontWeight: FontWeight.w400,
-                  color: Color(0xFF3D3D3D),
+                  color: ColorConstants.textDark,
                 ),
               ),
               SizedBox(width: 2),
@@ -307,7 +309,7 @@ class _SounderPageState extends State<SounderPage> {
             style: GoogleFonts.inter(
               fontSize: 18,
               fontWeight: FontWeight.w600,
-              color: Color(0xFF3A3A3A),
+              color: ColorConstants.textBodyDark,
             ),
           ),
           content: Column(
@@ -320,12 +322,12 @@ class _SounderPageState extends State<SounderPage> {
                       style: GoogleFonts.inter(
                         fontSize: 14,
                         fontWeight: FontWeight.w400,
-                        color: Color(0xFF3D3D3D),
+                        color: ColorConstants.textDark,
                       ),
                     ),
                     value: option,
                     groupValue: selectedValue,
-                    activeColor: Color(0xFFEC1D24),
+                    activeColor: ColorConstants.primary,
                     onChanged: (String? value) {
                       selectedValue = value!;
                       Navigator.of(context).pop();
@@ -340,11 +342,11 @@ class _SounderPageState extends State<SounderPage> {
                 Navigator.of(context).pop();
               },
               child: Text(
-                'Cancel',
+                StringConstants.cancel,
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: Color(0xFF696969),
+                  color: ColorConstants.textSecondary,
                 ),
               ),
             ),

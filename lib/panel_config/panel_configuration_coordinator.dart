@@ -11,6 +11,7 @@ import 'package:techno_switch_solar_app/panel_config/panel_config_feedback_dialo
 import 'package:techno_switch_solar_app/screens/log_retrieval_loading_screen.dart'
     hide ble;
 import 'package:techno_switch_solar_app/screens/scanning_screen.dart';
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
 class PanelConfigurationCoordinator {
   PanelConfigurationCoordinator({
@@ -147,7 +148,7 @@ class PanelConfigurationCoordinator {
       },
       mode: 'bottomsheet_download',
       isConfigLogBulk: true,
-      downloadSuccessMessage: 'Configuration',
+      downloadSuccessMessage: StringConstants.configuration,
       onDownloadComplete: _onConfigLogBulkDownloadComplete,
     );
   }
@@ -186,7 +187,7 @@ class PanelConfigurationCoordinator {
       },
       mode: 'bottomsheet_download',
       isConfigLogBulk: true,
-      downloadSuccessMessage: 'Configuration',
+      downloadSuccessMessage: StringConstants.configuration,
       onDownloadComplete: () async {
         await _onConfigLogBulkDownloadComplete();
         configDownloadFinished = true;
@@ -247,7 +248,7 @@ class PanelConfigurationCoordinator {
 
     return completer.future.timeout(
       const Duration(minutes: 10),
-      onTimeout: () => throw TimeoutException('Bulk apply timed out'),
+      onTimeout: () => throw TimeoutException(StringConstants.bulkApplyTimedOut),
     );
   }
 }

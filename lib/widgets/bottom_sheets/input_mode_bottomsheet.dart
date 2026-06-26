@@ -10,6 +10,8 @@ import 'package:techno_switch_solar_app/utils/input_mode_util.dart';
 import 'package:techno_switch_solar_app/panel_config/panel_config_cache_sync.dart';
 import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/widgets/dropdown.dart';
+import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
 class InputModeBottomSheet extends StatefulWidget {
   final String deviceId;
@@ -34,31 +36,31 @@ class InputModeBottomSheet extends StatefulWidget {
 class InputModeBottomSheetState extends State<InputModeBottomSheet> {
   // ───────────── Dropdown Options ─────────────
 
-  final List<String> groupOptions = ['None', 'General', 'Ext. Out'];
+  final List<String> groupOptions = ['None', 'General', StringConstants.extOut];
 
   final Map<String, List<String>> functionOptionsMap = {
     'None': ['None'],
     'General': [
-      'Extnl. Fault',
-      'Reset',
-      'Extnl. Controls Enabled',
-      'Silence Alarm',
-      'Sound Alarm',
-      'Silence Buzzer',
-      'Mute',
-      'Extnl. Supervisory',
-      'Extnl. Supply Fault',
+      StringConstants.extnlFault,
+      StringConstants.reset,
+      StringConstants.extnlControlsEnabled,
+      StringConstants.silenceAlarm,
+      StringConstants.soundAlarm,
+      StringConstants.silenceBuzzer,
+      StringConstants.mute,
+      StringConstants.extnlSupervisory,
+      StringConstants.extnlSupplyFault,
     ],
-    'Ext. Out': [
-      'Manual Trigger',
-      'Manual Mode',
-      'Hold',
-      'Extnl. Disable Gas',
-      'Extnl. Ext. Fault',
+    StringConstants.extOut: [
+      StringConstants.manualTrigger,
+      StringConstants.manualMode,
+      StringConstants.hold,
+      StringConstants.extnlDisableGas,
+      StringConstants.extnlExtFault,
     ],
   };
 
-  final List<String> yesNoOptions = ['No', 'Yes'];
+  final List<String> yesNoOptions = [StringConstants.no, StringConstants.yes];
 
   // ───────────── Selected Values ─────────────
 
@@ -157,9 +159,9 @@ class InputModeBottomSheetState extends State<InputModeBottomSheet> {
   void _pushInputToManager() {
     final groupIndex = returnIndex(group, groupOptions);
     final functionIndex = returnIndex(function, functionOptionsMap[group]!);
-    final isEnabled = enabled == 'Yes';
-    final isTest = test == 'Yes';
-    final isInverted = inverted == 'Yes';
+    final isEnabled = enabled == StringConstants.yes;
+    final isTest = test == StringConstants.yes;
+    final isInverted = inverted == StringConstants.yes;
 
     final config = InputModeConfig(
       inputEnable: InputEnable.values[isEnabled ? 1 : 0],
@@ -196,10 +198,10 @@ class InputModeBottomSheetState extends State<InputModeBottomSheet> {
     return Column(
       children: [
         if (widget.embedInCreateFlow) _title('Input Mode Configuration'),
-        _readOnlyField('Input', 'PROG IN 1'),
+        _readOnlyField(StringConstants.inputModeConfiguration, StringConstants.progIN1),
         _inputTextField(),
         DropdownWidget(
-          label: 'Group',
+          label: StringConstants.group,
           value: group,
           items: groupOptions,
           onChanged: (v) {
@@ -210,39 +212,39 @@ class InputModeBottomSheetState extends State<InputModeBottomSheet> {
           },
         ),
         DropdownWidget(
-          label: 'Function',
+          label: StringConstants.function,
           value: function,
           items: functionOptionsMap[group]!,
           onChanged: (v) => setState(() => function = v),
         ),
         DropdownWidget(
-          label: 'Enabled',
+          label: StringConstants.enabled,
           value: enabled,
           items: yesNoOptions,
           onChanged: (v) {
             setState(() {
               enabled = v;
-              if (enabled == 'No') {
-                test = 'No';
+              if (enabled == StringConstants.no) {
+                test = StringConstants.no;
               }
             });
           },
         ),
         DropdownWidget(
-          label: 'Test',
+          label: StringConstants.test,
           value: test,
           items: yesNoOptions,
           onChanged: (v) {
             setState(() {
               test = v;
-              if (test == 'Yes') {
-                enabled = 'Yes';
+              if (test == StringConstants.yes) {
+                enabled = StringConstants.yes;
               }
             });
           },
         ),
         DropdownWidget(
-          label: 'Inverted',
+          label: StringConstants.inverted,
           value: inverted,
           items: yesNoOptions,
           onChanged: (v) => setState(() => inverted = v),
@@ -280,7 +282,7 @@ class InputModeBottomSheetState extends State<InputModeBottomSheet> {
         constraints: BoxConstraints(maxHeight: maxHeight),
         child: Container(
           decoration: const BoxDecoration(
-            color: Color(0xFFE31C23),
+            color: ColorConstants.primaryVariant,
             borderRadius: BorderRadius.vertical(top: Radius.circular(50)),
           ),
           child: Padding(
@@ -288,7 +290,7 @@ class InputModeBottomSheetState extends State<InputModeBottomSheet> {
             child: Container(
               clipBehavior: Clip.hardEdge,
               decoration: const BoxDecoration(
-                color: Colors.white,
+                color: ColorConstants.white,
                 borderRadius: BorderRadius.vertical(top: Radius.circular(50)),
               ),
               // padding: EdgeInsets.only(
@@ -312,7 +314,7 @@ class InputModeBottomSheetState extends State<InputModeBottomSheet> {
                             width: 38,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              color: Colors.black.withValues(alpha: 0.06),
+                              color: ColorConstants.blackMaterial.withValues(alpha: 0.06),
                             ),
                             child: const Icon(Icons.close, size: 20),
                           ),
@@ -330,7 +332,7 @@ class InputModeBottomSheetState extends State<InputModeBottomSheet> {
                     child: Column(
                       children: [
                         _dragHandle(),
-                        _title('Input Mode'),
+                        _title(StringConstants.inputMode),
                         Expanded(child: scroll),
                         const SizedBox(height: 12),
                         Row(
@@ -374,7 +376,7 @@ class InputModeBottomSheetState extends State<InputModeBottomSheet> {
         style: GoogleFonts.inter(
           fontSize: 20,
           fontWeight: FontWeight.w700,
-          color: const Color(0xFF3D3D3D),
+          color: ColorConstants.textDark,
         ),
       ),
     );
@@ -386,7 +388,7 @@ class InputModeBottomSheetState extends State<InputModeBottomSheet> {
       style: GoogleFonts.inter(
         fontSize: 13,
         fontWeight: FontWeight.w600,
-        color: const Color(0xFF3D3D3D),
+        color: ColorConstants.textDark,
       ),
     );
   }
@@ -404,16 +406,16 @@ class InputModeBottomSheetState extends State<InputModeBottomSheet> {
             alignment: Alignment.centerLeft,
             padding: const EdgeInsets.symmetric(horizontal: 14),
             decoration: BoxDecoration(
-              color: const Color(0xFFF0F0F0),
+              color: ColorConstants.colorFff0F0F0,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFD0D0D0)),
+              border: Border.all(color: ColorConstants.borderLight),
             ),
             child: Text(
               value,
               style: GoogleFonts.inter(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
-                color: const Color(0xFF3D3D3D),
+                color: ColorConstants.textDark,
               ),
             ),
           ),
@@ -428,7 +430,7 @@ class InputModeBottomSheetState extends State<InputModeBottomSheet> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _label('Input Text'),
+          _label(StringConstants.inputText),
           const SizedBox(height: 6),
           TextField(
             controller: inputTextCtrl,
@@ -449,7 +451,7 @@ class InputModeBottomSheetState extends State<InputModeBottomSheet> {
                     fontSize: 12,
                     color:
                         currentLength == 21
-                            ? const Color(0xFFEC1D24)
+                            ? ColorConstants.primary
                             : Colors.grey,
                   ),
                 ),
@@ -461,7 +463,7 @@ class InputModeBottomSheetState extends State<InputModeBottomSheet> {
             style: GoogleFonts.inter(
               fontSize: 14,
               fontWeight: FontWeight.w500,
-              color: const Color(0xFF3D3D3D),
+              color: ColorConstants.textDark,
             ),
           ),
           if (_inputTextError != null) ...[
@@ -471,7 +473,7 @@ class InputModeBottomSheetState extends State<InputModeBottomSheet> {
               style: GoogleFonts.inter(
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
-                color: const Color(0xFFEC1D24),
+                color: ColorConstants.primary,
               ),
             ),
           ],
@@ -510,7 +512,7 @@ class InputModeBottomSheetState extends State<InputModeBottomSheet> {
   //                           style: GoogleFonts.inter(
   //                             fontSize: 14,
   //                             fontWeight: FontWeight.w500,
-  //                             color: const Color(0xFF3D3D3D),
+  //                             color: ColorConstants.textDark,
   //                           ),
   //                         ),
   //                       ),
@@ -524,7 +526,7 @@ class InputModeBottomSheetState extends State<InputModeBottomSheet> {
   //               height: 48,
   //               padding: EdgeInsets.zero,
   //               decoration: BoxDecoration(
-  //                 color: const Color(0xFFF8F8F8),
+  //                 color: ColorConstants.surfaceLight,
   //                 borderRadius: BorderRadius.circular(12),
   //               ),
   //             ),
@@ -532,7 +534,7 @@ class InputModeBottomSheetState extends State<InputModeBottomSheet> {
   //             iconStyleData: const IconStyleData(
   //               icon: Icon(
   //                 Icons.keyboard_arrow_down_rounded,
-  //                 color: Color(0xFF3D3D3D),
+  //                 color: ColorConstants.textDark,
   //               ),
   //               iconSize: 22,
   //             ),
@@ -540,7 +542,7 @@ class InputModeBottomSheetState extends State<InputModeBottomSheet> {
   //             dropdownStyleData: DropdownStyleData(
   //               maxHeight: 280,
   //               decoration: BoxDecoration(
-  //                 color: Colors.white,
+  //                 color: ColorConstants.white,
   //                 borderRadius: BorderRadius.circular(12),
   //               ),
   //               elevation: 4,
@@ -554,7 +556,7 @@ class InputModeBottomSheetState extends State<InputModeBottomSheet> {
   //             // 🔥 CONTROL ALL PADDING HERE ONLY
   //             decoration: InputDecoration(
   //               filled: true,
-  //               fillColor: const Color(0xFFF8F8F8),
+  //               fillColor: ColorConstants.surfaceLight,
   //               contentPadding: const EdgeInsets.symmetric(
   //                 horizontal: 14,
   //                 vertical: 12,
@@ -563,7 +565,7 @@ class InputModeBottomSheetState extends State<InputModeBottomSheet> {
   //               enabledBorder: OutlineInputBorder(
   //                 borderRadius: BorderRadius.circular(12),
   //                 borderSide: const BorderSide(
-  //                   color: Color(0xFFD0D0D0),
+  //                   color: ColorConstants.borderLight,
   //                   width: 1,
   //                 ),
   //               ),
@@ -571,7 +573,7 @@ class InputModeBottomSheetState extends State<InputModeBottomSheet> {
   //               focusedBorder: OutlineInputBorder(
   //                 borderRadius: BorderRadius.circular(12),
   //                 borderSide: const BorderSide(
-  //                   color: Color(0xFFEC1D24),
+  //                   color: ColorConstants.primary,
   //                   width: 2,
   //                 ),
   //               ),
@@ -585,11 +587,11 @@ class InputModeBottomSheetState extends State<InputModeBottomSheet> {
 
   InputDecoration _inputDecoration({bool hasError = false}) {
     final borderColor =
-        hasError ? const Color(0xFFEC1D24) : const Color(0xFFD0D0D0);
+        hasError ? ColorConstants.primary : ColorConstants.borderLight;
 
     return InputDecoration(
       filled: true,
-      fillColor: const Color(0xFFF8F8F8),
+      fillColor: ColorConstants.surfaceLight,
 
       // 🔥 SAME 24px HORIZONTAL
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
@@ -606,7 +608,7 @@ class InputModeBottomSheetState extends State<InputModeBottomSheet> {
 
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFFEC1D24), width: 2),
+        borderSide: const BorderSide(color: ColorConstants.primary, width: 2),
       ),
     );
   }
@@ -616,8 +618,8 @@ class InputModeBottomSheetState extends State<InputModeBottomSheet> {
       height: 48,
       child: OutlinedButton(
         style: OutlinedButton.styleFrom(
-          foregroundColor: const Color(0xFFEC1D24),
-          side: const BorderSide(color: Color(0xFFEC1D24)),
+          foregroundColor: ColorConstants.primary,
+          side: const BorderSide(color: ColorConstants.primary),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24),
           ),
@@ -627,7 +629,7 @@ class InputModeBottomSheetState extends State<InputModeBottomSheet> {
           widget.onDownload();
         },
         child: Text(
-          'Download',
+          StringConstants.download,
           style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600),
         ),
       ),
@@ -639,7 +641,7 @@ class InputModeBottomSheetState extends State<InputModeBottomSheet> {
       height: 48,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFFEC1D24),
+          backgroundColor: ColorConstants.primary,
           disabledBackgroundColor: Colors.grey.shade400,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24),
@@ -654,11 +656,11 @@ class InputModeBottomSheetState extends State<InputModeBottomSheet> {
                 }
                 : null,
         child: Text(
-          'Apply',
+          StringConstants.apply,
           style: GoogleFonts.inter(
             fontSize: 16,
             fontWeight: FontWeight.w600,
-            color: Colors.white,
+            color: ColorConstants.white,
           ),
         ),
       ),

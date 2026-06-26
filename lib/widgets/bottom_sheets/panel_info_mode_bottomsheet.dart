@@ -9,6 +9,8 @@ import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/panel_config/panel_config_cache_sync.dart';
 import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
+import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
 class PanelInfoBottomSheet extends StatefulWidget {
   final String deviceId;
@@ -78,8 +80,8 @@ class PanelInfoBottomSheetState extends State<PanelInfoBottomSheet> {
 
   void _applyCachedData(Map<String, dynamic> data) {
     config.panelIdController.text =
-        (data['panelId'] as num?)?.toString() ?? '0';
-    config.panelNameController.text = (data['panelName'] as String?) ?? '';
+        (data[StringConstants.offlineprovisioned] as num?)?.toString() ?? '0';
+    config.panelNameController.text = (data[StringConstants.panelname] as String?) ?? '';
     config.yearController.text = (data['year'] as num?)?.toString() ?? '0';
     config.monthController.text = (data['month'] as num?)?.toString() ?? '0';
     config.dayController.text = (data['day'] as num?)?.toString() ?? '0';
@@ -87,7 +89,7 @@ class PanelInfoBottomSheetState extends State<PanelInfoBottomSheet> {
     config.minuteController.text = (data['minute'] as num?)?.toString() ?? '0';
     config.secondController.text = (data['second'] as num?)?.toString() ?? '0';
     config.delayController.text = (data['delay'] as num?)?.toString() ?? '0';
-    useMobileTime = (data['useMobileTime'] as bool?) ?? true;
+    useMobileTime = (data[StringConstants.usemobiletime] as bool?) ?? true;
     if (useMobileTime) {
       _startLiveTime();
     }
@@ -169,7 +171,7 @@ class PanelInfoBottomSheetState extends State<PanelInfoBottomSheet> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            if (widget.embedInCreateFlow) _title("Panel Information"),
+            if (widget.embedInCreateFlow) _title(StringConstants.panelInformation),
             _panelInfoTile(),
             _dateTimeTile(),
             _eventReminderTile(),
@@ -213,7 +215,7 @@ class PanelInfoBottomSheetState extends State<PanelInfoBottomSheet> {
           constraints: BoxConstraints(maxHeight: maxHeight),
           child: Container(
             decoration: const BoxDecoration(
-              color: Color(0xFFE31C23),
+              color: ColorConstants.primaryVariant,
               borderRadius: BorderRadius.vertical(top: Radius.circular(50)),
             ),
             child: Padding(
@@ -221,7 +223,7 @@ class PanelInfoBottomSheetState extends State<PanelInfoBottomSheet> {
               child: Container(
                 clipBehavior: Clip.hardEdge,
                 decoration: const BoxDecoration(
-                  color: Colors.white,
+                  color: ColorConstants.white,
                   borderRadius: BorderRadius.vertical(top: Radius.circular(50)),
                 ),
                 // padding: EdgeInsets.only(
@@ -245,7 +247,7 @@ class PanelInfoBottomSheetState extends State<PanelInfoBottomSheet> {
                               width: 38,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: Colors.black.withValues(alpha: 0.06),
+                                color: ColorConstants.blackMaterial.withValues(alpha: 0.06),
                               ),
                               child: const Icon(Icons.close, size: 20),
                             ),
@@ -293,12 +295,12 @@ class PanelInfoBottomSheetState extends State<PanelInfoBottomSheet> {
       title: "Panel Info",
       children: [
         _textField(
-          "Panel No",
+          StringConstants.panelNo,
           config.panelIdController,
           isNumeric: true,
           maxLength: 2,
         ),
-        _textField("Panel Name", config.panelNameController, maxLength: 21),
+        _textField(StringConstants.panelName, config.panelNameController, maxLength: 21),
       ],
     );
   }
@@ -307,34 +309,34 @@ class PanelInfoBottomSheetState extends State<PanelInfoBottomSheet> {
   /// them so routine time drift does not mark Panel Info as mismatched.
   Widget _dateTimeTile() {
     return _tileWrapper(
-      title: "Date & Time",
+      title: StringConstants.dateTime,
       children: [
         Row(
           children: [
             const Expanded(
               child: Text(
-                "Use Mobile Date & Time",
+                StringConstants.useMobileDateTime,
                 style: TextStyle(fontWeight: FontWeight.w600),
               ),
             ),
             Switch(value: useMobileTime, onChanged: _toggleMobileTime),
           ],
         ),
-        _numberField("Year", config.yearController, maxLength: 4),
-        _numberField("Month", config.monthController, maxLength: 2),
-        _numberField("Day", config.dayController, maxLength: 2),
-        _numberField("Hour", config.hourController, maxLength: 2),
-        _numberField("Minute", config.minuteController, maxLength: 2),
-        _numberField("Second", config.secondController, maxLength: 2),
+        _numberField(StringConstants.year, config.yearController, maxLength: 4),
+        _numberField(StringConstants.month, config.monthController, maxLength: 2),
+        _numberField(StringConstants.day, config.dayController, maxLength: 2),
+        _numberField(StringConstants.hour, config.hourController, maxLength: 2),
+        _numberField(StringConstants.minute, config.minuteController, maxLength: 2),
+        _numberField(StringConstants.second, config.secondController, maxLength: 2),
       ],
     );
   }
 
   Widget _eventReminderTile() {
     return _tileWrapper(
-      title: "Event Reminder",
+      title: StringConstants.eventReminder,
       children: [
-        _numberField("Delay (s)", config.delayController, maxLength: 3),
+        _numberField(StringConstants.delayS, config.delayController, maxLength: 3),
       ],
     );
   }
@@ -347,10 +349,10 @@ class PanelInfoBottomSheetState extends State<PanelInfoBottomSheet> {
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: const Color(0xFFDCDCDC)),
+          border: Border.all(color: ColorConstants.borderMuted),
         ),
         child: Theme(
-          data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+          data: Theme.of(context).copyWith(dividerColor: ColorConstants.transparent),
           child: ExpansionTile(
             onExpansionChanged: (expanded) {
               setState(() {
@@ -364,7 +366,7 @@ class PanelInfoBottomSheetState extends State<PanelInfoBottomSheet> {
               style: GoogleFonts.inter(
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
-                color: const Color(0xFF3D3D3D),
+                color: ColorConstants.textDark,
               ),
             ),
             children: [...children, const SizedBox(height: 14)],
@@ -412,7 +414,7 @@ class PanelInfoBottomSheetState extends State<PanelInfoBottomSheet> {
                             fontSize: 12,
                             color:
                                 currentLength == max
-                                    ? const Color(0xFFEC1D24)
+                                    ? ColorConstants.primary
                                     : Colors.grey,
                           ),
                         ),
@@ -469,19 +471,19 @@ class PanelInfoBottomSheetState extends State<PanelInfoBottomSheet> {
   InputDecoration _inputDecoration() {
     return InputDecoration(
       filled: true,
-      fillColor: const Color(0xFFF8F8F8),
+      fillColor: ColorConstants.surfaceLight,
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFFD0D0D0)),
+        borderSide: const BorderSide(color: ColorConstants.borderLight),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFFD0D0D0)),
+        borderSide: const BorderSide(color: ColorConstants.borderLight),
       ),
       focusedBorder: const OutlineInputBorder(
         borderRadius: BorderRadius.all(Radius.circular(12)),
-        borderSide: BorderSide(color: Color(0xFFEC1D24), width: 2),
+        borderSide: BorderSide(color: ColorConstants.primary, width: 2),
       ),
     );
   }
@@ -515,8 +517,8 @@ class PanelInfoBottomSheetState extends State<PanelInfoBottomSheet> {
       height: 48,
       child: OutlinedButton(
         style: OutlinedButton.styleFrom(
-          foregroundColor: const Color(0xFFEC1D24),
-          side: const BorderSide(color: Color(0xFFEC1D24)),
+          foregroundColor: ColorConstants.primary,
+          side: const BorderSide(color: ColorConstants.primary),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24),
           ),
@@ -526,7 +528,7 @@ class PanelInfoBottomSheetState extends State<PanelInfoBottomSheet> {
           widget.onDownload();
         },
         child: Text(
-          'Download',
+          StringConstants.download,
           style: GoogleFonts.inter(fontWeight: FontWeight.w600),
         ),
       ),
@@ -606,7 +608,7 @@ class PanelInfoBottomSheetState extends State<PanelInfoBottomSheet> {
       height: 48,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFFEC1D24),
+          backgroundColor: ColorConstants.primary,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24),
           ),
@@ -620,10 +622,10 @@ class PanelInfoBottomSheetState extends State<PanelInfoBottomSheet> {
                 }
                 : null,
         child: Text(
-          'Apply',
+          StringConstants.apply,
           style: GoogleFonts.inter(
             fontWeight: FontWeight.w600,
-            color: Colors.white,
+            color: ColorConstants.white,
           ),
         ),
       ),

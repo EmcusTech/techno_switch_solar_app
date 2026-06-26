@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:techno_switch_solar_app/models/ble/firmware/firmware_bin_format.dart';
 import 'package:techno_switch_solar_app/models/ble/firmware/firmware_packet_model.dart';
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
 class FirmwarePacketService {
   static const int payloadSize = 240;
@@ -115,7 +116,7 @@ class FirmwarePacketService {
 
   int _bytesToUint32BE(Uint8List b) {
     if (b.length != 4) {
-      throw ArgumentError('CRC must be 4 bytes');
+      throw ArgumentError(StringConstants.crcMustBe4Bytes);
     }
     return (b[0] << 24) | (b[1] << 16) | (b[2] << 8) | b[3];
   }
