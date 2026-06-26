@@ -549,8 +549,9 @@ class PanelInfoBottomSheetState extends State<PanelInfoBottomSheet> {
         config.dayController.text.isEmpty ||
         config.hourController.text.isEmpty ||
         config.minuteController.text.isEmpty ||
-        config.secondController.text.isEmpty)
+        config.secondController.text.isEmpty) {
       return false;
+    }
 
     final year = int.tryParse(config.yearController.text) ?? 0;
     final month = int.tryParse(config.monthController.text) ?? 0;

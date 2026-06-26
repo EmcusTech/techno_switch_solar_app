@@ -105,8 +105,8 @@ class _EventLogContentState extends State<_EventLogContent> {
   bool _useProvidedLogs = false;
   DateTime? _fromDate;
   DateTime? _toDate;
-  Set<String> _selectedStatuses = {};
-  Set<String> _selectedEventClasses = {};
+  final Set<String> _selectedStatuses = {};
+  final Set<String> _selectedEventClasses = {};
   String? _alarmCount;
   List<LogModel> _filteredLogs = [];
   bool _filtersApplied = false;

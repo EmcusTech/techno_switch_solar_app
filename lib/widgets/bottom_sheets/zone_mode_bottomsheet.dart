@@ -51,8 +51,8 @@ class ZoneBottomSheetState extends State<ZoneBottomSheet> {
 
   late List<ZoneConfig> zones;
 
-  Map<int, String?> _zoneTextErrors = {};
-  Map<int, String?> _verificationErrors = {};
+  final Map<int, String?> _zoneTextErrors = {};
+  final Map<int, String?> _verificationErrors = {};
 
   bool _computeIsValid() {
     for (int i = 0; i < 3; i++) {

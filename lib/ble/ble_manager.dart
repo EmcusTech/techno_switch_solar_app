@@ -1757,7 +1757,7 @@ class BleManager {
     if (_notifySub != null) {
       try {
         await _notifySub?.cancel();
-      } catch (e) {}
+      } catch (_) {}
       _notifySub = null;
     }
 
@@ -1812,7 +1812,7 @@ class BleManager {
       } else {
         return;
       }
-    } catch (e) {
+    } catch (_) {
     } finally {
       final deviceId = device?.remoteId.str ?? connectedDeviceId.value;
       connectedBtDevice.value = null;
