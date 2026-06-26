@@ -246,7 +246,8 @@ class _EventLogContentState extends State<_EventLogContent> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  StringConstants.thisWillRemoveAllEntriesFromTheListThisCannotBeUndone,
+                  StringConstants
+                      .thisWillRemoveAllEntriesFromTheListThisCannotBeUndone,
                   style: GoogleFonts.inter(
                     fontSize: 14,
                     fontWeight: FontWeight.w400,
@@ -905,7 +906,8 @@ class _EventLogContentState extends State<_EventLogContent> {
                                           Text(
                                             _fromDate != null
                                                 ? DateFormat(
-                                                  StringConstants.ddMMYyyyHHMmSs,
+                                                  StringConstants
+                                                      .ddMMYyyyHHMmSs,
                                                 ).format(_fromDate!)
                                                 : StringConstants.from,
                                             style: GoogleFonts.inter(
@@ -957,7 +959,8 @@ class _EventLogContentState extends State<_EventLogContent> {
                                           Text(
                                             _toDate != null
                                                 ? DateFormat(
-                                                  StringConstants.ddMMYyyyHHMmSs,
+                                                  StringConstants
+                                                      .ddMMYyyyHHMmSs,
                                                 ).format(_toDate!)
                                                 : StringConstants.to,
                                             style: GoogleFonts.inter(
@@ -1181,7 +1184,9 @@ class _EventLogContentState extends State<_EventLogContent> {
                                   vertical: 12,
                                   horizontal: 32,
                                 ),
-                                side: BorderSide(color: ColorConstants.transparent),
+                                side: BorderSide(
+                                  color: ColorConstants.transparent,
+                                ),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(8),
                                 ),
@@ -1295,7 +1300,9 @@ class _EventLogContentState extends State<_EventLogContent> {
                               ),
                               TextSpan(
                                 text:
-                                    isConnected ? StringConstants.connected : StringConstants.disconnected,
+                                    isConnected
+                                        ? StringConstants.connected
+                                        : StringConstants.disconnected,
                                 style: GoogleFonts.inter(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w500,
@@ -1360,11 +1367,15 @@ class _EventLogContentState extends State<_EventLogContent> {
                         ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(4),
-                          borderSide: BorderSide(color: ColorConstants.borderMedium),
+                          borderSide: BorderSide(
+                            color: ColorConstants.borderMedium,
+                          ),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(4),
-                          borderSide: BorderSide(color: ColorConstants.borderMedium),
+                          borderSide: BorderSide(
+                            color: ColorConstants.borderMedium,
+                          ),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(4),
@@ -1706,12 +1717,24 @@ class _LogListViewState extends State<_LogListView>
       color: ColorConstants.white,
       child: Row(
         children: [
-          _buildHeaderCell(StringConstants.id, wEventId, StringConstants.eventid),
-          _buildHeaderCell(StringConstants.dateTime, wDateTime, StringConstants.datetime),
+          _buildHeaderCell(
+            StringConstants.id,
+            wEventId,
+            StringConstants.eventid,
+          ),
+          _buildHeaderCell(
+            StringConstants.dateTime,
+            wDateTime,
+            StringConstants.datetime,
+          ),
           _buildHeaderCell('Status', wEventStatus, 'status'),
           _buildHeaderCell(StringConstants.classLabel, wEventClass, 'class'),
           _buildHeaderCell(StringConstants.type, wEventType, 'type'),
-          _buildHeaderCell(StringConstants.subType, wEventSubType, StringConstants.subtype),
+          _buildHeaderCell(
+            StringConstants.subType,
+            wEventSubType,
+            StringConstants.subtype,
+          ),
           _buildHeaderCell(StringConstants.source, wEventSource, 'source'),
           _buildHeaderCell('Identifier', wIdentifier, 'identifier'),
           _buildHeaderCell(StringConstants.text, wText, 'text'),
@@ -1739,7 +1762,10 @@ class _LogListViewState extends State<_LogListView>
                 style: GoogleFonts.inter(
                   fontWeight: FontWeight.w600,
                   fontSize: 12,
-                  color: isActive ? ColorConstants.primary : ColorConstants.textBodyDark,
+                  color:
+                      isActive
+                          ? ColorConstants.primary
+                          : ColorConstants.textBodyDark,
                 ),
               ),
             ),
@@ -1751,7 +1777,11 @@ class _LogListViewState extends State<_LogListView>
                 color: ColorConstants.primary,
               )
             else
-              Icon(Icons.unfold_more, size: 16, color: ColorConstants.textPlaceholder),
+              Icon(
+                Icons.unfold_more,
+                size: 16,
+                color: ColorConstants.textPlaceholder,
+              ),
           ],
         ),
       ),
@@ -1767,9 +1797,15 @@ class _LogListViewState extends State<_LogListView>
         color: ColorConstants.textSecondary,
       );
     } else if (dataType == DataType.dateTime) {
-      textStyle = GoogleFonts.inter(fontSize: 12, color: ColorConstants.textSecondary);
+      textStyle = GoogleFonts.inter(
+        fontSize: 12,
+        color: ColorConstants.textSecondary,
+      );
     } else {
-      textStyle = GoogleFonts.inter(fontSize: 13, color: ColorConstants.textSecondary);
+      textStyle = GoogleFonts.inter(
+        fontSize: 13,
+        color: ColorConstants.textSecondary,
+      );
     }
     return Container(
       width: width,
@@ -2006,9 +2042,18 @@ class _LogTableViewState extends State<_LogTableView>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      _buildInfoColumn(StringConstants.panelNo, log.panelNo ?? ''),
-                      _buildInfoColumn(StringConstants.lBusNo, log.lBusNo ?? ''),
-                      _buildInfoColumn(StringConstants.moduleNo, log.moduleNo ?? ''),
+                      _buildInfoColumn(
+                        StringConstants.panelNo,
+                        log.panelNo ?? '',
+                      ),
+                      _buildInfoColumn(
+                        StringConstants.lBusNo,
+                        log.lBusNo ?? '',
+                      ),
+                      _buildInfoColumn(
+                        StringConstants.moduleNo,
+                        log.moduleNo ?? '',
+                      ),
                     ],
                   ),
                   Padding(
@@ -2024,7 +2069,10 @@ class _LogTableViewState extends State<_LogTableView>
                     children: [
                       _buildInfoColumn('Status', log.eventStatus ?? ''),
                       _buildInfoColumn('Event Class', log.eventClass ?? ''),
-                      _buildInfoColumn(StringConstants.source, log.eventSource ?? ''),
+                      _buildInfoColumn(
+                        StringConstants.source,
+                        log.eventSource ?? '',
+                      ),
                     ],
                   ),
                   Padding(
@@ -2039,7 +2087,10 @@ class _LogTableViewState extends State<_LogTableView>
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       _buildInfoColumn('Event Type', log.eventType ?? ''),
-                      _buildInfoColumn(StringConstants.eventType, log.eventSubType ?? ''),
+                      _buildInfoColumn(
+                        StringConstants.eventType,
+                        log.eventSubType ?? '',
+                      ),
                     ],
                   ),
                   Padding(

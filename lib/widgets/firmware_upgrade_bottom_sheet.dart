@@ -139,7 +139,8 @@ class _FirmwareUpgradeBottomSheetState
           setState(() {
             _currentStep = FirmwareUpgradeStep.result;
             _isUpgrading = false;
-            _errorMessage = _errorMessage ?? StringConstants.firmwareUpgradeFailed;
+            _errorMessage =
+                _errorMessage ?? StringConstants.firmwareUpgradeFailed;
           });
         }
       }
@@ -192,7 +193,9 @@ class _FirmwareUpgradeBottomSheetState
 
       if (isChipInBootLoader != true) {
         if (!manager.isConnected) {
-          throw Exception(StringConstants.deviceNotConnectedCannotSendJumpCommand);
+          throw Exception(
+            StringConstants.deviceNotConnectedCannotSendJumpCommand,
+          );
         }
         if (!manager.handshakeCompleteNotifier.value) {
           throw Exception(
@@ -473,7 +476,8 @@ class _FirmwareUpgradeBottomSheetState
             setState(() {
               _isWaitingForJumpReconnect = false;
               _selectedDevice = device;
-              _currentBleStateMessage = StringConstants.deviceReadyContinuingUpgrade;
+              _currentBleStateMessage =
+                  StringConstants.deviceReadyContinuingUpgrade;
             });
           } else {
             logger.Logger(
@@ -555,7 +559,9 @@ class _FirmwareUpgradeBottomSheetState
           }
 
           if (!bleManager.isConnected) {
-            throw Exception(StringConstants.connectionNotEstablishedAfterReconnect);
+            throw Exception(
+              StringConstants.connectionNotEstablishedAfterReconnect,
+            );
           }
 
           if (scanLastByte != null) {
@@ -604,7 +610,8 @@ class _FirmwareUpgradeBottomSheetState
         if (manufacturerDataValue == BleMsdUtils.statusBootloader) {
           setState(() {
             _selectedDevice = device;
-            _currentBleStateMessage = StringConstants.deviceReadyContinuingUpgrade;
+            _currentBleStateMessage =
+                StringConstants.deviceReadyContinuingUpgrade;
           });
         } else {
           logger.Logger(
@@ -999,7 +1006,10 @@ class _FirmwareUpgradeBottomSheetState
                       ? ColorConstants.primary.withOpacity(0.1)
                       : ColorConstants.white),
           border: Border.all(
-            color: isSelected ? ColorConstants.primary : ColorConstants.progressTrack,
+            color:
+                isSelected
+                    ? ColorConstants.primary
+                    : ColorConstants.progressTrack,
             width: isSelected ? 2 : 1,
           ),
           borderRadius: BorderRadius.circular(8),
@@ -1012,7 +1022,10 @@ class _FirmwareUpgradeBottomSheetState
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: isSelected ? ColorConstants.primary : ColorConstants.progressTrack,
+                  color:
+                      isSelected
+                          ? ColorConstants.primary
+                          : ColorConstants.progressTrack,
                   width: 2,
                 ),
               ),
@@ -2158,7 +2171,8 @@ class _FirmwareUpgradeBottomSheetState
       setState(() {
         _isUpgrading = false;
         _currentStep = FirmwareUpgradeStep.result;
-        _errorMessage = isSuccess ? null : StringConstants.firmwareTransferFailed;
+        _errorMessage =
+            isSuccess ? null : StringConstants.firmwareTransferFailed;
         _currentBleStateMessage = null;
       });
     } catch (e) {
