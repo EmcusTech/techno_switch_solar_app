@@ -152,7 +152,7 @@ enum BleOperationMode {
 
 const String BLE_AUTHN_MSG = StringConstants.bleAuthMsg;
 
-class BleManager {
+class BleManager extends GetxService {
   int u8TxPktCnt = 0;
   int u8RxPktCnt = 0;
 

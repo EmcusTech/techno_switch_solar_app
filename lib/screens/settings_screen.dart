@@ -8,8 +8,6 @@ import 'package:techno_switch_solar_app/utils/ble_name_utils.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
-final BleManager ble = Get.find<BleManager>();
-
 class SettingsScreen extends StatefulWidget {
   final String panelName;
   final String panelVersionNo;
@@ -227,7 +225,7 @@ class _SettingsContentState extends State<_SettingsContent> {
                     ),
                   ),
                   ValueListenableBuilder(
-                    valueListenable: ble.isConnectedNotifier,
+                    valueListenable: _bleManager.isConnectedNotifier,
                     builder: (context, isConnected, child) {
                       return RichText(
                         text: TextSpan(

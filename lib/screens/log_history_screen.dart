@@ -342,7 +342,7 @@ class LogHistoryScreenState extends State<LogHistoryScreen> {
                     ),
                   ),
                   ValueListenableBuilder(
-                    valueListenable: ble.isConnectedNotifier,
+                    valueListenable: bleController.bleManager.isConnectedNotifier,
                     builder: (context, isConnected, child) {
                       return Text(
                         isConnected ? StringConstants.connected : StringConstants.disconnected,

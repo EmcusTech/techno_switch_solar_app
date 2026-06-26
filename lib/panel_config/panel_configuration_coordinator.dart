@@ -8,8 +8,7 @@ import 'package:techno_switch_solar_app/panel_config/panel_access_password_popup
 import 'package:techno_switch_solar_app/panel_config/panel_config_bulk_sync.dart';
 import 'package:techno_switch_solar_app/panel_config/panel_config_cache_sync.dart';
 import 'package:techno_switch_solar_app/panel_config/panel_config_feedback_dialogs.dart';
-import 'package:techno_switch_solar_app/screens/log_retrieval_loading_screen.dart'
-    hide ble;
+import 'package:techno_switch_solar_app/screens/log_retrieval_loading_screen.dart';
 import 'package:techno_switch_solar_app/screens/scanning_screen.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 

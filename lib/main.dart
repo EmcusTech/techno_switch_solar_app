@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_logs/flutter_logs.dart';
-import 'package:get/get.dart';
-import 'package:techno_switch_solar_app/ble/ble_manager.dart';
-import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
+import 'package:techno_switch_solar_app/bindings/initial_binding.dart';
 import 'package:techno_switch_solar_app/screens/splash_screen.dart';
 import 'package:techno_switch_solar_app/services/app_services.dart';
 import 'package:techno_switch_solar_app/services/navigation_service.dart';
@@ -14,7 +12,7 @@ import 'package:google_fonts/google_fonts.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  Get.put<BleManager>(BleManager(), permanent: true);
+  InitialBinding().dependencies();
 
   await FlutterLogs.initLogs(
     logLevelsEnabled: <LogLevel>[
@@ -43,8 +41,6 @@ void main() async {
     "<${DateTime.now()}>",
     StringConstants.datetimeNow,
   );
-
-  Get.put(BleLogController());
 
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   runApp(const MyApp());

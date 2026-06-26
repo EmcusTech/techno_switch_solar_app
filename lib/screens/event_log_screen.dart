@@ -21,8 +21,6 @@ import 'package:techno_switch_solar_app/utils/ble_name_utils.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
-final BleManager ble = Get.find<BleManager>();
-
 class EventLogScreen extends StatefulWidget {
   final List<LogModel> logDataList;
   final String panelVersionNo;
@@ -102,6 +100,7 @@ class _EventLogContent extends StatefulWidget {
 }
 
 class _EventLogContentState extends State<_EventLogContent> {
+  final BleManager ble = Get.find<BleManager>();
   bool _isListSelected = true;
   int _selectedViewIndex = 0;
   bool _useProvidedLogs = false;

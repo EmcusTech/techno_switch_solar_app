@@ -27,8 +27,6 @@ import 'package:techno_switch_solar_app/utils/ble_msd_utils.dart';
 import 'package:techno_switch_solar_app/utils/logger.dart' as logger;
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 
-final BleManager ble = Get.find<BleManager>();
-
 enum FirmwareType { mainPanel, bleChip }
 
 enum FirmwareUpgradeStep {
@@ -54,6 +52,7 @@ class FirmwareUpgradeBottomSheet extends StatefulWidget {
 class _FirmwareUpgradeBottomSheetState
     extends State<FirmwareUpgradeBottomSheet> {
   final UpdatesController _controller = Get.find<UpdatesController>();
+  final BleManager ble = Get.find<BleManager>();
   FirmwareUpgradeStep _currentStep = FirmwareUpgradeStep.essentialSteps;
   FirmwareType? _selectedFirmwareType;
   PlatformFile? _selectedFile;

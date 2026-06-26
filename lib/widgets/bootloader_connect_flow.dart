@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
+import 'package:techno_switch_solar_app/bindings/firmware_binding.dart';
 import 'package:techno_switch_solar_app/controllers/updates_controller.dart';
 import 'package:techno_switch_solar_app/utils/ble_msd_utils.dart';
 import 'package:techno_switch_solar_app/utils/ble_name_utils.dart';
@@ -93,9 +94,7 @@ Future<bool> showFirmwareUpgradeBottomSheetForConnect({
   required BuildContext context,
   required DiscoveredDevice connectedDevice,
 }) async {
-  if (!Get.isRegistered<UpdatesController>()) {
-    Get.put(UpdatesController());
-  }
+  FirmwareBinding().dependencies();
 
   final result = await showModalBottomSheet<bool>(
     context: context,
@@ -107,6 +106,7 @@ Future<bool> showFirmwareUpgradeBottomSheetForConnect({
         (sheetContext) =>
             FirmwareUpgradeBottomSheet(connectedDevice: connectedDevice),
   );
+  Get.delete<UpdatesController>();
   return result ?? false;
 }
 

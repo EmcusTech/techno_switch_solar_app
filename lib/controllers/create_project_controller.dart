@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
 import 'package:techno_switch_solar_app/models/create_project/site_form_data.dart';
 import 'package:techno_switch_solar_app/models/create_project/panel_form_data.dart';
@@ -11,7 +12,7 @@ import 'package:techno_switch_solar_app/models/create_project/lbus_data.dart';
 import 'package:techno_switch_solar_app/models/panel_type_config.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
-class CreateProjectController extends ChangeNotifier {
+class CreateProjectController extends GetxController {
   final TextEditingController siteNameController = TextEditingController(
     text: '',
   );
@@ -54,12 +55,12 @@ class CreateProjectController extends ChangeNotifier {
 
   void setCreateProjectPanelBleVerified(bool value) {
     createProjectPanelBleVerified = value;
-    notifyListeners();
+    update();
   }
 
   void setConnectedDevice(DiscoveredDevice? device) {
     connectedDevice = device;
-    notifyListeners();
+    update();
   }
 
   void setSkippedPanelConnect({required bool skipped, String? panelId}) {
@@ -69,13 +70,13 @@ class CreateProjectController extends ChangeNotifier {
       createProjectPanelBleVerified = false;
       connectedDevice = null;
     }
-    notifyListeners();
+    update();
   }
 
   void clearSkippedPanelConnect() {
     skippedPanelConnect = false;
     manualPanelId = '';
-    notifyListeners();
+    update();
   }
 
   CreateProjectController() {
@@ -147,7 +148,7 @@ class CreateProjectController extends ChangeNotifier {
         relayData.initializeRelays(panelConfig.relayCount);
       }
     }
-    notifyListeners();
+    update();
   }
 
   void updateGeneralSetting(String label, String value) {
@@ -171,7 +172,7 @@ class CreateProjectController extends ChangeNotifier {
         generalSettings = generalSettings.copyWith(eventReminder: value);
         break;
     }
-    notifyListeners();
+    update();
   }
 
   void updateSliderSetting(String label, double value) {
@@ -185,32 +186,32 @@ class CreateProjectController extends ChangeNotifier {
         generalSettings = generalSettings.copyWith(timerSettings: value);
         break;
     }
-    notifyListeners();
+    update();
   }
 
   void setExpandedField(String? field) {
     generalSettings = generalSettings.copyWith(expandedField: field);
-    notifyListeners();
+    update();
   }
 
   void setExpandedZone(String? zoneName) {
     zoneSettings.expandedZone = zoneName;
-    notifyListeners();
+    update();
   }
 
   void updateZoneField(String zoneName, String fieldType, String value) {
     zoneSettings.updateZoneField(zoneName, fieldType, value);
-    notifyListeners();
+    update();
   }
 
   void setExpandedSounder(String? sounderName) {
     sounderData.expandedSounder = sounderName;
-    notifyListeners();
+    update();
   }
 
   void updateSounderField(String sounderName, String fieldType, String value) {
     sounderData.updateSounderField(sounderName, fieldType, value);
-    notifyListeners();
+    update();
   }
 
   void updateSounderSetting(String label, String value) {
@@ -235,37 +236,37 @@ class CreateProjectController extends ChangeNotifier {
         sounderSettings.releaseAction = value;
         break;
     }
-    notifyListeners();
+    update();
   }
 
   void updateInputSetting(String label, String value) {
     inputData.updateField(label, value);
-    notifyListeners();
+    update();
   }
 
   void setExpandedRelay(String? relayName) {
     relayData.expandedRelay = relayName;
-    notifyListeners();
+    update();
   }
 
   void updateRelayField(String relayName, String fieldType, String value) {
     relayData.updateRelayField(relayName, fieldType, value);
-    notifyListeners();
+    update();
   }
 
   void setExpandedLBus(String? lbusName) {
     lbusData.expandedLBus = lbusName;
-    notifyListeners();
+    update();
   }
 
   void updateLBusField(String lbusName, String fieldType, String value) {
     lbusData.updateLBusField(lbusName, fieldType, value);
-    notifyListeners();
+    update();
   }
 
   void updateExtinguishingSetting(String label, String value) {
     extinguishingData.updateField(label, value);
-    notifyListeners();
+    update();
   }
 
   bool validateStep(int step) {
@@ -289,7 +290,7 @@ class CreateProjectController extends ChangeNotifier {
     }
 
     if (validationErrors.isNotEmpty) {
-      notifyListeners();
+      update();
       return false;
     }
 
@@ -298,11 +299,11 @@ class CreateProjectController extends ChangeNotifier {
 
   void clearValidationErrors() {
     validationErrors.clear();
-    notifyListeners();
+    update();
   }
 
   @override
-  void dispose() {
+  void onClose() {
     siteNameController.dispose();
     installerNameController.dispose();
     companyNameController.dispose();
@@ -312,6 +313,6 @@ class CreateProjectController extends ChangeNotifier {
     installerEmailController.dispose();
     siteDescriptionController.dispose();
     panelNameController.dispose();
-    super.dispose();
+    super.onClose();
   }
 }

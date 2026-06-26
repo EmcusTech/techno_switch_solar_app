@@ -16,8 +16,6 @@ import 'package:techno_switch_solar_app/utils/ble_name_utils.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
-final BleManager ble = Get.find<BleManager>();
-
 class LogRetrievalCompletedScreen extends StatefulWidget {
   final List<LogModel> logs;
   final String panelId;
@@ -40,6 +38,7 @@ class LogRetrievalCompletedScreen extends StatefulWidget {
 
 class _LogRetrievalCompletedScreenState
     extends State<LogRetrievalCompletedScreen> {
+  final BleManager ble = Get.find<BleManager>();
   bool _isHandlingBack = false;
   final PanelService _panelService = PanelService();
   final SiteService _siteService = SiteService();

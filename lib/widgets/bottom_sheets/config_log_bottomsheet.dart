@@ -11,7 +11,6 @@ import 'package:techno_switch_solar_app/utils/peripheral_config_snapshot.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/widgets/dropdown.dart';
 
-final BleManager ble = Get.find<BleManager>();
 
 /// [bottomSheet] - rounded top only (e.g. dashboard modal).
 /// [dialog] - same content in a centered [Dialog] (e.g. post connect compare).
@@ -50,6 +49,7 @@ class ConfigLogBottomSheet extends StatefulWidget {
 
 class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
     with TickerProviderStateMixin {
+  final BleManager ble = Get.find<BleManager>();
   static const Color _textPrimary = ColorConstants.textDark;
   static const Color _textMuted = ColorConstants.textMuted;
   static const Color _textTabUnselected = ColorConstants.textSubtle;

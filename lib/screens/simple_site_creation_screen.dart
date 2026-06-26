@@ -13,8 +13,6 @@ import '../screens/site_screen.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
-final BleManager ble = Get.find<BleManager>();
-
 class SimpleSiteCreationScreen extends StatefulWidget {
   final List<LogModel> retrievedLogs;
   final String? panelName;
@@ -37,6 +35,7 @@ class SimpleSiteCreationScreen extends StatefulWidget {
 }
 
 class _SimpleSiteCreationScreenState extends State<SimpleSiteCreationScreen> {
+  final BleManager ble = Get.find<BleManager>();
   late TextEditingController _siteNameController;
   late TextEditingController _installerNameController;
   late TextEditingController _companyNameController;

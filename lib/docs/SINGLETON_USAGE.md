@@ -22,14 +22,78 @@ if (AppServices.isConnected) {
 
 Placeholder for session cleanup hooks. Call `AppState.reset()` when leaving a BLE flow; call `AppState.dispose()` on app shutdown.
 
-### BleManager (`lib/ble/ble_manager.dart`)
+### Dependency registration (`lib/bindings/initial_binding.dart`)
 
-Primary BLE implementation used for scanning, handshake, log retrieval, firmware OTA, and panel configuration. Registered in `main.dart`:
+`InitialBinding` is the **single registration point** for app-wide GetX
+dependencies. It is invoked once from `main()` before `runApp`, replacing the
+previous scattered `Get.put` calls.
 
 ```dart
-Get.put<BleManager>(BleManager(), permanent: true);
-Get.put(BleLogController());
+class InitialBinding extends Bindings {
+  @override
+  void dependencies() {
+    Get.put<BleManager>(BleManager(), permanent: true);
+    Get.lazyPut<BleLogController>(() => BleLogController(), fenix: true);
+  }
+}
 ```
+
+```dart
+// main.dart
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  InitialBinding().dependencies();
+  // ...
+  runApp(const MyApp());
+}
+```
+
+Guidelines:
+
+- Register app-wide dependencies only in `InitialBinding`. Do not call
+  `Get.put` directly from screens or widgets.
+- Feature-scoped controllers get their own binding (e.g. `FirmwareBinding`
+  for `UpdatesController`) and are removed with `Get.delete` when the feature
+  closes.
+
+### BleManager (`lib/ble/ble_manager.dart`)
+
+Primary BLE implementation used for scanning, handshake, log retrieval,
+firmware OTA, and panel configuration. It is a `GetxService` (app-lifetime,
+registered `permanent: true`) and is resolved via `Get.find<BleManager>()`.
+
+## Dependency resolution conventions
+
+- **No file-level globals.** Do not declare top-level
+  `final BleManager ble = Get.find<BleManager>();`. Resolve dependencies inside
+  the `State` (or `GetxController`) that needs them, e.g.
+
+```dart
+class _MyScreenState extends State<MyScreen> {
+  final BleManager ble = Get.find<BleManager>();
+  // ...
+}
+```
+
+- Prefer resolving BLE access through `BleLogController` (which exposes
+  `bleManager`) rather than calling both `Get.find<BleManager>()` and
+  `Get.find<BleLogController>()` in the same widget.
+- **Known follow-up:** `BleManager` and `BleLogController` reference each other
+  via `Get.find` (circular DI). This is intentional for now; do not refactor BLE
+  internals as part of DI cleanup.
+
+## Reactive widget conventions
+
+Pick the builder by *what* state is changing:
+
+| State source | Builder to use |
+| --- | --- |
+| BLE device/session state (`ValueNotifier` in `BleProcess`, e.g. `isConnectedNotifier`, `processDesc`) | `ValueListenableBuilder` (unchanged) |
+| `GetxController` with `.obs` fields (`UpdatesController`) | `Obx` |
+| `GetxController` using coarse `update()` (`CreateProjectController`) | `GetBuilder<T>` |
+
+BLE `ValueNotifier`s are deliberately **not** converted to `.obs`; keep using
+`ValueListenableBuilder` for them.
 
 ## Typical navigation cleanup
 

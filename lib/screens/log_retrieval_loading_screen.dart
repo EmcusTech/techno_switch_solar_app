@@ -14,8 +14,6 @@ import 'package:techno_switch_solar_app/utils/ble_name_utils.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
-final BleManager ble = Get.find<BleManager>();
-
 class LogRetrievalLoadingScreen extends StatefulWidget {
   final dynamic selectedDevice;
   final ScanType scanType;
@@ -41,7 +39,7 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen> {
   bool _hasNavigatedToEventLog = false;
   bool _allowExit = false;
 
-  final BleManager _bleManager = Get.find<BleManager>();
+  final BleManager ble = Get.find<BleManager>();
 
   @override
   void initState() {
@@ -247,7 +245,7 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen> {
       await _sendStopControlCommand();
 
       if (widget.isLiveEvent == true) {
-        await _bleManager.disconnectConnectedDevice();
+        await ble.disconnectConnectedDevice();
       }
     }
   }

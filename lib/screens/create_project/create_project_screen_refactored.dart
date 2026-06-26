@@ -147,9 +147,8 @@ class _CreateSiteScreenRefactoredState
   void initState() {
     super.initState();
     BleSessionIdlePolicy.suppressIdleDisconnect.value = true;
-    _controller = CreateProjectController();
+    _controller = Get.put(CreateProjectController());
     _pageController = PageController();
-    _controller.addListener(_onControllerUpdate);
     _panelRefreshNotifiers = PanelConfigRefreshNotifiers(
       relay: _relayRefresh,
       input: _inputRefresh,
@@ -163,17 +162,10 @@ class _CreateSiteScreenRefactoredState
     );
   }
 
-  void _onControllerUpdate() {
-    if (mounted) {
-      setState(() {});
-    }
-  }
-
   @override
   void dispose() {
     BleSessionIdlePolicy.suppressIdleDisconnect.value = false;
-    _controller.removeListener(_onControllerUpdate);
-    _controller.dispose();
+    Get.delete<CreateProjectController>();
     _pageController.dispose();
     _relayRefresh.dispose();
     _inputRefresh.dispose();
@@ -810,7 +802,9 @@ class _CreateSiteScreenRefactoredState
 
   @override
   Widget build(BuildContext context) {
-    return PopScope(
+    return GetBuilder<CreateProjectController>(
+      init: _controller,
+      builder: (controller) => PopScope(
       canPop: !_bleController.isConnected,
       onPopInvokedWithResult: (didPop, result) async {
         if (didPop) return;
@@ -865,6 +859,7 @@ class _CreateSiteScreenRefactoredState
           ),
         ),
       ),
+    ),
     );
   }
 

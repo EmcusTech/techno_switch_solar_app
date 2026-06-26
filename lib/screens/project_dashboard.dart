@@ -8,10 +8,10 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
+import 'package:techno_switch_solar_app/bindings/firmware_binding.dart';
 import 'package:techno_switch_solar_app/controllers/updates_controller.dart';
 import 'package:techno_switch_solar_app/screens/log_history_screen.dart';
-import 'package:techno_switch_solar_app/screens/log_retrieval_loading_screen.dart'
-    hide ble;
+import 'package:techno_switch_solar_app/screens/log_retrieval_loading_screen.dart';
 import 'package:techno_switch_solar_app/screens/scanning_screen.dart';
 import 'package:techno_switch_solar_app/screens/settings_screen.dart';
 import 'package:techno_switch_solar_app/screens/test_mode_screen.dart';
@@ -54,8 +54,6 @@ import 'package:techno_switch_solar_app/widgets/bootloader_connect_flow.dart';
 import 'package:techno_switch_solar_app/widgets/ble_connecting_dialog.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
-
-final BleManager ble = Get.find<BleManager>();
 
 class ProjectDashboardScreen extends StatefulWidget {
   final String panelVersionNo;
@@ -258,6 +256,7 @@ class _ProjectDashboardContent extends StatefulWidget {
 }
 
 class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
+  final BleManager ble = Get.find<BleManager>();
   bool _isUnexpectedDisconnectDialogOpen = false;
   final ValueNotifier<bool> _navigatingToDeviceConnecting = ValueNotifier<bool>(
     false,
@@ -2756,11 +2755,9 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
               _peripheralTile(
                 peripheralName: StringConstants.fwUpgrade,
                 iconPath: 'assets/svgs/firmware_icon.svg',
-                onTap: () {
-                  if (!Get.isRegistered<UpdatesController>()) {
-                    Get.put(UpdatesController());
-                  }
-                  showModalBottomSheet(
+                onTap: () async {
+                  FirmwareBinding().dependencies();
+                  await showModalBottomSheet(
                     context: context,
                     isScrollControlled: true,
                     backgroundColor: ColorConstants.transparent,
@@ -2771,6 +2768,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                           connectedDevice: widget.selectedDevice,
                         ),
                   );
+                  Get.delete<UpdatesController>();
                 },
               ),
               _peripheralTile(
