@@ -3,10 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:techno_switch_solar_app/ble/ble_manager.dart';
-import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
-import 'package:techno_switch_solar_app/models/access_code_mode_model.dart';
-import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
+import 'package:techno_switch_solar_app/controllers/peripheral/access_code_controller.dart';
 import 'package:techno_switch_solar_app/widgets/app_styled_dialogs.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/widgets/dropdown.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
@@ -31,124 +28,23 @@ class AccessCodesBottomSheet extends StatefulWidget {
 }
 
 class _AccessCodesBottomSheetState extends State<AccessCodesBottomSheet> {
-  BleManager? manager;
-  int selectedCode = 1;
-  bool isAccessCodeEnabled = true;
-
-  final List<String> accessLevelNames = [
-    StringConstants.notUsed,
-    StringConstants.untrainedUser,
-    StringConstants.authorisedUser,
-    StringConstants.commissioning,
-  ];
-
-  final TextEditingController accessLevelController = TextEditingController();
-  final TextEditingController accessCodeController = TextEditingController();
-
-  String accessLevelName = StringConstants.notUsed;
-
-  void _onListChanged() {
-    _loadFromManager();
-  }
+  late final AccessCodeController controller;
 
   @override
   void initState() {
     super.initState();
-    widget.refreshTrigger.addListener(_onRefreshTriggered);
-    _loadData();
+    controller = Get.put(
+      AccessCodeController(
+        deviceId: widget.deviceId,
+        refreshTrigger: widget.refreshTrigger,
+      ),
+    );
   }
 
   @override
   void dispose() {
-    widget.refreshTrigger.removeListener(_onRefreshTriggered);
-    manager?.accessCodeSetupDataList.removeListener(_onListChanged);
-    accessLevelController.dispose();
-    accessCodeController.dispose();
+    Get.delete<AccessCodeController>();
     super.dispose();
-  }
-
-  void _onRefreshTriggered() {
-    _loadFromManager();
-  }
-
-  Future<void> _loadData() async {
-    if (Get.isRegistered<BleLogController>()) {
-      manager = Get.find<BleLogController>().bleManager;
-      manager?.accessCodeSetupDataList.addListener(_onListChanged);
-    }
-    final cached = await PeripheralSetupCache.loadAccessCodeSetup(
-      widget.deviceId,
-    );
-    if (cached != null && cached.isNotEmpty) {
-      final list = cached.map((e) => AccessCodeSetupData.fromJson(e)).toList();
-      while (list.length < 8) {
-        list.add(const AccessCodeSetupData());
-      }
-      manager?.accessCodeSetupDataList.value = list;
-    }
-    _loadFromManager();
-  }
-
-  void _loadFromManager() {
-    if (!Get.isRegistered<BleLogController>()) return;
-    manager = Get.find<BleLogController>().bleManager;
-
-    final index = selectedCode - 1;
-    if (index < 0 || index >= manager!.accessCodeSetupDataList.value.length) {
-      return;
-    }
-
-    final data = manager!.accessCodeSetupDataList.value[index];
-
-    if (mounted) {
-      setState(() {
-        accessLevelController.text = data.accessLevel.toString();
-        accessLevelName =
-            accessLevelNames.contains(data.accessLevelName)
-                ? data.accessLevelName
-                : (data.accessLevel >= 0 &&
-                    data.accessLevel < accessLevelNames.length)
-                ? accessLevelNames[data.accessLevel]
-                : accessLevelNames.first;
-        accessCodeController.text = data.accessCode;
-      });
-    }
-  }
-
-  bool _isValidAccessCode() {
-    if (accessLevelName == accessLevelNames.first) {
-      return true;
-    }
-    final code = int.tryParse(accessCodeController.text);
-    if (code == null || code < 1 || code > 99999999) return false;
-    return true;
-  }
-
-  int? _findDuplicateAccessCodeSlot() {
-    if (manager == null) return null;
-    if (accessLevelName == accessLevelNames.first) return null;
-
-    final enteredCode = int.tryParse(accessCodeController.text.trim());
-    if (enteredCode == null) return null;
-
-    final currentIndex = selectedCode - 1;
-    final list = manager!.accessCodeSetupDataList.value;
-
-    for (var i = 0; i < list.length; i++) {
-      if (i == currentIndex) continue;
-
-      final other = list[i];
-      if (other.accessLevelName == accessLevelNames.first) continue;
-
-      final otherCode = int.tryParse(other.accessCode.trim());
-      if (otherCode == null) continue;
-
-      if (otherCode == enteredCode) {
-        return i + 1;
-      }
-    }
-
-    return null;
   }
 
   void _showDuplicateAccessCodeDialog(int existingSlot) {
@@ -161,196 +57,147 @@ class _AccessCodesBottomSheetState extends State<AccessCodesBottomSheet> {
     );
   }
 
-  void _saveCurrentToManager() {
-    if (manager == null) return;
-    final index = selectedCode - 1;
-    if (index < 0 || index >= manager!.accessCodeSetupDataList.value.length)
-      return;
-
-    final existing = manager!.accessCodeSetupDataList.value[index];
-    final levelIndex = accessLevelNames.indexOf(accessLevelName);
-    final level = levelIndex >= 0 ? levelIndex : existing.accessLevel;
-
-    final updated = existing.copyWith(
-      accessLevel: level,
-      accessLevelName: accessLevelName,
-      accessCode: accessCodeController.text,
-    );
-
-    final list = List<AccessCodeSetupData>.from(
-      manager!.accessCodeSetupDataList.value,
-    );
-    list[index] = updated;
-    manager!.accessCodeSetupDataList.value = list;
-  }
-
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
 
-    return SafeArea(
-      child: ConstrainedBox(
-        constraints: BoxConstraints(maxHeight: screenHeight * 0.80),
-        child: Container(
-          decoration: const BoxDecoration(
-            color: ColorConstants.primaryVariant,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(50)),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.only(top: 8.0),
+    return GetBuilder<AccessCodeController>(
+      init: controller,
+      builder: (c) {
+        return SafeArea(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxHeight: screenHeight * 0.80),
             child: Container(
-              clipBehavior: Clip.hardEdge,
               decoration: const BoxDecoration(
-                color: ColorConstants.white,
+                color: ColorConstants.primaryVariant,
                 borderRadius: BorderRadius.vertical(top: Radius.circular(50)),
               ),
-              // padding: EdgeInsets.only(
-              //   left: 24,
-              //   right: 24,
-              //   top: 16,
-              //   bottom: MediaQuery.of(context).viewInsets.bottom + 16,
-              // ),
-              child: Stack(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              child: Padding(
+                padding: const EdgeInsets.only(top: 8.0),
+                child: Container(
+                  clipBehavior: Clip.hardEdge,
+                  decoration: const BoxDecoration(
+                    color: ColorConstants.white,
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(50)),
+                  ),
+                  child: Stack(
                     children: [
-                      SvgPicture.asset('assets/svgs/bottomsheet_logo.svg'),
-                      Padding(
-                        padding: const EdgeInsets.only(right: 32.0),
-                        child: GestureDetector(
-                          onTap: () => Navigator.pop(context),
-                          child: Container(
-                            height: 38,
-                            width: 38,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: ColorConstants.blackMaterial.withValues(alpha: 0.06),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          SvgPicture.asset('assets/svgs/bottomsheet_logo.svg'),
+                          Padding(
+                            padding: const EdgeInsets.only(right: 32.0),
+                            child: GestureDetector(
+                              onTap: () => Navigator.pop(context),
+                              child: Container(
+                                height: 38,
+                                width: 38,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: ColorConstants.blackMaterial
+                                      .withValues(alpha: 0.06),
+                                ),
+                                child: const Icon(Icons.close, size: 20),
+                              ),
                             ),
-                            child: const Icon(Icons.close, size: 20),
                           ),
+                        ],
+                      ),
+                      Padding(
+                        padding: EdgeInsets.only(
+                          left: 24,
+                          right: 24,
+                          top: 16,
+                          bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+                        ),
+                        child: Column(
+                          children: [
+                            _dragHandle(),
+                            _title(StringConstants.accessMode),
+                            Expanded(
+                              child: SingleChildScrollView(
+                                physics: const BouncingScrollPhysics(),
+                                keyboardDismissBehavior:
+                                    ScrollViewKeyboardDismissBehavior.onDrag,
+                                child: Column(
+                                  children: [
+                                    _selector(),
+                                    const SizedBox(height: 16),
+                                    _sectionContainer(
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 16,
+                                          vertical: 16,
+                                        ),
+                                        child: Column(
+                                          children: [
+                                            _disabledField(
+                                              StringConstants.accessCodeNo2,
+                                              controller.selectedCode.toString(),
+                                            ),
+                                            _textField(
+                                              label: StringConstants.accessLevel4,
+                                              controller:
+                                                  controller.accessLevelController,
+                                              enabled: false,
+                                            ),
+                                            DropdownWidget(
+                                              label:
+                                                  StringConstants.accessLevelName2,
+                                              value: controller.accessLevelName,
+                                              items: controller.accessLevelNames,
+                                              onChanged: (v) =>
+                                                  controller.setAccessLevelName(v),
+                                            ),
+                                            _textField(
+                                              label: 'Access Code',
+                                              controller:
+                                                  controller.accessCodeController,
+                                              isNumeric: true,
+                                              maxLength: 8,
+                                              onChanged: () =>
+                                                  controller.onAccessCodeChanged(),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            Row(
+                              children: [
+                                Expanded(child: _downloadButton()),
+                                const SizedBox(width: 12),
+                                Expanded(child: _applyButton()),
+                              ],
+                            ),
+                          ],
                         ),
                       ),
                     ],
                   ),
-                  Padding(
-                    padding: EdgeInsets.only(
-                      left: 24,
-                      right: 24,
-                      top: 16,
-                      bottom: MediaQuery.of(context).viewInsets.bottom + 16,
-                    ),
-                    child: Column(
-                      children: [
-                        _dragHandle(),
-
-                        _title(StringConstants.accessMode),
-
-                        Expanded(
-                          child: SingleChildScrollView(
-                            physics: const BouncingScrollPhysics(),
-                            keyboardDismissBehavior:
-                                ScrollViewKeyboardDismissBehavior.onDrag,
-                            child: Column(
-                              children: [
-                                _selector(),
-
-                                const SizedBox(height: 16),
-
-                                _sectionContainer(
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 16,
-                                      vertical: 16,
-                                    ),
-                                    child: Column(
-                                      children: [
-                                        _disabledField(
-                                          StringConstants.accessCodeNo2,
-                                          selectedCode.toString(),
-                                        ),
-
-                                        _textField(
-                                          label: StringConstants.accessLevel4,
-                                          controller: accessLevelController,
-                                          enabled: false,
-                                        ),
-
-                                        DropdownWidget(
-                                          label: StringConstants.accessLevelName2,
-                                          value: accessLevelName,
-                                          items: accessLevelNames,
-                                          onChanged: (v) {
-                                            setState(() {
-                                              accessLevelName = v;
-
-                                              int index = accessLevelNames
-                                                  .indexOf(v);
-
-                                              accessLevelController.text =
-                                                  index.toString();
-
-                                              if (v == accessLevelNames.first) {
-                                                isAccessCodeEnabled = false;
-                                                accessCodeController.clear();
-                                              } else {
-                                                isAccessCodeEnabled = true;
-                                              }
-                                            });
-                                          },
-                                        ),
-
-                                        _textField(
-                                          label: 'Access Code',
-                                          controller: accessCodeController,
-                                          isNumeric: true,
-                                          maxLength: 8,
-                                          onChanged: () => setState(() {}),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-
-                        const SizedBox(height: 12),
-
-                        Row(
-                          children: [
-                            Expanded(child: _downloadButton()),
-                            const SizedBox(width: 12),
-                            Expanded(child: _applyButton()),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
   Widget _selector() {
     return DropdownWidget(
       label: 'Select Access Code',
-      value: 'Access Code $selectedCode',
+      value: 'Access Code ${controller.selectedCode}',
       items: List.generate(8, (i) => 'Access Code ${i + 1}'),
       dropdownListHeight: 340,
       onChanged: (v) {
         final number = int.parse(v.split(' ').last);
-
-        setState(() {
-          _saveCurrentToManager();
-          selectedCode = number;
-          _loadFromManager();
-        });
+        controller.selectCode(number);
       },
     );
   }
@@ -532,17 +379,18 @@ class _AccessCodesBottomSheetState extends State<AccessCodesBottomSheet> {
           ),
         ),
         onPressed:
-            _isValidAccessCode()
+            controller.computeIsValid()
                 ? () {
                   FocusManager.instance.primaryFocus?.unfocus();
 
-                  final duplicateSlot = _findDuplicateAccessCodeSlot();
+                  final duplicateSlot =
+                      controller.findDuplicateAccessCodeSlot();
                   if (duplicateSlot != null) {
                     _showDuplicateAccessCodeDialog(duplicateSlot);
                     return;
                   }
 
-                  _saveCurrentToManager();
+                  controller.pushToManager();
                   widget.onApply();
                 }
                 : null,

@@ -3,10 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:techno_switch_solar_app/ble/ble_manager.dart';
-import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
-import 'package:techno_switch_solar_app/panel_config/panel_config_cache_sync.dart';
-import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
+import 'package:techno_switch_solar_app/controllers/peripheral/service_due_controller.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/widgets/dropdown.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
@@ -32,17 +29,13 @@ class ServiceDueBottomSheet extends StatefulWidget {
 }
 
 class ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
-  BleManager? manager;
-
-  final ServiceDueConfig config = ServiceDueConfig();
+  late final ServiceDueController controller;
 
   final FocusNode yearFocusNode = FocusNode();
   final FocusNode monthFocusNode = FocusNode();
   final FocusNode dayFocusNode = FocusNode();
   final FocusNode hourFocusNode = FocusNode();
   final FocusNode minuteFocusNode = FocusNode();
-
-  final List<String> reminderOptions = [StringConstants.off, StringConstants.on];
 
   @override
   void initState() {
@@ -78,153 +71,122 @@ class ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
         }
       });
     });
-    if (Get.isRegistered<BleLogController>()) {
-      manager = Get.find<BleLogController>().bleManager;
-    }
 
-    _loadData();
-    widget.refreshTrigger.addListener(_onRefreshTriggered);
+    controller = Get.put(
+      ServiceDueController(
+        deviceId: widget.deviceId,
+        refreshTrigger: widget.refreshTrigger,
+      ),
+    );
   }
 
   @override
   void dispose() {
-    widget.refreshTrigger.removeListener(_onRefreshTriggered);
+    yearFocusNode.dispose();
+    monthFocusNode.dispose();
+    dayFocusNode.dispose();
+    hourFocusNode.dispose();
+    minuteFocusNode.dispose();
+    Get.delete<ServiceDueController>();
     super.dispose();
   }
 
-  void _onRefreshTriggered() {
-    _loadFromManager();
-  }
-
-  Future<void> _loadData() async {
-    final cached = await PeripheralSetupCache.loadServiceDueSetup(
-      widget.deviceId,
-    );
-    if (cached != null) {
-      _applyCachedData(cached);
-      if (mounted) setState(() {});
-      return;
-    }
-    _loadFromManager();
-  }
-
-  void _applyCachedData(Map<String, dynamic> data) {
-    config.yearController.text = (data['year'] as num?)?.toString() ?? '0';
-    config.monthController.text = (data['month'] as num?)?.toString() ?? '0';
-    config.dayController.text = (data['day'] as num?)?.toString() ?? '0';
-    config.hourController.text = (data['hour'] as num?)?.toString() ?? '0';
-    config.minuteController.text = (data['minute'] as num?)?.toString() ?? '0';
-    config.companyController.text = (data['company'] as String?) ?? '';
-    config.contactController.text = (data['contact'] as String?) ?? '';
-    config.reminder = (data['reminder'] as int?) == 1 ? StringConstants.on : StringConstants.off;
-  }
-
-  void _loadFromManager() {
-    if (manager == null) return;
-    config.yearController.text = manager!.serviceDueYear.value.toString();
-    config.monthController.text = manager!.serviceDueMonth.value.toString();
-    config.dayController.text = manager!.serviceDueDay.value.toString();
-    config.hourController.text = manager!.serviceDueHour.value.toString();
-    config.minuteController.text = manager!.serviceDueMinute.value.toString();
-    config.companyController.text = manager!.serviceDueCompany.value;
-    config.contactController.text = manager!.serviceDueContact.value;
-    config.reminder = manager!.serviceDueReminder.value == 0 ? StringConstants.off : StringConstants.on;
-    if (mounted) setState(() {});
-  }
+  /// Kept for the create-project wizard, which commits each embedded sheet via
+  /// its `GlobalKey`.
+  Future<bool> commitLocal() => controller.commitLocal();
 
   @override
   Widget build(BuildContext context) {
-    final scroll = SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
-      padding: EdgeInsets.only(
-        left: widget.embedInCreateFlow ? 0 : 0,
-        top: widget.embedInCreateFlow ? 0 : 16,
-        bottom: 16,
-      ),
-      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-      child: _formColumn(),
-    );
-
-    if (widget.embedInCreateFlow) {
-      return scroll;
-    }
-
-    final maxHeight = MediaQuery.of(context).size.height * 0.80;
-
-    return SafeArea(
-      child: ConstrainedBox(
-        constraints: BoxConstraints(maxHeight: maxHeight),
-        child: Container(
-          decoration: const BoxDecoration(
-            color: ColorConstants.primaryVariant,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(50)),
+    return GetBuilder<ServiceDueController>(
+      init: controller,
+      builder: (c) {
+        final scroll = SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          padding: EdgeInsets.only(
+            top: widget.embedInCreateFlow ? 0 : 16,
+            bottom: 16,
           ),
-          child: Padding(
-            padding: const EdgeInsets.only(top: 8.0),
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+          child: _formColumn(),
+        );
+
+        if (widget.embedInCreateFlow) {
+          return scroll;
+        }
+
+        final maxHeight = MediaQuery.of(context).size.height * 0.80;
+
+        return SafeArea(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxHeight: maxHeight),
             child: Container(
-              clipBehavior: Clip.hardEdge,
               decoration: const BoxDecoration(
-                color: ColorConstants.white,
+                color: ColorConstants.primaryVariant,
                 borderRadius: BorderRadius.vertical(top: Radius.circular(50)),
               ),
-              // padding: EdgeInsets.only(
-              //   left: 24,
-              //   right: 24,
-              //   top: 16,
-              //   bottom: MediaQuery.of(context).viewInsets.bottom + 16,
-              // ),
-              child: Stack(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              child: Padding(
+                padding: const EdgeInsets.only(top: 8.0),
+                child: Container(
+                  clipBehavior: Clip.hardEdge,
+                  decoration: const BoxDecoration(
+                    color: ColorConstants.white,
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(50)),
+                  ),
+                  child: Stack(
                     children: [
-                      SvgPicture.asset('assets/svgs/bottomsheet_logo.svg'),
-                      Padding(
-                        padding: const EdgeInsets.only(right: 32.0),
-                        child: GestureDetector(
-                          onTap: () => Navigator.pop(context),
-                          child: Container(
-                            height: 38,
-                            width: 38,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: ColorConstants.blackMaterial.withValues(alpha: 0.06),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          SvgPicture.asset('assets/svgs/bottomsheet_logo.svg'),
+                          Padding(
+                            padding: const EdgeInsets.only(right: 32.0),
+                            child: GestureDetector(
+                              onTap: () => Navigator.pop(context),
+                              child: Container(
+                                height: 38,
+                                width: 38,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: ColorConstants.blackMaterial
+                                      .withValues(alpha: 0.06),
+                                ),
+                                child: const Icon(Icons.close, size: 20),
+                              ),
                             ),
-                            child: const Icon(Icons.close, size: 20),
                           ),
+                        ],
+                      ),
+                      Padding(
+                        padding: EdgeInsets.only(
+                          left: 24,
+                          right: 24,
+                          top: 16,
+                          bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+                        ),
+                        child: Column(
+                          children: [
+                            _dragHandle(),
+                            _title(StringConstants.serviceDueMode),
+                            Expanded(child: scroll),
+                            const SizedBox(height: 12),
+                            Row(
+                              children: [
+                                Expanded(child: _downloadButton()),
+                                const SizedBox(width: 12),
+                                Expanded(child: _applyButton()),
+                              ],
+                            ),
+                          ],
                         ),
                       ),
                     ],
                   ),
-                  Padding(
-                    padding: EdgeInsets.only(
-                      left: 24,
-                      right: 24,
-                      top: 16,
-                      bottom: MediaQuery.of(context).viewInsets.bottom + 16,
-                    ),
-                    child: Column(
-                      children: [
-                        _dragHandle(),
-                        _title(StringConstants.serviceDueMode),
-                        Expanded(child: scroll),
-                        const SizedBox(height: 12),
-                        Row(
-                          children: [
-                            Expanded(child: _downloadButton()),
-                            const SizedBox(width: 12),
-                            Expanded(child: _applyButton()),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
@@ -291,7 +253,7 @@ class ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
 
   Widget _contactField({
     required String label,
-    required TextEditingController controller,
+    required TextEditingController fieldController,
   }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
@@ -301,12 +263,12 @@ class ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
           _label(label),
           const SizedBox(height: 6),
           TextField(
-            controller: controller,
+            controller: fieldController,
             keyboardType: TextInputType.phone,
             maxLength: 13,
             buildCounter: _relayStyleCounter,
             inputFormatters: [LengthLimitingTextInputFormatter(13)],
-            onChanged: (_) => setState(() {}),
+            onChanged: (_) => controller.onFieldChanged(),
             decoration: _inputDecoration(),
           ),
         ],
@@ -316,7 +278,7 @@ class ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
 
   Widget _textField({
     required String label,
-    required TextEditingController controller,
+    required TextEditingController fieldController,
   }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
@@ -326,40 +288,16 @@ class ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
           _label(label),
           const SizedBox(height: 6),
           TextField(
-            controller: controller,
+            controller: fieldController,
             maxLength: 13,
             buildCounter: _relayStyleCounter,
             inputFormatters: [LengthLimitingTextInputFormatter(13)],
-            onChanged: (_) => setState(() {}),
+            onChanged: (_) => controller.onFieldChanged(),
             decoration: _inputDecoration(),
           ),
         ],
       ),
     );
-  }
-
-  void _pushServiceDueToManager() {
-    final m = manager!;
-    m.serviceDueYear.value = int.parse(config.yearController.text);
-    m.serviceDueMonth.value = int.parse(config.monthController.text);
-    m.serviceDueDay.value = int.parse(config.dayController.text);
-    m.serviceDueHour.value = int.parse(config.hourController.text);
-    m.serviceDueMinute.value = int.parse(config.minuteController.text);
-    m.serviceDueCompany.value = config.companyController.text;
-    m.serviceDueContact.value = config.contactController.text;
-    m.serviceDueReminder.value = config.reminder == StringConstants.on ? 1 : 0;
-  }
-
-  Future<bool> commitLocal() async {
-    if (!_isValidDateTime() || manager == null) return false;
-    FocusManager.instance.primaryFocus?.unfocus();
-    _pushServiceDueToManager();
-    await PanelConfigCacheSync.saveServiceDue(
-      manager!,
-      widget.deviceId,
-      widget.refreshTrigger,
-    );
-    return true;
   }
 
   Widget _formColumn() {
@@ -382,7 +320,7 @@ class ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
           ),
         _numberField(
           label: 'Year',
-          controller: config.yearController,
+          fieldController: controller.config.yearController,
           min: 0,
           max: 9999,
           errorMessage: StringConstants.yearMustBeBetween2010And9999,
@@ -390,7 +328,7 @@ class ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
         ),
         _numberField(
           label: 'Month',
-          controller: config.monthController,
+          fieldController: controller.config.monthController,
           min: 1,
           max: 12,
           errorMessage: StringConstants.monthMustBeBetween1And12,
@@ -398,7 +336,7 @@ class ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
         ),
         _numberField(
           label: 'Day',
-          controller: config.dayController,
+          fieldController: controller.config.dayController,
           min: 1,
           max: 31,
           errorMessage: StringConstants.dayMustBeBetween1And31,
@@ -406,7 +344,7 @@ class ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
         ),
         _numberField(
           label: 'Hour',
-          controller: config.hourController,
+          fieldController: controller.config.hourController,
           min: 0,
           max: 23,
           errorMessage: StringConstants.hourMustBeBetween0And23,
@@ -414,91 +352,32 @@ class ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
         ),
         _numberField(
           label: 'Minute',
-          controller: config.minuteController,
+          fieldController: controller.config.minuteController,
           min: 0,
           max: 59,
           errorMessage: StringConstants.minuteMustBeBetween0And59,
           focusNode: minuteFocusNode,
         ),
-        _textField(label: 'Company', controller: config.companyController),
-        _contactField(label: StringConstants.contact, controller: config.contactController),
+        _textField(label: 'Company', fieldController: controller.config.companyController),
+        _contactField(
+          label: StringConstants.contact,
+          fieldController: controller.config.contactController,
+        ),
         DropdownWidget(
           label: StringConstants.reminder,
-          value: config.reminder,
-          items: reminderOptions,
-          onChanged: (v) {
-            setState(() {
-              config.reminder = v;
-            });
-          },
+          value: controller.config.reminder,
+          items: controller.reminderOptions,
+          onChanged: (v) => controller.setReminder(v),
         ),
       ],
     );
   }
 
-  bool _isValidDateTime() {
-    if (config.yearController.text.isEmpty ||
-        config.monthController.text.isEmpty ||
-        config.dayController.text.isEmpty ||
-        config.hourController.text.isEmpty ||
-        config.minuteController.text.isEmpty) {
-      return false;
-    }
-
-    final year = int.parse(config.yearController.text);
-    final month = int.parse(config.monthController.text);
-    final day = int.parse(config.dayController.text);
-    final hour = int.parse(config.hourController.text);
-    final minute = int.parse(config.minuteController.text);
-
-    if (year < 2010 || year > 9999) return false;
-    if (month < 1 || month > 12) return false;
-    if (day < 1 || day > 31) return false;
-    if (hour < 0 || hour > 23) return false;
-    if (minute < 0 || minute > 59) return false;
-
-    try {
-      final dt = DateTime(year, month, day, hour, minute);
-
-      if (dt.year != year || dt.month != month || dt.day != day) {
-        return false;
-      }
-
-      return true;
-    } catch (_) {
-      return false;
-    }
-  }
-
-  // bool _isValidCompany() {
-  //   final company = config.companyController.text.trim();
-  //   if (company.length > 13) return false;
-
-  //   return true;
-  // }
-
-  // bool _isValidContact() {
-  //   final contact = config.contactController.text.trim();
-
-  //   if (contact.isEmpty) return false;
-
-  //   // length check
-  //   if (contact.length > 13) return false;
-
-  //   // digits only (extra safety, even though formatter exists)
-  //   if (!RegExp(r'^\d+$').hasMatch(contact)) return false;
-
-  //   // // optional: Indian mobile logic
-  //   // if (!RegExp(rStringConstants.s69).hasMatch(contact)) return false;
-
-  //   return true;
-  // }
-
   // ───────────────── NUMBER FIELD ─────────────────
 
   Widget _numberField({
     required String label,
-    required TextEditingController controller,
+    required TextEditingController fieldController,
     required int min,
     required int max,
     String? errorMessage,
@@ -512,15 +391,15 @@ class ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
           _label(label),
           const SizedBox(height: 6),
           TextField(
-            controller: controller,
+            controller: fieldController,
             focusNode: focusNode,
             keyboardType: TextInputType.number,
             inputFormatters: [
               FilteringTextInputFormatter.digitsOnly,
-              LengthLimitingTextInputFormatter(4), // safe upper cap
+              LengthLimitingTextInputFormatter(4),
               RangeInputFormatter(min: min, max: max),
             ],
-            onChanged: (_) => setState(() {}),
+            onChanged: (_) => controller.onFieldChanged(),
             decoration: _inputDecoration(),
           ),
           const SizedBox(height: 4),
@@ -592,10 +471,10 @@ class ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
           ),
         ),
         onPressed:
-            (!_isValidDateTime())
+            (!controller.computeIsValid())
                 ? null
                 : () async {
-                  if (await commitLocal()) {
+                  if (await controller.commitLocal()) {
                     widget.onApply();
                   }
                 },
@@ -610,20 +489,6 @@ class ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
       ),
     );
   }
-}
-
-// ───────────────── MODEL ─────────────────
-
-class ServiceDueConfig {
-  String reminder = StringConstants.off;
-
-  final TextEditingController yearController = TextEditingController();
-  final TextEditingController monthController = TextEditingController();
-  final TextEditingController dayController = TextEditingController();
-  final TextEditingController hourController = TextEditingController();
-  final TextEditingController minuteController = TextEditingController();
-  final TextEditingController companyController = TextEditingController();
-  final TextEditingController contactController = TextEditingController();
 }
 
 // ───────────────── VALIDATION ─────────────────

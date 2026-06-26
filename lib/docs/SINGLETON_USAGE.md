@@ -95,6 +95,32 @@ Pick the builder by *what* state is changing:
 BLE `ValueNotifier`s are deliberately **not** converted to `.obs`; keep using
 `ValueListenableBuilder` for them.
 
+## Controller layer (UI/logic separation)
+
+Screens and bottom sheets should keep only layout + user-intent in their
+widgets; non-presentational logic lives in a `GetxController`.
+
+- **One controller per screen/sheet.** It owns state and orchestration and
+  talks to services/`BleManager`.
+- **Controllers hold NO `BuildContext`.** Navigation and dialogs stay in the
+  View. When a flow needs a mid-flow decision, the controller returns a
+  result/enum and the View performs the dialog/navigation (decision-result
+  pattern).
+- **Services are the I/O layer.** Controllers call `PanelService`,
+  `SiteService`, `FirmwareUpgradeService`, etc.; Views never instantiate them.
+- **Lifecycle.** Register via a `Bindings` class (or `Get.put` in `initState`)
+  and `Get.delete` when the screen/sheet closes. Dispose owned
+  `TextEditingController`s in `onClose()`.
+
+### Peripheral config sheets
+
+The relay/zone/input/sounder/general/etc. bottom sheets share one lifecycle
+(`load -> cache-hit applyCachedData / cache-miss loadFromManager`;
+`commit -> validate -> pushToManager -> save`). That skeleton lives in
+`PeripheralModeController` (`lib/controllers/peripheral/peripheral_mode_controller.dart`);
+each sheet's controller extends it and implements only the model-specific
+mapping. The sheet widget rebuilds via `GetBuilder<T>`.
+
 ## Typical navigation cleanup
 
 ```dart

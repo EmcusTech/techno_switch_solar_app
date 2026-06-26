@@ -3,10 +3,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:techno_switch_solar_app/ble/ble_manager.dart';
-import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
-import 'package:techno_switch_solar_app/utils/peripheral_test_mode_sync.dart';
-import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
+import 'package:techno_switch_solar_app/controllers/peripheral/test_mode_sounder_controller.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/widgets/dropdown.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
@@ -32,49 +29,34 @@ class TestModeSounderBottomSheet extends StatefulWidget {
 
 class _TestModeSounderBottomSheetState
     extends State<TestModeSounderBottomSheet> {
-  BleManager? manager;
+  late final TestModeSounderController controller;
 
-  final List<String> yesNoOptions = [StringConstants.no, StringConstants.yes];
+  List<String> get yesNoOptions => controller.yesNoOptions;
 
   @override
   void initState() {
     super.initState();
-    _loadData();
-    widget.refreshTrigger.addListener(_onRefreshTriggered);
+    controller = Get.put(
+      TestModeSounderController(
+        deviceId: widget.deviceId,
+        refreshTrigger: widget.refreshTrigger,
+      ),
+    );
   }
 
   @override
   void dispose() {
-    widget.refreshTrigger.removeListener(_onRefreshTriggered);
+    Get.delete<TestModeSounderController>();
     super.dispose();
-  }
-
-  void _onRefreshTriggered() {
-    _loadFromManager();
-  }
-
-  Future<void> _loadData() async {
-    if (Get.isRegistered<BleLogController>()) {
-      manager = Get.find<BleLogController>().bleManager;
-    }
-    final cached = await PeripheralSetupCache.loadSounderSetup(widget.deviceId);
-    if (cached != null && manager != null) {
-      applySounderMainTestFlagsFromCacheMap(manager!, cached);
-      if (mounted) setState(() {});
-      return;
-    }
-    _loadFromManager();
-  }
-
-  void _loadFromManager() {
-    if (!Get.isRegistered<BleLogController>()) return;
-    manager = Get.find<BleLogController>().bleManager;
-    if (mounted) setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
+    return GetBuilder<TestModeSounderController>(
+      init: controller,
+      builder: (c) {
+        final manager = c.manager;
+        return SafeArea(
       child: ConstrainedBox(
         constraints: BoxConstraints(
           maxHeight: MediaQuery.of(context).size.height * 0.55,
@@ -149,9 +131,9 @@ class _TestModeSounderBottomSheetState
                                       ? const SizedBox.shrink()
                                       : AnimatedBuilder(
                                         animation: Listenable.merge([
-                                          manager!.isSounderOneTest,
-                                          manager!.isSounderTwoTest,
-                                          manager!.isSounderThreeTest,
+                                          manager.isSounderOneTest,
+                                          manager.isSounderTwoTest,
+                                          manager.isSounderThreeTest,
                                         ]),
                                         builder: (context, _) {
                                           return Column(
@@ -159,14 +141,14 @@ class _TestModeSounderBottomSheetState
                                               DropdownWidget(
                                                 label: StringConstants.sounder1Test,
                                                 value:
-                                                    manager!
+                                                    manager
                                                             .isSounderOneTest
                                                             .value
                                                         ? StringConstants.yes
                                                         : StringConstants.no,
                                                 items: yesNoOptions,
                                                 onChanged:
-                                                    (v) => _onTestChanged(
+                                                    (v) => controller.onTestChanged(
                                                       0,
                                                       v == StringConstants.yes,
                                                     ),
@@ -174,14 +156,14 @@ class _TestModeSounderBottomSheetState
                                               DropdownWidget(
                                                 label: StringConstants.sounder2Test,
                                                 value:
-                                                    manager!
+                                                    manager
                                                             .isSounderTwoTest
                                                             .value
                                                         ? StringConstants.yes
                                                         : StringConstants.no,
                                                 items: yesNoOptions,
                                                 onChanged:
-                                                    (v) => _onTestChanged(
+                                                    (v) => controller.onTestChanged(
                                                       1,
                                                       v == StringConstants.yes,
                                                     ),
@@ -189,14 +171,14 @@ class _TestModeSounderBottomSheetState
                                               DropdownWidget(
                                                 label: StringConstants.sounder3Test,
                                                 value:
-                                                    manager!
+                                                    manager
                                                             .isSounderThreeTest
                                                             .value
                                                         ? StringConstants.yes
                                                         : StringConstants.no,
                                                 items: yesNoOptions,
                                                 onChanged:
-                                                    (v) => _onTestChanged(
+                                                    (v) => controller.onTestChanged(
                                                       2,
                                                       v == StringConstants.yes,
                                                     ),
@@ -226,13 +208,8 @@ class _TestModeSounderBottomSheetState
         ),
       ),
     );
-  }
-
-  void _onTestChanged(int index, bool test) {
-    final m = manager;
-    if (m == null) return;
-    setSounderMainTestOnManager(m, index, test);
-    if (test) setSounderMainEnabledOnManager(m, index, true);
+      },
+    );
   }
 
   Widget _downloadButton() {
@@ -270,10 +247,10 @@ class _TestModeSounderBottomSheetState
           ),
         ),
         onPressed:
-            manager != null
+            controller.manager != null
                 ? () {
                   FocusManager.instance.primaryFocus?.unfocus();
-                  syncSounderMainOutputModeHexFromBleManager(manager!);
+                  controller.applyTest();
                   widget.onApply();
                 }
                 : null,

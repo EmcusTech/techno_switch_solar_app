@@ -3,10 +3,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:techno_switch_solar_app/ble/ble_manager.dart';
-import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
-import 'package:techno_switch_solar_app/utils/peripheral_test_mode_sync.dart';
-import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
+import 'package:techno_switch_solar_app/controllers/peripheral/test_mode_relay_controller.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/widgets/dropdown.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
@@ -31,49 +28,34 @@ class TestModeRelayBottomSheet extends StatefulWidget {
 }
 
 class _TestModeRelayBottomSheetState extends State<TestModeRelayBottomSheet> {
-  BleManager? manager;
+  late final TestModeRelayController controller;
 
-  final List<String> yesNoOptions = [StringConstants.no, StringConstants.yes];
+  List<String> get yesNoOptions => controller.yesNoOptions;
 
   @override
   void initState() {
     super.initState();
-    _loadData();
-    widget.refreshTrigger.addListener(_onRefreshTriggered);
+    controller = Get.put(
+      TestModeRelayController(
+        deviceId: widget.deviceId,
+        refreshTrigger: widget.refreshTrigger,
+      ),
+    );
   }
 
   @override
   void dispose() {
-    widget.refreshTrigger.removeListener(_onRefreshTriggered);
+    Get.delete<TestModeRelayController>();
     super.dispose();
-  }
-
-  void _onRefreshTriggered() {
-    _loadFromManager();
-  }
-
-  Future<void> _loadData() async {
-    if (Get.isRegistered<BleLogController>()) {
-      manager = Get.find<BleLogController>().bleManager;
-    }
-    final cached = await PeripheralSetupCache.loadRelaySetup(widget.deviceId);
-    if (cached != null && manager != null) {
-      applyRelayTestFlagsFromCacheMap(manager!, cached);
-      if (mounted) setState(() {});
-      return;
-    }
-    _loadFromManager();
-  }
-
-  void _loadFromManager() {
-    if (!Get.isRegistered<BleLogController>()) return;
-    manager = Get.find<BleLogController>().bleManager;
-    if (mounted) setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
+    return GetBuilder<TestModeRelayController>(
+      init: controller,
+      builder: (c) {
+        final manager = c.manager;
+        return SafeArea(
       child: ConstrainedBox(
         constraints: BoxConstraints(
           maxHeight: MediaQuery.of(context).size.height * 0.55,
@@ -148,9 +130,9 @@ class _TestModeRelayBottomSheetState extends State<TestModeRelayBottomSheet> {
                                       ? const SizedBox.shrink()
                                       : AnimatedBuilder(
                                         animation: Listenable.merge([
-                                          manager!.isRelayOneSetupTest,
-                                          manager!.isRelayTwoSetupTest,
-                                          manager!.isRelayThreeSetupTest,
+                                          manager.isRelayOneSetupTest,
+                                          manager.isRelayTwoSetupTest,
+                                          manager.isRelayThreeSetupTest,
                                         ]),
                                         builder: (context, _) {
                                           return Column(
@@ -158,14 +140,14 @@ class _TestModeRelayBottomSheetState extends State<TestModeRelayBottomSheet> {
                                               DropdownWidget(
                                                 label: StringConstants.relay1Test,
                                                 value:
-                                                    manager!
+                                                    manager
                                                             .isRelayOneSetupTest
                                                             .value
                                                         ? StringConstants.yes
                                                         : StringConstants.no,
                                                 items: yesNoOptions,
                                                 onChanged:
-                                                    (v) => _onTestChanged(
+                                                    (v) => controller.onTestChanged(
                                                       0,
                                                       v == StringConstants.yes,
                                                     ),
@@ -173,14 +155,14 @@ class _TestModeRelayBottomSheetState extends State<TestModeRelayBottomSheet> {
                                               DropdownWidget(
                                                 label: StringConstants.relay2Test,
                                                 value:
-                                                    manager!
+                                                    manager
                                                             .isRelayTwoSetupTest
                                                             .value
                                                         ? StringConstants.yes
                                                         : StringConstants.no,
                                                 items: yesNoOptions,
                                                 onChanged:
-                                                    (v) => _onTestChanged(
+                                                    (v) => controller.onTestChanged(
                                                       1,
                                                       v == StringConstants.yes,
                                                     ),
@@ -188,14 +170,14 @@ class _TestModeRelayBottomSheetState extends State<TestModeRelayBottomSheet> {
                                               DropdownWidget(
                                                 label: StringConstants.relay3Test,
                                                 value:
-                                                    manager!
+                                                    manager
                                                             .isRelayThreeSetupTest
                                                             .value
                                                         ? StringConstants.yes
                                                         : StringConstants.no,
                                                 items: yesNoOptions,
                                                 onChanged:
-                                                    (v) => _onTestChanged(
+                                                    (v) => controller.onTestChanged(
                                                       2,
                                                       v == StringConstants.yes,
                                                     ),
@@ -225,13 +207,8 @@ class _TestModeRelayBottomSheetState extends State<TestModeRelayBottomSheet> {
         ),
       ),
     );
-  }
-
-  void _onTestChanged(int index, bool test) {
-    final m = manager;
-    if (m == null) return;
-    setRelayTestOnManager(m, index, test);
-    if (test) setRelayEnabledOnManager(m, index, true);
+      },
+    );
   }
 
   Widget _downloadButton() {
@@ -269,10 +246,10 @@ class _TestModeRelayBottomSheetState extends State<TestModeRelayBottomSheet> {
           ),
         ),
         onPressed:
-            manager != null
+            controller.manager != null
                 ? () {
                   FocusManager.instance.primaryFocus?.unfocus();
-                  syncRelayOutputModeHexFromBleManager(manager!);
+                  controller.applyTest();
                   widget.onApply();
                 }
                 : null,

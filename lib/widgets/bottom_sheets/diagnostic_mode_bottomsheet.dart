@@ -3,10 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/ble/ble_process.dart';
-import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
-import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
+import 'package:techno_switch_solar_app/controllers/peripheral/diagnostic_info_controller.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/widgets/diagnostic_voltage_tile.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
@@ -145,59 +143,41 @@ class _DiagnosticInfoBottomSheetState extends State<DiagnosticInfoBottomSheet> {
   static const Color _brandRed = ColorConstants.primary;
   static const Color _border = ColorConstants.borderMuted;
   final ScrollController scrollController = ScrollController();
-  BleManager? manager;
+  late final DiagnosticInfoController controller;
+
+  /// Diagnostic has no external refresh trigger; the base controller still
+  /// expects one, so the View owns a throwaway notifier.
+  final ValueNotifier<int> _refreshTrigger = ValueNotifier<int>(0);
 
   @override
   void initState() {
     super.initState();
-    if (Get.isRegistered<BleLogController>()) {
-      manager = Get.find<BleLogController>().bleManager;
-    }
-    _loadData();
-  }
-
-  Future<void> _loadData() async {
-    if (manager == null) return;
-    final cached = await PeripheralSetupCache.loadDiagnosticSetup(
-      widget.deviceId,
+    controller = Get.put(
+      DiagnosticInfoController(
+        deviceId: widget.deviceId,
+        refreshTrigger: _refreshTrigger,
+      ),
     );
-    if (cached != null) {
-      _applyCachedData(cached);
-    }
   }
 
-  void _applyCachedData(Map<String, dynamic> data) {
-    if (manager == null) return;
-    final process = manager!.bleProcess;
-    process.sounderOneAdcValue.value =
-        (data[StringConstants.sounder1] as num?)?.toDouble() ?? 0;
-    process.sounderTwoAdcValue.value =
-        (data[StringConstants.sounder2] as num?)?.toDouble() ?? 0;
-    process.sounderThreeAdcValue.value =
-        (data[StringConstants.sounder3] as num?)?.toDouble() ?? 0;
-    process.dischargeAdcValue.value =
-        (data['discharge'] as num?)?.toDouble() ?? 0;
-    process.vauxAdcValue.value = (data['vaux'] as num?)?.toDouble() ?? 0;
-    process.vinAdcValue.value = (data['vin'] as num?)?.toDouble() ?? 0;
-    process.progInputAdcValue.value =
-        (data[StringConstants.proginput] as num?)?.toDouble() ?? 0;
-    process.holdInputAdcValue.value =
-        (data['holdInput'] as num?)?.toDouble() ?? 0;
-    process.zone1AdcValue.value = (data[StringConstants.zone12] as num?)?.toDouble() ?? 0;
-    process.zone2AdcValue.value = (data['zone2'] as num?)?.toDouble() ?? 0;
-    process.zone3AdcValue.value = (data['zone3'] as num?)?.toDouble() ?? 0;
-    process.earthAdcValue.value = (data['earth'] as num?)?.toDouble() ?? 0;
+  @override
+  void dispose() {
+    scrollController.dispose();
+    Get.delete<DiagnosticInfoController>();
+    _refreshTrigger.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
     final maxHeight = screenHeight * 0.75;
+    final manager = controller.manager;
     if (manager == null) {
       return const SizedBox.shrink();
     }
 
-    final p = manager!.bleProcess;
+    final p = manager.bleProcess;
 
     return SafeArea(
       child: AnimatedSize(
