@@ -640,13 +640,7 @@ class BleProcess {
 
     bleManager.u8RxPktCnt = rx.payload[4];
 
-    Logger(
-      "Rx pkt count: $bleManager.u8RxPktCnt (STATE: ${bleManager.otaProcessState.name}",
-      type: LogType.ble,
-    );
-
     if (rx.payload[3] == 0x03) {
-      Logger(StringConstants.nackPacket, type: LogType.ble);
       isOtaCompleted = true;
       processNextOtaFrame = false;
       bleManager.otaProcessState = OtaProcessState.notInUse;
@@ -659,7 +653,6 @@ class BleProcess {
         rx.payload[12] == 0x02 &&
         rx.payload[13] == 0x0A &&
         !isNetworkPacketProcess.value) {
-      Logger(StringConstants.wrongPassword, type: LogType.ble);
       clearSessionAccessCode();
       resetProcessState();
       processDesc.value = StringConstants.wrongPassword;

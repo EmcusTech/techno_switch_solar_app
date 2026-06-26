@@ -83,24 +83,3 @@ class GeneralEquipmentModeCodec {
     return decode(value);
   }
 }
-
-void main() {
-  print("========= GENERAL EQUIPMENT MODE =========\n");
-
-  final config = GeneralEquipmentModeConfig(
-    equipmentEnable: EquipmentEnable.enabled,
-    equipmentMode: EquipmentMode.test,
-    sounderDelay: SounderDelay.enabled,
-  );
-
-  final hex = GeneralEquipmentModeCodec.encodeHex(config);
-
-  print(config);
-  print("Generated HEX → $hex\n");
-
-  print("========= DECODE TEST =========\n");
-
-  final decoded = GeneralEquipmentModeCodec.fromHex(hex);
-
-  print(decoded);
-}

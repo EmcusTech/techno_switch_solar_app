@@ -46,7 +46,6 @@ class _CommonNumericKeypadTileWidgetState
     return GestureDetector(
       onTapUp: (details) async {
         widget.onTap?.call();
-        print("tapped up : $details");
         await Future.delayed(Duration(milliseconds: 35), () {
           setState(() {
             isPressed = false;
@@ -54,13 +53,11 @@ class _CommonNumericKeypadTileWidgetState
         });
       },
       onTapDown: (details) async {
-        print("tapped down : $details");
         setState(() {
           isPressed = true;
         });
       },
       onTapCancel: () {
-        print("tapped cancelled");
         setState(() {
           isPressed = false;
         });

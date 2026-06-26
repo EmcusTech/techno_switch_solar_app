@@ -1470,8 +1470,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 _selectedDevice.id,
               );
           await _saveAllPeripheralCachesFromBle();
-        } catch (e, st) {
-          debugPrint('$e\n$st');
+        } catch (e, _) {
           _configLogCompareResult.value = ConfigCompareResult.withError(
             e is TimeoutException
                 ? 'Operation timed out. Stay close to the device and try again.'

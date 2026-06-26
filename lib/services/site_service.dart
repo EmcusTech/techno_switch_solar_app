@@ -1,3 +1,5 @@
+import 'package:techno_switch_solar_app/utils/logger.dart';
+
 import '../models/site_model.dart';
 import '../models/log_model.dart';
 import '../models/panel_model.dart';
@@ -107,12 +109,8 @@ class SiteService {
 
     if (siteId != null && logs.isNotEmpty) {
       try {
-        print(
-          'DEBUG: Creating log retrieval session for siteId: $siteId, logCount: ${logs.length}',
-        );
         final site = await getSiteById(siteId);
         if (site != null) {
-          print('DEBUG: Site found: ${site.siteName}');
           retrievalSession = await _logRetrievalService
               .createLogRetrievalSession(
                 siteId: siteId,
@@ -120,18 +118,15 @@ class SiteService {
                 logs: logs,
               );
           retrievalTimestamp = retrievalSession.retrievalDate;
-          print(
-            'DEBUG: Log retrieval session created successfully: ${retrievalSession.sessionName}',
-          );
         } else {
-          print('DEBUG: ERROR - Site not found for siteId: $siteId');
+          Logger('DEBUG: ERROR - Site not found for siteId: $siteId');
         }
       } catch (e, stackTrace) {
-        print('DEBUG: ERROR creating log retrieval session: $e');
-        print('DEBUG: Stack trace: $stackTrace');
+        Logger('DEBUG: ERROR creating log retrieval session: $e');
+        Logger('DEBUG: Stack trace: $stackTrace');
       }
     } else {
-      print(
+      Logger(
         'DEBUG: Skipping log retrieval session creation - siteId: $siteId, logs.isEmpty: ${logs.isEmpty}',
       );
     }

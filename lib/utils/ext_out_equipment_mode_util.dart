@@ -62,22 +62,3 @@ class ExtZoneEquipmentModeCodec {
     return decode(value);
   }
 }
-
-void main() {
-  print("========= EXT ZONE EQUIPMENT MODE =========\n");
-
-  final config = ExtZoneEquipmentModeConfig(
-    zoneEnable: ExtZoneEquipmentEnable.enabled,
-    zoneMode: ExtZoneEquipmentMode.normal,
-  );
-
-  final hex = ExtZoneEquipmentModeCodec.encodeHex(config);
-
-  print(config);
-  print("Generated HEX → $hex\n");
-
-  print("========= DECODE TEST =========\n");
-
-  final decoded = ExtZoneEquipmentModeCodec.fromHex(hex);
-  print(decoded);
-}

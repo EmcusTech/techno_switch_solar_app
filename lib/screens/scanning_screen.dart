@@ -745,9 +745,7 @@ class _ScanningScreenState extends State<ScanningScreen>
         final devices = await UsbSerial.listDevices();
         if (mounted) _handleNewScanResults(devices.cast<dynamic>());
       }
-    } catch (e) {
-      debugPrint('DBG_RADAR: USB scan error: $e');
-    }
+    } catch (_) {}
   }
 
   String? _computeStableKey(dynamic device) {
@@ -829,9 +827,7 @@ class _ScanningScreenState extends State<ScanningScreen>
           return 'ts:$h';
         }
       } catch (_) {}
-    } catch (e) {
-      debugPrint('DBG_RADAR: computeStableKey error: $e');
-    }
+    } catch (_) {}
     return null;
   }
 

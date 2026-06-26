@@ -86,24 +86,3 @@ class ZoneEquipmentModeCodec {
     return decode(value);
   }
 }
-
-void main() {
-  print("========= ZONE EQUIPMENT MODE =========\n");
-
-  final config = ZoneEquipmentModeConfig(
-    zoneEnable: ZoneEquipmentEnable.enabled,
-    zoneMode: ZoneEquipmentMode.test,
-    sounderDelay: ZoneSounderDelay.enabled,
-  );
-
-  final hex = ZoneEquipmentModeCodec.encodeHex(config);
-
-  print(config);
-  print("Generated HEX → $hex\n");
-
-  print("========= DECODE TEST =========\n");
-
-  final decoded = ZoneEquipmentModeCodec.fromHex(hex);
-
-  print(decoded);
-}

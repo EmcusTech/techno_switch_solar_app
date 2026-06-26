@@ -463,7 +463,6 @@ class ProjectReportPdfUtil {
     if (s == '-' || s == '—' || s.isEmpty) return '-';
     final t = s.trim();
     if (t.toLowerCase().endsWith('s')) return t;
-    print("The verification time is: $t");
     return '${t.replaceAll('"', '')}s';
   }
 

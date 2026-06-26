@@ -76,24 +76,3 @@ class InputModeCodec {
     return decode(value);
   }
 }
-
-void main() {
-  print("========= INPUT MODE ENCODE TEST =========\n");
-
-  final config = InputModeConfig(
-    inputEnable: InputEnable.enabled,
-    inputMode: InputMode.test,
-    latchMode: LatchMode.nonLatched,
-    invertMode: InvertMode.inverted,
-  );
-
-  final String hexValue = InputModeCodec.encodeHex(config);
-
-  print(config);
-  print("Generated HEX → $hexValue\n");
-
-  print("========= DECODE TEST =========\n");
-
-  final decoded = InputModeCodec.fromHex(hexValue);
-  print(decoded);
-}

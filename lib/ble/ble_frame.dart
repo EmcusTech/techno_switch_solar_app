@@ -27,10 +27,6 @@ BleRxFrame bleParseAndUpdateRxFrame(Uint8List frame, int frameLen) {
 
   int count = 0;
 
-  Logger(
-    "TX/RX: RECEIVED: time: ${DateTime.now().toIso8601String()}, frame: ${frame.sublist(7, frameLen - 4).map((b) => b.toRadixString(16).padLeft(2, '0')).join(" ")}",
-  );
-
   int sof = (frame[count] << 8) | frame[count + 1];
   count += 2;
 
@@ -71,7 +67,6 @@ BleRxFrame bleParseAndUpdateRxFrame(Uint8List frame, int frameLen) {
 }
 
 bool bleValidateRxFrame(BleRxFrame rx) {
-  Logger("the input dats is : $rx");
   if (rx.sof != 0xAA55) {
     Logger(StringConstants.sofValidationFail);
     return false;

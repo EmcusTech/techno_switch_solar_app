@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/utils/bluetooth_constants.dart';
+import 'package:techno_switch_solar_app/utils/logger.dart';
 
 class BluetoothService {
   final FlutterReactiveBle _ble = FlutterReactiveBle();
@@ -35,7 +36,6 @@ class BluetoothService {
 
   Future<bool> ensurePoweredOn() async {
     final status = await _ble.statusStream.first;
-    print("Bluetooth status: $status");
     return status == BleStatus.ready;
   }
 
@@ -43,7 +43,6 @@ class BluetoothService {
     bool disconnectIfConnected = true,
     Duration postDisconnectDelay = const Duration(seconds: 2),
   }) async {
-    print("The scanning initial status is: ${ble.isConnected}");
     if (disconnectIfConnected && ble.isConnected) {
       final deviceId = ble.connectedDeviceId.value;
       await ble.disconnectHandler(
@@ -89,7 +88,7 @@ class BluetoothService {
             }
           },
           onError: (e) {
-            print('Scan error: $e');
+            Logger('Scan error: $e');
           },
         );
   }
@@ -122,11 +121,7 @@ class BluetoothService {
     connectedDevice = device;
 
     connectionStream.listen((update) {
-      print("Connection state: ${update.connectionState}");
-
       if (update.connectionState == DeviceConnectionState.connected) {
-        print("Connected!");
-
         _readCharacteristic = QualifiedCharacteristic(
           serviceId: BleUuids.primaryService,
           characteristicId: BleUuids.primaryReadChar,
@@ -143,7 +138,7 @@ class BluetoothService {
       }
 
       if (update.connectionState == DeviceConnectionState.disconnected) {
-        print("Disconnected.");
+        Logger("Disconnected.");
       }
     });
     await _ble.requestMtu(deviceId: device.id, mtu: 247);

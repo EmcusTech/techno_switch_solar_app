@@ -1537,8 +1537,6 @@ class BleManager {
     int? manufacturerDataOverride,
     bool skipConnectionHandshake = false,
   }) async {
-    Logger("Attempting to connect to device: ${device.id}");
-
     if (isConnected) {
       shutdown();
       return;
@@ -1566,7 +1564,6 @@ class BleManager {
     try {
       while (attempt < maxRetries) {
         attempt++;
-        Logger("BLE connect attempt $attempt / $maxRetries");
 
         try {
           selectedDevice = device;
@@ -1614,9 +1611,7 @@ class BleManager {
     if (!Platform.isAndroid) return;
 
     try {
-      Logger(StringConstants.bleClearingGattCache);
       await flutterReactiveBle.clearGattCache(deviceId);
-      Logger(StringConstants.bleClearedGattCache);
     } catch (_) {}
   }
 
@@ -1641,22 +1636,12 @@ class BleManager {
     var ignoreInitialDisconnectedEmission = true;
     List<int> md = device.manufacturerData;
 
-    Logger(
-      "DEBUG CONNECTION: Device manufacturer data - Full array: $md, Length: ${md.length}",
-    );
-
     if (manufacturerDataOverride != null) {
       md = [manufacturerDataOverride];
-      Logger(
-        "DEBUG CONNECTION: Using manufacturer data override: $manufacturerDataOverride (as array: $md)",
-      );
     } else if (md.isEmpty &&
         selectedDevice != null &&
         selectedDevice!.id == device.id) {
       md = selectedDevice!.manufacturerData;
-      Logger(
-        "DEBUG CONNECTION: Using manufacturer data from selectedDevice - Full array: $md, Length: ${md.length}, Status byte: ${BleMsdUtils.statusByte(md)}",
-      );
     } else if (md.isEmpty) {}
     final statusByte = manufacturerDataOverride ?? BleMsdUtils.statusByte(md);
 
@@ -2388,11 +2373,6 @@ class BleManager {
     u8Pkt[214] = checksum & BleConstants.base;
     u8Pkt[215] = BleConstants.eot;
 
-    Logger(
-      "TX/RX: TRANSMIT: Network Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
-      type: LogType.ble,
-    );
-
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
 
@@ -2422,11 +2402,6 @@ class BleManager {
     pollPkt[213] = (checksum >> 8) & BleConstants.base;
     pollPkt[214] = checksum & BleConstants.base;
     pollPkt[215] = BleConstants.eot;
-
-    Logger(
-      "TX/RX: TRANSMIT: Poll Packet Command time: ${DateTime.now().toIso8601String()}, packet: ${pollPkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
-      type: LogType.ble,
-    );
 
     await sendSmallDataFrame(0x1000, 216, pollPkt);
   }
@@ -2468,11 +2443,6 @@ class BleManager {
     pkt[214] = checksum & BleConstants.base;
     pkt[215] = BleConstants.eot;
 
-    Logger(
-      "TX/RX: TRANSMIT: Access Command time: ${DateTime.now().toIso8601String()}, packet: ${pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
-      type: LogType.ble,
-    );
-
     await sendSmallDataFrame(0x1000, 216, pkt);
   }
 
@@ -2499,11 +2469,6 @@ class BleManager {
     u8Pkt[214] = checksum & BleConstants.base;
     u8Pkt[215] = 0xFD;
 
-    Logger(
-      "TX/RX: TRANSMIT: Start Control Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
-      type: LogType.ble,
-    );
-
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
 
@@ -2529,10 +2494,6 @@ class BleManager {
     u8Pkt[213] = (checksum >> 8) & BleConstants.base;
     u8Pkt[214] = checksum & BleConstants.base;
     u8Pkt[215] = BleConstants.eot;
-    Logger(
-      "TX/RX: TRANSMIT: Stop Control Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
-      type: LogType.ble,
-    );
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
@@ -2688,11 +2649,6 @@ class BleManager {
     u8Pkt[214] = checksum & BleConstants.base;
     u8Pkt[215] = BleConstants.eot;
 
-    Logger(
-      "TX/RX: TRANSMIT: Ext Out fetch Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
-      type: LogType.ble,
-    );
-
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
 
@@ -2751,11 +2707,6 @@ class BleManager {
     u8Pkt[214] = checksum & BleConstants.base;
     u8Pkt[215] = BleConstants.eot;
 
-    Logger(
-      "TX/RX: TRANSMIT: Ext Out apply Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
-      type: LogType.ble,
-    );
-
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
 
@@ -2780,11 +2731,6 @@ class BleManager {
     u8Pkt[213] = (checksum >> 8) & BleConstants.base;
     u8Pkt[214] = checksum & BleConstants.base;
     u8Pkt[215] = BleConstants.eot;
-
-    Logger(
-      "TX/RX: TRANSMIT: Dip Fetch Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
-      type: LogType.ble,
-    );
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
@@ -2812,11 +2758,6 @@ class BleManager {
     u8Pkt[213] = (checksum >> 8) & BleConstants.base;
     u8Pkt[214] = checksum & BleConstants.base;
     u8Pkt[215] = BleConstants.eot;
-
-    Logger(
-      "TX/RX: TRANSMIT: Input Setup Fetch Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
-      type: LogType.ble,
-    );
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
@@ -2883,11 +2824,6 @@ class BleManager {
     u8Pkt[214] = checksum & BleConstants.base;
     u8Pkt[215] = BleConstants.eot;
 
-    Logger(
-      "TX/RX: TRANSMIT: Input Setup Apply Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
-      type: LogType.ble,
-    );
-
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
 
@@ -2914,11 +2850,6 @@ class BleManager {
     u8Pkt[213] = (checksum >> 8) & BleConstants.base;
     u8Pkt[214] = checksum & BleConstants.base;
     u8Pkt[215] = BleConstants.eot;
-
-    Logger(
-      "TX/RX: TRANSMIT: First Relay Setup Fetch Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
-      type: LogType.ble,
-    );
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
@@ -2947,11 +2878,6 @@ class BleManager {
     u8Pkt[214] = checksum & BleConstants.base;
     u8Pkt[215] = BleConstants.eot;
 
-    Logger(
-      "TX/RX: TRANSMIT: Second Relay Setup Fetch Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
-      type: LogType.ble,
-    );
-
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
 
@@ -2978,11 +2904,6 @@ class BleManager {
     u8Pkt[213] = (checksum >> 8) & BleConstants.base;
     u8Pkt[214] = checksum & BleConstants.base;
     u8Pkt[215] = BleConstants.eot;
-
-    Logger(
-      "TX/RX: TRANSMIT: Third Relay Setup Fetch Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
-      type: LogType.ble,
-    );
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
@@ -3192,11 +3113,6 @@ class BleManager {
     u8Pkt[214] = checksum & BleConstants.base;
     u8Pkt[215] = BleConstants.eot;
 
-    Logger(
-      "TX/RX: TRANSMIT: Relay Setup Apply First Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
-      type: LogType.ble,
-    );
-
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
 
@@ -3246,11 +3162,6 @@ class BleManager {
     u8Pkt[213] = (checksum >> 8) & BleConstants.base;
     u8Pkt[214] = checksum & BleConstants.base;
     u8Pkt[215] = BleConstants.eot;
-
-    Logger(
-      "TX/RX: TRANSMIT: Relay Setup Apply Second Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
-      type: LogType.ble,
-    );
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
@@ -3302,11 +3213,6 @@ class BleManager {
     u8Pkt[214] = checksum & BleConstants.base;
     u8Pkt[215] = BleConstants.eot;
 
-    Logger(
-      "TX/RX: TRANSMIT: Relay Setup Apply Third Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
-      type: LogType.ble,
-    );
-
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
 
@@ -3332,11 +3238,6 @@ class BleManager {
     u8Pkt[213] = (checksum >> 8) & BleConstants.base;
     u8Pkt[214] = checksum & BleConstants.base;
     u8Pkt[215] = BleConstants.eot;
-
-    Logger(
-      "TX/RX: TRANSMIT: Zone Setup Fetch First Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
-      type: LogType.ble,
-    );
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
@@ -3364,11 +3265,6 @@ class BleManager {
     u8Pkt[214] = checksum & BleConstants.base;
     u8Pkt[215] = BleConstants.eot;
 
-    Logger(
-      "TX/RX: TRANSMIT: Zone Setup Fetch Second Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
-      type: LogType.ble,
-    );
-
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
 
@@ -3394,11 +3290,6 @@ class BleManager {
     u8Pkt[213] = (checksum >> 8) & BleConstants.base;
     u8Pkt[214] = checksum & BleConstants.base;
     u8Pkt[215] = BleConstants.eot;
-
-    Logger(
-      "TX/RX: TRANSMIT: Zone Setup Fetch Third Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
-      type: LogType.ble,
-    );
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
@@ -3448,11 +3339,6 @@ class BleManager {
     u8Pkt[213] = (checksum >> 8) & BleConstants.base;
     u8Pkt[214] = checksum & BleConstants.base;
     u8Pkt[215] = BleConstants.eot;
-
-    Logger(
-      "TX/RX: TRANSMIT: Zone Setup Apply First Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
-      type: LogType.ble,
-    );
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
@@ -3504,11 +3390,6 @@ class BleManager {
     u8Pkt[214] = checksum & BleConstants.base;
     u8Pkt[215] = BleConstants.eot;
 
-    Logger(
-      "TX/RX: TRANSMIT: Zone Setup Apply Second Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
-      type: LogType.ble,
-    );
-
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
 
@@ -3559,11 +3440,6 @@ class BleManager {
     u8Pkt[214] = checksum & BleConstants.base;
     u8Pkt[215] = BleConstants.eot;
 
-    Logger(
-      "TX/RX: TRANSMIT: Zone Setup Apply Third Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
-      type: LogType.ble,
-    );
-
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
 
@@ -3588,11 +3464,6 @@ class BleManager {
     u8Pkt[213] = (checksum >> 8) & BleConstants.base;
     u8Pkt[214] = checksum & BleConstants.base;
     u8Pkt[215] = BleConstants.eot;
-
-    Logger(
-      "TX/RX: TRANSMIT: Radio Setup Fetch Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
-      type: LogType.ble,
-    );
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
@@ -3675,11 +3546,6 @@ class BleManager {
     u8Pkt[214] = checksum & BleConstants.base;
     u8Pkt[215] = BleConstants.eot;
 
-    Logger(
-      "TX/RX: TRANSMIT: Radio Setup Apply Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
-      type: LogType.ble,
-    );
-
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
 
@@ -3704,11 +3570,6 @@ class BleManager {
     u8Pkt[213] = (checksum >> 8) & BleConstants.base;
     u8Pkt[214] = checksum & BleConstants.base;
     u8Pkt[215] = BleConstants.eot;
-
-    Logger(
-      "TX/RX: TRANSMIT: Module Setup Fetch Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
-      type: LogType.ble,
-    );
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
@@ -3735,11 +3596,6 @@ class BleManager {
     u8Pkt[213] = (checksum >> 8) & BleConstants.base;
     u8Pkt[214] = checksum & BleConstants.base;
     u8Pkt[215] = BleConstants.eot;
-
-    Logger(
-      "TX/RX: TRANSMIT: L Bus Setup Fetch Command time: ${DateTime.now().toIso8601String()}, packet: ${u8Pkt.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
-      type: LogType.ble,
-    );
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }

@@ -359,8 +359,7 @@ Future<void> showPanelAccessPasswordPopup({
                         configLogWorking?.value = true;
                         try {
                           await delegates.afterBulkApplyAccessGranted?.call();
-                        } catch (e, st) {
-                          debugPrint('$e\n$st');
+                        } catch (e, _) {
                           if (isMounted()) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
@@ -403,8 +402,7 @@ Future<void> showPanelAccessPasswordPopup({
                               }
                             });
                           }
-                        } catch (e, st) {
-                          debugPrint('$e\n$st');
+                        } catch (e, _) {
                           if (isMounted()) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(

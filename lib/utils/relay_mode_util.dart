@@ -82,25 +82,3 @@ class OutputModeCodec {
     return decode(value);
   }
 }
-
-// ================= DEMO =================
-
-void main() {
-  print("========= OUTPUT MODE ENCODE TEST =========\n");
-
-  final config = OutputModeConfig(
-    outputEnable: OutputEnable.enabled,
-    outputMode: OutputMode.test,
-    supervisionMode: SupervisionMode.normal,
-  );
-
-  final String hexValue = OutputModeCodec.encodeHex(config);
-
-  print(config);
-  print("Generated HEX → $hexValue\n");
-
-  print("========= DECODE TEST =========\n");
-
-  final decoded = OutputModeCodec.fromHex(hexValue);
-  print(decoded);
-}

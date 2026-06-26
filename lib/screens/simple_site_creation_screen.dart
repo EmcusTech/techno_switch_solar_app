@@ -3,6 +3,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
+import 'package:techno_switch_solar_app/utils/logger.dart';
 import '../models/log_model.dart';
 import '../services/site_service.dart';
 import '../services/panel_service.dart';
@@ -89,9 +90,6 @@ class _SimpleSiteCreationScreenState extends State<SimpleSiteCreationScreen> {
         final existingPanel = await _panelService.getPanelByPanelId(
           panelIdToCheck,
         );
-        print(
-          'DEBUG: SimpleSiteCreation - Found existing panel: ${existingPanel?.panelId} with siteId: ${existingPanel?.siteId}',
-        );
 
         if (existingPanel != null && existingPanel.siteId != null) {
           final existingSite = await _siteService.getSiteById(
@@ -127,15 +125,14 @@ class _SimpleSiteCreationScreenState extends State<SimpleSiteCreationScreen> {
             return;
           }
         } else {
-          print(
+          Logger(
             'DEBUG: SimpleSiteCreation - Panel exists but no siteId, or panel not found',
           );
         }
       } else {
-        print('DEBUG: SimpleSiteCreation - No panel ID to check');
+        Logger('DEBUG: SimpleSiteCreation - No panel ID to check');
       }
 
-      print('DEBUG: SimpleSiteCreation - Proceeding with new site creation');
       final errors = _siteService.validateSiteData(
         siteName: _siteNameController.text,
         installerName: _installerNameController.text,
@@ -170,38 +167,30 @@ class _SimpleSiteCreationScreenState extends State<SimpleSiteCreationScreen> {
       await _siteService.storeLogs(widget.retrievedLogs, siteId: site.id!);
 
       final panelIdToAssociate = widget.panelId;
-      print(
-        'DEBUG: Panel ID to associate: $panelIdToAssociate (from widget: ${widget.panelId})',
-      );
-      print('DEBUG: Site ID: ${site.id}');
 
       if (panelIdToAssociate != null) {
         try {
           final existingPanel = await _siteService.getPanelByPanelId(
             panelIdToAssociate,
           );
-          print(
-            'DEBUG: Panel exists before assignment: ${existingPanel != null}',
-          );
           if (existingPanel != null) {
-            print('DEBUG: Existing panel details: ${existingPanel.toString()}');
+            Logger(
+              'DEBUG: Existing panel details: ${existingPanel.toString()}',
+            );
           } else {
-            print(
+            Logger(
               'DEBUG: Panel does not exist - will be created during assignment',
             );
           }
 
-          final success = await _siteService.associateCurrentPanelWithSite(
+          await _siteService.associateCurrentPanelWithSite(
             panelIdToAssociate,
             site.id!,
             panelName: widget.panelName,
           );
-          print('DEBUG: Panel association success: $success');
-        } catch (e) {
-          print('DEBUG: Panel association failed: $e');
-        }
+        } catch (_) {}
       } else {
-        print(
+        Logger(
           'DEBUG: No panel ID found - panel was not registered during connection or not passed to constructor',
         );
       }

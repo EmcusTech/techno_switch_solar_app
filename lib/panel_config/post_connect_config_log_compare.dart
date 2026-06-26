@@ -216,8 +216,7 @@ Future<void> presentPostConnectConfigLogCompareAfterDownload({
             refreshNotifiers,
           );
           refreshNotifiers.bumpAll();
-        } catch (e, st) {
-          debugPrint('$e\n$st');
+        } catch (e, _) {
           compareResult.value = ConfigCompareResult.withError(
             e is TimeoutException
                 ? 'Operation timed out. Stay close to the device and try again.'

@@ -140,6 +140,11 @@ abstract final class StringConstants {
   static const String bleShutdown = "Shutdown BLE";
   static const String bleAeskey = "AES_KEY";
 
+  // Firmware
+  static const String wantUpgrade = "Do you want to upgrade to";
+  static const String wantDowngrade = "Do you want to downgrade to";
+  static const String sameVersion = "The versions are same, continue?";
+
   // MISC
   static const String panelNo1 = "Panel No. 1";
 }

@@ -14,6 +14,7 @@ import 'package:techno_switch_solar_app/services/site_service.dart';
 import 'package:techno_switch_solar_app/services/log_retrieval_service.dart';
 import 'package:techno_switch_solar_app/services/panel_service.dart';
 import 'package:intl/intl.dart';
+import 'package:techno_switch_solar_app/utils/logger.dart';
 import 'package:techno_switch_solar_app/widgets/common/common_cta_button.dart';
 import 'package:techno_switch_solar_app/utils/ble_name_utils.dart';
 
@@ -49,28 +50,7 @@ class _SiteScreenState extends State<SiteScreen> {
 
   Future<void> _loadPanels() async {
     try {
-      print(
-        'DEBUG: Loading panels for site ${widget.site.id} (${widget.site.siteName})',
-      );
-
-      final allPanels = await _siteService.getAllPanels();
-      print('DEBUG: Total panels in database: ${allPanels.length}');
-      for (int i = 0; i < allPanels.length; i++) {
-        print(
-          'DEBUG: All Panel $i: ${allPanels[i].panelId} - ${allPanels[i].panelName} (siteId: ${allPanels[i].siteId})',
-        );
-      }
-
-      final unassignedPanels = await _siteService.getUnassignedPanels();
-      print('DEBUG: Unassigned panels: ${unassignedPanels.length}');
-
       final panels = await _siteService.getSitePanels(widget.site.id!);
-      print('DEBUG: Loaded ${panels.length} panels for site ${widget.site.id}');
-      for (int i = 0; i < panels.length; i++) {
-        print(
-          'DEBUG: Site Panel $i: ${panels[i].panelId} - ${panels[i].panelName}',
-        );
-      }
 
       setState(() {
         _panels = panels;
@@ -80,7 +60,6 @@ class _SiteScreenState extends State<SiteScreen> {
       setState(() {
         _isLoading = false;
       });
-      print('Error loading panels: $error');
     }
   }
 
@@ -95,7 +74,7 @@ class _SiteScreenState extends State<SiteScreen> {
         _lastRetrievalDate = latest?.retrievalDate;
       });
     } catch (error) {
-      print('Error loading latest retrieval info: $error');
+      Logger('Error loading latest retrieval info: $error');
     }
   }
 

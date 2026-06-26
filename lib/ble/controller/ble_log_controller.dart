@@ -183,9 +183,6 @@ class BleLogController extends GetxController {
         BleProcess.maxNetworkFlowRestarts) {
       return;
     }
-    Logger(
-      "------------------------Restarting the network FLow-------------------------------",
-    );
     await Future.delayed(const Duration(seconds: 7));
     if (bleProcess.networkFlowRestartCount >=
         BleProcess.maxNetworkFlowRestarts) {
@@ -216,7 +213,6 @@ class BleLogController extends GetxController {
   }
 
   Future<void> onBleFatalError(String message) async {
-    Logger("BLE FATAL ERROR: $message");
     bleProcess.cancelRxTimeout();
     bleProcess.isSessionAccessCodeValidationOnly = false;
     try {
