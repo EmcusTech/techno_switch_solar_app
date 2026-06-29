@@ -130,7 +130,9 @@ class ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
                   clipBehavior: Clip.hardEdge,
                   decoration: const BoxDecoration(
                     color: ColorConstants.white,
-                    borderRadius: BorderRadius.vertical(top: Radius.circular(50)),
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(50),
+                    ),
                   ),
                   child: Stack(
                     children: [
@@ -190,8 +192,6 @@ class ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
     );
   }
 
-  // ───────────────── UI HELPERS ─────────────────
-
   Widget _dragHandle() {
     return Container(
       width: 40,
@@ -228,8 +228,6 @@ class ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
       ),
     );
   }
-
-  // ───────────────── TEXT FIELD ─────────────────
 
   Widget? _relayStyleCounter(
     BuildContext context, {
@@ -358,7 +356,10 @@ class ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
           errorMessage: StringConstants.minuteMustBeBetween0And59,
           focusNode: minuteFocusNode,
         ),
-        _textField(label: 'Company', fieldController: controller.config.companyController),
+        _textField(
+          label: 'Company',
+          fieldController: controller.config.companyController,
+        ),
         _contactField(
           label: StringConstants.contact,
           fieldController: controller.config.contactController,
@@ -372,8 +373,6 @@ class ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
       ],
     );
   }
-
-  // ───────────────── NUMBER FIELD ─────────────────
 
   Widget _numberField({
     required String label,
@@ -413,8 +412,6 @@ class ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
     );
   }
 
-  // ───────────────── INPUT STYLE ─────────────────
-
   InputDecoration _inputDecoration() {
     return InputDecoration(
       filled: true,
@@ -434,8 +431,6 @@ class ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
       ),
     );
   }
-
-  // ───────────────── BUTTONS ─────────────────
 
   Widget _downloadButton() {
     return SizedBox(
@@ -490,8 +485,6 @@ class ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
     );
   }
 }
-
-// ───────────────── VALIDATION ─────────────────
 
 class RangeInputFormatter extends TextInputFormatter {
   final int min;
