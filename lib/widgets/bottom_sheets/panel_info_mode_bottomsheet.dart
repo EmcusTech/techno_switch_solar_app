@@ -154,7 +154,7 @@ class PanelInfoBottomSheetState extends State<PanelInfoBottomSheet> {
                           child: Column(
                             children: [
                               _dragHandle(),
-                              _title("Panel Info"),
+                              _title(StringConstants.panelInfo),
                               Expanded(child: _scrollContent()),
                               const SizedBox(height: 12),
                               Row(
@@ -183,7 +183,7 @@ class PanelInfoBottomSheetState extends State<PanelInfoBottomSheet> {
 
   Widget _panelInfoTile() {
     return _tileWrapper(
-      title: "Panel Info",
+      title: StringConstants.panelInfo,
       children: [
         _textField(
           StringConstants.panelNo,

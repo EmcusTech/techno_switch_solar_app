@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 import 'package:techno_switch_solar_app/utils/storage/commissioning_test_results_cache.dart';
 import 'package:techno_switch_solar_app/widgets/commissioning_test_result_dialog.dart';
 
@@ -37,7 +38,7 @@ Future<void> showCommissioningTestResultConfirmation({
   final results = await showCommissioningTestResultDialog(
     context: context,
     title: title,
-    subtitle: 'Did each test pass or fail?',
+    subtitle: StringConstants.didEachTestPassOrFail,
     items: items,
     initialResults: initialResults,
   );

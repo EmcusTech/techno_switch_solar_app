@@ -229,7 +229,7 @@ class LogHistoryScreenState extends State<LogHistoryScreen> {
         Navigator.of(context, rootNavigator: true).pop();
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Failed to load logs: $e')));
+        ).showSnackBar(SnackBar(content: Text('${StringConstants.failedToLoadLogsPrefix}$e')));
       }
     }
   }

@@ -184,7 +184,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'L-Bus comms fault on bus(es): ${busNumbers.join(", ")}',
+            '${StringConstants.lBusCommsFaultOnBusesPrefix}${busNumbers.join(", ")}',
             style: StyleConstants.black13w600Style.copyWith(
               color: _brandRed,
               height: 1.35,
@@ -192,8 +192,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
           ),
           const SizedBox(height: 6),
           Text(
-            'Enabled-bus detail may be incomplete. Use per-bus download on the '
-            'L-Bus screen if needed.',
+            StringConstants.enabledBusDetailMayBeIncompleteUsePerBusDownloadOnThe,
             style: StyleConstants.textDarkGray12w400Style,
           ),
         ],
@@ -212,7 +211,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
 
   Widget _lBusSelector() {
     return DropdownWidget(
-      label: 'Select L-Bus',
+      label: StringConstants.selectLBus,
       value: 'L-Bus $_selectedLBus',
       items: List.generate(31, (i) => 'L-Bus ${i + 1}'),
       dropdownListHeight: MediaQuery.sizeOf(context).height * 0.2,
@@ -349,7 +348,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    text.isEmpty ? 'Comparing…' : text,
+                    text.isEmpty ? StringConstants.comparing : text,
                     maxLines: 1,
                     style: StyleConstants.primary13w600Style.copyWith(
                       color: _textPrimary,
@@ -400,7 +399,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Apply to panel?',
+                  StringConstants.applyToPanel,
                   style: StyleConstants.black20w700Style.copyWith(
                     color: _textPrimary,
                   ),
@@ -408,8 +407,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'This will overwrite panel settings with the configuration '
-                  'saved in this app for this device.',
+                  StringConstants.thisWillOverwritePanelSettingsWithTheConfiguration,
                   style: StyleConstants.textMuted14w400Style.copyWith(
                     color: _textMuted,
                     height: 1.4,
@@ -432,7 +430,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
                           ),
                           onPressed: () => Navigator.of(ctx).pop(false),
                           child: Text(
-                            'Cancel',
+                            StringConstants.cancel,
                             style: StyleConstants.black16w600Style,
                           ),
                         ),
@@ -453,7 +451,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
                           ),
                           onPressed: () => Navigator.of(ctx).pop(true),
                           child: Text(
-                            'Apply',
+                            StringConstants.apply,
                             style: StyleConstants.black16w600Style,
                           ),
                         ),
@@ -531,9 +529,9 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
           children: [
             _diffFieldTitle(title),
             const SizedBox(height: 6),
-            _diffValueSideRow('Panel', panelVal),
+            _diffValueSideRow(StringConstants.panel, panelVal),
             const SizedBox(height: 4),
-            _diffValueSideRow('App', appVal),
+            _diffValueSideRow(StringConstants.app, appVal),
           ],
         );
       }
@@ -557,15 +555,15 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
           _diffFieldTitle(title),
           const SizedBox(height: 6),
           Text(
-            'List length differs',
+            StringConstants.listLengthDiffers,
             style: StyleConstants.black12w500Style.copyWith(
               color: _textMuted,
               height: 1.35,
             ),
           ),
           const SizedBox(height: 4),
-          _diffValueSideRow('Panel', '$panelN entries'),
-          _diffValueSideRow('App', '$appN entries'),
+          _diffValueSideRow(StringConstants.panel, '$panelN${StringConstants.entriesSuffix}'),
+          _diffValueSideRow(StringConstants.app, '$appN${StringConstants.entriesSuffix}'),
         ],
       );
     }
@@ -585,7 +583,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
           _diffFieldTitle(title),
           const SizedBox(height: 6),
           Text(
-            'Only on panel',
+            StringConstants.onlyOnPanel2,
             style: StyleConstants.black12w500Style.copyWith(
               color: _textMuted,
               height: 1.35,
@@ -612,7 +610,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
           _diffFieldTitle(title),
           const SizedBox(height: 6),
           Text(
-            'Only in app',
+            StringConstants.onlyInApp2,
             style: StyleConstants.black12w500Style.copyWith(
               color: _textMuted,
               height: 1.35,
@@ -668,22 +666,22 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
     final fieldDiffCount = visibleDiffLines.length;
     final summaryText = () {
       if (diffLines.isEmpty) {
-        return 'Panel data differs from app cache.';
+        return StringConstants.panelDataDiffersFromAppCache;
       }
       if (isLBus) {
         if (hasLBusCommsFaults && !hasLBusFieldDiffs) {
-          return 'Comms fault during download (no field differences vs app)';
+          return StringConstants.commsFaultDuringDownloadNoFieldDifferencesVsApp;
         }
         if (hasLBusCommsFaults && hasLBusFieldDiffs) {
-          return 'Comms fault on some buses; $fieldDiffCount change(s) on '
-              'L-Bus $_selectedLBus';
+          return '${StringConstants.commsFaultOnSomeBusesPrefix}$fieldDiffCount'
+              '${StringConstants.changesOnLBusPrefix}$_selectedLBus';
         }
         if (fieldDiffCount == 0) {
-          return 'No differences on L-Bus $_selectedLBus';
+          return '${StringConstants.noDifferencesOnLBusPrefix}$_selectedLBus';
         }
-        return '$fieldDiffCount change(s) on L-Bus $_selectedLBus';
+        return '$fieldDiffCount${StringConstants.changesOnLBusPrefix}$_selectedLBus';
       }
-      return '${diffLines.length} change(s) vs saved app data';
+      return '${diffLines.length}${StringConstants.changesVsSavedAppDataSuffix}';
     }();
     return Container(
       width: double.infinity,
@@ -712,7 +710,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
             const SizedBox(height: 12),
           if (diffLines.isEmpty)
             Text(
-              'No field-level detail available.',
+              StringConstants.noFieldLevelDetailAvailable,
               style: StyleConstants.textDarkGray12w400Style,
             )
           else if (isLBus && !hasLBusFieldDiffs)
@@ -720,8 +718,8 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
           else if (visibleDiffLines.isEmpty)
             Text(
               isLBus
-                  ? 'Select another L-Bus to view its differences.'
-                  : 'No field-level detail available.',
+                  ? StringConstants.selectAnotherLBusToViewItsDifferences
+                  : StringConstants.noFieldLevelDetailAvailable,
               style: StyleConstants.textDarkGray12w400Style,
             )
           else
@@ -761,12 +759,12 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
         const Divider(thickness: 1.2),
         const SizedBox(height: 16),
         Text(
-          'Sections that differ',
+          StringConstants.sectionsThatDiffer,
           style: StyleConstants.black16w700Style.copyWith(color: _textPrimary),
         ),
         const SizedBox(height: 6),
         Text(
-          'Swipe or tap a tab to review panel vs app differences.',
+          StringConstants.swipeOrTapATabToReviewPanelVsAppDifferences,
           style: StyleConstants.textMuted13w400Style.copyWith(
             color: _textMuted,
             height: 1.35,
@@ -834,7 +832,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
   Widget _resultBlock(ConfigCompareResult result) {
     if (result.errorMessage != null) {
       return _tileShell(
-        title: 'Result',
+        title: StringConstants.result,
         children: [
           Container(
             width: double.infinity,
@@ -858,7 +856,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
 
     if (result.isAppCacheEmpty) {
       return _tileShell(
-        title: 'Result',
+        title: StringConstants.result,
         children: [
           Container(
             width: double.infinity,
@@ -875,10 +873,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    'No configuration is saved in the app for this device. '
-                    'Panel data was downloaded successfully. Update the app to '
-                    'save it locally — there is nothing in the app to send to '
-                    'the panel.',
+                    StringConstants.noConfigurationIsSavedInTheAppForThisDevice,
                     style: StyleConstants.colorFf1565C014w500Style,
                   ),
                 ),
@@ -891,7 +886,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
 
     if (!result.hasMismatch) {
       return _tileShell(
-        title: 'Result',
+        title: StringConstants.result,
         children: [
           Container(
             width: double.infinity,
@@ -907,7 +902,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    'All configuration sections match the saved app data.',
+                    StringConstants.allConfigurationSectionsMatchTheSavedAppData,
                     style: StyleConstants.successDark14w500Style,
                   ),
                 ),
@@ -920,10 +915,10 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
 
     if (result.mismatchedSections.isEmpty) {
       return _tileShell(
-        title: 'Result',
+        title: StringConstants.result,
         children: [
           Text(
-            'Configuration differs from saved app data, but no section detail is available.',
+            StringConstants.configurationDiffersFromSavedAppDataButNoSectionDetailIsAvailable,
             style: StyleConstants.textMuted13w400Style.copyWith(
               color: _textMuted,
               height: 1.35,
@@ -1006,7 +1001,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
                         FocusManager.instance.primaryFocus?.unfocus();
                         Navigator.of(context).pop();
                       },
-              child: Text('Okay', style: StyleConstants.white16w600Style),
+              child: Text(StringConstants.okay, style: StyleConstants.white16w600Style),
             ),
           ),
         ],
@@ -1105,7 +1100,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
                       FocusManager.instance.primaryFocus?.unfocus();
                       Navigator.of(context).pop();
                     },
-            child: Text('Next', style: StyleConstants.white16w600Style),
+            child: Text(StringConstants.next, style: StyleConstants.white16w600Style),
           ),
         ),
       ],
@@ -1244,7 +1239,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
                             : MainAxisSize.max,
                     children: [
                       _dragHandle(),
-                      _title('Config Log'),
+                      _title(StringConstants.configLog),
                       const SizedBox(height: 16),
                       if (compactIntroLayout)
                         _buildScrollableBody(
@@ -1330,10 +1325,10 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
                             child: SingleChildScrollView(
                               physics: const BouncingScrollPhysics(),
                               child: _tileShell(
-                                title: 'Compare with saved setup',
+                                title: StringConstants.compareWithSavedSetup,
                                 children: [
                                   Text(
-                                    'Download the full configuration from the panel and compare it with data stored in this app for this device.',
+                                    StringConstants.downloadTheFullConfigurationFromThePanelAndCompareItWithDataStoredInThisAppForThisDevice,
                                     style: StyleConstants.textMuted13w400Style
                                         .copyWith(
                                           color: _textMuted,
@@ -1369,10 +1364,10 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         _tileShell(
-                          title: 'Compare with saved setup',
+                          title: StringConstants.compareWithSavedSetup,
                           children: [
                             Text(
-                              'Download the full configuration from the panel and compare it with data stored in this app for this device.',
+                              StringConstants.downloadTheFullConfigurationFromThePanelAndCompareItWithDataStoredInThisAppForThisDevice,
                               style: StyleConstants.textMuted13w400Style
                                   .copyWith(color: _textMuted, height: 1.4),
                             ),

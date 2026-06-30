@@ -1068,7 +1068,7 @@ class _ScanningScreenState extends State<ScanningScreen>
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('USB/Serial Devices'),
+                              Text(StringConstants.usbSerialDevicesTitle),
                               Text(
                                 StringConstants.scanForConnectedUSBSolarDevices,
                               ),
@@ -1111,7 +1111,7 @@ class _ScanningScreenState extends State<ScanningScreen>
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('Bluetooth (BLE) Devices'),
+                              Text(StringConstants.bluetoothBleDevicesTitle),
                               Text(
                                 StringConstants
                                     .scanForNearbyBluetoothSolarDevices,

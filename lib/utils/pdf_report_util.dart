@@ -5,6 +5,7 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:techno_switch_solar_app/models/log_model.dart';
 import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
 class LogReportPdfUtil {
   LogReportPdfUtil._();
@@ -162,7 +163,7 @@ class LogReportPdfUtil {
 
   static pw.Widget _logTable(List<LogModel> logs) {
     if (logs.isEmpty) {
-      return pw.Text('No log entries available');
+      return pw.Text(StringConstants.noLogEntriesAvailable);
     }
 
     pw.Widget headerCell(String text, {double width = 60}) {

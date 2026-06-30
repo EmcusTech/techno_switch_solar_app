@@ -226,7 +226,7 @@ abstract final class StringConstants {
   static const String chooseWhatToTest = "Choose what to test";
   static const String clear = "Clear";
   static const String clearLogs = "Clear logs?";
-  static const String close = "Update";
+  static const String close = "Close";
   static const String commsFaultDuringDownloadNoFieldDifferencesVsApp =
       "Comms fault during download (no field differences vs app)";
   static const String communityForum = "Community Forum";
@@ -324,7 +324,8 @@ abstract final class StringConstants {
   static const String deviceConnected = "Connecting...";
   static const String deviceIsInBootloaderMode = "Device is in bootloader mode";
   static const String
-  deviceIsRestartingSearchingForPanelAndEstablishingConnection = "Preparing...";
+  deviceIsRestartingSearchingForPanelAndEstablishingConnection =
+      "Device is restarting. Searching for panel and establishing connection...";
   static const String deviceNameIsEmpty = "Device name is empty";
   static const String deviceNotConnectedCannotSendJumpCommand =
       "Device not connected. Cannot send jump command.";
@@ -376,6 +377,7 @@ abstract final class StringConstants {
   static const String enable = "Enable";
   static const String enabled = "Enabled";
   static const String enabledBusDetailMayBeIncompleteUsePerBusDownloadOnThe =
+      "Enabled-bus detail may be incomplete. Use per-bus download on the "
       "L-Bus screen if needed.";
   static const String enterAValidPanelIDLettersNumbersOr =
       "Enter a valid panel ID (letters, numbers, - or _)";
@@ -594,6 +596,9 @@ abstract final class StringConstants {
   static const String next = "Next";
   static const String no = "No";
   static const String noConfigurationIsSavedInTheAppForThisDevice =
+      "No configuration is saved in the app for this device. "
+      "Panel data was downloaded successfully. Update the app to "
+      "save it locally — there is nothing in the app to send to "
       "the panel.";
   static const String noConnectedPanel = "No connected panel";
   static const String noDeviceNameStoredForReconnection =
@@ -643,7 +648,7 @@ abstract final class StringConstants {
   static const String outputText = "Output Text";
   static const String outputtext = "dynamicText";
   static const String p1 = "P1";
-  static const String panel = "App";
+  static const String panel = "Panel";
   static const String panel2 = " · app ";
   static const String panelActions = "Panel Actions";
   static const String panelAlreadyAssigned = "Panel already assigned";
@@ -794,7 +799,7 @@ abstract final class StringConstants {
   static const String sectionsThatDiffer = "Sections that differ";
   static const String selectASite = "Select a site";
   static const String selectAnotherLBusToViewItsDifferences =
-      "No field-level detail available.";
+      "Select another L-Bus to view its differences.";
   static const String selectCOUNTFROMLogRetrievalsWHERESiteId =
       "SELECT COUNT(*) FROM log_retrievals WHERE site_id = ?";
   static const String selectCOUNTFROMLogs = "SELECT COUNT(*) FROM logs";
@@ -905,6 +910,7 @@ abstract final class StringConstants {
   static const String text = "Text";
   static const String textinputHide = "TextInput.hide";
   static const String theBootloaderFileOnTheDeviceIsCorrupted =
+      "The bootloader file on the device is corrupted. "
       "Tap on Update to update the firmware.";
   static const String
   theConnectionToTheDeviceWasLostAnyOpenPanelsWereClosedUseConnectWhenYouAreReadyToReconnect =
@@ -925,6 +931,7 @@ abstract final class StringConstants {
   thisPanelIsNotAssociatedWithAnySiteYetCreateASiteToContinue =
       "This panel is not associated with any site yet. Create a site to continue.";
   static const String thisWillOverwritePanelSettingsWithTheConfiguration =
+      "This will overwrite panel settings with the configuration "
       "saved in this app for this device.";
   static const String thisWillRemoveAllEntriesFromTheListThisCannotBeUndone =
       "This will remove all entries from the list. This cannot be undone.";
@@ -1240,4 +1247,122 @@ abstract final class StringConstants {
   static const String zone22 = "Zone 2";
   static const String zone3 = "zone3";
   static const String zone32 = "Zone 3";
+
+  static const String deviceConnectedTitle = "Device Connected!";
+  static const String pleaseWaitWhileWeConnectToPrefix =
+      "Please wait while we connect to ";
+  static const String essentialStepConnectViaBluetooth =
+      "Ensure the device is connected via Bluetooth";
+  static const String essentialStepKeepPoweredOn =
+      "Keep the device powered on throughout the upgrade";
+  static const String essentialStepDoNotDisconnect =
+      "Do not disconnect or turn off the device during upgrade";
+  static const String essentialStepCloseOtherApps =
+      "Close other apps that might interfere with Bluetooth";
+  static const String essentialStepsBeforeFirmwareUpgrade =
+      "Essential Steps Before Firmware Upgrade";
+  static const String chooseFirmwareType = "Choose Firmware Type";
+  static const String mainPanelFirmware = "Main Panel Firmware";
+  static const String bleChipFirmware = "BLE Chip Firmware";
+  static const String upgradeMainPanelFirmwareDescription =
+      "Upgrade the main panel firmware";
+  static const String upgradeBleChipFirmwareDescription =
+      "Upgrade the Bluetooth chip firmware";
+  static const String uploadFirmwareFile = "Upload Firmware File";
+  static const String tapToSelectFirmwareFile = "Tap to select firmware file";
+  static const String fileDetails = "File Details";
+  static const String fileName = "File Name";
+  static const String fileSize = "File Size";
+  static const String firmwareTypeLabel = "Firmware Type";
+  static const String buildDate = "Build date";
+  static const String expectedCrc = "Expected CRC";
+  static const String calculatedCrc = "Calculated CRC";
+  static const String statusLabel = "Status";
+  static const String validLabel = "Valid";
+  static const String invalidLabel = "Invalid";
+  static const String fileCrcValidationFailedSelectValidFile =
+      "File CRC validation failed. Please select a valid firmware file.";
+  static const String pleaseWaitWhileFirmwareUpgraded =
+      "Please wait while the firmware is being upgraded. Do not disconnect the device.";
+  static const String processingLabel = "Processing...";
+  static const String failedLabel = "Failed";
+  static const String doneLabel = "Done";
+  static const String validatingFirmwareUpgradeSuccess =
+      "Validating firmware upgrade success...";
+  static const String firmwareUpgradeCompletedSuccessfully =
+      "Firmware upgrade completed successfully!";
+  static const String failedToReconnectToDevicePrefix =
+      "Failed to reconnect to device: ";
+  static const String unableToDetermineUpgradeStatus =
+      "Unable to determine upgrade status";
+  static const String reconnectionErrorPrefix = "Reconnection error: ";
+  static const String errorSelectingFilePrefix = "Error selecting file: ";
+  static const String noFileSelectedPleaseUploadAgain =
+      "No file selected. Please upload again.";
+  static const String crcValidationFailed = "CRC validation failed.";
+  static const String deviceHardwareFirmwareCouldNotBeRead =
+      "Device hardware and firmware versions could not be read from "
+      "Bluetooth. Do you still want to update?";
+  static const String firmwareAlreadyUpToDate =
+      "The firmware is already up to date with the current firmware version";
+  static const String binFileHardwareVersionLabel =
+      "Bin File Hardware Version: ";
+  static const String bleHardwareVersionLabel = "BLE Hardware Version: ";
+  static const String errorSendingPacketsPrefix = "Error sending packets: ";
+  static const String bootloaderFileCorruptedDoYouWantToUpdate =
+      "The bootloader file on the device is corrupted. "
+      "Do you want to update the firmware?";
+
+  // Site / panel actions
+  static const String errorDeletingSitePrefix = "Error deleting site: ";
+  static const String errorDeletingPanelPrefix = "Error deleting panel: ";
+  static const String thisWillRemoveSitePrefix = 'This will remove "';
+  static const String fromThisSite = "from this site?";
+
+  // Scanning / errors
+  static const String usbSerialDevicesTitle = "USB/Serial Devices";
+  static const String bluetoothBleDevicesTitle = "Bluetooth (BLE) Devices";
+  static const String failedToConnectPrefix = "Failed to connect: ";
+  static const String couldNotCreatePdfPrefix = "Could not create PDF: ";
+  static const String failedToLoadLogsPrefix = "Failed to load logs: ";
+
+  // FAQ questions
+  static const String faqHowDoICreateNewProject =
+      "How do I create a new project?";
+  static const String faqHowCanIRetrieveProjectLogs =
+      "How can I retrieve project logs?";
+  static const String faqWhatMaintenanceTasksAvailable =
+      "What maintenance tasks are available?";
+
+  // Config log (dynamic fragments)
+  static const String lBusCommsFaultOnBusesPrefix =
+      "L-Bus comms fault on bus(es): ";
+  static const String selectLBus = "Select L-Bus";
+  static const String entriesSuffix = " entries";
+  static const String commsFaultOnSomeBusesPrefix =
+      "Comms fault on some buses; ";
+  static const String changesOnLBusPrefix = " change(s) on L-Bus ";
+  static const String noDifferencesOnLBusPrefix = "No differences on L-Bus ";
+  static const String changesVsSavedAppDataSuffix = " change(s) vs saved app data";
+
+  static String siteDeletedMessage(String siteName) => 'Site "$siteName" deleted';
+
+  static String panelDeletedMessage(String panelName) =>
+      'Panel "$panelName" deleted';
+
+  static String deleteSiteConfirmationMessage(String siteName) =>
+      '$thisWillRemoveSitePrefix$siteName".\n$thisWillRemoveWidgetSiteSiteNameN2';
+
+  static String removePanelConfirmationMessage(
+    String panelName,
+    String panelId,
+  ) =>
+      'Remove panel "$panelName" ($panelId) $fromThisSite';
+
+  static String binFileHardwareVersionDetail(
+    String? binHardware,
+    String bleHardware,
+  ) =>
+      '$binFileHardwareVersionLabel$binHardware\n'
+      '$bleHardwareVersionLabel$bleHardware';
 }

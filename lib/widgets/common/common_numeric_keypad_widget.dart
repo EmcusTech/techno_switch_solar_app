@@ -491,7 +491,7 @@ class _CommonNumericKeypadWidgetState extends State<CommonNumericKeypadWidget> {
                                                   ),
                                                   const SizedBox(width: 8),
                                                   Text(
-                                                    'Verify',
+                                                    StringConstants.verify,
                                                     style: StyleConstants.white14boldStyle,
                                                   ),
                                                 ],

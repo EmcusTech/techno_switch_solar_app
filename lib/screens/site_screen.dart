@@ -18,6 +18,7 @@ import 'package:techno_switch_solar_app/widgets/common/common_cta_button.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/ble_name_utils.dart';
 import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
 import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
 class SiteScreen extends StatefulWidget {
@@ -125,15 +126,16 @@ class _SiteScreenState extends State<SiteScreen> {
 
                 const SizedBox(height: 16),
                 Text(
-                  'Delete site?',
+                  StringConstants.deleteSite,
                   style: StyleConstants.textDark20w700Style,
                   textAlign: TextAlign.center,
                 ),
 
                 const SizedBox(height: 8),
                 Text(
-                  'This will remove "${widget.site.siteName}".\n'
-                  'All logs will be deleted and panels will be unassigned.',
+                  StringConstants.deleteSiteConfirmationMessage(
+                    widget.site.siteName,
+                  ),
                   style: StyleConstants.textMuted14w400Style,
                   textAlign: TextAlign.center,
                 ),
@@ -154,7 +156,7 @@ class _SiteScreenState extends State<SiteScreen> {
                         ),
                         onPressed: () => Navigator.of(dialogContext).pop(false),
                         child: Text(
-                          'Cancel',
+                          StringConstants.cancel,
                           style: StyleConstants.textGray14w500Style,
                         ),
                       ),
@@ -171,7 +173,7 @@ class _SiteScreenState extends State<SiteScreen> {
                         ),
                         onPressed: () => Navigator.of(dialogContext).pop(true),
                         child: Text(
-                          'Delete',
+                          StringConstants.delete,
                           style: StyleConstants.white14w600Style,
                         ),
                       ),
@@ -202,7 +204,9 @@ class _SiteScreenState extends State<SiteScreen> {
       if (deleted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Site "${widget.site.siteName}" deleted'),
+            content: Text(
+              StringConstants.siteDeletedMessage(widget.site.siteName),
+            ),
             backgroundColor: ColorConstants.primary,
           ),
         );
@@ -210,7 +214,7 @@ class _SiteScreenState extends State<SiteScreen> {
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Unable to delete site'),
+            content: Text(StringConstants.unableToDeleteSite),
             backgroundColor: ColorConstants.primary,
           ),
         );
@@ -219,7 +223,7 @@ class _SiteScreenState extends State<SiteScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error deleting site: $error'),
+          content: Text('${StringConstants.errorDeletingSitePrefix}$error'),
           backgroundColor: ColorConstants.primary,
         ),
       );
@@ -268,15 +272,17 @@ class _SiteScreenState extends State<SiteScreen> {
 
                 const SizedBox(height: 16),
                 Text(
-                  'Remove panel?',
+                  StringConstants.removePanel,
                   style: StyleConstants.textDark20w700Style,
                   textAlign: TextAlign.center,
                 ),
 
                 const SizedBox(height: 8),
                 Text(
-                  'Remove panel "${panel.panelName}" (${panel.panelId}) '
-                  'from this site?',
+                  StringConstants.removePanelConfirmationMessage(
+                    panel.panelName,
+                    panel.panelId,
+                  ),
                   style: StyleConstants.textMuted14w400Style,
                   textAlign: TextAlign.center,
                 ),
@@ -297,7 +303,7 @@ class _SiteScreenState extends State<SiteScreen> {
                         ),
                         onPressed: () => Navigator.of(dialogContext).pop(false),
                         child: Text(
-                          'Cancel',
+                          StringConstants.cancel,
                           style: StyleConstants.textGray14w500Style,
                         ),
                       ),
@@ -314,7 +320,7 @@ class _SiteScreenState extends State<SiteScreen> {
                         ),
                         onPressed: () => Navigator.of(dialogContext).pop(true),
                         child: Text(
-                          'Remove',
+                          StringConstants.remove,
                           style: StyleConstants.white14w600Style,
                         ),
                       ),
@@ -345,14 +351,16 @@ class _SiteScreenState extends State<SiteScreen> {
       if (deleted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Panel "${panel.panelName}" deleted'),
+            content: Text(
+              StringConstants.panelDeletedMessage(panel.panelName),
+            ),
             backgroundColor: ColorConstants.primary,
           ),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Unable to delete panel'),
+            content: Text(StringConstants.unableToDeletePanel),
             backgroundColor: ColorConstants.primary,
           ),
         );
@@ -361,7 +369,7 @@ class _SiteScreenState extends State<SiteScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error deleting panel: $error'),
+          content: Text('${StringConstants.errorDeletingPanelPrefix}$error'),
           backgroundColor: ColorConstants.primary,
         ),
       );
@@ -381,7 +389,7 @@ class _SiteScreenState extends State<SiteScreen> {
       return Padding(
         padding: const EdgeInsets.only(top: 4),
         child: Text(
-          'No logs yet',
+          StringConstants.noLogsYet,
           style: StyleConstants.textMuted11w400Style,
         ),
       );
@@ -469,7 +477,7 @@ class _SiteScreenState extends State<SiteScreen> {
               ),
               SizedBox(width: 12),
               Text(
-                'Site Information',
+                StringConstants.siteInformation,
                 style: StyleConstants.black20w700Style,
               ),
             ],
@@ -519,7 +527,7 @@ class _SiteScreenState extends State<SiteScreen> {
                         ],
                       ),
                       Text(
-                        'Site Information',
+                        StringConstants.siteInformation,
                         style: StyleConstants.textNeutral12w400Style,
                       ),
                     ],
@@ -567,7 +575,7 @@ class _SiteScreenState extends State<SiteScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Created',
+                            StringConstants.created,
                             style: StyleConstants.textNeutral12w400Style,
                           ),
                           Text(
@@ -598,7 +606,7 @@ class _SiteScreenState extends State<SiteScreen> {
                         SvgPicture.asset(AssetConstants.detailsIcon),
                         SizedBox(width: 8),
                         Text(
-                          'View Site Details',
+                          StringConstants.viewSiteDetails,
                           style: StyleConstants.white14w500Style,
                         ),
                       ],
@@ -620,7 +628,7 @@ class _SiteScreenState extends State<SiteScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Panels',
+            StringConstants.panels,
             style: StyleConstants.textDark14w500Style,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -666,12 +674,12 @@ class _SiteScreenState extends State<SiteScreen> {
             ),
             SizedBox(height: 16),
             Text(
-              'No Panels Yet',
+              StringConstants.noPanelsYet,
               style: StyleConstants.textDark16w600Style,
             ),
             SizedBox(height: 8),
             Text(
-              'Connect to a panel to associate it with this site',
+              StringConstants.connectToAPanelToAssociateItWithThisSite,
               style: StyleConstants.textGray14w400Style,
               textAlign: TextAlign.center,
             ),
@@ -801,7 +809,7 @@ class _PanelListItemWidgetState extends State<_PanelListItemWidget>
               backgroundColor: const Color.fromARGB(255, 245, 63, 57),
               foregroundColor: ColorConstants.white,
               icon: CupertinoIcons.delete,
-              label: 'Delete',
+              label: StringConstants.delete,
             ),
           ],
         ),

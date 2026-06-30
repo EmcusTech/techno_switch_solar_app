@@ -29,8 +29,9 @@ class BleConnectingDialogMessages {
   static final standard = BleConnectingDialogMessages(
     connectingTitle: StringConstants.establishingSecureConnection,
     connectingSubtitle:
-        (device) => 'Please wait while we connect to ${device.name}',
-    connectedTitle: 'Device Connected!',
+        (device) =>
+            '${StringConstants.pleaseWaitWhileWeConnectToPrefix}${device.name}',
+    connectedTitle: StringConstants.deviceConnectedTitle,
     connectedSubtitle: StringConstants.encryptingAndAuthenticating,
     handshakeCompleteSubtitle: StringConstants.preparing,
   );
@@ -39,8 +40,9 @@ class BleConnectingDialogMessages {
     connectingTitle: StringConstants.reconnecting,
     connectingSubtitle:
         (_) =>
-            'Device is restarting. Searching for panel and establishing connection...',
-    connectedTitle: 'Device Connected!',
+            StringConstants
+                .deviceIsRestartingSearchingForPanelAndEstablishingConnection,
+    connectedTitle: StringConstants.deviceConnectedTitle,
     connectedSubtitle: StringConstants.encryptingAndAuthenticating,
     handshakeCompleteSubtitle: StringConstants.preparing,
   );

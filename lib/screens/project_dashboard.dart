@@ -825,7 +825,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
         }
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to connect: $e'),
+            content: Text('${StringConstants.failedToConnectPrefix}$e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -887,7 +887,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Could not create PDF: $e')));
+        ).showSnackBar(SnackBar(content: Text('${StringConstants.couldNotCreatePdfPrefix}$e')));
       }
     }
   }
@@ -1013,7 +1013,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 ),
               ),
 
-              Text('Export', style: StyleConstants.textBodyDark18w700Style),
+              Text(StringConstants.export, style: StyleConstants.textBodyDark18w700Style),
 
               const SizedBox(height: 12),
 

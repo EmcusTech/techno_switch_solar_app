@@ -487,7 +487,8 @@ class _FirmwareUpgradeBottomSheetState
           }
         } else {
           setState(() {
-            _currentBleStateMessage = 'Validating firmware upgrade success...';
+            _currentBleStateMessage =
+                StringConstants.validatingFirmwareUpgradeSuccess;
           });
 
           if (scanLastByte == BleMsdUtils.statusUpgradeSuccess) {
@@ -495,7 +496,7 @@ class _FirmwareUpgradeBottomSheetState
               _isWaitingForEndReconnect = false;
               _selectedDevice = device;
               _currentBleStateMessage =
-                  'Firmware upgrade completed successfully!';
+                  StringConstants.firmwareUpgradeCompletedSuccessfully;
             });
             _controller.downloadingStatus.value = fw.DownloadStatus.completed;
             logger.Logger('Firmware upgrade SUCCESS confirmed from MSD [0,2]');
@@ -581,7 +582,8 @@ class _FirmwareUpgradeBottomSheetState
           setState(() {
             _isWaitingForJumpReconnect = false;
             _isWaitingForEndReconnect = false;
-            _errorMessage = 'Failed to reconnect to device: $e';
+            _errorMessage =
+                '${StringConstants.failedToReconnectToDevicePrefix}$e';
           });
           return;
         }
@@ -631,7 +633,8 @@ class _FirmwareUpgradeBottomSheetState
 
         // Update message to show we're validating
         setState(() {
-          _currentBleStateMessage = 'Validating firmware upgrade success...';
+          _currentBleStateMessage =
+              StringConstants.validatingFirmwareUpgradeSuccess;
         });
 
         if (manufacturerDataValue == BleMsdUtils.statusUpgradeSuccess) {
@@ -639,7 +642,7 @@ class _FirmwareUpgradeBottomSheetState
           setState(() {
             _selectedDevice = device;
             _currentBleStateMessage =
-                'Firmware upgrade completed successfully!';
+                StringConstants.firmwareUpgradeCompletedSuccessfully;
           });
           _controller.downloadingStatus.value = fw.DownloadStatus.completed;
         } else if (manufacturerDataValue == BleMsdUtils.statusBootloader) {
@@ -655,7 +658,7 @@ class _FirmwareUpgradeBottomSheetState
             setState(() {
               _selectedDevice = device;
               _currentBleStateMessage =
-                  'Firmware upgrade completed successfully!';
+                  StringConstants.firmwareUpgradeCompletedSuccessfully;
             });
             _controller.downloadingStatus.value = fw.DownloadStatus.completed;
           } else if (scanLastByte == BleMsdUtils.statusBootloader) {
@@ -670,7 +673,7 @@ class _FirmwareUpgradeBottomSheetState
               'Unknown manufacturer data value: $manufacturerDataValue, scan: $scanLastByte',
             );
             setState(() {
-              _errorMessage = 'Unable to determine upgrade status';
+              _errorMessage = StringConstants.unableToDetermineUpgradeStatus;
             });
             _controller.downloadingStatus.value = fw.DownloadStatus.failed;
           }
@@ -681,7 +684,7 @@ class _FirmwareUpgradeBottomSheetState
       setState(() {
         _isWaitingForJumpReconnect = false;
         _isWaitingForEndReconnect = false;
-        _errorMessage = 'Reconnection error: $e';
+        _errorMessage = '${StringConstants.reconnectionErrorPrefix}$e';
       });
       _controller.downloadingStatus.value = fw.DownloadStatus.failed;
     }
@@ -750,7 +753,10 @@ class _FirmwareUpgradeBottomSheetState
       children: [
         Row(
           children: [
-            Text('Firmware Upgrade', style: StyleConstants.black20w700Style),
+            Text(
+              StringConstants.firmwareUpgrade,
+              style: StyleConstants.black20w700Style,
+            ),
             Spacer(),
             Visibility(
               visible: _currentStep != FirmwareUpgradeStep.progress,
@@ -787,10 +793,10 @@ class _FirmwareUpgradeBottomSheetState
 
   Widget _buildEssentialSteps() {
     final steps = [
-      'Ensure the device is connected via Bluetooth',
-      'Keep the device powered on throughout the upgrade',
-      'Do not disconnect or turn off the device during upgrade',
-      'Close other apps that might interfere with Bluetooth',
+      StringConstants.essentialStepConnectViaBluetooth,
+      StringConstants.essentialStepKeepPoweredOn,
+      StringConstants.essentialStepDoNotDisconnect,
+      StringConstants.essentialStepCloseOtherApps,
     ];
 
     return FutureBuilder<bool>(
@@ -800,7 +806,7 @@ class _FirmwareUpgradeBottomSheetState
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              'Essential Steps Before Firmware Upgrade',
+              StringConstants.essentialStepsBeforeFirmwareUpgrade,
               style: StyleConstants.black18w700Style,
             ),
             SizedBox(height: 24),
@@ -894,18 +900,21 @@ class _FirmwareUpgradeBottomSheetState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text('Choose Firmware Type', style: StyleConstants.black18w700Style),
+        Text(
+          StringConstants.chooseFirmwareType,
+          style: StyleConstants.black18w700Style,
+        ),
         SizedBox(height: 24),
         _buildFirmwareTypeOption(
-          title: 'Main Panel Firmware',
-          description: 'Upgrade the main panel firmware',
+          title: StringConstants.mainPanelFirmware,
+          description: StringConstants.upgradeMainPanelFirmwareDescription,
           type: FirmwareType.mainPanel,
           enabled: false,
         ),
         SizedBox(height: 16),
         _buildFirmwareTypeOption(
-          title: 'BLE Chip Firmware',
-          description: 'Upgrade the Bluetooth chip firmware',
+          title: StringConstants.bleChipFirmware,
+          description: StringConstants.upgradeBleChipFirmwareDescription,
           type: FirmwareType.bleChip,
         ),
         SizedBox(height: 32),
@@ -1036,7 +1045,10 @@ class _FirmwareUpgradeBottomSheetState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text('Upload Firmware File', style: StyleConstants.black18w700Style),
+        Text(
+          StringConstants.uploadFirmwareFile,
+          style: StyleConstants.black18w700Style,
+        ),
         SizedBox(height: 24),
         GestureDetector(
           onTap: _isUploading ? null : _pickFile,
@@ -1071,7 +1083,7 @@ class _FirmwareUpgradeBottomSheetState
                   SizedBox(height: 16),
                   Text(
                     _selectedFile == null
-                        ? 'Tap to select firmware file'
+                        ? StringConstants.tapToSelectFirmwareFile
                         : _selectedFile!.name,
                     style: StyleConstants.textHeading16w600Style,
                     textAlign: TextAlign.center,
@@ -1183,20 +1195,23 @@ class _FirmwareUpgradeBottomSheetState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text('File Details', style: StyleConstants.black18w700Style),
+        Text(
+          StringConstants.fileDetails,
+          style: StyleConstants.black18w700Style,
+        ),
         SizedBox(height: 24),
-        _buildDetailRow('File Name', _selectedFile!.name),
+        _buildDetailRow(StringConstants.fileName, _selectedFile!.name),
         SizedBox(height: 12),
         _buildDetailRow(
-          'File Size',
+          StringConstants.fileSize,
           '${(_selectedFile!.size / (1024 * 1024)).toStringAsFixed(2)} MB',
         ),
         SizedBox(height: 12),
         _buildDetailRow(
-          'Firmware Type',
+          StringConstants.firmwareTypeLabel,
           _selectedFirmwareType == FirmwareType.mainPanel
-              ? 'Main Panel Firmware'
-              : 'BLE Chip Firmware',
+              ? StringConstants.mainPanelFirmware
+              : StringConstants.bleChipFirmware,
         ),
         if (result != null) ...[
           SizedBox(height: 12),
@@ -1210,29 +1225,29 @@ class _FirmwareUpgradeBottomSheetState
             _emptyToDash(result.hardwareVersion),
           ),
           SizedBox(height: 12),
-          _buildDetailRow('Build date', _emptyToDash(result.date)),
+          _buildDetailRow(StringConstants.buildDate, _emptyToDash(result.date)),
           SizedBox(height: 12),
-          _buildDetailRow('Product ID', _emptyToDash(result.productId)),
+          _buildDetailRow(StringConstants.productId, _emptyToDash(result.productId)),
         ],
         Visibility(
           visible: !isCrcMatched,
           child: Column(
             children: [
               SizedBox(height: 12),
-              _buildDetailRow('Expected CRC', expectedCrc),
+              _buildDetailRow(StringConstants.expectedCrc, expectedCrc),
               SizedBox(height: 12),
-              _buildDetailRow('Calculated CRC', calculatedCrc),
+              _buildDetailRow(StringConstants.calculatedCrc, calculatedCrc),
             ],
           ),
         ),
         SizedBox(height: 12),
         _buildDetailRow(
-          'Status',
+          StringConstants.statusLabel,
           _isValidating
               ? StringConstants.validating2
               : isCrcMatched
-              ? 'Valid'
-              : 'Invalid',
+              ? StringConstants.validLabel
+              : StringConstants.invalidLabel,
           valueColor:
               _isValidating
                   ? ColorConstants.textDisabled
@@ -1259,7 +1274,7 @@ class _FirmwareUpgradeBottomSheetState
                 Expanded(
                   child: Text(
                     _validationResult?.error ??
-                        'File CRC validation failed. Please select a valid firmware file.',
+                        StringConstants.fileCrcValidationFailedSelectValidFile,
                     style: StyleConstants.primary14w400Style,
                   ),
                 ),
@@ -1442,8 +1457,8 @@ class _FirmwareUpgradeBottomSheetState
           Text(
             _currentBleStateMessage ??
                 (status == fw.DownloadStatus.upgrading
-                    ? 'Please wait while the firmware is being upgraded. Do not disconnect the device.'
-                    : 'Processing...'),
+                    ? StringConstants.pleaseWaitWhileFirmwareUpgraded
+                    : StringConstants.processingLabel),
             style: StyleConstants.textDisabled14w400Style,
             textAlign: TextAlign.center,
           ),
@@ -1469,7 +1484,7 @@ class _FirmwareUpgradeBottomSheetState
         ),
         SizedBox(height: 24),
         Text(
-          isSuccess ? StringConstants.strf910c9ffFailed : 'Failed',
+          isSuccess ? StringConstants.strf910c9ffFailed : StringConstants.failedLabel,
           style: StyleConstants.primary24w700Style.copyWith(
             color: isSuccess ? ColorConstants.success : ColorConstants.primary,
           ),
@@ -1487,7 +1502,10 @@ class _FirmwareUpgradeBottomSheetState
             _controller.progressbarCount.value = 0.0;
             _controller.totalPacketLength.value = 0;
           },
-          child: Text('Done', style: StyleConstants.white16w600Style),
+          child: Text(
+            StringConstants.doneLabel,
+            style: StyleConstants.white16w600Style,
+          ),
         ),
         // ElevatedButton(
         //   onPressed: () {
@@ -1553,7 +1571,7 @@ class _FirmwareUpgradeBottomSheetState
       logger.Logger('Error picking file: $e');
       setState(() {
         _isUploading = false;
-        _errorMessage = 'Error selecting file: $e';
+        _errorMessage = '${StringConstants.errorSelectingFilePrefix}$e';
       });
     }
   }
@@ -1576,9 +1594,9 @@ class _FirmwareUpgradeBottomSheetState
       _validationResult = result;
       _isValidating = false;
       if (result == null) {
-        _errorMessage = 'No file selected. Please upload again.';
+        _errorMessage = StringConstants.noFileSelectedPleaseUploadAgain;
       } else if (!result.isValid) {
-        _errorMessage = result.error ?? 'CRC validation failed.';
+        _errorMessage = result.error ?? StringConstants.crcValidationFailed;
       }
     });
   }
@@ -1597,8 +1615,7 @@ class _FirmwareUpgradeBottomSheetState
     if (_bleVersionsNotRecovered()) {
       final shouldProceed = await _confirmAndUpgrade(
         message:
-            'Device hardware and firmware versions could not be read from '
-            'Bluetooth. Do you still want to update?',
+            StringConstants.deviceHardwareFirmwareCouldNotBeRead,
       );
       if (shouldProceed) {
         await _startUpgrade(
@@ -1669,7 +1686,7 @@ class _FirmwareUpgradeBottomSheetState
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  "The Firware is already upto date with the current firmware version",
+                  StringConstants.firmwareAlreadyUpToDate,
                   style: StyleConstants.textGray14w400Style,
                   textAlign: TextAlign.center,
                 ),
@@ -1753,7 +1770,10 @@ class _FirmwareUpgradeBottomSheetState
 
                 const SizedBox(height: 8),
                 Text(
-                  "Bin File Hardware Version: ${_validationResult?.hardwareVersion}\nBLE Hardware Version: ${ble.bleHardwareVersion.value}",
+                  StringConstants.binFileHardwareVersionDetail(
+                    _validationResult?.hardwareVersion,
+                    ble.bleHardwareVersion.value,
+                  ),
                   style: StyleConstants.textGray14w400Style,
                   textAlign: TextAlign.center,
                 ),
@@ -1996,7 +2016,7 @@ class _FirmwareUpgradeBottomSheetState
       setState(() {
         _isUpgrading = false;
         _currentStep = FirmwareUpgradeStep.result;
-        _errorMessage = 'Error sending packets: $e';
+        _errorMessage = '${StringConstants.errorSendingPacketsPrefix}$e';
         _currentBleStateMessage = null;
       });
       _controller.downloadingStatus.value = fw.DownloadStatus.failed;

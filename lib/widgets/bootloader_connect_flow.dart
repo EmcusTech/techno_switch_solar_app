@@ -13,6 +13,7 @@ import 'package:techno_switch_solar_app/utils/bluetooth_service.dart';
 import 'package:techno_switch_solar_app/widgets/app_styled_dialogs.dart';
 import 'package:techno_switch_solar_app/widgets/ble_connecting_dialog.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 import 'package:techno_switch_solar_app/widgets/firmware_upgrade_bottom_sheet.dart';
 
 /// True when scan MSD or post-connect [BleManager.bleManufacturerData] indicates bootloader.
@@ -33,23 +34,20 @@ bool isBleDeviceInBootloaderMode({
 String _bootloaderUpgradeConnectMessage({
   required bool bootloaderFileCorrupted,
 }) {
-  const base =
-      'This device is in firmware upgrade mode and cannot be used normally. ';
   if (bootloaderFileCorrupted) {
-    return 'The bootloader file on the device is corrupted. '
-        'Do you want to update the firmware?';
+    return StringConstants.bootloaderFileCorruptedDoYouWantToUpdate;
   }
-  return '${base}Do you want to update the firmware?';
+  return '${StringConstants.thisDeviceIsInFirmwareUpgradeModeAndCannotBeUsedNormally}'
+      '${StringConstants.doYouWantToUpdateTheFirmware}';
 }
 
 String _bootloaderUpgradeDashboardMessage({
   required bool bootloaderFileCorrupted,
 }) {
   if (bootloaderFileCorrupted) {
-    return 'The bootloader file on the device is corrupted. '
-        'Tap on Update to update the firmware.';
+    return StringConstants.theBootloaderFileOnTheDeviceIsCorrupted;
   }
-  return 'Tap on Update to update the firmware.';
+  return StringConstants.tapOnUpdateToUpdateTheFirmware;
 }
 
 /// Connect-time offer: Cancel / Yes.
@@ -59,12 +57,12 @@ Future<bool?> showBootloaderUpgradeOfferDialog(
 }) {
   return showAppStyledTwoActionDialog<bool>(
     context: context,
-    title: 'Device is in bootloader mode',
+    title: StringConstants.deviceIsInBootloaderMode,
     message: _bootloaderUpgradeConnectMessage(
       bootloaderFileCorrupted: bootloaderFileCorrupted,
     ),
-    leadingActionLabel: 'Cancel',
-    trailingActionLabel: 'Yes',
+    leadingActionLabel: StringConstants.cancel,
+    trailingActionLabel: StringConstants.yes,
     leadingValue: false,
     trailingValue: true,
     icon: Icons.warning,
@@ -78,12 +76,12 @@ Future<bool?> showBootloaderUpgradeOfferFromDashboardDialog(
 }) {
   return showAppStyledTwoActionDialog<bool>(
     context: context,
-    title: 'Device is in bootloader mode',
+    title: StringConstants.deviceIsInBootloaderMode,
     message: _bootloaderUpgradeDashboardMessage(
       bootloaderFileCorrupted: bootloaderFileCorrupted,
     ),
-    leadingActionLabel: 'Close',
-    trailingActionLabel: 'Update',
+    leadingActionLabel: StringConstants.close,
+    trailingActionLabel: StringConstants.update,
     leadingValue: false,
     trailingValue: true,
     icon: Icons.warning,
@@ -262,7 +260,7 @@ Future<DiscoveredDevice?> resolveBootloaderModeOnConnect({
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-            'Device not found after firmware upgrade. Please scan and connect again.',
+            StringConstants.deviceNotFoundAfterFirmwareUpgradePleaseScanAndConnectAgain,
           ),
         ),
       );
