@@ -12,6 +12,7 @@ import 'package:techno_switch_solar_app/models/log_model.dart';
 import 'package:techno_switch_solar_app/services/navigation_service.dart';
 import 'package:techno_switch_solar_app/services/panel_service.dart';
 import 'package:techno_switch_solar_app/services/site_service.dart';
+import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
 import 'package:techno_switch_solar_app/utils/export_tile.dart';
 import 'package:techno_switch_solar_app/utils/event_constants.dart';
 import 'package:techno_switch_solar_app/utils/pdf_report_util.dart';
@@ -237,22 +238,14 @@ class _EventLogContentState extends State<_EventLogContent> {
                 const SizedBox(height: 16),
                 Text(
                   StringConstants.clearLogs,
-                  style: GoogleFonts.inter(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: ColorConstants.textDark,
-                  ),
+                  style: StyleConstants.textDark18w700Style,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
                 Text(
                   StringConstants
                       .thisWillRemoveAllEntriesFromTheListThisCannotBeUndone,
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w400,
-                    color: ColorConstants.textGray,
-                  ),
+                  style: StyleConstants.textGray14w400Style,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 20),
@@ -274,11 +267,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                           child: Center(
                             child: Text(
                               StringConstants.cancel,
-                              style: GoogleFonts.inter(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: ColorConstants.textGray,
-                              ),
+                              style: StyleConstants.textGray16w600Style,
                             ),
                           ),
                         ),
@@ -303,12 +292,8 @@ class _EventLogContentState extends State<_EventLogContent> {
                           ),
                           child: Center(
                             child: Text(
-                              'Clear',
-                              style: GoogleFonts.inter(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: ColorConstants.white,
-                              ),
+                              StringConstants.clear,
+                              style: StyleConstants.white16w600Style,
                             ),
                           ),
                         ),
@@ -505,12 +490,8 @@ class _EventLogContentState extends State<_EventLogContent> {
                 ),
               ),
               Text(
-                'Export',
-                style: GoogleFonts.inter(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: ColorConstants.textBodyDark,
-                ),
+                StringConstants.export,
+                style: StyleConstants.textBodyDark18w700Style,
               ),
               const SizedBox(height: 12),
               ExportTile(
@@ -729,10 +710,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                         const SizedBox(width: 8),
                         Text(
                           StringConstants.eventLog,
-                          style: GoogleFonts.inter(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w700,
-                          ),
+                          style: StyleConstants.black20w700Style,
                         ),
                         const Spacer(),
                         if (widget.isLiveEventLogs == true)
@@ -840,11 +818,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                             alignment: Alignment.centerLeft,
                             child: Text(
                               StringConstants.filter,
-                              style: GoogleFonts.inter(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                color: ColorConstants.textBodyDark,
-                              ),
+                              style: StyleConstants.textBodyDark20w700Style,
                             ),
                           ),
                         ),
@@ -859,11 +833,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                       children: [
                         Text(
                           StringConstants.selectDate,
-                          style: GoogleFonts.inter(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: ColorConstants.textBodyDark,
-                          ),
+                          style: StyleConstants.textBodyDark14w700Style,
                         ),
                         SizedBox(height: 12),
                         Row(
@@ -881,7 +851,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                                   children: [
                                     Text(
                                       StringConstants.from,
-                                      style: GoogleFonts.inter(fontSize: 14),
+                                      style: StyleConstants.black14w400Style,
                                     ),
                                     SizedBox(height: 10),
                                     Container(
@@ -904,10 +874,9 @@ class _EventLogContentState extends State<_EventLogContent> {
                                                       .ddMMYyyyHHMmSs,
                                                 ).format(_fromDate!)
                                                 : StringConstants.from,
-                                            style: GoogleFonts.inter(
-                                              fontSize: 14,
-                                              color: ColorConstants.textMuted,
-                                            ),
+                                            style:
+                                                StyleConstants
+                                                    .textMuted14w400Style,
                                           ),
                                           Spacer(),
                                           SvgPicture.asset(
@@ -934,7 +903,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                                   children: [
                                     Text(
                                       StringConstants.to,
-                                      style: GoogleFonts.inter(fontSize: 14),
+                                      style: StyleConstants.black14w400Style,
                                     ),
                                     SizedBox(height: 10),
                                     Container(
@@ -957,10 +926,9 @@ class _EventLogContentState extends State<_EventLogContent> {
                                                       .ddMMYyyyHHMmSs,
                                                 ).format(_toDate!)
                                                 : StringConstants.to,
-                                            style: GoogleFonts.inter(
-                                              fontSize: 14,
-                                              color: ColorConstants.textMuted,
-                                            ),
+                                            style:
+                                                StyleConstants
+                                                    .textMuted14w400Style,
                                           ),
                                           Spacer(),
                                           SvgPicture.asset(
@@ -978,11 +946,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                         SizedBox(height: 21),
                         Text(
                           StringConstants.status2,
-                          style: GoogleFonts.inter(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: ColorConstants.textBodyDark,
-                          ),
+                          style: StyleConstants.textBodyDark14w700Style,
                         ),
                         SizedBox(height: 12),
                         Wrap(

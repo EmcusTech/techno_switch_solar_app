@@ -35,9 +35,21 @@ abstract final class StyleConstants {
     color: ColorConstants.white,
   );
 
+  static TextStyle get black14w400Style => GoogleFonts.inter(
+    fontSize: 14,
+    fontWeight: FontWeight.w400,
+    color: ColorConstants.black,
+  );
+
   static TextStyle get black16w600Style => GoogleFonts.inter(
     fontSize: 16,
     fontWeight: FontWeight.w600,
+    color: ColorConstants.black,
+  );
+
+  static TextStyle get black20w700Style => GoogleFonts.inter(
+    fontSize: 20,
+    fontWeight: FontWeight.w700,
     color: ColorConstants.black,
   );
 
@@ -51,5 +63,41 @@ abstract final class StyleConstants {
     fontSize: 14,
     fontWeight: FontWeight.w400,
     color: ColorConstants.textMuted,
+  );
+
+  static TextStyle get textDark18w700Style => GoogleFonts.inter(
+    fontSize: 18,
+    fontWeight: FontWeight.w700,
+    color: ColorConstants.textDark,
+  );
+
+  static TextStyle get textGray14w400Style => GoogleFonts.inter(
+    fontSize: 14,
+    fontWeight: FontWeight.w400,
+    color: ColorConstants.textGray,
+  );
+
+  static TextStyle get textGray16w600Style => GoogleFonts.inter(
+    fontSize: 16,
+    fontWeight: FontWeight.w600,
+    color: ColorConstants.textGray,
+  );
+
+  static TextStyle get textBodyDark18w700Style => GoogleFonts.inter(
+    fontSize: 18,
+    fontWeight: FontWeight.w700,
+    color: ColorConstants.textBodyDark,
+  );
+
+  static TextStyle get textBodyDark20w700Style => GoogleFonts.inter(
+    fontSize: 20,
+    fontWeight: FontWeight.w700,
+    color: ColorConstants.textBodyDark,
+  );
+
+  static TextStyle get textBodyDark14w700Style => GoogleFonts.inter(
+    fontSize: 14,
+    fontWeight: FontWeight.w700,
+    color: ColorConstants.textBodyDark,
   );
 }
