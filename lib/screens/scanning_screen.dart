@@ -29,6 +29,7 @@ import 'package:techno_switch_solar_app/widgets/panel_access_code_dialog.dart';
 import 'package:techno_switch_solar_app/widgets/bootloader_connect_flow.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
+import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 
 enum ScanType { usb, bluetooth }
 
@@ -1050,11 +1051,11 @@ class _ScanningScreenState extends State<ScanningScreen>
       children: [
         Column(
           children: [
-            SvgPicture.asset('assets/svgs/background_1.svg'),
+            SvgPicture.asset(AssetConstants.background1),
             const Spacer(),
             Transform.rotate(
               angle: 3.14159,
-              child: SvgPicture.asset('assets/svgs/background_1.svg'),
+              child: SvgPicture.asset(AssetConstants.background1),
             ),
           ],
         ),
@@ -1068,7 +1069,7 @@ class _ScanningScreenState extends State<ScanningScreen>
                 shape: BoxShape.circle,
                 color: Colors.red[50],
               ),
-              child: Center(child: SvgPicture.asset('assets/svgs/logo.svg')),
+              child: Center(child: SvgPicture.asset(AssetConstants.logo)),
             ),
             const SizedBox(height: 40),
             Text(
@@ -1185,11 +1186,11 @@ class _ScanningScreenState extends State<ScanningScreen>
       children: [
         Column(
           children: [
-            SvgPicture.asset('assets/svgs/background_1.svg'),
+            SvgPicture.asset(AssetConstants.background1),
             const Spacer(),
             Transform.rotate(
               angle: 3.14159,
-              child: SvgPicture.asset('assets/svgs/background_1.svg'),
+              child: SvgPicture.asset(AssetConstants.background1),
             ),
           ],
         ),
@@ -1387,7 +1388,7 @@ class _ScanningScreenState extends State<ScanningScreen>
               ),
               SizedBox(height: 6),
               SvgPicture.asset(
-                'assets/svgs/panel_icon.svg',
+                AssetConstants.panelIcon,
                 width: 60,
                 height: 60,
               ),
@@ -1787,7 +1788,7 @@ class _ScanningScreenState extends State<ScanningScreen>
                                   color: ColorConstants.primary,
                                 )
                                 : Lottie.asset(
-                                  'assets/jsons/ble_connecting.json',
+                                  AssetConstants.bleConnectingJson,
                                   animate: !showConnectionError,
                                 ),
                       ),

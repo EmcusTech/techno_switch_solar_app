@@ -5,6 +5,7 @@ import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:techno_switch_solar_app/screens/home_screen.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
+import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -47,14 +48,14 @@ class _SplashScreenState extends State<SplashScreen> {
                 children: [
                   Expanded(
                     child: SvgPicture.asset(
-                      'assets/svgs/splashscreen_background_1.svg',
+                      AssetConstants.splashscreenBackground1,
                       fit: BoxFit.cover,
                       width: double.infinity,
                     ),
                   ),
                   Expanded(
                     child: SvgPicture.asset(
-                      'assets/svgs/splashscreen_background_2.svg',
+                      AssetConstants.splashscreenBackground2,
                       fit: BoxFit.cover,
                       width: double.infinity,
                     ),
@@ -72,7 +73,7 @@ class _SplashScreenState extends State<SplashScreen> {
                       horizontal: 26,
                       vertical: 32,
                     ),
-                    child: Image.asset('assets/images/full_logo.png'),
+                    child: Image.asset(AssetConstants.fullLogo),
                   ),
                   Text(
                     StringConstants.panelConfigurationTool,
@@ -101,7 +102,7 @@ class _SplashScreenState extends State<SplashScreen> {
                   ),
                   SizedBox(height: 10),
                   Text(
-                    StringConstants.v0049TestingVersion,
+                    StringConstants.testingVersion,
                     style: GoogleFonts.inter(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,

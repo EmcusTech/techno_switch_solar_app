@@ -3,6 +3,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
+import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 
 class LogRetrievalFailedScreen extends StatefulWidget {
   const LogRetrievalFailedScreen({super.key});
@@ -37,7 +38,7 @@ class _LogRetrievalFailedScreenState extends State<LogRetrievalFailedScreen> {
         ),
         child: Stack(
           children: [
-            SvgPicture.asset('assets/svgs/background_1.svg'),
+            SvgPicture.asset(AssetConstants.background1),
             Padding(
               padding: EdgeInsets.only(top: 24),
               child: Column(
@@ -53,7 +54,7 @@ class _LogRetrievalFailedScreenState extends State<LogRetrievalFailedScreen> {
                             Navigator.of(context).pop();
                           },
                           child: SvgPicture.asset(
-                            'assets/svgs/arrow_back_icon.svg',
+                            AssetConstants.arrowBackIcon,
                           ),
                         ),
                         SizedBox(width: 8),
@@ -90,7 +91,7 @@ class _LogRetrievalFailedScreenState extends State<LogRetrievalFailedScreen> {
           children: [
             Align(
               alignment: Alignment.topCenter,
-              child: SvgPicture.asset('assets/svgs/background_2.svg'),
+              child: SvgPicture.asset(AssetConstants.background2),
             ),
             Align(
               alignment: Alignment.topCenter,

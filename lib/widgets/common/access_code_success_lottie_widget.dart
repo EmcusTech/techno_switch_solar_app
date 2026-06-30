@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
+import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 
 /// Shown after panel access code validation succeeds (before sheet closes).
 class AccessCodeSuccessLottieWidget extends StatelessWidget {
   const AccessCodeSuccessLottieWidget({super.key});
 
-  static const String _assetPath = 'assets/jsons/firmware_upgrade_success.json';
+  static const String _assetPath = AssetConstants.firmwareUpgradeSuccessJson;
 
   @override
   Widget build(BuildContext context) {

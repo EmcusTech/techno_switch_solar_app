@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/models/panel_type_config.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
+import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 
 class PanelSelectionPage extends StatefulWidget {
   final String? selectedPanelType;
@@ -241,7 +242,7 @@ class _PanelSelectionPageState extends State<PanelSelectionPage> {
               ),
               Spacer(),
               SvgPicture.asset(
-                'assets/svgs/panel_type_icon_1.svg',
+                AssetConstants.panelTypeIcon1,
                 colorFilter: ColorFilter.mode(
                   zoneCount == '0' ? ColorConstants.divider : ColorConstants.primary,
                   BlendMode.srcIn,
@@ -264,7 +265,7 @@ class _PanelSelectionPageState extends State<PanelSelectionPage> {
               ),
               SizedBox(width: 6),
               SvgPicture.asset(
-                'assets/svgs/panel_type_icon_2.svg',
+                AssetConstants.panelTypeIcon2,
                 colorFilter: ColorFilter.mode(
                   sounderCount == '0' ? ColorConstants.divider : ColorConstants.primary,
                   BlendMode.srcIn,
@@ -287,7 +288,7 @@ class _PanelSelectionPageState extends State<PanelSelectionPage> {
               ),
               SizedBox(width: 6),
               SvgPicture.asset(
-                'assets/svgs/panel_type_icon_3.svg',
+                AssetConstants.panelTypeIcon3,
                 colorFilter: ColorFilter.mode(
                   relaysCount == '0' ? ColorConstants.divider : ColorConstants.primary,
                   BlendMode.srcIn,
@@ -310,7 +311,7 @@ class _PanelSelectionPageState extends State<PanelSelectionPage> {
               ),
               SizedBox(width: 6),
               SvgPicture.asset(
-                'assets/svgs/panel_type_icon_4.svg',
+                AssetConstants.panelTypeIcon4,
                 colorFilter: ColorFilter.mode(
                   panelFireExtinguisherCount == '0'
                       ? ColorConstants.divider

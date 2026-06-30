@@ -8,6 +8,7 @@ import 'package:techno_switch_solar_app/utils/commissioning_test_results_helper.
 import 'package:techno_switch_solar_app/utils/peripheral_config_diff_labels.dart';
 import 'package:techno_switch_solar_app/utils/storage/commissioning_test_results_cache.dart';
 import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
+import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 
 /// Site / panel summary + peripheral sections (cache-backed), same PDF chrome as log report.
 class ProjectReportPdfUtil {
@@ -85,8 +86,8 @@ class ProjectReportPdfUtil {
     final serviceDate = _serviceDateFromDue(serviceDue);
 
     final pdf = pw.Document();
-    final logo = await _loadImage('assets/images/full_logo.png');
-    final watermarkSvg = await _loadSvg('assets/svgs/log_report_watermark.svg');
+    final logo = await _loadImage(AssetConstants.fullLogo);
+    final watermarkSvg = await _loadSvg(AssetConstants.logReportWatermark);
 
     pdf.addPage(
       pw.MultiPage(

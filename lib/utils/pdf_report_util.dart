@@ -4,6 +4,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:techno_switch_solar_app/models/log_model.dart';
+import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 
 class LogReportPdfUtil {
   LogReportPdfUtil._();
@@ -18,8 +19,8 @@ class LogReportPdfUtil {
     required String saqccNo,
   }) async {
     final pdf = pw.Document();
-    final logo = await _loadImage('assets/images/full_logo.png');
-    final watermarkSvg = await _loadSvg('assets/svgs/log_report_watermark.svg');
+    final logo = await _loadImage(AssetConstants.fullLogo);
+    final watermarkSvg = await _loadSvg(AssetConstants.logReportWatermark);
 
     pdf.addPage(
       pw.MultiPage(

@@ -13,6 +13,7 @@ import 'package:techno_switch_solar_app/utils/ble_msd_utils.dart';
 import 'package:techno_switch_solar_app/utils/ble_name_utils.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
+import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 
 class LogRetrievalLoadingScreen extends StatefulWidget {
   final dynamic selectedDevice;
@@ -286,7 +287,7 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen> {
           ),
           child: Stack(
             children: [
-              SvgPicture.asset('assets/svgs/background_1.svg'),
+              SvgPicture.asset(AssetConstants.background1),
               Padding(
                 padding: EdgeInsets.only(top: 24),
                 child: Column(
@@ -302,7 +303,7 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen> {
                               _showStopConfirmationDialog();
                             },
                             child: SvgPicture.asset(
-                              'assets/svgs/arrow_back_icon.svg',
+                              AssetConstants.arrowBackIcon,
                             ),
                           ),
                           SizedBox(width: 8),
@@ -340,7 +341,7 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen> {
           children: [
             Align(
               alignment: Alignment.topRight,
-              child: SvgPicture.asset('assets/svgs/background_2.svg'),
+              child: SvgPicture.asset(AssetConstants.background2),
             ),
             Align(
               alignment: Alignment.topCenter,
@@ -357,7 +358,7 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen> {
               ),
             ),
             Lottie.asset(
-              'assets/jsons/fetching_log.json',
+              AssetConstants.fetchingLogJson,
               height: 320,
               width: 320,
             ),

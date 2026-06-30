@@ -54,6 +54,7 @@ import 'package:techno_switch_solar_app/widgets/bootloader_connect_flow.dart';
 import 'package:techno_switch_solar_app/widgets/ble_connecting_dialog.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
+import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 
 class ProjectDashboardScreen extends StatefulWidget {
   final String panelVersionNo;
@@ -197,7 +198,7 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
                 icon: navItem(
                   index: 0,
                   label: StringConstants.dashboard,
-                  asset: 'assets/svgs/dashboard_icon.svg',
+                  asset: AssetConstants.dashboardIcon,
                 ),
                 label: '',
               ),
@@ -205,7 +206,7 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
                 icon: navItem(
                   index: 1,
                   label: StringConstants.settings,
-                  asset: 'assets/svgs/setting_icon.svg',
+                  asset: AssetConstants.settingIcon,
                 ),
                 label: '',
               ),
@@ -213,7 +214,7 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
                 icon: navItem(
                   index: 2,
                   label: StringConstants.testMode,
-                  asset: 'assets/svgs/test_mode_icon.svg',
+                  asset: AssetConstants.testModeIcon,
                 ),
                 label: '',
               ),
@@ -221,7 +222,7 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
                 icon: navItem(
                   index: 3,
                   label: StringConstants.logHistory,
-                  asset: 'assets/svgs/log_history_icon.svg',
+                  asset: AssetConstants.logHistoryIcon,
                 ),
                 label: '',
               ),
@@ -673,7 +674,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                                   color: Colors.green,
                                 )
                                 : Lottie.asset(
-                                  'assets/jsons/ble_connecting.json',
+                                  AssetConstants.bleConnectingJson,
                                   animate: !maxBleConnectionRetriesReached,
                                 ),
                       ),
@@ -953,7 +954,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
         ),
         child: Stack(
           children: [
-            SvgPicture.asset('assets/svgs/background_1.svg'),
+            SvgPicture.asset(AssetConstants.background1),
             Padding(
               padding: EdgeInsets.only(top: 24),
               child: Column(
@@ -1011,7 +1012,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                           child: Padding(
                             padding: const EdgeInsets.only(right: 12.0),
                             child: SvgPicture.asset(
-                              "assets/svgs/share_icon.svg",
+                              AssetConstants.shareIcon,
                             ),
                           ),
                         ),
@@ -1069,7 +1070,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
               const SizedBox(height: 12),
 
               ExportTile(
-                iconPath: "assets/svgs/share_icon_red.svg",
+                iconPath: AssetConstants.shareIconRed,
                 title: StringConstants.exportAsPDF,
                 onTap: () async {
                   Navigator.pop(context);
@@ -1307,7 +1308,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                   ),
                   child: Center(
                     child: SvgPicture.asset(
-                      'assets/svgs/check_circle_icon.svg',
+                      AssetConstants.checkCircleIcon,
                       height: 40,
                       width: 40,
                       fit: BoxFit.contain,
@@ -1400,7 +1401,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                   ),
                   child: Center(
                     child: SvgPicture.asset(
-                      'assets/svgs/check_circle_icon.svg',
+                      AssetConstants.checkCircleIcon,
                       height: 40,
                       width: 40,
                       fit: BoxFit.contain,
@@ -1690,7 +1691,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
   Widget _buildPanelInfoHeader() {
     return Row(
       children: [
-        SvgPicture.asset('assets/svgs/panel_icon.svg', height: 62, width: 62),
+        SvgPicture.asset(AssetConstants.panelIcon, height: 62, width: 62),
         SizedBox(width: 14),
         Expanded(
           child: Column(
@@ -1823,7 +1824,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
             children: [
               _peripheralTile(
                 peripheralName: StringConstants.relays,
-                iconPath: 'assets/svgs/peripheral_relay_icon.svg',
+                iconPath: AssetConstants.peripheralRelayIcon,
                 onTap: () {
                   if (BleMsdUtils.isBootloader(
                     _selectedDevice.manufacturerData,
@@ -1863,7 +1864,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
               ),
               _peripheralTile(
                 peripheralName: StringConstants.inputs,
-                iconPath: 'assets/svgs/peripheral_input_icon.svg',
+                iconPath: AssetConstants.peripheralInputIcon,
                 onTap: () {
                   if (BleMsdUtils.isBootloader(
                     _selectedDevice.manufacturerData,
@@ -1902,7 +1903,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
               ),
               _peripheralTile(
                 peripheralName: StringConstants.zones,
-                iconPath: 'assets/svgs/peripheral_zones_icon.svg',
+                iconPath: AssetConstants.peripheralZonesIcon,
                 onTap: () {
                   if (BleMsdUtils.isBootloader(
                     _selectedDevice.manufacturerData,
@@ -1942,7 +1943,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
               ),
               _peripheralTile(
                 peripheralName: StringConstants.sounders,
-                iconPath: 'assets/svgs/peripheral_sounder_icon.svg',
+                iconPath: AssetConstants.peripheralSounderIcon,
                 onTap: () {
                   if (BleMsdUtils.isBootloader(
                     _selectedDevice.manufacturerData,
@@ -1987,7 +1988,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
               ),
               _peripheralTile(
                 peripheralName: StringConstants.radio,
-                iconPath: 'assets/svgs/peripheral_prog_hold_icon.svg',
+                iconPath: AssetConstants.peripheralProgHoldIcon,
                 isDisabled: true,
                 onTap: () {
                   if (BleMsdUtils.isBootloader(
@@ -2029,7 +2030,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
               ),
               _peripheralTile(
                 peripheralName: StringConstants.moduleInfo,
-                iconPath: 'assets/svgs/peripheral_aux_icon.svg',
+                iconPath: AssetConstants.peripheralAuxIcon,
                 onTap: () {
                   if (BleMsdUtils.isBootloader(
                     _selectedDevice.manufacturerData,
@@ -2057,7 +2058,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
               ),
               _peripheralTile(
                 peripheralName: StringConstants.lBus,
-                iconPath: 'assets/svgs/peripheral_l_bus_icon.svg',
+                iconPath: AssetConstants.peripheralLBusIcon,
                 onTap: () {
                   if (BleMsdUtils.isBootloader(
                     _selectedDevice.manufacturerData,
@@ -2098,7 +2099,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
               ),
               _peripheralTile(
                 peripheralName: StringConstants.extOut2,
-                iconPath: 'assets/svgs/peripheral_ext_out_icon.svg',
+                iconPath: AssetConstants.peripheralExtOutIcon,
                 onTap: () {
                   if (BleMsdUtils.isBootloader(
                     _selectedDevice.manufacturerData,
@@ -2733,7 +2734,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
             children: [
               _peripheralTile(
                 peripheralName: StringConstants.eventLog,
-                iconPath: 'assets/svgs/panel_action_event_log_icon.svg',
+                iconPath: AssetConstants.panelActionEventLogIcon,
                 onTap: () {
                   if (BleMsdUtils.isBootloader(
                     _selectedDevice.manufacturerData,
@@ -2754,7 +2755,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
               ),
               _peripheralTile(
                 peripheralName: StringConstants.fwUpgrade,
-                iconPath: 'assets/svgs/firmware_icon.svg',
+                iconPath: AssetConstants.firmwareIcon,
                 onTap: () async {
                   FirmwareBinding().dependencies();
                   await showModalBottomSheet(
@@ -2773,7 +2774,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
               ),
               _peripheralTile(
                 peripheralName: StringConstants.serviceDue,
-                iconPath: 'assets/svgs/panel_action_service_due_icon.svg',
+                iconPath: AssetConstants.panelActionServiceDueIcon,
                 onTap: () {
                   if (BleMsdUtils.isBootloader(
                     _selectedDevice.manufacturerData,
@@ -2815,7 +2816,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
               ),
               _peripheralTile(
                 peripheralName: StringConstants.accessCode,
-                iconPath: 'assets/svgs/panel_action_access_code_icon.svg',
+                iconPath: AssetConstants.panelActionAccessCodeIcon,
                 onTap: () {
                   if (BleMsdUtils.isBootloader(
                     _selectedDevice.manufacturerData,
@@ -2862,7 +2863,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
               ),
               _peripheralTile(
                 peripheralName: StringConstants.panelInfo,
-                iconPath: 'assets/svgs/panel_action_panel_info_icon.svg',
+                iconPath: AssetConstants.panelActionPanelInfoIcon,
                 onTap: () {
                   showPanelInfoSetupBottomSheet(
                     context: context,
@@ -2901,7 +2902,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
               ),
               _peripheralTile(
                 peripheralName: 'General',
-                iconPath: 'assets/svgs/panel_action_general_module_icon.svg',
+                iconPath: AssetConstants.panelActionGeneralModuleIcon,
                 onTap: () {
                   showGeneralModuleSetupBottomSheet(
                     context: context,
@@ -2941,7 +2942,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
               ),
               _peripheralTile(
                 peripheralName: StringConstants.liveDataIsBeingStreamedFromTheDeviceInRealTime,
-                iconPath: 'assets/svgs/diagnostic_icon.svg',
+                iconPath: AssetConstants.diagnosticIcon,
                 onTap: () {
                   if (BleMsdUtils.isBootloader(
                     _selectedDevice.manufacturerData,
@@ -2973,7 +2974,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
               ),
               _peripheralTile(
                 peripheralName: StringConstants.walkTest,
-                iconPath: 'assets/svgs/walk_test_icon.svg',
+                iconPath: AssetConstants.walkTestIcon,
                 onTap: () {
                   if (BleMsdUtils.isBootloader(
                     _selectedDevice.manufacturerData,
@@ -3014,7 +3015,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
               ),
               _peripheralTile(
                 peripheralName: StringConstants.configLog,
-                iconPath: 'assets/svgs/panel_action_config_log_icon.svg',
+                iconPath: AssetConstants.panelActionConfigLogIcon,
                 onTap: () {
                   if (BleMsdUtils.isBootloader(
                     _selectedDevice.manufacturerData,
@@ -3027,7 +3028,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
               ),
               _peripheralTile(
                 peripheralName: StringConstants.testMode,
-                iconPath: 'assets/svgs/peripheral_prog_hold_icon.svg',
+                iconPath: AssetConstants.peripheralProgHoldIcon,
                 onTap: () {
                   if (BleMsdUtils.isBootloader(
                     _selectedDevice.manufacturerData,

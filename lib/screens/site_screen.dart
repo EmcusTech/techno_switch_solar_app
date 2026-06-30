@@ -18,6 +18,7 @@ import 'package:techno_switch_solar_app/utils/logger.dart';
 import 'package:techno_switch_solar_app/widgets/common/common_cta_button.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/ble_name_utils.dart';
+import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 
 class SiteScreen extends StatefulWidget {
   final SiteModel site;
@@ -471,7 +472,7 @@ class _SiteScreenState extends State<SiteScreen> {
   Widget _buildHeader(BuildContext context) {
     return Stack(
       children: [
-        SvgPicture.asset('assets/svgs/background_1.svg'),
+        SvgPicture.asset(AssetConstants.background1),
         Padding(
           padding: const EdgeInsets.only(top: 120),
           child: Column(
@@ -558,7 +559,7 @@ class _SiteScreenState extends State<SiteScreen> {
                     children: [
                       Row(
                         children: [
-                          SvgPicture.asset('assets/svgs/location_icon.svg'),
+                          SvgPicture.asset(AssetConstants.locationIcon),
                           SizedBox(width: 8),
                           Text(
                             widget.site.siteName,
@@ -585,7 +586,7 @@ class _SiteScreenState extends State<SiteScreen> {
                       _confirmDeleteSite();
                     },
                     child: SvgPicture.asset(
-                      'assets/svgs/delete_icon.svg',
+                      AssetConstants.deleteIcon,
                       colorFilter: ColorFilter.mode(
                         ColorConstants.errorBright,
                         BlendMode.srcIn,
@@ -616,7 +617,7 @@ class _SiteScreenState extends State<SiteScreen> {
                 children: [
                   Row(
                     children: [
-                      SvgPicture.asset('assets/svgs/site_calender_icon.svg'),
+                      SvgPicture.asset(AssetConstants.siteCalenderIcon),
                       SizedBox(width: 12),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -657,7 +658,7 @@ class _SiteScreenState extends State<SiteScreen> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        SvgPicture.asset('assets/svgs/details_icon.svg'),
+                        SvgPicture.asset(AssetConstants.detailsIcon),
                         SizedBox(width: 8),
                         Text(
                           'View Site Details',
@@ -726,7 +727,7 @@ class _SiteScreenState extends State<SiteScreen> {
         child: Column(
           children: [
             SvgPicture.asset(
-              'assets/svgs/new_project_icon.svg',
+              AssetConstants.newProjectIcon,
               height: 48,
               width: 48,
               colorFilter: ColorFilter.mode(
@@ -902,7 +903,7 @@ class _PanelListItemWidgetState extends State<_PanelListItemWidget>
               child: Row(
                 children: [
                   Image.asset(
-                    'assets/images/panel_icon.png',
+                    AssetConstants.panelIconImage,
                     height: 62,
                     width: 62,
                   ),

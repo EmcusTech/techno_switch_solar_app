@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
@@ -42,7 +43,7 @@ class TestModeChoiceBottomSheet extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    SvgPicture.asset('assets/svgs/bottomsheet_logo.svg'),
+                    SvgPicture.asset(AssetConstants.bottomsheetLogo),
                     Padding(
                       padding: const EdgeInsets.only(right: 32.0),
                       child: GestureDetector(

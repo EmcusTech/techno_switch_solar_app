@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
 import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
+import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
@@ -203,7 +204,7 @@ class _BleConnectingDialogState extends State<BleConnectingDialog> {
                               color: ColorConstants.primary,
                             )
                             : Lottie.asset(
-                              'assets/jsons/ble_connecting.json',
+                              AssetConstants.bleConnectingJson,
                               animate: !showConnectionError,
                             ),
                   ),

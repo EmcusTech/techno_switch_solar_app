@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/ble/ble_process.dart';
+import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 
 void showPanelApplySuccessDialog(
@@ -58,7 +59,7 @@ void showPanelApplySuccessDialog(
                 ),
                 child: Center(
                   child: SvgPicture.asset(
-                    'assets/svgs/check_circle_icon.svg',
+                    AssetConstants.checkCircleIcon,
                     height: 40,
                     width: 40,
                     fit: BoxFit.contain,
@@ -120,7 +121,7 @@ void showPanelDownloadSuccessDialog(BuildContext context, String message) {
                 ),
                 child: Center(
                   child: SvgPicture.asset(
-                    'assets/svgs/check_circle_icon.svg',
+                    AssetConstants.checkCircleIcon,
                     height: 40,
                     width: 40,
                     fit: BoxFit.contain,

@@ -3,6 +3,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
+import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 
 class LBusDevicesPage extends StatefulWidget {
   final String? expandedLBus;
@@ -83,13 +84,13 @@ class _LBusDevicesPageState extends State<LBusDevicesPage> {
               ),
               Spacer(),
               SvgPicture.asset(
-                'assets/svgs/add_circle_icon.svg',
+                AssetConstants.addCircleIcon,
                 width: 24,
                 height: 24,
               ),
               SizedBox(width: 25),
               SvgPicture.asset(
-                'assets/svgs/edit_icon.svg',
+                AssetConstants.editIcon,
                 width: 24,
                 height: 24,
               ),
@@ -304,7 +305,7 @@ class _LBusDevicesPageState extends State<LBusDevicesPage> {
                 ),
               ),
               SizedBox(width: 2),
-              SvgPicture.asset('assets/svgs/drop_down_red_icon.svg'),
+              SvgPicture.asset(AssetConstants.dropDownRedIcon),
             ],
           ),
         ),

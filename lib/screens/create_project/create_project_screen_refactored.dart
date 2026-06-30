@@ -29,6 +29,7 @@ import 'package:techno_switch_solar_app/widgets/bottom_sheets/zone_mode_bottomsh
 import 'package:techno_switch_solar_app/widgets/app_styled_dialogs.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
+import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 
 class CreateSiteScreenRefactored extends StatefulWidget {
   const CreateSiteScreenRefactored({super.key});
@@ -825,7 +826,7 @@ class _CreateSiteScreenRefactoredState
           ),
           child: Stack(
             children: [
-              SvgPicture.asset('assets/svgs/background_1.svg'),
+              SvgPicture.asset(AssetConstants.background1),
               Padding(
                 padding: const EdgeInsets.only(left: 20, right: 20, top: 24),
                 child: Column(

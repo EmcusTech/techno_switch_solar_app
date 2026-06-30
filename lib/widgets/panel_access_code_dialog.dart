@@ -6,7 +6,6 @@ import 'package:techno_switch_solar_app/screens/log_retrieval_loading_screen.dar
 import 'package:techno_switch_solar_app/screens/scanning_screen.dart';
 import 'package:techno_switch_solar_app/widgets/common/common_numeric_keypad_widget.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
 Future<bool> _showPanelAccessCodeBottomSheet({
   required BuildContext context,

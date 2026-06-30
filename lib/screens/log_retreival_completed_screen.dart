@@ -15,6 +15,7 @@ import 'package:techno_switch_solar_app/widgets/site_creation_dialog.dart';
 import 'package:techno_switch_solar_app/utils/ble_name_utils.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
+import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 
 class LogRetrievalCompletedScreen extends StatefulWidget {
   final List<LogModel> logs;
@@ -62,7 +63,7 @@ class _LogRetrievalCompletedScreenState
           ),
           child: Stack(
             children: [
-              SvgPicture.asset('assets/svgs/background_1.svg'),
+              SvgPicture.asset(AssetConstants.background1),
               Padding(
                 padding: EdgeInsets.only(top: 24),
                 child: Column(
@@ -78,7 +79,7 @@ class _LogRetrievalCompletedScreenState
                               await _handleBackNavigation();
                             },
                             child: SvgPicture.asset(
-                              'assets/svgs/arrow_back_icon.svg',
+                              AssetConstants.arrowBackIcon,
                             ),
                           ),
                           SizedBox(width: 8),
@@ -201,7 +202,7 @@ class _LogRetrievalCompletedScreenState
           children: [
             Align(
               alignment: Alignment.topCenter,
-              child: SvgPicture.asset('assets/svgs/background_3.svg'),
+              child: SvgPicture.asset(AssetConstants.background3),
             ),
             Align(
               alignment: Alignment.topCenter,
@@ -219,7 +220,7 @@ class _LogRetrievalCompletedScreenState
               ),
             ),
             Lottie.asset(
-              'assets/jsons/firmware_upgrade_success.json',
+              AssetConstants.firmwareUpgradeSuccessJson,
               height: 180,
               width: 180,
               repeat: false,

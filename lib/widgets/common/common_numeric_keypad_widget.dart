@@ -7,6 +7,7 @@ import 'package:techno_switch_solar_app/widgets/common/access_code_success_lotti
 import 'package:techno_switch_solar_app/widgets/common/access_code_verifying_lottie_widget.dart';
 import 'package:techno_switch_solar_app/widgets/common/common_cta_button.dart';
 import 'package:techno_switch_solar_app/widgets/common/common_numeric_keypad_tile_widget.dart';
+import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
@@ -528,7 +529,7 @@ class _CommonNumericKeypadWidgetState extends State<CommonNumericKeypadWidget> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      SvgPicture.asset('assets/svgs/bottomsheet_logo.svg'),
+                      SvgPicture.asset(AssetConstants.bottomsheetLogo),
                       if (!lockSheet)
                         Padding(
                           padding: const EdgeInsets.only(right: 32.0),
@@ -656,7 +657,7 @@ class _CommonNumericKeypadWidgetState extends State<CommonNumericKeypadWidget> {
               ),
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
-                child: SvgPicture.asset('assets/svgs/lock_icon_white_svg.svg'),
+                child: SvgPicture.asset(AssetConstants.lockIconWhiteSvg),
               ),
             ),
             const SizedBox(height: 32),

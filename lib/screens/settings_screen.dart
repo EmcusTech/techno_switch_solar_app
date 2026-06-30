@@ -7,6 +7,7 @@ import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/utils/ble_name_utils.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
+import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 
 class SettingsScreen extends StatefulWidget {
   final String panelName;
@@ -132,7 +133,7 @@ class _SettingsContentState extends State<_SettingsContent> {
         ),
         child: Stack(
           children: [
-            SvgPicture.asset('assets/svgs/background_1.svg'),
+            SvgPicture.asset(AssetConstants.background1),
             Padding(
               padding: EdgeInsets.only(top: 24),
               child: Column(
@@ -155,7 +156,7 @@ class _SettingsContentState extends State<_SettingsContent> {
                             }
                           },
                           child: SvgPicture.asset(
-                            'assets/svgs/arrow_back_icon.svg',
+                            AssetConstants.arrowBackIcon,
                           ),
                         ),
                         SizedBox(width: 8),
@@ -200,7 +201,7 @@ class _SettingsContentState extends State<_SettingsContent> {
           Row(
             children: [
               SvgPicture.asset(
-                'assets/svgs/panel_icon.svg',
+                AssetConstants.panelIcon,
                 height: 62,
                 width: 62,
               ),
@@ -292,7 +293,7 @@ class _SettingsContentState extends State<_SettingsContent> {
         child: Row(
           children: [
             SvgPicture.asset(
-              'assets/svgs/settings_icon.svg',
+              AssetConstants.settingsIcon,
               colorFilter: ColorFilter.mode(
                 ColorConstants.textHeading.withValues(alpha: 0.72),
                 BlendMode.srcIn,

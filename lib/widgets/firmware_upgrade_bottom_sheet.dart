@@ -13,6 +13,7 @@ import 'package:lottie/lottie.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 import 'package:techno_switch_solar_app/ble/ble_session_idle_policy.dart';
 import 'package:techno_switch_solar_app/models/ble/firmware/firmware_packet_model.dart';
+import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 import 'package:techno_switch_solar_app/widgets/common/common_cta_button.dart';
 import '../ble/ble_manager.dart';
@@ -1108,7 +1109,7 @@ class _FirmwareUpgradeBottomSheetState
               child: Column(
                 children: [
                   SvgPicture.asset(
-                    'assets/svgs/upload_icon.svg',
+                    AssetConstants.uploadIcon,
                     width: 32,
                     height: 32,
                   ),
@@ -1499,15 +1500,15 @@ class _FirmwareUpgradeBottomSheetState
           Center(
             child:
                 _isWaitingForEndReconnect
-                    ? Lottie.asset('assets/jsons/ble_connecting.json')
+                    ? Lottie.asset(AssetConstants.bleConnectingJson)
                     : (progress * 100).toStringAsFixed(1) == '0.0'
-                    ? Lottie.asset('assets/jsons/ble_connecting.json')
+                    ? Lottie.asset(AssetConstants.bleConnectingJson)
                     : CircularPercentIndicator(
                       radius: 80,
                       lineWidth: 8,
                       percent: progress.clamp(0.0, 1.0),
                       center: Lottie.asset(
-                        'assets/jsons/firmware_upgrade.json',
+                        AssetConstants.firmwareUpgradeJson,
                       ),
                       progressColor: ColorConstants.primary,
                       backgroundColor: ColorConstants.progressTrack,
@@ -1578,8 +1579,8 @@ class _FirmwareUpgradeBottomSheetState
           height: 180,
           width: 180,
           isSuccess
-              ? 'assets/jsons/firmware_upgrade_success.json'
-              : 'assets/jsons/firmware_upgrade_failed.json',
+              ? AssetConstants.firmwareUpgradeSuccessJson
+              : AssetConstants.firmwareUpgradeFailedJson,
           repeat: false,
         ),
         SizedBox(height: 24),

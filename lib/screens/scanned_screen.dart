@@ -26,6 +26,7 @@ import 'package:techno_switch_solar_app/utils/bluetooth_service.dart';
 import 'package:usb_serial/usb_serial.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
+import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 
 class ScannedScreen extends StatefulWidget {
   final List<dynamic> discoveredDevices;
@@ -559,7 +560,7 @@ class _ScannedScreenState extends State<ScannedScreen> {
             ),
           ),
         ),
-        SvgPicture.asset('assets/svgs/background_1.svg'),
+        SvgPicture.asset(AssetConstants.background1),
         Padding(
           padding: const EdgeInsets.only(top: 100),
           child: Column(
@@ -591,7 +592,7 @@ class _ScannedScreenState extends State<ScannedScreen> {
                       child: Padding(
                         padding: const EdgeInsets.all(25.0),
                         child: SvgPicture.asset(
-                          'assets/svgs/logo.svg',
+                          AssetConstants.logo,
                           height: 59.29,
                           width: 51,
                           colorFilter: ColorFilter.mode(
@@ -1090,7 +1091,7 @@ class _ScannedScreenState extends State<ScannedScreen> {
                                   color: ColorConstants.primary,
                                 )
                                 : Lottie.asset(
-                                  'assets/jsons/ble_connecting.json',
+                                  AssetConstants.bleConnectingJson,
                                   animate: !showConnectionError,
                                 ),
                       ),
@@ -1205,7 +1206,7 @@ class _ScannedScreenState extends State<ScannedScreen> {
                           .withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: SvgPicture.asset('assets/svgs/panel_icon.svg'),
+                    child: SvgPicture.asset(AssetConstants.panelIcon),
                   ),
                   SizedBox(width: 14.31),
                   Expanded(
@@ -1243,7 +1244,7 @@ class _ScannedScreenState extends State<ScannedScreen> {
                       ],
                     ),
                   ),
-                  SvgPicture.asset('assets/svgs/arrow_right_colored_icon.svg'),
+                  SvgPicture.asset(AssetConstants.arrowRightColoredIcon),
                 ],
               ),
             ),

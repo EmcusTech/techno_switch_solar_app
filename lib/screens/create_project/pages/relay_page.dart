@@ -3,6 +3,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
+import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 
 class RelayPage extends StatefulWidget {
   final String? expandedRelay;
@@ -274,7 +275,7 @@ class _RelayPageState extends State<RelayPage> {
                 ),
               ),
               SizedBox(width: 2),
-              SvgPicture.asset('assets/svgs/drop_down_red_icon.svg'),
+              SvgPicture.asset(AssetConstants.dropDownRedIcon),
             ],
           ),
         ),

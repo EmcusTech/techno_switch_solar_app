@@ -149,7 +149,8 @@ abstract final class StringConstants {
   static const String panelNo1 = "Panel No. 1";
 
   // UI & app strings (auto-migrated)
-  static const String aSiteSiteSiteNameWasCreatedForPanelIDLogicalId = "Use site";
+  static const String aSiteSiteSiteNameWasCreatedForPanelIDLogicalId =
+      "Use site";
   static const String aZAZ09 = "[^a-zA-Z0-9]";
   static const String accessCode = "Access Code";
   static const String accessCodeNo2 = "Access Code No";
@@ -159,7 +160,8 @@ abstract final class StringConstants {
   static const String accessLevel4 = "Access Level";
   static const String accessLevelName2 = "Access Level Name";
   static const String accessMode = "Access Mode";
-  static const String accessOurComprehensiveUserManual = "Access our comprehensive user manual";
+  static const String accessOurComprehensiveUserManual =
+      "Access our comprehensive user manual";
   static const String accesscode = "accessCode";
   static const String accesscodeno = "accessCodeNo";
   static const String accesslevel = "accessLevel";
@@ -171,35 +173,46 @@ abstract final class StringConstants {
   static const String advancedConfiguration = "Advanced Configuration";
   static const String advertise = "Advertise";
   static const String advertisementdata = "advertisementData";
-  static const String allConfigurationSectionsMatchTheSavedAppData = "All configuration sections match the saved app data.";
+  static const String allConfigurationSectionsMatchTheSavedAppData =
+      "All configuration sections match the saved app data.";
   static const String allNominal = "Critical";
-  static const String alterTABLELogsADDCOLUMNIsValidINTEGER = "ALTER TABLE logs ADD COLUMN is_valid INTEGER";
-  static const String alterTABLELogsADDCOLUMNRetrievalIdINTEGER = "ALTER TABLE logs ADD COLUMN retrieval_id INTEGER";
+  static const String alterTABLELogsADDCOLUMNIsValidINTEGER =
+      "ALTER TABLE logs ADD COLUMN is_valid INTEGER";
+  static const String alterTABLELogsADDCOLUMNRetrievalIdINTEGER =
+      "ALTER TABLE logs ADD COLUMN retrieval_id INTEGER";
   static const String app = "App";
   static const String apply = "Apply";
   static const String applyNow = "Apply Now";
   static const String applyToPanel = "Apply to panel?";
   static const String applying = "Validated";
-  static const String areYouSureYouWantToStopTheLogRetrievalProcessThisActionCannotBeUndone = "Are you sure you want to stop the log retrieval process? This action cannot be undone.";
-  static const String areYouSureYouWantToUploadThisConfigurationToThePanel = "Are you sure you want to upload this configuration to the panel?";
+  static const String
+  areYouSureYouWantToStopTheLogRetrievalProcessThisActionCannotBeUndone =
+      "Are you sure you want to stop the log retrieval process? This action cannot be undone.";
+  static const String areYouSureYouWantToUploadThisConfigurationToThePanel =
+      "Are you sure you want to upload this configuration to the panel?";
   static const String autoCountdown = "Auto Countdown";
   static const String autoFieldIsFocused = "Auto field is focused";
   static const String autoFieldLostFocus = "Auto field lost focus";
   static const String back = "Back";
   static const String batteryTest = "Battery Test";
   static const String bleDevice = "BLE Device";
-  static const String bleDeviceIsNotConnectedTapOnConnectToConnectAgain = "BLE device is not connected. Tap on Connect to connect again.";
+  static const String bleDeviceIsNotConnectedTapOnConnectToConnectAgain =
+      "BLE device is not connected. Tap on Connect to connect again.";
   static const String bleFirmwareVersion = "Module No";
-  static const String bleHandshakeNotCompleteCannotStartFirmwareUpgrade = "BLE handshake not complete. Cannot start firmware upgrade.";
+  static const String bleHandshakeNotCompleteCannotStartFirmwareUpgrade =
+      "BLE handshake not complete. Cannot start firmware upgrade.";
   static const String bleManagerNotFound = "BLE manager not found";
   static const String bleSolarDevice = "BLE Solar Device";
   static const String bluenrgm2sp = "BLUENRGM2SP";
   static const String bluetooth = "Bluetooth";
-  static const String bluetoothBLEDevices = "Scan for nearby Bluetooth solar devices";
+  static const String bluetoothBLEDevices =
+      "Scan for nearby Bluetooth solar devices";
   static const String bluetoothDisconnected = "Bluetooth disconnected";
   static const String bluetoothIsNotEnabled = "Bluetooth is not enabled";
-  static const String bluetoothIsOffPleaseEnableBluetoothToContinueScanning = "Bluetooth is off. Please enable Bluetooth to continue scanning.";
-  static const String bluetoothOperationTimedOut = "Bluetooth operation timed out";
+  static const String bluetoothIsOffPleaseEnableBluetoothToContinueScanning =
+      "Bluetooth is off. Please enable Bluetooth to continue scanning.";
+  static const String bluetoothOperationTimedOut =
+      "Bluetooth operation timed out";
   static const String boot = "Boot";
   static const String bt = "BT_";
   static const String buildingName = "Building Name";
@@ -208,12 +221,14 @@ abstract final class StringConstants {
   static const String cancel = "Cancel";
   static const String checkingDeviceStatus = "Checking device status...";
   static const String chooseScanType = "Choose Scan Type";
-  static const String chooseTheSiteWhereThisPanelShouldBeAssigned = "Choose the site where this panel should be assigned.";
+  static const String chooseTheSiteWhereThisPanelShouldBeAssigned =
+      "Choose the site where this panel should be assigned.";
   static const String chooseWhatToTest = "Choose what to test";
   static const String clear = "Clear";
   static const String clearLogs = "Clear logs?";
   static const String close = "Update";
-  static const String commsFaultDuringDownloadNoFieldDifferencesVsApp = "Comms fault during download (no field differences vs app)";
+  static const String commsFaultDuringDownloadNoFieldDifferencesVsApp =
+      "Comms fault during download (no field differences vs app)";
   static const String communityForum = "Community Forum";
   static const String company = "Contact";
   static const String companyName = "Company Name";
@@ -221,44 +236,61 @@ abstract final class StringConstants {
   static const String comparing = "Comparing…";
   static const String configLog = "Config Log";
   static const String configuration = "Configuration";
-  static const String configurationDiffersFromSavedAppDataButNoSectionDetailIsAvailable = "Configuration differs from saved app data, but no section detail is available.";
-  static const String configurationHasBeenSuccessfullyUploadedToThePanel = "Configuration has been successfully uploaded to the panel.";
+  static const String
+  configurationDiffersFromSavedAppDataButNoSectionDetailIsAvailable =
+      "Configuration differs from saved app data, but no section detail is available.";
+  static const String configurationHasBeenSuccessfullyUploadedToThePanel =
+      "Configuration has been successfully uploaded to the panel.";
   static const String confirmed = "Confirmed";
   static const String connect = "Connect";
-  static const String connectAPanelToConfigurePeripherals = "Connect a panel to configure peripherals.";
+  static const String connectAPanelToConfigurePeripherals =
+      "Connect a panel to configure peripherals.";
   static const String connectPanel = "Connect panel";
-  static const String connectToAPanelToAssociateItWithThisSite = "Connect to a panel to associate it with this site";
+  static const String connectToAPanelToAssociateItWithThisSite =
+      "Connect to a panel to associate it with this site";
   static const String connected = "Connected";
   static const String connecting = "Connecting...";
   static const String connection = "Connection";
   static const String connectionLostNoDevice = "Connection lost - no device";
-  static const String connectionNotEstablishedAfterReconnect = "Connection not established after reconnect";
+  static const String connectionNotEstablishedAfterReconnect =
+      "Connection not established after reconnect";
   static const String connectionProblem = "Connection problem";
   static const String connectiontype = "connectionType";
   static const String continous = "Pulsing 1s On, 5s Off";
   static const String continueLabel = "Continue";
   static const String continuous = "Off";
   static const String control = "Control";
-  static const String couldNotAssignPanelToSite = "Could not assign panel to site";
+  static const String couldNotAssignPanelToSite =
+      "Could not assign panel to site";
   static const String countDownAction = "Count Down Action";
   static const String countdown = "Countdown";
-  static const String countdownAutoMustBeBetween0And60 = "Reset Delay must be between 0 and 1800";
+  static const String countdownAutoMustBeBetween0And60 =
+      "Reset Delay must be between 0 and 1800";
   static const String countdownAutoS = "Countdown Auto (s)";
   static const String countdownManS = "Countdown Man (s)";
   static const String countdownaction = "countdownAction";
   static const String countdownauto = "isSolar";
   static const String countdownman = "ext_out";
-  static const String crcMismatchBINFileMayBeCorrupted = "CRC mismatch. BIN file may be corrupted.";
+  static const String crcMismatchBINFileMayBeCorrupted =
+      "CRC mismatch. BIN file may be corrupted.";
   static const String crcMustBe4Bytes = "CRC must be 4 bytes";
   static const String create = "Create";
   static const String createASite = "Create a site?";
-  static const String createINDEXIdxLogRetrievalsRetrievalDateONLogRetrievalsRetrievalDate = "CREATE INDEX idx_log_retrievals_retrieval_date ON log_retrievals (retrieval_date)";
-  static const String createINDEXIdxLogRetrievalsSiteIdONLogRetrievalsSiteId = "CREATE INDEX idx_log_retrievals_site_id ON log_retrievals (site_id)";
-  static const String createINDEXIdxLogsEventDateONLogsEventDateTime = "CREATE INDEX idx_logs_event_date ON logs (event_date_time)";
-  static const String createINDEXIdxLogsRetrievalIdONLogsRetrievalId = "CREATE INDEX idx_logs_retrieval_id ON logs (retrieval_id)";
-  static const String createINDEXIdxLogsSiteIdONLogsSiteId = "CREATE INDEX idx_logs_site_id ON logs (site_id)";
-  static const String createINDEXIdxPanelsPanelIdONPanelsPanelId = "CREATE INDEX idx_panels_site_id ON panels (site_id)";
-  static const String createINDEXIdxSitesCreatedAtONSitesCreatedAt = "CREATE INDEX idx_panels_site_id ON panels (site_id)";
+  static const String
+  createINDEXIdxLogRetrievalsRetrievalDateONLogRetrievalsRetrievalDate =
+      "CREATE INDEX idx_log_retrievals_retrieval_date ON log_retrievals (retrieval_date)";
+  static const String createINDEXIdxLogRetrievalsSiteIdONLogRetrievalsSiteId =
+      "CREATE INDEX idx_log_retrievals_site_id ON log_retrievals (site_id)";
+  static const String createINDEXIdxLogsEventDateONLogsEventDateTime =
+      "CREATE INDEX idx_logs_event_date ON logs (event_date_time)";
+  static const String createINDEXIdxLogsRetrievalIdONLogsRetrievalId =
+      "CREATE INDEX idx_logs_retrieval_id ON logs (retrieval_id)";
+  static const String createINDEXIdxLogsSiteIdONLogsSiteId =
+      "CREATE INDEX idx_logs_site_id ON logs (site_id)";
+  static const String createINDEXIdxPanelsPanelIdONPanelsPanelId =
+      "CREATE INDEX idx_panels_site_id ON panels (site_id)";
+  static const String createINDEXIdxSitesCreatedAtONSitesCreatedAt =
+      "CREATE INDEX idx_panels_site_id ON panels (site_id)";
   static const String createSite = "Create Site";
   static const String createSite2 = "Next";
   static const String createSiteForLogs = "Create Site for Logs?";
@@ -272,7 +304,8 @@ abstract final class StringConstants {
   static const String date = "Protocol";
   static const String dateTime = "Date & Time";
   static const String datetime = "dateTime";
-  static const String datetimeNow = "----------------------setUpLogs: Setting up logs..-----------------";
+  static const String datetimeNow =
+      "----------------------setUpLogs: Setting up logs..-----------------";
   static const String day = "Day";
   static const String dayMustBeBetween1And31 = "Day must be between 1 and 31";
   static const String ddMMYyyy = "dd/MM/yyyy";
@@ -281,7 +314,8 @@ abstract final class StringConstants {
   static const String ddMMYyyyNhhMmSsA2 = "dd/MM/yyyy\\nhh:mm:ss a";
   static const String delayFieldIsFocused = "Delay field is focused";
   static const String delayFieldLostFocus = "Delay field lost focus";
-  static const String delayMustBeBetween0And600Seconds = "Delay must be between 0 and 600 seconds";
+  static const String delayMustBeBetween0And600Seconds =
+      "Delay must be between 0 and 600 seconds";
   static const String delayS = "Delay (s)";
   static const String delayed = "Delayed";
   static const String delete = "Delete";
@@ -289,14 +323,21 @@ abstract final class StringConstants {
   static const String detectionmode = "zone";
   static const String deviceConnected = "Connecting...";
   static const String deviceIsInBootloaderMode = "Device is in bootloader mode";
-  static const String deviceIsRestartingSearchingForPanelAndEstablishingConnection = "Preparing...";
+  static const String
+  deviceIsRestartingSearchingForPanelAndEstablishingConnection = "Preparing...";
   static const String deviceNameIsEmpty = "Device name is empty";
-  static const String deviceNotConnectedCannotSendJumpCommand = "Device not connected. Cannot send jump command.";
-  static const String deviceNotFoundAfterFirmwareUpgradePleaseReconnect = "Device not found after firmware upgrade. Please reconnect.";
-  static const String deviceNotFoundAfterFirmwareUpgradePleaseScanAndConnectAgain = "Device not found after firmware upgrade. Please scan and connect again.";
+  static const String deviceNotConnectedCannotSendJumpCommand =
+      "Device not connected. Cannot send jump command.";
+  static const String deviceNotFoundAfterFirmwareUpgradePleaseReconnect =
+      "Device not found after firmware upgrade. Please reconnect.";
+  static const String
+  deviceNotFoundAfterFirmwareUpgradePleaseScanAndConnectAgain =
+      "Device not found after firmware upgrade. Please scan and connect again.";
   static const String deviceNotResponding2 = "Device not responding";
-  static const String deviceReadyContinuingUpgrade = "Device ready. Continuing upgrade...";
-  static const String deviceReconnectedContinuingUpgrade = "Device reconnected. Continuing upgrade...";
+  static const String deviceReadyContinuingUpgrade =
+      "Device ready. Continuing upgrade...";
+  static const String deviceReconnectedContinuingUpgrade =
+      "Device reconnected. Continuing upgrade...";
   static const String deviceid = "deviceId";
   static const String devicetext = "productRev";
   static const String diagnostics = "Diagnostics";
@@ -309,11 +350,17 @@ abstract final class StringConstants {
   static const String doubleKnock = "Double Knock";
   static const String download = "Download";
   static const String downloadCompare = "Download & compare";
-  static const String downloadPanelConfiguration = "Download panel configuration?";
-  static const String downloadTheFullConfigurationFromThePanelAndCompareItWithDataStoredInThisAppForThisDevice = "Download the full configuration from the panel and compare it with data stored in this app for this device.";
-  static const String downloadTheFullConfigurationFromThePanelNowThisMatchesTheDashboardDownloadAllFlowAndFillsLocalCachesBeforeYouEdit = "Yes";
+  static const String downloadPanelConfiguration =
+      "Download panel configuration?";
+  static const String
+  downloadTheFullConfigurationFromThePanelAndCompareItWithDataStoredInThisAppForThisDevice =
+      "Download the full configuration from the panel and compare it with data stored in this app for this device.";
+  static const String
+  downloadTheFullConfigurationFromThePanelNowThisMatchesTheDashboardDownloadAllFlowAndFillsLocalCachesBeforeYouEdit =
+      "Yes";
   static const String downloading = "Downloading...";
-  static const String downloadingConfiguration = "Applying configuration to panel…";
+  static const String downloadingConfiguration =
+      "Applying configuration to panel…";
   static const String duplicateAccessCode = "Duplicate Access Code";
   static const String dynamictext = "Ext. Out";
   static const String e1 = "e1";
@@ -328,8 +375,10 @@ abstract final class StringConstants {
   static const String emptyZoneMode = "empty zone mode";
   static const String enable = "Enable";
   static const String enabled = "Enabled";
-  static const String enabledBusDetailMayBeIncompleteUsePerBusDownloadOnThe = "L-Bus screen if needed.";
-  static const String enterAValidPanelIDLettersNumbersOr = "Enter a valid panel ID (letters, numbers, - or _)";
+  static const String enabledBusDetailMayBeIncompleteUsePerBusDownloadOnThe =
+      "L-Bus screen if needed.";
+  static const String enterAValidPanelIDLettersNumbersOr =
+      "Enter a valid panel ID (letters, numbers, - or _)";
   static const String enterAccessCode = "Enter Access Code";
   static const String enterBuildingName = "buildingName";
   static const String enterCompanyName = "companyName";
@@ -344,14 +393,18 @@ abstract final class StringConstants {
   static const String enterSiteDescription = "siteDescription";
   static const String enterSiteName = "siteName";
   static const String enterSounderText = "Enter Sounder Text";
-  static const String enterThePanelIDForThisSiteEGAB12ItShouldMatchTheIDInThePanelBLENameTECHNOSWITCHXXXXWhenYouConnectLater = "Panel ID";
+  static const String
+  enterThePanelIDForThisSiteEGAB12ItShouldMatchTheIDInThePanelBLENameTECHNOSWITCHXXXXWhenYouConnectLater =
+      "Panel ID";
   static const String enterZoneText = "Enter Zone Text";
   static const String establishingSecureConnection = "Connecting...";
   static const String evacuation = "Evacuation";
   static const String eventClass = "Event Class:";
-  static const String eventDateTimeDESCRetrievedAtDESC = "event_date_time DESC, retrieved_at DESC";
+  static const String eventDateTimeDESCRetrievedAtDESC =
+      "event_date_time DESC, retrieved_at DESC";
   static const String eventLog = "Event Log";
-  static const String eventLogRetrievalNFailed2 = "Event Log Retrieval\\nFailed!";
+  static const String eventLogRetrievalNFailed2 =
+      "Event Log Retrieval\\nFailed!";
   static const String eventReminder = "Event Reminder";
   static const String eventType = "Event";
   static const String eventid = "eventId";
@@ -365,7 +418,8 @@ abstract final class StringConstants {
   static const String extOutText001 = "EXT-Out-Text------001";
   static const String extSnd1 = "Ext. Snd 1";
   static const String extSnd2 = "Man. Release Snd";
-  static const String extSound1ExtSound2ManReleaseSound = "Ext Sound 1/Ext Sound 2/Man Release Sound";
+  static const String extSound1ExtSound2ManReleaseSound =
+      "Ext Sound 1/Ext Sound 2/Man Release Sound";
   static const String extinguishingOUT = "EXTINGUISHING OUT";
   static const String extinguishingOUTPUT = "EXTINGUISHING OUTPUT";
   static const String extinguishingOutput = "Extinguishing Output";
@@ -373,7 +427,8 @@ abstract final class StringConstants {
   static const String fault = "Normal";
   static const String faultLatching = "Fault Latching";
   static const String faultlatching = "faultLatching";
-  static const String fetchingFirmwareUpgradeStatus = "Fetching Firmware Upgrade status...";
+  static const String fetchingFirmwareUpgradeStatus =
+      "Fetching Firmware Upgrade status...";
   static const String filter = "Filter";
   static const String fireSound = "Warble";
   static const String firmwareDate = "Firmware date";
@@ -382,11 +437,14 @@ abstract final class StringConstants {
   static const String firmwareUpgradeFailed = "Firmware upgrade failed";
   static const String firmwareVersion = "Firmware Version";
   static const String firmwareVersion2 = "Firmware version";
-  static const String fixPanelInformationFields = "Fix panel information fields";
-  static const String fixTheFieldsOnThisStepBeforeContinuing = "Fix the fields on this step before continuing";
+  static const String fixPanelInformationFields =
+      "Fix panel information fields";
+  static const String fixTheFieldsOnThisStepBeforeContinuing =
+      "Fix the fields on this step before continuing";
   static const String frequentlyAskedQuestions = "Frequently Asked Questions";
   static const String from = "From";
-  static const String fromTheDeviceButTheyAreNotAssociatedWithAnySiteNN2 = " from the device, but they are not associated with any site.\\n\\n";
+  static const String fromTheDeviceButTheyAreNotAssociatedWithAnySiteNN2 =
+      " from the device, but they are not associated with any site.\\n\\n";
   static const String function = "Function";
   static const String function1A = "Function 3B";
   static const String functionA = "Function A";
@@ -398,7 +456,8 @@ abstract final class StringConstants {
   static const String generalMode = "General Mode";
   static const String generalModule = "General Module";
   static const String generalSettings = "General Settings";
-  static const String goingBackWillDisconnectTheDeviceAreYouSure = "Going back will disconnect the device. Are you sure?";
+  static const String goingBackWillDisconnectTheDeviceAreYouSure =
+      "Going back will disconnect the device. Are you sure?";
   static const String group = "Group";
   static const String groupA = "Group A";
   static const String hardware = "Date";
@@ -419,14 +478,17 @@ abstract final class StringConstants {
   static const String hourFieldIsFocused = "Hour field is focused";
   static const String hourFieldLostFocus = "Hour field lost focus";
   static const String hourMustBeBetween0And23 = "Hour must be between 0 and 23";
-  static const String howCanIRetrieveProjectLogs = "You can retrieve project logs by tapping the \"Retrieve Log\" quick link on the home screen. Select your project and choose the date range for the logs you need.";
-  static const String howDoICreateANewProject = "To create a new project, tap on the \"New Project\" quick link on the home screen. Follow the step-by-step wizard to set up your project details.";
+  static const String howCanIRetrieveProjectLogs =
+      "You can retrieve project logs by tapping the \"Retrieve Log\" quick link on the home screen. Select your project and choose the date range for the logs you need.";
+  static const String howDoICreateANewProject =
+      "To create a new project, tap on the \"New Project\" quick link on the home screen. Follow the step-by-step wizard to set up your project details.";
   static const String id = "ID";
   static const String id2 = "log_retrievals";
   static const String idLED = "ID LED";
   static const String identifier = "Text";
   static const String idled = "idLed";
-  static const String ifYouSkipThisStepTheLogsWillBeLost = "If you skip this step, the logs will be lost.";
+  static const String ifYouSkipThisStepTheLogsWillBeLost =
+      "If you skip this step, the logs will be lost.";
   static const String immediate = "Confirmed";
   static const String initiating = "Verifying access";
   static const String input = "Output";
@@ -442,7 +504,8 @@ abstract final class StringConstants {
   static const String installerName = "Installer Name";
   static const String installeremail = "installerEmail";
   static const String invalidADCResponse = "Invalid ADC response";
-  static const String invalidBINFileTooSmallNeedAtLeast = "Invalid BIN file (too small, need at least ";
+  static const String invalidBINFileTooSmallNeedAtLeast =
+      "Invalid BIN file (too small, need at least ";
   static const String invalidNumber = "Invalid number";
   static const String invalidPayload = "Invalid payload";
   static const String inverted = "Inverted";
@@ -450,23 +513,27 @@ abstract final class StringConstants {
   static const String isMTL5561 = "detectionMode";
   static const String issolar = "isSolar";
   static const String item = "Tested At";
-  static const String joinOurCommunityDiscussions = "Join our community discussions";
+  static const String joinOurCommunityDiscussions =
+      "Join our community discussions";
   static const String keyboard = "Keyboard";
   static const String lBUS = "L-BUS";
   static const String lBUS1 = "L-BUS 1";
   static const String lBUS2 = "L-BUS 2";
   static const String lBus = "L-Bus";
-  static const String lBusCommsFaultOnBusEsLBusCommsFaultBusNumbersJoin = "per-bus download if needed.";
+  static const String lBusCommsFaultOnBusEsLBusCommsFaultBusNumbersJoin =
+      "per-bus download if needed.";
   static const String lBusConfiguration = "L-Bus Configuration";
   static const String lBusDeviceText2 = "L-Bus Device Text";
   static const String lBusDevices = "L-Bus Devices";
   static const String lBusMode = "L-Bus Mode";
   static const String lBusNo = "L-Bus No";
-  static const String lastConnectedDESCCreatedAtDESC = "last_connected DESC, created_at DESC";
+  static const String lastConnectedDESCCreatedAtDESC =
+      "last_connected DESC, created_at DESC";
   static const String lbusno = "lBusNo";
   static const String levelTimeout = "Timer Settings";
   static const String listLengthDiffers = "List length differs";
-  static const String liveDataStreamingFromTheDeviceHasBeenStopped = "Live data streaming from the device has been stopped.";
+  static const String liveDataStreamingFromTheDeviceHasBeenStopped =
+      "Live data streaming from the device has been stopped.";
   static const String liveDiagnosticsStopped = "Live Diagnostics Stopped";
   static const String liveEvents = "Live Events";
   static const String logENTRIES = "LOG ENTRIES";
@@ -474,26 +541,34 @@ abstract final class StringConstants {
   static const String logRetrievalFailed = "Log Retrieval Failed";
   static const String logRetrievalHistory = "Log Retrieval History";
   static const String logRetrievalReport = "Log Retrieval Report";
-  static const String logRetrievalsWillAppearHereWhenYouRetrieveLogsForThisSite = "Log retrievals will appear here when you retrieve logs for this site.";
+  static const String
+  logRetrievalsWillAppearHereWhenYouRetrieveLogsForThisSite =
+      "Log retrievals will appear here when you retrieve logs for this site.";
   static const String logView = "Log View";
   static const String logdata = "logData";
-  static const String lvlTimeOutFieldIsFocused = "LVL Time-out field is focused";
-  static const String lvlTimeOutFieldLostFocus = "LVL Time-out field lost focus";
-  static const String lvlTimeOutMustBeBetween30And300Seconds = "LVL Time-out must be between 30 and 300 seconds";
+  static const String lvlTimeOutFieldIsFocused =
+      "LVL Time-out field is focused";
+  static const String lvlTimeOutFieldLostFocus =
+      "LVL Time-out field lost focus";
+  static const String lvlTimeOutMustBeBetween30And300Seconds =
+      "LVL Time-out must be between 30 and 300 seconds";
   static const String lvlTimeOutS = "LVL Time-out (s)";
   static const String lvltimeout = "faultLatching";
   static const String macaddress = "macAddress";
-  static const String makeSureYourSolarDevicesAreConnectedViaUSBAndPoweredOn = "Make sure Bluetooth is enabled and solar devices are in pairing mode.";
+  static const String makeSureYourSolarDevicesAreConnectedViaUSBAndPoweredOn =
+      "Make sure Bluetooth is enabled and solar devices are in pairing mode.";
   static const String manFieldIsFocused = "Man field is focused";
   static const String manFieldLostFocus = "Man field lost focus";
   static const String manualCountdown = "Manual Countdown";
   static const String manufacturerdata = "manufacturerData";
   static const String manufacturingDate = "Manufacturing Date";
-  static const String maxConnectionRetriesReached = "Max Connection Retries Reached!";
+  static const String maxConnectionRetriesReached =
+      "Max Connection Retries Reached!";
   static const String minute = "Minute";
   static const String minuteFieldIsFocused = "Minute field is focused";
   static const String minuteFieldLostFocus = "Minute field lost focus";
-  static const String minuteMustBeBetween0And59 = "Minute must be between 0 and 59";
+  static const String minuteMustBeBetween0And59 =
+      "Minute must be between 0 and 59";
   static const String mmmDY = "MMM d, y";
   static const String mode = "Mode";
   static const String module = "Module";
@@ -502,32 +577,44 @@ abstract final class StringConstants {
   static const String month = "Month";
   static const String monthFieldIsFocused = "Month field is focused";
   static const String monthFieldLostFocus = "Month field lost focus";
-  static const String monthMustBeBetween1And12 = "Month must be between 1 and 12";
-  static const String mustBe0ForImmediateNormalMode = "Must be 0 for Immediate/Normal mode";
-  static const String mustBe30ForConfirmedMode = "Must be 30 for Confirmed mode";
-  static const String mustBeBetween10And60ForVerifiedMode = "Must be between 10 and 60 for Verified mode";
+  static const String monthMustBeBetween1And12 =
+      "Month must be between 1 and 12";
+  static const String mustBe0ForImmediateNormalMode =
+      "Must be 0 for Immediate/Normal mode";
+  static const String mustBe30ForConfirmedMode =
+      "Must be 30 for Confirmed mode";
+  static const String mustBeBetween10And60ForVerifiedMode =
+      "Must be between 10 and 60 for Verified mode";
   static const String nA = "N/A";
   static const String name = "Name";
   static const String needImmediateHelp = "Need Immediate Help?";
   static const String newSite = "New Site";
   static const String next = "Next";
   static const String no = "No";
-  static const String noConfigurationIsSavedInTheAppForThisDevice = "the panel.";
+  static const String noConfigurationIsSavedInTheAppForThisDevice =
+      "the panel.";
   static const String noConnectedPanel = "No connected panel";
-  static const String noDeviceNameStoredForReconnection = "No device name stored for reconnection";
-  static const String noFieldLevelDetailAvailable = "No field-level detail available.";
+  static const String noDeviceNameStoredForReconnection =
+      "No device name stored for reconnection";
+  static const String noFieldLevelDetailAvailable =
+      "No field-level detail available.";
   static const String noInformationAvailable = "No information available";
   static const String noLogEntriesAvailable = "No log entries available";
   static const String noLogHistory = "No Log History";
   static const String noLogsYet = "No logs yet";
   static const String noPacketsPrepared = "No packets prepared";
-  static const String noPacketsToProcessPleaseReUploadTheFile = "No packets to process. Please re-upload the file.";
+  static const String noPacketsToProcessPleaseReUploadTheFile =
+      "No packets to process. Please re-upload the file.";
   static const String noPanelsYet = "No Panels Yet";
-  static const String noRelayTestResultsRecordedForThisDevice = "No relay test results recorded for this device.";
-  static const String noSiteSelectedPleaseSelectOrCreateASite = "No site selected. Please select or create a site.";
+  static const String noRelayTestResultsRecordedForThisDevice =
+      "No relay test results recorded for this device.";
+  static const String noSiteSelectedPleaseSelectOrCreateASite =
+      "No site selected. Please select or create a site.";
   static const String noSitesYet = "No Sites Yet";
-  static const String noSounderTestResultsRecordedForThisDevice = "No sounder test results recorded for this device.";
-  static const String noWalkTestResultsRecordedForThisDevice = "No walk test results recorded for this device.";
+  static const String noSounderTestResultsRecordedForThisDevice =
+      "No sounder test results recorded for this device.";
+  static const String noWalkTestResultsRecordedForThisDevice =
+      "No walk test results recorded for this device.";
   static const String none = "Normal";
   static const String normal = "Immediate";
   static const String notDefined = "Aerosol";
@@ -544,7 +631,8 @@ abstract final class StringConstants {
   static const String onlyInApp2 = "Only in app";
   static const String onlyOnPanel2 = "Only on panel";
   static const String openSite = "Open Site";
-  static const String operationTimedOutStayCloseToTheDeviceAndTryAgain = "Operation timed out. Stay close to the device and try again.";
+  static const String operationTimedOutStayCloseToTheDeviceAndTryAgain =
+      "Operation timed out. Stay close to the device and try again.";
   static const String oryx202 = "ORYX202";
   static const String oryx204 = "ORYX204";
   static const String oryx208 = "ORYX208";
@@ -559,14 +647,16 @@ abstract final class StringConstants {
   static const String panelAlreadyAssigned = "Panel already assigned";
   static const String panelAlreadyOnASite = "Panel already on a site";
   static const String panelConfigurationTool = "Panel Configuration Tool";
-  static const String panelDataDiffersFromAppCache = "Panel data differs from app cache.";
+  static const String panelDataDiffersFromAppCache =
+      "Panel data differs from app cache.";
   static const String panelDateTime = "14/05/2025 - 11:32:03";
   static const String panelIDIsMissing = "Panel ID is missing";
   static const String panelINFO = "PANEL INFO";
   static const String panelId = "panel_id = ?";
   static const String panelInfo = "Panel Info";
   static const String panelInformation = "Panel Information";
-  static const String panelIsAlreadyAssignedToAnotherSite = "Panel is already assigned to another site";
+  static const String panelIsAlreadyAssignedToAnotherSite =
+      "Panel is already assigned to another site";
   static const String panelName = "Panel Name";
   static const String panelName2 = "panel_name = ?";
   static const String panelNo = "Panel No";
@@ -581,17 +671,23 @@ abstract final class StringConstants {
   static const String pass = "Pass";
   static const String peripheralOverview = "Peripheral Overview";
   static const String peripheralid = "peripheralId";
-  static const String pleaseFillInAllRequiredFields = "Please fill in all required fields";
-  static const String pleaseFixTheSiteFormStep1 = "Please fix the site form (step 1)";
-  static const String pleaseScanAgainAndConnectToTheDevice = "Please scan again and connect to the device";
-  static const String pleaseScanAgainAndReconnect = "Please scan again and reconnect.";
+  static const String pleaseFillInAllRequiredFields =
+      "Please fill in all required fields";
+  static const String pleaseFixTheSiteFormStep1 =
+      "Please fix the site form (step 1)";
+  static const String pleaseScanAgainAndConnectToTheDevice =
+      "Please scan again and connect to the device";
+  static const String pleaseScanAgainAndReconnect =
+      "Please scan again and reconnect.";
   static const String pleaseTryConnectingAgain = "Please try connecting again";
-  static const String pleaseWaitTillScanIdentifiesTheDevices = "Please wait till scan identifies the devices....";
+  static const String pleaseWaitTillScanIdentifiesTheDevices =
+      "Please wait till scan identifies the devices....";
   static const String pleaseWaitWhileWeConnectToDeviceName = "Preparing...";
   static const String power = "Power";
   static const String pragmaForeignKeysON = "PRAGMA foreign_keys = ON";
   static const String preparingDashboard = "Preparing dashboard...";
-  static const String preparingFirmwareUpgrade = "Preparing Firmware Upgrade...";
+  static const String preparingFirmwareUpgrade =
+      "Preparing Firmware Upgrade...";
   static const String preparingToNavigate = "Preparing to navigate...";
   static const String processing = "Fetching...";
   static const String product = "Product";
@@ -604,7 +700,8 @@ abstract final class StringConstants {
   static const String proginput = "progInput";
   static const String programming = "Programming";
   static const String programmingGroup = "Programming Group";
-  static const String projectConfigurationReport = "Project Configuration Report";
+  static const String projectConfigurationReport =
+      "Project Configuration Report";
   static const String projectDashboard = "Project Dashboard";
   static const String projectINFO = "PROJECT INFO";
   static const String projectSettings = "Project Settings";
@@ -694,13 +791,17 @@ abstract final class StringConstants {
   static const String sectionRoot = "(section root)";
   static const String sectionsThatDiffer = "Sections that differ";
   static const String selectASite = "Select a site";
-  static const String selectAnotherLBusToViewItsDifferences = "No field-level detail available.";
-  static const String selectCOUNTFROMLogRetrievalsWHERESiteId = "SELECT COUNT(*) FROM log_retrievals WHERE site_id = ?";
+  static const String selectAnotherLBusToViewItsDifferences =
+      "No field-level detail available.";
+  static const String selectCOUNTFROMLogRetrievalsWHERESiteId =
+      "SELECT COUNT(*) FROM log_retrievals WHERE site_id = ?";
   static const String selectCOUNTFROMLogs = "SELECT COUNT(*) FROM logs";
-  static const String selectCOUNTFROMLogsWHERESiteIdISNULL = "SELECT COUNT(*) FROM logs WHERE site_id IS NULL";
+  static const String selectCOUNTFROMLogsWHERESiteIdISNULL =
+      "SELECT COUNT(*) FROM logs WHERE site_id IS NULL";
   static const String selectCOUNTFROMSites = "SELECT COUNT(*) FROM sites";
   static const String selectDate = "Select Date";
-  static const String selectTheTypeOfDevicesYouWantToScanFor = "Select the type of devices you want to scan for";
+  static const String selectTheTypeOfDevicesYouWantToScanFor =
+      "Select the type of devices you want to scan for";
   static const String server = "Server";
   static const String service = "Service";
   static const String serviceDue = "Service Due";
@@ -720,16 +821,21 @@ abstract final class StringConstants {
   static const String siteDetails = "Site Details";
   static const String siteFoundForThisPanel = "Site found for this panel";
   static const String siteId = "site_id = ?";
-  static const String siteIdANDRetrievedAtANDRetrievedAt = "site_id = ? AND retrieved_at >= ? AND retrieved_at < ?";
+  static const String siteIdANDRetrievedAtANDRetrievedAt =
+      "site_id = ? AND retrieved_at >= ? AND retrieved_at < ?";
   static const String siteIdISNULL = "last_connected DESC, created_at DESC";
-  static const String siteIdISNULLANDRetrievedAt = "site_id IS NULL AND retrieved_at < ?";
+  static const String siteIdISNULLANDRetrievedAt =
+      "site_id IS NULL AND retrieved_at < ?";
   static const String siteInformation = "Site Information";
   static const String siteName = "Service Date";
-  static const String siteNameLIKEORInstallerNameLIKEORCompanyNameLIKE = "created_at DESC";
-  static const String siteReadyOpeningDashboard = "Site ready - opening dashboard";
+  static const String siteNameLIKEORInstallerNameLIKEORCompanyNameLIKE =
+      "created_at DESC";
+  static const String siteReadyOpeningDashboard =
+      "Site ready - opening dashboard";
   static const String sitename = "siteName";
   static const String skip = "Skip";
-  static const String skipConnectionEnterPanelIDManually = "Skip connection — enter panel ID manually";
+  static const String skipConnectionEnterPanelIDManually =
+      "Skip connection — enter panel ID manually";
   static const String snd1 = "SND 3";
   static const String solar = "SOLAR";
   static const String solarMode = "Solar Mode";
@@ -783,9 +889,11 @@ abstract final class StringConstants {
   static const String supervisory = "Supervisory";
   static const String supplyFault = "Supply Fault";
   static const String supportTechnoswitchCom = "support@technoswitch.com";
-  static const String swipeOrTapATabToReviewPanelVsAppDifferences = "Swipe or tap a tab to review panel vs app differences.";
+  static const String swipeOrTapATabToReviewPanelVsAppDifferences =
+      "Swipe or tap a tab to review panel vs app differences.";
   static const String systemTest = "System Test";
-  static const String tapOnUpdateToUpdateTheFirmware = "Tap on Update to update the firmware.";
+  static const String tapOnUpdateToUpdateTheFirmware =
+      "Tap on Update to update the firmware.";
   static const String tapToConnect = "Tap to connect";
   static const String tapToScanAgain = "Tap to Scan Again";
   static const String technoswitch = "TECHNOSWITCH_";
@@ -794,28 +902,50 @@ abstract final class StringConstants {
   static const String testedat = "result";
   static const String text = "Text";
   static const String textinputHide = "TextInput.hide";
-  static const String theBootloaderFileOnTheDeviceIsCorrupted = "Tap on Update to update the firmware.";
-  static const String theConnectionToTheDeviceWasLostAnyOpenPanelsWereClosedUseConnectWhenYouAreReadyToReconnect = "The connection to the device was lost. Any open panels were closed. Use Connect when you are ready to reconnect.";
-  static const String thePanelDidNotRespondPleaseScanAndConnectAgain = "The panel did not respond. Please scan and connect again.";
-  static const String thereWasAnErrorDownloading = "There was an error downloading";
-  static const String thisDeviceIsInFirmwareUpgradeModeAndCannotBeUsedNormally = "This device is in firmware upgrade mode and cannot be used normally. ";
-  static const String thisPanelIDIsAlreadyLinkedToASiteUseADifferentIDOrConnectToThePanelInstead = "This panel ID is already linked to a site. Use a different ID or connect to the panel instead.";
-  static const String thisPanelIsAssignedToAnotherSiteMoveItToTheNewSiteYouAreCreatingOrSkipAndReturnHome = "Replace";
-  static const String thisPanelIsNotAssociatedWithAnySiteYetCreateASiteToContinue = "This panel is not associated with any site yet. Create a site to continue.";
-  static const String thisWillOverwritePanelSettingsWithTheConfiguration = "saved in this app for this device.";
-  static const String thisWillRemoveAllEntriesFromTheListThisCannotBeUndone = "This will remove all entries from the list. This cannot be undone.";
-  static const String thisWillRemoveWidgetSiteSiteNameN2 = "All logs will be deleted and panels will be unassigned.";
-  static const String thisWillSaveTheSiteAndPanelIDConfigurationWillBeStoredLocallyAndCanBeAppliedWhenYouConnectThePanelLater = "Create";
-  static const String thisWillUpdateThePanelSettingsWithTheValuesYouConfiguredInThisSetup = "Next";
+  static const String theBootloaderFileOnTheDeviceIsCorrupted =
+      "Tap on Update to update the firmware.";
+  static const String
+  theConnectionToTheDeviceWasLostAnyOpenPanelsWereClosedUseConnectWhenYouAreReadyToReconnect =
+      "The connection to the device was lost. Any open panels were closed. Use Connect when you are ready to reconnect.";
+  static const String thePanelDidNotRespondPleaseScanAndConnectAgain =
+      "The panel did not respond. Please scan and connect again.";
+  static const String thereWasAnErrorDownloading =
+      "There was an error downloading";
+  static const String thisDeviceIsInFirmwareUpgradeModeAndCannotBeUsedNormally =
+      "This device is in firmware upgrade mode and cannot be used normally. ";
+  static const String
+  thisPanelIDIsAlreadyLinkedToASiteUseADifferentIDOrConnectToThePanelInstead =
+      "This panel ID is already linked to a site. Use a different ID or connect to the panel instead.";
+  static const String
+  thisPanelIsAssignedToAnotherSiteMoveItToTheNewSiteYouAreCreatingOrSkipAndReturnHome =
+      "Replace";
+  static const String
+  thisPanelIsNotAssociatedWithAnySiteYetCreateASiteToContinue =
+      "This panel is not associated with any site yet. Create a site to continue.";
+  static const String thisWillOverwritePanelSettingsWithTheConfiguration =
+      "saved in this app for this device.";
+  static const String thisWillRemoveAllEntriesFromTheListThisCannotBeUndone =
+      "This will remove all entries from the list. This cannot be undone.";
+  static const String thisWillRemoveWidgetSiteSiteNameN2 =
+      "All logs will be deleted and panels will be unassigned.";
+  static const String
+  thisWillSaveTheSiteAndPanelIDConfigurationWillBeStoredLocallyAndCanBeAppliedWhenYouConnectThePanelLater =
+      "Create";
+  static const String
+  thisWillUpdateThePanelSettingsWithTheValuesYouConfiguredInThisSetup = "Next";
   static const String timerSettings = "Timer Settings";
   static const String to = "To";
   static const String totalretrievals = "lastRetrieval";
   static const String turnOnBluetooth = "Turn on Bluetooth";
   static const String type = "Type";
   static const String typeA = "Type A";
-  static const String unableToConnectToThePanelPleaseCheckYourConnectionAndTryAgain = "Unable to connect to the panel. Please check your connection and try again.";
-  static const String unableToOpenThisLogSessionMissingId = "Unable to open this log session (missing id).";
-  static const String unableToReconnectDeviceNameNotFound = "Unable to reconnect: Device name not found";
+  static const String
+  unableToConnectToThePanelPleaseCheckYourConnectionAndTryAgain =
+      "Unable to connect to the panel. Please check your connection and try again.";
+  static const String unableToOpenThisLogSessionMissingId =
+      "Unable to open this log session (missing id).";
+  static const String unableToReconnectDeviceNameNotFound =
+      "Unable to reconnect: Device name not found";
   static const String unassigned = "Unassigned";
   static const String unknownDevice = "Unknown Device";
   static const String updateApp = "Update App";
@@ -830,7 +960,7 @@ abstract final class StringConstants {
   static const String useMobileDateTime = "Use Mobile Date & Time";
   static const String usemobiletime = "useMobileTime";
   static const String userManual = "User Manual";
-  static const String v0049TestingVersion = "v0.0.49 -- testing version";
+  static const String testingVersion = "v0.0.49 -- testing version";
   static const String validating = "Validating";
   static const String validating2 = "Validating...";
   static const String vaux = "EXT";
@@ -846,18 +976,23 @@ abstract final class StringConstants {
   static const String walkTESTRESULTS = "WALK TEST RESULTS";
   static const String walkTest = "Walk Test";
   static const String walkTestResults = "Sounder Test Results";
-  static const String watchStepByStepVideoGuides = "Watch step-by-step video guides";
-  static const String whatMaintenanceTasksAreAvailable = "The maintenance section provides various tools for system maintenance, including system checks, updates, and troubleshooting guides.";
-  static const String wouldYouLikeToCreateASiteToSaveTheseLogs = "Would you like to create a site to save these logs? ";
+  static const String watchStepByStepVideoGuides =
+      "Watch step-by-step video guides";
+  static const String whatMaintenanceTasksAreAvailable =
+      "The maintenance section provides various tools for system maintenance, including system checks, updates, and troubleshooting guides.";
+  static const String wouldYouLikeToCreateASiteToSaveTheseLogs =
+      "Would you like to create a site to save these logs? ";
   static const String wrongPanelType = "Wrong panel type";
   static const String year = "Year";
   static const String yearFieldIsFocused = "Year field is focused";
   static const String yearFieldLostFocus = "Year field lost focus";
-  static const String yearMustBeBetween2010And9999 = "Year must be between 2010 and 9999";
+  static const String yearMustBeBetween2010And9999 =
+      "Year must be between 2010 and 9999";
   static const String yes = "Yes";
   static const String yesStop = "Yes, Stop";
   static const String youRetrieved = "You retrieved ";
-  static const String yourSavedSetupHasBeenAppliedToThePanel = "Your saved setup has been applied to the panel.";
+  static const String yourSavedSetupHasBeenAppliedToThePanel =
+      "Your saved setup has been applied to the panel.";
   static const String z1 = "z1";
   static const String z1AndZ2 = "Any 1 zone";
   static const String z2 = "z2";
@@ -889,7 +1024,8 @@ abstract final class StringConstants {
   static const String any1Zone = "Any 1 zone";
   static const String any2Zones = "Any 2 zones";
   static const String app2 = " · app ";
-  static const String applyingConfigurationToPanel = "Applying configuration to panel…";
+  static const String applyingConfigurationToPanel =
+      "Applying configuration to panel…";
   static const String authorisedUser = "Authorised User";
   static const String averagelogsperretrieval = "averageLogsPerRetrieval";
   static const String bell = "Bell";
@@ -902,15 +1038,19 @@ abstract final class StringConstants {
   static const String companyname = "companyName";
   static const String contact = "Contact";
   static const String controlsEnabled = "Controls Enabled";
-  static const String countdownManMustBeBetween0And60 = "Countdown Man must be between 0 and 60";
-  static const String createINDEXIdxPanelsSiteIdONPanelsSiteId = "CREATE INDEX idx_panels_site_id ON panels (site_id)";
+  static const String countdownManMustBeBetween0And60 =
+      "Countdown Man must be between 0 and 60";
+  static const String createINDEXIdxPanelsSiteIdONPanelsSiteId =
+      "CREATE INDEX idx_panels_site_id ON panels (site_id)";
   static const String delay = "Delay";
   static const String devicename = "deviceName";
   static const String dipMode = "DIP Mode";
   static const String disable = "Disable";
   static const String disablement = "Disablement";
-  static const String doYouWantToUpdateTheFirmware = "Do you want to update the firmware?";
-  static const String encryptingAndAuthenticating = "Encrypting and authenticating...";
+  static const String doYouWantToUpdateTheFirmware =
+      "Do you want to update the firmware?";
+  static const String encryptingAndAuthenticating =
+      "Encrypting and authenticating...";
   static const String ext = "EXT";
   static const String extAgentReleased = "Ext. Agent Released";
   static const String extRelease = "Ext. Release";
@@ -953,9 +1093,12 @@ abstract final class StringConstants {
   static const String lBusSettings = "L-Bus Settings";
   static const String lastretrieval = "lastRetrieval";
   static const String levelTimeout2 = "Level timeout";
-  static const String liveDataIsBeingStreamedFromTheDeviceInRealTime = "Diagnostics";
+  static const String liveDataIsBeingStreamedFromTheDeviceInRealTime =
+      "Diagnostics";
   static const String logretrievalloadingscreen = "LogRetrievalLoadingScreen";
-  static const String makeSureBluetoothIsEnabledAndSolarDevicesAreInPairingMode = "Make sure Bluetooth is enabled and solar devices are in pairing mode.";
+  static const String
+  makeSureBluetoothIsEnabledAndSolarDevicesAreInPairingMode =
+      "Make sure Bluetooth is enabled and solar devices are in pairing mode.";
   static const String manReleaseSnd = "Man. Release Snd";
   static const String manual = "Manual";
   static const String manualMode = "Manual Mode";
@@ -971,11 +1114,13 @@ abstract final class StringConstants {
   static const String p2 = "P2";
   static const String p3 = "P3";
   static const String p4 = "P4";
-  static const String panelDataWasDownloadedSuccessfullyUpdateTheAppTo = "Panel data was downloaded successfully. Update the app to ";
+  static const String panelDataWasDownloadedSuccessfullyUpdateTheAppTo =
+      "Panel data was downloaded successfully. Update the app to ";
   static const String panelID = "Panel ID";
   static const String panelSerialNumber = "Panel Serial Number";
   static const String panelSettings = "Panel Settings";
-  static const String pleaseEnterAValidEmailAddress = "Please enter a valid email address";
+  static const String pleaseEnterAValidEmailAddress =
+      "Please enter a valid email address";
   static const String preparing = "Preparing...";
   static const String progIN1 = "PROG IN 1";
   static const String projectdashboardscreen = "ProjectDashboardScreen";
@@ -996,9 +1141,11 @@ abstract final class StringConstants {
   static const String relayTestResults = "Relay Test Results";
   static const String releaseHold = "Release Hold";
   static const String releaseInitiated = "Release Initiated";
-  static const String releaseTimeMustBeBetween10And300 = "Release Time must be between 10 and 300";
+  static const String releaseTimeMustBeBetween10And300 =
+      "Release Time must be between 10 and 300";
   static const String replace = "Replace";
-  static const String resetDelayMustBeBetween0And1800 = "Reset Delay must be between 0 and 1800";
+  static const String resetDelayMustBeBetween0And1800 =
+      "Reset Delay must be between 0 and 1800";
   static const String resetLevel = "Reset level";
   static const String resetdelay = "resetDelay";
   static const String restart = "Restart";
@@ -1021,11 +1168,16 @@ abstract final class StringConstants {
   static const String s900Sec = "900 Sec";
   static const String s90Sec = "90 Sec";
   static const String saqccNo = "SAQCC No";
-  static const String saqccRegistrationNumberIsRequired = "SAQCC registration number is required";
-  static const String saveItLocallyThereIsNothingInTheAppToSendTo = "save it locally — there is nothing in the app to send to ";
-  static const String savedInThisAppForThisDevice = "saved in this app for this device.";
-  static const String scanForConnectedUSBSolarDevices = "Scan for connected USB solar devices";
-  static const String scanForNearbyBluetoothSolarDevices = "Scan for nearby Bluetooth solar devices";
+  static const String saqccRegistrationNumberIsRequired =
+      "SAQCC registration number is required";
+  static const String saveItLocallyThereIsNothingInTheAppToSendTo =
+      "save it locally — there is nothing in the app to send to ";
+  static const String savedInThisAppForThisDevice =
+      "saved in this app for this device.";
+  static const String scanForConnectedUSBSolarDevices =
+      "Scan for connected USB solar devices";
+  static const String scanForNearbyBluetoothSolarDevices =
+      "Scan for nearby Bluetooth solar devices";
   static const String scannedscreen = "ScannedScreen";
   static const String second = "Second";
   static const String serviceDate = "Service Date";
@@ -1052,11 +1204,16 @@ abstract final class StringConstants {
   static const String suspend = "Suspend";
   static const String testedAt = "Tested At";
   static const String testmodescreen = "TestModeScreen";
-  static const String theMaintenanceSectionProvidesVariousToolsForSystemMaintenanceIncludingSystemChecksUpdatesAndTroubleshootingGuides = "The maintenance section provides various tools for system maintenance, including system checks, updates, and troubleshooting guides.";
-  static const String theMessageHasBeenSuccessfullyDownloadedFromTheDevice = "Live data is being streamed from the device in real time.";
+  static const String
+  theMaintenanceSectionProvidesVariousToolsForSystemMaintenanceIncludingSystemChecksUpdatesAndTroubleshootingGuides =
+      "The maintenance section provides various tools for system maintenance, including system checks, updates, and troubleshooting guides.";
+  static const String theMessageHasBeenSuccessfullyDownloadedFromTheDevice =
+      "Live data is being streamed from the device in real time.";
   static const String thePanel = "the panel.";
   static const String thisSection = "This section";
-  static const String toCreateANewProjectTapOnTheNewProjectQuickLinkOnTheHomeScreenFollowTheStepByStepWizardToSetUpYourProjectDetails = "To create a new project, tap on the \"New Project\" quick link on the home screen. Follow the step-by-step wizard to set up your project details.";
+  static const String
+  toCreateANewProjectTapOnTheNewProjectQuickLinkOnTheHomeScreenFollowTheStepByStepWizardToSetUpYourProjectDetails =
+      "To create a new project, tap on the \"New Project\" quick link on the home screen. Follow the step-by-step wizard to set up your project details.";
   static const String totallogs = "totalLogs";
   static const String typeB = "Type B";
   static const String typeC = "Type C";
@@ -1067,7 +1224,9 @@ abstract final class StringConstants {
   static const String validated = "Validated";
   static const String vin = "Vin";
   static const String warble = "Warble";
-  static const String youCanRetrieveProjectLogsByTappingTheRetrieveLogQuickLinkOnTheHomeScreenSelectYourProjectAndChooseTheDateRangeForTheLogsYouNeed = "You can retrieve project logs by tapping the \"Retrieve Log\" quick link on the home screen. Select your project and choose the date range for the logs you need.";
+  static const String
+  youCanRetrieveProjectLogsByTappingTheRetrieveLogQuickLinkOnTheHomeScreenSelectYourProjectAndChooseTheDateRangeForTheLogsYouNeed =
+      "You can retrieve project logs by tapping the \"Retrieve Log\" quick link on the home screen. Select your project and choose the date range for the logs you need.";
   static const String z12 = "Z1";
   static const String z1AndZ2AndZ3 = "Z1 and Z2 and Z3";
   static const String z1AndZ3 = "Z1 and Z3";

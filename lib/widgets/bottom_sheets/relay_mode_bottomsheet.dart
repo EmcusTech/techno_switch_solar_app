@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/controllers/peripheral/relay_mode_controller.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/widgets/dropdown.dart';
+import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
@@ -133,7 +134,7 @@ class RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            SvgPicture.asset('assets/svgs/bottomsheet_logo.svg'),
+                            SvgPicture.asset(AssetConstants.bottomsheetLogo),
                             Padding(
                               padding: const EdgeInsets.only(right: 32.0),
                               child: GestureDetector(

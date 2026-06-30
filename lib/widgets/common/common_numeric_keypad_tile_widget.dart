@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 
 class CommonNumericKeypadTileWidget extends StatefulWidget {
@@ -134,7 +135,7 @@ class _CommonNumericKeypadTileWidgetState
           child:
               widget.isDelete == true
                   ? SvgPicture.asset(
-                    "assets/svgs/keypad_delete_icon.svg",
+                    AssetConstants.keypadDeleteIcon,
                     colorFilter: ColorFilter.mode(
                       isPressed
                           ? ColorConstants.white
@@ -143,7 +144,7 @@ class _CommonNumericKeypadTileWidgetState
                     ),
                   )
                   : widget.isClear == true
-                  ? SvgPicture.asset("assets/svgs/keypad_clear_icon.svg")
+                  ? SvgPicture.asset(AssetConstants.keypadClearIcon)
                   : Text(
                     numericValue ?? "",
                     style: GoogleFonts.inter(

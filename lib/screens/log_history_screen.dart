@@ -10,6 +10,7 @@ import 'package:techno_switch_solar_app/services/log_retrieval_service.dart';
 import 'package:techno_switch_solar_app/utils/ble_name_utils.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
+import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 
 class LogHistoryScreen extends StatefulWidget {
   final String panelName;
@@ -265,7 +266,7 @@ class LogHistoryScreenState extends State<LogHistoryScreen> {
         ),
         child: Stack(
           children: [
-            SvgPicture.asset('assets/svgs/background_1.svg'),
+            SvgPicture.asset(AssetConstants.background1),
             Padding(
               padding: EdgeInsets.only(top: 24),
               child: Column(
@@ -317,7 +318,7 @@ class LogHistoryScreenState extends State<LogHistoryScreen> {
           Row(
             children: [
               SvgPicture.asset(
-                'assets/svgs/panel_icon.svg',
+                AssetConstants.panelIcon,
                 height: 62,
                 width: 62,
               ),

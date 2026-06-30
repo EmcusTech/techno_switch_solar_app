@@ -12,6 +12,7 @@ import '../screens/home_screen.dart';
 import '../screens/site_screen.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
+import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 
 class SimpleSiteCreationScreen extends StatefulWidget {
   final List<LogModel> retrievedLogs;
@@ -233,7 +234,7 @@ class _SimpleSiteCreationScreenState extends State<SimpleSiteCreationScreen> {
         ),
         child: Stack(
           children: [
-            SvgPicture.asset('assets/svgs/background_1.svg'),
+            SvgPicture.asset(AssetConstants.background1),
             SafeArea(
               child: Padding(
                 padding: const EdgeInsets.only(left: 20, right: 20, top: 20),
@@ -247,7 +248,7 @@ class _SimpleSiteCreationScreenState extends State<SimpleSiteCreationScreen> {
                             Navigator.pop(context);
                           },
                           child: SvgPicture.asset(
-                            'assets/svgs/arrow_back_icon.svg',
+                            AssetConstants.arrowBackIcon,
                           ),
                         ),
                         SizedBox(width: 17),

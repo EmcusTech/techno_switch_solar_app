@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
@@ -39,7 +40,7 @@ class SiteCreationDialog extends StatelessWidget {
               ),
               child: Center(
                 child: SvgPicture.asset(
-                  'assets/svgs/new_project_icon.svg',
+                  AssetConstants.newProjectIcon,
                   height: 32,
                   width: 32,
                   colorFilter: ColorFilter.mode(

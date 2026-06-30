@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 
 class ScanningAnimation extends StatefulWidget {
   const ScanningAnimation({super.key, this.pausedListenable});
@@ -100,7 +101,7 @@ class _ScanningAnimationState extends State<ScanningAnimation>
                 shape: BoxShape.circle,
                 color: Colors.red[50],
               ),
-              child: Center(child: SvgPicture.asset('assets/svgs/logo.svg')),
+              child: Center(child: SvgPicture.asset(AssetConstants.logo)),
             ),
           ],
         );

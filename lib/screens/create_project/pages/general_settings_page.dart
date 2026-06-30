@@ -5,6 +5,7 @@ import 'package:techno_switch_solar_app/widgets/custom_slider_thumb_widget.dart'
 import 'package:techno_switch_solar_app/widgets/custom_vertical_tick_mark_shape_widget.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
+import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 
 class GeneralSettingsPage extends StatefulWidget {
   final String levelTimeout;
@@ -140,7 +141,7 @@ class _GeneralSettingsPageState extends State<GeneralSettingsPage> {
                   ),
                 ),
                 SizedBox(width: 2),
-                SvgPicture.asset('assets/svgs/drop_down_red_icon.svg'),
+                SvgPicture.asset(AssetConstants.dropDownRedIcon),
               ],
             ),
           ),

@@ -16,6 +16,7 @@ import 'settings_screen.dart';
 import 'help_screen.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
+import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -83,7 +84,7 @@ class _HomeScreenState extends State<HomeScreen> {
             items: <BottomNavigationBarItem>[
               BottomNavigationBarItem(
                 icon: SvgPicture.asset(
-                  'assets/svgs/home_icon.svg',
+                  AssetConstants.homeIcon,
                   height: 24,
                   width: 24,
                   colorFilter: ColorFilter.mode(
@@ -95,7 +96,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               BottomNavigationBarItem(
                 icon: SvgPicture.asset(
-                  'assets/svgs/setting_icon.svg',
+                  AssetConstants.settingIcon,
                   height: 24,
                   width: 24,
                   colorFilter: ColorFilter.mode(
@@ -107,7 +108,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               BottomNavigationBarItem(
                 icon: SvgPicture.asset(
-                  'assets/svgs/help_icon.svg',
+                  AssetConstants.helpIcon,
                   height: 24,
                   width: 24,
                   colorFilter: ColorFilter.mode(
@@ -260,7 +261,7 @@ class _HomeContentState extends State<_HomeContent> with RouteAware {
             ),
           ),
         ),
-        SvgPicture.asset('assets/svgs/background_1.svg'),
+        SvgPicture.asset(AssetConstants.background1),
         Padding(
           padding: const EdgeInsets.only(top: 40),
           child: Column(
@@ -290,7 +291,7 @@ class _HomeContentState extends State<_HomeContent> with RouteAware {
                       child: Padding(
                         padding: const EdgeInsets.all(25.0),
                         child: SvgPicture.asset(
-                          'assets/svgs/logo.svg',
+                          AssetConstants.logo,
                           height: 59.29,
                           width: 51,
                           colorFilter: ColorFilter.mode(
@@ -348,12 +349,12 @@ class _HomeContentState extends State<_HomeContent> with RouteAware {
                   );
                 },
                 child: _buildQuickLinkItem(
-                  'assets/svgs/new_project_icon.svg',
+                  AssetConstants.newProjectIcon,
                   StringConstants.newSite,
                 ),
               ),
               _buildQuickLinkItem(
-                'assets/svgs/open_project_icon.svg',
+                AssetConstants.openProjectIcon,
                 StringConstants.openSite,
                 isEnabled: false,
               ),
@@ -367,7 +368,7 @@ class _HomeContentState extends State<_HomeContent> with RouteAware {
                   );
                 },
                 child: _buildQuickLinkItem(
-                  'assets/svgs/maintenance_icon.svg',
+                  AssetConstants.maintenanceIcon,
                   StringConstants.liveEvents,
                 ),
               ),
@@ -380,7 +381,7 @@ class _HomeContentState extends State<_HomeContent> with RouteAware {
                   );
                 },
                 child: _buildQuickLinkItem(
-                  'assets/svgs/retrieve_log_icon.svg',
+                  AssetConstants.retrieveLogIcon,
                   StringConstants.retrieveLog,
                 ),
               ),
@@ -596,7 +597,7 @@ class _HomeContentState extends State<_HomeContent> with RouteAware {
                   child: Row(
                     children: [
                       Image.asset(
-                        'assets/images/panel_icon.png',
+                        AssetConstants.panelIconImage,
                         height: 62,
                         width: 62,
                       ),

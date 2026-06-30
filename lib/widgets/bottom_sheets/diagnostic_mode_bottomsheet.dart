@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/ble/ble_process.dart';
 import 'package:techno_switch_solar_app/controllers/peripheral/diagnostic_info_controller.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/widgets/diagnostic_voltage_tile.dart';
+import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
@@ -30,7 +31,7 @@ String diagnosticSectionIconAsset(
 ) {
   if (type == DiagnosticSectionType.other &&
       band == DiagnosticVoltageBand.critical) {
-    return 'assets/svgs/diagnostics/other_crticial_icon.svg';
+    return AssetConstants.diagnosticsOtherCritical;
   }
 
   final prefix = switch (type) {
@@ -45,13 +46,14 @@ String diagnosticSectionIconAsset(
     DiagnosticVoltageBand.high => 'high',
     DiagnosticVoltageBand.critical => 'critical',
   };
-  return 'assets/svgs/diagnostics/${prefix}_${suffix}_icon.svg';
+  return AssetConstants.diagnosticSectionIcon(prefix, suffix);
 }
 
 String diagnosticSectionSubtitle(Iterable<double> voltages) {
   final voltageList = voltages.toList();
   final channelCount = voltageList.length;
-  final channels = channelCount == 1 ? StringConstants.s1Channel : '$channelCount channels';
+  final channels =
+      channelCount == 1 ? StringConstants.s1Channel : '$channelCount channels';
 
   final band = aggregateDiagnosticSectionBand(voltageList);
   var bandCount = 0;
@@ -209,7 +211,7 @@ class _DiagnosticInfoBottomSheetState extends State<DiagnosticInfoBottomSheet> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        SvgPicture.asset('assets/svgs/bottomsheet_logo.svg'),
+                        SvgPicture.asset(AssetConstants.bottomsheetLogo),
                         Padding(
                           padding: const EdgeInsets.only(right: 32.0),
                           child: GestureDetector(
@@ -219,7 +221,9 @@ class _DiagnosticInfoBottomSheetState extends State<DiagnosticInfoBottomSheet> {
                               width: 38,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: ColorConstants.blackMaterial.withValues(alpha: 0.06),
+                                color: ColorConstants.blackMaterial.withValues(
+                                  alpha: 0.06,
+                                ),
                               ),
                               child: const Icon(Icons.close, size: 20),
                             ),
@@ -237,7 +241,10 @@ class _DiagnosticInfoBottomSheetState extends State<DiagnosticInfoBottomSheet> {
                       child: Column(
                         children: [
                           _dragHandle(),
-                          _title(StringConstants.liveDataIsBeingStreamedFromTheDeviceInRealTime),
+                          _title(
+                            StringConstants
+                                .liveDataIsBeingStreamedFromTheDeviceInRealTime,
+                          ),
                           const SizedBox(height: 16),
                           Expanded(
                             child: ListView(
@@ -255,8 +262,14 @@ class _DiagnosticInfoBottomSheetState extends State<DiagnosticInfoBottomSheet> {
                                       DiagnosticSectionType.sounder,
                                   items: [
                                     _VoltRef('SND 1', p.sounderOneAdcValue),
-                                    _VoltRef(StringConstants.snd2, p.sounderTwoAdcValue),
-                                    _VoltRef(StringConstants.snd3, p.sounderThreeAdcValue),
+                                    _VoltRef(
+                                      StringConstants.snd2,
+                                      p.sounderTwoAdcValue,
+                                    ),
+                                    _VoltRef(
+                                      StringConstants.snd3,
+                                      p.sounderThreeAdcValue,
+                                    ),
                                   ],
                                 ),
                                 _section(
@@ -266,8 +279,14 @@ class _DiagnosticInfoBottomSheetState extends State<DiagnosticInfoBottomSheet> {
                                       DiagnosticSectionType.power,
                                   items: [
                                     _VoltRef('Vaux', p.vauxAdcValue),
-                                    _VoltRef(StringConstants.vin, p.vinAdcValue),
-                                    _VoltRef(StringConstants.ext, p.dischargeAdcValue),
+                                    _VoltRef(
+                                      StringConstants.vin,
+                                      p.vinAdcValue,
+                                    ),
+                                    _VoltRef(
+                                      StringConstants.ext,
+                                      p.dischargeAdcValue,
+                                    ),
                                   ],
                                 ),
                                 _section(
@@ -277,7 +296,10 @@ class _DiagnosticInfoBottomSheetState extends State<DiagnosticInfoBottomSheet> {
                                       DiagnosticSectionType.input,
                                   items: [
                                     _VoltRef('Prog In', p.progInputAdcValue),
-                                    _VoltRef(StringConstants.holdIn, p.holdInputAdcValue),
+                                    _VoltRef(
+                                      StringConstants.holdIn,
+                                      p.holdInputAdcValue,
+                                    ),
                                   ],
                                 ),
                                 _section(
@@ -287,8 +309,14 @@ class _DiagnosticInfoBottomSheetState extends State<DiagnosticInfoBottomSheet> {
                                       DiagnosticSectionType.zone,
                                   items: [
                                     _VoltRef('Zone 1', p.zone1AdcValue),
-                                    _VoltRef(StringConstants.zone22, p.zone2AdcValue),
-                                    _VoltRef(StringConstants.zone32, p.zone3AdcValue),
+                                    _VoltRef(
+                                      StringConstants.zone22,
+                                      p.zone2AdcValue,
+                                    ),
+                                    _VoltRef(
+                                      StringConstants.zone32,
+                                      p.zone3AdcValue,
+                                    ),
                                   ],
                                 ),
                                 _section(
@@ -296,7 +324,12 @@ class _DiagnosticInfoBottomSheetState extends State<DiagnosticInfoBottomSheet> {
                                   isLive: p.isAdcSetupFetchCommandActive,
                                   diagnosticSectionType:
                                       DiagnosticSectionType.other,
-                                  items: [_VoltRef(StringConstants.earth, p.earthAdcValue)],
+                                  items: [
+                                    _VoltRef(
+                                      StringConstants.earth,
+                                      p.earthAdcValue,
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
@@ -324,7 +357,9 @@ class _DiagnosticInfoBottomSheetState extends State<DiagnosticInfoBottomSheet> {
                                           ? widget.onStop
                                           : widget.onDownload,
                                   child: Text(
-                                    isFetchActive ? StringConstants.stop : StringConstants.start,
+                                    isFetchActive
+                                        ? StringConstants.stop
+                                        : StringConstants.start,
                                     style: GoogleFonts.inter(
                                       fontSize: 15,
                                       fontWeight: FontWeight.w600,
@@ -386,8 +421,7 @@ class _DiagnosticInfoBottomSheetState extends State<DiagnosticInfoBottomSheet> {
                   label: StringConstants.none,
                   count: counts.nominal,
                   band: DiagnosticVoltageBand.nominal,
-                  iconAsset:
-                      'assets/svgs/diagnostics/diagnostics_normal_icon.svg',
+                  iconAsset: AssetConstants.diagnosticsNormal,
                 ),
               ),
               const SizedBox(width: 8),
@@ -396,8 +430,7 @@ class _DiagnosticInfoBottomSheetState extends State<DiagnosticInfoBottomSheet> {
                   label: StringConstants.high,
                   count: counts.high,
                   band: DiagnosticVoltageBand.high,
-                  iconAsset:
-                      'assets/svgs/diagnostics/diagnostics_high_icon.svg',
+                  iconAsset: AssetConstants.diagnosticsHigh,
                 ),
               ),
               const SizedBox(width: 8),
@@ -406,8 +439,7 @@ class _DiagnosticInfoBottomSheetState extends State<DiagnosticInfoBottomSheet> {
                   label: StringConstants.critical,
                   count: counts.critical,
                   band: DiagnosticVoltageBand.critical,
-                  iconAsset:
-                      'assets/svgs/diagnostics/diagnostics_critical_icon.svg',
+                  iconAsset: AssetConstants.diagnosticsCritical,
                 ),
               ),
             ],
@@ -444,7 +476,10 @@ class _DiagnosticInfoBottomSheetState extends State<DiagnosticInfoBottomSheet> {
             offset: const Offset(1, 1),
             blurRadius: 2,
           ),
-          BoxShadow(color: ColorConstants.blackMaterial.withValues(alpha: 0.10), blurRadius: 1),
+          BoxShadow(
+            color: ColorConstants.blackMaterial.withValues(alpha: 0.10),
+            blurRadius: 1,
+          ),
         ],
       ),
       child: Container(
@@ -565,9 +600,7 @@ class _DiagnosticInfoBottomSheetState extends State<DiagnosticInfoBottomSheet> {
                       //   ),
                       // ),
                       // const SizedBox(width: 10),
-                      SvgPicture.asset(
-                        'assets/svgs/diagnostics/diagnostics_dropdown_icon.svg',
-                      ),
+                      SvgPicture.asset(AssetConstants.diagnosticsDropdown),
                     ],
                   );
                 },

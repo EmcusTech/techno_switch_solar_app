@@ -3,6 +3,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
+import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 
 class TestModeScreen extends StatefulWidget {
   const TestModeScreen({super.key});
@@ -26,7 +27,7 @@ class _TestModeScreenState extends State<TestModeScreen> {
         ),
         child: Stack(
           children: [
-            SvgPicture.asset('assets/svgs/background_1.svg'),
+            SvgPicture.asset(AssetConstants.background1),
             Padding(
               padding: EdgeInsets.only(top: 24),
               child: Column(
@@ -42,7 +43,7 @@ class _TestModeScreenState extends State<TestModeScreen> {
                             Navigator.of(context).pop();
                           },
                           child: SvgPicture.asset(
-                            'assets/svgs/arrow_back_icon.svg',
+                            AssetConstants.arrowBackIcon,
                           ),
                         ),
                         SizedBox(width: 8),
@@ -79,7 +80,7 @@ class _TestModeScreenState extends State<TestModeScreen> {
           children: [
             Align(
               alignment: Alignment.topRight,
-              child: SvgPicture.asset('assets/svgs/background_2.svg'),
+              child: SvgPicture.asset(AssetConstants.background2),
             ),
             Padding(
               padding: const EdgeInsets.only(top: 45),
@@ -113,7 +114,7 @@ class _TestModeScreenState extends State<TestModeScreen> {
                 children: [
                   _buildTestModeOption(
                     StringConstants.batteryTest,
-                    'assets/svgs/battery_test_icon.svg',
+                    AssetConstants.batteryTestIcon,
                     () {
                       // Handle battery test
                     },
@@ -121,7 +122,7 @@ class _TestModeScreenState extends State<TestModeScreen> {
                   SizedBox(height: 16),
                   _buildTestModeOption(
                     StringConstants.solarPanelTest,
-                    'assets/svgs/solar_panel_test_icon.svg',
+                    AssetConstants.solarPanelTestIcon,
                     () {
                       // Handle solar panel test
                     },
@@ -129,7 +130,7 @@ class _TestModeScreenState extends State<TestModeScreen> {
                   SizedBox(height: 16),
                   _buildTestModeOption(
                     StringConstants.inverterTest,
-                    'assets/svgs/inverter_test_icon.svg',
+                    AssetConstants.inverterTestIcon,
                     () {
                       // Handle inverter test
                     },
@@ -137,7 +138,7 @@ class _TestModeScreenState extends State<TestModeScreen> {
                   SizedBox(height: 16),
                   _buildTestModeOption(
                     StringConstants.systemTest,
-                    'assets/svgs/system_test_icon.svg',
+                    AssetConstants.systemTestIcon,
                     () {
                       // Handle system test
                     },

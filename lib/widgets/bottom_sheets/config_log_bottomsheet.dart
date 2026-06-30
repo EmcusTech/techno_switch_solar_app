@@ -8,6 +8,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/utils/peripheral_config_diff_labels.dart';
 import 'package:techno_switch_solar_app/utils/peripheral_config_snapshot.dart';
+import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/widgets/dropdown.dart';
 
@@ -1363,7 +1364,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    SvgPicture.asset('assets/svgs/bottomsheet_logo.svg'),
+                    SvgPicture.asset(AssetConstants.bottomsheetLogo),
                     Padding(
                       padding: const EdgeInsets.only(right: 32.0),
                       child: GestureDetector(

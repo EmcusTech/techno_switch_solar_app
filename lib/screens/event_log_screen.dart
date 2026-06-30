@@ -20,6 +20,7 @@ import 'package:techno_switch_solar_app/screens/simple_site_creation_screen.dart
 import 'package:techno_switch_solar_app/utils/ble_name_utils.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
+import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 
 class EventLogScreen extends StatefulWidget {
   final List<LogModel> logDataList;
@@ -227,7 +228,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                   ),
                   child: Center(
                     child: SvgPicture.asset(
-                      'assets/svgs/clear_icon.svg',
+                      AssetConstants.clearIcon,
                       height: 28,
                       width: 28,
                     ),
@@ -513,7 +514,7 @@ class _EventLogContentState extends State<_EventLogContent> {
               ),
               const SizedBox(height: 12),
               ExportTile(
-                iconPath: "assets/svgs/share_icon_red.svg",
+                iconPath: AssetConstants.shareIconRed,
                 title: StringConstants.exportAsPDF,
                 onTap: () async {
                   Navigator.pop(context);
@@ -710,7 +711,7 @@ class _EventLogContentState extends State<_EventLogContent> {
         ),
         child: Stack(
           children: [
-            SvgPicture.asset('assets/svgs/background_1.svg'),
+            SvgPicture.asset(AssetConstants.background1),
             Padding(
               padding: EdgeInsets.only(top: 24),
               child: Column(
@@ -724,7 +725,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                         GestureDetector(
                           onTap: () async => await _handleBackNavigation(),
                           child: SvgPicture.asset(
-                            'assets/svgs/arrow_back_icon.svg',
+                            AssetConstants.arrowBackIcon,
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -748,7 +749,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                               child: Opacity(
                                 opacity: _canClearLogs ? 1.0 : 0,
                                 child: SvgPicture.asset(
-                                  'assets/svgs/clear_icon.svg',
+                                  AssetConstants.clearIcon,
                                   height: 28,
                                   width: 28,
                                 ),
@@ -760,7 +761,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                           child: Padding(
                             padding: const EdgeInsets.only(right: 12.0),
                             child: SvgPicture.asset(
-                              "assets/svgs/share_icon.svg",
+                              AssetConstants.shareIcon,
                             ),
                           ),
                         ),
@@ -769,7 +770,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                           child: Padding(
                             padding: const EdgeInsets.only(left: 12.0),
                             child: SvgPicture.asset(
-                              "assets/svgs/filter_icon.svg",
+                              AssetConstants.filterIcon,
                             ),
                           ),
                         ),
@@ -916,7 +917,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                                           ),
                                           Spacer(),
                                           SvgPicture.asset(
-                                            "assets/svgs/calendar_icon.svg",
+                                            AssetConstants.calendarIcon,
                                           ),
                                         ],
                                       ),
@@ -969,7 +970,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                                           ),
                                           Spacer(),
                                           SvgPicture.asset(
-                                            "assets/svgs/calendar_icon.svg",
+                                            AssetConstants.calendarIcon,
                                           ),
                                         ],
                                       ),
@@ -1254,7 +1255,7 @@ class _EventLogContentState extends State<_EventLogContent> {
           Row(
             children: [
               SvgPicture.asset(
-                'assets/svgs/panel_icon.svg',
+                AssetConstants.panelIcon,
                 height: 62,
                 width: 62,
               ),
@@ -1425,7 +1426,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                               child: Padding(
                                 padding: const EdgeInsets.all(2.0),
                                 child: SvgPicture.asset(
-                                  'assets/svgs/list_deselected_icon.svg',
+                                  AssetConstants.listDeselectedIcon,
                                   colorFilter: ColorFilter.mode(
                                     ColorConstants.white,
                                     BlendMode.srcIn,
@@ -1434,7 +1435,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                               ),
                             )
                             : SvgPicture.asset(
-                              'assets/svgs/list_deselected_icon.svg',
+                              AssetConstants.listDeselectedIcon,
                             ),
                   ),
                   SizedBox(width: 5),
@@ -1447,7 +1448,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                     child:
                         _isListSelected
                             ? SvgPicture.asset(
-                              'assets/svgs/table_deselected_icon.svg',
+                              AssetConstants.tableDeselectedIcon,
                             )
                             : Container(
                               height: 28,
@@ -1459,7 +1460,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                               child: Padding(
                                 padding: const EdgeInsets.all(4.0),
                                 child: SvgPicture.asset(
-                                  'assets/svgs/table_deselected_icon.svg',
+                                  AssetConstants.tableDeselectedIcon,
                                   colorFilter: ColorFilter.mode(
                                     ColorConstants.white,
                                     BlendMode.srcIn,
