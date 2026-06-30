@@ -1,7 +1,3 @@
-/// Centralized asset path constants (SVGs, Lottie JSONs, images).
-///
-/// Use these instead of hard-coding `'assets/...'` string literals so paths
-/// live in one place and typos are caught at compile time.
 class AssetConstants {
   AssetConstants._();
 
@@ -58,9 +54,12 @@ class AssetConstants {
   static const String dashboardIcon = '$_svgDir/dashboard_icon.svg';
   static const String testModeIcon = '$_svgDir/test_mode_icon.svg';
   static const String logHistoryIcon = '$_svgDir/log_history_icon.svg';
-  static const String peripheralRelayIcon = '$_svgDir/peripheral_relay_icon.svg';
-  static const String peripheralInputIcon = '$_svgDir/peripheral_input_icon.svg';
-  static const String peripheralZonesIcon = '$_svgDir/peripheral_zones_icon.svg';
+  static const String peripheralRelayIcon =
+      '$_svgDir/peripheral_relay_icon.svg';
+  static const String peripheralInputIcon =
+      '$_svgDir/peripheral_input_icon.svg';
+  static const String peripheralZonesIcon =
+      '$_svgDir/peripheral_zones_icon.svg';
   static const String peripheralSounderIcon =
       '$_svgDir/peripheral_sounder_icon.svg';
   static const String peripheralProgHoldIcon =
@@ -105,8 +104,6 @@ class AssetConstants {
   static const String diagnosticsDropdown =
       '$_diagnosticsDir/diagnostics_dropdown_icon.svg';
 
-  /// Build a diagnostics section icon path from its [prefix] (section) and
-  /// [suffix] (band), e.g. `power_high` -> assets/svgs/diagnostics/power_high_icon.svg.
   static String diagnosticSectionIcon(String prefix, String suffix) =>
       '$_diagnosticsDir/${prefix}_${suffix}_icon.svg';
 

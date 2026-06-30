@@ -8,6 +8,7 @@ import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/panel_config/panel_config_feedback_dialogs.dart';
+import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
 import 'package:techno_switch_solar_app/utils/peripheral_cache_to_ble.dart';
 import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
@@ -246,7 +247,8 @@ Future<void> showPanelAccessPasswordPopup({
                                     : isGeneralModuleSetup == true
                                     ? StringConstants.generalModule
                                     : isAdcSetup == true
-                                    ? StringConstants.liveDataIsBeingStreamedFromTheDeviceInRealTime
+                                    ? StringConstants
+                                        .liveDataIsBeingStreamedFromTheDeviceInRealTime
                                     : StringConstants.configuration);
                             delegates.showDownloadSuccess(context, message);
                             Future.delayed(const Duration(seconds: 2), () {
@@ -274,35 +276,45 @@ Future<void> showPanelAccessPasswordPopup({
                             bleManager.bleProcess.isInputSetupApplyDone.value) {
                           await delegates.saveInputCache();
                           if (isMounted()) {
-                            showApplySuccessWithOptionalFollowUp(StringConstants.inputs);
+                            showApplySuccessWithOptionalFollowUp(
+                              StringConstants.inputs,
+                            );
                           }
                         } else if (isRelaySetup &&
                             bleManager.bleProcess.isRelaySetupApplyDone.value &&
                             isMounted()) {
                           await delegates.saveRelayCache();
                           if (isMounted()) {
-                            showApplySuccessWithOptionalFollowUp(StringConstants.relays);
+                            showApplySuccessWithOptionalFollowUp(
+                              StringConstants.relays,
+                            );
                           }
                         } else if (isZoneSetup &&
                             bleManager.bleProcess.isRadioSetupApplyDone.value &&
                             isMounted()) {
                           await delegates.saveRadioCache();
                           if (isMounted()) {
-                            showApplySuccessWithOptionalFollowUp(StringConstants.radio);
+                            showApplySuccessWithOptionalFollowUp(
+                              StringConstants.radio,
+                            );
                           }
                         } else if (isZoneSetup &&
                             bleManager.bleProcess.isZoneSetupApplyDone.value &&
                             isMounted()) {
                           await delegates.saveZoneCache();
                           if (isMounted()) {
-                            showApplySuccessWithOptionalFollowUp(StringConstants.zones);
+                            showApplySuccessWithOptionalFollowUp(
+                              StringConstants.zones,
+                            );
                           }
                         } else if (isLBusSetup &&
                             bleManager.bleProcess.isLBusSetupApplyDone.value &&
                             isMounted()) {
                           await delegates.saveLBusCache();
                           if (isMounted()) {
-                            showApplySuccessWithOptionalFollowUp(StringConstants.lBus);
+                            showApplySuccessWithOptionalFollowUp(
+                              StringConstants.lBus,
+                            );
                           }
                         } else if (isSounderSetup &&
                             bleManager
@@ -312,14 +324,18 @@ Future<void> showPanelAccessPasswordPopup({
                             isMounted()) {
                           await delegates.saveSounderCache();
                           if (isMounted()) {
-                            showApplySuccessWithOptionalFollowUp(StringConstants.sounders);
+                            showApplySuccessWithOptionalFollowUp(
+                              StringConstants.sounders,
+                            );
                           }
                         } else if (isServiceDueSetup &&
                             bleManager.bleProcess.isServiceDueApplyDone.value &&
                             isMounted()) {
                           await delegates.saveServiceDueCache();
                           if (isMounted()) {
-                            showApplySuccessWithOptionalFollowUp(StringConstants.serviceDue);
+                            showApplySuccessWithOptionalFollowUp(
+                              StringConstants.serviceDue,
+                            );
                           }
                         } else if (isAccessCodeSetup &&
                             bleManager
@@ -329,7 +345,9 @@ Future<void> showPanelAccessPasswordPopup({
                             isMounted()) {
                           await delegates.saveAccessCodeCache();
                           if (isMounted()) {
-                            showApplySuccessWithOptionalFollowUp(StringConstants.accessCode);
+                            showApplySuccessWithOptionalFollowUp(
+                              StringConstants.accessCode,
+                            );
                           }
                         } else if (isPanelInfoSetup &&
                             bleManager
@@ -339,7 +357,9 @@ Future<void> showPanelAccessPasswordPopup({
                             isMounted()) {
                           await delegates.savePanelInfoCache();
                           if (isMounted()) {
-                            showApplySuccessWithOptionalFollowUp(StringConstants.panelInfo);
+                            showApplySuccessWithOptionalFollowUp(
+                              StringConstants.panelInfo,
+                            );
                           }
                         } else if (isGeneralModuleSetup &&
                             bleManager
@@ -393,7 +413,8 @@ Future<void> showPanelAccessPasswordPopup({
                           await onDownloadComplete?.call();
                           if (isMounted()) {
                             final message =
-                                downloadSuccessMessage ?? StringConstants.configuration;
+                                downloadSuccessMessage ??
+                                StringConstants.configuration;
                             closeAccessDialog();
                             delegates.showDownloadSuccess(context, message);
                             Future.delayed(const Duration(seconds: 2), () {
@@ -512,11 +533,7 @@ Future<void> showPanelAccessPasswordPopup({
                                   child: Text(
                                     dialogTitle,
                                     key: ValueKey<String>(dialogTitle),
-                                    style: GoogleFonts.inter(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.w700,
-                                      color: ColorConstants.textDark,
-                                    ),
+                                    style: StyleConstants.textMuted20w600Style,
                                     textAlign: TextAlign.center,
                                   ),
                                 ),
@@ -541,12 +558,9 @@ Future<void> showPanelAccessPasswordPopup({
                                               obscureText: true,
                                               maxLength: 8,
                                               textAlign: TextAlign.center,
-                                              style: GoogleFonts.inter(
-                                                fontSize: 24,
-                                                fontWeight: FontWeight.w600,
-                                                letterSpacing: 8,
-                                                color: ColorConstants.textDark,
-                                              ),
+                                              style:
+                                                  StyleConstants
+                                                      .textDark24w600Style,
                                               inputFormatters: [
                                                 FilteringTextInputFormatter
                                                     .digitsOnly,
@@ -579,20 +593,15 @@ Future<void> showPanelAccessPasswordPopup({
                                                 }
                                               },
                                               decoration: InputDecoration(
-                                                hintText: StringConstants.strca4d661a,
-                                                hintStyle: GoogleFonts.inter(
-                                                  fontSize: 24,
-                                                  fontWeight: FontWeight.w600,
-                                                  letterSpacing: 8,
-                                                  color: const Color(
-                                                    0xFFD0D0D0,
-                                                  ),
-                                                ),
+                                                hintText:
+                                                    StringConstants.strca4d661a,
+                                                hintStyle:
+                                                    StyleConstants
+                                                        .borderLight24w600Style,
                                                 counterText: '',
                                                 filled: true,
-                                                fillColor: const Color(
-                                                  0xFFF8F8F8,
-                                                ),
+                                                fillColor:
+                                                    ColorConstants.surfaceLight,
                                                 border: OutlineInputBorder(
                                                   borderRadius:
                                                       BorderRadius.circular(12),
@@ -600,12 +609,10 @@ Future<void> showPanelAccessPasswordPopup({
                                                     color:
                                                         isAccessKeyValidValue ==
                                                                 false
-                                                            ? const Color(
-                                                              0xFFEC1D24,
-                                                            )
-                                                            : const Color(
-                                                              0xFFD0D0D0,
-                                                            ),
+                                                            ? ColorConstants
+                                                                .primary
+                                                            : ColorConstants
+                                                                .borderLight,
                                                     width: 1,
                                                   ),
                                                 ),
@@ -616,12 +623,10 @@ Future<void> showPanelAccessPasswordPopup({
                                                     color:
                                                         isAccessKeyValidValue ==
                                                                 false
-                                                            ? const Color(
-                                                              0xFFEC1D24,
-                                                            )
-                                                            : const Color(
-                                                              0xFFD0D0D0,
-                                                            ),
+                                                            ? ColorConstants
+                                                                .primary
+                                                            : ColorConstants
+                                                                .borderLight,
                                                     width: 1,
                                                   ),
                                                 ),
@@ -633,9 +638,9 @@ Future<void> showPanelAccessPasswordPopup({
                                                           ),
                                                       borderSide:
                                                           const BorderSide(
-                                                            color: Color(
-                                                              0xFFEC1D24,
-                                                            ),
+                                                            color:
+                                                                ColorConstants
+                                                                    .primary,
                                                             width: 2,
                                                           ),
                                                     ),
@@ -643,7 +648,8 @@ Future<void> showPanelAccessPasswordPopup({
                                                   borderRadius:
                                                       BorderRadius.circular(12),
                                                   borderSide: const BorderSide(
-                                                    color: ColorConstants.primary,
+                                                    color:
+                                                        ColorConstants.primary,
                                                     width: 1,
                                                   ),
                                                 ),
@@ -655,9 +661,9 @@ Future<void> showPanelAccessPasswordPopup({
                                                           ),
                                                       borderSide:
                                                           const BorderSide(
-                                                            color: Color(
-                                                              0xFFEC1D24,
-                                                            ),
+                                                            color:
+                                                                ColorConstants
+                                                                    .primary,
                                                             width: 2,
                                                           ),
                                                     ),
@@ -705,20 +711,23 @@ Future<void> showPanelAccessPasswordPopup({
                                     if (bulkOp &&
                                         showDetailedConfigLogBulkBleProgressInAccessDialog) {
                                       if (processDescValue.isNotEmpty &&
-                                          processDescValue != StringConstants.success) {
+                                          processDescValue !=
+                                              StringConstants.success) {
                                         status = processDescValue;
                                       } else {
                                         status =
                                             mode == 'bottomsheet_download'
                                                 ? 'Downloading configuration…'
-                                                : StringConstants.applyingConfigurationToPanel;
+                                                : StringConstants
+                                                    .applyingConfigurationToPanel;
                                       }
                                     } else if (bulkOp &&
                                         !showDetailedConfigLogBulkBleProgressInAccessDialog) {
                                       status =
                                           mode == 'bottomsheet_download'
                                               ? 'Downloading configuration…'
-                                              : StringConstants.applyingConfigurationToPanel;
+                                              : StringConstants
+                                                  .applyingConfigurationToPanel;
                                     } else {
                                       status =
                                           mode == 'bottomsheet_download'
@@ -753,16 +762,17 @@ Future<void> showPanelAccessPasswordPopup({
                                         ),
                                         child: Text(
                                           status,
-                                          style: GoogleFonts.inter(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w600,
-                                            color:
-                                                commFailed ||
-                                                        isAccessKeyValidValue ==
-                                                            false
-                                                    ? ColorConstants.primary
-                                                    : ColorConstants.textDark,
-                                          ),
+                                          style: StyleConstants
+                                              .primary14w600Style
+                                              .copyWith(
+                                                color:
+                                                    commFailed ||
+                                                            isAccessKeyValidValue ==
+                                                                false
+                                                        ? ColorConstants.primary
+                                                        : ColorConstants
+                                                            .textDark,
+                                              ),
                                           textAlign: TextAlign.center,
                                         ),
                                       );
@@ -788,13 +798,12 @@ Future<void> showPanelAccessPasswordPopup({
                                                   child: OutlinedButton(
                                                     style: OutlinedButton.styleFrom(
                                                       foregroundColor:
-                                                          const Color(
-                                                            0xFFEC1D24,
-                                                          ),
+                                                          ColorConstants
+                                                              .primary,
                                                       side: const BorderSide(
-                                                        color: Color(
-                                                          0xFFEC1D24,
-                                                        ),
+                                                        color:
+                                                            ColorConstants
+                                                                .primary,
                                                       ),
                                                       shape: RoundedRectangleBorder(
                                                         borderRadius:
@@ -813,11 +822,9 @@ Future<void> showPanelAccessPasswordPopup({
                                                     },
                                                     child: Text(
                                                       StringConstants.cancel,
-                                                      style: GoogleFonts.inter(
-                                                        fontSize: 16,
-                                                        fontWeight:
-                                                            FontWeight.w600,
-                                                      ),
+                                                      style:
+                                                          StyleConstants
+                                                              .black16w600Style,
                                                     ),
                                                   ),
                                                 ),
@@ -839,9 +846,8 @@ Future<void> showPanelAccessPasswordPopup({
                                                         return ElevatedButton(
                                                           style: ElevatedButton.styleFrom(
                                                             backgroundColor:
-                                                                const Color(
-                                                                  0xFFEC1D24,
-                                                                ),
+                                                                ColorConstants
+                                                                    .primary,
                                                             shape: RoundedRectangleBorder(
                                                               borderRadius:
                                                                   BorderRadius.circular(
@@ -885,15 +891,8 @@ Future<void> showPanelAccessPasswordPopup({
                                                           child: Text(
                                                             'Verify',
                                                             style:
-                                                                GoogleFonts.inter(
-                                                                  fontSize: 16,
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .w600,
-                                                                  color:
-                                                                      Colors
-                                                                          .white,
-                                                                ),
+                                                                StyleConstants
+                                                                    .white16w600Style,
                                                           ),
                                                         );
                                                       },

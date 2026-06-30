@@ -1507,9 +1507,7 @@ class _FirmwareUpgradeBottomSheetState
                       radius: 80,
                       lineWidth: 8,
                       percent: progress.clamp(0.0, 1.0),
-                      center: Lottie.asset(
-                        AssetConstants.firmwareUpgradeJson,
-                      ),
+                      center: Lottie.asset(AssetConstants.firmwareUpgradeJson),
                       progressColor: ColorConstants.primary,
                       backgroundColor: ColorConstants.progressTrack,
                       circularStrokeCap: CircularStrokeCap.round,
@@ -1593,16 +1591,6 @@ class _FirmwareUpgradeBottomSheetState
           ),
           textAlign: TextAlign.center,
         ),
-        // SizedBox(height: 16),
-        // Text(
-        //   message,
-        //   style: GoogleFonts.inter(
-        //     fontSize: 16,
-        //     fontWeight: FontWeight.w400,
-        //     color: ColorConstants.textHeading,
-        //   ),
-        //   textAlign: TextAlign.center,
-        // ),
         SizedBox(height: 32),
         CommonCtaButton(
           onTap: () {

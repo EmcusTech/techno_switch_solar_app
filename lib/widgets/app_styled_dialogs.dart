@@ -38,9 +38,7 @@ Future<T?> showAppStyledTwoActionDialog<T>({
                   color: iconCircleColor,
                   shape: BoxShape.circle,
                 ),
-                child: Center(
-                  child: Icon(icon, color: iconColor, size: 32),
-                ),
+                child: Center(child: Icon(icon, color: iconColor, size: 32)),
               ),
               const SizedBox(height: 16),
               Text(
@@ -67,7 +65,8 @@ Future<T?> showAppStyledTwoActionDialog<T>({
                 children: [
                   Expanded(
                     child: GestureDetector(
-                      onTap: () => Navigator.of(dialogContext).pop(leadingValue),
+                      onTap:
+                          () => Navigator.of(dialogContext).pop(leadingValue),
                       child: Container(
                         height: 48,
                         decoration: BoxDecoration(
@@ -94,8 +93,8 @@ Future<T?> showAppStyledTwoActionDialog<T>({
                   const SizedBox(width: 12),
                   Expanded(
                     child: GestureDetector(
-                      onTap: () =>
-                          Navigator.of(dialogContext).pop(trailingValue),
+                      onTap:
+                          () => Navigator.of(dialogContext).pop(trailingValue),
                       child: Container(
                         height: 48,
                         decoration: BoxDecoration(
@@ -166,9 +165,7 @@ Future<void> showAppStyledOneActionDialog({
                   color: iconCircleColor,
                   shape: BoxShape.circle,
                 ),
-                child: Center(
-                  child: Icon(icon, color: iconColor, size: 32),
-                ),
+                child: Center(child: Icon(icon, color: iconColor, size: 32)),
               ),
               const SizedBox(height: 16),
               Text(
@@ -416,9 +413,9 @@ class _AppStyledTextInputDialogState extends State<_AppStyledTextInputDialog> {
                           borderRadius: BorderRadius.circular(24),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(
-                                0xFFEC1D24,
-                              ).withValues(alpha: 0.3),
+                              color: ColorConstants.primary.withValues(
+                                alpha: 0.3,
+                              ),
                               blurRadius: 8,
                               offset: const Offset(0, 4),
                             ),

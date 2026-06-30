@@ -247,9 +247,7 @@ class _SimpleSiteCreationScreenState extends State<SimpleSiteCreationScreen> {
                           onTap: () {
                             Navigator.pop(context);
                           },
-                          child: SvgPicture.asset(
-                            AssetConstants.arrowBackIcon,
-                          ),
+                          child: SvgPicture.asset(AssetConstants.arrowBackIcon),
                         ),
                         SizedBox(width: 17),
                         Expanded(
@@ -329,10 +327,11 @@ class _SimpleSiteCreationScreenState extends State<SimpleSiteCreationScreen> {
                                         decoration: BoxDecoration(
                                           color:
                                               _isLoading
-                                                  ? Color(
-                                                    0xFFEFEEEE,
-                                                  ).withValues(alpha: 0.5)
-                                                  : ColorConstants.buttonSecondaryBackground,
+                                                  ? ColorConstants
+                                                      .buttonSecondaryBackground
+                                                      .withValues(alpha: 0.5)
+                                                  : ColorConstants
+                                                      .buttonSecondaryBackground,
                                           borderRadius: BorderRadius.circular(
                                             28,
                                           ),
@@ -345,10 +344,12 @@ class _SimpleSiteCreationScreenState extends State<SimpleSiteCreationScreen> {
                                               fontWeight: FontWeight.w700,
                                               color:
                                                   _isLoading
-                                                      ? Color(
-                                                        0xFF49454F,
-                                                      ).withValues(alpha: 0.5)
-                                                      : ColorConstants.labelText,
+                                                      ? ColorConstants.labelText
+                                                          .withValues(
+                                                            alpha: 0.5,
+                                                          )
+                                                      : ColorConstants
+                                                          .labelText,
                                             ),
                                           ),
                                         ),
@@ -367,9 +368,8 @@ class _SimpleSiteCreationScreenState extends State<SimpleSiteCreationScreen> {
                                         decoration: BoxDecoration(
                                           color:
                                               _isLoading
-                                                  ? Color(
-                                                    0xFFEC1D24,
-                                                  ).withValues(alpha: 0.5)
+                                                  ? ColorConstants.primary
+                                                      .withValues(alpha: 0.5)
                                                   : ColorConstants.primary,
                                           borderRadius: BorderRadius.circular(
                                             28,
@@ -386,7 +386,10 @@ class _SimpleSiteCreationScreenState extends State<SimpleSiteCreationScreen> {
                                                       valueColor:
                                                           AlwaysStoppedAnimation<
                                                             Color
-                                                          >(ColorConstants.white),
+                                                          >(
+                                                            ColorConstants
+                                                                .white,
+                                                          ),
                                                     ),
                                                   )
                                                   : Text(
@@ -395,7 +398,8 @@ class _SimpleSiteCreationScreenState extends State<SimpleSiteCreationScreen> {
                                                       fontSize: 14,
                                                       fontWeight:
                                                           FontWeight.w700,
-                                                      color: ColorConstants.white,
+                                                      color:
+                                                          ColorConstants.white,
                                                     ),
                                                   ),
                                         ),

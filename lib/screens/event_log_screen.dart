@@ -724,9 +724,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                       children: [
                         GestureDetector(
                           onTap: () async => await _handleBackNavigation(),
-                          child: SvgPicture.asset(
-                            AssetConstants.arrowBackIcon,
-                          ),
+                          child: SvgPicture.asset(AssetConstants.arrowBackIcon),
                         ),
                         const SizedBox(width: 8),
                         Text(
@@ -760,18 +758,14 @@ class _EventLogContentState extends State<_EventLogContent> {
                           onTap: () => _showExportBottomSheet(context),
                           child: Padding(
                             padding: const EdgeInsets.only(right: 12.0),
-                            child: SvgPicture.asset(
-                              AssetConstants.shareIcon,
-                            ),
+                            child: SvgPicture.asset(AssetConstants.shareIcon),
                           ),
                         ),
                         GestureDetector(
                           onTap: () => _showFilterBottomSheet(context),
                           child: Padding(
                             padding: const EdgeInsets.only(left: 12.0),
-                            child: SvgPicture.asset(
-                              AssetConstants.filterIcon,
-                            ),
+                            child: SvgPicture.asset(AssetConstants.filterIcon),
                           ),
                         ),
                       ],
@@ -1033,9 +1027,8 @@ class _EventLogContentState extends State<_EventLogContent> {
                                               value: _selectedStatuses.contains(
                                                 status,
                                               ),
-                                              activeColor: const Color(
-                                                0xFFEC1D24,
-                                              ),
+                                              activeColor:
+                                                  ColorConstants.primary,
                                               onChanged: (value) {
                                                 sheetSetState(() {
                                                   if (value == true) {
@@ -1057,9 +1050,8 @@ class _EventLogContentState extends State<_EventLogContent> {
                                                 overflow: TextOverflow.ellipsis,
                                                 style: GoogleFonts.inter(
                                                   fontSize: 14,
-                                                  color: const Color(
-                                                    0xFF918F8F,
-                                                  ),
+                                                  color:
+                                                      ColorConstants.textMuted,
                                                 ),
                                               ),
                                             ),
@@ -1134,9 +1126,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                                                 VisualDensity.compact,
                                             value: _selectedEventClasses
                                                 .contains(eventClass),
-                                            activeColor: const Color(
-                                              0xFFEC1D24,
-                                            ),
+                                            activeColor: ColorConstants.primary,
                                             onChanged: (value) {
                                               sheetSetState(() {
                                                 if (value == true) {
@@ -1254,11 +1244,7 @@ class _EventLogContentState extends State<_EventLogContent> {
           // Panel Info Row
           Row(
             children: [
-              SvgPicture.asset(
-                AssetConstants.panelIcon,
-                height: 62,
-                width: 62,
-              ),
+              SvgPicture.asset(AssetConstants.panelIcon, height: 62, width: 62),
               SizedBox(width: 14),
               Expanded(
                 child: Column(

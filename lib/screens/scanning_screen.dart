@@ -151,7 +151,8 @@ class _ScanningScreenState extends State<ScanningScreen>
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    StringConstants.thisPanelIsNotAssociatedWithAnySiteYetCreateASiteToContinue,
+                    StringConstants
+                        .thisPanelIsNotAssociatedWithAnySiteYetCreateASiteToContinue,
                     style: GoogleFonts.inter(
                       fontSize: 14,
                       fontWeight: FontWeight.w400,
@@ -168,7 +169,9 @@ class _ScanningScreenState extends State<ScanningScreen>
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(24),
                             ),
-                            side: const BorderSide(color: ColorConstants.primary),
+                            side: const BorderSide(
+                              color: ColorConstants.primary,
+                            ),
                           ),
                           onPressed: () {
                             Navigator.of(dialogContext).pop(false);
@@ -197,7 +200,8 @@ class _ScanningScreenState extends State<ScanningScreen>
                             Navigator.of(dialogContext).pop(true);
                           },
                           child: Text(
-                            StringConstants.thisWillSaveTheSiteAndPanelIDConfigurationWillBeStoredLocallyAndCanBeAppliedWhenYouConnectThePanelLater,
+                            StringConstants
+                                .thisWillSaveTheSiteAndPanelIDConfigurationWillBeStoredLocallyAndCanBeAppliedWhenYouConnectThePanelLater,
                             style: GoogleFonts.inter(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
@@ -288,7 +292,8 @@ class _ScanningScreenState extends State<ScanningScreen>
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      StringConstants.chooseTheSiteWhereThisPanelShouldBeAssigned,
+                      StringConstants
+                          .chooseTheSiteWhereThisPanelShouldBeAssigned,
                       style: GoogleFonts.inter(
                         fontSize: 14,
                         fontWeight: FontWeight.w400,
@@ -321,9 +326,9 @@ class _ScanningScreenState extends State<ScanningScreen>
                               decoration: BoxDecoration(
                                 color:
                                     isSelected
-                                        ? const Color(
-                                          0xFFEC1D24,
-                                        ).withOpacity(0.08)
+                                        ? ColorConstants.primary.withOpacity(
+                                          0.08,
+                                        )
                                         : ColorConstants.surfaceLight,
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
@@ -367,7 +372,9 @@ class _ScanningScreenState extends State<ScanningScreen>
                                                     site.buildingName.trim(),
                                                   ]
                                                   .where((s) => s.isNotEmpty)
-                                                  .join(StringConstants.str6b6dfb41),
+                                                  .join(
+                                                    StringConstants.str6b6dfb41,
+                                                  ),
                                               maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
                                               style: GoogleFonts.inter(
@@ -450,16 +457,16 @@ class _ScanningScreenState extends State<ScanningScreen>
                                     color: ColorConstants.primary,
                                     width: 1.5,
                                   ),
-                                  backgroundColor: const Color(
-                                    0xFFEC1D24,
-                                  ).withOpacity(0.04),
+                                  backgroundColor: ColorConstants.primary
+                                      .withOpacity(0.04),
                                 ),
                                 onPressed:
                                     () => Navigator.of(
                                       dialogContext,
                                     ).pop('create'),
                                 child: Text(
-                                  StringConstants.thisWillSaveTheSiteAndPanelIDConfigurationWillBeStoredLocallyAndCanBeAppliedWhenYouConnectThePanelLater,
+                                  StringConstants
+                                      .thisWillSaveTheSiteAndPanelIDConfigurationWillBeStoredLocallyAndCanBeAppliedWhenYouConnectThePanelLater,
                                   style: GoogleFonts.inter(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w600,
@@ -695,7 +702,8 @@ class _ScanningScreenState extends State<ScanningScreen>
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  StringConstants.bluetoothIsOffPleaseEnableBluetoothToContinueScanning,
+                  StringConstants
+                      .bluetoothIsOffPleaseEnableBluetoothToContinueScanning,
                   style: GoogleFonts.inter(
                     fontSize: 14,
                     fontWeight: FontWeight.w400,
@@ -1120,7 +1128,9 @@ class _ScanningScreenState extends State<ScanningScreen>
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text('USB/Serial Devices'),
-                              Text(StringConstants.scanForConnectedUSBSolarDevices),
+                              Text(
+                                StringConstants.scanForConnectedUSBSolarDevices,
+                              ),
                             ],
                           ),
                         ),
@@ -1161,7 +1171,10 @@ class _ScanningScreenState extends State<ScanningScreen>
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text('Bluetooth (BLE) Devices'),
-                              Text(StringConstants.scanForNearbyBluetoothSolarDevices),
+                              Text(
+                                StringConstants
+                                    .scanForNearbyBluetoothSolarDevices,
+                              ),
                             ],
                           ),
                         ),
@@ -1387,11 +1400,7 @@ class _ScanningScreenState extends State<ScanningScreen>
                 ),
               ),
               SizedBox(height: 6),
-              SvgPicture.asset(
-                AssetConstants.panelIcon,
-                width: 60,
-                height: 60,
-              ),
+              SvgPicture.asset(AssetConstants.panelIcon, width: 60, height: 60),
               SizedBox(height: 6),
               Expanded(
                 child: Text(
@@ -1687,7 +1696,8 @@ class _ScanningScreenState extends State<ScanningScreen>
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
                         content: Text(
-                          StringConstants.noSiteSelectedPleaseSelectOrCreateASite,
+                          StringConstants
+                              .noSiteSelectedPleaseSelectOrCreateASite,
                         ),
                       ),
                     );

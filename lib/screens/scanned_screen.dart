@@ -108,7 +108,8 @@ class _ScannedScreenState extends State<ScannedScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    StringConstants.thisPanelIsNotAssociatedWithAnySiteYetCreateASiteToContinue,
+                    StringConstants
+                        .thisPanelIsNotAssociatedWithAnySiteYetCreateASiteToContinue,
                     style: GoogleFonts.inter(
                       fontSize: 14,
                       fontWeight: FontWeight.w400,
@@ -125,7 +126,9 @@ class _ScannedScreenState extends State<ScannedScreen> {
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(24),
                             ),
-                            side: const BorderSide(color: ColorConstants.primary),
+                            side: const BorderSide(
+                              color: ColorConstants.primary,
+                            ),
                           ),
                           onPressed: () {
                             Navigator.of(dialogContext).pop(false);
@@ -154,7 +157,8 @@ class _ScannedScreenState extends State<ScannedScreen> {
                             Navigator.of(dialogContext).pop(true);
                           },
                           child: Text(
-                            StringConstants.thisWillSaveTheSiteAndPanelIDConfigurationWillBeStoredLocallyAndCanBeAppliedWhenYouConnectThePanelLater,
+                            StringConstants
+                                .thisWillSaveTheSiteAndPanelIDConfigurationWillBeStoredLocallyAndCanBeAppliedWhenYouConnectThePanelLater,
                             style: GoogleFonts.inter(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
@@ -245,7 +249,8 @@ class _ScannedScreenState extends State<ScannedScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      StringConstants.chooseTheSiteWhereThisPanelShouldBeAssigned,
+                      StringConstants
+                          .chooseTheSiteWhereThisPanelShouldBeAssigned,
                       style: GoogleFonts.inter(
                         fontSize: 14,
                         fontWeight: FontWeight.w400,
@@ -278,9 +283,9 @@ class _ScannedScreenState extends State<ScannedScreen> {
                               decoration: BoxDecoration(
                                 color:
                                     isSelected
-                                        ? const Color(
-                                          0xFFEC1D24,
-                                        ).withOpacity(0.08)
+                                        ? ColorConstants.primary.withOpacity(
+                                          0.08,
+                                        )
                                         : ColorConstants.surfaceLight,
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
@@ -324,7 +329,9 @@ class _ScannedScreenState extends State<ScannedScreen> {
                                                     site.buildingName.trim(),
                                                   ]
                                                   .where((s) => s.isNotEmpty)
-                                                  .join(StringConstants.str6b6dfb41),
+                                                  .join(
+                                                    StringConstants.str6b6dfb41,
+                                                  ),
                                               maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
                                               style: GoogleFonts.inter(
@@ -407,16 +414,16 @@ class _ScannedScreenState extends State<ScannedScreen> {
                                     color: ColorConstants.primary,
                                     width: 1.5,
                                   ),
-                                  backgroundColor: const Color(
-                                    0xFFEC1D24,
-                                  ).withOpacity(0.04),
+                                  backgroundColor: ColorConstants.primary
+                                      .withOpacity(0.04),
                                 ),
                                 onPressed:
                                     () => Navigator.of(
                                       dialogContext,
                                     ).pop('create'),
                                 child: Text(
-                                  StringConstants.thisWillSaveTheSiteAndPanelIDConfigurationWillBeStoredLocallyAndCanBeAppliedWhenYouConnectThePanelLater,
+                                  StringConstants
+                                      .thisWillSaveTheSiteAndPanelIDConfigurationWillBeStoredLocallyAndCanBeAppliedWhenYouConnectThePanelLater,
                                   style: GoogleFonts.inter(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w600,
@@ -707,7 +714,8 @@ class _ScannedScreenState extends State<ScannedScreen> {
           Text(
             widget.scanType == ScanType.usb
                 ? 'Make sure your solar devices are connected via USB and powered on.'
-                : StringConstants.makeSureBluetoothIsEnabledAndSolarDevicesAreInPairingMode,
+                : StringConstants
+                    .makeSureBluetoothIsEnabledAndSolarDevicesAreInPairingMode,
             textAlign: TextAlign.center,
             style: GoogleFonts.inter(
               fontSize: 12,
@@ -985,7 +993,8 @@ class _ScannedScreenState extends State<ScannedScreen> {
                       ScaffoldMessenger.of(screenContext).showSnackBar(
                         const SnackBar(
                           content: Text(
-                            StringConstants.noSiteSelectedPleaseSelectOrCreateASite,
+                            StringConstants
+                                .noSiteSelectedPleaseSelectOrCreateASite,
                           ),
                         ),
                       );
@@ -1259,7 +1268,9 @@ class _ScannedScreenState extends State<ScannedScreen> {
       return device.productName ?? StringConstants.usbSolarDevice;
     } else if (widget.scanType == ScanType.bluetooth &&
         device is DiscoveredDevice) {
-      return device.name.isNotEmpty ? device.name : StringConstants.bleSolarDevice;
+      return device.name.isNotEmpty
+          ? device.name
+          : StringConstants.bleSolarDevice;
     }
     return StringConstants.unknownDevice;
   }

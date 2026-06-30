@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/ble/ble_process.dart';
 import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
+import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
 
 void showPanelApplySuccessDialog(
   BuildContext context,
@@ -38,9 +39,7 @@ void showPanelApplySuccessDialog(
         }
       });
       return Dialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
@@ -69,21 +68,13 @@ void showPanelApplySuccessDialog(
               const SizedBox(height: 16),
               Text(
                 '$message Applied',
-                style: GoogleFonts.inter(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                  color: ColorConstants.textDark,
-                ),
+                style: StyleConstants.textDark20w700Style,
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 8),
               Text(
                 resolvedSubtitle,
-                style: GoogleFonts.inter(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w400,
-                  color: ColorConstants.textMuted,
-                ),
+                style: StyleConstants.textMuted14w400Style,
                 textAlign: TextAlign.center,
               ),
             ],
@@ -100,9 +91,7 @@ void showPanelDownloadSuccessDialog(BuildContext context, String message) {
     barrierDismissible: false,
     builder: (dialogContext) {
       return Dialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
@@ -131,21 +120,13 @@ void showPanelDownloadSuccessDialog(BuildContext context, String message) {
               const SizedBox(height: 16),
               Text(
                 '$message Downloaded',
-                style: GoogleFonts.inter(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                  color: ColorConstants.textDark,
-                ),
+                style: StyleConstants.textDark20w700Style,
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 8),
               Text(
                 'The $message has been successfully downloaded from the device.',
-                style: GoogleFonts.inter(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w400,
-                  color: ColorConstants.textMuted,
-                ),
+                style: StyleConstants.textMuted14w400Style,
                 textAlign: TextAlign.center,
               ),
             ],
