@@ -506,6 +506,8 @@ abstract final class StringConstants {
   static const String invalidADCResponse = "Invalid ADC response";
   static const String invalidBINFileTooSmallNeedAtLeast =
       "Invalid BIN file (too small, need at least ";
+  static const String invalidBINFileHardwareMismatch =
+      "Invalid bin file, hardware versions don't match";
   static const String invalidNumber = "Invalid number";
   static const String invalidPayload = "Invalid payload";
   static const String inverted = "Inverted";

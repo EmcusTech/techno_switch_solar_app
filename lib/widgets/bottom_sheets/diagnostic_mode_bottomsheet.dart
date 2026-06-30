@@ -10,6 +10,7 @@ import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
 import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
+
 enum DiagnosticSectionType { sounder, power, input, zone, other }
 
 DiagnosticVoltageBand aggregateDiagnosticSectionBand(
@@ -200,12 +201,6 @@ class _DiagnosticInfoBottomSheetState extends State<DiagnosticInfoBottomSheet> {
                   color: ColorConstants.white,
                   borderRadius: BorderRadius.vertical(top: Radius.circular(50)),
                 ),
-                // padding: EdgeInsets.only(
-                //   left: 24,
-                //   right: 24,
-                //   top: 16,
-                //   bottom: MediaQuery.of(context).viewInsets.bottom + 16,
-                // ),
                 child: Stack(
                   children: [
                     Row(
@@ -360,7 +355,7 @@ class _DiagnosticInfoBottomSheetState extends State<DiagnosticInfoBottomSheet> {
                                     isFetchActive
                                         ? StringConstants.stop
                                         : StringConstants.start,
-                                    style: StyleConstants.black15w600Style,
+                                    style: StyleConstants.white16w600Style,
                                   ),
                                 ),
                               );
@@ -382,10 +377,7 @@ class _DiagnosticInfoBottomSheetState extends State<DiagnosticInfoBottomSheet> {
   Widget _title(String text) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
-      child: Text(
-        text,
-        style: StyleConstants.black20w700Style,
-      ),
+      child: Text(text, style: StyleConstants.black20w700Style),
     );
   }
 
@@ -496,17 +488,17 @@ class _DiagnosticInfoBottomSheetState extends State<DiagnosticInfoBottomSheet> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  SvgPicture.asset(iconAsset),
-                  const SizedBox(height: 8),
-                  Text(
-                    '$count',
-                    style: StyleConstants.black20w700Style,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      SvgPicture.asset(iconAsset),
+                      Text('$count', style: StyleConstants.black20w700Style),
+                    ],
                   ),
                   const SizedBox(height: 8),
-                  Text(
-                    label,
-                    style: StyleConstants.blueGray16w500Style,
-                  ),
+
+                  // const SizedBox(height: 2),
+                  Text(label, style: StyleConstants.blueGray16w500Style),
                 ],
               ),
             ),
@@ -562,7 +554,9 @@ class _DiagnosticInfoBottomSheetState extends State<DiagnosticInfoBottomSheet> {
                         children: [
                           Text(
                             title,
-                            style: StyleConstants.primary13w600Style.copyWith(color: _textPrimary),
+                            style: StyleConstants.primary13w600Style.copyWith(
+                              color: _textPrimary,
+                            ),
                           ),
                           Text(
                             diagnosticSectionSubtitle(

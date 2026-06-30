@@ -28,6 +28,7 @@ import 'package:techno_switch_solar_app/utils/logger.dart' as logger;
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 
 import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
+
 enum FirmwareType { mainPanel, bleChip }
 
 enum FirmwareUpgradeStep {
@@ -749,10 +750,7 @@ class _FirmwareUpgradeBottomSheetState
       children: [
         Row(
           children: [
-            Text(
-              'Firmware Upgrade',
-              style: StyleConstants.black20w700Style,
-            ),
+            Text('Firmware Upgrade', style: StyleConstants.black20w700Style),
             Spacer(),
             Visibility(
               visible: _currentStep != FirmwareUpgradeStep.progress,
@@ -896,10 +894,7 @@ class _FirmwareUpgradeBottomSheetState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          'Choose Firmware Type',
-          style: StyleConstants.black18w700Style,
-        ),
+        Text('Choose Firmware Type', style: StyleConstants.black18w700Style),
         SizedBox(height: 24),
         _buildFirmwareTypeOption(
           title: 'Main Panel Firmware',
@@ -1022,10 +1017,7 @@ class _FirmwareUpgradeBottomSheetState
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    title,
-                    style: StyleConstants.textHeading16w600Style,
-                  ),
+                  Text(title, style: StyleConstants.textHeading16w600Style),
                   SizedBox(height: 4),
                   Text(
                     description,
@@ -1044,10 +1036,7 @@ class _FirmwareUpgradeBottomSheetState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          'Upload Firmware File',
-          style: StyleConstants.black18w700Style,
-        ),
+        Text('Upload Firmware File', style: StyleConstants.black18w700Style),
         SizedBox(height: 24),
         GestureDetector(
           onTap: _isUploading ? null : _pickFile,
@@ -1194,10 +1183,7 @@ class _FirmwareUpgradeBottomSheetState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          'File Details',
-          style: StyleConstants.black18w700Style,
-        ),
+        Text('File Details', style: StyleConstants.black18w700Style),
         SizedBox(height: 24),
         _buildDetailRow('File Name', _selectedFile!.name),
         SizedBox(height: 12),
@@ -1378,15 +1364,14 @@ class _FirmwareUpgradeBottomSheetState
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          label,
-          style: StyleConstants.textDisabled14w400Style,
-        ),
+        Text(label, style: StyleConstants.textDisabled14w400Style),
         SizedBox(
           width: MediaQuery.of(context).size.width * 0.4,
           child: Text(
             value,
-            style: StyleConstants.primary14w600Style.copyWith(color: valueColor ?? ColorConstants.textHeading),
+            style: StyleConstants.primary14w600Style.copyWith(
+              color: valueColor ?? ColorConstants.textHeading,
+            ),
             maxLines: 3,
             overflow: TextOverflow.ellipsis,
             textAlign: TextAlign.end,
@@ -1485,7 +1470,9 @@ class _FirmwareUpgradeBottomSheetState
         SizedBox(height: 24),
         Text(
           isSuccess ? StringConstants.strf910c9ffFailed : 'Failed',
-          style: StyleConstants.primary24w700Style.copyWith(color: isSuccess ? ColorConstants.success : ColorConstants.primary),
+          style: StyleConstants.primary24w700Style.copyWith(
+            color: isSuccess ? ColorConstants.success : ColorConstants.primary,
+          ),
           textAlign: TextAlign.center,
         ),
         SizedBox(height: 32),
@@ -1500,10 +1487,7 @@ class _FirmwareUpgradeBottomSheetState
             _controller.progressbarCount.value = 0.0;
             _controller.totalPacketLength.value = 0;
           },
-          child: Text(
-            'Done',
-            style: StyleConstants.white16w600Style,
-          ),
+          child: Text('Done', style: StyleConstants.white16w600Style),
         ),
         // ElevatedButton(
         //   onPressed: () {
@@ -1762,7 +1746,7 @@ class _FirmwareUpgradeBottomSheetState
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  "Invalid bin file, hardware versions don't match",
+                  StringConstants.invalidBINFileHardwareMismatch,
                   style: StyleConstants.textGray14w400Style,
                   textAlign: TextAlign.center,
                 ),
