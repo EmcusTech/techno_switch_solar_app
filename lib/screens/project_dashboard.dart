@@ -56,6 +56,7 @@ import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 
 import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
+
 class ProjectDashboardScreen extends StatefulWidget {
   final String panelVersionNo;
   final String panelName;
@@ -129,7 +130,9 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
       if (disabledIndexes.contains(index)) {
         return Colors.grey;
       }
-      return _selectedIndex == index ? ColorConstants.white : ColorConstants.blackMaterial;
+      return _selectedIndex == index
+          ? ColorConstants.white
+          : ColorConstants.blackMaterial;
     }
 
     Widget navItem({
@@ -336,7 +339,8 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    StringConstants.theConnectionToTheDeviceWasLostAnyOpenPanelsWereClosedUseConnectWhenYouAreReadyToReconnect,
+                    StringConstants
+                        .theConnectionToTheDeviceWasLostAnyOpenPanelsWereClosedUseConnectWhenYouAreReadyToReconnect,
                     style: StyleConstants.textGray14w400Style,
                     textAlign: TextAlign.center,
                   ),
@@ -939,7 +943,8 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                               shape: BoxShape.circle,
                               boxShadow: [
                                 BoxShadow(
-                                  color: ColorConstants.blackMaterial.withOpacity(0.1),
+                                  color: ColorConstants.blackMaterial
+                                      .withOpacity(0.1),
                                   blurRadius: 8,
                                   offset: const Offset(0, 2),
                                 ),
@@ -963,9 +968,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                           onTap: () => _showExportBottomSheet(context),
                           child: Padding(
                             padding: const EdgeInsets.only(right: 12.0),
-                            child: SvgPicture.asset(
-                              AssetConstants.shareIcon,
-                            ),
+                            child: SvgPicture.asset(AssetConstants.shareIcon),
                           ),
                         ),
                       ],
@@ -1010,10 +1013,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 ),
               ),
 
-              Text(
-                'Export',
-                style: StyleConstants.textBodyDark18w700Style,
-              ),
+              Text('Export', style: StyleConstants.textBodyDark18w700Style),
 
               const SizedBox(height: 12),
 
@@ -1129,7 +1129,8 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  StringConstants.bleDeviceIsNotConnectedTapOnConnectToConnectAgain,
+                  StringConstants
+                      .bleDeviceIsNotConnectedTapOnConnectToConnectAgain,
                   style: StyleConstants.textGray14w400Style,
                   textAlign: TextAlign.center,
                 ),
@@ -1249,7 +1250,9 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 ),
                 SizedBox(height: 16),
                 Text(
-                  message == StringConstants.liveDataIsBeingStreamedFromTheDeviceInRealTime
+                  message ==
+                          StringConstants
+                              .liveDataIsBeingStreamedFromTheDeviceInRealTime
                       ? "Live Diagnostics Active"
                       : "$message Downloaded",
                   style: StyleConstants.textDark20w700Style,
@@ -1259,8 +1262,11 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 Visibility(
                   visible: !ble.bleProcess.isLbusFetchHasErrors.value,
                   child: Text(
-                    message == StringConstants.liveDataIsBeingStreamedFromTheDeviceInRealTime
-                        ? StringConstants.theMessageHasBeenSuccessfullyDownloadedFromTheDevice
+                    message ==
+                            StringConstants
+                                .liveDataIsBeingStreamedFromTheDeviceInRealTime
+                        ? StringConstants
+                            .theMessageHasBeenSuccessfullyDownloadedFromTheDevice
                         : 'The $message has been successfully downloaded from the device.',
                     style: StyleConstants.textMuted14w400Style,
                     textAlign: TextAlign.center,
@@ -1383,7 +1389,8 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
         } catch (e, _) {
           _configLogCompareResult.value = ConfigCompareResult.withError(
             e is TimeoutException
-                ? StringConstants.operationTimedOutStayCloseToTheDeviceAndTryAgain
+                ? StringConstants
+                    .operationTimedOutStayCloseToTheDeviceAndTryAgain
                 : e.toString(),
           );
         }
@@ -1504,7 +1511,8 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                       context,
                       StringConstants.configuration,
                       subtitle:
-                          StringConstants.yourSavedSetupHasBeenAppliedToThePanel,
+                          StringConstants
+                              .yourSavedSetupHasBeenAppliedToThePanel,
                     );
                   } finally {
                     _bleManager.bleProcess.clearPeripheralApplyDoneFlags();
@@ -2585,10 +2593,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
             ),
           ),
           SizedBox(height: 8),
-          Text(
-            peripheralName,
-            style: StyleConstants.textSecondary10w500Style,
-          ),
+          Text(peripheralName, style: StyleConstants.textSecondary10w500Style),
         ],
       ),
     );
@@ -2826,7 +2831,9 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 },
               ),
               _peripheralTile(
-                peripheralName: StringConstants.liveDataIsBeingStreamedFromTheDeviceInRealTime,
+                peripheralName:
+                    StringConstants
+                        .liveDataIsBeingStreamedFromTheDeviceInRealTime,
                 iconPath: AssetConstants.diagnosticIcon,
                 onTap: () {
                   if (BleMsdUtils.isBootloader(
@@ -2847,7 +2854,9 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                         },
                         mode: 'bottomsheet_download',
                         onDownloadComplete: _saveModuleCacheAndNotifyRefresh,
-                        downloadSuccessMessage: StringConstants.liveDataIsBeingStreamedFromTheDeviceInRealTime,
+                        downloadSuccessMessage:
+                            StringConstants
+                                .liveDataIsBeingStreamedFromTheDeviceInRealTime,
                       );
                     },
                     onStop: () {

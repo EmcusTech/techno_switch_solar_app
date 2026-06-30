@@ -208,10 +208,10 @@ class PanelInfoBottomSheetState extends State<PanelInfoBottomSheet> {
       children: [
         Row(
           children: [
-            const Expanded(
+            Expanded(
               child: Text(
                 StringConstants.useMobileDateTime,
-                style: TextStyle(fontWeight: FontWeight.w600),
+                style: StyleConstants.black16w600Style,
               ),
             ),
             Switch(

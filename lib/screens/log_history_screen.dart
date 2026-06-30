@@ -12,6 +12,7 @@ import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 
 import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
+
 class LogHistoryScreen extends StatefulWidget {
   final String panelName;
   final String panelVersionNo;
@@ -78,14 +79,20 @@ class LogHistoryScreenState extends State<LogHistoryScreen> {
           child:
               _isLoading
                   ? Center(
-                    child: CircularProgressIndicator(color: ColorConstants.primary),
+                    child: CircularProgressIndicator(
+                      color: ColorConstants.primary,
+                    ),
                   )
                   : _logRetrievals.isEmpty
                   ? Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.history, size: 64, color: ColorConstants.borderGray),
+                        Icon(
+                          Icons.history,
+                          size: 64,
+                          color: ColorConstants.borderGray,
+                        ),
                         SizedBox(height: 16),
                         Text(
                           StringConstants.noLogHistory,
@@ -93,7 +100,8 @@ class LogHistoryScreenState extends State<LogHistoryScreen> {
                         ),
                         SizedBox(height: 8),
                         Text(
-                          StringConstants.logRetrievalsWillAppearHereWhenYouRetrieveLogsForThisSite,
+                          StringConstants
+                              .logRetrievalsWillAppearHereWhenYouRetrieveLogsForThisSite,
                           textAlign: TextAlign.center,
                           style: StyleConstants.textPlaceholder14w400Style,
                         ),
@@ -290,11 +298,7 @@ class LogHistoryScreenState extends State<LogHistoryScreen> {
         children: [
           Row(
             children: [
-              SvgPicture.asset(
-                AssetConstants.panelIcon,
-                height: 62,
-                width: 62,
-              ),
+              SvgPicture.asset(AssetConstants.panelIcon, height: 62, width: 62),
               SizedBox(width: 14),
               Column(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -309,14 +313,18 @@ class LogHistoryScreenState extends State<LogHistoryScreen> {
                     style: StyleConstants.textDisabled14w500Style,
                   ),
                   ValueListenableBuilder(
-                    valueListenable: bleController.bleManager.isConnectedNotifier,
+                    valueListenable:
+                        bleController.bleManager.isConnectedNotifier,
                     builder: (context, isConnected, child) {
                       return Text(
-                        isConnected ? StringConstants.connected : StringConstants.disconnected,
+                        isConnected
+                            ? StringConstants.connected
+                            : StringConstants.disconnected,
                         style: StyleConstants.primary14w500Style.copyWith(
-                          color: isConnected
-                              ? ColorConstants.success
-                              : ColorConstants.primary,
+                          color:
+                              isConnected
+                                  ? ColorConstants.success
+                                  : ColorConstants.primary,
                         ),
                       );
                     },
@@ -326,7 +334,10 @@ class LogHistoryScreenState extends State<LogHistoryScreen> {
             ],
           ),
           SizedBox(height: 10),
-          Divider(color: ColorConstants.blackMaterial.withValues(alpha: 0.18), thickness: 1),
+          Divider(
+            color: ColorConstants.blackMaterial.withValues(alpha: 0.18),
+            thickness: 1,
+          ),
           SizedBox(height: 10),
           _buildLogHistorySection(),
         ],

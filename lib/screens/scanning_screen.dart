@@ -31,6 +31,7 @@ import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 
 import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
+
 enum ScanType { usb, bluetooth }
 
 class ScanningScreen extends StatefulWidget {
@@ -328,7 +329,9 @@ class _ScanningScreenState extends State<ScanningScreen>
                                           site.siteName,
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
-                                          style: StyleConstants.textDark14w600Style,
+                                          style:
+                                              StyleConstants
+                                                  .textDark14w600Style,
                                         ),
                                         if (site.companyName
                                                 .trim()
@@ -349,7 +352,9 @@ class _ScanningScreenState extends State<ScanningScreen>
                                                   ),
                                               maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
-                                              style: StyleConstants.textMuted12w400Style,
+                                              style:
+                                                  StyleConstants
+                                                      .textMuted12w400Style,
                                             ),
                                           ),
                                       ],
@@ -1189,16 +1194,12 @@ class _ScanningScreenState extends State<ScanningScreen>
                     color: ColorConstants.primary,
                     borderRadius: BorderRadius.circular(28.5),
                   ),
-                  child: const Padding(
+                  child: Padding(
                     padding: EdgeInsets.symmetric(vertical: 20),
                     child: Center(
                       child: Text(
                         StringConstants.stopScanning,
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: ColorConstants.white,
-                        ),
+                        style: StyleConstants.white14w700Style,
                       ),
                     ),
                   ),

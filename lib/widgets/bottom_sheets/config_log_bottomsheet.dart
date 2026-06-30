@@ -5,6 +5,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 import 'package:techno_switch_solar_app/utils/peripheral_config_diff_labels.dart';
 import 'package:techno_switch_solar_app/utils/peripheral_config_snapshot.dart';
 import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
@@ -13,11 +14,8 @@ import 'package:techno_switch_solar_app/widgets/bottom_sheets/widgets/dropdown.d
 
 import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
 
-/// [bottomSheet] - rounded top only (e.g. dashboard modal).
-/// [dialog] - same content in a centered [Dialog] (e.g. post connect compare).
 enum ConfigLogPresentationStyle { bottomSheet, dialog }
 
-/// Bottom sheet for bulk config sync: compare panel vs cached setup, then resolve mismatches.
 class ConfigLogBottomSheet extends StatefulWidget {
   final String deviceId;
   final ValueNotifier<ConfigCompareResult?> compareResult;
@@ -25,9 +23,6 @@ class ConfigLogBottomSheet extends StatefulWidget {
   final VoidCallback onDownloadAndCompare;
   final Future<void> Function() onUsePanelDataInApp;
   final VoidCallback onApplyLocalToPanel;
-
-  /// When false, hides the "Download & compare" intro block (e.g. after a
-  /// pre-filled compare from tap-to-connect).
   final bool showDownloadAndCompareCta;
 
   final ConfigLogPresentationStyle presentation;
@@ -646,8 +641,8 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
         ),
         onPressed: working ? null : widget.onDownloadAndCompare,
         child: Text(
-          'Download & compare',
-          style: StyleConstants.black16w600Style,
+          StringConstants.downloadCompare,
+          style: StyleConstants.white16w600Style,
         ),
       ),
     );
@@ -972,7 +967,10 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
                 ),
               ),
               onPressed: working ? null : _onUpdateAppPressed,
-              child: Text('Update App', style: StyleConstants.white16w600Style),
+              child: Text(
+                StringConstants.updateApp,
+                style: StyleConstants.primary16w600Style,
+              ),
             ),
           ),
         ],
@@ -1034,8 +1032,8 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
                   ),
                   onPressed: working ? null : _onUpdateAppPressed,
                   child: Text(
-                    'Update App',
-                    style: StyleConstants.black15w600Style,
+                    StringConstants.updateApp,
+                    style: StyleConstants.primary16w600Style,
                     textAlign: TextAlign.center,
                     maxLines: 2,
                   ),
@@ -1063,7 +1061,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
                             _confirmApplyLocal();
                           },
                   child: Text(
-                    'Update Panel',
+                    StringConstants.updatePanel,
                     style: StyleConstants.white15w600Style,
                     textAlign: TextAlign.center,
                     maxLines: 2,
