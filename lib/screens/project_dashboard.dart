@@ -885,9 +885,11 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
       );
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('${StringConstants.couldNotCreatePdfPrefix}$e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${StringConstants.couldNotCreatePdfPrefix}$e'),
+          ),
+        );
       }
     }
   }
@@ -1013,7 +1015,10 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 ),
               ),
 
-              Text(StringConstants.export, style: StyleConstants.textBodyDark18w700Style),
+              Text(
+                StringConstants.export,
+                style: StyleConstants.textBodyDark18w700Style,
+              ),
 
               const SizedBox(height: 12),
 

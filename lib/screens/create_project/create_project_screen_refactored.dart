@@ -31,6 +31,7 @@ import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 
 import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
+
 class CreateSiteScreenRefactored extends StatefulWidget {
   const CreateSiteScreenRefactored({super.key});
 
@@ -93,7 +94,9 @@ class _CreateSiteScreenRefactoredState
   Future<void> _dismissKeyboardFully() async {
     if (!mounted) return;
     FocusManager.instance.primaryFocus?.unfocus();
-    await SystemChannels.textInput.invokeMethod<Object>(StringConstants.textinputHide);
+    await SystemChannels.textInput.invokeMethod<Object>(
+      StringConstants.textinputHide,
+    );
     if (!mounted) return;
     FocusScope.of(context).unfocus();
     await WidgetsBinding.instance.endOfFrame;
@@ -121,7 +124,9 @@ class _CreateSiteScreenRefactoredState
         message:
             'This will save the site and panel ID. Configuration will be stored locally and can be applied when you connect the panel later.',
         leadingActionLabel: StringConstants.cancel,
-        trailingActionLabel: StringConstants.thisWillSaveTheSiteAndPanelIDConfigurationWillBeStoredLocallyAndCanBeAppliedWhenYouConnectThePanelLater,
+        trailingActionLabel:
+            StringConstants
+                .thisWillSaveTheSiteAndPanelIDConfigurationWillBeStoredLocallyAndCanBeAppliedWhenYouConnectThePanelLater,
         leadingValue: false,
         trailingValue: true,
       );
@@ -136,7 +141,9 @@ class _CreateSiteScreenRefactoredState
       message:
           'This will update the panel settings with the values you configured in this setup.',
       leadingActionLabel: StringConstants.cancel,
-      trailingActionLabel: StringConstants.thisWillUpdateThePanelSettingsWithTheValuesYouConfiguredInThisSetup,
+      trailingActionLabel:
+          StringConstants
+              .thisWillUpdateThePanelSettingsWithTheValuesYouConfiguredInThisSetup,
       leadingValue: false,
       trailingValue: true,
     );
@@ -618,7 +625,10 @@ class _CreateSiteScreenRefactoredState
 
   Future<void> _skipPanelConnectAndContinue() async {
     if (!_controller.validateStep(2)) {
-      _showSnackBar(StringConstants.pleaseFillInAllRequiredFields, isError: true);
+      _showSnackBar(
+        StringConstants.pleaseFillInAllRequiredFields,
+        isError: true,
+      );
       return;
     }
 
@@ -653,7 +663,8 @@ class _CreateSiteScreenRefactoredState
         context: context,
         title: StringConstants.panelAlreadyAssigned,
         message:
-            StringConstants.thisPanelIDIsAlreadyLinkedToASiteUseADifferentIDOrConnectToThePanelInstead,
+            StringConstants
+                .thisPanelIDIsAlreadyLinkedToASiteUseADifferentIDOrConnectToThePanelInstead,
       );
       return;
     }
@@ -683,7 +694,10 @@ class _CreateSiteScreenRefactoredState
     }
 
     if (_currentStep <= 2 && !_controller.validateStep(_currentStep)) {
-      _showSnackBar(StringConstants.pleaseFillInAllRequiredFields, isError: true);
+      _showSnackBar(
+        StringConstants.pleaseFillInAllRequiredFields,
+        isError: true,
+      );
       return;
     }
 
@@ -789,62 +803,73 @@ class _CreateSiteScreenRefactoredState
   Widget build(BuildContext context) {
     return GetBuilder<CreateProjectController>(
       init: _controller,
-      builder: (controller) => PopScope(
-      canPop: !_bleController.isConnected,
-      onPopInvokedWithResult: (didPop, result) async {
-        if (didPop) return;
-        final disconnect = await _confirmAndDisconnect();
-        if (disconnect && context.mounted) {
-          Navigator.of(context).pop();
-        }
-      },
-      child: Scaffold(
-        resizeToAvoidBottomInset: true,
-        body: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [ColorConstants.scaffoldGradientTop, ColorConstants.white],
-            ),
-          ),
-          child: Stack(
-            children: [
-              SvgPicture.asset(AssetConstants.background1),
-              Padding(
-                padding: const EdgeInsets.only(left: 20, right: 20, top: 24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+      builder:
+          (controller) => PopScope(
+            canPop: !_bleController.isConnected,
+            onPopInvokedWithResult: (didPop, result) async {
+              if (didPop) return;
+              final disconnect = await _confirmAndDisconnect();
+              if (disconnect && context.mounted) {
+                Navigator.of(context).pop();
+              }
+            },
+            child: Scaffold(
+              resizeToAvoidBottomInset: true,
+              body: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      ColorConstants.scaffoldGradientTop,
+                      ColorConstants.white,
+                    ],
+                  ),
+                ),
+                child: Stack(
                   children: [
-                    _buildAppBar(),
-                    const SizedBox(height: 18),
-                    Expanded(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: ColorConstants.white,
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.only(top: 22, bottom: 20),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(child: _buildPageView()),
-                              const SizedBox(height: 20),
-                              _buildNavigation(),
-                            ],
+                    SvgPicture.asset(AssetConstants.background1),
+                    Padding(
+                      padding: const EdgeInsets.only(
+                        left: 20,
+                        right: 20,
+                        top: 24,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          _buildAppBar(),
+                          const SizedBox(height: 18),
+                          Expanded(
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: ColorConstants.white,
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.only(
+                                  top: 22,
+                                  bottom: 20,
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Expanded(child: _buildPageView()),
+                                    const SizedBox(height: 20),
+                                    _buildNavigation(),
+                                  ],
+                                ),
+                              ),
+                            ),
                           ),
-                        ),
+                        ],
                       ),
                     ),
                   ],
                 ),
               ),
-            ],
+            ),
           ),
-        ),
-      ),
-    ),
     );
   }
 
@@ -880,10 +905,7 @@ class _CreateSiteScreenRefactoredState
           style: StyleConstants.textBodyDark20w700Style,
         ),
         const Spacer(),
-        Text(
-          StringConstants.step,
-          style: StyleConstants.black16w500Style,
-        ),
+        Text(StringConstants.step, style: StyleConstants.black16w500Style),
         const SizedBox(width: 8),
         Container(
           decoration: BoxDecoration(
@@ -1070,8 +1092,11 @@ class _CreateSiteScreenRefactoredState
         _currentStep == 2
             ? StringConstants.connectPanel
             : _currentStep == 11
-            ? (_controller.skippedPanelConnect ? 'Create site' : StringConstants.finish)
-            : StringConstants.thisWillUpdateThePanelSettingsWithTheValuesYouConfiguredInThisSetup;
+            ? (_controller.skippedPanelConnect
+                ? 'Create site'
+                : StringConstants.finish)
+            : StringConstants
+                .thisWillUpdateThePanelSettingsWithTheValuesYouConfiguredInThisSetup;
 
     return Column(
       children: [
@@ -1107,7 +1132,10 @@ class _CreateSiteScreenRefactoredState
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.arrow_back, color: ColorConstants.labelText),
+                        const Icon(
+                          Icons.arrow_back,
+                          color: ColorConstants.labelText,
+                        ),
                         const SizedBox(width: 6),
                         Text(
                           StringConstants.back,
@@ -1136,12 +1164,12 @@ class _CreateSiteScreenRefactoredState
                   ),
                   child: Row(
                     children: [
-                      Text(
-                        nextLabel,
-                        style: StyleConstants.white14w700Style,
-                      ),
+                      Text(nextLabel, style: StyleConstants.white14w700Style),
                       const SizedBox(width: 6),
-                      const Icon(Icons.arrow_forward, color: ColorConstants.white),
+                      const Icon(
+                        Icons.arrow_forward,
+                        color: ColorConstants.white,
+                      ),
                     ],
                   ),
                 ),

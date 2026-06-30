@@ -1343,9 +1343,11 @@ abstract final class StringConstants {
       "Comms fault on some buses; ";
   static const String changesOnLBusPrefix = " change(s) on L-Bus ";
   static const String noDifferencesOnLBusPrefix = "No differences on L-Bus ";
-  static const String changesVsSavedAppDataSuffix = " change(s) vs saved app data";
+  static const String changesVsSavedAppDataSuffix =
+      " change(s) vs saved app data";
 
-  static String siteDeletedMessage(String siteName) => 'Site "$siteName" deleted';
+  static String siteDeletedMessage(String siteName) =>
+      'Site "$siteName" deleted';
 
   static String panelDeletedMessage(String panelName) =>
       'Panel "$panelName" deleted';
@@ -1356,8 +1358,7 @@ abstract final class StringConstants {
   static String removePanelConfirmationMessage(
     String panelName,
     String panelId,
-  ) =>
-      'Remove panel "$panelName" ($panelId) $fromThisSite';
+  ) => 'Remove panel "$panelName" ($panelId) $fromThisSite';
 
   static String binFileHardwareVersionDetail(
     String? binHardware,
