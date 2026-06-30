@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/controllers/peripheral/module_info_controller.dart';
 import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
+import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
 class ModuleInfoBottomSheet extends StatefulWidget {
   final String deviceId;
   final VoidCallback onDownload;
@@ -120,11 +120,7 @@ class _ModuleInfoBottomSheetState extends State<ModuleInfoBottomSheet> {
                               padding: const EdgeInsets.only(bottom: 16),
                               child: Text(
                                 StringConstants.moduleInfo,
-                                style: GoogleFonts.inter(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w700,
-                                  color: ColorConstants.textDark,
-                                ),
+                                style: StyleConstants.textDark20w700Style,
                               ),
                             ),
                             Expanded(
@@ -195,10 +191,7 @@ class _ModuleInfoBottomSheetState extends State<ModuleInfoBottomSheet> {
                                 onPressed: widget.onDownload,
                                 child: Text(
                                   StringConstants.download,
-                                  style: GoogleFonts.inter(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                                  style: StyleConstants.black16w600Style,
                                 ),
                               ),
                             ),
@@ -219,7 +212,7 @@ class _ModuleInfoBottomSheetState extends State<ModuleInfoBottomSheet> {
   Widget _label(String text) {
     return Text(
       text,
-      style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600),
+      style: StyleConstants.black13w600Style,
     );
   }
 
@@ -242,11 +235,7 @@ class _ModuleInfoBottomSheetState extends State<ModuleInfoBottomSheet> {
             alignment: Alignment.centerLeft,
             child: Text(
               value,
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: ColorConstants.textDark,
-              ),
+              style: StyleConstants.textDark14w500Style,
             ),
           ),
         ],
@@ -280,11 +269,7 @@ class _ModuleInfoBottomSheetState extends State<ModuleInfoBottomSheet> {
         children: [
           Text(
             label,
-            style: GoogleFonts.inter(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: ColorConstants.textDark,
-            ),
+            style: StyleConstants.textDark13w600Style,
           ),
           const SizedBox(height: 6),
           Container(
@@ -297,11 +282,7 @@ class _ModuleInfoBottomSheetState extends State<ModuleInfoBottomSheet> {
             ),
             child: Text(
               value.isEmpty ? '-' : value,
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: ColorConstants.textDark,
-              ),
+              style: StyleConstants.textDark14w500Style,
             ),
           ),
         ],

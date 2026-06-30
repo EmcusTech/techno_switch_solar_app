@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 
+import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
 /// Reusable text field widget with consistent styling and validation support
 class CustomTextFieldWidget extends StatelessWidget {
   final String label;
@@ -38,11 +38,9 @@ class CustomTextFieldWidget extends StatelessWidget {
       children: [
         Text(
           label,
-          style: GoogleFonts.inter(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: hasError ? ColorConstants.primary : ColorConstants.textSecondary,
-          ),
+          style: StyleConstants.primary13w600Style.copyWith(
+                                            color: hasError ? ColorConstants.primary : ColorConstants.textSecondary,
+                                            ),
         ),
         SizedBox(height: 8),
         Container(
@@ -65,11 +63,7 @@ class CustomTextFieldWidget extends StatelessWidget {
               contentPadding: EdgeInsets.all(12),
               border: InputBorder.none,
               hintText: hintText,
-              hintStyle: GoogleFonts.inter(
-                fontSize: 13,
-                fontWeight: FontWeight.w400,
-                color: ColorConstants.divider,
-              ),
+              hintStyle: StyleConstants.divider13w400Style,
             ),
           ),
         ),
@@ -77,11 +71,7 @@ class CustomTextFieldWidget extends StatelessWidget {
           SizedBox(height: 4),
           Text(
             errorMessage,
-            style: GoogleFonts.inter(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-              color: ColorConstants.primary,
-            ),
+            style: StyleConstants.primary12w500Style,
           ),
         ],
       ],

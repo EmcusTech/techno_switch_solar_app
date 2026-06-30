@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/controllers/peripheral/radio_mode_controller.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/widgets/dropdown.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
+
+import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
 
 class RadioModeBottomSheet extends StatefulWidget {
   final String deviceId;
@@ -201,11 +202,7 @@ class _RadioModeBottomSheetState extends State<RadioModeBottomSheet> {
                 : null,
         child: Text(
           StringConstants.apply,
-          style: GoogleFonts.inter(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: ColorConstants.white,
-          ),
+          style: StyleConstants.white16w600Style,
         ),
       ),
     );
@@ -225,7 +222,7 @@ class _RadioModeBottomSheetState extends State<RadioModeBottomSheet> {
         ),
         child: Text(
           StringConstants.download,
-          style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600),
+          style: StyleConstants.primary16w600Style,
         ),
       ),
     );
@@ -258,13 +255,7 @@ class _RadioModeBottomSheetState extends State<RadioModeBottomSheet> {
           if (error != null)
             Padding(
               padding: const EdgeInsets.only(top: 4),
-              child: Text(
-                error,
-                style: GoogleFonts.inter(
-                  fontSize: 12,
-                  color: ColorConstants.primary,
-                ),
-              ),
+              child: Text(error, style: StyleConstants.primary12w400Style),
             ),
         ],
       ),
@@ -286,10 +277,7 @@ class _RadioModeBottomSheetState extends State<RadioModeBottomSheet> {
   Widget _title(String text) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
-      child: Text(
-        text,
-        style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.w700),
-      ),
+      child: Text(text, style: StyleConstants.black20w700Style),
     );
   }
 
@@ -310,14 +298,7 @@ class _RadioModeBottomSheetState extends State<RadioModeBottomSheet> {
               border: Border.all(color: ColorConstants.borderLight),
             ),
             alignment: Alignment.centerLeft,
-            child: Text(
-              value,
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: ColorConstants.textDark,
-              ),
-            ),
+            child: Text(value, style: StyleConstants.textDark14w500Style),
           ),
         ],
       ),
@@ -325,10 +306,7 @@ class _RadioModeBottomSheetState extends State<RadioModeBottomSheet> {
   }
 
   Widget _label(String text) {
-    return Text(
-      text,
-      style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600),
-    );
+    return Text(text, style: StyleConstants.black13w600Style);
   }
 
   InputDecoration _inputDecoration({bool hasError = false}) {

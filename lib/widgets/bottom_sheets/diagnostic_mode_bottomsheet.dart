@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/ble/ble_process.dart';
 import 'package:techno_switch_solar_app/controllers/peripheral/diagnostic_info_controller.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/widgets/diagnostic_voltage_tile.dart';
@@ -10,6 +9,7 @@ import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
+import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
 enum DiagnosticSectionType { sounder, power, input, zone, other }
 
 DiagnosticVoltageBand aggregateDiagnosticSectionBand(
@@ -360,10 +360,7 @@ class _DiagnosticInfoBottomSheetState extends State<DiagnosticInfoBottomSheet> {
                                     isFetchActive
                                         ? StringConstants.stop
                                         : StringConstants.start,
-                                    style: GoogleFonts.inter(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w600,
-                                    ),
+                                    style: StyleConstants.black15w600Style,
                                   ),
                                 ),
                               );
@@ -387,7 +384,7 @@ class _DiagnosticInfoBottomSheetState extends State<DiagnosticInfoBottomSheet> {
       padding: const EdgeInsets.only(bottom: 16),
       child: Text(
         text,
-        style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.w700),
+        style: StyleConstants.black20w700Style,
       ),
     );
   }
@@ -503,19 +500,12 @@ class _DiagnosticInfoBottomSheetState extends State<DiagnosticInfoBottomSheet> {
                   const SizedBox(height: 8),
                   Text(
                     '$count',
-                    style: GoogleFonts.inter(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w700,
-                    ),
+                    style: StyleConstants.black20w700Style,
                   ),
                   const SizedBox(height: 8),
                   Text(
                     label,
-                    style: GoogleFonts.inter(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                      color: ColorConstants.blueGray,
-                    ),
+                    style: StyleConstants.blueGray16w500Style,
                   ),
                 ],
               ),
@@ -572,21 +562,13 @@ class _DiagnosticInfoBottomSheetState extends State<DiagnosticInfoBottomSheet> {
                         children: [
                           Text(
                             title,
-                            style: GoogleFonts.inter(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: _textPrimary,
-                            ),
+                            style: StyleConstants.primary13w600Style.copyWith(color: _textPrimary),
                           ),
                           Text(
                             diagnosticSectionSubtitle(
                               items.map((item) => item.notifier.value),
                             ),
-                            style: GoogleFonts.inter(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w500,
-                              color: ColorConstants.blueGray,
-                            ),
+                            style: StyleConstants.blueGray11w500Style,
                           ),
                         ],
                       ),

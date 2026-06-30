@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/ble/ble_process.dart';
 import 'package:techno_switch_solar_app/widgets/common/access_code_success_lottie_widget.dart';
 import 'package:techno_switch_solar_app/widgets/common/access_code_verifying_lottie_widget.dart';
@@ -11,6 +10,7 @@ import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
+import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
 enum ValidatingStatus { empty, verifying, success, error }
 
 class CommonNumericKeypadWidget extends StatefulWidget {
@@ -350,23 +350,13 @@ class _CommonNumericKeypadWidgetState extends State<CommonNumericKeypadWidget> {
                                       obscureText: true,
                                       maxLength: 8,
                                       textAlign: TextAlign.center,
-                                      style: GoogleFonts.inter(
-                                        fontSize: 24,
-                                        fontWeight: FontWeight.w600,
-                                        letterSpacing: 8,
-                                        color: ColorConstants.textDark,
-                                      ),
+                                      style: StyleConstants.textDark24w600Style,
                                       inputFormatters: [
                                         FilteringTextInputFormatter.digitsOnly,
                                       ],
                                       decoration: InputDecoration(
                                         hintText: StringConstants.strca4d661a,
-                                        hintStyle: GoogleFonts.inter(
-                                          fontSize: 24,
-                                          fontWeight: FontWeight.w600,
-                                          letterSpacing: 8,
-                                          color: ColorConstants.borderLight,
-                                        ),
+                                        hintStyle: StyleConstants.borderLight24w600Style,
                                         counterText: '',
                                         filled: true,
                                         fillColor: ColorConstants.surfaceLight,
@@ -423,14 +413,11 @@ class _CommonNumericKeypadWidgetState extends State<CommonNumericKeypadWidget> {
                                         ),
                                         child: Text(
                                           status,
-                                          style: GoogleFonts.inter(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w600,
-                                            color:
-                                                isErrorStatus
+                                          style: StyleConstants.primary14w600Style.copyWith(
+                                            color: isErrorStatus
                                                     ? ColorConstants.primary
                                                     : ColorConstants.textDark,
-                                          ),
+                                            ),
                                           textAlign: TextAlign.center,
                                         ),
                                       ),
@@ -505,12 +492,7 @@ class _CommonNumericKeypadWidgetState extends State<CommonNumericKeypadWidget> {
                                                   const SizedBox(width: 8),
                                                   Text(
                                                     'Verify',
-                                                    style: GoogleFonts.inter(
-                                                      fontSize: 14,
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      color: ColorConstants.white,
-                                                    ),
+                                                    style: StyleConstants.white14boldStyle,
                                                   ),
                                                 ],
                                               ),
@@ -614,11 +596,7 @@ class _CommonNumericKeypadWidgetState extends State<CommonNumericKeypadWidget> {
             const AccessCodeVerifyingLottieWidget(key: ValueKey('verifying')),
             Text(
               StringConstants.verifyingAccess,
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: ColorConstants.textDark,
-              ),
+              style: StyleConstants.textDark14w600Style,
             ),
           ],
         );
@@ -628,11 +606,7 @@ class _CommonNumericKeypadWidgetState extends State<CommonNumericKeypadWidget> {
             const AccessCodeSuccessLottieWidget(key: ValueKey('success')),
             Text(
               StringConstants.accessGranted,
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: ColorConstants.textDark,
-              ),
+              style: StyleConstants.textDark14w600Style,
             ),
           ],
         );
@@ -664,10 +638,7 @@ class _CommonNumericKeypadWidgetState extends State<CommonNumericKeypadWidget> {
             Text(
               isError ? StringConstants.deviceNotResponding2 : StringConstants.enterAccessCode,
               textAlign: TextAlign.center,
-              style: GoogleFonts.inter(
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-              ),
+              style: StyleConstants.black20w600Style,
             ),
           ],
         );

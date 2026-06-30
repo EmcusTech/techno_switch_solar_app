@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/widgets/custom_slider_thumb_widget.dart';
 import 'package:techno_switch_solar_app/widgets/custom_vertical_tick_mark_shape_widget.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 
+import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
 class GeneralSettingsPage extends StatefulWidget {
   final String levelTimeout;
   final double timerSettings;
@@ -49,11 +49,7 @@ class _GeneralSettingsPageState extends State<GeneralSettingsPage> {
           padding: const EdgeInsets.symmetric(horizontal: 19),
           child: Text(
             StringConstants.generalSettings,
-            style: GoogleFonts.inter(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: ColorConstants.textBodyDark,
-            ),
+            style: StyleConstants.textBodyDark18w600Style,
           ),
         ),
         SizedBox(height: 32),
@@ -125,20 +121,12 @@ class _GeneralSettingsPageState extends State<GeneralSettingsPage> {
               children: [
                 Text(
                   label,
-                  style: GoogleFonts.inter(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: ColorConstants.textSecondary,
-                  ),
+                  style: StyleConstants.textSecondary13w600Style,
                 ),
                 Spacer(),
                 Text(
                   value,
-                  style: GoogleFonts.inter(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w400,
-                    color: ColorConstants.textMuted,
-                  ),
+                  style: StyleConstants.textMuted13w400Style,
                 ),
                 SizedBox(width: 2),
                 SvgPicture.asset(AssetConstants.dropDownRedIcon),
@@ -171,18 +159,11 @@ class _GeneralSettingsPageState extends State<GeneralSettingsPage> {
                       children: [
                         Text(
                           StringConstants.timerSettings,
-                          style: GoogleFonts.inter(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                          ),
+                          style: StyleConstants.black11w600Style,
                         ),
                         Text(
                           value,
-                          style: GoogleFonts.inter(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: ColorConstants.textBodyDark,
-                          ),
+                          style: StyleConstants.textBodyDark11w600Style,
                         ),
                       ],
                     ),
@@ -249,11 +230,7 @@ class _GeneralSettingsPageState extends State<GeneralSettingsPage> {
           ),
           title: Text(
             label,
-            style: GoogleFonts.inter(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: ColorConstants.textBodyDark,
-            ),
+            style: StyleConstants.textBodyDark18w600Style,
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -262,11 +239,7 @@ class _GeneralSettingsPageState extends State<GeneralSettingsPage> {
                   return RadioListTile<String>(
                     title: Text(
                       option,
-                      style: GoogleFonts.inter(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w400,
-                        color: ColorConstants.textDark,
-                      ),
+                      style: StyleConstants.textDark14w400Style,
                     ),
                     value: option,
                     groupValue: selectedValue,
@@ -286,11 +259,7 @@ class _GeneralSettingsPageState extends State<GeneralSettingsPage> {
               },
               child: Text(
                 StringConstants.cancel,
-                style: GoogleFonts.inter(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: ColorConstants.textSecondary,
-                ),
+                style: StyleConstants.textSecondary14w600Style,
               ),
             ),
           ],

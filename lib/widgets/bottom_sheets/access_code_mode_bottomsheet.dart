@@ -2,13 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/controllers/peripheral/access_code_controller.dart';
 import 'package:techno_switch_solar_app/widgets/app_styled_dialogs.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/widgets/dropdown.dart';
 import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
+
+import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
 
 class AccessCodesBottomSheet extends StatefulWidget {
   final String deviceId;
@@ -79,7 +80,9 @@ class _AccessCodesBottomSheetState extends State<AccessCodesBottomSheet> {
                   clipBehavior: Clip.hardEdge,
                   decoration: const BoxDecoration(
                     color: ColorConstants.white,
-                    borderRadius: BorderRadius.vertical(top: Radius.circular(50)),
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(50),
+                    ),
                   ),
                   child: Stack(
                     children: [
@@ -135,30 +138,39 @@ class _AccessCodesBottomSheetState extends State<AccessCodesBottomSheet> {
                                           children: [
                                             _disabledField(
                                               StringConstants.accessCodeNo2,
-                                              controller.selectedCode.toString(),
+                                              controller.selectedCode
+                                                  .toString(),
                                             ),
                                             _textField(
-                                              label: StringConstants.accessLevel4,
+                                              label:
+                                                  StringConstants.accessLevel4,
                                               controller:
-                                                  controller.accessLevelController,
+                                                  controller
+                                                      .accessLevelController,
                                               enabled: false,
                                             ),
                                             DropdownWidget(
                                               label:
-                                                  StringConstants.accessLevelName2,
+                                                  StringConstants
+                                                      .accessLevelName2,
                                               value: controller.accessLevelName,
-                                              items: controller.accessLevelNames,
-                                              onChanged: (v) =>
-                                                  controller.setAccessLevelName(v),
+                                              items:
+                                                  controller.accessLevelNames,
+                                              onChanged:
+                                                  (v) => controller
+                                                      .setAccessLevelName(v),
                                             ),
                                             _textField(
                                               label: 'Access Code',
                                               controller:
-                                                  controller.accessCodeController,
+                                                  controller
+                                                      .accessCodeController,
                                               isNumeric: true,
                                               maxLength: 8,
-                                              onChanged: () =>
-                                                  controller.onAccessCodeChanged(),
+                                              onChanged:
+                                                  () =>
+                                                      controller
+                                                          .onAccessCodeChanged(),
                                             ),
                                           ],
                                         ),
@@ -228,14 +240,7 @@ class _AccessCodesBottomSheetState extends State<AccessCodesBottomSheet> {
   Widget _title(String text) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
-      child: Text(
-        text,
-        style: GoogleFonts.inter(
-          fontSize: 20,
-          fontWeight: FontWeight.w700,
-          color: ColorConstants.textDark,
-        ),
-      ),
+      child: Text(text, style: StyleConstants.textDark20w700Style),
     );
   }
 
@@ -274,8 +279,7 @@ class _AccessCodesBottomSheetState extends State<AccessCodesBottomSheet> {
                         padding: const EdgeInsets.only(top: 4),
                         child: Text(
                           '$currentLength / $max',
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
+                          style: StyleConstants.primary12w400Style.copyWith(
                             color:
                                 currentLength == max
                                     ? ColorConstants.primary
@@ -316,14 +320,7 @@ class _AccessCodesBottomSheetState extends State<AccessCodesBottomSheet> {
   }
 
   Widget _label(String text) {
-    return Text(
-      text,
-      style: GoogleFonts.inter(
-        fontSize: 13,
-        fontWeight: FontWeight.w600,
-        color: ColorConstants.textDark,
-      ),
-    );
+    return Text(text, style: StyleConstants.textDark13w600Style);
   }
 
   InputDecoration _inputDecoration() {
@@ -363,7 +360,7 @@ class _AccessCodesBottomSheetState extends State<AccessCodesBottomSheet> {
         },
         child: Text(
           StringConstants.download,
-          style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600),
+          style: StyleConstants.primary16w600Style,
         ),
       ),
     );
@@ -397,11 +394,7 @@ class _AccessCodesBottomSheetState extends State<AccessCodesBottomSheet> {
                 : null,
         child: Text(
           StringConstants.apply,
-          style: GoogleFonts.inter(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: ColorConstants.white,
-          ),
+          style: StyleConstants.white16w600Style,
         ),
       ),
     );

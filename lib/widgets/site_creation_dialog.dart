@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
+import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
 class SiteCreationDialog extends StatelessWidget {
   final VoidCallback onCreateSite;
   final VoidCallback onSkip;
@@ -56,11 +56,7 @@ class SiteCreationDialog extends StatelessWidget {
             // Title
             Text(
               StringConstants.createSiteForLogs,
-              style: GoogleFonts.inter(
-                fontSize: 20,
-                fontWeight: FontWeight.w700,
-                color: ColorConstants.textDark,
-              ),
+              style: StyleConstants.textDark20w700Style,
               textAlign: TextAlign.center,
             ),
 
@@ -70,20 +66,12 @@ class SiteCreationDialog extends StatelessWidget {
             RichText(
               textAlign: TextAlign.center,
               text: TextSpan(
-                style: GoogleFonts.inter(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w400,
-                  color: ColorConstants.textGray,
-                  height: 1.4,
-                ),
+                style: StyleConstants.textGray16w400Style,
                 children: [
                   TextSpan(text: StringConstants.youRetrieved),
                   TextSpan(
                     text: '$logCount log${logCount == 1 ? '' : 's'}',
-                    style: GoogleFonts.inter(
-                      fontWeight: FontWeight.w600,
-                      color: ColorConstants.primary,
-                    ),
+                    style: StyleConstants.primary16w600Style,
                   ),
                   TextSpan(
                     text:
@@ -95,10 +83,7 @@ class SiteCreationDialog extends StatelessWidget {
                   ),
                   TextSpan(
                     text: StringConstants.ifYouSkipThisStepTheLogsWillBeLost,
-                    style: GoogleFonts.inter(
-                      fontWeight: FontWeight.w600,
-                      color: ColorConstants.primary,
-                    ),
+                    style: StyleConstants.primary16w600Style,
                   ),
                 ],
               ),
@@ -123,11 +108,7 @@ class SiteCreationDialog extends StatelessWidget {
                       child: Center(
                         child: Text(
                           StringConstants.skip,
-                          style: GoogleFonts.inter(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: ColorConstants.textGray,
-                          ),
+                          style: StyleConstants.textGray16w600Style,
                         ),
                       ),
                     ),
@@ -156,11 +137,7 @@ class SiteCreationDialog extends StatelessWidget {
                       child: Center(
                         child: Text(
                           'Create Site',
-                          style: GoogleFonts.inter(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: ColorConstants.white,
-                          ),
+                          style: StyleConstants.white16w600Style,
                         ),
                       ),
                     ),

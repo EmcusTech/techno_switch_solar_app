@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 
+import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
 class TestModeScreen extends StatefulWidget {
   const TestModeScreen({super.key});
 
@@ -49,10 +49,7 @@ class _TestModeScreenState extends State<TestModeScreen> {
                         SizedBox(width: 8),
                         Text(
                           StringConstants.testMode,
-                          style: GoogleFonts.inter(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w700,
-                          ),
+                          style: StyleConstants.black20w700Style,
                         ),
                       ],
                     ),
@@ -89,19 +86,11 @@ class _TestModeScreenState extends State<TestModeScreen> {
                   children: [
                     Text(
                       StringConstants.testMode,
-                      style: GoogleFonts.inter(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w600,
-                        color: ColorConstants.textMuted,
-                      ),
+                      style: StyleConstants.textMuted20w600Style,
                     ),
                     Text(
                       StringConstants.configuration,
-                      style: GoogleFonts.inter(
-                        fontSize: 32,
-                        fontWeight: FontWeight.w700,
-                        color: ColorConstants.textBodyDark,
-                      ),
+                      style: StyleConstants.textBodyDark32w700Style,
                     ),
                   ],
                 ),
@@ -199,11 +188,7 @@ class _TestModeScreenState extends State<TestModeScreen> {
               SizedBox(width: 16),
               Text(
                 title,
-                style: GoogleFonts.inter(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: ColorConstants.textDark,
-                ),
+                style: StyleConstants.textDark16w600Style,
               ),
               Spacer(),
               Icon(Icons.arrow_forward_ios, size: 16, color: ColorConstants.textDark),

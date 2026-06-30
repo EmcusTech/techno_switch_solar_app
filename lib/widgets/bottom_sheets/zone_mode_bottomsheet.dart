@@ -3,12 +3,13 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/controllers/peripheral/zone_mode_controller.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/widgets/dropdown.dart';
 import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
+
+import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
 
 class ZoneBottomSheet extends StatefulWidget {
   final String deviceId;
@@ -79,11 +80,7 @@ class ZoneBottomSheetState extends State<ZoneBottomSheet> {
             children: [
               Text(
                 StringConstants.zoneConfiguration,
-                style: GoogleFonts.inter(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                  color: ColorConstants.textDark,
-                ),
+                style: StyleConstants.textDark20w700Style,
               ),
               const SizedBox(height: 12),
               Expanded(
@@ -158,15 +155,17 @@ class ZoneBottomSheetState extends State<ZoneBottomSheet> {
                             left: 24.0,
                             right: 24.0,
                             top: 16.0,
-                            bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+                            bottom:
+                                MediaQuery.of(context).viewInsets.bottom + 16,
                           ),
                           child: Column(
                             children: [
                               _dragHandle(),
                               _title(StringConstants.zoneMode),
                               Expanded(
-                                child:
-                                    NotificationListener<UserScrollNotification>(
+                                child: NotificationListener<
+                                  UserScrollNotification
+                                >(
                                   onNotification: (notification) {
                                     if (notification.direction !=
                                         ScrollDirection.idle) {
@@ -192,7 +191,9 @@ class ZoneBottomSheetState extends State<ZoneBottomSheet> {
                                 children: [
                                   Expanded(child: _downloadButton()),
                                   const SizedBox(width: 12),
-                                  Expanded(child: _applyButton(isValid: isValid)),
+                                  Expanded(
+                                    child: _applyButton(isValid: isValid),
+                                  ),
                                 ],
                               ),
                             ],
@@ -225,9 +226,9 @@ class ZoneBottomSheetState extends State<ZoneBottomSheet> {
             border: Border.all(color: ColorConstants.borderMuted),
           ),
           child: Theme(
-            data: Theme.of(context).copyWith(
-              dividerColor: ColorConstants.transparent,
-            ),
+            data: Theme.of(
+              context,
+            ).copyWith(dividerColor: ColorConstants.transparent),
             child: ExpansionTile(
               onExpansionChanged: (expanded) async {
                 setState(() {
@@ -253,11 +254,7 @@ class ZoneBottomSheetState extends State<ZoneBottomSheet> {
               childrenPadding: EdgeInsets.zero,
               title: Text(
                 'Zone ${zone.zoneNumber}',
-                style: GoogleFonts.inter(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  color: ColorConstants.textDark,
-                ),
+                style: StyleConstants.textDark15w600Style,
               ),
               children: [
                 Container(
@@ -325,8 +322,7 @@ class ZoneBottomSheetState extends State<ZoneBottomSheet> {
                 padding: const EdgeInsets.only(top: 4),
                 child: Text(
                   "$currentLength / 21",
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
+                  style: StyleConstants.primary12w400Style.copyWith(
                     color:
                         currentLength == 21
                             ? ColorConstants.primary
@@ -337,22 +333,11 @@ class ZoneBottomSheetState extends State<ZoneBottomSheet> {
             },
             inputFormatters: [LengthLimitingTextInputFormatter(21)],
             decoration: _inputDecoration(hasError: errorMsg != null),
-            style: GoogleFonts.inter(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: ColorConstants.textDark,
-            ),
+            style: StyleConstants.textDark14w500Style,
           ),
           if (errorMsg != null) ...[
             const SizedBox(height: 4),
-            Text(
-              errorMsg,
-              style: GoogleFonts.inter(
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-                color: ColorConstants.primary,
-              ),
-            ),
+            Text(errorMsg, style: StyleConstants.primary12w500Style),
           ],
         ],
       ),
@@ -390,14 +375,7 @@ class ZoneBottomSheetState extends State<ZoneBottomSheet> {
           ),
           if (errorMsg != null) ...[
             const SizedBox(height: 4),
-            Text(
-              errorMsg,
-              style: GoogleFonts.inter(
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-                color: ColorConstants.primary,
-              ),
-            ),
+            Text(errorMsg, style: StyleConstants.primary12w500Style),
           ],
         ],
       ),
@@ -421,7 +399,7 @@ class ZoneBottomSheetState extends State<ZoneBottomSheet> {
         },
         child: Text(
           StringConstants.download,
-          style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600),
+          style: StyleConstants.primary16w600Style,
         ),
       ),
     );
@@ -448,11 +426,7 @@ class ZoneBottomSheetState extends State<ZoneBottomSheet> {
                 : null,
         child: Text(
           StringConstants.apply,
-          style: GoogleFonts.inter(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: ColorConstants.white,
-          ),
+          style: StyleConstants.white16w600Style,
         ),
       ),
     );
@@ -475,26 +449,12 @@ class ZoneBottomSheetState extends State<ZoneBottomSheet> {
   Widget _title(String text) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
-      child: Text(
-        text,
-        style: GoogleFonts.inter(
-          fontSize: 20,
-          fontWeight: FontWeight.w700,
-          color: ColorConstants.textDark,
-        ),
-      ),
+      child: Text(text, style: StyleConstants.textDark20w700Style),
     );
   }
 
   Widget _label(String text) {
-    return Text(
-      text,
-      style: GoogleFonts.inter(
-        fontSize: 13,
-        fontWeight: FontWeight.w600,
-        color: ColorConstants.textDark,
-      ),
-    );
+    return Text(text, style: StyleConstants.textDark13w600Style);
   }
 
   InputDecoration _inputDecoration({bool hasError = false}) {

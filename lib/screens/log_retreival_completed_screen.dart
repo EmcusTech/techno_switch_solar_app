@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
@@ -17,6 +16,7 @@ import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 
+import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
 class LogRetrievalCompletedScreen extends StatefulWidget {
   final List<LogModel> logs;
   final String panelId;
@@ -85,10 +85,7 @@ class _LogRetrievalCompletedScreenState
                           SizedBox(width: 8),
                           Text(
                             StringConstants.eventLog,
-                            style: GoogleFonts.inter(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w700,
-                            ),
+                            style: StyleConstants.black20w700Style,
                           ),
                         ],
                       ),
@@ -210,11 +207,7 @@ class _LogRetrievalCompletedScreenState
                 padding: const EdgeInsets.only(top: 45),
                 child: Text(
                   'Retrieval\nCompleted!',
-                  style: GoogleFonts.inter(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w600,
-                    color: ColorConstants.success,
-                  ),
+                  style: StyleConstants.success24w600Style,
                   textAlign: TextAlign.center,
                 ),
               ),
@@ -254,11 +247,7 @@ class _LogRetrievalCompletedScreenState
                               SizedBox(width: 6),
                               Text(
                                 StringConstants.back,
-                                style: GoogleFonts.inter(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: ColorConstants.labelText,
-                                ),
+                                style: StyleConstants.labelText14boldStyle,
                               ),
                             ],
                           ),
@@ -298,11 +287,7 @@ class _LogRetrievalCompletedScreenState
                             children: [
                               Text(
                                 StringConstants.thisWillUpdateThePanelSettingsWithTheValuesYouConfiguredInThisSetup,
-                                style: GoogleFonts.inter(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: ColorConstants.white,
-                                ),
+                                style: StyleConstants.white14boldStyle,
                               ),
                               SizedBox(width: 6),
                               Icon(Icons.arrow_forward, color: ColorConstants.white),

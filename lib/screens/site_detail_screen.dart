@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/services/site_service.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 
+import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
 class SiteDetailScreen extends StatelessWidget {
   final SiteWithLogCount siteWithLogCount;
   const SiteDetailScreen({super.key, required this.siteWithLogCount});
@@ -58,10 +58,7 @@ class SiteDetailScreen extends StatelessWidget {
                       SizedBox(width: 12),
                       Text(
                         StringConstants.siteDetails,
-                        style: GoogleFonts.inter(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w700,
-                        ),
+                        style: StyleConstants.black20w700Style,
                       ),
                     ],
                   ),
@@ -82,109 +79,65 @@ class SiteDetailScreen extends StatelessWidget {
                         children: [
                           Text(
                             "Site Name",
-                            style: GoogleFonts.inter(
-                              color: ColorConstants.textMediumGray,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                            ),
+                            style: StyleConstants.textMediumGray13w700Style,
                           ),
                           SizedBox(height: 4),
                           Text(
                             siteWithLogCount.site.siteName,
-                            style: GoogleFonts.inter(
-                              color: ColorConstants.textBodyDark,
-                              fontSize: 20,
-                              fontWeight: FontWeight.w700,
-                            ),
+                            style: StyleConstants.textBodyDark20w700Style,
                           ),
                           SizedBox(height: 24),
                           Text(
                             StringConstants.installerName,
-                            style: GoogleFonts.inter(
-                              color: ColorConstants.textMediumGray,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                            ),
+                            style: StyleConstants.textMediumGray13w700Style,
                           ),
                           SizedBox(height: 4),
                           Text(
                             siteWithLogCount.site.installerName.isNotEmpty
                                 ? siteWithLogCount.site.installerName
                                 : '-',
-                            style: GoogleFonts.inter(
-                              color: ColorConstants.textBodyDark,
-                              fontSize: 20,
-                              fontWeight: FontWeight.w700,
-                            ),
+                            style: StyleConstants.textBodyDark20w700Style,
                           ),
                           SizedBox(height: 24),
                           Text(
                             StringConstants.companyName,
-                            style: GoogleFonts.inter(
-                              color: ColorConstants.textMediumGray,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                            ),
+                            style: StyleConstants.textMediumGray13w700Style,
                           ),
                           SizedBox(height: 4),
                           Text(
                             siteWithLogCount.site.companyName.isNotEmpty
                                 ? siteWithLogCount.site.companyName
                                 : '-',
-                            style: GoogleFonts.inter(
-                              color: ColorConstants.textBodyDark,
-                              fontSize: 20,
-                              fontWeight: FontWeight.w700,
-                            ),
+                            style: StyleConstants.textBodyDark20w700Style,
                           ),
                           SizedBox(height: 24),
                           Text(
                             StringConstants.saqccRegistrationNumber,
-                            style: GoogleFonts.inter(
-                              color: ColorConstants.textMediumGray,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                            ),
+                            style: StyleConstants.textMediumGray13w700Style,
                           ),
                           SizedBox(height: 4),
                           Text(
                             siteWithLogCount.site.saqccRegNumber.isNotEmpty
                                 ? siteWithLogCount.site.saqccRegNumber
                                 : '-',
-                            style: GoogleFonts.inter(
-                              color: ColorConstants.textBodyDark,
-                              fontSize: 20,
-                              fontWeight: FontWeight.w700,
-                            ),
+                            style: StyleConstants.textBodyDark20w700Style,
                           ),
                           SizedBox(height: 24),
                           Text(
                             StringConstants.buildingName,
-                            style: GoogleFonts.inter(
-                              color: ColorConstants.textMediumGray,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                            ),
+                            style: StyleConstants.textMediumGray13w700Style,
                           ),
                           SizedBox(height: 4),
                           Text(
                             siteWithLogCount.site.buildingName.isNotEmpty
                                 ? siteWithLogCount.site.buildingName
                                 : '-',
-                            style: GoogleFonts.inter(
-                              color: ColorConstants.textBodyDark,
-                              fontSize: 20,
-                              fontWeight: FontWeight.w700,
-                            ),
+                            style: StyleConstants.textBodyDark20w700Style,
                           ),
                           SizedBox(height: 24),
                           Text(
                             StringConstants.installerContactNumber,
-                            style: GoogleFonts.inter(
-                              color: ColorConstants.textMediumGray,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                            ),
+                            style: StyleConstants.textMediumGray13w700Style,
                           ),
                           SizedBox(height: 4),
                           Text(
@@ -194,51 +147,31 @@ class SiteDetailScreen extends StatelessWidget {
                                     .isNotEmpty
                                 ? siteWithLogCount.site.installerContactNumber
                                 : '-',
-                            style: GoogleFonts.inter(
-                              color: ColorConstants.textBodyDark,
-                              fontSize: 20,
-                              fontWeight: FontWeight.w700,
-                            ),
+                            style: StyleConstants.textBodyDark20w700Style,
                           ),
                           SizedBox(height: 24),
                           Text(
                             StringConstants.installerEmail,
-                            style: GoogleFonts.inter(
-                              color: ColorConstants.textMediumGray,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                            ),
+                            style: StyleConstants.textMediumGray13w700Style,
                           ),
                           SizedBox(height: 4),
                           Text(
                             siteWithLogCount.site.installerEmail.isNotEmpty
                                 ? siteWithLogCount.site.installerEmail
                                 : '-',
-                            style: GoogleFonts.inter(
-                              color: ColorConstants.textBodyDark,
-                              fontSize: 20,
-                              fontWeight: FontWeight.w700,
-                            ),
+                            style: StyleConstants.textBodyDark20w700Style,
                           ),
                           SizedBox(height: 24),
                           Text(
                             StringConstants.siteDescription,
-                            style: GoogleFonts.inter(
-                              color: ColorConstants.textMediumGray,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                            ),
+                            style: StyleConstants.textMediumGray13w700Style,
                           ),
                           SizedBox(height: 4),
                           Text(
                             siteWithLogCount.site.siteDescription.isNotEmpty
                                 ? siteWithLogCount.site.siteDescription
                                 : '-',
-                            style: GoogleFonts.inter(
-                              color: ColorConstants.textBodyDark,
-                              fontSize: 20,
-                              fontWeight: FontWeight.w700,
-                            ),
+                            style: StyleConstants.textBodyDark20w700Style,
                           ),
                         ],
                       ),

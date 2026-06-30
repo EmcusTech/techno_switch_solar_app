@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/models/log_model.dart';
 import 'package:techno_switch_solar_app/models/log_retrieval_model.dart';
@@ -12,6 +11,7 @@ import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 
+import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
 class LogHistoryScreen extends StatefulWidget {
   final String panelName;
   final String panelVersionNo;
@@ -70,11 +70,7 @@ class LogHistoryScreenState extends State<LogHistoryScreen> {
       children: [
         Text(
           StringConstants.logRetrievalHistory,
-          style: GoogleFonts.inter(
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
-            color: ColorConstants.textDark,
-          ),
+          style: StyleConstants.textDark16w700Style,
         ),
         SizedBox(height: 16),
         SizedBox(
@@ -93,21 +89,13 @@ class LogHistoryScreenState extends State<LogHistoryScreen> {
                         SizedBox(height: 16),
                         Text(
                           StringConstants.noLogHistory,
-                          style: GoogleFonts.inter(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            color: ColorConstants.textGray,
-                          ),
+                          style: StyleConstants.textGray18w600Style,
                         ),
                         SizedBox(height: 8),
                         Text(
                           StringConstants.logRetrievalsWillAppearHereWhenYouRetrieveLogsForThisSite,
                           textAlign: TextAlign.center,
-                          style: GoogleFonts.inter(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w400,
-                            color: ColorConstants.textPlaceholder,
-                          ),
+                          style: StyleConstants.textPlaceholder14w400Style,
                         ),
                       ],
                     ),
@@ -168,29 +156,17 @@ class LogHistoryScreenState extends State<LogHistoryScreen> {
                 children: [
                   Text(
                     logRetrieval.sessionName,
-                    style: GoogleFonts.inter(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: ColorConstants.blackMaterial,
-                    ),
+                    style: StyleConstants.blackMaterial14w700Style,
                   ),
                   SizedBox(height: 4),
                   Text(
                     'Log Records : ${logRetrieval.logCount}',
-                    style: GoogleFonts.inter(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w400,
-                      color: ColorConstants.textSecondary,
-                    ),
+                    style: StyleConstants.textSecondary12w400Style,
                   ),
                   SizedBox(height: 2),
                   Text(
                     'Date Retrieved : $formattedDate',
-                    style: GoogleFonts.inter(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w400,
-                      color: ColorConstants.textMediumGray,
-                    ),
+                    style: StyleConstants.textMediumGray12w400Style,
                   ),
                 ],
               ),
@@ -279,10 +255,7 @@ class LogHistoryScreenState extends State<LogHistoryScreen> {
                       children: [
                         Text(
                           StringConstants.logHistory,
-                          style: GoogleFonts.inter(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w700,
-                          ),
+                          style: StyleConstants.black20w700Style,
                         ),
                       ],
                     ),
@@ -329,31 +302,21 @@ class LogHistoryScreenState extends State<LogHistoryScreen> {
                 children: [
                   Text(
                     BleNameUtils.getDisplayPrefixFromBleName(widget.panelName),
-                    style: GoogleFonts.inter(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                    ),
+                    style: StyleConstants.black16w700Style,
                   ),
                   Text(
                     BleNameUtils.getDisplayIdFromBleName(widget.panelName),
-                    style: GoogleFonts.inter(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: ColorConstants.textDisabled,
-                    ),
+                    style: StyleConstants.textDisabled14w500Style,
                   ),
                   ValueListenableBuilder(
                     valueListenable: bleController.bleManager.isConnectedNotifier,
                     builder: (context, isConnected, child) {
                       return Text(
                         isConnected ? StringConstants.connected : StringConstants.disconnected,
-                        style: GoogleFonts.inter(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color:
-                              isConnected
-                                  ? ColorConstants.success
-                                  : ColorConstants.primary,
+                        style: StyleConstants.primary14w500Style.copyWith(
+                          color: isConnected
+                              ? ColorConstants.success
+                              : ColorConstants.primary,
                         ),
                       );
                     },

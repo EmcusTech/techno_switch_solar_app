@@ -3,12 +3,13 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/controllers/peripheral/ext_out_controller.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/widgets/dropdown.dart';
 import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
+
+import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
 
 class ExtOutBottomSheet extends StatefulWidget {
   final String deviceId;
@@ -142,7 +143,9 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
                   clipBehavior: Clip.hardEdge,
                   decoration: const BoxDecoration(
                     color: ColorConstants.white,
-                    borderRadius: BorderRadius.vertical(top: Radius.circular(50)),
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(50),
+                    ),
                   ),
                   child: Stack(
                     children: [
@@ -189,7 +192,8 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
                                 Expanded(child: _downloadButton()),
                                 const SizedBox(width: 12),
                                 Expanded(
-                                    child: _applyButton(formValid: formValid)),
+                                  child: _applyButton(formValid: formValid),
+                                ),
                               ],
                             ),
                           ],
@@ -212,18 +216,21 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
     return ValueListenableBuilder<bool>(
       valueListenable: manager.bleProcess.isExtOutApplyButtonActive,
       builder: (context, isSolar, _) {
-        final bgColor = isSolar
-            ? ColorConstants.successBackgroundLight
-            : ColorConstants.errorBackgroundLight;
+        final bgColor =
+            isSolar
+                ? ColorConstants.successBackgroundLight
+                : ColorConstants.errorBackgroundLight;
 
         final textColor =
             isSolar ? ColorConstants.successDark : ColorConstants.colorFfc62828;
 
-        final icon = isSolar
-            ? Icons.wb_sunny_rounded
-            : Icons.settings_input_component_rounded;
+        final icon =
+            isSolar
+                ? Icons.wb_sunny_rounded
+                : Icons.settings_input_component_rounded;
 
-        final label = isSolar ? StringConstants.solarMode : StringConstants.dipMode;
+        final label =
+            isSolar ? StringConstants.solarMode : StringConstants.dipMode;
 
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -238,9 +245,7 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
               const SizedBox(width: 6),
               Text(
                 label,
-                style: GoogleFonts.inter(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
+                style: StyleConstants.black12w600Style.copyWith(
                   color: textColor,
                 ),
               ),
@@ -346,14 +351,7 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
   Widget _title(String text) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
-      child: Text(
-        text,
-        style: GoogleFonts.inter(
-          fontSize: 20,
-          fontWeight: FontWeight.w700,
-          color: ColorConstants.textDark,
-        ),
-      ),
+      child: Text(text, style: StyleConstants.textDark20w700Style),
     );
   }
 
@@ -382,9 +380,7 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
             const SizedBox(height: 4),
             Text(
               errorMsg,
-              style: GoogleFonts.inter(
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
+              style: StyleConstants.black12w500Style.copyWith(
                 color: Colors.orange,
               ),
             ),
@@ -395,14 +391,7 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
   }
 
   Widget _label(String text) {
-    return Text(
-      text,
-      style: GoogleFonts.inter(
-        fontSize: 13,
-        fontWeight: FontWeight.w600,
-        color: ColorConstants.textDark,
-      ),
-    );
+    return Text(text, style: StyleConstants.textDark13w600Style);
   }
 
   InputDecoration _inputDecoration({bool hasError = false}) {
@@ -444,7 +433,7 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
         },
         child: Text(
           StringConstants.download,
-          style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600),
+          style: StyleConstants.primary16w600Style,
         ),
       ),
     );
@@ -473,11 +462,7 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
                 : null,
         child: Text(
           StringConstants.apply,
-          style: GoogleFonts.inter(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: ColorConstants.white,
-          ),
+          style: StyleConstants.white16w600Style,
         ),
       ),
     );

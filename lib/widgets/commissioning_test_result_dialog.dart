@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
+import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
 class CommissioningTestItem {
   const CommissioningTestItem({required this.id, required this.label});
 
@@ -105,21 +105,13 @@ class _CommissioningTestResultDialogState
             const SizedBox(height: 16),
             Text(
               widget.title,
-              style: GoogleFonts.inter(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: ColorConstants.textDark,
-              ),
+              style: StyleConstants.textDark18w700Style,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
             Text(
               widget.subtitle,
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                fontWeight: FontWeight.w400,
-                color: ColorConstants.textGray,
-              ),
+              style: StyleConstants.textGray14w400Style,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
@@ -154,11 +146,7 @@ class _CommissioningTestResultDialogState
                       child: Center(
                         child: Text(
                           StringConstants.skip,
-                          style: GoogleFonts.inter(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: ColorConstants.textGray,
-                          ),
+                          style: StyleConstants.textGray16w600Style,
                         ),
                       ),
                     ),
@@ -192,11 +180,7 @@ class _CommissioningTestResultDialogState
                       child: Center(
                         child: Text(
                           StringConstants.save,
-                          style: GoogleFonts.inter(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: ColorConstants.white,
-                          ),
+                          style: StyleConstants.white16w600Style,
                         ),
                       ),
                     ),
@@ -224,11 +208,7 @@ class _CommissioningTestResultDialogState
         children: [
           Text(
             item.label,
-            style: GoogleFonts.inter(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: ColorConstants.textDark,
-            ),
+            style: StyleConstants.textDark14w600Style,
           ),
           const SizedBox(height: 8),
           Row(
@@ -281,12 +261,7 @@ class _CommissioningTestResultDialogState
         child: Center(
           child: Text(
             label,
-            style: GoogleFonts.inter(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color:
-                  isSelected ? selectedBorder : ColorConstants.textGray,
-            ),
+            style: StyleConstants.textGray14w600Style.copyWith(color: isSelected ? selectedBorder : ColorConstants.textGray),
           ),
         ),
       ),

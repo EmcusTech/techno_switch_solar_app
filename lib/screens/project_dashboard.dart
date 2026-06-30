@@ -5,7 +5,6 @@ import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/ble/ble_session_idle_policy.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/bindings/firmware_binding.dart';
@@ -56,6 +55,7 @@ import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 
+import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
 class ProjectDashboardScreen extends StatefulWidget {
   final String panelVersionNo;
   final String panelName;
@@ -151,12 +151,7 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
           const SizedBox(height: 4),
           Text(
             label,
-            style: GoogleFonts.inter(
-              fontSize: 12,
-              fontWeight:
-                  _selectedIndex == index ? FontWeight.w600 : FontWeight.w500,
-              color: color,
-            ),
+            style: StyleConstants.black12w400Style.copyWith(color: color),
           ),
         ],
       );
@@ -336,21 +331,13 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                   const SizedBox(height: 16),
                   Text(
                     StringConstants.bluetoothDisconnected,
-                    style: GoogleFonts.inter(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                      color: ColorConstants.textDark,
-                    ),
+                    style: StyleConstants.textDark18w700Style,
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 8),
                   Text(
                     StringConstants.theConnectionToTheDeviceWasLostAnyOpenPanelsWereClosedUseConnectWhenYouAreReadyToReconnect,
-                    style: GoogleFonts.inter(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w400,
-                      color: ColorConstants.textGray,
-                    ),
+                    style: StyleConstants.textGray14w400Style,
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 20),
@@ -370,11 +357,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                         child: Center(
                           child: Text(
                             StringConstants.ok,
-                            style: GoogleFonts.inter(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: ColorConstants.white,
-                            ),
+                            style: StyleConstants.white16w600Style,
                           ),
                         ),
                       ),
@@ -479,21 +462,13 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 const SizedBox(height: 16),
                 Text(
                   StringConstants.disconnectDevice,
-                  style: GoogleFonts.inter(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: ColorConstants.textDark,
-                  ),
+                  style: StyleConstants.textDark18w700Style,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
                 Text(
                   StringConstants.goingBackWillDisconnectTheDeviceAreYouSure,
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w400,
-                    color: ColorConstants.textGray,
-                  ),
+                  style: StyleConstants.textGray14w400Style,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 20),
@@ -515,11 +490,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                           child: Center(
                             child: Text(
                               StringConstants.cancel,
-                              style: GoogleFonts.inter(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: ColorConstants.textGray,
-                              ),
+                              style: StyleConstants.textGray16w600Style,
                             ),
                           ),
                         ),
@@ -545,11 +516,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                           child: Center(
                             child: Text(
                               'Disconnect',
-                              style: GoogleFonts.inter(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: ColorConstants.white,
-                              ),
+                              style: StyleConstants.white16w600Style,
                             ),
                           ),
                         ),
@@ -688,11 +655,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                           : isConnected
                           ? 'Establishing secure connection...'
                           : StringConstants.establishingSecureConnection,
-                      style: GoogleFonts.inter(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
-                        color: ColorConstants.textDark,
-                      ),
+                      style: StyleConstants.textDark20w700Style,
                       textAlign: TextAlign.center,
                     ),
                     SizedBox(height: 8),
@@ -705,11 +668,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                           : isConnected
                           ? StringConstants.encryptingAndAuthenticating
                           : 'Please wait while we connect to ${device.name}',
-                      style: GoogleFonts.inter(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w400,
-                        color: ColorConstants.textMuted,
-                      ),
+                      style: StyleConstants.textMuted14w400Style,
                       textAlign: TextAlign.center,
                     ),
                     SizedBox(height: 16),
@@ -728,11 +687,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                           },
                           child: Text(
                             StringConstants.ok,
-                            style: GoogleFonts.inter(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: ColorConstants.white,
-                            ),
+                            style: StyleConstants.white14w600Style,
                           ),
                         ),
                       ),
@@ -1001,10 +956,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                         Expanded(
                           child: Text(
                             StringConstants.projectDashboard,
-                            style: GoogleFonts.inter(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w700,
-                            ),
+                            style: StyleConstants.black20w700Style,
                           ),
                         ),
                         GestureDetector(
@@ -1060,11 +1012,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
 
               Text(
                 'Export',
-                style: GoogleFonts.inter(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: ColorConstants.textBodyDark,
-                ),
+                style: StyleConstants.textBodyDark18w700Style,
               ),
 
               const SizedBox(height: 12),
@@ -1176,21 +1124,13 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 const SizedBox(height: 16),
                 Text(
                   StringConstants.deviceNotConnected,
-                  style: GoogleFonts.inter(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: ColorConstants.textDark,
-                  ),
+                  style: StyleConstants.textDark18w700Style,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
                 Text(
                   StringConstants.bleDeviceIsNotConnectedTapOnConnectToConnectAgain,
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w400,
-                    color: ColorConstants.textGray,
-                  ),
+                  style: StyleConstants.textGray14w400Style,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 20),
@@ -1214,11 +1154,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                           child: Center(
                             child: Text(
                               'Close',
-                              style: GoogleFonts.inter(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: ColorConstants.textGray,
-                              ),
+                              style: StyleConstants.textGray16w600Style,
                             ),
                           ),
                         ),
@@ -1248,11 +1184,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                           child: Center(
                             child: Text(
                               'Connect',
-                              style: GoogleFonts.inter(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: ColorConstants.white,
-                              ),
+                              style: StyleConstants.white16w600Style,
                             ),
                           ),
                         ),
@@ -1320,11 +1252,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                   message == StringConstants.liveDataIsBeingStreamedFromTheDeviceInRealTime
                       ? "Live Diagnostics Active"
                       : "$message Downloaded",
-                  style: GoogleFonts.inter(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                    color: ColorConstants.textDark,
-                  ),
+                  style: StyleConstants.textDark20w700Style,
                   textAlign: TextAlign.center,
                 ),
                 SizedBox(height: 8),
@@ -1334,11 +1262,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                     message == StringConstants.liveDataIsBeingStreamedFromTheDeviceInRealTime
                         ? StringConstants.theMessageHasBeenSuccessfullyDownloadedFromTheDevice
                         : 'The $message has been successfully downloaded from the device.',
-                    style: GoogleFonts.inter(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w400,
-                      color: ColorConstants.textMuted,
-                    ),
+                    style: StyleConstants.textMuted14w400Style,
                     textAlign: TextAlign.center,
                   ),
                 ),
@@ -1346,11 +1270,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                   visible: ble.bleProcess.isLbusFetchHasErrors.value,
                   child: Text(
                     StringConstants.thereWasAnErrorDownloading,
-                    style: GoogleFonts.inter(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w400,
-                      color: ColorConstants.textMuted,
-                    ),
+                    style: StyleConstants.textMuted14w400Style,
                     textAlign: TextAlign.center,
                   ),
                 ),
@@ -1358,11 +1278,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                   visible: ble.bleProcess.isLbusFetchHasErrors.value,
                   child: Text(
                     'L-Bus ${ble.bleProcess.lbusFetchErrors.value.join(", ")} - Comms Fault',
-                    style: GoogleFonts.inter(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w400,
-                      color: ColorConstants.primary,
-                    ),
+                    style: StyleConstants.primary14w400Style,
                     textAlign: TextAlign.center,
                   ),
                 ),
@@ -1411,21 +1327,13 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 SizedBox(height: 16),
                 Text(
                   StringConstants.liveDiagnosticsStopped,
-                  style: GoogleFonts.inter(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                    color: ColorConstants.textDark,
-                  ),
+                  style: StyleConstants.textDark20w700Style,
                   textAlign: TextAlign.center,
                 ),
                 SizedBox(height: 8),
                 Text(
                   StringConstants.liveDataStreamingFromTheDeviceHasBeenStopped,
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w400,
-                    color: ColorConstants.textMuted,
-                  ),
+                  style: StyleConstants.textMuted14w400Style,
                   textAlign: TextAlign.center,
                 ),
               ],
@@ -1700,19 +1608,12 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
             children: [
               Text(
                 BleNameUtils.getDisplayPrefixFromBleName(widget.panelName),
-                style: GoogleFonts.inter(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                ),
+                style: StyleConstants.black16w700Style,
                 overflow: TextOverflow.ellipsis,
               ),
               Text(
                 BleNameUtils.getDisplayIdFromBleName(widget.panelName),
-                style: GoogleFonts.inter(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: ColorConstants.textDisabled,
-                ),
+                style: StyleConstants.textDisabled14w500Style,
                 overflow: TextOverflow.ellipsis,
               ),
               ValueListenableBuilder(
@@ -1721,11 +1622,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                   if (isConnected) {
                     return Text(
                       StringConstants.connected,
-                      style: GoogleFonts.inter(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: ColorConstants.success,
-                      ),
+                      style: StyleConstants.success14w500Style,
                     );
                   } else {
                     return Row(
@@ -1736,11 +1633,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                               children: [
                                 TextSpan(
                                   text: StringConstants.disconnected,
-                                  style: GoogleFonts.inter(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w500,
-                                    color: ColorConstants.primary,
-                                  ),
+                                  style: StyleConstants.primary14w500Style,
                                 ),
                               ],
                             ),
@@ -1783,11 +1676,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                       ),
                       child: Text(
                         'Connect',
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: ColorConstants.white,
-                        ),
+                        style: StyleConstants.white12w600Style,
                       ),
                     ),
                   );
@@ -1806,7 +1695,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
       children: [
         Text(
           StringConstants.peripheralOverview,
-          style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700),
+          style: StyleConstants.black16w700Style,
         ),
         SizedBox(height: 8),
         SizedBox(
@@ -2698,11 +2587,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
           SizedBox(height: 8),
           Text(
             peripheralName,
-            style: GoogleFonts.inter(
-              fontSize: 10,
-              fontWeight: FontWeight.w500,
-              color: ColorConstants.textSecondary,
-            ),
+            style: StyleConstants.textSecondary10w500Style,
           ),
         ],
       ),
@@ -2715,7 +2600,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
       children: [
         Text(
           StringConstants.panelActions,
-          style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700),
+          style: StyleConstants.black16w700Style,
         ),
         SizedBox(height: 8),
         SizedBox(

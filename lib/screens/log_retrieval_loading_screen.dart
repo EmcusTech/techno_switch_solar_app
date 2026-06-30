@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
@@ -15,6 +14,7 @@ import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 
+import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
 class LogRetrievalLoadingScreen extends StatefulWidget {
   final dynamic selectedDevice;
   final ScanType scanType;
@@ -157,21 +157,13 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen> {
                 const SizedBox(height: 16),
                 Text(
                   StringConstants.stopLogRetrieval,
-                  style: GoogleFonts.inter(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: ColorConstants.textDark,
-                  ),
+                  style: StyleConstants.textDark18w700Style,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
                 Text(
                   StringConstants.areYouSureYouWantToStopTheLogRetrievalProcessThisActionCannotBeUndone,
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w400,
-                    color: ColorConstants.textGray,
-                  ),
+                  style: StyleConstants.textGray14w400Style,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 20),
@@ -193,11 +185,7 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen> {
                           child: Center(
                             child: Text(
                               StringConstants.cancel,
-                              style: GoogleFonts.inter(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: ColorConstants.textGray,
-                              ),
+                              style: StyleConstants.textGray16w600Style,
                             ),
                           ),
                         ),
@@ -223,11 +211,7 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen> {
                           child: Center(
                             child: Text(
                               StringConstants.yesStop,
-                              style: GoogleFonts.inter(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: ColorConstants.white,
-                              ),
+                              style: StyleConstants.white16w600Style,
                             ),
                           ),
                         ),
@@ -309,10 +293,7 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen> {
                           SizedBox(width: 8),
                           Text(
                             StringConstants.eventLog,
-                            style: GoogleFonts.inter(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w700,
-                            ),
+                            style: StyleConstants.black20w700Style,
                           ),
                         ],
                       ),
@@ -349,11 +330,7 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen> {
                 padding: const EdgeInsets.only(top: 45),
                 child: Text(
                   StringConstants.retrievingLogs,
-                  style: GoogleFonts.inter(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w600,
-                    color: ColorConstants.textMuted,
-                  ),
+                  style: StyleConstants.textMuted24w600Style,
                 ),
               ),
             ),
@@ -369,11 +346,7 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen> {
                 builder: (context, value, _) {
                   return Text(
                     value,
-                    style: GoogleFonts.inter(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w400,
-                      color: ColorConstants.textMuted,
-                    ),
+                    style: StyleConstants.textMuted12w400Style,
                     textAlign: TextAlign.center,
                     maxLines: 2,
                   );
@@ -397,11 +370,7 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen> {
                           children: [
                             Text(
                               '${(percent * 100).toStringAsFixed(1)}%',
-                              style: GoogleFonts.inter(
-                                fontSize: 32,
-                                fontWeight: FontWeight.w700,
-                                fontFeatures: [FontFeature.tabularFigures()],
-                              ),
+                              style: StyleConstants.black32w700Style,
                               maxLines: 1,
                             ),
                             SizedBox(height: 23),
@@ -454,11 +423,7 @@ class _LogRetrievalLoadingScreenState extends State<LogRetrievalLoadingScreen> {
         child: Center(
           child: Text(
             StringConstants.cancel,
-            style: GoogleFonts.inter(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: ColorConstants.white,
-            ),
+            style: StyleConstants.white16w600Style,
           ),
         ),
       ),

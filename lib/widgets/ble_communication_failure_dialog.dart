@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
+import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
 /// Shown when the panel does not respond after repeated network-flow retries.
 class BleCommunicationFailureDialog {
   BleCommunicationFailureDialog._();
@@ -25,19 +25,11 @@ class BleCommunicationFailureDialog {
           ),
           title: Text(
             title,
-            style: GoogleFonts.inter(
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-              color: ColorConstants.textDark,
-            ),
+            style: StyleConstants.textDark18w700Style,
           ),
           content: Text(
             message,
-            style: GoogleFonts.inter(
-              fontSize: 14,
-              fontWeight: FontWeight.w400,
-              color: ColorConstants.textMuted,
-            ),
+            style: StyleConstants.textMuted14w400Style,
           ),
           actions: [
             SizedBox(
@@ -52,11 +44,7 @@ class BleCommunicationFailureDialog {
                 onPressed: () => Navigator.of(dialogContext).pop(),
                 child: Text(
                   StringConstants.ok,
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: ColorConstants.white,
-                  ),
+                  style: StyleConstants.white14w600Style,
                 ),
               ),
             ),

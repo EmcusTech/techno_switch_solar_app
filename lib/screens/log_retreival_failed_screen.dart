@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 
+import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
 class LogRetrievalFailedScreen extends StatefulWidget {
   const LogRetrievalFailedScreen({super.key});
 
@@ -60,10 +60,7 @@ class _LogRetrievalFailedScreenState extends State<LogRetrievalFailedScreen> {
                         SizedBox(width: 8),
                         Text(
                           StringConstants.logRetrievalFailed,
-                          style: GoogleFonts.inter(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w700,
-                          ),
+                          style: StyleConstants.black20w700Style,
                         ),
                       ],
                     ),
@@ -99,11 +96,7 @@ class _LogRetrievalFailedScreenState extends State<LogRetrievalFailedScreen> {
                 padding: const EdgeInsets.only(top: 45),
                 child: Text(
                   'Event Log Retrieval\nFailed!',
-                  style: GoogleFonts.inter(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w600,
-                    color: ColorConstants.primary,
-                  ),
+                  style: StyleConstants.primary24w600Style,
                   textAlign: TextAlign.center,
                 ),
               ),
@@ -130,7 +123,7 @@ class _LogRetrievalFailedScreenState extends State<LogRetrievalFailedScreen> {
                   SizedBox(height: 120),
                   Text(
                     StringConstants.unableToConnectToThePanelPleaseCheckYourConnectionAndTryAgain,
-                    style: GoogleFonts.inter(fontSize: 14),
+                    style: StyleConstants.black14w400Style,
                     textAlign: TextAlign.center,
                   ),
                 ],

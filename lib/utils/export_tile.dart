@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 
+import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
 class ExportTile extends StatelessWidget {
   final String iconPath;
   final String title;
@@ -29,11 +28,7 @@ class ExportTile extends StatelessWidget {
             Expanded(
               child: Text(
                 title,
-                style: GoogleFonts.inter(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: ColorConstants.textBodyDark,
-                ),
+                style: StyleConstants.textBodyDark16w600Style,
               ),
             ),
           ],

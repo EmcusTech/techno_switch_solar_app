@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
+import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
 /// First step: user picks Sounders or Relays for test configuration.
 class TestModeChoiceBottomSheet extends StatelessWidget {
   final VoidCallback onSounders;
@@ -77,11 +77,7 @@ class TestModeChoiceBottomSheet extends StatelessWidget {
                         alignment: Alignment.centerLeft,
                         child: Text(
                           StringConstants.testMode,
-                          style: GoogleFonts.inter(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w700,
-                            color: ColorConstants.textDark,
-                          ),
+                          style: StyleConstants.textDark20w700Style,
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -89,11 +85,7 @@ class TestModeChoiceBottomSheet extends StatelessWidget {
                         alignment: Alignment.centerLeft,
                         child: Text(
                           StringConstants.chooseWhatToTest,
-                          style: GoogleFonts.inter(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                            color: ColorConstants.textSubtle,
-                          ),
+                          style: StyleConstants.textSubtle13w500Style,
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -128,11 +120,7 @@ class TestModeChoiceBottomSheet extends StatelessWidget {
               Expanded(
                 child: Text(
                   title,
-                  style: GoogleFonts.inter(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    color: ColorConstants.textDark,
-                  ),
+                  style: StyleConstants.textDark15w600Style,
                 ),
               ),
               Icon(Icons.chevron_right, color: Colors.grey.shade600),

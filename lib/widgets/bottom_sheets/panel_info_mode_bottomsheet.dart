@@ -3,11 +3,12 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/controllers/peripheral/panel_info_controller.dart';
 import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
+
+import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
 
 class PanelInfoBottomSheet extends StatefulWidget {
   final String deviceId;
@@ -147,7 +148,8 @@ class PanelInfoBottomSheetState extends State<PanelInfoBottomSheet> {
                             left: 24,
                             right: 24,
                             top: 16,
-                            bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+                            bottom:
+                                MediaQuery.of(context).viewInsets.bottom + 16,
                           ),
                           child: Column(
                             children: [
@@ -218,12 +220,36 @@ class PanelInfoBottomSheetState extends State<PanelInfoBottomSheet> {
             ),
           ],
         ),
-        _numberField(StringConstants.year, controller.config.yearController, maxLength: 4),
-        _numberField(StringConstants.month, controller.config.monthController, maxLength: 2),
-        _numberField(StringConstants.day, controller.config.dayController, maxLength: 2),
-        _numberField(StringConstants.hour, controller.config.hourController, maxLength: 2),
-        _numberField(StringConstants.minute, controller.config.minuteController, maxLength: 2),
-        _numberField(StringConstants.second, controller.config.secondController, maxLength: 2),
+        _numberField(
+          StringConstants.year,
+          controller.config.yearController,
+          maxLength: 4,
+        ),
+        _numberField(
+          StringConstants.month,
+          controller.config.monthController,
+          maxLength: 2,
+        ),
+        _numberField(
+          StringConstants.day,
+          controller.config.dayController,
+          maxLength: 2,
+        ),
+        _numberField(
+          StringConstants.hour,
+          controller.config.hourController,
+          maxLength: 2,
+        ),
+        _numberField(
+          StringConstants.minute,
+          controller.config.minuteController,
+          maxLength: 2,
+        ),
+        _numberField(
+          StringConstants.second,
+          controller.config.secondController,
+          maxLength: 2,
+        ),
       ],
     );
   }
@@ -232,7 +258,11 @@ class PanelInfoBottomSheetState extends State<PanelInfoBottomSheet> {
     return _tileWrapper(
       title: StringConstants.eventReminder,
       children: [
-        _numberField(StringConstants.delayS, controller.config.delayController, maxLength: 3),
+        _numberField(
+          StringConstants.delayS,
+          controller.config.delayController,
+          maxLength: 3,
+        ),
       ],
     );
   }
@@ -248,9 +278,9 @@ class PanelInfoBottomSheetState extends State<PanelInfoBottomSheet> {
           border: Border.all(color: ColorConstants.borderMuted),
         ),
         child: Theme(
-          data: Theme.of(context).copyWith(
-            dividerColor: ColorConstants.transparent,
-          ),
+          data: Theme.of(
+            context,
+          ).copyWith(dividerColor: ColorConstants.transparent),
           child: ExpansionTile(
             onExpansionChanged: (expanded) {
               setState(() {
@@ -259,14 +289,7 @@ class PanelInfoBottomSheetState extends State<PanelInfoBottomSheet> {
             },
             tilePadding: const EdgeInsets.symmetric(horizontal: 16),
             childrenPadding: const EdgeInsets.symmetric(horizontal: 16),
-            title: Text(
-              title,
-              style: GoogleFonts.inter(
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
-                color: ColorConstants.textDark,
-              ),
-            ),
+            title: Text(title, style: StyleConstants.textDark15w600Style),
             children: [...children, const SizedBox(height: 14)],
           ),
         ),
@@ -308,8 +331,7 @@ class PanelInfoBottomSheetState extends State<PanelInfoBottomSheet> {
                         padding: const EdgeInsets.only(top: 4),
                         child: Text(
                           '$currentLength / $max',
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
+                          style: StyleConstants.primary12w400Style.copyWith(
                             color:
                                 currentLength == max
                                     ? ColorConstants.primary
@@ -360,10 +382,7 @@ class PanelInfoBottomSheetState extends State<PanelInfoBottomSheet> {
   }
 
   Widget _label(String text) {
-    return Text(
-      text,
-      style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600),
-    );
+    return Text(text, style: StyleConstants.black13w600Style);
   }
 
   InputDecoration _inputDecoration() {
@@ -403,10 +422,7 @@ class PanelInfoBottomSheetState extends State<PanelInfoBottomSheet> {
   Widget _title(String text) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
-      child: Text(
-        text,
-        style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.w700),
-      ),
+      child: Text(text, style: StyleConstants.black20w700Style),
     );
   }
 
@@ -427,7 +443,7 @@ class PanelInfoBottomSheetState extends State<PanelInfoBottomSheet> {
         },
         child: Text(
           StringConstants.download,
-          style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+          style: StyleConstants.primary16w600Style,
         ),
       ),
     );
@@ -453,10 +469,7 @@ class PanelInfoBottomSheetState extends State<PanelInfoBottomSheet> {
                 : null,
         child: Text(
           StringConstants.apply,
-          style: GoogleFonts.inter(
-            fontWeight: FontWeight.w600,
-            color: ColorConstants.white,
-          ),
+          style: StyleConstants.white14w600Style,
         ),
       ),
     );

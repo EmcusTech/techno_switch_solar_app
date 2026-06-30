@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
@@ -533,7 +532,7 @@ Future<void> showPanelAccessPasswordPopup({
                                   child: Text(
                                     dialogTitle,
                                     key: ValueKey<String>(dialogTitle),
-                                    style: StyleConstants.textMuted20w600Style,
+                                    style: StyleConstants.textDark20w700Style,
                                     textAlign: TextAlign.center,
                                   ),
                                 ),

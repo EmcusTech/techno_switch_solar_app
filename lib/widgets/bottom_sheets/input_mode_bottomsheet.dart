@@ -3,12 +3,13 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/controllers/peripheral/input_mode_controller.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/widgets/dropdown.dart';
 import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
+
+import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
 
 class InputModeBottomSheet extends StatefulWidget {
   final String deviceId;
@@ -138,7 +139,9 @@ class InputModeBottomSheetState extends State<InputModeBottomSheet> {
                   clipBehavior: Clip.hardEdge,
                   decoration: const BoxDecoration(
                     color: ColorConstants.white,
-                    borderRadius: BorderRadius.vertical(top: Radius.circular(50)),
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(50),
+                    ),
                   ),
                   child: Stack(
                     children: [
@@ -215,26 +218,12 @@ class InputModeBottomSheetState extends State<InputModeBottomSheet> {
   Widget _title(String text) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
-      child: Text(
-        text,
-        style: GoogleFonts.inter(
-          fontSize: 20,
-          fontWeight: FontWeight.w700,
-          color: ColorConstants.textDark,
-        ),
-      ),
+      child: Text(text, style: StyleConstants.textDark20w700Style),
     );
   }
 
   Widget _label(String text) {
-    return Text(
-      text,
-      style: GoogleFonts.inter(
-        fontSize: 13,
-        fontWeight: FontWeight.w600,
-        color: ColorConstants.textDark,
-      ),
-    );
+    return Text(text, style: StyleConstants.textDark13w600Style);
   }
 
   Widget _readOnlyField(String label, String value) {
@@ -254,14 +243,7 @@ class InputModeBottomSheetState extends State<InputModeBottomSheet> {
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: ColorConstants.borderLight),
             ),
-            child: Text(
-              value,
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: ColorConstants.textDark,
-              ),
-            ),
+            child: Text(value, style: StyleConstants.textDark14w500Style),
           ),
         ],
       ),
@@ -291,8 +273,7 @@ class InputModeBottomSheetState extends State<InputModeBottomSheet> {
                 padding: const EdgeInsets.only(top: 4),
                 child: Text(
                   "$currentLength / 21",
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
+                  style: StyleConstants.primary12w400Style.copyWith(
                     color:
                         currentLength == 21
                             ? ColorConstants.primary
@@ -302,22 +283,16 @@ class InputModeBottomSheetState extends State<InputModeBottomSheet> {
               );
             },
             inputFormatters: [LengthLimitingTextInputFormatter(21)],
-            decoration: _inputDecoration(hasError: controller.inputTextError != null),
-            style: GoogleFonts.inter(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: ColorConstants.textDark,
+            decoration: _inputDecoration(
+              hasError: controller.inputTextError != null,
             ),
+            style: StyleConstants.textDark14w500Style,
           ),
           if (controller.inputTextError != null) ...[
             const SizedBox(height: 4),
             Text(
               controller.inputTextError!,
-              style: GoogleFonts.inter(
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-                color: ColorConstants.primary,
-              ),
+              style: StyleConstants.primary12w500Style,
             ),
           ],
         ],
@@ -365,7 +340,7 @@ class InputModeBottomSheetState extends State<InputModeBottomSheet> {
         },
         child: Text(
           StringConstants.download,
-          style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600),
+          style: StyleConstants.primary16w600Style,
         ),
       ),
     );
@@ -392,11 +367,7 @@ class InputModeBottomSheetState extends State<InputModeBottomSheet> {
                 : null,
         child: Text(
           StringConstants.apply,
-          style: GoogleFonts.inter(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: ColorConstants.white,
-          ),
+          style: StyleConstants.white16w600Style,
         ),
       ),
     );

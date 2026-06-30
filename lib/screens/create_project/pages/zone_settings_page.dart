@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 
+import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
 class ZoneSettingsPage extends StatefulWidget {
   final String? expandedZone;
   final Map<String, String> zoneTexts;
@@ -43,11 +43,7 @@ class _ZoneSettingsPageState extends State<ZoneSettingsPage> {
           padding: const EdgeInsets.symmetric(horizontal: 19),
           child: Text(
             StringConstants.zoneSettings,
-            style: GoogleFonts.inter(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: ColorConstants.textBodyDark,
-            ),
+            style: StyleConstants.textBodyDark18w600Style,
           ),
         ),
         SizedBox(height: 32),
@@ -95,11 +91,7 @@ class _ZoneSettingsPageState extends State<ZoneSettingsPage> {
                 children: [
                   Text(
                     zoneName,
-                    style: GoogleFonts.inter(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: ColorConstants.textBodyDark,
-                    ),
+                    style: StyleConstants.textBodyDark14w600Style,
                   ),
                   Spacer(),
                   Icon(
@@ -122,11 +114,7 @@ class _ZoneSettingsPageState extends State<ZoneSettingsPage> {
                     children: [
                       Text(
                         StringConstants.zoneText,
-                        style: GoogleFonts.inter(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: ColorConstants.textSecondary,
-                        ),
+                        style: StyleConstants.textSecondary13w600Style,
                       ),
                       SizedBox(height: 8),
                       Container(
@@ -158,11 +146,7 @@ class _ZoneSettingsPageState extends State<ZoneSettingsPage> {
                             contentPadding: EdgeInsets.all(12),
                             border: InputBorder.none,
                             hintText: StringConstants.enterZoneText,
-                            hintStyle: GoogleFonts.inter(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w400,
-                              color: ColorConstants.divider,
-                            ),
+                            hintStyle: StyleConstants.divider13w400Style,
                           ),
                         ),
                       ),
@@ -252,11 +236,7 @@ class _ZoneSettingsPageState extends State<ZoneSettingsPage> {
       children: [
         Text(
           label,
-          style: GoogleFonts.inter(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: ColorConstants.textSecondary,
-          ),
+          style: StyleConstants.textSecondary13w600Style,
         ),
         Spacer(),
         GestureDetector(
@@ -266,11 +246,7 @@ class _ZoneSettingsPageState extends State<ZoneSettingsPage> {
             children: [
               Text(
                 value,
-                style: GoogleFonts.inter(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w400,
-                  color: ColorConstants.textMuted,
-                ),
+                style: StyleConstants.textMuted13w400Style,
               ),
               SizedBox(width: 2),
               SvgPicture.asset(AssetConstants.dropDownRedIcon),
@@ -298,11 +274,7 @@ class _ZoneSettingsPageState extends State<ZoneSettingsPage> {
           ),
           title: Text(
             label,
-            style: GoogleFonts.inter(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: ColorConstants.textBodyDark,
-            ),
+            style: StyleConstants.textBodyDark18w600Style,
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -311,11 +283,7 @@ class _ZoneSettingsPageState extends State<ZoneSettingsPage> {
                   return RadioListTile<String>(
                     title: Text(
                       option,
-                      style: GoogleFonts.inter(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w400,
-                        color: ColorConstants.textDark,
-                      ),
+                      style: StyleConstants.textDark14w400Style,
                     ),
                     value: option,
                     groupValue: selectedValue,
@@ -335,11 +303,7 @@ class _ZoneSettingsPageState extends State<ZoneSettingsPage> {
               },
               child: Text(
                 StringConstants.cancel,
-                style: GoogleFonts.inter(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: ColorConstants.textSecondary,
-                ),
+                style: StyleConstants.textSecondary14w600Style,
               ),
             ),
           ],

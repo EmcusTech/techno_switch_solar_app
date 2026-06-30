@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 
+import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
 class ProjectSummaryPage extends StatefulWidget {
   final String enabled;
   final String actuatorType;
@@ -74,12 +74,7 @@ class _ProjectSummaryPageState extends State<ProjectSummaryPage> {
                             SizedBox(height: 36),
                             Text(
                               StringConstants.extinguishingOUT,
-                              style: GoogleFonts.inter(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w800,
-                                color: ColorConstants.textBodyDark,
-                                letterSpacing: 4.0,
-                              ),
+                              style: StyleConstants.textBodyDark18w800Style,
                             ),
                             SizedBox(height: 31),
 
@@ -194,11 +189,7 @@ class _ProjectSummaryPageState extends State<ProjectSummaryPage> {
             ),
             child: Text(
               StringConstants.uploadToPanel,
-              style: GoogleFonts.inter(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: ColorConstants.white,
-              ),
+              style: StyleConstants.white16w700Style,
             ),
           ),
         ),
@@ -214,11 +205,7 @@ class _ProjectSummaryPageState extends State<ProjectSummaryPage> {
           flex: 3,
           child: Text(
             label,
-            style: GoogleFonts.inter(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: ColorConstants.textDark,
-            ),
+            style: StyleConstants.textDark13w600Style,
           ),
         ),
         Expanded(
@@ -230,11 +217,7 @@ class _ProjectSummaryPageState extends State<ProjectSummaryPage> {
               children: [
                 Text(
                   value,
-                  style: GoogleFonts.inter(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w400,
-                    color: ColorConstants.criticalRed,
-                  ),
+                  style: StyleConstants.criticalRed13w400Style,
                 ),
                 SizedBox(width: 2),
                 SvgPicture.asset(AssetConstants.dropDownRedIcon),
@@ -262,11 +245,7 @@ class _ProjectSummaryPageState extends State<ProjectSummaryPage> {
           ),
           title: Text(
             label,
-            style: GoogleFonts.inter(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: ColorConstants.textBodyDark,
-            ),
+            style: StyleConstants.textBodyDark18w600Style,
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -275,11 +254,7 @@ class _ProjectSummaryPageState extends State<ProjectSummaryPage> {
                   return RadioListTile<String>(
                     title: Text(
                       option,
-                      style: GoogleFonts.inter(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w400,
-                        color: ColorConstants.textDark,
-                      ),
+                      style: StyleConstants.textDark14w400Style,
                     ),
                     value: option,
                     groupValue: selectedValue,
@@ -302,11 +277,7 @@ class _ProjectSummaryPageState extends State<ProjectSummaryPage> {
               },
               child: Text(
                 StringConstants.cancel,
-                style: GoogleFonts.inter(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: ColorConstants.textSecondary,
-                ),
+                style: StyleConstants.textSecondary14w600Style,
               ),
             ),
           ],
@@ -325,19 +296,11 @@ class _ProjectSummaryPageState extends State<ProjectSummaryPage> {
           ),
           title: Text(
             StringConstants.uploadToPanel,
-            style: GoogleFonts.inter(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: ColorConstants.textBodyDark,
-            ),
+            style: StyleConstants.textBodyDark18w600Style,
           ),
           content: Text(
             StringConstants.areYouSureYouWantToUploadThisConfigurationToThePanel,
-            style: GoogleFonts.inter(
-              fontSize: 14,
-              fontWeight: FontWeight.w400,
-              color: ColorConstants.textSecondary,
-            ),
+            style: StyleConstants.textSecondary14w400Style,
           ),
           actions: [
             TextButton(
@@ -346,11 +309,7 @@ class _ProjectSummaryPageState extends State<ProjectSummaryPage> {
               },
               child: Text(
                 StringConstants.cancel,
-                style: GoogleFonts.inter(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: ColorConstants.textSecondary,
-                ),
+                style: StyleConstants.textSecondary14w600Style,
               ),
             ),
             ElevatedButton(
@@ -367,11 +326,7 @@ class _ProjectSummaryPageState extends State<ProjectSummaryPage> {
               ),
               child: Text(
                 'Upload',
-                style: GoogleFonts.inter(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: ColorConstants.white,
-                ),
+                style: StyleConstants.white14w600Style,
               ),
             ),
           ],
@@ -394,21 +349,13 @@ class _ProjectSummaryPageState extends State<ProjectSummaryPage> {
               SizedBox(width: 8),
               Text(
                 StringConstants.uploadSuccessful,
-                style: GoogleFonts.inter(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: ColorConstants.textBodyDark,
-                ),
+                style: StyleConstants.textBodyDark18w600Style,
               ),
             ],
           ),
           content: Text(
             StringConstants.configurationHasBeenSuccessfullyUploadedToThePanel,
-            style: GoogleFonts.inter(
-              fontSize: 14,
-              fontWeight: FontWeight.w400,
-              color: ColorConstants.textSecondary,
-            ),
+            style: StyleConstants.textSecondary14w400Style,
           ),
           actions: [
             ElevatedButton(
@@ -424,11 +371,7 @@ class _ProjectSummaryPageState extends State<ProjectSummaryPage> {
               ),
               child: Text(
                 StringConstants.ok,
-                style: GoogleFonts.inter(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: ColorConstants.white,
-                ),
+                style: StyleConstants.white14w600Style,
               ),
             ),
           ],

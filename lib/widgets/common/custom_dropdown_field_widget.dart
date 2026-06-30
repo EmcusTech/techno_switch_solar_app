@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
+import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
 /// Reusable dropdown field widget with consistent styling
 class CustomDropdownFieldWidget extends StatelessWidget {
   final String label;
@@ -26,11 +26,7 @@ class CustomDropdownFieldWidget extends StatelessWidget {
       children: [
         Text(
           label,
-          style: GoogleFonts.inter(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: ColorConstants.textSecondary,
-          ),
+          style: StyleConstants.textSecondary13w600Style,
         ),
         Spacer(),
         GestureDetector(
@@ -39,11 +35,7 @@ class CustomDropdownFieldWidget extends StatelessWidget {
             children: [
               Text(
                 value,
-                style: GoogleFonts.inter(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w400,
-                  color: ColorConstants.textDark,
-                ),
+                style: StyleConstants.textDark13w400Style,
               ),
               SizedBox(width: 2),
               SvgPicture.asset(AssetConstants.dropDownRedIcon),
@@ -66,11 +58,7 @@ class CustomDropdownFieldWidget extends StatelessWidget {
           ),
           title: Text(
             label,
-            style: GoogleFonts.inter(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: ColorConstants.textBodyDark,
-            ),
+            style: StyleConstants.textBodyDark18w600Style,
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -79,11 +67,7 @@ class CustomDropdownFieldWidget extends StatelessWidget {
                   return RadioListTile<String>(
                     title: Text(
                       option,
-                      style: GoogleFonts.inter(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w400,
-                        color: ColorConstants.textDark,
-                      ),
+                      style: StyleConstants.textDark14w400Style,
                     ),
                     value: option,
                     groupValue: selectedValue,
@@ -103,11 +87,7 @@ class CustomDropdownFieldWidget extends StatelessWidget {
               },
               child: Text(
                 StringConstants.cancel,
-                style: GoogleFonts.inter(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: ColorConstants.textSecondary,
-                ),
+                style: StyleConstants.textSecondary14w600Style,
               ),
             ),
           ],

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 
+import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
 class InputPage extends StatefulWidget {
   final String inputText;
   final String inverted;
@@ -53,11 +53,7 @@ class _InputPageState extends State<InputPage> {
           padding: const EdgeInsets.only(left: 19),
           child: Text(
             StringConstants.inputModeConfiguration,
-            style: GoogleFonts.inter(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: ColorConstants.textBodyDark,
-            ),
+            style: StyleConstants.textBodyDark18w600Style,
           ),
         ),
         SizedBox(height: 29),
@@ -77,11 +73,7 @@ class _InputPageState extends State<InputPage> {
                     children: [
                       Text(
                         StringConstants.inputText,
-                        style: GoogleFonts.inter(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: ColorConstants.textSecondary,
-                        ),
+                        style: StyleConstants.textSecondary13w600Style,
                       ),
                       SizedBox(height: 8),
                       Container(
@@ -102,11 +94,7 @@ class _InputPageState extends State<InputPage> {
                             contentPadding: EdgeInsets.all(12),
                             border: InputBorder.none,
                             hintText: StringConstants.enterInputText,
-                            hintStyle: GoogleFonts.inter(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w400,
-                              color: ColorConstants.divider,
-                            ),
+                            hintStyle: StyleConstants.divider13w400Style,
                           ),
                         ),
                       ),
@@ -137,11 +125,7 @@ class _InputPageState extends State<InputPage> {
                     children: [
                       Text(
                         StringConstants.programmingGroup,
-                        style: GoogleFonts.inter(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: ColorConstants.textBodyDark,
-                        ),
+                        style: StyleConstants.textBodyDark14w600Style,
                       ),
                       SizedBox(height: 20),
                       _buildDropdownField('Group', widget.group, [
@@ -179,11 +163,7 @@ class _InputPageState extends State<InputPage> {
           children: [
             Text(
               label,
-              style: GoogleFonts.inter(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: ColorConstants.textSecondary,
-              ),
+              style: StyleConstants.textSecondary13w600Style,
             ),
             Spacer(),
             GestureDetector(
@@ -192,11 +172,7 @@ class _InputPageState extends State<InputPage> {
                 children: [
                   Text(
                     value,
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w400,
-                      color: ColorConstants.textDark,
-                    ),
+                    style: StyleConstants.textDark13w400Style,
                   ),
                   SizedBox(width: 2),
                   SvgPicture.asset(AssetConstants.dropDownRedIcon),
@@ -225,11 +201,7 @@ class _InputPageState extends State<InputPage> {
           ),
           title: Text(
             label,
-            style: GoogleFonts.inter(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: ColorConstants.textBodyDark,
-            ),
+            style: StyleConstants.textBodyDark18w600Style,
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -238,11 +210,7 @@ class _InputPageState extends State<InputPage> {
                   return RadioListTile<String>(
                     title: Text(
                       option,
-                      style: GoogleFonts.inter(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w400,
-                        color: ColorConstants.textDark,
-                      ),
+                      style: StyleConstants.textDark14w400Style,
                     ),
                     value: option,
                     groupValue: selectedValue,
@@ -262,11 +230,7 @@ class _InputPageState extends State<InputPage> {
               },
               child: Text(
                 StringConstants.cancel,
-                style: GoogleFonts.inter(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: ColorConstants.textSecondary,
-                ),
+                style: StyleConstants.textSecondary14w600Style,
               ),
             ),
           ],

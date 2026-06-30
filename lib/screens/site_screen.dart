@@ -5,7 +5,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/models/panel_model.dart';
 import 'package:techno_switch_solar_app/models/site_model.dart';
 import 'package:techno_switch_solar_app/screens/site_detail_screen.dart';
@@ -20,6 +19,7 @@ import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/ble_name_utils.dart';
 import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 
+import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
 class SiteScreen extends StatefulWidget {
   final SiteModel site;
   final SiteWithLogCount siteWithLogCount;
@@ -126,11 +126,7 @@ class _SiteScreenState extends State<SiteScreen> {
                 const SizedBox(height: 16),
                 Text(
                   'Delete site?',
-                  style: GoogleFonts.inter(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                    color: ColorConstants.textDark,
-                  ),
+                  style: StyleConstants.textDark20w700Style,
                   textAlign: TextAlign.center,
                 ),
 
@@ -138,12 +134,7 @@ class _SiteScreenState extends State<SiteScreen> {
                 Text(
                   'This will remove "${widget.site.siteName}".\n'
                   'All logs will be deleted and panels will be unassigned.',
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w400,
-                    color: ColorConstants.textMuted,
-                    height: 1.4,
-                  ),
+                  style: StyleConstants.textMuted14w400Style,
                   textAlign: TextAlign.center,
                 ),
 
@@ -164,11 +155,7 @@ class _SiteScreenState extends State<SiteScreen> {
                         onPressed: () => Navigator.of(dialogContext).pop(false),
                         child: Text(
                           'Cancel',
-                          style: GoogleFonts.inter(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color: ColorConstants.textGray,
-                          ),
+                          style: StyleConstants.textGray14w500Style,
                         ),
                       ),
                     ),
@@ -185,11 +172,7 @@ class _SiteScreenState extends State<SiteScreen> {
                         onPressed: () => Navigator.of(dialogContext).pop(true),
                         child: Text(
                           'Delete',
-                          style: GoogleFonts.inter(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: ColorConstants.white,
-                          ),
+                          style: StyleConstants.white14w600Style,
                         ),
                       ),
                     ),
@@ -286,11 +269,7 @@ class _SiteScreenState extends State<SiteScreen> {
                 const SizedBox(height: 16),
                 Text(
                   'Remove panel?',
-                  style: GoogleFonts.inter(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                    color: ColorConstants.textDark,
-                  ),
+                  style: StyleConstants.textDark20w700Style,
                   textAlign: TextAlign.center,
                 ),
 
@@ -298,12 +277,7 @@ class _SiteScreenState extends State<SiteScreen> {
                 Text(
                   'Remove panel "${panel.panelName}" (${panel.panelId}) '
                   'from this site?',
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w400,
-                    color: ColorConstants.textMuted,
-                    height: 1.4,
-                  ),
+                  style: StyleConstants.textMuted14w400Style,
                   textAlign: TextAlign.center,
                 ),
 
@@ -324,11 +298,7 @@ class _SiteScreenState extends State<SiteScreen> {
                         onPressed: () => Navigator.of(dialogContext).pop(false),
                         child: Text(
                           'Cancel',
-                          style: GoogleFonts.inter(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color: ColorConstants.textGray,
-                          ),
+                          style: StyleConstants.textGray14w500Style,
                         ),
                       ),
                     ),
@@ -345,11 +315,7 @@ class _SiteScreenState extends State<SiteScreen> {
                         onPressed: () => Navigator.of(dialogContext).pop(true),
                         child: Text(
                           'Remove',
-                          style: GoogleFonts.inter(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: ColorConstants.white,
-                          ),
+                          style: StyleConstants.white14w600Style,
                         ),
                       ),
                     ),
@@ -416,11 +382,7 @@ class _SiteScreenState extends State<SiteScreen> {
         padding: const EdgeInsets.only(top: 4),
         child: Text(
           'No logs yet',
-          style: GoogleFonts.inter(
-            fontSize: 11,
-            fontWeight: FontWeight.w400,
-            color: ColorConstants.textMuted,
-          ),
+          style: StyleConstants.textMuted11w400Style,
         ),
       );
     }
@@ -431,21 +393,13 @@ class _SiteScreenState extends State<SiteScreen> {
         const SizedBox(width: 4),
         Text(
           '$lastLogCount log${lastLogCount == 1 ? '' : 's'}',
-          style: GoogleFonts.inter(
-            fontSize: 11,
-            fontWeight: FontWeight.w500,
-            color: ColorConstants.success,
-          ),
+          style: StyleConstants.success11w500Style,
         ),
         if (lastLogDate != null) ...[
           const SizedBox(width: 8),
           Text(
             'Last: ${DateFormat('MMM d').format(lastLogDate)}',
-            style: GoogleFonts.inter(
-              fontSize: 11,
-              fontWeight: FontWeight.w400,
-              color: ColorConstants.textMuted,
-            ),
+            style: StyleConstants.textMuted11w400Style,
           ),
         ],
       ],
@@ -516,10 +470,7 @@ class _SiteScreenState extends State<SiteScreen> {
               SizedBox(width: 12),
               Text(
                 'Site Information',
-                style: GoogleFonts.inter(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                ),
+                style: StyleConstants.black20w700Style,
               ),
             ],
           ),
@@ -563,20 +514,13 @@ class _SiteScreenState extends State<SiteScreen> {
                           SizedBox(width: 8),
                           Text(
                             widget.site.siteName,
-                            style: GoogleFonts.inter(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: ColorConstants.textBodyDark,
-                            ),
+                            style: StyleConstants.textBodyDark20boldStyle,
                           ),
                         ],
                       ),
                       Text(
                         'Site Information',
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
-                          color: ColorConstants.textNeutral,
-                        ),
+                        style: StyleConstants.textNeutral12w400Style,
                       ),
                     ],
                   ),
@@ -624,20 +568,13 @@ class _SiteScreenState extends State<SiteScreen> {
                         children: [
                           Text(
                             'Created',
-                            style: GoogleFonts.inter(
-                              fontSize: 12,
-                              color: ColorConstants.textNeutral,
-                            ),
+                            style: StyleConstants.textNeutral12w400Style,
                           ),
                           Text(
                             DateFormat(
                               'MMM d, y',
                             ).format(widget.siteWithLogCount.site.createdAt),
-                            style: GoogleFonts.inter(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w400,
-                              color: ColorConstants.textNeutral,
-                            ),
+                            style: StyleConstants.textNeutral12w400Style,
                           ),
                         ],
                       ),
@@ -662,11 +599,7 @@ class _SiteScreenState extends State<SiteScreen> {
                         SizedBox(width: 8),
                         Text(
                           'View Site Details',
-                          style: GoogleFonts.inter(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color: ColorConstants.white,
-                          ),
+                          style: StyleConstants.white14w500Style,
                         ),
                       ],
                     ),
@@ -688,11 +621,7 @@ class _SiteScreenState extends State<SiteScreen> {
         children: [
           Text(
             'Panels',
-            style: GoogleFonts.inter(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: ColorConstants.textDark,
-            ),
+            style: StyleConstants.textDark14w500Style,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
@@ -738,20 +667,12 @@ class _SiteScreenState extends State<SiteScreen> {
             SizedBox(height: 16),
             Text(
               'No Panels Yet',
-              style: GoogleFonts.inter(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: ColorConstants.textDark,
-              ),
+              style: StyleConstants.textDark16w600Style,
             ),
             SizedBox(height: 8),
             Text(
               'Connect to a panel to associate it with this site',
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                fontWeight: FontWeight.w400,
-                color: ColorConstants.textGray,
-              ),
+              style: StyleConstants.textGray14w400Style,
               textAlign: TextAlign.center,
             ),
           ],
@@ -918,11 +839,7 @@ class _PanelListItemWidgetState extends State<_PanelListItemWidget>
                                 panel.panelName,
                               )
                               : panel.panelName,
-                          style: GoogleFonts.inter(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                            color: ColorConstants.textDark,
-                          ),
+                          style: StyleConstants.textDark14w700Style,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -932,11 +849,7 @@ class _PanelListItemWidgetState extends State<_PanelListItemWidget>
                                 panel.panelName,
                               )
                               : panel.panelId,
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w400,
-                            color: ColorConstants.textMuted,
-                          ),
+                          style: StyleConstants.textMuted12w400Style,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),

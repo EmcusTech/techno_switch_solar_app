@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
+import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
 /// Decision dialogs matching the app pattern (rounded [Dialog], icon circle, two actions).
 Future<T?> showAppStyledTwoActionDialog<T>({
   required BuildContext context,
@@ -43,21 +43,13 @@ Future<T?> showAppStyledTwoActionDialog<T>({
               const SizedBox(height: 16),
               Text(
                 title,
-                style: GoogleFonts.inter(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: ColorConstants.textDark,
-                ),
+                style: StyleConstants.textDark18w700Style,
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 8),
               Text(
                 message,
-                style: GoogleFonts.inter(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w400,
-                  color: ColorConstants.textGray,
-                ),
+                style: StyleConstants.textGray14w400Style,
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 20),
@@ -80,11 +72,7 @@ Future<T?> showAppStyledTwoActionDialog<T>({
                         child: Center(
                           child: Text(
                             leadingActionLabel,
-                            style: GoogleFonts.inter(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: ColorConstants.textGray,
-                            ),
+                            style: StyleConstants.textGray16w600Style,
                           ),
                         ),
                       ),
@@ -113,11 +101,7 @@ Future<T?> showAppStyledTwoActionDialog<T>({
                         child: Center(
                           child: Text(
                             trailingActionLabel,
-                            style: GoogleFonts.inter(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: ColorConstants.white,
-                            ),
+                            style: StyleConstants.white16w600Style,
                           ),
                         ),
                       ),
@@ -170,21 +154,13 @@ Future<void> showAppStyledOneActionDialog({
               const SizedBox(height: 16),
               Text(
                 title,
-                style: GoogleFonts.inter(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: ColorConstants.textDark,
-                ),
+                style: StyleConstants.textDark18w700Style,
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 8),
               Text(
                 message,
-                style: GoogleFonts.inter(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w400,
-                  color: ColorConstants.textGray,
-                ),
+                style: StyleConstants.textGray14w400Style,
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 20),
@@ -207,11 +183,7 @@ Future<void> showAppStyledOneActionDialog({
                   child: Center(
                     child: Text(
                       actionLabel,
-                      style: GoogleFonts.inter(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: ColorConstants.white,
-                      ),
+                      style: StyleConstants.white16w600Style,
                     ),
                   ),
                 ),
@@ -334,21 +306,13 @@ class _AppStyledTextInputDialogState extends State<_AppStyledTextInputDialog> {
               const SizedBox(height: 16),
               Text(
                 widget.title,
-                style: GoogleFonts.inter(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: ColorConstants.textDark,
-                ),
+                style: StyleConstants.textDark18w700Style,
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 8),
               Text(
                 widget.message,
-                style: GoogleFonts.inter(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w400,
-                  color: ColorConstants.textGray,
-                ),
+                style: StyleConstants.textGray14w400Style,
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 16),
@@ -392,11 +356,7 @@ class _AppStyledTextInputDialogState extends State<_AppStyledTextInputDialog> {
                         child: Center(
                           child: Text(
                             widget.cancelLabel,
-                            style: GoogleFonts.inter(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: ColorConstants.textGray,
-                            ),
+                            style: StyleConstants.textGray16w600Style,
                           ),
                         ),
                       ),
@@ -424,11 +384,7 @@ class _AppStyledTextInputDialogState extends State<_AppStyledTextInputDialog> {
                         child: Center(
                           child: Text(
                             widget.confirmLabel,
-                            style: GoogleFonts.inter(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: ColorConstants.white,
-                            ),
+                            style: StyleConstants.white16w600Style,
                           ),
                         ),
                       ),

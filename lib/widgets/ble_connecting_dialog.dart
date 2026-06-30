@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
 import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
@@ -9,6 +8,7 @@ import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
+import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
 /// Copy for the shared BLE connecting dialog. Use [afterFirmwareUpgrade] for
 /// post-upgrade reconnect; [standard] matches the default connect flow.
 class BleConnectingDialogMessages {
@@ -212,21 +212,13 @@ class _BleConnectingDialogState extends State<BleConnectingDialog> {
                 const SizedBox(height: 16),
                 Text(
                   title,
-                  style: GoogleFonts.inter(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                    color: ColorConstants.textDark,
-                  ),
+                  style: StyleConstants.textDark20w700Style,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
                 Text(
                   subtitle,
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w400,
-                    color: ColorConstants.textMuted,
-                  ),
+                  style: StyleConstants.textMuted14w400Style,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 16),
@@ -249,11 +241,7 @@ class _BleConnectingDialogState extends State<BleConnectingDialog> {
                       },
                       child: Text(
                         StringConstants.ok,
-                        style: GoogleFonts.inter(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: ColorConstants.white,
-                        ),
+                        style: StyleConstants.white14w600Style,
                       ),
                     ),
                   ),

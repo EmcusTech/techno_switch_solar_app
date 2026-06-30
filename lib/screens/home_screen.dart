@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/screens/create_project/create_project_screen_refactored.dart';
 import 'package:techno_switch_solar_app/screens/scanning_screen.dart';
@@ -18,6 +17,7 @@ import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 
+import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -126,14 +126,8 @@ class _HomeScreenState extends State<HomeScreen> {
             backgroundColor: ColorConstants.primary,
             elevation: 0,
             type: BottomNavigationBarType.fixed,
-            selectedLabelStyle: GoogleFonts.inter(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-            ),
-            unselectedLabelStyle: GoogleFonts.inter(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-            ),
+            selectedLabelStyle: StyleConstants.black12w600Style,
+            unselectedLabelStyle: StyleConstants.black12w500Style,
           ),
         ),
       ),
@@ -307,11 +301,7 @@ class _HomeContentState extends State<_HomeContent> with RouteAware {
               SizedBox(height: 15),
               Text(
                 StringConstants.tapToConnect,
-                style: GoogleFonts.inter(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w400,
-                  color: ColorConstants.textDark,
-                ),
+                style: StyleConstants.textDark14w400Style,
               ),
             ],
           ),
@@ -329,11 +319,7 @@ class _HomeContentState extends State<_HomeContent> with RouteAware {
             alignment: Alignment.centerLeft,
             child: Text(
               StringConstants.quickLinks,
-              style: GoogleFonts.inter(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: ColorConstants.textDark,
-              ),
+              style: StyleConstants.textDark18w700Style,
             ),
           ),
           SizedBox(height: 12),
@@ -431,11 +417,7 @@ class _HomeContentState extends State<_HomeContent> with RouteAware {
         SizedBox(height: 11),
         Text(
           text,
-          style: GoogleFonts.inter(
-            fontSize: 11,
-            fontWeight: FontWeight.w400,
-            color: ColorConstants.textDark,
-          ),
+          style: StyleConstants.textDark11w400Style,
         ),
       ],
     );
@@ -452,20 +434,12 @@ class _HomeContentState extends State<_HomeContent> with RouteAware {
             children: [
               Text(
                 StringConstants.recentSites,
-                style: GoogleFonts.inter(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: ColorConstants.textDark,
-                ),
+                style: StyleConstants.textDark18w700Style,
               ),
               if (_sites.isNotEmpty)
                 Text(
                   StringConstants.viewAll,
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: ColorConstants.textGray.withValues(alpha: 0.2),
-                  ),
+                  style: StyleConstants.textGray14w500Style,
                 ),
             ],
           ),
@@ -515,11 +489,7 @@ class _HomeContentState extends State<_HomeContent> with RouteAware {
             '${DateFormat('MMM d').format(createdAt)}, '
             '${DateFormat('yyyy').format(createdAt)} • '
             '${DateFormat('hh:mm a').format(createdAt)}',
-            style: GoogleFonts.inter(
-              fontSize: 11,
-              fontWeight: FontWeight.w400,
-              color: ColorConstants.textMuted,
-            ),
+            style: StyleConstants.textMuted11w400Style,
           ),
         ],
       ),
@@ -553,11 +523,7 @@ class _HomeContentState extends State<_HomeContent> with RouteAware {
               return Center(
                 child: Text(
                   StringConstants.noSitesYet,
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w400,
-                    color: ColorConstants.textDark,
-                  ),
+                  style: StyleConstants.textDark14w400Style,
                 ),
               );
             }
@@ -608,11 +574,7 @@ class _HomeContentState extends State<_HomeContent> with RouteAware {
                           children: [
                             Text(
                               site.siteName,
-                              style: GoogleFonts.inter(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
-                                color: ColorConstants.textDark,
-                              ),
+                              style: StyleConstants.textDark16w700Style,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),

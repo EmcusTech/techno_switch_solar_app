@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/utils/logger.dart';
 import '../models/log_model.dart';
@@ -14,6 +13,7 @@ import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 
+import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
 class SimpleSiteCreationScreen extends StatefulWidget {
   final List<LogModel> retrievedLogs;
   final String? panelName;
@@ -253,11 +253,7 @@ class _SimpleSiteCreationScreenState extends State<SimpleSiteCreationScreen> {
                         Expanded(
                           child: Text(
                             StringConstants.createSite,
-                            style: GoogleFonts.inter(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w700,
-                              color: ColorConstants.textBodyDark,
-                            ),
+                            style: StyleConstants.textBodyDark20w700Style,
                           ),
                         ),
                       ],
@@ -339,11 +335,8 @@ class _SimpleSiteCreationScreenState extends State<SimpleSiteCreationScreen> {
                                         child: Center(
                                           child: Text(
                                             StringConstants.cancel,
-                                            style: GoogleFonts.inter(
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.w700,
-                                              color:
-                                                  _isLoading
+                                            style: StyleConstants.labelText14w700Style.copyWith(
+                                            color: _isLoading
                                                       ? ColorConstants.labelText
                                                           .withValues(
                                                             alpha: 0.5,
@@ -394,13 +387,7 @@ class _SimpleSiteCreationScreenState extends State<SimpleSiteCreationScreen> {
                                                   )
                                                   : Text(
                                                     StringConstants.createSite,
-                                                    style: GoogleFonts.inter(
-                                                      fontSize: 14,
-                                                      fontWeight:
-                                                          FontWeight.w700,
-                                                      color:
-                                                          ColorConstants.white,
-                                                    ),
+                                                    style: StyleConstants.white14w700Style,
                                                   ),
                                         ),
                                       ),

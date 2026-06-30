@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/utils/ble_name_utils.dart';
@@ -9,6 +8,7 @@ import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 
+import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
 class SettingsScreen extends StatefulWidget {
   final String panelName;
   final String panelVersionNo;
@@ -62,22 +62,18 @@ class _SettingsContentState extends State<_SettingsContent> {
           ),
           title: Text(
             StringConstants.disconnectDevice,
-            style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w700),
+            style: StyleConstants.black18w700Style,
           ),
           content: Text(
             StringConstants.goingBackWillDisconnectTheDeviceAreYouSure,
-            style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w400),
+            style: StyleConstants.black14w400Style,
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(false),
               child: Text(
                 StringConstants.cancel,
-                style: GoogleFonts.inter(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: ColorConstants.textGray,
-                ),
+                style: StyleConstants.textGray14w600Style,
               ),
             ),
             ElevatedButton(
@@ -91,11 +87,7 @@ class _SettingsContentState extends State<_SettingsContent> {
               ),
               child: Text(
                 'Disconnect',
-                style: GoogleFonts.inter(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: ColorConstants.white,
-                ),
+                style: StyleConstants.white14w600Style,
               ),
             ),
           ],
@@ -162,10 +154,7 @@ class _SettingsContentState extends State<_SettingsContent> {
                         SizedBox(width: 8),
                         Text(
                           StringConstants.projectSettings,
-                          style: GoogleFonts.inter(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w700,
-                          ),
+                          style: StyleConstants.black20w700Style,
                         ),
                       ],
                     ),
@@ -212,18 +201,11 @@ class _SettingsContentState extends State<_SettingsContent> {
                 children: [
                   Text(
                     BleNameUtils.getDisplayPrefixFromBleName(widget.panelName),
-                    style: GoogleFonts.inter(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                    ),
+                    style: StyleConstants.black16w700Style,
                   ),
                   Text(
                     BleNameUtils.getDisplayIdFromBleName(widget.panelName),
-                    style: GoogleFonts.inter(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: ColorConstants.textDisabled,
-                    ),
+                    style: StyleConstants.textDisabled14w500Style,
                   ),
                   ValueListenableBuilder(
                     valueListenable: _bleManager.isConnectedNotifier,
@@ -233,21 +215,14 @@ class _SettingsContentState extends State<_SettingsContent> {
                           children: [
                             TextSpan(
                               text: StringConstants.status4,
-                              style: GoogleFonts.inter(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                                color: ColorConstants.textDisabled,
-                              ),
+                              style: StyleConstants.textDisabled14w500Style,
                             ),
                             TextSpan(
                               text: isConnected ? StringConstants.connected : StringConstants.disconnected,
-                              style: GoogleFonts.inter(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                                color:
-                                    isConnected
-                                        ? ColorConstants.success
-                                        : ColorConstants.primary,
+                              style: StyleConstants.primary14w500Style.copyWith(
+                                color: isConnected
+                                    ? ColorConstants.success
+                                    : ColorConstants.primary,
                               ),
                             ),
                           ],
@@ -302,10 +277,7 @@ class _SettingsContentState extends State<_SettingsContent> {
             SizedBox(width: 12),
             Text(
               title,
-              style: GoogleFonts.inter(
-                fontSize: 16,
-                fontWeight: FontWeight.w400,
-              ),
+              style: StyleConstants.black16w400Style,
             ),
             Spacer(),
             Icon(

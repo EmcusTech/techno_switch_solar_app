@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/ble/ble_session_idle_policy.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
@@ -31,6 +30,7 @@ import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 
+import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
 class CreateSiteScreenRefactored extends StatefulWidget {
   const CreateSiteScreenRefactored({super.key});
 
@@ -217,21 +217,13 @@ class _CreateSiteScreenRefactoredState
                 const SizedBox(height: 16),
                 Text(
                   StringConstants.disconnectDevice,
-                  style: GoogleFonts.inter(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: ColorConstants.textDark,
-                  ),
+                  style: StyleConstants.textDark18w700Style,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
                 Text(
                   StringConstants.goingBackWillDisconnectTheDeviceAreYouSure,
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w400,
-                    color: ColorConstants.textGray,
-                  ),
+                  style: StyleConstants.textGray14w400Style,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 20),
@@ -253,11 +245,7 @@ class _CreateSiteScreenRefactoredState
                           child: Center(
                             child: Text(
                               StringConstants.cancel,
-                              style: GoogleFonts.inter(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: ColorConstants.textGray,
-                              ),
+                              style: StyleConstants.textGray16w600Style,
                             ),
                           ),
                         ),
@@ -283,11 +271,7 @@ class _CreateSiteScreenRefactoredState
                           child: Center(
                             child: Text(
                               'Disconnect',
-                              style: GoogleFonts.inter(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: ColorConstants.white,
-                              ),
+                              style: StyleConstants.white16w600Style,
                             ),
                           ),
                         ),
@@ -893,16 +877,12 @@ class _CreateSiteScreenRefactoredState
         const SizedBox(width: 12),
         Text(
           StringConstants.createSite,
-          style: GoogleFonts.inter(
-            fontSize: 20,
-            fontWeight: FontWeight.w700,
-            color: ColorConstants.textBodyDark,
-          ),
+          style: StyleConstants.textBodyDark20w700Style,
         ),
         const Spacer(),
         Text(
           StringConstants.step,
-          style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w500),
+          style: StyleConstants.black16w500Style,
         ),
         const SizedBox(width: 8),
         Container(
@@ -919,12 +899,7 @@ class _CreateSiteScreenRefactoredState
             ),
             child: Text(
               '$_currentStep/$_totalSteps',
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
-                color: ColorConstants.white,
-                fontFeatures: const [FontFeature.tabularFigures()],
-              ),
+              style: StyleConstants.white14w700Style,
             ),
           ),
         ),
@@ -975,10 +950,7 @@ class _CreateSiteScreenRefactoredState
               return Center(
                 child: Text(
                   StringConstants.connectAPanelToConfigurePeripherals,
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    color: ColorConstants.textGray,
-                  ),
+                  style: StyleConstants.textGray14w400Style,
                   textAlign: TextAlign.center,
                 ),
               );
@@ -1110,12 +1082,7 @@ class _CreateSiteScreenRefactoredState
               onTap: _skipPanelConnectAndContinue,
               child: Text(
                 StringConstants.skipConnectionEnterPanelIDManually,
-                style: GoogleFonts.inter(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: ColorConstants.primary,
-                  decoration: TextDecoration.underline,
-                ),
+                style: StyleConstants.primary13w600Style,
                 textAlign: TextAlign.center,
               ),
             ),
@@ -1144,11 +1111,7 @@ class _CreateSiteScreenRefactoredState
                         const SizedBox(width: 6),
                         Text(
                           StringConstants.back,
-                          style: GoogleFonts.inter(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                            color: ColorConstants.labelText,
-                          ),
+                          style: StyleConstants.labelText14w700Style,
                         ),
                       ],
                     ),
@@ -1175,11 +1138,7 @@ class _CreateSiteScreenRefactoredState
                     children: [
                       Text(
                         nextLabel,
-                        style: GoogleFonts.inter(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: ColorConstants.white,
-                        ),
+                        style: StyleConstants.white14w700Style,
                       ),
                       const SizedBox(width: 6),
                       const Icon(Icons.arrow_forward, color: ColorConstants.white),

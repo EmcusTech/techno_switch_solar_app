@@ -8,7 +8,6 @@ import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
 import 'package:flutter_svg/svg.dart';
 // import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:get/get.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 import 'package:techno_switch_solar_app/ble/ble_session_idle_policy.dart';
@@ -28,6 +27,7 @@ import 'package:techno_switch_solar_app/utils/ble_msd_utils.dart';
 import 'package:techno_switch_solar_app/utils/logger.dart' as logger;
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 
+import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
 enum FirmwareType { mainPanel, bleChip }
 
 enum FirmwareUpgradeStep {
@@ -751,10 +751,7 @@ class _FirmwareUpgradeBottomSheetState
           children: [
             Text(
               'Firmware Upgrade',
-              style: GoogleFonts.inter(
-                fontSize: 20,
-                fontWeight: FontWeight.w700,
-              ),
+              style: StyleConstants.black20w700Style,
             ),
             Spacer(),
             Visibility(
@@ -806,10 +803,7 @@ class _FirmwareUpgradeBottomSheetState
           children: [
             Text(
               'Essential Steps Before Firmware Upgrade',
-              style: GoogleFonts.inter(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-              ),
+              style: StyleConstants.black18w700Style,
             ),
             SizedBox(height: 24),
 
@@ -838,11 +832,7 @@ class _FirmwareUpgradeBottomSheetState
                     Expanded(
                       child: Text(
                         step,
-                        style: GoogleFonts.inter(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w400,
-                          color: ColorConstants.textHeading,
-                        ),
+                        style: StyleConstants.textHeading14w400Style,
                       ),
                     ),
                   ],
@@ -859,11 +849,7 @@ class _FirmwareUpgradeBottomSheetState
               },
               child: Text(
                 StringConstants.disabled,
-                style: GoogleFonts.inter(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: ColorConstants.white,
-                ),
+                style: StyleConstants.white16w600Style,
               ),
             ),
             // ElevatedButton(
@@ -884,11 +870,7 @@ class _FirmwareUpgradeBottomSheetState
             //   ),
             //   child: Text(
             //     StringConstants.disabled,
-            //     style: GoogleFonts.inter(
-            //       fontSize: 16,
-            //       fontWeight: FontWeight.w600,
-            //       color: ColorConstants.white,
-            //     ),
+            //     style: StyleConstants.white16w600Style,
             //   ),
             // ),
           ],
@@ -916,7 +898,7 @@ class _FirmwareUpgradeBottomSheetState
       children: [
         Text(
           'Choose Firmware Type',
-          style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w700),
+          style: StyleConstants.black18w700Style,
         ),
         SizedBox(height: 24),
         _buildFirmwareTypeOption(
@@ -944,11 +926,7 @@ class _FirmwareUpgradeBottomSheetState
                 color: ColorConstants.buttonSecondaryBackground,
                 child: Text(
                   StringConstants.back,
-                  style: GoogleFonts.inter(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: ColorConstants.labelText,
-                  ),
+                  style: StyleConstants.labelText16w600Style,
                 ),
               ),
             ),
@@ -966,11 +944,7 @@ class _FirmwareUpgradeBottomSheetState
                 isDisabled: _selectedFirmwareType == null,
                 child: Text(
                   StringConstants.disabled,
-                  style: GoogleFonts.inter(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: ColorConstants.white,
-                  ),
+                  style: StyleConstants.white16w600Style,
                 ),
               ),
             ),
@@ -1050,20 +1024,12 @@ class _FirmwareUpgradeBottomSheetState
                 children: [
                   Text(
                     title,
-                    style: GoogleFonts.inter(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: ColorConstants.textHeading,
-                    ),
+                    style: StyleConstants.textHeading16w600Style,
                   ),
                   SizedBox(height: 4),
                   Text(
                     description,
-                    style: GoogleFonts.inter(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w400,
-                      color: ColorConstants.textDisabled,
-                    ),
+                    style: StyleConstants.textDisabled14w400Style,
                   ),
                 ],
               ),
@@ -1080,7 +1046,7 @@ class _FirmwareUpgradeBottomSheetState
       children: [
         Text(
           'Upload Firmware File',
-          style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w700),
+          style: StyleConstants.black18w700Style,
         ),
         SizedBox(height: 24),
         GestureDetector(
@@ -1118,22 +1084,14 @@ class _FirmwareUpgradeBottomSheetState
                     _selectedFile == null
                         ? 'Tap to select firmware file'
                         : _selectedFile!.name,
-                    style: GoogleFonts.inter(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: ColorConstants.textHeading,
-                    ),
+                    style: StyleConstants.textHeading16w600Style,
                     textAlign: TextAlign.center,
                   ),
                   if (_selectedFile != null) ...[
                     SizedBox(height: 8),
                     Text(
                       '${(_selectedFile!.size / (1024 * 1024)).toStringAsFixed(2)} MB',
-                      style: GoogleFonts.inter(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w400,
-                        color: ColorConstants.textDisabled,
-                      ),
+                      style: StyleConstants.textDisabled14w400Style,
                     ),
                   ],
                 ],
@@ -1161,11 +1119,7 @@ class _FirmwareUpgradeBottomSheetState
                 color: ColorConstants.buttonSecondaryBackground,
                 child: Text(
                   StringConstants.back,
-                  style: GoogleFonts.inter(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: ColorConstants.labelText,
-                  ),
+                  style: StyleConstants.labelText16w600Style,
                 ),
               ),
             ),
@@ -1185,11 +1139,7 @@ class _FirmwareUpgradeBottomSheetState
             //     ),
             //     child: Text(
             //       StringConstants.back,
-            //       style: GoogleFonts.inter(
-            //         fontSize: 16,
-            //         fontWeight: FontWeight.w600,
-            //         color: ColorConstants.primary,
-            //       ),
+            //       style: StyleConstants.primary16w600Style,
             //     ),
             //   ),
             // ),
@@ -1203,11 +1153,7 @@ class _FirmwareUpgradeBottomSheetState
                 isDisabled: _selectedFile == null || _isUploading,
                 child: Text(
                   StringConstants.disabled,
-                  style: GoogleFonts.inter(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: ColorConstants.white,
-                  ),
+                  style: StyleConstants.white16w600Style,
                 ),
               ),
             ),
@@ -1227,11 +1173,7 @@ class _FirmwareUpgradeBottomSheetState
             //     ),
             //     child: Text(
             //       StringConstants.disabled,
-            //       style: GoogleFonts.inter(
-            //         fontSize: 16,
-            //         fontWeight: FontWeight.w600,
-            //         color: ColorConstants.white,
-            //       ),
+            //       style: StyleConstants.white16w600Style,
             //     ),
             //   ),
             // ),
@@ -1254,7 +1196,7 @@ class _FirmwareUpgradeBottomSheetState
       children: [
         Text(
           'File Details',
-          style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w700),
+          style: StyleConstants.black18w700Style,
         ),
         SizedBox(height: 24),
         _buildDetailRow('File Name', _selectedFile!.name),
@@ -1332,11 +1274,7 @@ class _FirmwareUpgradeBottomSheetState
                   child: Text(
                     _validationResult?.error ??
                         'File CRC validation failed. Please select a valid firmware file.',
-                    style: GoogleFonts.inter(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w400,
-                      color: ColorConstants.primary,
-                    ),
+                    style: StyleConstants.primary14w400Style,
                   ),
                 ),
               ],
@@ -1359,11 +1297,7 @@ class _FirmwareUpgradeBottomSheetState
                 isDisabled: _isValidating,
                 child: Text(
                   StringConstants.back,
-                  style: GoogleFonts.inter(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: ColorConstants.labelText,
-                  ),
+                  style: StyleConstants.labelText16w600Style,
                 ),
               ),
             ),
@@ -1386,11 +1320,7 @@ class _FirmwareUpgradeBottomSheetState
             //     ),
             //     child: Text(
             //       StringConstants.back,
-            //       style: GoogleFonts.inter(
-            //         fontSize: 16,
-            //         fontWeight: FontWeight.w600,
-            //         color: ColorConstants.primary,
-            //       ),
+            //       style: StyleConstants.primary16w600Style,
             //     ),
             //   ),
             // ),
@@ -1406,11 +1336,7 @@ class _FirmwareUpgradeBottomSheetState
                 isDisabled: _isValidating || !isCrcMatched,
                 child: Text(
                   StringConstants.disabled,
-                  style: GoogleFonts.inter(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: ColorConstants.white,
-                  ),
+                  style: StyleConstants.white16w600Style,
                 ),
               ),
             ),
@@ -1436,11 +1362,7 @@ class _FirmwareUpgradeBottomSheetState
             //     ),
             //     child: Text(
             //       StringConstants.disabled,
-            //       style: GoogleFonts.inter(
-            //         fontSize: 16,
-            //         fontWeight: FontWeight.w600,
-            //         color: ColorConstants.white,
-            //       ),
+            //       style: StyleConstants.white16w600Style,
             //     ),
             //   ),
             // ),
@@ -1458,21 +1380,13 @@ class _FirmwareUpgradeBottomSheetState
       children: [
         Text(
           label,
-          style: GoogleFonts.inter(
-            fontSize: 14,
-            fontWeight: FontWeight.w400,
-            color: ColorConstants.textDisabled,
-          ),
+          style: StyleConstants.textDisabled14w400Style,
         ),
         SizedBox(
           width: MediaQuery.of(context).size.width * 0.4,
           child: Text(
             value,
-            style: GoogleFonts.inter(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: valueColor ?? ColorConstants.textHeading,
-            ),
+            style: StyleConstants.primary14w600Style.copyWith(color: valueColor ?? ColorConstants.textHeading),
             maxLines: 3,
             overflow: TextOverflow.ellipsis,
             textAlign: TextAlign.end,
@@ -1494,7 +1408,7 @@ class _FirmwareUpgradeBottomSheetState
         children: [
           // Text(
           //   'Firmware Upgrade in Progress',
-          //   style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w700),
+          //   style: StyleConstants.black18w700Style,
           // ),
           // SizedBox(height: 32),
           Center(
@@ -1521,23 +1435,14 @@ class _FirmwareUpgradeBottomSheetState
             child: Center(
               child: Text(
                 '${(progress * 100).toStringAsFixed(1)}%',
-                style: GoogleFonts.inter(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w700,
-                  // color: ColorConstants.primary,
-                  fontFeatures: [FontFeature.tabularFigures()],
-                ),
+                style: StyleConstants.primary24w700Style,
               ),
             ),
           ),
           // if (totalPackets > 0)
           //   Text(
           //     'Packet $currentIndex of $totalPackets',
-          //     style: GoogleFonts.inter(
-          //       fontSize: 14,
-          //       fontWeight: FontWeight.w400,
-          //       color: ColorConstants.textDisabled,
-          //     ),
+          //     style: StyleConstants.textDisabled14w400Style,
           //     textAlign: TextAlign.center,
           //   ),
           // SizedBox(height: 8),
@@ -1554,11 +1459,7 @@ class _FirmwareUpgradeBottomSheetState
                 (status == fw.DownloadStatus.upgrading
                     ? 'Please wait while the firmware is being upgraded. Do not disconnect the device.'
                     : 'Processing...'),
-            style: GoogleFonts.inter(
-              fontSize: 14,
-              fontWeight: FontWeight.w400,
-              color: ColorConstants.textDisabled,
-            ),
+            style: StyleConstants.textDisabled14w400Style,
             textAlign: TextAlign.center,
           ),
         ],
@@ -1584,11 +1485,7 @@ class _FirmwareUpgradeBottomSheetState
         SizedBox(height: 24),
         Text(
           isSuccess ? StringConstants.strf910c9ffFailed : 'Failed',
-          style: GoogleFonts.inter(
-            fontSize: 24,
-            fontWeight: FontWeight.w700,
-            color: isSuccess ? ColorConstants.success : ColorConstants.primary,
-          ),
+          style: StyleConstants.primary24w700Style.copyWith(color: isSuccess ? ColorConstants.success : ColorConstants.primary),
           textAlign: TextAlign.center,
         ),
         SizedBox(height: 32),
@@ -1605,11 +1502,7 @@ class _FirmwareUpgradeBottomSheetState
           },
           child: Text(
             'Done',
-            style: GoogleFonts.inter(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: ColorConstants.white,
-            ),
+            style: StyleConstants.white16w600Style,
           ),
         ),
         // ElevatedButton(
@@ -1632,11 +1525,7 @@ class _FirmwareUpgradeBottomSheetState
         //   ),
         //   child: Text(
         //     'Done',
-        //     style: GoogleFonts.inter(
-        //       fontSize: 16,
-        //       fontWeight: FontWeight.w600,
-        //       color: ColorConstants.white,
-        //     ),
+        //     style: StyleConstants.white16w600Style,
         //   ),
         // ),
       ],
@@ -1791,21 +1680,13 @@ class _FirmwareUpgradeBottomSheetState
                 const SizedBox(height: 16),
                 Text(
                   StringConstants.firmwareUpdate,
-                  style: GoogleFonts.inter(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: ColorConstants.textDark,
-                  ),
+                  style: StyleConstants.textDark18w700Style,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
                 Text(
                   "The Firware is already upto date with the current firmware version",
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w400,
-                    color: ColorConstants.textGray,
-                  ),
+                  style: StyleConstants.textGray14w400Style,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 20),
@@ -1827,11 +1708,7 @@ class _FirmwareUpgradeBottomSheetState
                     child: Center(
                       child: Text(
                         StringConstants.okay,
-                        style: GoogleFonts.inter(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: ColorConstants.white,
-                        ),
+                        style: StyleConstants.white16w600Style,
                       ),
                     ),
                   ),
@@ -1880,32 +1757,20 @@ class _FirmwareUpgradeBottomSheetState
                 const SizedBox(height: 16),
                 Text(
                   StringConstants.firmwareUpdate,
-                  style: GoogleFonts.inter(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: ColorConstants.textDark,
-                  ),
+                  style: StyleConstants.textDark18w700Style,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
                 Text(
                   "Invalid bin file, hardware versions don't match",
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w400,
-                    color: ColorConstants.textGray,
-                  ),
+                  style: StyleConstants.textGray14w400Style,
                   textAlign: TextAlign.center,
                 ),
 
                 const SizedBox(height: 8),
                 Text(
                   "Bin File Hardware Version: ${_validationResult?.hardwareVersion}\nBLE Hardware Version: ${ble.bleHardwareVersion.value}",
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w400,
-                    color: ColorConstants.textGray,
-                  ),
+                  style: StyleConstants.textGray14w400Style,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 20),
@@ -1927,11 +1792,7 @@ class _FirmwareUpgradeBottomSheetState
                     child: Center(
                       child: Text(
                         StringConstants.cancel,
-                        style: GoogleFonts.inter(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: ColorConstants.white,
-                        ),
+                        style: StyleConstants.white16w600Style,
                       ),
                     ),
                   ),
@@ -1980,21 +1841,13 @@ class _FirmwareUpgradeBottomSheetState
                 const SizedBox(height: 16),
                 Text(
                   StringConstants.firmwareUpdate,
-                  style: GoogleFonts.inter(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: ColorConstants.textDark,
-                  ),
+                  style: StyleConstants.textDark18w700Style,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
                 Text(
                   message ?? '',
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w400,
-                    color: ColorConstants.textGray,
-                  ),
+                  style: StyleConstants.textGray14w400Style,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 20),
@@ -2016,11 +1869,7 @@ class _FirmwareUpgradeBottomSheetState
                           child: Center(
                             child: Text(
                               StringConstants.cancel,
-                              style: GoogleFonts.inter(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: ColorConstants.textGray,
-                              ),
+                              style: StyleConstants.textGray16w600Style,
                             ),
                           ),
                         ),
@@ -2046,11 +1895,7 @@ class _FirmwareUpgradeBottomSheetState
                           child: Center(
                             child: Text(
                               StringConstants.disabled,
-                              style: GoogleFonts.inter(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: ColorConstants.white,
-                              ),
+                              style: StyleConstants.white16w600Style,
                             ),
                           ),
                         ),

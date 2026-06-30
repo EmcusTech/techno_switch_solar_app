@@ -1,9 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
+import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
 enum DiagnosticVoltageBand { critical, nominal, high }
 
 DiagnosticVoltageBand diagnosticVoltageBandFor(double volts) {
@@ -70,12 +70,10 @@ class DiagnosticVoltageTile extends StatelessWidget {
                               label,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: GoogleFonts.inter(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w500,
-                                color: _textMuted,
-                                height: 1.2,
-                              ),
+                              style: StyleConstants.black10w500Style.copyWith(
+                                                color: _textMuted,
+                                                height: 1.2,
+                                            ),
                             ),
                             Spacer(),
                             statusBadgeIcon(band, isLive: live),
@@ -88,25 +86,21 @@ class DiagnosticVoltageTile extends StatelessWidget {
                           children: [
                             Text(
                               value.toStringAsFixed(decimals),
-                              style: GoogleFonts.inter(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w700,
-                                color: _valueColor(band),
-                                height: 1.1,
-                                fontFeatures: const [
+                              style: StyleConstants.black15w700Style.copyWith(
+                                                color: _valueColor(band),
+                                                height: 1.1,
+                                                fontFeatures: const [
                                   FontFeature.tabularFigures(),
                                 ],
-                              ),
+                                            ),
                             ),
                             const SizedBox(width: 3),
                             Text(
                               unit,
-                              style: GoogleFonts.inter(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                                color: _textMuted,
-                                height: 1.1,
-                              ),
+                              style: StyleConstants.black11w600Style.copyWith(
+                                                color: _textMuted,
+                                                height: 1.1,
+                                            ),
                             ),
                           ],
                         ),
@@ -170,11 +164,7 @@ class DiagnosticVoltageTile extends StatelessWidget {
         child: Center(
           child: Text(
             _valueStatus(band),
-            style: GoogleFonts.inter(
-              fontSize: 10,
-              fontWeight: FontWeight.w600,
-              color: _valueColor(band),
-            ),
+            style: StyleConstants.black10w600Style.copyWith(color: _valueColor(band)),
           ),
         ),
       ),

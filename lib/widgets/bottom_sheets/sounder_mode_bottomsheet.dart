@@ -3,12 +3,13 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/controllers/peripheral/sounder_mode_controller.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/widgets/dropdown.dart';
 import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
+
+import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
 
 class SounderModeBottomSheet extends StatefulWidget {
   final String deviceId;
@@ -169,7 +170,8 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
                             left: 24.0,
                             right: 24.0,
                             top: 16.0,
-                            bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+                            bottom:
+                                MediaQuery.of(context).viewInsets.bottom + 16,
                           ),
                           child: Column(
                             children: [
@@ -231,11 +233,7 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
             childrenPadding: const EdgeInsets.symmetric(horizontal: 16),
             title: Text(
               'Sounder ${index + 1}',
-              style: GoogleFonts.inter(
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
-                color: ColorConstants.textDark,
-              ),
+              style: StyleConstants.textDark15w600Style,
             ),
             children: [
               _disabledField('Output', 'SNDR ${index + 1}'),
@@ -305,11 +303,7 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
         const SizedBox(height: 16),
         Text(
           StringConstants.advancedConfiguration,
-          style: GoogleFonts.inter(
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
-            color: ColorConstants.textDark,
-          ),
+          style: StyleConstants.textDark16w700Style,
         ),
         const SizedBox(height: 16),
       ],
@@ -333,14 +327,8 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
             ),
             labelColor: ColorConstants.primary,
             unselectedLabelColor: ColorConstants.textSubtle,
-            labelStyle: GoogleFonts.inter(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-            ),
-            unselectedLabelStyle: GoogleFonts.inter(
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
-            ),
+            labelStyle: StyleConstants.black13w600Style,
+            unselectedLabelStyle: StyleConstants.black13w500Style,
             tabs: const [
               Tab(text: 'General'),
               Tab(text: StringConstants.zone),
@@ -375,13 +363,19 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
         _disabledField('Function', StringConstants.fireSnd),
         DropdownWidget(
           label: StringConstants.enabled,
-          value: controller.yesNoOptions[manager.isSounderGeneralEnabled.value ? 1 : 0],
+          value:
+              controller.yesNoOptions[manager.isSounderGeneralEnabled.value
+                  ? 1
+                  : 0],
           items: controller.yesNoOptions,
           onChanged: (_) {},
         ),
         DropdownWidget(
           label: StringConstants.test,
-          value: controller.yesNoOptions[manager.isSounderGeneralTest.value ? 1 : 0],
+          value:
+              controller.yesNoOptions[manager.isSounderGeneralTest.value
+                  ? 1
+                  : 0],
           items: controller.yesNoOptions,
           onChanged: (_) {},
         ),
@@ -406,7 +400,7 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
           childrenPadding: const EdgeInsets.symmetric(horizontal: 16),
           title: Text(
             'Zone ${index + 1}',
-            style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+            style: StyleConstants.textDark14w600Style,
           ),
           children: [
             _disabledField('Function', StringConstants.fireSnd),
@@ -455,7 +449,7 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
           childrenPadding: const EdgeInsets.symmetric(horizontal: 16),
           title: Text(
             controller.functions[index],
-            style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+            style: StyleConstants.textDark14w600Style,
           ),
           children: [
             _disabledField('Function', controller.functions[index]),
@@ -524,13 +518,18 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
             alignment: Alignment.centerLeft,
             child: Text(
               _delayError,
-              style: GoogleFonts.inter(fontSize: 12, color: Colors.orange),
+              style: StyleConstants.black12w400Style.copyWith(
+                color: Colors.orange,
+              ),
             ),
           ),
         const SizedBox(height: 14),
         DropdownWidget(
           label: StringConstants.delayed,
-          value: controller.yesNoOptions[manager.isSounderGeneralDelay.value ? 1 : 0],
+          value:
+              controller.yesNoOptions[manager.isSounderGeneralDelay.value
+                  ? 1
+                  : 0],
           items: controller.yesNoOptions,
           onChanged: (_) {},
         ),
@@ -547,9 +546,9 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
         border: Border.all(color: ColorConstants.borderMuted),
       ),
       child: Theme(
-        data: Theme.of(context).copyWith(
-          dividerColor: ColorConstants.transparent,
-        ),
+        data: Theme.of(
+          context,
+        ).copyWith(dividerColor: ColorConstants.transparent),
         child: child,
       ),
     );
@@ -570,14 +569,7 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
   Widget _title(String text) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
-      child: Text(
-        text,
-        style: GoogleFonts.inter(
-          fontSize: 20,
-          fontWeight: FontWeight.w700,
-          color: ColorConstants.textDark,
-        ),
-      ),
+      child: Text(text, style: StyleConstants.textDark20w700Style),
     );
   }
 
@@ -637,8 +629,7 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
                         padding: const EdgeInsets.only(top: 4),
                         child: Text(
                           '$currentLength / $max',
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
+                          style: StyleConstants.primary12w400Style.copyWith(
                             color:
                                 currentLength == max
                                     ? ColorConstants.primary
@@ -662,14 +653,7 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
   }
 
   Widget _label(String text) {
-    return Text(
-      text,
-      style: GoogleFonts.inter(
-        fontSize: 13,
-        fontWeight: FontWeight.w600,
-        color: ColorConstants.textDark,
-      ),
-    );
+    return Text(text, style: StyleConstants.textDark13w600Style);
   }
 
   InputDecoration _inputDecoration({bool hasError = false}) {
@@ -712,7 +696,7 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
         },
         child: Text(
           StringConstants.download,
-          style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600),
+          style: StyleConstants.primary16w600Style,
         ),
       ),
     );
@@ -739,11 +723,7 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
                 : null,
         child: Text(
           StringConstants.apply,
-          style: GoogleFonts.inter(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: ColorConstants.white,
-          ),
+          style: StyleConstants.white16w600Style,
         ),
       ),
     );

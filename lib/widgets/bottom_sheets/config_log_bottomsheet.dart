@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/utils/peripheral_config_diff_labels.dart';
 import 'package:techno_switch_solar_app/utils/peripheral_config_snapshot.dart';
@@ -12,6 +11,7 @@ import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/widgets/dropdown.dart';
 
+import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
 
 /// [bottomSheet] - rounded top only (e.g. dashboard modal).
 /// [dialog] - same content in a centered [Dialog] (e.g. post connect compare).
@@ -190,9 +190,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
         children: [
           Text(
             'L-Bus comms fault on bus(es): ${busNumbers.join(", ")}',
-            style: GoogleFonts.inter(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
+            style: StyleConstants.black13w600Style.copyWith(
               color: _brandRed,
               height: 1.35,
             ),
@@ -201,12 +199,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
           Text(
             'Enabled-bus detail may be incomplete. Use per-bus download on the '
             'L-Bus screen if needed.',
-            style: GoogleFonts.inter(
-              fontSize: 12,
-              fontWeight: FontWeight.w400,
-              color: ColorConstants.textDarkGray,
-              height: 1.35,
-            ),
+            style: StyleConstants.textDarkGray12w400Style,
           ),
         ],
       ),
@@ -288,11 +281,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
       padding: const EdgeInsets.only(bottom: 16),
       child: Text(
         text,
-        style: GoogleFonts.inter(
-          fontSize: 20,
-          fontWeight: FontWeight.w700,
-          color: _textPrimary,
-        ),
+        style: StyleConstants.black20w700Style.copyWith(color: _textPrimary),
       ),
     );
   }
@@ -300,11 +289,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
   Widget _sectionLabel(String text) {
     return Text(
       text,
-      style: GoogleFonts.inter(
-        fontSize: 15,
-        fontWeight: FontWeight.w600,
-        color: _textPrimary,
-      ),
+      style: StyleConstants.black15w600Style.copyWith(color: _textPrimary),
     );
   }
 
@@ -371,9 +356,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
                   child: Text(
                     text.isEmpty ? 'Comparing…' : text,
                     maxLines: 1,
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
+                    style: StyleConstants.primary13w600Style.copyWith(
                       color: _textPrimary,
                       height: 1.35,
                     ),
@@ -423,9 +406,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
                 const SizedBox(height: 16),
                 Text(
                   'Apply to panel?',
-                  style: GoogleFonts.inter(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
+                  style: StyleConstants.black20w700Style.copyWith(
                     color: _textPrimary,
                   ),
                   textAlign: TextAlign.center,
@@ -434,9 +415,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
                 Text(
                   'This will overwrite panel settings with the configuration '
                   'saved in this app for this device.',
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w400,
+                  style: StyleConstants.textMuted14w400Style.copyWith(
                     color: _textMuted,
                     height: 1.4,
                   ),
@@ -459,10 +438,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
                           onPressed: () => Navigator.of(ctx).pop(false),
                           child: Text(
                             'Cancel',
-                            style: GoogleFonts.inter(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
+                            style: StyleConstants.black16w600Style,
                           ),
                         ),
                       ),
@@ -483,10 +459,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
                           onPressed: () => Navigator.of(ctx).pop(true),
                           child: Text(
                             'Apply',
-                            style: GoogleFonts.inter(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
+                            style: StyleConstants.black16w600Style,
                           ),
                         ),
                       ),
@@ -512,9 +485,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
           width: 48,
           child: Text(
             sideLabel,
-            style: GoogleFonts.inter(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
+            style: StyleConstants.black12w500Style.copyWith(
               color: _textMuted,
               height: 1.4,
             ),
@@ -523,12 +494,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
         Expanded(
           child: SelectableText(
             value,
-            style: GoogleFonts.inter(
-              fontSize: 12,
-              fontWeight: FontWeight.w400,
-              height: 1.4,
-              color: ColorConstants.textDarkGray,
-            ),
+            style: StyleConstants.textDarkGray12w400Style,
           ),
         ),
       ],
@@ -538,9 +504,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
   Widget _diffFieldTitle(String title) {
     return Text(
       title,
-      style: GoogleFonts.inter(
-        fontSize: 13,
-        fontWeight: FontWeight.w600,
+      style: StyleConstants.primary13w600Style.copyWith(
         color: _textPrimary,
         height: 1.35,
       ),
@@ -599,9 +563,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
           const SizedBox(height: 6),
           Text(
             'List length differs',
-            style: GoogleFonts.inter(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
+            style: StyleConstants.black12w500Style.copyWith(
               color: _textMuted,
               height: 1.35,
             ),
@@ -629,23 +591,13 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
           const SizedBox(height: 6),
           Text(
             'Only on panel',
-            style: GoogleFonts.inter(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
+            style: StyleConstants.black12w500Style.copyWith(
               color: _textMuted,
               height: 1.35,
             ),
           ),
           const SizedBox(height: 4),
-          SelectableText(
-            val,
-            style: GoogleFonts.inter(
-              fontSize: 12,
-              fontWeight: FontWeight.w400,
-              height: 1.4,
-              color: ColorConstants.textDarkGray,
-            ),
-          ),
+          SelectableText(val, style: StyleConstants.textDarkGray12w400Style),
         ],
       );
     }
@@ -666,35 +618,18 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
           const SizedBox(height: 6),
           Text(
             'Only in app',
-            style: GoogleFonts.inter(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
+            style: StyleConstants.black12w500Style.copyWith(
               color: _textMuted,
               height: 1.35,
             ),
           ),
           const SizedBox(height: 4),
-          SelectableText(
-            val,
-            style: GoogleFonts.inter(
-              fontSize: 12,
-              fontWeight: FontWeight.w400,
-              height: 1.4,
-              color: ColorConstants.textDarkGray,
-            ),
-          ),
+          SelectableText(val, style: StyleConstants.textDarkGray12w400Style),
         ],
       );
     }
 
-    return SelectableText(
-      line,
-      style: GoogleFonts.inter(
-        fontSize: 12,
-        height: 1.45,
-        color: ColorConstants.textDarkGray,
-      ),
-    );
+    return SelectableText(line, style: StyleConstants.textDarkGray12w400Style);
   }
 
   Widget _downloadCompareButton(bool working) {
@@ -712,7 +647,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
         onPressed: working ? null : widget.onDownloadAndCompare,
         child: Text(
           'Download & compare',
-          style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600),
+          style: StyleConstants.black16w600Style,
         ),
       ),
     );
@@ -766,34 +701,9 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Row(
-          //   children: [
-          //     Icon(
-          //       Icons.difference_outlined,
-          //       color: Colors.grey.shade700,
-          //       size: 20,
-          //     ),
-          //     const SizedBox(width: 8),
-          //     Expanded(
-          //       child: Text(
-          //         s.displayLabel,
-          //         style: GoogleFonts.inter(
-          //           fontSize: 15,
-          //           fontWeight: FontWeight.w600,
-          //           color: _textPrimary,
-          //         ),
-          //       ),
-          //     ),
-          //   ],
-          // ),
-          // const SizedBox(height: 6),
           Text(
             summaryText,
-            style: GoogleFonts.inter(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-              color: _textMuted,
-            ),
+            style: StyleConstants.black12w500Style.copyWith(color: _textMuted),
           ),
           if (isLBus && hasLBusCommsFaults) ...[
             const SizedBox(height: 12),
@@ -808,11 +718,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
           if (diffLines.isEmpty)
             Text(
               'No field-level detail available.',
-              style: GoogleFonts.inter(
-                fontSize: 12,
-                height: 1.45,
-                color: ColorConstants.textDarkGray,
-              ),
+              style: StyleConstants.textDarkGray12w400Style,
             )
           else if (isLBus && !hasLBusFieldDiffs)
             const SizedBox.shrink()
@@ -821,11 +727,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
               isLBus
                   ? 'Select another L-Bus to view its differences.'
                   : 'No field-level detail available.',
-              style: GoogleFonts.inter(
-                fontSize: 12,
-                height: 1.45,
-                color: ColorConstants.textDarkGray,
-              ),
+              style: StyleConstants.textDarkGray12w400Style,
             )
           else
             Column(
@@ -865,18 +767,12 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
         const SizedBox(height: 16),
         Text(
           'Sections that differ',
-          style: GoogleFonts.inter(
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
-            color: _textPrimary,
-          ),
+          style: StyleConstants.black16w700Style.copyWith(color: _textPrimary),
         ),
         const SizedBox(height: 6),
         Text(
           'Swipe or tap a tab to review panel vs app differences.',
-          style: GoogleFonts.inter(
-            fontSize: 13,
-            fontWeight: FontWeight.w400,
+          style: StyleConstants.textMuted13w400Style.copyWith(
             color: _textMuted,
             height: 1.35,
           ),
@@ -898,14 +794,8 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
             ),
             labelColor: _brandRed,
             unselectedLabelColor: _textTabUnselected,
-            labelStyle: GoogleFonts.inter(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-            ),
-            unselectedLabelStyle: GoogleFonts.inter(
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
-            ),
+            labelStyle: StyleConstants.black13w600Style,
+            unselectedLabelStyle: StyleConstants.black13w500Style,
             labelPadding: const EdgeInsets.symmetric(horizontal: 14),
             tabs:
                 sections
@@ -961,9 +851,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
             ),
             child: Text(
               result.errorMessage!,
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
+              style: StyleConstants.black14w500Style.copyWith(
                 color: _brandRed,
                 height: 1.35,
               ),
@@ -996,12 +884,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
                     'Panel data was downloaded successfully. Update the app to '
                     'save it locally — there is nothing in the app to send to '
                     'the panel.',
-                    style: GoogleFonts.inter(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: ColorConstants.colorFf1565C0,
-                      height: 1.35,
-                    ),
+                    style: StyleConstants.colorFf1565C014w500Style,
                   ),
                 ),
               ],
@@ -1030,12 +913,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
                 Expanded(
                   child: Text(
                     'All configuration sections match the saved app data.',
-                    style: GoogleFonts.inter(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: ColorConstants.successDark,
-                      height: 1.35,
-                    ),
+                    style: StyleConstants.successDark14w500Style,
                   ),
                 ),
               ],
@@ -1051,9 +929,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
         children: [
           Text(
             'Configuration differs from saved app data, but no section detail is available.',
-            style: GoogleFonts.inter(
-              fontSize: 13,
-              fontWeight: FontWeight.w400,
+            style: StyleConstants.textMuted13w400Style.copyWith(
               color: _textMuted,
               height: 1.35,
             ),
@@ -1096,14 +972,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
                 ),
               ),
               onPressed: working ? null : _onUpdateAppPressed,
-              child: Text(
-                'Update App',
-                style: GoogleFonts.inter(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: ColorConstants.white,
-                ),
-              ),
+              child: Text('Update App', style: StyleConstants.white16w600Style),
             ),
           ),
         ],
@@ -1139,14 +1008,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
                         FocusManager.instance.primaryFocus?.unfocus();
                         Navigator.of(context).pop();
                       },
-              child: Text(
-                'Okay',
-                style: GoogleFonts.inter(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: ColorConstants.white,
-                ),
-              ),
+              child: Text('Okay', style: StyleConstants.white16w600Style),
             ),
           ),
         ],
@@ -1173,10 +1035,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
                   onPressed: working ? null : _onUpdateAppPressed,
                   child: Text(
                     'Update App',
-                    style: GoogleFonts.inter(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: StyleConstants.black15w600Style,
                     textAlign: TextAlign.center,
                     maxLines: 2,
                   ),
@@ -1205,11 +1064,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
                           },
                   child: Text(
                     'Update Panel',
-                    style: GoogleFonts.inter(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: ColorConstants.white,
-                    ),
+                    style: StyleConstants.white15w600Style,
                     textAlign: TextAlign.center,
                     maxLines: 2,
                   ),
@@ -1252,14 +1107,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
                       FocusManager.instance.primaryFocus?.unfocus();
                       Navigator.of(context).pop();
                     },
-            child: Text(
-              'Next',
-              style: GoogleFonts.inter(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: ColorConstants.white,
-              ),
-            ),
+            child: Text('Next', style: StyleConstants.white16w600Style),
           ),
         ),
       ],
@@ -1374,7 +1222,9 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
                           width: 38,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: ColorConstants.blackMaterial.withValues(alpha: 0.06),
+                            color: ColorConstants.blackMaterial.withValues(
+                              alpha: 0.06,
+                            ),
                           ),
                           child: const Icon(Icons.close, size: 20),
                         ),
@@ -1486,12 +1336,11 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
                                 children: [
                                   Text(
                                     'Download the full configuration from the panel and compare it with data stored in this app for this device.',
-                                    style: GoogleFonts.inter(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w400,
-                                      color: _textMuted,
-                                      height: 1.4,
-                                    ),
+                                    style: StyleConstants.textMuted13w400Style
+                                        .copyWith(
+                                          color: _textMuted,
+                                          height: 1.4,
+                                        ),
                                   ),
                                   const SizedBox(height: 14),
                                   _downloadCompareButton(working),
@@ -1526,12 +1375,8 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
                           children: [
                             Text(
                               'Download the full configuration from the panel and compare it with data stored in this app for this device.',
-                              style: GoogleFonts.inter(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w400,
-                                color: _textMuted,
-                                height: 1.4,
-                              ),
+                              style: StyleConstants.textMuted13w400Style
+                                  .copyWith(color: _textMuted, height: 1.4),
                             ),
                             const SizedBox(height: 14),
                             _downloadCompareButton(working),

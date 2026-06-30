@@ -6,7 +6,6 @@ import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/screens/event_log_screen.dart';
@@ -31,6 +30,7 @@ import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 
+import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
 enum ScanType { usb, bluetooth }
 
 class ScanningScreen extends StatefulWidget {
@@ -142,22 +142,14 @@ class _ScanningScreenState extends State<ScanningScreen>
                   const SizedBox(height: 16),
                   Text(
                     StringConstants.createASite,
-                    style: GoogleFonts.inter(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w700,
-                      color: ColorConstants.textDark,
-                    ),
+                    style: StyleConstants.textDark20w700Style,
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 8),
                   Text(
                     StringConstants
                         .thisPanelIsNotAssociatedWithAnySiteYetCreateASiteToContinue,
-                    style: GoogleFonts.inter(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w400,
-                      color: ColorConstants.textMuted,
-                    ),
+                    style: StyleConstants.textMuted14w400Style,
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 20),
@@ -179,11 +171,7 @@ class _ScanningScreenState extends State<ScanningScreen>
                           },
                           child: Text(
                             StringConstants.cancel,
-                            style: GoogleFonts.inter(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: ColorConstants.primary,
-                            ),
+                            style: StyleConstants.primary14w600Style,
                           ),
                         ),
                       ),
@@ -202,11 +190,7 @@ class _ScanningScreenState extends State<ScanningScreen>
                           child: Text(
                             StringConstants
                                 .thisWillSaveTheSiteAndPanelIDConfigurationWillBeStoredLocallyAndCanBeAppliedWhenYouConnectThePanelLater,
-                            style: GoogleFonts.inter(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: ColorConstants.white,
-                            ),
+                            style: StyleConstants.white14w600Style,
                           ),
                         ),
                       ),
@@ -283,22 +267,14 @@ class _ScanningScreenState extends State<ScanningScreen>
                     const SizedBox(height: 16),
                     Text(
                       StringConstants.selectASite,
-                      style: GoogleFonts.inter(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
-                        color: ColorConstants.textDark,
-                      ),
+                      style: StyleConstants.textDark20w700Style,
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 8),
                     Text(
                       StringConstants
                           .chooseTheSiteWhereThisPanelShouldBeAssigned,
-                      style: GoogleFonts.inter(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w400,
-                        color: ColorConstants.textMuted,
-                      ),
+                      style: StyleConstants.textMuted14w400Style,
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 20),
@@ -352,11 +328,7 @@ class _ScanningScreenState extends State<ScanningScreen>
                                           site.siteName,
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
-                                          style: GoogleFonts.inter(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w600,
-                                            color: ColorConstants.textDark,
-                                          ),
+                                          style: StyleConstants.textDark14w600Style,
                                         ),
                                         if (site.companyName
                                                 .trim()
@@ -377,11 +349,7 @@ class _ScanningScreenState extends State<ScanningScreen>
                                                   ),
                                               maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
-                                              style: GoogleFonts.inter(
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.w400,
-                                                color: ColorConstants.textMuted,
-                                              ),
+                                              style: StyleConstants.textMuted12w400Style,
                                             ),
                                           ),
                                       ],
@@ -419,11 +387,7 @@ class _ScanningScreenState extends State<ScanningScreen>
                                     ).pop('select'),
                             child: Text(
                               StringConstants.disabled,
-                              style: GoogleFonts.inter(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                color: ColorConstants.white,
-                              ),
+                              style: StyleConstants.white14w600Style,
                             ),
                           ),
                         ),
@@ -438,11 +402,7 @@ class _ScanningScreenState extends State<ScanningScreen>
                                 },
                                 child: Text(
                                   StringConstants.cancel,
-                                  style: GoogleFonts.inter(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w500,
-                                    color: ColorConstants.textMuted,
-                                  ),
+                                  style: StyleConstants.textMuted14w500Style,
                                 ),
                               ),
                             ),
@@ -467,11 +427,7 @@ class _ScanningScreenState extends State<ScanningScreen>
                                 child: Text(
                                   StringConstants
                                       .thisWillSaveTheSiteAndPanelIDConfigurationWillBeStoredLocallyAndCanBeAppliedWhenYouConnectThePanelLater,
-                                  style: GoogleFonts.inter(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                    color: ColorConstants.primary,
-                                  ),
+                                  style: StyleConstants.primary14w600Style,
                                 ),
                               ),
                             ),
@@ -693,22 +649,14 @@ class _ScanningScreenState extends State<ScanningScreen>
                 const SizedBox(height: 16),
                 Text(
                   StringConstants.turnOnBluetooth,
-                  style: GoogleFonts.inter(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                    color: ColorConstants.textDark,
-                  ),
+                  style: StyleConstants.textDark20w700Style,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
                 Text(
                   StringConstants
                       .bluetoothIsOffPleaseEnableBluetoothToContinueScanning,
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w400,
-                    color: ColorConstants.textMuted,
-                  ),
+                  style: StyleConstants.textMuted14w400Style,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 16),
@@ -727,11 +675,7 @@ class _ScanningScreenState extends State<ScanningScreen>
                     },
                     child: Text(
                       StringConstants.ok,
-                      style: GoogleFonts.inter(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: ColorConstants.white,
-                      ),
+                      style: StyleConstants.white14w600Style,
                     ),
                   ),
                 ),
@@ -1082,21 +1026,13 @@ class _ScanningScreenState extends State<ScanningScreen>
             const SizedBox(height: 40),
             Text(
               StringConstants.chooseScanType,
-              style: GoogleFonts.inter(
-                fontSize: 24,
-                fontWeight: FontWeight.w700,
-                color: ColorConstants.textDark,
-              ),
+              style: StyleConstants.textDark24w700Style,
             ),
             const SizedBox(height: 12),
             Text(
               StringConstants.selectTheTypeOfDevicesYouWantToScanFor,
               textAlign: TextAlign.center,
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                fontWeight: FontWeight.w400,
-                color: ColorConstants.textBodyDark,
-              ),
+              style: StyleConstants.textBodyDark14w400Style,
             ),
             const SizedBox(height: 40),
             Padding(
@@ -1272,11 +1208,7 @@ class _ScanningScreenState extends State<ScanningScreen>
             const SizedBox(height: 20),
             Text(
               StringConstants.pleaseWaitTillScanIdentifiesTheDevices,
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                fontWeight: FontWeight.w400,
-                color: ColorConstants.textBodyDark,
-              ),
+              style: StyleConstants.textBodyDark14w400Style,
             ),
             const SizedBox(height: 20),
           ],
@@ -1393,11 +1325,7 @@ class _ScanningScreenState extends State<ScanningScreen>
             children: [
               Text(
                 BleNameUtils.getDisplayPrefixFromBleName(label),
-                style: GoogleFonts.inter(
-                  fontSize: 8,
-                  fontWeight: FontWeight.bold,
-                  color: ColorConstants.textDark.withValues(alpha: 0.5),
-                ),
+                style: StyleConstants.textDark8boldStyle,
               ),
               SizedBox(height: 6),
               SvgPicture.asset(AssetConstants.panelIcon, width: 60, height: 60),
@@ -1408,10 +1336,7 @@ class _ScanningScreenState extends State<ScanningScreen>
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: StyleConstants.black12boldStyle,
                 ),
               ),
             ],
@@ -1483,22 +1408,14 @@ class _ScanningScreenState extends State<ScanningScreen>
                 const SizedBox(height: 16),
                 Text(
                   StringConstants.wrongPanelType,
-                  style: GoogleFonts.inter(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                    color: ColorConstants.textDark,
-                  ),
+                  style: StyleConstants.textDark20w700Style,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
                 Text(
                   'This device does not match the panel type you selected ($expected). '
                   'The connected panel reported: $received.',
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w400,
-                    color: ColorConstants.textMuted,
-                  ),
+                  style: StyleConstants.textMuted14w400Style,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 20),
@@ -1514,11 +1431,7 @@ class _ScanningScreenState extends State<ScanningScreen>
                     onPressed: () => Navigator.of(dialogContext).pop(),
                     child: Text(
                       StringConstants.ok,
-                      style: GoogleFonts.inter(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: ColorConstants.white,
-                      ),
+                      style: StyleConstants.white14w600Style,
                     ),
                   ),
                 ),
@@ -1814,11 +1727,7 @@ class _ScanningScreenState extends State<ScanningScreen>
                           : isConnected
                           ? 'Device Connected!'
                           : StringConstants.establishingSecureConnection,
-                      style: GoogleFonts.inter(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
-                        color: ColorConstants.textDark,
-                      ),
+                      style: StyleConstants.textDark20w700Style,
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 8),
@@ -1832,11 +1741,7 @@ class _ScanningScreenState extends State<ScanningScreen>
                           : isConnected
                           ? StringConstants.encryptingAndAuthenticating
                           : 'Please wait while we connect to ${device.name}',
-                      style: GoogleFonts.inter(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w400,
-                        color: ColorConstants.textMuted,
-                      ),
+                      style: StyleConstants.textMuted14w400Style,
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 16),
@@ -1864,11 +1769,7 @@ class _ScanningScreenState extends State<ScanningScreen>
                           },
                           child: Text(
                             StringConstants.ok,
-                            style: GoogleFonts.inter(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: ColorConstants.white,
-                            ),
+                            style: StyleConstants.white14w600Style,
                           ),
                         ),
                       ),

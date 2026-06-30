@@ -3,7 +3,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
@@ -1012,11 +1011,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                                               child: Text(
                                                 status,
                                                 overflow: TextOverflow.ellipsis,
-                                                style: GoogleFonts.inter(
-                                                  fontSize: 14,
-                                                  color:
-                                                      ColorConstants.textMuted,
-                                                ),
+                                                style: StyleConstants.textMuted14w400Style,
                                               ),
                                             ),
                                           ],
@@ -1030,11 +1025,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                         SizedBox(height: 24),
                         Text(
                           StringConstants.eventClass,
-                          style: GoogleFonts.inter(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            color: ColorConstants.textBodyDark,
-                          ),
+                          style: StyleConstants.textBodyDark16w700Style,
                         ),
                         SizedBox(height: 12),
                         Wrap(
@@ -1111,10 +1102,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                                               displayName,
                                               maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
-                                              style: GoogleFonts.inter(
-                                                fontSize: 14,
-                                                color: ColorConstants.textMuted,
-                                              ),
+                                              style: StyleConstants.textMuted14w400Style,
                                             ),
                                           ),
                                         ],
@@ -1147,11 +1135,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                               ),
                               child: Text(
                                 StringConstants.reset,
-                                style: GoogleFonts.inter(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  color: ColorConstants.textBodyDark,
-                                ),
+                                style: StyleConstants.textBodyDark14w600Style,
                               ),
                             ),
                             SizedBox(width: 12),
@@ -1174,11 +1158,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                                     ),
                                     child: Text(
                                       StringConstants.applyNow,
-                                      style: GoogleFonts.inter(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.bold,
-                                        color: ColorConstants.white,
-                                      ),
+                                      style: StyleConstants.white14boldStyle,
                                     ),
                                   ),
                                 ),
@@ -1219,19 +1199,11 @@ class _EventLogContentState extends State<_EventLogContent> {
                       _panelDisplayName(_resolvedPanelName()),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.inter(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: ColorConstants.textDark,
-                      ),
+                      style: StyleConstants.textDark16w700Style,
                     ),
                     Text(
                       BleNameUtils.getDisplayIdFromBleName(widget.panelName),
-                      style: GoogleFonts.inter(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: ColorConstants.textDisabled,
-                      ),
+                      style: StyleConstants.textDisabled14w500Style,
                     ),
 
                     ValueListenableBuilder(
@@ -1242,24 +1214,17 @@ class _EventLogContentState extends State<_EventLogContent> {
                             children: [
                               TextSpan(
                                 text: StringConstants.status3,
-                                style: GoogleFonts.inter(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                  color: ColorConstants.textDisabled,
-                                ),
+                                style: StyleConstants.textDisabled14w500Style,
                               ),
                               TextSpan(
                                 text:
                                     isConnected
                                         ? StringConstants.connected
                                         : StringConstants.disconnected,
-                                style: GoogleFonts.inter(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                  color:
-                                      isConnected
-                                          ? ColorConstants.success
-                                          : ColorConstants.primary,
+                                style: StyleConstants.primary14w500Style.copyWith(
+                                  color: isConnected
+                                      ? ColorConstants.success
+                                      : ColorConstants.primary,
                                 ),
                               ),
                             ],
@@ -1281,11 +1246,7 @@ class _EventLogContentState extends State<_EventLogContent> {
             children: [
               Text(
                 StringConstants.logView,
-                style: GoogleFonts.inter(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: ColorConstants.textBodyDark,
-                ),
+                style: StyleConstants.textBodyDark16w700Style,
               ),
               Row(
                 mainAxisSize: MainAxisSize.min,
@@ -1299,17 +1260,10 @@ class _EventLogContentState extends State<_EventLogContent> {
                       onChanged: (_) => setState(() {}),
                       keyboardType: TextInputType.text,
                       textAlignVertical: TextAlignVertical.center,
-                      style: GoogleFonts.inter(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                        color: ColorConstants.textBodyDark,
-                      ),
+                      style: StyleConstants.textBodyDark13w500Style,
                       decoration: InputDecoration(
                         hintText: StringConstants.id,
-                        hintStyle: GoogleFonts.inter(
-                          fontSize: 12,
-                          color: ColorConstants.divider,
-                        ),
+                        hintStyle: StyleConstants.divider12w400Style,
                         isDense: true,
                         contentPadding: const EdgeInsets.symmetric(
                           horizontal: 8,
@@ -1709,13 +1663,10 @@ class _LogListViewState extends State<_LogListView>
             Flexible(
               child: Text(
                 text,
-                style: GoogleFonts.inter(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 12,
-                  color:
-                      isActive
-                          ? ColorConstants.primary
-                          : ColorConstants.textBodyDark,
+                style: StyleConstants.primary12w600Style.copyWith(
+                  color: isActive
+                      ? ColorConstants.primary
+                      : ColorConstants.textBodyDark,
                 ),
               ),
             ),
@@ -1741,21 +1692,11 @@ class _LogListViewState extends State<_LogListView>
   Widget _buildDataCell(String text, double width, DataType dataType) {
     TextStyle textStyle = TextStyle();
     if (dataType == DataType.id) {
-      textStyle = GoogleFonts.inter(
-        fontSize: 13,
-        fontWeight: FontWeight.bold,
-        color: ColorConstants.textSecondary,
-      );
+      textStyle = StyleConstants.textSecondary13boldStyle;
     } else if (dataType == DataType.dateTime) {
-      textStyle = GoogleFonts.inter(
-        fontSize: 12,
-        color: ColorConstants.textSecondary,
-      );
+      textStyle = StyleConstants.textSecondary12w400Style;
     } else {
-      textStyle = GoogleFonts.inter(
-        fontSize: 13,
-        color: ColorConstants.textSecondary,
-      );
+      textStyle = StyleConstants.textSecondary13w400Style;
     }
     return Container(
       width: width,
@@ -1952,11 +1893,7 @@ class _LogTableViewState extends State<_LogTableView>
                               StringConstants.ddMMYyyyHhMmSsA,
                             ).format(log.eventDateTime!.toLocal())
                             : StringConstants.nA,
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w400,
-                          color: ColorConstants.textSecondary,
-                        ),
+                        style: StyleConstants.textSecondary12w400Style,
                       ),
                       Spacer(),
                       Container(
@@ -1971,11 +1908,7 @@ class _LogTableViewState extends State<_LogTableView>
                           ),
                           child: Text(
                             log.eventId ?? '-',
-                            style: GoogleFonts.inter(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                              color: ColorConstants.white,
-                            ),
+                            style: StyleConstants.white13w700Style,
                           ),
                         ),
                       ),
@@ -2075,19 +2008,11 @@ class _LogTableViewState extends State<_LogTableView>
         children: [
           Text(
             title,
-            style: GoogleFonts.inter(
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-              color: ColorConstants.textBodyDark,
-            ),
+            style: StyleConstants.textBodyDark14w700Style,
           ),
           Text(
             value,
-            style: GoogleFonts.inter(
-              fontSize: 14,
-              fontWeight: FontWeight.w400,
-              color: ColorConstants.textSecondary,
-            ),
+            style: StyleConstants.textSecondary14w400Style,
           ),
         ],
       ),

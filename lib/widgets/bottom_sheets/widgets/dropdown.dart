@@ -1,9 +1,9 @@
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
+import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
 class DropdownWidget extends StatefulWidget {
   final String label;
   final String value;
@@ -48,11 +48,7 @@ class _DropdownWidgetState extends State<DropdownWidget> {
   Widget _label(String text) {
     return Text(
       text,
-      style: GoogleFonts.inter(
-        fontSize: 13,
-        fontWeight: FontWeight.w600,
-        color: ColorConstants.textDark,
-      ),
+      style: StyleConstants.textDark13w600Style,
     );
   }
 
@@ -85,11 +81,7 @@ class _DropdownWidgetState extends State<DropdownWidget> {
                           child: Text(
                             e,
                             overflow: TextOverflow.ellipsis,
-                            style: GoogleFonts.inter(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                              color: ColorConstants.textDark,
-                            ),
+                            style: StyleConstants.textDark14w500Style,
                           ),
                         ),
                       )
@@ -153,10 +145,7 @@ class _DropdownWidgetState extends State<DropdownWidget> {
 
                               hintText: StringConstants.search,
 
-                              hintStyle: GoogleFonts.inter(
-                                fontSize: 14,
-                                color: Colors.grey,
-                              ),
+                              hintStyle: StyleConstants.black14w400Style.copyWith(color: Colors.grey),
 
                               prefixIcon: const Icon(Icons.search, size: 20),
 

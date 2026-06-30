@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/controllers/peripheral/service_due_controller.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/widgets/dropdown.dart';
 import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
+
+import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
 
 class ServiceDueBottomSheet extends StatefulWidget {
   final String deviceId;
@@ -208,26 +209,12 @@ class ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
   Widget _title(String text) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
-      child: Text(
-        text,
-        style: GoogleFonts.inter(
-          fontSize: 20,
-          fontWeight: FontWeight.w700,
-          color: ColorConstants.textDark,
-        ),
-      ),
+      child: Text(text, style: StyleConstants.textDark20w700Style),
     );
   }
 
   Widget _label(String text) {
-    return Text(
-      text,
-      style: GoogleFonts.inter(
-        fontSize: 13,
-        fontWeight: FontWeight.w600,
-        color: ColorConstants.textDark,
-      ),
-    );
+    return Text(text, style: StyleConstants.textDark13w600Style);
   }
 
   Widget? _relayStyleCounter(
@@ -242,8 +229,7 @@ class ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
       padding: const EdgeInsets.only(top: 4),
       child: Text(
         '$currentLength / $max',
-        style: GoogleFonts.inter(
-          fontSize: 12,
+        style: StyleConstants.primary12w400Style.copyWith(
           color: currentLength == max ? ColorConstants.primary : Colors.grey,
         ),
       ),
@@ -309,11 +295,7 @@ class ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
               alignment: Alignment.centerLeft,
               child: Text(
                 StringConstants.serviceDueConfiguration,
-                style: GoogleFonts.inter(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                  color: ColorConstants.textDark,
-                ),
+                style: StyleConstants.textDark20w700Style,
               ),
             ),
           ),
@@ -406,7 +388,9 @@ class ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
           if (errorMessage != null && focusNode?.hasFocus == true)
             Text(
               errorMessage,
-              style: GoogleFonts.inter(fontSize: 12, color: Colors.orange),
+              style: StyleConstants.black12w400Style.copyWith(
+                color: Colors.orange,
+              ),
             ),
         ],
       ),
@@ -450,7 +434,7 @@ class ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
         },
         child: Text(
           StringConstants.download,
-          style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600),
+          style: StyleConstants.primary16w600Style,
         ),
       ),
     );
@@ -476,11 +460,7 @@ class ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
                 },
         child: Text(
           StringConstants.apply,
-          style: GoogleFonts.inter(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: ColorConstants.white,
-          ),
+          style: StyleConstants.white16w600Style,
         ),
       ),
     );

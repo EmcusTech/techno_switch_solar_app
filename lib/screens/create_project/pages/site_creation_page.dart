@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
+import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
 class SiteCreationPage extends StatefulWidget {
   final TextEditingController siteNameController;
   final TextEditingController installerNameController;
@@ -51,20 +51,14 @@ class _SiteCreationPageState extends State<SiteCreationPage> {
             children: [
               TextSpan(
                 text: label,
-                style: GoogleFonts.inter(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: hasError ? ColorConstants.primary : ColorConstants.textSecondary,
-                ),
+                style: StyleConstants.primary13w600Style.copyWith(
+                                            color: hasError ? ColorConstants.primary : ColorConstants.textSecondary,
+                                            ),
               ),
               if (isRequired)
                 TextSpan(
                   text: StringConstants.strb411bc68,
-                  style: GoogleFonts.inter(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: ColorConstants.primary,
-                  ),
+                  style: StyleConstants.primary13w600Style,
                 ),
             ],
           ),
@@ -89,11 +83,7 @@ class _SiteCreationPageState extends State<SiteCreationPage> {
               contentPadding: EdgeInsets.all(12),
               border: InputBorder.none,
               hintText: hintText,
-              hintStyle: GoogleFonts.inter(
-                fontSize: 13,
-                fontWeight: FontWeight.w400,
-                color: ColorConstants.divider,
-              ),
+              hintStyle: StyleConstants.divider13w400Style,
             ),
           ),
         ),
@@ -101,11 +91,7 @@ class _SiteCreationPageState extends State<SiteCreationPage> {
           SizedBox(height: 4),
           Text(
             errorMessage,
-            style: GoogleFonts.inter(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-              color: ColorConstants.primary,
-            ),
+            style: StyleConstants.primary12w500Style,
           ),
         ],
       ],
@@ -121,11 +107,7 @@ class _SiteCreationPageState extends State<SiteCreationPage> {
         children: [
           Text(
             StringConstants.siteCreation,
-            style: GoogleFonts.inter(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: ColorConstants.textBodyDark,
-            ),
+            style: StyleConstants.textBodyDark18w600Style,
           ),
           SizedBox(height: 32),
           Expanded(

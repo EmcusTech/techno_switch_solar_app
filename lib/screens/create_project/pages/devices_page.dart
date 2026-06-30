@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 
+import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
 class LBusDevicesPage extends StatefulWidget {
   final String? expandedLBus;
   final Map<String, String> lbusInputs;
@@ -76,11 +76,7 @@ class _LBusDevicesPageState extends State<LBusDevicesPage> {
             children: [
               Text(
                 StringConstants.lBusDevices,
-                style: GoogleFonts.inter(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: ColorConstants.textBodyDark,
-                ),
+                style: StyleConstants.textBodyDark18w600Style,
               ),
               Spacer(),
               SvgPicture.asset(
@@ -129,11 +125,7 @@ class _LBusDevicesPageState extends State<LBusDevicesPage> {
               children: [
                 Text(
                   lbusName,
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: ColorConstants.textBodyDark,
-                  ),
+                  style: StyleConstants.textBodyDark14w600Style,
                 ),
                 Spacer(),
                 Icon(
@@ -154,11 +146,7 @@ class _LBusDevicesPageState extends State<LBusDevicesPage> {
               children: [
                 Text(
                   StringConstants.inputModeConfiguration,
-                  style: GoogleFonts.inter(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: ColorConstants.textSecondary,
-                  ),
+                  style: StyleConstants.textSecondary13w600Style,
                 ),
                 SizedBox(height: 8),
                 Container(
@@ -179,22 +167,14 @@ class _LBusDevicesPageState extends State<LBusDevicesPage> {
                       contentPadding: EdgeInsets.all(12),
                       border: InputBorder.none,
                       hintText: StringConstants.enterInputText,
-                      hintStyle: GoogleFonts.inter(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w400,
-                        color: ColorConstants.divider,
-                      ),
+                      hintStyle: StyleConstants.divider13w400Style,
                     ),
                   ),
                 ),
                 SizedBox(height: 16),
                 Text(
                   StringConstants.inputText,
-                  style: GoogleFonts.inter(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: ColorConstants.textSecondary,
-                  ),
+                  style: StyleConstants.textSecondary13w600Style,
                 ),
                 SizedBox(height: 8),
                 Container(
@@ -215,11 +195,7 @@ class _LBusDevicesPageState extends State<LBusDevicesPage> {
                       contentPadding: EdgeInsets.all(12),
                       border: InputBorder.none,
                       hintText: StringConstants.enterInputText,
-                      hintStyle: GoogleFonts.inter(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w400,
-                        color: ColorConstants.divider,
-                      ),
+                      hintStyle: StyleConstants.divider13w400Style,
                     ),
                   ),
                 ),
@@ -285,11 +261,7 @@ class _LBusDevicesPageState extends State<LBusDevicesPage> {
       children: [
         Text(
           label,
-          style: GoogleFonts.inter(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: ColorConstants.textSecondary,
-          ),
+          style: StyleConstants.textSecondary13w600Style,
         ),
         Spacer(),
         GestureDetector(
@@ -298,11 +270,7 @@ class _LBusDevicesPageState extends State<LBusDevicesPage> {
             children: [
               Text(
                 value,
-                style: GoogleFonts.inter(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w400,
-                  color: ColorConstants.textDark,
-                ),
+                style: StyleConstants.textDark13w400Style,
               ),
               SizedBox(width: 2),
               SvgPicture.asset(AssetConstants.dropDownRedIcon),
@@ -330,11 +298,7 @@ class _LBusDevicesPageState extends State<LBusDevicesPage> {
           ),
           title: Text(
             label,
-            style: GoogleFonts.inter(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: ColorConstants.textBodyDark,
-            ),
+            style: StyleConstants.textBodyDark18w600Style,
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -343,11 +307,7 @@ class _LBusDevicesPageState extends State<LBusDevicesPage> {
                   return RadioListTile<String>(
                     title: Text(
                       option,
-                      style: GoogleFonts.inter(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w400,
-                        color: ColorConstants.textDark,
-                      ),
+                      style: StyleConstants.textDark14w400Style,
                     ),
                     value: option,
                     groupValue: selectedValue,
@@ -375,11 +335,7 @@ class _LBusDevicesPageState extends State<LBusDevicesPage> {
               },
               child: Text(
                 StringConstants.cancel,
-                style: GoogleFonts.inter(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: ColorConstants.textSecondary,
-                ),
+                style: StyleConstants.textSecondary14w600Style,
               ),
             ),
           ],

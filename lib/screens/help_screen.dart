@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
+import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
 class HelpScreen extends StatelessWidget {
   const HelpScreen({super.key});
 
@@ -24,11 +24,7 @@ class HelpScreen extends StatelessWidget {
               padding: const EdgeInsets.only(top: 24, left: 24, right: 24),
               child: Text(
                 StringConstants.helpSupport,
-                style: GoogleFonts.inter(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w700,
-                  color: ColorConstants.textDark,
-                ),
+                style: StyleConstants.textDark24w700Style,
               ),
             ),
             _buildContactSupport(),
@@ -60,11 +56,7 @@ class HelpScreen extends StatelessWidget {
         children: [
           Text(
             StringConstants.needImmediateHelp,
-            style: GoogleFonts.inter(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: ColorConstants.textDark,
-            ),
+            style: StyleConstants.textDark18w600Style,
           ),
           const SizedBox(height: 16),
           _buildContactOption(
@@ -93,11 +85,7 @@ class HelpScreen extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
           child: Text(
             StringConstants.frequentlyAskedQuestions,
-            style: GoogleFonts.inter(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: ColorConstants.textDark,
-            ),
+            style: StyleConstants.textDark18w600Style,
           ),
         ),
         _buildFAQItem(
@@ -124,11 +112,7 @@ class HelpScreen extends StatelessWidget {
         children: [
           Text(
             StringConstants.additionalSupport,
-            style: GoogleFonts.inter(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: ColorConstants.textDark,
-            ),
+            style: StyleConstants.textDark18w600Style,
           ),
           const SizedBox(height: 16),
           _buildSupportOption(
@@ -171,19 +155,11 @@ class HelpScreen extends StatelessWidget {
             children: [
               Text(
                 title,
-                style: GoogleFonts.inter(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                  color: ColorConstants.textDark,
-                ),
+                style: StyleConstants.textDark16w500Style,
               ),
               Text(
                 subtitle,
-                style: GoogleFonts.inter(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w400,
-                  color: ColorConstants.textGray,
-                ),
+                style: StyleConstants.textGray14w400Style,
               ),
             ],
           ),
@@ -209,22 +185,14 @@ class HelpScreen extends StatelessWidget {
       child: ExpansionTile(
         title: Text(
           question,
-          style: GoogleFonts.inter(
-            fontSize: 16,
-            fontWeight: FontWeight.w500,
-            color: ColorConstants.textDark,
-          ),
+          style: StyleConstants.textDark16w500Style,
         ),
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
             child: Text(
               answer,
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                fontWeight: FontWeight.w400,
-                color: ColorConstants.textGray,
-              ),
+              style: StyleConstants.textGray14w400Style,
             ),
           ),
         ],
@@ -264,19 +232,11 @@ class HelpScreen extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: GoogleFonts.inter(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                      color: ColorConstants.textDark,
-                    ),
+                    style: StyleConstants.textDark16w500Style,
                   ),
                   Text(
                     subtitle,
-                    style: GoogleFonts.inter(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w400,
-                      color: ColorConstants.textGray,
-                    ),
+                    style: StyleConstants.textGray14w400Style,
                   ),
                 ],
               ),
