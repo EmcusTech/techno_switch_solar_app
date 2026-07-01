@@ -1,15 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:techno_switch_solar_app/ble/ble_manager.dart';
+import 'package:techno_switch_solar_app/ble/ble_session_idle_policy.dart';
 import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
-import 'package:techno_switch_solar_app/models/create_project/site_form_data.dart';
+import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
+import 'package:techno_switch_solar_app/controllers/create_project_ui_delegate.dart';
 import 'package:techno_switch_solar_app/models/create_project/panel_form_data.dart';
-import 'package:techno_switch_solar_app/models/create_project/zone_settings_data.dart';
-import 'package:techno_switch_solar_app/models/create_project/sounder_data.dart';
 import 'package:techno_switch_solar_app/models/create_project/relay_data.dart';
+import 'package:techno_switch_solar_app/models/create_project/site_form_data.dart';
+import 'package:techno_switch_solar_app/models/create_project/sounder_data.dart';
+import 'package:techno_switch_solar_app/models/create_project/zone_settings_data.dart';
 import 'package:techno_switch_solar_app/models/panel_type_config.dart';
+import 'package:techno_switch_solar_app/panel_config/panel_config_cache_sync.dart';
+import 'package:techno_switch_solar_app/panel_config/panel_configuration_coordinator.dart';
+import 'package:techno_switch_solar_app/utils/constants/ble/ble_name_utils.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
+import 'package:techno_switch_solar_app/utils/panel_service.dart';
+import 'package:techno_switch_solar_app/utils/site_service.dart';
 
 class CreateProjectController extends GetxController {
+  static const int totalSteps = 11;
+
   final TextEditingController siteNameController = TextEditingController(
     text: '',
   );
@@ -38,12 +49,58 @@ class CreateProjectController extends GetxController {
   Map<String, String> validationErrors = {};
 
   bool createProjectPanelBleVerified = false;
-
   DiscoveredDevice? connectedDevice;
-
   bool skippedPanelConnect = false;
-
   String manualPanelId = '';
+
+  int currentStep = 1;
+  String wizardDeviceId = '';
+  bool offeredBulkDownload = false;
+
+  CreateProjectUiDelegate? _ui;
+  Future<void> Function()? _animateNextPage;
+  Future<void> Function()? _animatePreviousPage;
+  Future<bool> Function()? commitCurrentStepHandler;
+  Future<bool> Function()? commitPanelInfoHandler;
+
+  final SiteService _siteService = SiteService();
+  final PanelService _panelService = PanelService();
+  late final BleManager _bleManager;
+  late final BleLogController _bleController;
+
+  final ValueNotifier<int> relayRefresh = ValueNotifier(0);
+  final ValueNotifier<int> inputRefresh = ValueNotifier(0);
+  final ValueNotifier<int> zoneRefresh = ValueNotifier(0);
+  final ValueNotifier<int> extOutRefresh = ValueNotifier(0);
+  final ValueNotifier<int> sounderRefresh = ValueNotifier(0);
+  final ValueNotifier<int> serviceDueRefresh = ValueNotifier(0);
+  final ValueNotifier<int> accessCodeRefresh = ValueNotifier(0);
+  final ValueNotifier<int> panelInfoRefresh = ValueNotifier(0);
+  final ValueNotifier<int> generalModuleRefresh = ValueNotifier(0);
+  final ValueNotifier<bool> navigatingToDeviceConnecting = ValueNotifier(false);
+
+  late final PanelConfigRefreshNotifiers panelRefreshNotifiers;
+
+  void attachUi(CreateProjectUiDelegate ui) {
+    _ui = ui;
+  }
+
+  void detachUi() {
+    _ui = null;
+  }
+
+  void setupPageNavigation({
+    required Future<void> Function() animateNext,
+    required Future<void> Function() animatePrevious,
+  }) {
+    _animateNextPage = animateNext;
+    _animatePreviousPage = animatePrevious;
+  }
+
+  void setCurrentStep(int step) {
+    currentStep = step;
+    update();
+  }
 
   void setCreateProjectPanelBleVerified(bool value) {
     createProjectPanelBleVerified = value;
@@ -71,7 +128,23 @@ class CreateProjectController extends GetxController {
     update();
   }
 
-  CreateProjectController() {
+  @override
+  void onInit() {
+    super.onInit();
+    _bleManager = Get.find<BleManager>();
+    _bleController = Get.find<BleLogController>();
+    panelRefreshNotifiers = PanelConfigRefreshNotifiers(
+      relay: relayRefresh,
+      input: inputRefresh,
+      zone: zoneRefresh,
+      extOut: extOutRefresh,
+      sounder: sounderRefresh,
+      serviceDue: serviceDueRefresh,
+      accessCode: accessCodeRefresh,
+      panelInfo: panelInfoRefresh,
+      generalModule: generalModuleRefresh,
+    );
+    BleSessionIdlePolicy.suppressIdleDisconnect.value = true;
     _initializeControllerListeners();
     if (PanelTypeConfig.availablePanels.length == 1) {
       updatePanelType(PanelTypeConfig.availablePanels.first.typeName);
@@ -179,8 +252,487 @@ class CreateProjectController extends GetxController {
     update();
   }
 
+  String get nextButtonLabel {
+    if (currentStep == 2) {
+      return StringConstants.connectPanel;
+    }
+    if (currentStep == 11) {
+      return skippedPanelConnect
+          ? UiStrings.createSiteDialogTitle
+          : StringConstants.finish;
+    }
+    return UiStrings.nextButton;
+  }
+
+  Future<void> onLeadingBackPressed() async {
+    final ui = _ui;
+    if (ui == null) return;
+
+    if (_bleController.isConnected) {
+      final shouldPop = await confirmAndDisconnect();
+      if (shouldPop) {
+        ui.popScreen();
+      }
+    } else {
+      ui.popScreen();
+    }
+  }
+
+  Future<bool> confirmAndDisconnect() async {
+    final ui = _ui;
+    if (ui == null) return false;
+
+    final shouldDisconnect = await ui.showDisconnectConfirmDialog();
+
+    if (shouldDisconnect == true) {
+      if (_bleManager.isConnected) {
+        await _bleManager.disconnectConnectedDevice();
+      }
+      setCreateProjectPanelBleVerified(false);
+      setConnectedDevice(null);
+      clearSkippedPanelConnect();
+      wizardDeviceId = '';
+      update();
+      return true;
+    }
+    return false;
+  }
+
+  Future<void> confirmFinishAndApply() async {
+    final ui = _ui;
+    if (ui == null) return;
+
+    await ui.settleImeBeforeShowingDialog();
+    if (!ui.isMounted) return;
+
+    if (skippedPanelConnect) {
+      final proceed = await ui.showCreateSiteConfirmDialog();
+      if (proceed != true || !ui.isMounted) return;
+      await finishCreateSiteWithoutPanel();
+      return;
+    }
+
+    final proceed = await ui.showApplyPanelSettingsConfirmDialog();
+    if (proceed != true || !ui.isMounted) return;
+    await finishCreateSiteBulkApplyAndOpenDashboard();
+  }
+
+  Future<bool> runPostConnectAssignedPanelFlow() async {
+    final ui = _ui;
+    if (ui == null) return false;
+
+    final device = connectedDevice;
+    if (device == null) return false;
+
+    final bleName = device.name.trim();
+    if (bleName.isEmpty) return true;
+
+    var panel =
+        await _panelService.getPanelByPanelId(bleName) ??
+        await _panelService.getPanelByBleName(bleName);
+    if (panel?.siteId == null) return true;
+
+    if (!ui.isMounted) return false;
+    await ui.settleImeBeforeShowingDialog();
+    if (!ui.isMounted) return false;
+
+    final choice = await ui.showPanelAlreadyOnSiteDialog();
+
+    if (choice == 'skip') {
+      if (_bleManager.isConnected) {
+        await _bleManager.disconnectConnectedDevice();
+      }
+      setCreateProjectPanelBleVerified(false);
+      setConnectedDevice(null);
+      wizardDeviceId = '';
+      update();
+      ui.popToHome();
+      return false;
+    }
+
+    if (choice == 'move') {
+      await _panelService.unassignPanelFromSite(panel!.panelId);
+    }
+    return true;
+  }
+
+  Future<void> offerBulkDownloadIfNeeded() async {
+    final ui = _ui;
+    if (ui == null) return;
+
+    if (skippedPanelConnect) return;
+    if (offeredBulkDownload) return;
+    offeredBulkDownload = true;
+
+    if (!ui.isMounted) return;
+    await ui.settleImeBeforeShowingDialog();
+    if (!ui.isMounted) return;
+
+    final download = await ui.showBulkDownloadDialog();
+    if (download != true || !ui.isMounted) return;
+
+    if (connectedDevice == null) return;
+    await runBulkDownload();
+  }
+
+  PanelConfigurationCoordinator _panelCoordinator(
+    DiscoveredDevice device, {
+    bool useDialogOnlyBulkProgress = false,
+  }) {
+    return PanelConfigurationCoordinator(
+      bleManager: _bleManager,
+      bleController: _bleController,
+      device: device,
+      refreshNotifiers: panelRefreshNotifiers,
+      navigatingToDeviceConnecting: navigatingToDeviceConnecting,
+      useDialogOnlyBulkProgress: useDialogOnlyBulkProgress,
+    );
+  }
+
+  Future<void> runBulkDownload() async {
+    final ui = _ui;
+    if (ui == null || !ui.isMounted) return;
+
+    final device = connectedDevice;
+    if (device == null) return;
+
+    _panelCoordinator(device, useDialogOnlyBulkProgress: true).startBulkDownload(
+      context: ui.uiContext,
+      isMounted: () => ui.isMounted,
+    );
+  }
+
+  Future<void> runBulkApply() async {
+    final ui = _ui;
+    if (ui == null || !ui.isMounted) return;
+
+    final device = connectedDevice ?? _bleManager.selectedDevice;
+    if (device == null) return;
+
+    await _panelCoordinator(device).startBulkApply(
+      context: ui.uiContext,
+      isMounted: () => ui.isMounted,
+    );
+  }
+
+  Future<void> finishCreateSiteBulkApplyAndOpenDashboard() async {
+    final ui = _ui;
+    if (ui == null) return;
+
+    final device = connectedDevice ?? _bleManager.selectedDevice;
+    if (device == null) {
+      ui.showSnackBar(StringConstants.noConnectedPanel, isError: true);
+      return;
+    }
+
+    if (commitPanelInfoHandler == null ||
+        !(await commitPanelInfoHandler!.call())) {
+      ui.showSnackBar(StringConstants.fixPanelInformationFields, isError: true);
+      return;
+    }
+
+    final errors = _siteService.validateSiteData(
+      siteName: siteNameController.text,
+      installerName: installerNameController.text,
+      companyName: companyNameController.text,
+      saqccRegNumber: saqccRegNumberController.text,
+      buildingName: buildingNameController.text,
+      installerContactNumber: installerContactNumberController.text,
+      installerEmail: installerEmailController.text,
+      siteDescription: siteDescriptionController.text,
+    );
+    if (errors.isNotEmpty) {
+      ui.showSnackBar(StringConstants.pleaseFixTheSiteFormStep1, isError: true);
+      return;
+    }
+
+    try {
+      final site = await _siteService.createSite(
+        siteName: siteNameController.text,
+        installerName: installerNameController.text,
+        companyName: companyNameController.text,
+        saqccRegNumber: saqccRegNumberController.text,
+        buildingName: buildingNameController.text,
+        installerContactNumber: installerContactNumberController.text,
+        installerEmail: installerEmailController.text,
+        siteDescription: siteDescriptionController.text,
+      );
+
+      final siteId = site.id;
+      if (siteId == null) {
+        ui.showSnackBar(StringConstants.siteCreatedButMissingId, isError: true);
+        return;
+      }
+
+      final bleName = device.name.trim();
+      final panel =
+          await _panelService.getPanelByPanelId(bleName) ??
+          await _panelService.getPanelByBleName(bleName);
+      final panelIdToUse = panel?.panelId ?? bleName;
+
+      final assigned = await _siteService.assignPanelToSite(
+        panelIdToUse,
+        siteId,
+        panelName: bleName.isNotEmpty ? bleName : null,
+      );
+      if (!assigned) {
+        ui.showSnackBar(StringConstants.couldNotAssignPanelToSite, isError: true);
+        return;
+      }
+
+      if (!ui.isMounted) return;
+
+      await runBulkApply();
+
+      if (!ui.isMounted) return;
+
+      ui.showSnackBar(StringConstants.siteReadyOpeningDashboard, isError: false);
+
+      ui.openProjectDashboard(
+        device: device,
+        siteId: siteId,
+        siteName: site.siteName,
+      );
+    } catch (e) {
+      ui.showSnackBar('Error: $e', isError: true);
+    }
+  }
+
+  Future<void> finishCreateSiteWithoutPanel() async {
+    final ui = _ui;
+    if (ui == null) return;
+
+    if (commitPanelInfoHandler == null ||
+        !(await commitPanelInfoHandler!.call())) {
+      ui.showSnackBar(StringConstants.fixPanelInformationFields, isError: true);
+      return;
+    }
+
+    final normalizedPanelId = BleNameUtils.normalizeManualPanelId(
+      manualPanelId,
+    );
+    if (normalizedPanelId.isEmpty) {
+      ui.showSnackBar(StringConstants.panelIDIsMissing, isError: true);
+      return;
+    }
+
+    final errors = _siteService.validateSiteData(
+      siteName: siteNameController.text,
+      installerName: installerNameController.text,
+      companyName: companyNameController.text,
+      saqccRegNumber: saqccRegNumberController.text,
+      buildingName: buildingNameController.text,
+      installerContactNumber: installerContactNumberController.text,
+      installerEmail: installerEmailController.text,
+      siteDescription: siteDescriptionController.text,
+    );
+    if (errors.isNotEmpty) {
+      ui.showSnackBar(StringConstants.pleaseFixTheSiteFormStep1, isError: true);
+      return;
+    }
+
+    try {
+      final site = await _siteService.createSite(
+        siteName: siteNameController.text,
+        installerName: installerNameController.text,
+        companyName: companyNameController.text,
+        saqccRegNumber: saqccRegNumberController.text,
+        buildingName: buildingNameController.text,
+        installerContactNumber: installerContactNumberController.text,
+        installerEmail: installerEmailController.text,
+        siteDescription: siteDescriptionController.text,
+      );
+
+      final siteId = site.id;
+      if (siteId == null) {
+        ui.showSnackBar(StringConstants.siteCreatedButMissingId, isError: true);
+        return;
+      }
+
+      final bleDisplayName = BleNameUtils.technoswitchBleNameForPanelId(
+        normalizedPanelId,
+      );
+      final assigned = await _siteService.assignPanelToSite(
+        normalizedPanelId,
+        siteId,
+        panelName: bleDisplayName,
+        offlineProvisioned: true,
+      );
+      if (!assigned) {
+        ui.showSnackBar(StringConstants.couldNotAssignPanelToSite, isError: true);
+        return;
+      }
+
+      if (!ui.isMounted) return;
+
+      ui.showSnackBar(StringConstants.siteCreatedSuccessfully, isError: false);
+
+      final sitesWithLogCount = await _siteService.getSitesWithLogCount();
+      final siteWithLogCount = sitesWithLogCount.firstWhere(
+        (entry) => entry.site.id == siteId,
+        orElse:
+            () => SiteWithLogCount(
+              site: site,
+              logCount: 0,
+              lastLogRetrieved: null,
+            ),
+      );
+
+      if (!ui.isMounted) return;
+
+      ui.openSiteScreen(site: site, siteWithLogCount: siteWithLogCount);
+    } catch (e) {
+      ui.showSnackBar('Error: $e', isError: true);
+    }
+  }
+
+  Future<void> skipPanelConnectAndContinue() async {
+    final ui = _ui;
+    if (ui == null) return;
+
+    if (!validateStep(2)) {
+      ui.showSnackBar(
+        StringConstants.pleaseFillInAllRequiredFields,
+        isError: true,
+      );
+      return;
+    }
+
+    await ui.settleImeBeforeShowingDialog();
+    if (!ui.isMounted) return;
+
+    final existingId = BleNameUtils.normalizeManualPanelId(manualPanelId);
+    final entered = await ui.showEnterPanelIdDialog(
+      initialValue: existingId.isNotEmpty ? existingId : null,
+    );
+
+    if (!ui.isMounted || entered == null) return;
+
+    final panelId = BleNameUtils.normalizeManualPanelId(entered);
+    final existingPanel = await _panelService.getPanelByPanelId(panelId);
+    if (existingPanel?.siteId != null) {
+      if (!ui.isMounted) return;
+      await ui.showPanelAlreadyAssignedDialog();
+      return;
+    }
+
+    setSkippedPanelConnect(skipped: true, panelId: panelId);
+    setCreateProjectPanelBleVerified(false);
+    setConnectedDevice(null);
+    wizardDeviceId = panelId;
+    offeredBulkDownload = false;
+
+    clearValidationErrors();
+    await ui.dismissKeyboardFully();
+    if (!ui.isMounted) return;
+    await _animateNextPage?.call();
+  }
+
+  Future<void> goToNextStep() async {
+    final ui = _ui;
+    if (ui == null) return;
+
+    await ui.dismissKeyboardFully();
+    if (!ui.isMounted) return;
+
+    if (currentStep == 11) {
+      await confirmFinishAndApply();
+      return;
+    }
+
+    if (currentStep <= 2 && !validateStep(currentStep)) {
+      ui.showSnackBar(
+        StringConstants.pleaseFillInAllRequiredFields,
+        isError: true,
+      );
+      return;
+    }
+
+    if (currentStep == 2) {
+      clearValidationErrors();
+      await ui.dismissKeyboardFully();
+      if (!ui.isMounted) return;
+      await Future<void>.delayed(const Duration(milliseconds: 120));
+      if (!ui.isMounted) return;
+
+      final verified = await ui.openScanningScreen(panelData.selectedPanelType);
+      if (!ui.isMounted) return;
+      if (verified != true) return;
+
+      final device = _bleManager.selectedDevice;
+      if (device == null) {
+        ui.showSnackBar(StringConstants.connectionLostNoDevice, isError: true);
+        return;
+      }
+
+      setCreateProjectPanelBleVerified(true);
+      setConnectedDevice(device);
+      clearSkippedPanelConnect();
+      wizardDeviceId = device.id;
+      update();
+
+      final proceed = await runPostConnectAssignedPanelFlow();
+      if (!proceed || !ui.isMounted) return;
+
+      await offerBulkDownloadIfNeeded();
+      if (!ui.isMounted) return;
+
+      clearValidationErrors();
+      await ui.dismissKeyboardFully();
+      if (!ui.isMounted) return;
+      await _animateNextPage?.call();
+      return;
+    }
+
+    if (currentStep >= 3 && currentStep <= 10) {
+      final ok = await commitCurrentStepHandler?.call() ?? true;
+      if (!ok) {
+        ui.showSnackBar(
+          StringConstants.fixTheFieldsOnThisStepBeforeContinuing,
+          isError: true,
+        );
+        return;
+      }
+    }
+
+    clearValidationErrors();
+    await ui.dismissKeyboardFully();
+    if (!ui.isMounted) return;
+    await _animateNextPage?.call();
+  }
+
+  Future<void> goToPreviousStep() async {
+    if (currentStep > 1) {
+      if (currentStep == 3) {
+        if (skippedPanelConnect) {
+          clearSkippedPanelConnect();
+        } else {
+          _bleManager.disconnectConnectedDevice();
+          setCreateProjectPanelBleVerified(false);
+          setConnectedDevice(null);
+        }
+        wizardDeviceId = '';
+        offeredBulkDownload = false;
+        update();
+      }
+      await _animatePreviousPage?.call();
+    }
+  }
+
   @override
   void onClose() {
+    detachUi();
+    BleSessionIdlePolicy.suppressIdleDisconnect.value = false;
+    relayRefresh.dispose();
+    inputRefresh.dispose();
+    zoneRefresh.dispose();
+    extOutRefresh.dispose();
+    sounderRefresh.dispose();
+    serviceDueRefresh.dispose();
+    accessCodeRefresh.dispose();
+    panelInfoRefresh.dispose();
+    generalModuleRefresh.dispose();
+    navigatingToDeviceConnecting.dispose();
     siteNameController.dispose();
     installerNameController.dispose();
     companyNameController.dispose();

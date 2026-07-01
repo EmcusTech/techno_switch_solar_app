@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
+import 'package:techno_switch_solar_app/bindings/create_project_binding.dart';
 import 'package:techno_switch_solar_app/screens/create_project/create_project_screen_refactored.dart';
 import 'package:techno_switch_solar_app/screens/scanning_screen.dart';
 import 'package:techno_switch_solar_app/screens/sites/site_screen.dart';
@@ -332,9 +333,10 @@ class _HomeContentState extends State<_HomeContent> with RouteAware {
             children: [
               GestureDetector(
                 onTap: () {
+                  CreateProjectBinding().dependencies();
                   Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (context) => CreateSiteScreenRefactored(),
+                      builder: (context) => const CreateSiteScreenRefactored(),
                     ),
                   );
                 },

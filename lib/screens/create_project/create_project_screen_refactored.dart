@@ -2,18 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
-import 'package:techno_switch_solar_app/ble/ble_manager.dart';
-import 'package:techno_switch_solar_app/ble/ble_session_idle_policy.dart';
+import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/controllers/create_project_controller.dart';
-import 'package:techno_switch_solar_app/panel_config/panel_config_cache_sync.dart';
-import 'package:techno_switch_solar_app/panel_config/panel_configuration_coordinator.dart';
+import 'package:techno_switch_solar_app/controllers/create_project_ui_delegate.dart';
+import 'package:techno_switch_solar_app/models/site_model.dart';
 import 'package:techno_switch_solar_app/screens/create_project/panel_selection_page.dart';
 import 'package:techno_switch_solar_app/screens/create_project/site_creation_page.dart';
 import 'package:techno_switch_solar_app/screens/project_dashboard.dart';
 import 'package:techno_switch_solar_app/screens/scanning_screen.dart';
 import 'package:techno_switch_solar_app/screens/sites/site_screen.dart';
-import 'package:techno_switch_solar_app/utils/panel_service.dart';
 import 'package:techno_switch_solar_app/utils/site_service.dart';
 import 'package:techno_switch_solar_app/utils/constants/ble/ble_name_utils.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/general_mode_bottomsheet.dart';
@@ -29,43 +27,30 @@ import 'package:techno_switch_solar_app/widgets/dialogs/app_styled_dialogs.dart'
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
-
 import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
 
-class CreateSiteScreenRefactored extends StatefulWidget {
+class CreateSiteScreenRefactored extends GetView<CreateProjectController> {
   const CreateSiteScreenRefactored({super.key});
 
   @override
-  State<CreateSiteScreenRefactored> createState() =>
-      _CreateSiteScreenRefactoredState();
+  Widget build(BuildContext context) {
+    return _CreateProjectPageHost(controller: controller);
+  }
 }
 
-class _CreateSiteScreenRefactoredState
-    extends State<CreateSiteScreenRefactored> {
-  late CreateProjectController _controller;
+class _CreateProjectPageHost extends StatefulWidget {
+  const _CreateProjectPageHost({required this.controller});
+
+  final CreateProjectController controller;
+
+  @override
+  State<_CreateProjectPageHost> createState() => _CreateProjectPageHostState();
+}
+
+class _CreateProjectPageHostState extends State<_CreateProjectPageHost>
+    implements CreateProjectUiDelegate {
   late PageController _pageController;
-  final SiteService _siteService = SiteService();
-  final PanelService _panelService = PanelService();
   final BleLogController _bleController = Get.find<BleLogController>();
-  final BleManager _bleManager = Get.find<BleManager>();
-
-  int _currentStep = 1;
-  static const int _totalSteps = 11;
-
-  final ValueNotifier<int> _relayRefresh = ValueNotifier(0);
-  final ValueNotifier<int> _inputRefresh = ValueNotifier(0);
-  final ValueNotifier<int> _zoneRefresh = ValueNotifier(0);
-  final ValueNotifier<int> _extOutRefresh = ValueNotifier(0);
-  final ValueNotifier<int> _sounderRefresh = ValueNotifier(0);
-  final ValueNotifier<int> _serviceDueRefresh = ValueNotifier(0);
-  final ValueNotifier<int> _accessCodeRefresh = ValueNotifier(0);
-  final ValueNotifier<int> _panelInfoRefresh = ValueNotifier(0);
-  final ValueNotifier<int> _generalModuleRefresh = ValueNotifier(0);
-  final ValueNotifier<bool> _navigatingToDeviceConnecting = ValueNotifier(
-    false,
-  );
-
-  late final PanelConfigRefreshNotifiers _panelRefreshNotifiers;
 
   final GlobalKey<GeneralModuleBottomSheetState> _generalSheetKey =
       GlobalKey<GeneralModuleBottomSheetState>();
@@ -86,12 +71,18 @@ class _CreateSiteScreenRefactoredState
   final GlobalKey<PanelInfoBottomSheetState> _panelInfoSheetKey =
       GlobalKey<PanelInfoBottomSheetState>();
 
-  bool _offeredBulkDownload = false;
-  String _wizardDeviceId = '';
+  CreateProjectController get _controller => widget.controller;
 
   void _noop() {}
 
-  Future<void> _dismissKeyboardFully() async {
+  @override
+  bool get isMounted => mounted;
+
+  @override
+  BuildContext get uiContext => context;
+
+  @override
+  Future<void> dismissKeyboardFully() async {
     if (!mounted) return;
     FocusManager.instance.primaryFocus?.unfocus();
     await SystemChannels.textInput.invokeMethod<Object>(
@@ -102,37 +93,47 @@ class _CreateSiteScreenRefactoredState
     await WidgetsBinding.instance.endOfFrame;
   }
 
-  Future<void> _settleImeBeforeShowingDialog() async {
-    await _dismissKeyboardFully();
+  @override
+  Future<void> settleImeBeforeShowingDialog() async {
+    await dismissKeyboardFully();
     if (!mounted) return;
     await Future<void>.delayed(const Duration(milliseconds: 160));
     if (!mounted) return;
-    await _dismissKeyboardFully();
+    await dismissKeyboardFully();
     if (!mounted) return;
     await WidgetsBinding.instance.endOfFrame;
     await Future<void>.delayed(const Duration(milliseconds: 280));
   }
 
-  Future<void> _confirmFinishAndApply() async {
-    await _settleImeBeforeShowingDialog();
+  @override
+  void showSnackBar(String message, {required bool isError}) {
     if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor:
+            isError ? ColorConstants.primary : ColorConstants.success,
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
 
-    if (_controller.skippedPanelConnect) {
-      final proceed = await showAppStyledTwoActionDialog<bool>(
-        context: context,
-        title: UiStrings.createSiteDialogTitle,
-        message: UiStrings.createSiteConfirmMessage,
-        leadingActionLabel: UiStrings.cancelButton,
-        trailingActionLabel: UiStrings.createButton,
-        leadingValue: false,
-        trailingValue: true,
-      );
-      if (proceed != true || !mounted) return;
-      await _finishCreateSiteWithoutPanel();
-      return;
-    }
+  @override
+  Future<bool?> showCreateSiteConfirmDialog() {
+    return showAppStyledTwoActionDialog<bool>(
+      context: context,
+      title: UiStrings.createSiteDialogTitle,
+      message: UiStrings.createSiteConfirmMessage,
+      leadingActionLabel: UiStrings.cancelButton,
+      trailingActionLabel: UiStrings.createButton,
+      leadingValue: false,
+      trailingValue: true,
+    );
+  }
 
-    final proceed = await showAppStyledTwoActionDialog<bool>(
+  @override
+  Future<bool?> showApplyPanelSettingsConfirmDialog() {
+    return showAppStyledTwoActionDialog<bool>(
       context: context,
       title: UiStrings.applyPanelSettingsDialogTitle,
       message: UiStrings.applyPanelSettingsConfirmMessage,
@@ -141,49 +142,11 @@ class _CreateSiteScreenRefactoredState
       leadingValue: false,
       trailingValue: true,
     );
-    if (proceed != true || !mounted) return;
-    await _finishCreateSiteBulkApplyAndOpenDashboard();
   }
 
   @override
-  void initState() {
-    super.initState();
-    BleSessionIdlePolicy.suppressIdleDisconnect.value = true;
-    _controller = Get.put(CreateProjectController());
-    _pageController = PageController();
-    _panelRefreshNotifiers = PanelConfigRefreshNotifiers(
-      relay: _relayRefresh,
-      input: _inputRefresh,
-      zone: _zoneRefresh,
-      extOut: _extOutRefresh,
-      sounder: _sounderRefresh,
-      serviceDue: _serviceDueRefresh,
-      accessCode: _accessCodeRefresh,
-      panelInfo: _panelInfoRefresh,
-      generalModule: _generalModuleRefresh,
-    );
-  }
-
-  @override
-  void dispose() {
-    BleSessionIdlePolicy.suppressIdleDisconnect.value = false;
-    Get.delete<CreateProjectController>();
-    _pageController.dispose();
-    _relayRefresh.dispose();
-    _inputRefresh.dispose();
-    _zoneRefresh.dispose();
-    _extOutRefresh.dispose();
-    _sounderRefresh.dispose();
-    _serviceDueRefresh.dispose();
-    _accessCodeRefresh.dispose();
-    _panelInfoRefresh.dispose();
-    _generalModuleRefresh.dispose();
-    _navigatingToDeviceConnecting.dispose();
-    super.dispose();
-  }
-
-  Future<bool> _confirmAndDisconnect() async {
-    final shouldDisconnect = await showDialog<bool>(
+  Future<bool?> showDisconnectConfirmDialog() {
+    return showDialog<bool>(
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) {
@@ -286,60 +249,38 @@ class _CreateSiteScreenRefactoredState
         );
       },
     );
-
-    if (shouldDisconnect == true) {
-      if (_bleManager.isConnected) {
-        await _bleManager.disconnectConnectedDevice();
-      }
-      _controller.setCreateProjectPanelBleVerified(false);
-      _controller.setConnectedDevice(null);
-      _controller.clearSkippedPanelConnect();
-      _wizardDeviceId = '';
-      return true;
-    }
-    return false;
   }
 
-  Future<void> _onLeadingBackPressed() async {
-    if (_bleController.isConnected) {
-      final shouldPop = await _confirmAndDisconnect();
-      if (shouldPop && mounted) {
-        Navigator.of(context).pop();
-      }
-    } else {
-      if (mounted) Navigator.of(context).pop();
-    }
-  }
-
-  void _showSnackBar(String message, {required bool isError}) {
-    if (!mounted) return;
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor:
-            isError ? ColorConstants.primary : ColorConstants.success,
-        duration: const Duration(seconds: 2),
-      ),
+  @override
+  Future<String?> showEnterPanelIdDialog({String? initialValue}) {
+    return showAppStyledTextInputDialog(
+      context: context,
+      title: UiStrings.enterPanelIdDialogTitle,
+      message:
+          'Enter the panel ID for this site (e.g. AB12). It should match the ID in the panel BLE name TECHNOSWITCH_XXXX when you connect later.',
+      hintText: UiStrings.panelIdLabel,
+      initialValue: initialValue,
+      validator: (value) {
+        if (!BleNameUtils.isValidManualPanelId(value)) {
+          return StringConstants.enterAValidPanelIDLettersNumbersOr;
+        }
+        return null;
+      },
     );
   }
 
-  Future<bool> _runPostConnectAssignedPanelFlow() async {
-    final device = _controller.connectedDevice;
-    if (device == null) return false;
+  @override
+  Future<void> showPanelAlreadyAssignedDialog() {
+    return showAppStyledOneActionDialog(
+      context: context,
+      title: StringConstants.panelAlreadyAssigned,
+      message: UiStrings.panelIdAlreadyLinkedMessage,
+    );
+  }
 
-    final bleName = device.name.trim();
-    if (bleName.isEmpty) return true;
-
-    var panel =
-        await _panelService.getPanelByPanelId(bleName) ??
-        await _panelService.getPanelByBleName(bleName);
-    if (panel?.siteId == null) return true;
-
-    if (!mounted) return false;
-    await _settleImeBeforeShowingDialog();
-    if (!mounted) return false;
-    final choice = await showAppStyledTwoActionDialog<String>(
+  @override
+  Future<String?> showPanelAlreadyOnSiteDialog() {
+    return showAppStyledTwoActionDialog<String>(
       context: context,
       title: StringConstants.panelAlreadyOnASite,
       message:
@@ -349,36 +290,11 @@ class _CreateSiteScreenRefactoredState
       leadingValue: 'skip',
       trailingValue: 'move',
     );
-
-    if (choice == 'skip') {
-      if (_bleManager.isConnected) {
-        await _bleManager.disconnectConnectedDevice();
-      }
-      _controller.setCreateProjectPanelBleVerified(false);
-      _controller.setConnectedDevice(null);
-      _wizardDeviceId = '';
-      if (mounted) {
-        Navigator.of(context).popUntil((route) => route.isFirst);
-      }
-      return false;
-    }
-
-    if (choice == 'move') {
-      await _panelService.unassignPanelFromSite(panel!.panelId);
-    }
-    return true;
   }
 
-  Future<void> _offerBulkDownloadIfNeeded() async {
-    if (_controller.skippedPanelConnect) return;
-    if (_offeredBulkDownload) return;
-    _offeredBulkDownload = true;
-    if (!mounted) return;
-
-    await _settleImeBeforeShowingDialog();
-    if (!mounted) return;
-
-    final download = await showAppStyledTwoActionDialog<bool>(
+  @override
+  Future<bool?> showBulkDownloadDialog() {
+    return showAppStyledTwoActionDialog<bool>(
       context: context,
       title: StringConstants.downloadPanelConfiguration,
       message:
@@ -388,24 +304,67 @@ class _CreateSiteScreenRefactoredState
       leadingValue: false,
       trailingValue: true,
     );
+  }
 
-    if (download != true || !mounted) return;
+  @override
+  Future<bool?> openScanningScreen(String? expectedPanelType) {
+    return Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder:
+            (_) => ScanningScreen(
+              createProjectExpectedPanelType: expectedPanelType,
+            ),
+      ),
+    );
+  }
 
-    final device = _controller.connectedDevice;
-    if (device == null) return;
+  @override
+  void popScreen() {
+    if (mounted) {
+      Navigator.of(context).pop();
+    }
+  }
 
-    PanelConfigurationCoordinator(
-      bleManager: _bleManager,
-      bleController: _bleController,
-      device: device,
-      refreshNotifiers: _panelRefreshNotifiers,
-      navigatingToDeviceConnecting: _navigatingToDeviceConnecting,
-      useDialogOnlyBulkProgress: true,
-    ).startBulkDownload(context: context, isMounted: () => mounted);
+  @override
+  void popToHome() {
+    Navigator.of(context).popUntil((route) => route.isFirst);
+  }
+
+  @override
+  void openProjectDashboard({
+    required DiscoveredDevice device,
+    required int siteId,
+    required String siteName,
+  }) {
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder:
+            (_) => ProjectDashboardScreen(
+              selectedDevice: device,
+              panelName: device.name,
+              panelVersionNo: device.id,
+              siteId: siteId,
+              siteName: siteName,
+            ),
+      ),
+    );
+  }
+
+  @override
+  void openSiteScreen({
+    required SiteModel site,
+    required SiteWithLogCount siteWithLogCount,
+  }) {
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder:
+            (_) => SiteScreen(site: site, siteWithLogCount: siteWithLogCount),
+      ),
+    );
   }
 
   Future<bool> _commitConfigStepForCurrentPage() async {
-    switch (_currentStep) {
+    switch (_controller.currentStep) {
       case 3:
         return await _generalSheetKey.currentState?.commitLocal() ?? false;
       case 4:
@@ -427,361 +386,45 @@ class _CreateSiteScreenRefactoredState
     }
   }
 
-  Future<void> _finishCreateSiteBulkApplyAndOpenDashboard() async {
-    final device = _controller.connectedDevice ?? _bleManager.selectedDevice;
-    if (device == null) {
-      _showSnackBar(StringConstants.noConnectedPanel, isError: true);
-      return;
-    }
-
+  Future<bool> _commitPanelInfo() async {
     final panelState = _panelInfoSheetKey.currentState;
-    if (panelState == null || !(await panelState.commitLocal())) {
-      _showSnackBar(StringConstants.fixPanelInformationFields, isError: true);
-      return;
-    }
-
-    final errors = _siteService.validateSiteData(
-      siteName: _controller.siteNameController.text,
-      installerName: _controller.installerNameController.text,
-      companyName: _controller.companyNameController.text,
-      saqccRegNumber: _controller.saqccRegNumberController.text,
-      buildingName: _controller.buildingNameController.text,
-      installerContactNumber: _controller.installerContactNumberController.text,
-      installerEmail: _controller.installerEmailController.text,
-      siteDescription: _controller.siteDescriptionController.text,
-    );
-    if (errors.isNotEmpty) {
-      _showSnackBar(StringConstants.pleaseFixTheSiteFormStep1, isError: true);
-      return;
-    }
-
-    try {
-      final site = await _siteService.createSite(
-        siteName: _controller.siteNameController.text,
-        installerName: _controller.installerNameController.text,
-        companyName: _controller.companyNameController.text,
-        saqccRegNumber: _controller.saqccRegNumberController.text,
-        buildingName: _controller.buildingNameController.text,
-        installerContactNumber:
-            _controller.installerContactNumberController.text,
-        installerEmail: _controller.installerEmailController.text,
-        siteDescription: _controller.siteDescriptionController.text,
-      );
-
-      final siteId = site.id;
-      if (siteId == null) {
-        _showSnackBar(StringConstants.siteCreatedButMissingId, isError: true);
-        return;
-      }
-
-      final bleName = device.name.trim();
-      final panel =
-          await _panelService.getPanelByPanelId(bleName) ??
-          await _panelService.getPanelByBleName(bleName);
-      final panelIdToUse = panel?.panelId ?? bleName;
-
-      final assigned = await _siteService.assignPanelToSite(
-        panelIdToUse,
-        siteId,
-        panelName: bleName.isNotEmpty ? bleName : null,
-      );
-      if (!assigned) {
-        _showSnackBar(StringConstants.couldNotAssignPanelToSite, isError: true);
-        return;
-      }
-
-      if (!mounted) return;
-
-      final coordinator = PanelConfigurationCoordinator(
-        bleManager: _bleManager,
-        bleController: _bleController,
-        device: device,
-        refreshNotifiers: _panelRefreshNotifiers,
-        navigatingToDeviceConnecting: _navigatingToDeviceConnecting,
-      );
-
-      await coordinator.startBulkApply(
-        context: context,
-        isMounted: () => mounted,
-      );
-
-      if (!mounted) return;
-
-      _showSnackBar(StringConstants.siteReadyOpeningDashboard, isError: false);
-
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder:
-              (_) => ProjectDashboardScreen(
-                selectedDevice: device,
-                panelName: device.name,
-                panelVersionNo: device.id,
-                siteId: siteId,
-                siteName: site.siteName,
-              ),
-        ),
-      );
-    } catch (e) {
-      _showSnackBar('Error: $e', isError: true);
-    }
+    if (panelState == null) return false;
+    return panelState.commitLocal();
   }
 
-  Future<void> _finishCreateSiteWithoutPanel() async {
-    final panelState = _panelInfoSheetKey.currentState;
-    if (panelState == null || !(await panelState.commitLocal())) {
-      _showSnackBar(StringConstants.fixPanelInformationFields, isError: true);
-      return;
-    }
-
-    final manualPanelId = BleNameUtils.normalizeManualPanelId(
-      _controller.manualPanelId,
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController();
+    _controller.attachUi(this);
+    _controller.setupPageNavigation(
+      animateNext:
+          () => _pageController.nextPage(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+          ),
+      animatePrevious:
+          () => _pageController.previousPage(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+          ),
     );
-    if (manualPanelId.isEmpty) {
-      _showSnackBar(StringConstants.panelIDIsMissing, isError: true);
-      return;
-    }
-
-    final errors = _siteService.validateSiteData(
-      siteName: _controller.siteNameController.text,
-      installerName: _controller.installerNameController.text,
-      companyName: _controller.companyNameController.text,
-      saqccRegNumber: _controller.saqccRegNumberController.text,
-      buildingName: _controller.buildingNameController.text,
-      installerContactNumber: _controller.installerContactNumberController.text,
-      installerEmail: _controller.installerEmailController.text,
-      siteDescription: _controller.siteDescriptionController.text,
-    );
-    if (errors.isNotEmpty) {
-      _showSnackBar(StringConstants.pleaseFixTheSiteFormStep1, isError: true);
-      return;
-    }
-
-    try {
-      final site = await _siteService.createSite(
-        siteName: _controller.siteNameController.text,
-        installerName: _controller.installerNameController.text,
-        companyName: _controller.companyNameController.text,
-        saqccRegNumber: _controller.saqccRegNumberController.text,
-        buildingName: _controller.buildingNameController.text,
-        installerContactNumber:
-            _controller.installerContactNumberController.text,
-        installerEmail: _controller.installerEmailController.text,
-        siteDescription: _controller.siteDescriptionController.text,
-      );
-
-      final siteId = site.id;
-      if (siteId == null) {
-        _showSnackBar(StringConstants.siteCreatedButMissingId, isError: true);
-        return;
-      }
-
-      final bleDisplayName = BleNameUtils.technoswitchBleNameForPanelId(
-        manualPanelId,
-      );
-      final assigned = await _siteService.assignPanelToSite(
-        manualPanelId,
-        siteId,
-        panelName: bleDisplayName,
-        offlineProvisioned: true,
-      );
-      if (!assigned) {
-        _showSnackBar(StringConstants.couldNotAssignPanelToSite, isError: true);
-        return;
-      }
-
-      if (!mounted) return;
-
-      _showSnackBar(StringConstants.siteCreatedSuccessfully, isError: false);
-
-      final sitesWithLogCount = await _siteService.getSitesWithLogCount();
-      final siteWithLogCount = sitesWithLogCount.firstWhere(
-        (entry) => entry.site.id == siteId,
-        orElse:
-            () => SiteWithLogCount(
-              site: site,
-              logCount: 0,
-              lastLogRetrieved: null,
-            ),
-      );
-
-      if (!mounted) return;
-
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder:
-              (_) => SiteScreen(site: site, siteWithLogCount: siteWithLogCount),
-        ),
-      );
-    } catch (e) {
-      _showSnackBar('Error: $e', isError: true);
-    }
+    _controller.commitCurrentStepHandler = _commitConfigStepForCurrentPage;
+    _controller.commitPanelInfoHandler = _commitPanelInfo;
   }
 
-  Future<void> _skipPanelConnectAndContinue() async {
-    if (!_controller.validateStep(2)) {
-      _showSnackBar(
-        StringConstants.pleaseFillInAllRequiredFields,
-        isError: true,
-      );
-      return;
+  @override
+  void dispose() {
+    _controller.detachUi();
+    _pageController.dispose();
+    if (Get.isRegistered<CreateProjectController>()) {
+      Get.delete<CreateProjectController>();
     }
-
-    await _settleImeBeforeShowingDialog();
-    if (!mounted) return;
-
-    final existingId = BleNameUtils.normalizeManualPanelId(
-      _controller.manualPanelId,
-    );
-    final entered = await showAppStyledTextInputDialog(
-      context: context,
-      title: UiStrings.enterPanelIdDialogTitle,
-      message:
-          'Enter the panel ID for this site (e.g. AB12). It should match the ID in the panel BLE name TECHNOSWITCH_XXXX when you connect later.',
-      hintText: UiStrings.panelIdLabel,
-      initialValue: existingId.isNotEmpty ? existingId : null,
-      validator: (value) {
-        if (!BleNameUtils.isValidManualPanelId(value)) {
-          return StringConstants.enterAValidPanelIDLettersNumbersOr;
-        }
-        return null;
-      },
-    );
-
-    if (!mounted || entered == null) return;
-
-    final panelId = BleNameUtils.normalizeManualPanelId(entered);
-    final existingPanel = await _panelService.getPanelByPanelId(panelId);
-    if (existingPanel?.siteId != null) {
-      if (!mounted) return;
-      await showAppStyledOneActionDialog(
-        context: context,
-        title: StringConstants.panelAlreadyAssigned,
-        message: UiStrings.panelIdAlreadyLinkedMessage,
-      );
-      return;
-    }
-
-    _controller.setSkippedPanelConnect(skipped: true, panelId: panelId);
-    _controller.setCreateProjectPanelBleVerified(false);
-    _controller.setConnectedDevice(null);
-    _wizardDeviceId = panelId;
-    _offeredBulkDownload = false;
-
-    _controller.clearValidationErrors();
-    await _dismissKeyboardFully();
-    if (!mounted) return;
-    await _pageController.nextPage(
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
-    );
-  }
-
-  Future<void> _goToNextStep() async {
-    await _dismissKeyboardFully();
-    if (!mounted) return;
-
-    if (_currentStep == 11) {
-      await _confirmFinishAndApply();
-      return;
-    }
-
-    if (_currentStep <= 2 && !_controller.validateStep(_currentStep)) {
-      _showSnackBar(
-        StringConstants.pleaseFillInAllRequiredFields,
-        isError: true,
-      );
-      return;
-    }
-
-    if (_currentStep == 2) {
-      _controller.clearValidationErrors();
-      await _dismissKeyboardFully();
-      if (!mounted) return;
-      await Future<void>.delayed(const Duration(milliseconds: 120));
-      if (!mounted) return;
-      final verified = await Navigator.of(context).push<bool>(
-        MaterialPageRoute(
-          builder:
-              (_) => ScanningScreen(
-                createProjectExpectedPanelType:
-                    _controller.panelData.selectedPanelType,
-              ),
-        ),
-      );
-      if (!mounted) return;
-      if (verified != true) return;
-
-      final device = _bleManager.selectedDevice;
-      if (device == null) {
-        _showSnackBar(StringConstants.connectionLostNoDevice, isError: true);
-        return;
-      }
-
-      _controller.setCreateProjectPanelBleVerified(true);
-      _controller.setConnectedDevice(device);
-      _controller.clearSkippedPanelConnect();
-      _wizardDeviceId = device.id;
-
-      final proceed = await _runPostConnectAssignedPanelFlow();
-      if (!proceed || !mounted) return;
-
-      await _offerBulkDownloadIfNeeded();
-      if (!mounted) return;
-
-      _controller.clearValidationErrors();
-      await _dismissKeyboardFully();
-      if (!mounted) return;
-      await _pageController.nextPage(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      );
-      return;
-    }
-
-    if (_currentStep >= 3 && _currentStep <= 10) {
-      final ok = await _commitConfigStepForCurrentPage();
-      if (!ok) {
-        _showSnackBar(
-          StringConstants.fixTheFieldsOnThisStepBeforeContinuing,
-          isError: true,
-        );
-        return;
-      }
-    }
-
-    _controller.clearValidationErrors();
-    await _dismissKeyboardFully();
-    if (!mounted) return;
-    await _pageController.nextPage(
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
-    );
-  }
-
-  void _goToPreviousStep() {
-    if (_currentStep > 1) {
-      if (_currentStep == 3) {
-        if (_controller.skippedPanelConnect) {
-          _controller.clearSkippedPanelConnect();
-        } else {
-          _bleManager.disconnectConnectedDevice();
-          _controller.setCreateProjectPanelBleVerified(false);
-          _controller.setConnectedDevice(null);
-        }
-        _wizardDeviceId = '';
-        _offeredBulkDownload = false;
-      }
-      _pageController.previousPage(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      );
-    }
+    super.dispose();
   }
 
   void _onPageChanged(int page) {
-    setState(() {
-      _currentStep = page + 1;
-    });
+    _controller.setCurrentStep(page + 1);
   }
 
   Widget _embeddedSheetPadding({required Widget child}) {
@@ -800,7 +443,7 @@ class _CreateSiteScreenRefactoredState
             canPop: !_bleController.isConnected,
             onPopInvokedWithResult: (didPop, result) async {
               if (didPop) return;
-              final disconnect = await _confirmAndDisconnect();
+              final disconnect = await controller.confirmAndDisconnect();
               if (disconnect && context.mounted) {
                 Navigator.of(context).pop();
               }
@@ -830,7 +473,7 @@ class _CreateSiteScreenRefactoredState
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          _buildAppBar(),
+                          _buildAppBar(controller),
                           const SizedBox(height: 18),
                           Expanded(
                             child: Container(
@@ -846,9 +489,9 @@ class _CreateSiteScreenRefactoredState
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Expanded(child: _buildPageView()),
+                                    Expanded(child: _buildPageView(controller)),
                                     const SizedBox(height: 20),
-                                    _buildNavigation(),
+                                    _buildNavigation(controller),
                                   ],
                                 ),
                               ),
@@ -865,11 +508,11 @@ class _CreateSiteScreenRefactoredState
     );
   }
 
-  Widget _buildAppBar() {
+  Widget _buildAppBar(CreateProjectController controller) {
     return Row(
       children: [
         GestureDetector(
-          onTap: _onLeadingBackPressed,
+          onTap: controller.onLeadingBackPressed,
           child: Container(
             width: 40,
             height: 40,
@@ -912,7 +555,7 @@ class _CreateSiteScreenRefactoredState
               bottom: 3,
             ),
             child: Text(
-              '$_currentStep/$_totalSteps',
+              '${controller.currentStep}/${CreateProjectController.totalSteps}',
               style: StyleConstants.white14w700Style,
             ),
           ),
@@ -921,36 +564,20 @@ class _CreateSiteScreenRefactoredState
     );
   }
 
-  Widget _buildPageView() {
-    final id = _wizardDeviceId;
+  Widget _buildPageView(CreateProjectController controller) {
+    final id = controller.wizardDeviceId;
 
     return PageView.builder(
       controller: _pageController,
       onPageChanged: _onPageChanged,
       physics: const NeverScrollableScrollPhysics(),
-      itemCount: _totalSteps,
+      itemCount: CreateProjectController.totalSteps,
       itemBuilder: (context, index) {
         switch (index) {
           case 0:
-            return SiteCreationPage(
-              siteNameController: _controller.siteNameController,
-              installerNameController: _controller.installerNameController,
-              companyNameController: _controller.companyNameController,
-              saqccRegNumberController: _controller.saqccRegNumberController,
-              buildingNameController: _controller.buildingNameController,
-              installerContactNumberController:
-                  _controller.installerContactNumberController,
-              installerEmailController: _controller.installerEmailController,
-              siteDescriptionController: _controller.siteDescriptionController,
-              validationErrors: _controller.validationErrors,
-            );
+            return const SiteCreationPage();
           case 1:
-            return PanelSelectionPage(
-              selectedPanelType: _controller.panelData.selectedPanelType,
-              panelNameController: _controller.panelNameController,
-              onPanelTypeChanged: _controller.updatePanelType,
-              validationErrors: _controller.validationErrors,
-            );
+            return const PanelSelectionPage();
           case 2:
           case 3:
           case 4:
@@ -977,7 +604,7 @@ class _CreateSiteScreenRefactoredState
                     deviceId: id,
                     onDownload: _noop,
                     onApply: _noop,
-                    refreshTrigger: _generalModuleRefresh,
+                    refreshTrigger: controller.generalModuleRefresh,
                     embedInCreateFlow: true,
                   ),
                 );
@@ -988,7 +615,7 @@ class _CreateSiteScreenRefactoredState
                     deviceId: id,
                     onDownload: _noop,
                     onApply: _noop,
-                    refreshTrigger: _serviceDueRefresh,
+                    refreshTrigger: controller.serviceDueRefresh,
                     embedInCreateFlow: true,
                   ),
                 );
@@ -999,7 +626,7 @@ class _CreateSiteScreenRefactoredState
                     deviceId: id,
                     onDownload: _noop,
                     onApply: _noop,
-                    refreshTrigger: _zoneRefresh,
+                    refreshTrigger: controller.zoneRefresh,
                     embedInCreateFlow: true,
                   ),
                 );
@@ -1010,7 +637,7 @@ class _CreateSiteScreenRefactoredState
                     deviceId: id,
                     onDownload: _noop,
                     onApply: _noop,
-                    refreshTrigger: _sounderRefresh,
+                    refreshTrigger: controller.sounderRefresh,
                     embedInCreateFlow: true,
                   ),
                 );
@@ -1021,7 +648,7 @@ class _CreateSiteScreenRefactoredState
                     deviceId: id,
                     onDownload: _noop,
                     onApply: _noop,
-                    refreshTrigger: _inputRefresh,
+                    refreshTrigger: controller.inputRefresh,
                     embedInCreateFlow: true,
                   ),
                 );
@@ -1032,7 +659,7 @@ class _CreateSiteScreenRefactoredState
                     deviceId: id,
                     onDownload: _noop,
                     onApply: _noop,
-                    refreshTrigger: _relayRefresh,
+                    refreshTrigger: controller.relayRefresh,
                     embedInCreateFlow: true,
                   ),
                 );
@@ -1043,7 +670,7 @@ class _CreateSiteScreenRefactoredState
                     deviceId: id,
                     onDownload: _noop,
                     onApply: _noop,
-                    refreshTrigger: _extOutRefresh,
+                    refreshTrigger: controller.extOutRefresh,
                     embedInCreateFlow: true,
                   ),
                 );
@@ -1054,7 +681,7 @@ class _CreateSiteScreenRefactoredState
                     deviceId: id,
                     onDownload: _noop,
                     onApply: _noop,
-                    refreshTrigger: _zoneRefresh,
+                    refreshTrigger: controller.zoneRefresh,
                     embedInCreateFlow: true,
                   ),
                 );
@@ -1065,7 +692,7 @@ class _CreateSiteScreenRefactoredState
                     deviceId: id,
                     onDownload: _noop,
                     onApply: _noop,
-                    refreshTrigger: _panelInfoRefresh,
+                    refreshTrigger: controller.panelInfoRefresh,
                     embedInCreateFlow: true,
                   ),
                 );
@@ -1079,23 +706,14 @@ class _CreateSiteScreenRefactoredState
     );
   }
 
-  Widget _buildNavigation() {
-    final nextLabel =
-        _currentStep == 2
-            ? StringConstants.connectPanel
-            : _currentStep == 11
-            ? (_controller.skippedPanelConnect
-                ? UiStrings.createSiteDialogTitle
-                : StringConstants.finish)
-            : UiStrings.nextButton;
-
+  Widget _buildNavigation(CreateProjectController controller) {
     return Column(
       children: [
-        if (_currentStep == 2)
+        if (controller.currentStep == 2)
           Padding(
             padding: const EdgeInsets.only(bottom: 12),
             child: GestureDetector(
-              onTap: _skipPanelConnectAndContinue,
+              onTap: controller.skipPanelConnectAndContinue,
               child: Text(
                 StringConstants.skipConnectionEnterPanelIDManually,
                 style: StyleConstants.primary13w600Style,
@@ -1106,9 +724,9 @@ class _CreateSiteScreenRefactoredState
         Row(
           children: [
             Opacity(
-              opacity: _currentStep == 1 ? 0.2 : 1.0,
+              opacity: controller.currentStep == 1 ? 0.2 : 1.0,
               child: GestureDetector(
-                onTap: _goToPreviousStep,
+                onTap: controller.goToPreviousStep,
                 child: Container(
                   decoration: BoxDecoration(
                     color: ColorConstants.buttonSecondaryBackground,
@@ -1140,7 +758,7 @@ class _CreateSiteScreenRefactoredState
             ),
             const Spacer(),
             GestureDetector(
-              onTap: () => _goToNextStep(),
+              onTap: controller.goToNextStep,
               child: Container(
                 decoration: BoxDecoration(
                   color: ColorConstants.primary,
@@ -1155,7 +773,10 @@ class _CreateSiteScreenRefactoredState
                   ),
                   child: Row(
                     children: [
-                      Text(nextLabel, style: StyleConstants.white14w700Style),
+                      Text(
+                        controller.nextButtonLabel,
+                        style: StyleConstants.white14w700Style,
+                      ),
                       const SizedBox(width: 6),
                       const Icon(
                         Icons.arrow_forward,

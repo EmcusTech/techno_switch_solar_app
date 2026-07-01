@@ -273,7 +273,7 @@ class _SimpleSiteCreationScreenState extends State<SimpleSiteCreationScreen> {
                             children: [
                               SizedBox(height: 20),
                               Expanded(
-                                child: SiteCreationPage(
+                                child: SiteCreationForm(
                                   siteNameController: _siteNameController,
                                   installerNameController:
                                       _installerNameController,

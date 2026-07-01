@@ -1,20 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:techno_switch_solar_app/controllers/create_project_controller.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
-
 import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
 
-class SiteCreationPage extends StatefulWidget {
-  final TextEditingController siteNameController;
-  final TextEditingController installerNameController;
-  final TextEditingController companyNameController;
-  final TextEditingController saqccRegNumberController;
-  final TextEditingController buildingNameController;
-  final TextEditingController installerContactNumberController;
-  final TextEditingController installerEmailController;
-  final TextEditingController siteDescriptionController;
-  final Map<String, String>? validationErrors;
-  const SiteCreationPage({
+class SiteCreationForm extends StatelessWidget {
+  const SiteCreationForm({
     super.key,
     required this.siteNameController,
     required this.installerNameController,
@@ -27,11 +19,16 @@ class SiteCreationPage extends StatefulWidget {
     this.validationErrors,
   });
 
-  @override
-  State<SiteCreationPage> createState() => _SiteCreationPageState();
-}
+  final TextEditingController siteNameController;
+  final TextEditingController installerNameController;
+  final TextEditingController companyNameController;
+  final TextEditingController saqccRegNumberController;
+  final TextEditingController buildingNameController;
+  final TextEditingController installerContactNumberController;
+  final TextEditingController installerEmailController;
+  final TextEditingController siteDescriptionController;
+  final Map<String, String>? validationErrors;
 
-class _SiteCreationPageState extends State<SiteCreationPage> {
   Widget _buildTextField({
     required String label,
     required TextEditingController controller,
@@ -40,9 +37,8 @@ class _SiteCreationPageState extends State<SiteCreationPage> {
     int? maxLines = 1,
     bool isRequired = false,
   }) {
-    final hasError =
-        widget.validationErrors?.containsKey(validationKey) == true;
-    final errorMessage = widget.validationErrors?[validationKey];
+    final hasError = validationErrors?.containsKey(validationKey) == true;
+    final errorMessage = validationErrors?[validationKey];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -82,7 +78,7 @@ class _SiteCreationPageState extends State<SiteCreationPage> {
             controller: controller,
             maxLines: maxLines,
             onTapOutside: (value) {
-              FocusScope.of(context).unfocus();
+              FocusManager.instance.primaryFocus?.unfocus();
             },
             decoration: InputDecoration(
               contentPadding: EdgeInsets.all(12),
@@ -122,7 +118,7 @@ class _SiteCreationPageState extends State<SiteCreationPage> {
                 children: [
                   _buildTextField(
                     label: 'Site Name',
-                    controller: widget.siteNameController,
+                    controller: siteNameController,
                     hintText: 'Enter Site Name',
                     validationKey: StringConstants.sitename,
                     isRequired: true,
@@ -130,21 +126,21 @@ class _SiteCreationPageState extends State<SiteCreationPage> {
                   SizedBox(height: 20),
                   _buildTextField(
                     label: StringConstants.installerName,
-                    controller: widget.installerNameController,
+                    controller: installerNameController,
                     hintText: 'Enter Installer Name',
                     validationKey: StringConstants.installername,
                   ),
                   SizedBox(height: 20),
                   _buildTextField(
                     label: StringConstants.companyName,
-                    controller: widget.companyNameController,
+                    controller: companyNameController,
                     hintText: 'Enter Company Name',
                     validationKey: StringConstants.companyname,
                   ),
                   SizedBox(height: 20),
                   _buildTextField(
                     label: StringConstants.saqccRegistrationNumber,
-                    controller: widget.saqccRegNumberController,
+                    controller: saqccRegNumberController,
                     hintText: 'Enter SAQCC Registration Number',
                     validationKey: StringConstants.saqccregnumber,
                     isRequired: true,
@@ -152,28 +148,28 @@ class _SiteCreationPageState extends State<SiteCreationPage> {
                   SizedBox(height: 20),
                   _buildTextField(
                     label: StringConstants.buildingName,
-                    controller: widget.buildingNameController,
+                    controller: buildingNameController,
                     hintText: 'Enter Building Name',
                     validationKey: StringConstants.buildingname,
                   ),
                   SizedBox(height: 20),
                   _buildTextField(
                     label: StringConstants.installerContactNumber,
-                    controller: widget.installerContactNumberController,
+                    controller: installerContactNumberController,
                     hintText: 'Enter Installer Contact Number',
                     validationKey: StringConstants.installercontactnumber,
                   ),
                   SizedBox(height: 20),
                   _buildTextField(
                     label: StringConstants.installerEmail,
-                    controller: widget.installerEmailController,
+                    controller: installerEmailController,
                     hintText: 'Enter Installer Email',
                     validationKey: StringConstants.installeremail,
                   ),
                   SizedBox(height: 20),
                   _buildTextField(
                     label: StringConstants.siteDescription,
-                    controller: widget.siteDescriptionController,
+                    controller: siteDescriptionController,
                     hintText: 'Enter Site Description',
                     validationKey: StringConstants.sitedescription,
                     maxLines: 5,
@@ -184,6 +180,29 @@ class _SiteCreationPageState extends State<SiteCreationPage> {
           ),
         ],
       ),
+    );
+  }
+}
+
+class SiteCreationPage extends GetView<CreateProjectController> {
+  const SiteCreationPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return GetBuilder<CreateProjectController>(
+      builder:
+          (c) => SiteCreationForm(
+            siteNameController: c.siteNameController,
+            installerNameController: c.installerNameController,
+            companyNameController: c.companyNameController,
+            saqccRegNumberController: c.saqccRegNumberController,
+            buildingNameController: c.buildingNameController,
+            installerContactNumberController:
+                c.installerContactNumberController,
+            installerEmailController: c.installerEmailController,
+            siteDescriptionController: c.siteDescriptionController,
+            validationErrors: c.validationErrors,
+          ),
     );
   }
 }

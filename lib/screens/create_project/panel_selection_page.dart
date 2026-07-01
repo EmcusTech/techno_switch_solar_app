@@ -1,171 +1,157 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:get/get.dart';
+import 'package:techno_switch_solar_app/controllers/create_project_controller.dart';
 import 'package:techno_switch_solar_app/models/panel_type_config.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
-
 import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
 
-class PanelSelectionPage extends StatefulWidget {
-  final String? selectedPanelType;
-  final TextEditingController panelNameController;
-  final Function(String?) onPanelTypeChanged;
-  final Map<String, String>? validationErrors;
+class PanelSelectionPage extends GetView<CreateProjectController> {
+  const PanelSelectionPage({super.key});
 
-  const PanelSelectionPage({
-    super.key,
-    required this.selectedPanelType,
-    required this.panelNameController,
-    required this.onPanelTypeChanged,
-    this.validationErrors,
-  });
-
-  @override
-  State<PanelSelectionPage> createState() => _PanelSelectionPageState();
-}
-
-class _PanelSelectionPageState extends State<PanelSelectionPage> {
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 19),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            StringConstants.panelSelection,
-            style: StyleConstants.textBodyDark18w600Style,
-          ),
-          SizedBox(height: 32),
-          Expanded(
-            child: SingleChildScrollView(
-              padding: EdgeInsets.only(
-                bottom: MediaQuery.viewInsetsOf(context).bottom + 24,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  RichText(
-                    text: TextSpan(
+    return GetBuilder<CreateProjectController>(
+      builder:
+          (c) => Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 19),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  StringConstants.panelSelection,
+                  style: StyleConstants.textBodyDark18w600Style,
+                ),
+                SizedBox(height: 32),
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: EdgeInsets.only(
+                      bottom: MediaQuery.viewInsetsOf(context).bottom + 24,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        TextSpan(
-                          text: StringConstants.panelName,
-                          style: StyleConstants.primary13w600Style.copyWith(
-                            color:
-                                widget.validationErrors?.containsKey(
-                                          StringConstants.panelname,
-                                        ) ==
-                                        true
-                                    ? ColorConstants.primary
-                                    : ColorConstants.textSecondary,
+                        RichText(
+                          text: TextSpan(
+                            children: [
+                              TextSpan(
+                                text: StringConstants.panelName,
+                                style: StyleConstants.primary13w600Style
+                                    .copyWith(
+                                      color:
+                                          c.validationErrors.containsKey(
+                                                StringConstants.panelname,
+                                              )
+                                              ? ColorConstants.primary
+                                              : ColorConstants.textSecondary,
+                                    ),
+                              ),
+                              TextSpan(
+                                text: StringConstants.strb411bc68,
+                                style: StyleConstants.primary13w600Style,
+                              ),
+                            ],
                           ),
                         ),
-                        TextSpan(
-                          text: StringConstants.strb411bc68,
-                          style: StyleConstants.primary13w600Style,
+                        SizedBox(height: 8),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: ColorConstants.white,
+                            borderRadius: BorderRadius.circular(4),
+                            border: Border.all(
+                              color:
+                                  c.validationErrors.containsKey(
+                                        StringConstants.panelname,
+                                      )
+                                      ? ColorConstants.primary
+                                      : ColorConstants.borderGray,
+                              width:
+                                  c.validationErrors.containsKey(
+                                        StringConstants.panelname,
+                                      )
+                                      ? 2
+                                      : 1,
+                            ),
+                          ),
+                          child: TextField(
+                            controller: c.panelNameController,
+                            textInputAction: TextInputAction.done,
+                            onSubmitted:
+                                (_) => FocusScope.of(context).unfocus(),
+                            onTapOutside: (value) {
+                              FocusScope.of(context).unfocus();
+                            },
+                            decoration: InputDecoration(
+                              contentPadding: EdgeInsets.all(12),
+                              border: InputBorder.none,
+                              hintText: StringConstants.enterPanelName,
+                              hintStyle: StyleConstants.divider13w400Style,
+                            ),
+                          ),
                         ),
+                        if (c.validationErrors.containsKey(
+                          StringConstants.panelname,
+                        )) ...[
+                          SizedBox(height: 4),
+                          Text(
+                            c.validationErrors[StringConstants.panelname]!,
+                            style: StyleConstants.primary12w500Style,
+                          ),
+                        ],
+                        SizedBox(height: 36),
+                        RichText(
+                          text: TextSpan(
+                            children: [
+                              TextSpan(
+                                text: StringConstants.panelType,
+                                style: StyleConstants.primary13w600Style
+                                    .copyWith(
+                                      color:
+                                          c.validationErrors.containsKey(
+                                                StringConstants.paneltype,
+                                              )
+                                              ? ColorConstants.primary
+                                              : ColorConstants.textSecondary,
+                                    ),
+                              ),
+                              TextSpan(
+                                text: StringConstants.strb411bc68,
+                                style: StyleConstants.primary13w600Style,
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (c.validationErrors.containsKey(
+                          StringConstants.paneltype,
+                        )) ...[
+                          SizedBox(height: 4),
+                          Text(
+                            c.validationErrors[StringConstants.paneltype]!,
+                            style: StyleConstants.primary12w500Style,
+                          ),
+                        ],
+                        SizedBox(height: 18),
+                        _buildPanelTypeTiles(c),
                       ],
                     ),
                   ),
-                  SizedBox(height: 8),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: ColorConstants.white,
-                      borderRadius: BorderRadius.circular(4),
-                      border: Border.all(
-                        color:
-                            widget.validationErrors?.containsKey(
-                                      StringConstants.panelname,
-                                    ) ==
-                                    true
-                                ? ColorConstants.primary
-                                : ColorConstants.borderGray,
-                        width:
-                            widget.validationErrors?.containsKey(
-                                      StringConstants.panelname,
-                                    ) ==
-                                    true
-                                ? 2
-                                : 1,
-                      ),
-                    ),
-                    child: TextField(
-                      controller: widget.panelNameController,
-                      textInputAction: TextInputAction.done,
-                      onSubmitted: (_) => FocusScope.of(context).unfocus(),
-                      onTapOutside: (value) {
-                        FocusScope.of(context).unfocus();
-                      },
-                      decoration: InputDecoration(
-                        contentPadding: EdgeInsets.all(12),
-                        border: InputBorder.none,
-                        hintText: StringConstants.enterPanelName,
-                        hintStyle: StyleConstants.divider13w400Style,
-                      ),
-                    ),
-                  ),
-                  if (widget.validationErrors?.containsKey(
-                        StringConstants.panelname,
-                      ) ==
-                      true) ...[
-                    SizedBox(height: 4),
-                    Text(
-                      widget.validationErrors![StringConstants.panelname]!,
-                      style: StyleConstants.primary12w500Style,
-                    ),
-                  ],
-                  SizedBox(height: 36),
-                  RichText(
-                    text: TextSpan(
-                      children: [
-                        TextSpan(
-                          text: StringConstants.panelType,
-                          style: StyleConstants.primary13w600Style.copyWith(
-                            color:
-                                widget.validationErrors?.containsKey(
-                                          StringConstants.paneltype,
-                                        ) ==
-                                        true
-                                    ? ColorConstants.primary
-                                    : ColorConstants.textSecondary,
-                          ),
-                        ),
-                        TextSpan(
-                          text: StringConstants.strb411bc68,
-                          style: StyleConstants.primary13w600Style,
-                        ),
-                      ],
-                    ),
-                  ),
-                  if (widget.validationErrors?.containsKey(
-                        StringConstants.paneltype,
-                      ) ==
-                      true) ...[
-                    SizedBox(height: 4),
-                    Text(
-                      widget.validationErrors![StringConstants.paneltype]!,
-                      style: StyleConstants.primary12w500Style,
-                    ),
-                  ],
-                  SizedBox(height: 18),
-                  _buildPanelTypeTiles(),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
-        ],
-      ),
     );
   }
 
-  Widget _buildPanelTypeTiles() {
+  Widget _buildPanelTypeTiles(CreateProjectController c) {
     return Column(
       children:
           PanelTypeConfig.availablePanels.map((panelConfig) {
             return Column(
               children: [
                 _buildPanelTypeTile(
+                  c: c,
                   title: panelConfig.typeName,
                   zoneCount: panelConfig.zoneCount.toString(),
                   sounderCount: panelConfig.sounderCount.toString(),
@@ -182,6 +168,7 @@ class _PanelSelectionPageState extends State<PanelSelectionPage> {
   }
 
   Widget _buildPanelTypeTile({
+    required CreateProjectController c,
     required String title,
     required String zoneCount,
     required String sounderCount,
@@ -190,7 +177,7 @@ class _PanelSelectionPageState extends State<PanelSelectionPage> {
   }) {
     return GestureDetector(
       onTap: () {
-        widget.onPanelTypeChanged(title);
+        c.updatePanelType(title);
       },
       child: Container(
         decoration: BoxDecoration(
@@ -204,9 +191,9 @@ class _PanelSelectionPageState extends State<PanelSelectionPage> {
             children: [
               Radio<String>(
                 value: title,
-                groupValue: widget.selectedPanelType,
+                groupValue: c.panelData.selectedPanelType,
                 onChanged: (value) {
-                  widget.onPanelTypeChanged(value);
+                  c.updatePanelType(value);
                 },
                 activeColor: ColorConstants.primary,
                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
