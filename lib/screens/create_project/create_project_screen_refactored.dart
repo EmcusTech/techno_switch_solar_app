@@ -8,14 +8,14 @@ import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/controllers/create_project_controller.dart';
 import 'package:techno_switch_solar_app/panel_config/panel_config_cache_sync.dart';
 import 'package:techno_switch_solar_app/panel_config/panel_configuration_coordinator.dart';
-import 'package:techno_switch_solar_app/screens/create_project/pages/panel_selection_page.dart';
-import 'package:techno_switch_solar_app/screens/create_project/pages/site_creation_page.dart';
+import 'package:techno_switch_solar_app/screens/create_project/panel_selection_page.dart';
+import 'package:techno_switch_solar_app/screens/create_project/site_creation_page.dart';
 import 'package:techno_switch_solar_app/screens/project_dashboard.dart';
 import 'package:techno_switch_solar_app/screens/scanning_screen.dart';
-import 'package:techno_switch_solar_app/screens/site_screen.dart';
-import 'package:techno_switch_solar_app/services/panel_service.dart';
-import 'package:techno_switch_solar_app/services/site_service.dart';
-import 'package:techno_switch_solar_app/utils/ble_name_utils.dart';
+import 'package:techno_switch_solar_app/screens/sites/site_screen.dart';
+import 'package:techno_switch_solar_app/utils/panel_service.dart';
+import 'package:techno_switch_solar_app/utils/site_service.dart';
+import 'package:techno_switch_solar_app/utils/constants/ble/ble_name_utils.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/general_mode_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/input_mode_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/l_bus_mode_bottomsheet.dart';
@@ -25,7 +25,7 @@ import 'package:techno_switch_solar_app/widgets/bottom_sheets/service_due_mode_b
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/setting_bottom_sheets/ext_out_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/sounder_mode_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/zone_mode_bottomsheet.dart';
-import 'package:techno_switch_solar_app/widgets/app_styled_dialogs.dart';
+import 'package:techno_switch_solar_app/widgets/dialogs/app_styled_dialogs.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
@@ -120,13 +120,10 @@ class _CreateSiteScreenRefactoredState
     if (_controller.skippedPanelConnect) {
       final proceed = await showAppStyledTwoActionDialog<bool>(
         context: context,
-        title: 'Create site',
-        message:
-            'This will save the site and panel ID. Configuration will be stored locally and can be applied when you connect the panel later.',
-        leadingActionLabel: StringConstants.cancel,
-        trailingActionLabel:
-            StringConstants
-                .thisWillSaveTheSiteAndPanelIDConfigurationWillBeStoredLocallyAndCanBeAppliedWhenYouConnectThePanelLater,
+        title: UiStrings.createSiteDialogTitle,
+        message: UiStrings.createSiteConfirmMessage,
+        leadingActionLabel: UiStrings.cancelButton,
+        trailingActionLabel: UiStrings.createButton,
         leadingValue: false,
         trailingValue: true,
       );
@@ -137,13 +134,10 @@ class _CreateSiteScreenRefactoredState
 
     final proceed = await showAppStyledTwoActionDialog<bool>(
       context: context,
-      title: StringConstants.updatePanelSettings,
-      message:
-          'This will update the panel settings with the values you configured in this setup.',
-      leadingActionLabel: StringConstants.cancel,
-      trailingActionLabel:
-          StringConstants
-              .thisWillUpdateThePanelSettingsWithTheValuesYouConfiguredInThisSetup,
+      title: UiStrings.applyPanelSettingsDialogTitle,
+      message: UiStrings.applyPanelSettingsConfirmMessage,
+      leadingActionLabel: UiStrings.cancelButton,
+      trailingActionLabel: UiStrings.nextButton,
       leadingValue: false,
       trailingValue: true,
     );
@@ -640,10 +634,10 @@ class _CreateSiteScreenRefactoredState
     );
     final entered = await showAppStyledTextInputDialog(
       context: context,
-      title: StringConstants.enterPanelID,
+      title: UiStrings.enterPanelIdDialogTitle,
       message:
           'Enter the panel ID for this site (e.g. AB12). It should match the ID in the panel BLE name TECHNOSWITCH_XXXX when you connect later.',
-      hintText: 'Panel ID',
+      hintText: UiStrings.panelIdLabel,
       initialValue: existingId.isNotEmpty ? existingId : null,
       validator: (value) {
         if (!BleNameUtils.isValidManualPanelId(value)) {
@@ -662,9 +656,7 @@ class _CreateSiteScreenRefactoredState
       await showAppStyledOneActionDialog(
         context: context,
         title: StringConstants.panelAlreadyAssigned,
-        message:
-            StringConstants
-                .thisPanelIDIsAlreadyLinkedToASiteUseADifferentIDOrConnectToThePanelInstead,
+        message: UiStrings.panelIdAlreadyLinkedMessage,
       );
       return;
     }
@@ -1093,10 +1085,9 @@ class _CreateSiteScreenRefactoredState
             ? StringConstants.connectPanel
             : _currentStep == 11
             ? (_controller.skippedPanelConnect
-                ? 'Create site'
+                ? UiStrings.createSiteDialogTitle
                 : StringConstants.finish)
-            : StringConstants
-                .thisWillUpdateThePanelSettingsWithTheValuesYouConfiguredInThisSetup;
+            : UiStrings.nextButton;
 
     return Column(
       children: [

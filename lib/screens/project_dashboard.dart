@@ -9,18 +9,18 @@ import 'package:lottie/lottie.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/bindings/firmware_binding.dart';
 import 'package:techno_switch_solar_app/controllers/updates_controller.dart';
-import 'package:techno_switch_solar_app/screens/log_history_screen.dart';
-import 'package:techno_switch_solar_app/screens/log_retrieval_loading_screen.dart';
+import 'package:techno_switch_solar_app/screens/logs/log_history_screen.dart';
+import 'package:techno_switch_solar_app/screens/logs/log_retrieval_loading_screen.dart';
 import 'package:techno_switch_solar_app/screens/scanning_screen.dart';
 import 'package:techno_switch_solar_app/screens/settings_screen.dart';
 import 'package:techno_switch_solar_app/screens/test_mode_screen.dart';
-import 'package:techno_switch_solar_app/utils/bluetooth_service.dart';
-import 'package:techno_switch_solar_app/utils/ble_name_utils.dart';
-import 'package:techno_switch_solar_app/utils/ble_msd_utils.dart';
+import 'package:techno_switch_solar_app/utils/constants/ble/bluetooth_service.dart';
+import 'package:techno_switch_solar_app/utils/constants/ble/ble_name_utils.dart';
+import 'package:techno_switch_solar_app/utils/constants/ble/ble_msd_utils.dart';
 import 'package:techno_switch_solar_app/utils/commissioning_test_results_helper.dart';
-import 'package:techno_switch_solar_app/utils/export_tile.dart';
-import 'package:techno_switch_solar_app/utils/project_report_pdf_util.dart';
-import 'package:techno_switch_solar_app/services/site_service.dart';
+import 'package:techno_switch_solar_app/widgets/export_tile.dart';
+import 'package:techno_switch_solar_app/utils/pdf/project_report_pdf_util.dart';
+import 'package:techno_switch_solar_app/utils/site_service.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/access_code_mode_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/diagnostic_mode_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/general_mode_bottomsheet.dart';
@@ -37,7 +37,7 @@ import 'package:techno_switch_solar_app/panel_config/panel_config_bulk_sync.dart
 import 'package:techno_switch_solar_app/panel_config/panel_config_cache_sync.dart';
 import 'package:techno_switch_solar_app/panel_config/panel_config_feedback_dialogs.dart';
 import 'package:techno_switch_solar_app/panel_config/post_connect_bulk_download_offer.dart';
-import 'package:techno_switch_solar_app/utils/peripheral_config_snapshot.dart';
+import 'package:techno_switch_solar_app/utils/peripherals/peripheral_config_snapshot.dart';
 import 'package:techno_switch_solar_app/utils/storage/commissioning_test_results_cache.dart';
 import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/config_log_bottomsheet.dart';
@@ -47,10 +47,10 @@ import 'package:techno_switch_solar_app/widgets/bottom_sheets/test_mode_relay_bo
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/test_mode_sounder_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/walk_test_zone_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/zone_mode_bottomsheet.dart';
-import 'package:techno_switch_solar_app/widgets/firmware_upgrade_bottom_sheet.dart';
-import 'package:techno_switch_solar_app/widgets/panel_access_code_dialog.dart';
-import 'package:techno_switch_solar_app/widgets/bootloader_connect_flow.dart';
-import 'package:techno_switch_solar_app/widgets/ble_connecting_dialog.dart';
+import 'package:techno_switch_solar_app/widgets/bottom_sheets/firmware_upgrade_bottom_sheet.dart';
+import 'package:techno_switch_solar_app/widgets/dialogs/panel_access_code_dialog.dart';
+import 'package:techno_switch_solar_app/utils/ble/bootloader_connect_flow.dart';
+import 'package:techno_switch_solar_app/widgets/dialogs/ble_connecting_dialog.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
@@ -339,8 +339,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    StringConstants
-                        .theConnectionToTheDeviceWasLostAnyOpenPanelsWereClosedUseConnectWhenYouAreReadyToReconnect,
+                    UiStrings.connectionLostUseConnectMessage,
                     style: StyleConstants.textGray14w400Style,
                     textAlign: TextAlign.center,
                   ),
@@ -1073,7 +1072,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text(
-              StringConstants.deviceNotFoundAfterFirmwareUpgradePleaseReconnect,
+              UiStrings.deviceNotFoundAfterFirmwareUpgradeReconnectMessage,
             ),
           ),
         );

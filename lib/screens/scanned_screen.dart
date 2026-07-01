@@ -6,28 +6,29 @@ import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:lottie/lottie.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
-import 'package:techno_switch_solar_app/screens/event_log_screen.dart';
-import 'package:techno_switch_solar_app/screens/log_retrieval_loading_screen.dart';
+import 'package:techno_switch_solar_app/screens/logs/event_log_screen.dart';
+import 'package:techno_switch_solar_app/screens/logs/log_retrieval_loading_screen.dart';
 import 'package:techno_switch_solar_app/screens/project_dashboard.dart';
 import 'package:techno_switch_solar_app/screens/scanning_screen.dart';
-import 'package:techno_switch_solar_app/services/navigation_service.dart';
-import 'package:techno_switch_solar_app/services/panel_service.dart';
-import 'package:techno_switch_solar_app/services/site_service.dart';
-import 'package:techno_switch_solar_app/services/panel_site_connect_flow.dart';
+import 'package:techno_switch_solar_app/utils/app/navigation_service.dart';
+import 'package:techno_switch_solar_app/utils/panel_service.dart';
+import 'package:techno_switch_solar_app/utils/site_service.dart';
+import 'package:techno_switch_solar_app/utils/panel_site_connect_flow.dart';
 import 'package:techno_switch_solar_app/models/site_model.dart';
-import 'package:techno_switch_solar_app/screens/simple_site_creation_screen.dart';
-import 'package:techno_switch_solar_app/utils/ble_name_utils.dart';
+import 'package:techno_switch_solar_app/screens/sites/simple_site_creation_screen.dart';
+import 'package:techno_switch_solar_app/utils/constants/ble/ble_name_utils.dart';
 import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
 import 'package:techno_switch_solar_app/panel_config/post_connect_bulk_download_offer.dart';
-import 'package:techno_switch_solar_app/widgets/panel_access_code_dialog.dart';
-import 'package:techno_switch_solar_app/widgets/bootloader_connect_flow.dart';
-import 'package:techno_switch_solar_app/utils/bluetooth_service.dart';
+import 'package:techno_switch_solar_app/widgets/dialogs/panel_access_code_dialog.dart';
+import 'package:techno_switch_solar_app/utils/ble/bootloader_connect_flow.dart';
+import 'package:techno_switch_solar_app/utils/constants/ble/bluetooth_service.dart';
 import 'package:usb_serial/usb_serial.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 
 import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
+
 class ScannedScreen extends StatefulWidget {
   final List<dynamic> discoveredDevices;
   final ScanType scanType;
@@ -104,8 +105,7 @@ class _ScannedScreenState extends State<ScannedScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    StringConstants
-                        .thisPanelIsNotAssociatedWithAnySiteYetCreateASiteToContinue,
+                    UiStrings.panelNotAssociatedCreateSiteMessage,
                     style: StyleConstants.textMuted14w400Style,
                     textAlign: TextAlign.center,
                   ),
@@ -145,8 +145,7 @@ class _ScannedScreenState extends State<ScannedScreen> {
                             Navigator.of(dialogContext).pop(true);
                           },
                           child: Text(
-                            StringConstants
-                                .thisWillSaveTheSiteAndPanelIDConfigurationWillBeStoredLocallyAndCanBeAppliedWhenYouConnectThePanelLater,
+                            UiStrings.createButton,
                             style: StyleConstants.white14w600Style,
                           ),
                         ),
@@ -285,7 +284,9 @@ class _ScannedScreenState extends State<ScannedScreen> {
                                           site.siteName,
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
-                                          style: StyleConstants.textDark14w600Style,
+                                          style:
+                                              StyleConstants
+                                                  .textDark14w600Style,
                                         ),
                                         if (site.companyName
                                                 .trim()
@@ -306,7 +307,9 @@ class _ScannedScreenState extends State<ScannedScreen> {
                                                   ),
                                               maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
-                                              style: StyleConstants.textMuted12w400Style,
+                                              style:
+                                                  StyleConstants
+                                                      .textMuted12w400Style,
                                             ),
                                           ),
                                       ],
@@ -382,8 +385,7 @@ class _ScannedScreenState extends State<ScannedScreen> {
                                       dialogContext,
                                     ).pop('create'),
                                 child: Text(
-                                  StringConstants
-                                      .thisWillSaveTheSiteAndPanelIDConfigurationWillBeStoredLocallyAndCanBeAppliedWhenYouConnectThePanelLater,
+                                  UiStrings.createButton,
                                   style: StyleConstants.primary14w600Style,
                                 ),
                               ),
@@ -652,16 +654,19 @@ class _ScannedScreenState extends State<ScannedScreen> {
           SizedBox(height: 16),
           Text(
             'No ${widget.scanType == ScanType.usb ? 'USB' : StringConstants.bluetooth} Devices Found',
-            style: StyleConstants.black16w600Style.copyWith(color: Colors.grey[700]),
+            style: StyleConstants.black16w600Style.copyWith(
+              color: Colors.grey[700],
+            ),
           ),
           SizedBox(height: 8),
           Text(
             widget.scanType == ScanType.usb
                 ? 'Make sure your solar devices are connected via USB and powered on.'
-                : StringConstants
-                    .makeSureBluetoothIsEnabledAndSolarDevicesAreInPairingMode,
+                : UiStrings.bluetoothPairingModeHintMessage,
             textAlign: TextAlign.center,
-            style: StyleConstants.black12w400Style.copyWith(color: Colors.grey[600]),
+            style: StyleConstants.black12w400Style.copyWith(
+              color: Colors.grey[600],
+            ),
           ),
         ],
       ),

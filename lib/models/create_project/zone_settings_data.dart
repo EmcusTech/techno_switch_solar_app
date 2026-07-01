@@ -1,4 +1,5 @@
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
+
 class ZoneSettingsData {
   String? expandedZone;
   Map<String, String> zoneTexts;

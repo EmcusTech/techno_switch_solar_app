@@ -1,0 +1,2130 @@
+import 'dart:async';
+import 'dart:io';
+import 'dart:typed_data';
+import 'package:dotted_border/dotted_border.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:flutter/material.dart';
+import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
+import 'package:flutter_svg/svg.dart';
+// import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:get/get.dart';
+import 'package:lottie/lottie.dart';
+import 'package:percent_indicator/percent_indicator.dart';
+import 'package:techno_switch_solar_app/ble/ble_session_idle_policy.dart';
+import 'package:techno_switch_solar_app/models/ble/firmware/firmware_packet_model.dart';
+import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
+import 'package:techno_switch_solar_app/widgets/common/common_cta_button.dart';
+import '../../ble/ble_manager.dart';
+import '../../ble/controller/ble_log_controller.dart';
+import '../../controllers/updates_controller.dart';
+import 'package:techno_switch_solar_app/utils/ble/firmware_upgrade_service.dart'
+    as fw;
+import 'package:techno_switch_solar_app/utils/constants/ble/bluetooth_service.dart'
+    as app_bluetooth;
+import 'package:techno_switch_solar_app/utils/constants/ble/ble_name_utils.dart';
+import 'package:techno_switch_solar_app/utils/constants/ble/ble_msd_utils.dart';
+import 'package:techno_switch_solar_app/utils/logger.dart' as logger;
+import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
+
+import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
+
+enum FirmwareType { mainPanel, bleChip }
+
+enum FirmwareUpgradeStep {
+  essentialSteps,
+  connectDevice,
+  chooseType,
+  fileUpload,
+  fileDetails,
+  progress,
+  result,
+}
+
+class FirmwareUpgradeBottomSheet extends StatefulWidget {
+  final DiscoveredDevice? connectedDevice;
+
+  const FirmwareUpgradeBottomSheet({super.key, this.connectedDevice});
+
+  @override
+  State<FirmwareUpgradeBottomSheet> createState() =>
+      _FirmwareUpgradeBottomSheetState();
+}
+
+class _FirmwareUpgradeBottomSheetState
+    extends State<FirmwareUpgradeBottomSheet> {
+  final UpdatesController _controller = Get.find<UpdatesController>();
+  final BleManager ble = Get.find<BleManager>();
+  FirmwareUpgradeStep _currentStep = FirmwareUpgradeStep.essentialSteps;
+  FirmwareType? _selectedFirmwareType;
+  PlatformFile? _selectedFile;
+  bool _isUploading = false;
+  bool _isUpgrading = false;
+  bool _isValidating = false;
+  String? _errorMessage;
+  String? _currentBleStateMessage;
+  fw.FirmwareValidationResult? _validationResult;
+
+  // BLE connection state
+  DiscoveredDevice? _selectedDevice;
+
+  // Internal reconnect state for firmware upgrade
+  bool _isWaitingForJumpReconnect = false;
+  bool _isWaitingForEndReconnect = false;
+  String? _originalDeviceName; // Store device name for reconnection
+  String?
+  _originalStableDeviceId; // Last 8 chars - stable across name changes (P_87654321 vs TECHNOSWITCH_87654321)
+  int? _originalManufacturerData; // Store manufacturer data before jump command
+  StreamSubscription<ConnectionStateUpdate>? _internalReconnectSub;
+  bool _bootloaderNotifyReady = false;
+
+  // Bluetooth service for internal reconnect (only used for reconnecting after jump/end commands)
+  final app_bluetooth.BluetoothService _bluetoothService =
+      app_bluetooth.BluetoothService();
+  StreamSubscription? _bleResultsSub;
+
+  // Tuning knobs to reduce reconnect latency while keeping BLE stable.
+  static const Duration _bleShortDelay = Duration(milliseconds: 800);
+  static const Duration _bleConnectSettleDelay = Duration(milliseconds: 600);
+  static const Duration _jumpReconnectInitialDelay = Duration(seconds: 2);
+  static const Duration _endReconnectInitialDelay = Duration(seconds: 1);
+  static const Duration _jumpScanGlobalTimeout = Duration(seconds: 6);
+  static const Duration _endScanGlobalTimeout = Duration(seconds: 10);
+  static const Duration _scanRetryDelay = Duration(milliseconds: 800);
+
+  void _beginFirmwareSession() {
+    BleSessionIdlePolicy.suppressFirmwareDisconnectUi.value = true;
+    BleSessionIdlePolicy.suppressIdleDisconnect.value = true;
+  }
+
+  void _endFirmwareSession() {
+    BleSessionIdlePolicy.suppressFirmwareDisconnectUi.value = false;
+    BleSessionIdlePolicy.suppressIdleDisconnect.value = false;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    if (widget.connectedDevice != null) {
+      _selectedDevice = widget.connectedDevice;
+    } else {
+      try {
+        final bleController = Get.find<BleLogController>();
+        final bleManager = bleController.bleManager;
+        if (bleManager.isConnected && bleManager.selectedDevice != null) {
+          _selectedDevice = bleManager.selectedDevice;
+        }
+      } catch (e) {
+        logger.Logger('Error getting connected device: $e');
+      }
+    }
+
+    _controller.downloadingStatus.listen((status) {
+      if (mounted) {
+        if (status == fw.DownloadStatus.upgrading) {
+          setState(() {
+            if (_currentStep == FirmwareUpgradeStep.fileDetails ||
+                _currentStep == FirmwareUpgradeStep.progress) {
+              _currentStep = FirmwareUpgradeStep.progress;
+              _isUpgrading = true;
+            }
+          });
+        } else if (status == fw.DownloadStatus.completed) {
+          setState(() {
+            _currentStep = FirmwareUpgradeStep.result;
+            _isUpgrading = false;
+            _errorMessage = null;
+          });
+        } else if (status == fw.DownloadStatus.failed) {
+          setState(() {
+            _currentStep = FirmwareUpgradeStep.result;
+            _isUpgrading = false;
+            _errorMessage =
+                _errorMessage ?? StringConstants.firmwareUpgradeFailed;
+          });
+        }
+      }
+    });
+  }
+
+  Future<void> _sendPacketsOverBle({bool? isChipInBootLoader = false}) async {
+    if (_controller.packetResult == null ||
+        _controller.packetResult!.packets.isEmpty) {
+      throw Exception(StringConstants.noPacketsPrepared);
+    }
+
+    _beginFirmwareSession();
+    try {
+      await _sendPacketsOverBleImpl(isChipInBootLoader: isChipInBootLoader);
+    } finally {
+      _endFirmwareSession();
+    }
+  }
+
+  Future<void> _sendPacketsOverBleImpl({
+    bool? isChipInBootLoader = false,
+  }) async {
+    // Try to get BleManager via BleLogController if registered
+    BleManager? manager;
+    if (Get.isRegistered<BleLogController>()) {
+      manager = Get.find<BleLogController>().bleManager;
+    }
+
+    final packets = _controller.packetResult!.packets;
+    final logicalTotal = _controller.packetResult!.totalLogicalPackets;
+
+    int logicalIndex = 0;
+
+    if (manager != null) {
+      manager.resetFirmwareState();
+      _bootloaderNotifyReady = false;
+
+      if (isChipInBootLoader != true && _selectedDevice != null) {
+        _originalDeviceName = _selectedDevice!.name;
+        _originalStableDeviceId = BleNameUtils.getDisplayIdFromBleName(
+          _selectedDevice!.name,
+        );
+        final md = _selectedDevice!.manufacturerData;
+        _originalManufacturerData = BleMsdUtils.statusByte(md);
+        logger.Logger(
+          'Stored device info before jump - name: $_originalDeviceName, manufacturer data array: $md, status byte: $_originalManufacturerData',
+        );
+      }
+
+      if (isChipInBootLoader != true) {
+        if (!manager.isConnected) {
+          throw Exception(
+            StringConstants.deviceNotConnectedCannotSendJumpCommand,
+          );
+        }
+        if (!manager.handshakeCompleteNotifier.value) {
+          throw Exception(
+            StringConstants.bleHandshakeNotCompleteCannotStartFirmwareUpgrade,
+          );
+        }
+
+        // Jump uses plaintext framing on the existing session; no enc-key re-request.
+        manager.setFirmwareState(BleStates.SEND_JUMP_FIRMWARE_PACKET);
+
+        try {
+          await manager.sendJumpFirmwarePacket(withoutResponse: true);
+        } catch (e) {
+          // Expected: device disconnects after jump packet, causing write to fail
+          logger.Logger('Jump packet sent, device disconnected (expected): $e');
+        }
+
+        await Future.delayed(const Duration(milliseconds: 300));
+
+        // Start internal reconnect after jump command
+        setState(() {
+          _isWaitingForJumpReconnect = true;
+          _currentBleStateMessage = StringConstants.checkingDeviceStatus;
+        });
+        await _reconnectAndCheckStatus(isJumpCommand: true);
+
+        // After reconnect, wait a bit before continuing
+        // Device needs time to stabilize in bootloader mode
+        await Future.delayed(_bleShortDelay);
+      }
+
+      await Future.delayed(const Duration(milliseconds: 300));
+      if (!_bootloaderNotifyReady) {
+        await manager.registerNotifyHandlerForFirmwareUpgrade(
+          isChipInBootLoader: true,
+        );
+        await Future.delayed(_bleShortDelay);
+      }
+      manager.setFirmwareState(BleStates.SEND_START_FIRMWARE_PACKET);
+
+      // Send start firmware packet - might fail if device disconnects
+      try {
+        await manager.sendStartFirmwarePacket();
+      } catch (e) {
+        // If device disconnects, wait and reconnect again
+        logger.Logger(
+          'Start firmware packet failed, device may have disconnected: $e',
+        );
+        // Wait for device to reconnect
+        await Future.delayed(const Duration(seconds: 2));
+        // Try to reconnect if needed
+        if (!manager.isConnected && _originalDeviceName != null) {
+          setState(() {
+            _isWaitingForJumpReconnect = true;
+            _currentBleStateMessage = StringConstants.checkingDeviceStatus;
+          });
+          await _reconnectAndCheckStatus(isJumpCommand: true);
+          await Future.delayed(const Duration(seconds: 2));
+          // Retry start packet after reconnect
+          try {
+            await manager.sendStartFirmwarePacket();
+          } catch (e2) {
+            logger.Logger('Start firmware packet retry failed: $e2');
+            throw Exception(
+              'Failed to send start firmware packet after reconnect: $e2',
+            );
+          }
+        } else {
+          throw Exception('Failed to send start firmware packet: $e');
+        }
+      }
+
+      await Future.delayed(const Duration(milliseconds: 300));
+      manager.setFirmwareState(BleStates.SEND_FIRMWARE_PACKET);
+      int seqFromField = 0;
+
+      for (FirmwarePacket packet in packets) {
+        final int currentSeqFromField = packet.sequence;
+        await manager.sendFirmwarePacket(
+          Uint8List.fromList(packet.bytes),
+          isFirstPacketAfterSkip: currentSeqFromField != (seqFromField + 1),
+        );
+        await Future.delayed(const Duration(milliseconds: 8));
+        seqFromField = currentSeqFromField;
+        logicalIndex++;
+        _controller.progressbarIndex.value = logicalIndex;
+        _controller.progressbarCount.value =
+            logicalTotal == 0 ? 0 : logicalIndex / logicalTotal;
+      }
+
+      await Future.delayed(const Duration(milliseconds: 300));
+      manager.setFirmwareState(BleStates.SEND_END_FIRMWARE_PACKET);
+
+      // Store device name before sending end packet (device will disconnect)
+      if (_selectedDevice != null) {
+        _originalDeviceName = _selectedDevice!.name;
+      }
+
+      setState(() {
+        _isWaitingForEndReconnect = true;
+        _currentBleStateMessage = StringConstants.fetchingFirmwareUpgradeStatus;
+      });
+
+      // Send end packet - expect it to fail when device disconnects
+      try {
+        await manager.sendEndFirmwarePacket();
+      } catch (e) {
+        // Expected: device disconnects after end packet, causing write to fail
+        logger.Logger('End packet sent, device disconnected (expected): $e');
+      }
+
+      // Start internal reconnect after end command
+
+      // Short grace period to allow disconnect/reboot to begin before scanning
+      await Future.delayed(_bleShortDelay);
+      await _reconnectAndCheckStatus(isJumpCommand: false);
+    } else {
+      // Fallback: just simulate progress if manager unavailable
+      // for (final _ in packets) {
+      //   logicalIndex++;
+      //   _controller.progressbarIndex.value = logicalIndex;
+      //   _controller.progressbarCount.value =
+      //       logicalTotal == 0 ? 0 : logicalIndex / logicalTotal;
+      //   await Future.delayed(const Duration(milliseconds: 20));
+      // }
+      throw Exception(StringConstants.bleManagerNotFound);
+    }
+
+    _controller.downloadingStatus.value = fw.DownloadStatus.completed;
+  }
+
+  /// Internal method to reconnect and check firmware upgrade status
+  Future<void> _reconnectAndCheckStatus({required bool isJumpCommand}) async {
+    if (_originalDeviceName == null || _originalDeviceName!.isEmpty) {
+      logger.Logger(StringConstants.noDeviceNameStoredForReconnection);
+      setState(() {
+        _isWaitingForJumpReconnect = false;
+        _isWaitingForEndReconnect = false;
+        _errorMessage = StringConstants.unableToReconnectDeviceNameNotFound;
+      });
+      return;
+    }
+
+    try {
+      // Wait longer for device to disconnect and restart (especially for jump command)
+      // Jump command causes device reboot, so it needs more time
+      await Future.delayed(
+        isJumpCommand ? _jumpReconnectInitialDelay : _endReconnectInitialDelay,
+      );
+
+      // Start scanning internally
+      await _bluetoothService.requestPermissions();
+      final poweredOn = await _bluetoothService.ensurePoweredOn();
+
+      if (!poweredOn) {
+        setState(() {
+          _isWaitingForJumpReconnect = false;
+          _isWaitingForEndReconnect = false;
+          _errorMessage = StringConstants.bluetoothIsNotEnabled;
+        });
+        return;
+      }
+
+      // Single continuous scan with a global timeout (faster than attempt loops)
+      DiscoveredDevice? device;
+      int? scanLastByte;
+      int? manufacturerDataFromScan;
+      final Completer<void> scanDoneCompleter = Completer<void>();
+      StreamSubscription? internalScanSub;
+      Timer? scanTimeoutTimer;
+
+      logger.Logger(
+        'Starting reconnect scan (${isJumpCommand ? "jump" : "end"} command) with global timeout',
+      );
+
+      internalScanSub = _bluetoothService.scanResultsStream.listen((results) {
+        for (var result in results) {
+          final manufacturerData = result.manufacturerData;
+          final statusByte = BleMsdUtils.statusByte(manufacturerData);
+          final stableId = BleNameUtils.getDisplayIdFromBleName(result.name);
+
+          if (isJumpCommand) {
+            final matchesStableId =
+                _originalStableDeviceId != null &&
+                stableId.isNotEmpty &&
+                stableId == _originalStableDeviceId;
+            final isBootloader = BleMsdUtils.isBootloader(manufacturerData);
+
+            if (matchesStableId && isBootloader) {
+              device = result;
+              scanLastByte = statusByte;
+              manufacturerDataFromScan = statusByte;
+              logger.Logger(
+                'Found bootloader device ${result.name} (stable ID match) with manufacturer data: $manufacturerData',
+              );
+              if (!scanDoneCompleter.isCompleted) {
+                scanDoneCompleter.complete();
+              }
+              return;
+            }
+            // Fallback: exact name match with bootloader (old firmware where name doesn't change)
+            if (result.name == _originalDeviceName && isBootloader) {
+              device = result;
+              scanLastByte = statusByte;
+              manufacturerDataFromScan = statusByte;
+              logger.Logger(
+                'Found bootloader device ${result.name} (name match) with manufacturer data: $manufacturerData',
+              );
+              if (!scanDoneCompleter.isCompleted) {
+                scanDoneCompleter.complete();
+              }
+              return;
+            }
+          } else {
+            // End command: match by name as before
+            if (result.name == _originalDeviceName) {
+              device = result;
+              if (manufacturerData.isNotEmpty) {
+                manufacturerDataFromScan = statusByte;
+                scanLastByte = manufacturerDataFromScan;
+              }
+              logger.Logger(
+                'Found device ${result.name} with manufacturer data array: $manufacturerData (status byte: $scanLastByte)',
+              );
+              if (scanLastByte == BleMsdUtils.statusUpgradeSuccess) {
+                if (!scanDoneCompleter.isCompleted) {
+                  scanDoneCompleter.complete();
+                }
+              }
+            }
+          }
+        }
+      });
+
+      // Start scanning
+      await _bluetoothService.startScanning(
+        disconnectIfConnected: true,
+        postDisconnectDelay: _scanRetryDelay,
+      );
+
+      // Global timeout for scan
+      scanTimeoutTimer = Timer(
+        isJumpCommand ? _jumpScanGlobalTimeout : _endScanGlobalTimeout,
+        () {
+          if (!scanDoneCompleter.isCompleted) {
+            scanDoneCompleter.complete();
+          }
+        },
+      );
+
+      await scanDoneCompleter.future;
+
+      await internalScanSub.cancel();
+      await _bluetoothService.stopScanning();
+      scanTimeoutTimer.cancel();
+
+      if (device == null) {
+        setState(() {
+          _isWaitingForJumpReconnect = false;
+          _isWaitingForEndReconnect = false;
+          _errorMessage =
+              'Device not found. Please ensure device is powered on.';
+        });
+        return;
+      }
+
+      final scanManufacturerData = device!.manufacturerData;
+      if (scanLastByte == null && scanManufacturerData.isNotEmpty) {
+        scanLastByte = BleMsdUtils.statusByte(scanManufacturerData);
+      }
+      logger.Logger(
+        'Device found: ${device!.name}, Manufacturer data from scan (full array): $scanManufacturerData (status byte: $scanLastByte)',
+      );
+
+      if (scanLastByte != null) {
+        if (isJumpCommand) {
+          if (scanLastByte == BleMsdUtils.statusBootloader) {
+            setState(() {
+              _isWaitingForJumpReconnect = false;
+              _selectedDevice = device;
+              _currentBleStateMessage =
+                  StringConstants.deviceReadyContinuingUpgrade;
+            });
+          } else {
+            logger.Logger(
+              'Unexpected manufacturer data for jump command: $scanLastByte (expected 1)',
+            );
+          }
+        } else {
+          setState(() {
+            _currentBleStateMessage =
+                StringConstants.validatingFirmwareUpgradeSuccess;
+          });
+
+          if (scanLastByte == BleMsdUtils.statusUpgradeSuccess) {
+            setState(() {
+              _isWaitingForEndReconnect = false;
+              _selectedDevice = device;
+              _currentBleStateMessage =
+                  StringConstants.firmwareUpgradeCompletedSuccessfully;
+            });
+            _controller.downloadingStatus.value = fw.DownloadStatus.completed;
+            logger.Logger('Firmware upgrade SUCCESS confirmed from MSD [0,2]');
+            return;
+          } else if (scanLastByte == BleMsdUtils.statusBootloader) {
+            setState(() {
+              _isWaitingForEndReconnect = false;
+              _errorMessage = StringConstants.firmwareUpgradeFailed;
+            });
+            _controller.downloadingStatus.value = fw.DownloadStatus.failed;
+            logger.Logger('Firmware upgrade FAILED confirmed from MSD [0,1]');
+            return;
+          } else {
+            logger.Logger(
+              'Unknown manufacturer data for end command: $scanLastByte (expected 1 or 2). Device may still be processing, will check after connection.',
+            );
+          }
+        }
+      }
+
+      final bleController = Get.find<BleLogController>();
+      final bleManager = bleController.bleManager;
+
+      // Check if already connected to avoid duplicate connections
+      if (bleManager.isConnected &&
+          bleManager.connectedDeviceId.value == device!.id) {
+        logger.Logger('Device already connected, skipping reconnect');
+      } else {
+        // Disconnect first if connected to a different device
+        if (bleManager.isConnected) {
+          logger.Logger('Disconnecting from current device before reconnect');
+          await bleManager.shutdown();
+          await Future.delayed(const Duration(seconds: 1));
+        }
+
+        // Use BleLogController's connectToDevice which handles initialization properly
+        // IMPORTANT: Use scan value (current device state) instead of old stored value
+        // For jump command: device is now in bootloader mode with MSD [0,1]
+        // For end command: device shows upgrade status with MSD [0,2] or [0,1]
+        final manufacturerDataToUse = scanLastByte ?? _originalManufacturerData;
+
+        // Update selectedDevice in bleManager with the new device that has correct MSD
+        // This ensures subsequent connection attempts use the correct manufacturer data
+        bleManager.selectedDevice = device;
+
+        try {
+          await bleController.connectToDevice(
+            device: device!,
+            manufacturerDataOverride: manufacturerDataToUse,
+            fastReconnect: true,
+            skipConnectionHandshake:
+                true, // Bootloader reconnect - auth done via registerNotifyHandlerForFirmwareUpgrade
+          );
+
+          // Wait for connection to be fully established
+          int waitCount = 0;
+          const int maxWaitCycles = 15;
+          const Duration waitStep = Duration(milliseconds: 150);
+          while (!bleManager.isConnected && waitCount < maxWaitCycles) {
+            await Future.delayed(waitStep);
+            waitCount++;
+          }
+
+          if (!bleManager.isConnected) {
+            throw Exception(
+              StringConstants.connectionNotEstablishedAfterReconnect,
+            );
+          }
+
+          if (scanLastByte != null) {
+            bleManager.bleManufacturerData.value = scanLastByte!;
+            logger.Logger(
+              'Using scan manufacturer data after reconnect: $scanLastByte (from MSD: $scanManufacturerData)',
+            );
+          } else if (_originalManufacturerData != null) {
+            bleManager.bleManufacturerData.value = _originalManufacturerData!;
+            logger.Logger(
+              'Using stored manufacturer data after reconnect (fallback): $_originalManufacturerData',
+            );
+          }
+        } catch (e) {
+          logger.Logger('Error connecting during reconnect: $e');
+          setState(() {
+            _isWaitingForJumpReconnect = false;
+            _isWaitingForEndReconnect = false;
+            _errorMessage =
+                '${StringConstants.failedToReconnectToDevicePrefix}$e';
+          });
+          return;
+        }
+      }
+
+      await Future.delayed(_bleConnectSettleDelay);
+
+      if (isJumpCommand) {
+        await bleManager.registerNotifyHandlerForFirmwareUpgrade(
+          isChipInBootLoader: true,
+        );
+        _bootloaderNotifyReady = true;
+        await Future.delayed(_bleConnectSettleDelay);
+      }
+
+      await Future.delayed(_bleConnectSettleDelay);
+
+      final manufacturerDataValue = bleManager.bleManufacturerData.value;
+
+      setState(() {
+        _isWaitingForJumpReconnect = false;
+        _isWaitingForEndReconnect = false;
+      });
+
+      if (isJumpCommand) {
+        // For jump command: expect [0,1] - device should be in bootloader mode
+        if (manufacturerDataValue == BleMsdUtils.statusBootloader) {
+          setState(() {
+            _selectedDevice = device;
+            _currentBleStateMessage =
+                StringConstants.deviceReadyContinuingUpgrade;
+          });
+        } else {
+          logger.Logger(
+            'Unexpected manufacturer data for jump command: $manufacturerDataValue (expected 1)',
+          );
+          setState(() {
+            _selectedDevice = device;
+            _currentBleStateMessage =
+                StringConstants.deviceReconnectedContinuingUpgrade;
+          });
+        }
+      } else {
+        // For end command, check upgrade status
+        // manufacturerDataValue is the MSD status byte (index 1)
+        // [0,2] = success, [0,1] = failed
+
+        // Update message to show we're validating
+        setState(() {
+          _currentBleStateMessage =
+              StringConstants.validatingFirmwareUpgradeSuccess;
+        });
+
+        if (manufacturerDataValue == BleMsdUtils.statusUpgradeSuccess) {
+          // Success
+          setState(() {
+            _selectedDevice = device;
+            _currentBleStateMessage =
+                StringConstants.firmwareUpgradeCompletedSuccessfully;
+          });
+          _controller.downloadingStatus.value = fw.DownloadStatus.completed;
+        } else if (manufacturerDataValue == BleMsdUtils.statusBootloader) {
+          // Failed
+          setState(() {
+            _errorMessage = StringConstants.firmwareUpgradeFailed;
+          });
+          _controller.downloadingStatus.value = fw.DownloadStatus.failed;
+        } else {
+          // Unknown status - fallback to scan data if available
+          if (scanLastByte == BleMsdUtils.statusUpgradeSuccess) {
+            // Success (from scan data)
+            setState(() {
+              _selectedDevice = device;
+              _currentBleStateMessage =
+                  StringConstants.firmwareUpgradeCompletedSuccessfully;
+            });
+            _controller.downloadingStatus.value = fw.DownloadStatus.completed;
+          } else if (scanLastByte == BleMsdUtils.statusBootloader) {
+            // Failed (from scan data)
+            setState(() {
+              _errorMessage = StringConstants.firmwareUpgradeFailed;
+            });
+            _controller.downloadingStatus.value = fw.DownloadStatus.failed;
+          } else {
+            // Unknown status
+            logger.Logger(
+              'Unknown manufacturer data value: $manufacturerDataValue, scan: $scanLastByte',
+            );
+            setState(() {
+              _errorMessage = StringConstants.unableToDetermineUpgradeStatus;
+            });
+            _controller.downloadingStatus.value = fw.DownloadStatus.failed;
+          }
+        }
+      }
+    } catch (e) {
+      logger.Logger('Error during reconnect: $e');
+      setState(() {
+        _isWaitingForJumpReconnect = false;
+        _isWaitingForEndReconnect = false;
+        _errorMessage = '${StringConstants.reconnectionErrorPrefix}$e';
+      });
+      _controller.downloadingStatus.value = fw.DownloadStatus.failed;
+    }
+  }
+
+  @override
+  void dispose() {
+    _endFirmwareSession();
+    _bleResultsSub?.cancel();
+    _internalReconnectSub?.cancel();
+    _bluetoothService.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return WillPopScope(
+      onWillPop: () async {
+        // Block back navigation while firmware upgrade is in progress
+        if (_currentStep == FirmwareUpgradeStep.progress ||
+            _isUpgrading ||
+            _isWaitingForEndReconnect ||
+            _isWaitingForJumpReconnect) {
+          return false;
+        }
+
+        // Allow back in all other cases
+        return true;
+      },
+      child: Container(
+        decoration: const BoxDecoration(
+          color: ColorConstants.primaryVariant,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(50)),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.only(top: 8.0),
+          child: Container(
+            clipBehavior: Clip.hardEdge,
+            decoration: const BoxDecoration(
+              color: ColorConstants.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(50)),
+            ),
+            child: SingleChildScrollView(
+              // controller: scrollController,
+              child: Padding(
+                padding: EdgeInsets.all(24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _buildHeader(),
+                    SizedBox(height: 24),
+                    _buildStepContent(),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeader() {
+    return Column(
+      children: [
+        Row(
+          children: [
+            Text(
+              StringConstants.firmwareUpgrade,
+              style: StyleConstants.black20w700Style,
+            ),
+            Spacer(),
+            Visibility(
+              visible: _currentStep != FirmwareUpgradeStep.progress,
+              child: IconButton(
+                icon: Icon(Icons.close),
+                onPressed: () => Navigator.of(context).pop(false),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStepContent() {
+    switch (_currentStep) {
+      case FirmwareUpgradeStep.essentialSteps:
+        return _buildEssentialSteps();
+      case FirmwareUpgradeStep.chooseType:
+        return _buildChooseType();
+      case FirmwareUpgradeStep.fileUpload:
+        return _buildFileUpload();
+      case FirmwareUpgradeStep.fileDetails:
+        return _buildFileDetails();
+      case FirmwareUpgradeStep.progress:
+        return _buildProgress();
+      case FirmwareUpgradeStep.result:
+        return _buildResult();
+      case FirmwareUpgradeStep.connectDevice:
+        // This step is no longer used - device is already connected
+        return _buildChooseType();
+    }
+  }
+
+  Widget _buildEssentialSteps() {
+    final steps = [
+      StringConstants.essentialStepConnectViaBluetooth,
+      StringConstants.essentialStepKeepPoweredOn,
+      StringConstants.essentialStepDoNotDisconnect,
+      StringConstants.essentialStepCloseOtherApps,
+    ];
+
+    return FutureBuilder<bool>(
+      future: _checkBleConnection(),
+      builder: (context, snapshot) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              StringConstants.essentialStepsBeforeFirmwareUpgrade,
+              style: StyleConstants.black18w700Style,
+            ),
+            SizedBox(height: 24),
+
+            ...steps.map(
+              (step) => Padding(
+                padding: EdgeInsets.only(bottom: 16),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: 24,
+                      height: 24,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: ColorConstants.primary.withOpacity(0.1),
+                      ),
+                      child: Center(
+                        child: Icon(
+                          Icons.check_circle,
+                          size: 16,
+                          color: ColorConstants.primary,
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        step,
+                        style: StyleConstants.textHeading14w400Style,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            SizedBox(height: 32),
+            CommonCtaButton(
+              onTap: () {
+                setState(() {
+                  // Skip connectDevice step - device is already connected
+                  _currentStep = FirmwareUpgradeStep.chooseType;
+                });
+              },
+              child: Text(
+                StringConstants.disabled,
+                style: StyleConstants.white16w600Style,
+              ),
+            ),
+            // ElevatedButton(
+            //   onPressed: () {
+            // setState(() {
+            //   _currentStep =
+            //       _testMode
+            //           ? FirmwareUpgradeStep.chooseType
+            //           : FirmwareUpgradeStep.connectDevice;
+            // });
+            //   },
+            //   style: ElevatedButton.styleFrom(
+            //     backgroundColor: ColorConstants.primary,
+            //     padding: EdgeInsets.symmetric(vertical: 16),
+            //     shape: RoundedRectangleBorder(
+            //       borderRadius: BorderRadius.circular(8),
+            //     ),
+            //   ),
+            //   child: Text(
+            //     StringConstants.disabled,
+            //     style: StyleConstants.white16w600Style,
+            //   ),
+            // ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<bool> _checkBleConnection() async {
+    try {
+      final bleManager = Get.find<BleManager>();
+      return bleManager.isConnected;
+    } catch (e) {
+      logger.Logger('Error checking BLE connection: $e');
+      return false;
+    }
+  }
+
+  // Removed _buildConnectDevice and all scanning UI methods - device is already connected
+  // All scanning-related methods have been removed since we use the existing BLE connection
+
+  Widget _buildChooseType() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          StringConstants.chooseFirmwareType,
+          style: StyleConstants.black18w700Style,
+        ),
+        SizedBox(height: 24),
+        _buildFirmwareTypeOption(
+          title: StringConstants.mainPanelFirmware,
+          description: StringConstants.upgradeMainPanelFirmwareDescription,
+          type: FirmwareType.mainPanel,
+          enabled: false,
+        ),
+        SizedBox(height: 16),
+        _buildFirmwareTypeOption(
+          title: StringConstants.bleChipFirmware,
+          description: StringConstants.upgradeBleChipFirmwareDescription,
+          type: FirmwareType.bleChip,
+        ),
+        SizedBox(height: 32),
+        Row(
+          children: [
+            Expanded(
+              child: CommonCtaButton(
+                onTap: () {
+                  setState(() {
+                    _currentStep = FirmwareUpgradeStep.essentialSteps;
+                  });
+                },
+                color: ColorConstants.buttonSecondaryBackground,
+                child: Text(
+                  StringConstants.back,
+                  style: StyleConstants.labelText16w600Style,
+                ),
+              ),
+            ),
+            SizedBox(width: 16),
+            Expanded(
+              child: CommonCtaButton(
+                onTap:
+                    _selectedFirmwareType == null
+                        ? null
+                        : () {
+                          setState(() {
+                            _currentStep = FirmwareUpgradeStep.fileUpload;
+                          });
+                        },
+                isDisabled: _selectedFirmwareType == null,
+                child: Text(
+                  StringConstants.disabled,
+                  style: StyleConstants.white16w600Style,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFirmwareTypeOption({
+    required String title,
+    required String description,
+    required FirmwareType type,
+    bool enabled = true,
+  }) {
+    final isSelected = _selectedFirmwareType == type;
+    return GestureDetector(
+      onTap:
+          enabled
+              ? () {
+                setState(() {
+                  _selectedFirmwareType = type;
+                });
+              }
+              : null,
+      child: Container(
+        padding: EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color:
+              !enabled
+                  ? Colors.grey.shade200
+                  : (isSelected
+                      ? ColorConstants.primary.withOpacity(0.1)
+                      : ColorConstants.white),
+          border: Border.all(
+            color:
+                isSelected
+                    ? ColorConstants.primary
+                    : ColorConstants.progressTrack,
+            width: isSelected ? 2 : 1,
+          ),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 24,
+              height: 24,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color:
+                      isSelected
+                          ? ColorConstants.primary
+                          : ColorConstants.progressTrack,
+                  width: 2,
+                ),
+              ),
+              child:
+                  isSelected
+                      ? Center(
+                        child: Container(
+                          width: 12,
+                          height: 12,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: ColorConstants.primary,
+                          ),
+                        ),
+                      )
+                      : null,
+            ),
+            SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: StyleConstants.textHeading16w600Style),
+                  SizedBox(height: 4),
+                  Text(
+                    description,
+                    style: StyleConstants.textDisabled14w400Style,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFileUpload() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          StringConstants.uploadFirmwareFile,
+          style: StyleConstants.black18w700Style,
+        ),
+        SizedBox(height: 24),
+        GestureDetector(
+          onTap: _isUploading ? null : _pickFile,
+          child: DottedBorder(
+            // childOnTop: false,
+            options: RoundedRectDottedBorderOptions(
+              color: ColorConstants.primary.withOpacity(0.3),
+              radius: Radius.circular(12),
+              dashPattern: [5, 5],
+              strokeWidth: 2,
+              padding: EdgeInsets.all(0),
+              stackFit: StackFit.passthrough,
+            ),
+            child: Container(
+              padding: EdgeInsets.all(32),
+              decoration: BoxDecoration(
+                color: ColorConstants.scaffoldGradientTop,
+                // border: Border.all(
+                //   color: ColorConstants.primary.withOpacity(0.3),
+                //   width: 2,
+                //   style: BorderStyle.solid,
+                // ),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                children: [
+                  SvgPicture.asset(
+                    AssetConstants.uploadIcon,
+                    width: 32,
+                    height: 32,
+                  ),
+                  SizedBox(height: 16),
+                  Text(
+                    _selectedFile == null
+                        ? StringConstants.tapToSelectFirmwareFile
+                        : _selectedFile!.name,
+                    style: StyleConstants.textHeading16w600Style,
+                    textAlign: TextAlign.center,
+                  ),
+                  if (_selectedFile != null) ...[
+                    SizedBox(height: 8),
+                    Text(
+                      '${(_selectedFile!.size / (1024 * 1024)).toStringAsFixed(2)} MB',
+                      style: StyleConstants.textDisabled14w400Style,
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        ),
+        if (_isUploading) ...[
+          SizedBox(height: 16),
+          LinearProgressIndicator(
+            backgroundColor: ColorConstants.progressTrack,
+            valueColor: AlwaysStoppedAnimation<Color>(ColorConstants.primary),
+          ),
+        ],
+        SizedBox(height: 32),
+        Row(
+          children: [
+            Expanded(
+              child: CommonCtaButton(
+                onTap: () {
+                  setState(() {
+                    _currentStep = FirmwareUpgradeStep.chooseType;
+                  });
+                },
+                color: ColorConstants.buttonSecondaryBackground,
+                child: Text(
+                  StringConstants.back,
+                  style: StyleConstants.labelText16w600Style,
+                ),
+              ),
+            ),
+            // Expanded(
+            //   child: OutlinedButton(
+            //     onPressed: () {
+            //       setState(() {
+            //         _currentStep = FirmwareUpgradeStep.chooseType;
+            //       });
+            //     },
+            //     style: OutlinedButton.styleFrom(
+            //       padding: EdgeInsets.symmetric(vertical: 16),
+            //       shape: RoundedRectangleBorder(
+            //         borderRadius: BorderRadius.circular(8),
+            //       ),
+            //       side: BorderSide(color: ColorConstants.primary),
+            //     ),
+            //     child: Text(
+            //       StringConstants.back,
+            //       style: StyleConstants.primary16w600Style,
+            //     ),
+            //   ),
+            // ),
+            SizedBox(width: 16),
+            Expanded(
+              child: CommonCtaButton(
+                onTap:
+                    _selectedFile == null || _isUploading
+                        ? null
+                        : _goToFileDetails,
+                isDisabled: _selectedFile == null || _isUploading,
+                child: Text(
+                  StringConstants.disabled,
+                  style: StyleConstants.white16w600Style,
+                ),
+              ),
+            ),
+            // Expanded(
+            //   child: ElevatedButton(
+            //     onPressed:
+            //         _selectedFile == null || _isUploading
+            //             ? null
+            //             : _goToFileDetails,
+            //     style: ElevatedButton.styleFrom(
+            //       backgroundColor: ColorConstants.primary,
+            //       padding: EdgeInsets.symmetric(vertical: 16),
+            //       shape: RoundedRectangleBorder(
+            //         borderRadius: BorderRadius.circular(8),
+            //       ),
+            //       disabledBackgroundColor: ColorConstants.progressTrack,
+            //     ),
+            //     child: Text(
+            //       StringConstants.disabled,
+            //       style: StyleConstants.white16w600Style,
+            //     ),
+            //   ),
+            // ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFileDetails() {
+    if (_selectedFile == null) return SizedBox();
+
+    final result = _validationResult;
+    final isCrcMatched = _controller.isFileCrcMatched.value;
+    final expectedCrc = result?.expectedHex ?? '-';
+    final calculatedCrc = result?.calculatedHex ?? '-';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          StringConstants.fileDetails,
+          style: StyleConstants.black18w700Style,
+        ),
+        SizedBox(height: 24),
+        _buildDetailRow(StringConstants.fileName, _selectedFile!.name),
+        SizedBox(height: 12),
+        _buildDetailRow(
+          StringConstants.fileSize,
+          '${(_selectedFile!.size / (1024 * 1024)).toStringAsFixed(2)} MB',
+        ),
+        SizedBox(height: 12),
+        _buildDetailRow(
+          StringConstants.firmwareTypeLabel,
+          _selectedFirmwareType == FirmwareType.mainPanel
+              ? StringConstants.mainPanelFirmware
+              : StringConstants.bleChipFirmware,
+        ),
+        if (result != null) ...[
+          SizedBox(height: 12),
+          _buildDetailRow(
+            StringConstants.firmwareVersion2,
+            _emptyToDash(result.firmwareVersion),
+          ),
+          SizedBox(height: 12),
+          _buildDetailRow(
+            StringConstants.hardwareVersion2,
+            _emptyToDash(result.hardwareVersion),
+          ),
+          SizedBox(height: 12),
+          _buildDetailRow(StringConstants.buildDate, _emptyToDash(result.date)),
+          SizedBox(height: 12),
+          _buildDetailRow(
+            StringConstants.productId,
+            _emptyToDash(result.productId),
+          ),
+        ],
+        Visibility(
+          visible: !isCrcMatched,
+          child: Column(
+            children: [
+              SizedBox(height: 12),
+              _buildDetailRow(StringConstants.expectedCrc, expectedCrc),
+              SizedBox(height: 12),
+              _buildDetailRow(StringConstants.calculatedCrc, calculatedCrc),
+            ],
+          ),
+        ),
+        SizedBox(height: 12),
+        _buildDetailRow(
+          StringConstants.statusLabel,
+          _isValidating
+              ? StringConstants.validating2
+              : isCrcMatched
+              ? StringConstants.validLabel
+              : StringConstants.invalidLabel,
+          valueColor:
+              _isValidating
+                  ? ColorConstants.textDisabled
+                  : isCrcMatched
+                  ? ColorConstants.success
+                  : ColorConstants.primary,
+        ),
+        if (_isValidating) ...[
+          SizedBox(height: 16),
+          Center(child: CircularProgressIndicator()),
+        ],
+        if (!_isValidating && !isCrcMatched)
+          Container(
+            margin: EdgeInsets.only(top: 24),
+            padding: EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: ColorConstants.primary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.warning, color: ColorConstants.primary),
+                SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    _validationResult?.error ??
+                        StringConstants.fileCrcValidationFailedSelectValidFile,
+                    style: StyleConstants.primary14w400Style,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        SizedBox(height: 24),
+        Row(
+          children: [
+            Expanded(
+              child: CommonCtaButton(
+                color: ColorConstants.buttonSecondaryBackground,
+                onTap:
+                    _isValidating
+                        ? null
+                        : () {
+                          setState(() {
+                            _currentStep = FirmwareUpgradeStep.fileUpload;
+                          });
+                        },
+                isDisabled: _isValidating,
+                child: Text(
+                  StringConstants.back,
+                  style: StyleConstants.labelText16w600Style,
+                ),
+              ),
+            ),
+            // Expanded(
+            //   child: OutlinedButton(
+            //     onPressed:
+            //         _isValidating
+            //             ? null
+            //             : () {
+            //               setState(() {
+            //                 _currentStep = FirmwareUpgradeStep.fileUpload;
+            //               });
+            //             },
+            //     style: OutlinedButton.styleFrom(
+            //       padding: EdgeInsets.symmetric(vertical: 16),
+            //       shape: RoundedRectangleBorder(
+            //         borderRadius: BorderRadius.circular(8),
+            //       ),
+            //       side: BorderSide(color: ColorConstants.primary),
+            //     ),
+            //     child: Text(
+            //       StringConstants.back,
+            //       style: StyleConstants.primary16w600Style,
+            //     ),
+            //   ),
+            // ),
+            SizedBox(width: 16),
+            Expanded(
+              child: CommonCtaButton(
+                onTap:
+                    (_isValidating || !isCrcMatched)
+                        ? null
+                        : () async {
+                          await _onValidationContinuePressed();
+                        },
+                isDisabled: _isValidating || !isCrcMatched,
+                child: Text(
+                  StringConstants.disabled,
+                  style: StyleConstants.white16w600Style,
+                ),
+              ),
+            ),
+            // Expanded(
+            //   flex: 2,
+            //   child: ElevatedButton(
+            //     onPressed:
+            //         (_isValidating || !isCrcMatched)
+            //             ? null
+            //             : () {
+            //               _startUpgrade(
+            //                 isChipInBootLoader:
+            //                     _selectedDevice?.manufacturerData.last == 1,
+            //               );
+            //             },
+            //     style: ElevatedButton.styleFrom(
+            //       backgroundColor: ColorConstants.primary,
+            //       padding: EdgeInsets.symmetric(vertical: 16),
+            //       shape: RoundedRectangleBorder(
+            //         borderRadius: BorderRadius.circular(8),
+            //       ),
+            //       disabledBackgroundColor: ColorConstants.progressTrack,
+            //     ),
+            //     child: Text(
+            //       StringConstants.disabled,
+            //       style: StyleConstants.white16w600Style,
+            //     ),
+            //   ),
+            // ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  String _emptyToDash(String s) => s.isEmpty ? '-' : s;
+
+  Widget _buildDetailRow(String label, String value, {Color? valueColor}) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(label, style: StyleConstants.textDisabled14w400Style),
+        SizedBox(
+          width: MediaQuery.of(context).size.width * 0.4,
+          child: Text(
+            value,
+            style: StyleConstants.primary14w600Style.copyWith(
+              color: valueColor ?? ColorConstants.textHeading,
+            ),
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.end,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildProgress() {
+    return Obx(() {
+      final progress = _controller.progressbarCount.value;
+      final status = _controller.downloadingStatus.value;
+
+      // Always show the normal progress UI, even during reconnection phases
+      // This hides the reconnection/status fetching messages and shows only the upload progress
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Text(
+          //   'Firmware Upgrade in Progress',
+          //   style: StyleConstants.black18w700Style,
+          // ),
+          // SizedBox(height: 32),
+          Center(
+            child:
+                _isWaitingForEndReconnect
+                    ? Lottie.asset(AssetConstants.bleConnectingJson)
+                    : (progress * 100).toStringAsFixed(1) == '0.0'
+                    ? Lottie.asset(AssetConstants.bleConnectingJson)
+                    : CircularPercentIndicator(
+                      radius: 80,
+                      lineWidth: 8,
+                      percent: progress.clamp(0.0, 1.0),
+                      center: Lottie.asset(AssetConstants.firmwareUpgradeJson),
+                      progressColor: ColorConstants.primary,
+                      backgroundColor: ColorConstants.progressTrack,
+                      circularStrokeCap: CircularStrokeCap.round,
+                    ),
+          ),
+          SizedBox(height: 12),
+          Visibility(
+            visible:
+                !((progress * 100).toStringAsFixed(1) == '0.0') &&
+                !_isWaitingForEndReconnect,
+            child: Center(
+              child: Text(
+                '${(progress * 100).toStringAsFixed(1)}%',
+                style: StyleConstants.primary24w700Style,
+              ),
+            ),
+          ),
+          // if (totalPackets > 0)
+          //   Text(
+          //     'Packet $currentIndex of $totalPackets',
+          //     style: StyleConstants.textDisabled14w400Style,
+          //     textAlign: TextAlign.center,
+          //   ),
+          // SizedBox(height: 8),
+          // LinearPercentIndicator(
+          //   lineHeight: 8,
+          //   percent: progress.clamp(0.0, 1.0),
+          //   backgroundColor: ColorConstants.progressTrack,
+          //   progressColor: ColorConstants.primary,
+          //   barRadius: Radius.circular(4),
+          // ),
+          SizedBox(height: 12),
+          Text(
+            _currentBleStateMessage ??
+                (status == fw.DownloadStatus.upgrading
+                    ? StringConstants.pleaseWaitWhileFirmwareUpgraded
+                    : StringConstants.processingLabel),
+            style: StyleConstants.textDisabled14w400Style,
+            textAlign: TextAlign.center,
+          ),
+        ],
+      );
+    });
+  }
+
+  Widget _buildResult() {
+    final isSuccess =
+        _controller.downloadingStatus.value == fw.DownloadStatus.completed;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Lottie.asset(
+          height: 180,
+          width: 180,
+          isSuccess
+              ? AssetConstants.firmwareUpgradeSuccessJson
+              : AssetConstants.firmwareUpgradeFailedJson,
+          repeat: false,
+        ),
+        SizedBox(height: 24),
+        Text(
+          isSuccess
+              ? StringConstants.strf910c9ffFailed
+              : StringConstants.failedLabel,
+          style: StyleConstants.primary24w700Style.copyWith(
+            color: isSuccess ? ColorConstants.success : ColorConstants.primary,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        SizedBox(height: 32),
+        CommonCtaButton(
+          onTap: () {
+            Navigator.of(context).pop(isSuccess);
+            // Reset state
+            _controller.downloadingStatus.value = fw.DownloadStatus.downloading;
+            _controller.isFileCrcMatched.value = false;
+            _controller.selectedFirmwareFile = null;
+            _controller.progressbarIndex.value = 0;
+            _controller.progressbarCount.value = 0.0;
+            _controller.totalPacketLength.value = 0;
+          },
+          child: Text(
+            StringConstants.doneLabel,
+            style: StyleConstants.white16w600Style,
+          ),
+        ),
+        // ElevatedButton(
+        //   onPressed: () {
+        //     Navigator.of(context).pop();
+        //     // Reset state
+        //     _controller.downloadingStatus.value = fw.DownloadStatus.downloading;
+        //     _controller.isFileCrcMatched.value = false;
+        //     _controller.selectedFirmwareFile = null;
+        //     _controller.progressbarIndex.value = 0;
+        //     _controller.progressbarCount.value = 0.0;
+        //     _controller.totalPacketLength.value = 0;
+        //   },
+        //   style: ElevatedButton.styleFrom(
+        //     backgroundColor: ColorConstants.primary,
+        //     padding: EdgeInsets.symmetric(vertical: 16),
+        //     shape: RoundedRectangleBorder(
+        //       borderRadius: BorderRadius.circular(8),
+        //     ),
+        //   ),
+        //   child: Text(
+        //     'Done',
+        //     style: StyleConstants.white16w600Style,
+        //   ),
+        // ),
+      ],
+    );
+  }
+
+  Future<void> _pickFile() async {
+    try {
+      setState(() {
+        _isUploading = true;
+        _errorMessage = null;
+      });
+
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['bin'],
+      );
+
+      if (result != null && result.files.single.path != null) {
+        final file = File(result.files.single.path!);
+        final platformFile = PlatformFile(
+          name: result.files.single.name,
+          path: result.files.single.path,
+          size: await file.length(),
+          bytes: await file.readAsBytes(),
+        );
+
+        _controller.selectFirmwareFile(platformFile);
+
+        setState(() {
+          _selectedFile = platformFile;
+          _isUploading = false;
+          _validationResult = null;
+        });
+      } else {
+        setState(() {
+          _isUploading = false;
+        });
+      }
+    } catch (e) {
+      logger.Logger('Error picking file: $e');
+      setState(() {
+        _isUploading = false;
+        _errorMessage = '${StringConstants.errorSelectingFilePrefix}$e';
+      });
+    }
+  }
+
+  Future<void> _goToFileDetails() async {
+    if (_selectedFile == null) return;
+
+    setState(() {
+      _currentStep = FirmwareUpgradeStep.fileDetails;
+      _isValidating = true;
+      _validationResult = null;
+      _errorMessage = null;
+    });
+
+    final result = _controller.validateSelectedFile(
+      requiredProductId: fw.FirmwareUpgradeService.expectedProductId,
+    );
+
+    setState(() {
+      _validationResult = result;
+      _isValidating = false;
+      if (result == null) {
+        _errorMessage = StringConstants.noFileSelectedPleaseUploadAgain;
+      } else if (!result.isValid) {
+        _errorMessage = result.error ?? StringConstants.crcValidationFailed;
+      }
+    });
+  }
+
+  bool _isVersionMissing(String? value) =>
+      value == null || value.trim().isEmpty;
+
+  bool _bleVersionsNotRecovered() =>
+      _isVersionMissing(ble.bleHardwareVersion.value) ||
+      _isVersionMissing(ble.bleFirmwareVersion.value);
+
+  Future<void> _onValidationContinuePressed() async {
+    final md = _selectedDevice?.manufacturerData;
+    final inBootloader = md != null && BleMsdUtils.isBootloader(md);
+
+    if (_bleVersionsNotRecovered()) {
+      final shouldProceed = await _confirmAndUpgrade(
+        message: StringConstants.deviceHardwareFirmwareCouldNotBeRead,
+      );
+      if (shouldProceed) {
+        await _startUpgrade(
+          isChipInBootLoader: inBootloader,
+          firmwareVersion: _validationResult?.firmwareVersion,
+        );
+      }
+      return;
+    }
+
+    // await _startUpgrade(
+    //   isChipInBootLoader: inBootloader,
+    //   firmwareVersion: _validationResult?.firmwareVersion,
+    // );
+
+    if ((_validationResult?.hardwareVersion == ble.bleHardwareVersion.value) &&
+        (_validationResult?.firmwareVersion != ble.bleFirmwareVersion.value)) {
+      await _startUpgrade(
+        isChipInBootLoader: inBootloader,
+        firmwareVersion: _validationResult?.firmwareVersion,
+      );
+    } else if (_validationResult?.hardwareVersion !=
+        ble.bleHardwareVersion.value) {
+      await _showHardwareVersionMismatch();
+    } else {
+      await _showSameFirmwareVersionPopUp();
+    }
+  }
+
+  Future<void> _showSameFirmwareVersionPopUp() async {
+    await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: ColorConstants.white,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 64,
+                  height: 64,
+                  decoration: BoxDecoration(
+                    color: ColorConstants.errorIconBackground,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Center(
+                    child: Icon(
+                      Icons.link_off,
+                      color: ColorConstants.primary,
+                      size: 32,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  StringConstants.firmwareUpdate,
+                  style: StyleConstants.textDark18w700Style,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  StringConstants.firmwareAlreadyUpToDate,
+                  style: StyleConstants.textGray14w400Style,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 20),
+                GestureDetector(
+                  onTap: () => Navigator.of(dialogContext).pop(false),
+                  child: Container(
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: ColorConstants.primary,
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: [
+                        BoxShadow(
+                          color: ColorConstants.primary.withOpacity(0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Center(
+                      child: Text(
+                        StringConstants.okay,
+                        style: StyleConstants.white16w600Style,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _showHardwareVersionMismatch() async {
+    await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: ColorConstants.white,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 64,
+                  height: 64,
+                  decoration: BoxDecoration(
+                    color: ColorConstants.errorIconBackground,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Center(
+                    child: Icon(
+                      Icons.link_off,
+                      color: ColorConstants.primary,
+                      size: 32,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  StringConstants.firmwareUpdate,
+                  style: StyleConstants.textDark18w700Style,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  StringConstants.invalidBINFileHardwareMismatch,
+                  style: StyleConstants.textGray14w400Style,
+                  textAlign: TextAlign.center,
+                ),
+
+                const SizedBox(height: 8),
+                Text(
+                  StringConstants.binFileHardwareVersionDetail(
+                    _validationResult?.hardwareVersion,
+                    ble.bleHardwareVersion.value,
+                  ),
+                  style: StyleConstants.textGray14w400Style,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 20),
+                GestureDetector(
+                  onTap: () => Navigator.of(dialogContext).pop(false),
+                  child: Container(
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: ColorConstants.primary,
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: [
+                        BoxShadow(
+                          color: ColorConstants.primary.withOpacity(0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Center(
+                      child: Text(
+                        StringConstants.cancel,
+                        style: StyleConstants.white16w600Style,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<bool> _confirmAndUpgrade({String? message}) async {
+    final shouldUpgrade = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: ColorConstants.white,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 64,
+                  height: 64,
+                  decoration: BoxDecoration(
+                    color: ColorConstants.errorIconBackground,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Center(
+                    child: Icon(
+                      Icons.link_off,
+                      color: ColorConstants.primary,
+                      size: 32,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  StringConstants.firmwareUpdate,
+                  style: StyleConstants.textDark18w700Style,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  message ?? '',
+                  style: StyleConstants.textGray14w400Style,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  children: [
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () => Navigator.of(dialogContext).pop(false),
+                        child: Container(
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: ColorConstants.buttonSecondaryBackground,
+                            borderRadius: BorderRadius.circular(24),
+                            border: Border.all(
+                              color: ColorConstants.borderLight,
+                              width: 1,
+                            ),
+                          ),
+                          child: Center(
+                            child: Text(
+                              StringConstants.cancel,
+                              style: StyleConstants.textGray16w600Style,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () => Navigator.of(dialogContext).pop(true),
+                        child: Container(
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: ColorConstants.primary,
+                            borderRadius: BorderRadius.circular(24),
+                            boxShadow: [
+                              BoxShadow(
+                                color: ColorConstants.primary.withOpacity(0.3),
+                                blurRadius: 8,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Center(
+                            child: Text(
+                              StringConstants.disabled,
+                              style: StyleConstants.white16w600Style,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+
+    return shouldUpgrade ?? false;
+  }
+
+  int compareFirmwareVersion({
+    required String currentVersion,
+    required String newVersion,
+  }) {
+    try {
+      final current = currentVersion.split('.').map(int.parse).toList();
+
+      final incoming = newVersion.split('.').map(int.parse).toList();
+
+      final maxLength =
+          current.length > incoming.length ? current.length : incoming.length;
+
+      while (current.length < maxLength) {
+        current.add(0);
+      }
+
+      while (incoming.length < maxLength) {
+        incoming.add(0);
+      }
+
+      for (int i = 0; i < maxLength; i++) {
+        if (incoming[i] > current[i]) {
+          return 1; // upgrade
+        }
+
+        if (incoming[i] < current[i]) {
+          return -1; // downgrade
+        }
+      }
+
+      return 0; // same
+    } catch (e) {
+      return -999; // invalid version
+    }
+  }
+
+  Future<void> _startUpgrade({
+    bool? isChipInBootLoader = false,
+    String? firmwareVersion = '',
+  }) async {
+    if (firmwareVersion != null &&
+        firmwareVersion.isNotEmpty &&
+        !_isVersionMissing(ble.bleFirmwareVersion.value)) {
+      final int comparedValue = compareFirmwareVersion(
+        currentVersion: ble.bleFirmwareVersion.value,
+        newVersion: firmwareVersion,
+      );
+      final shouldUpgrade = await _confirmAndUpgrade(
+        message:
+            comparedValue == 1
+                ? '${StringConstants.wantUpgrade} $firmwareVersion?'
+                : comparedValue == -1
+                ? '${StringConstants.wantDowngrade} $firmwareVersion?'
+                : StringConstants.sameVersion,
+      );
+
+      if (!shouldUpgrade) {
+        return;
+      }
+    }
+
+    _controller.downloadingStatus.value = fw.DownloadStatus.upgrading;
+
+    setState(() {
+      _isUpgrading = true;
+      _currentStep = FirmwareUpgradeStep.progress;
+      _currentBleStateMessage = StringConstants.preparingFirmwareUpgrade;
+      _errorMessage = null;
+    });
+
+    final prepared = await _controller.preparePackets();
+    if (!prepared || _controller.totalPacketLength.value == 0) {
+      setState(() {
+        _isUpgrading = false;
+        _currentStep = FirmwareUpgradeStep.result;
+        _errorMessage =
+            _controller.validationError ??
+            StringConstants.noPacketsToProcessPleaseReUploadTheFile;
+      });
+      _controller.downloadingStatus.value = fw.DownloadStatus.failed;
+      return;
+    }
+
+    // Real BLE path: send packets
+    try {
+      await _sendPacketsOverBle(isChipInBootLoader: isChipInBootLoader);
+      final bool isSuccess =
+          _controller.downloadingStatus.value == fw.DownloadStatus.completed;
+      setState(() {
+        _isUpgrading = false;
+        _currentStep = FirmwareUpgradeStep.result;
+        _errorMessage =
+            isSuccess ? null : StringConstants.firmwareTransferFailed;
+        _currentBleStateMessage = null;
+      });
+    } catch (e) {
+      setState(() {
+        _isUpgrading = false;
+        _currentStep = FirmwareUpgradeStep.result;
+        _errorMessage = '${StringConstants.errorSendingPacketsPrefix}$e';
+        _currentBleStateMessage = null;
+      });
+      _controller.downloadingStatus.value = fw.DownloadStatus.failed;
+    }
+  }
+}
+
+class _AnimatedGridCard extends StatefulWidget {
+  final Widget child;
+  final bool highlight;
+
+  const _AnimatedGridCard({required this.child, required this.highlight});
+
+  @override
+  State<_AnimatedGridCard> createState() => _AnimatedGridCardState();
+}
+
+class _AnimatedGridCardState extends State<_AnimatedGridCard>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 360),
+    )..forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: _controller,
+      child: ScaleTransition(
+        scale: Tween(begin: 0.92, end: 1.0).animate(
+          CurvedAnimation(parent: _controller, curve: Curves.easeOutBack),
+        ),
+        child: Stack(
+          children: [widget.child, if (widget.highlight) const _PulseGlow()],
+        ),
+      ),
+    );
+  }
+}
+
+class _PulseGlow extends StatefulWidget {
+  const _PulseGlow();
+
+  @override
+  State<_PulseGlow> createState() => _PulseGlowState();
+}
+
+class _PulseGlowState extends State<_PulseGlow>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    )..repeat(reverse: true);
+
+    Future.delayed(const Duration(milliseconds: 900), () {
+      if (mounted) _controller.stop();
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned.fill(
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (_, __) {
+          return Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.green.withOpacity(
+                    0.25 * (1 - _controller.value),
+                  ),
+                  blurRadius: 18,
+                  spreadRadius: 2,
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+}

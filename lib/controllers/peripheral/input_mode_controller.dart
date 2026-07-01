@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/controllers/peripheral/peripheral_mode_controller.dart';
-import 'package:techno_switch_solar_app/utils/input_mode_util.dart';
+import 'package:techno_switch_solar_app/utils/modes/input_mode_util.dart';
 import 'package:techno_switch_solar_app/panel_config/panel_config_cache_sync.dart';
 import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
@@ -73,9 +73,11 @@ class InputModeController extends PeripheralModeController {
     final f = (data['function'] as int?) ?? 0;
     final opts = functionOptionsMap[group]!;
     function = opts[f.clamp(0, opts.length - 1)];
-    enabled = (data['enabled'] as bool?) == true ? yesNoOptions[1] : yesNoOptions[0];
+    enabled =
+        (data['enabled'] as bool?) == true ? yesNoOptions[1] : yesNoOptions[0];
     test = (data['test'] as bool?) == true ? yesNoOptions[1] : yesNoOptions[0];
-    inverted = (data['inverted'] as bool?) == true ? yesNoOptions[1] : yesNoOptions[0];
+    inverted =
+        (data['inverted'] as bool?) == true ? yesNoOptions[1] : yesNoOptions[0];
     inputTextCtrl.text = (data['text'] as String?) ?? '';
   }
 
@@ -85,9 +87,11 @@ class InputModeController extends PeripheralModeController {
     manager = Get.find<BleLogController>().bleManager;
     group = groupOptions[manager!.inputSetupGroup.value];
     function = functionOptionsMap[group]![manager!.inputSetupFunction.value];
-    enabled = manager!.isInputSetupEnabled.value ? yesNoOptions[1] : yesNoOptions[0];
+    enabled =
+        manager!.isInputSetupEnabled.value ? yesNoOptions[1] : yesNoOptions[0];
     test = manager!.isInputSetupTest.value ? yesNoOptions[1] : yesNoOptions[0];
-    inverted = manager!.isInputSetupInverted.value ? yesNoOptions[1] : yesNoOptions[0];
+    inverted =
+        manager!.isInputSetupInverted.value ? yesNoOptions[1] : yesNoOptions[0];
     inputTextCtrl.text = manager!.inputSetupText.value;
     refreshUi();
   }

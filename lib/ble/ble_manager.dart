@@ -6,7 +6,7 @@ import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
-import 'package:techno_switch_solar_app/utils/constants/ble_constants.dart';
+import 'package:techno_switch_solar_app/utils/constants/ble/ble_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 import 'package:techno_switch_solar_app/utils/logger.dart';
 import 'ble_frame.dart';
@@ -16,13 +16,13 @@ import 'ble_encryption_config.dart';
 import 'ble_process.dart';
 import 'package:techno_switch_solar_app/models/access_code_mode_model.dart';
 import 'package:techno_switch_solar_app/models/l_bus_setup_data_model.dart';
-import 'package:techno_switch_solar_app/utils/input_mode_util.dart';
-import 'package:techno_switch_solar_app/utils/relay_mode_util.dart';
-import 'package:techno_switch_solar_app/utils/general_quipment_mode_util.dart';
-import 'package:techno_switch_solar_app/utils/zone_equipment_mode_util.dart';
-import 'package:techno_switch_solar_app/utils/ext_out_equipment_mode_util.dart';
-import 'package:techno_switch_solar_app/utils/l_bus_payload_config.dart';
-import 'package:techno_switch_solar_app/utils/ble_msd_utils.dart';
+import 'package:techno_switch_solar_app/utils/modes/input_mode_util.dart';
+import 'package:techno_switch_solar_app/utils/modes/relay_mode_util.dart';
+import 'package:techno_switch_solar_app/utils/modes/general_quipment_mode_util.dart';
+import 'package:techno_switch_solar_app/utils/modes/zone_equipment_mode_util.dart';
+import 'package:techno_switch_solar_app/utils/modes/ext_out_equipment_mode_util.dart';
+import 'package:techno_switch_solar_app/utils/modes/l_bus_payload_config.dart';
+import 'package:techno_switch_solar_app/utils/constants/ble/ble_msd_utils.dart';
 
 const int BLE_FAILED = 0;
 const int BLE_SUCCESS = 1;
@@ -2965,7 +2965,8 @@ class BleManager extends GetxService {
   int _sounderGeneralEquipmentModeByteForApply() {
     try {
       final raw = sounderGeneralMode.value.trim();
-      if (raw.isEmpty) throw FormatException(StringConstants.emptySounderGeneralMode);
+      if (raw.isEmpty)
+        throw FormatException(StringConstants.emptySounderGeneralMode);
       return int.parse(raw, radix: 16) & BleConstants.base;
     } catch (_) {
       final cfg = GeneralEquipmentModeConfig(

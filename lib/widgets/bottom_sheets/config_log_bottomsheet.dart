@@ -6,11 +6,11 @@ import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
-import 'package:techno_switch_solar_app/utils/peripheral_config_diff_labels.dart';
-import 'package:techno_switch_solar_app/utils/peripheral_config_snapshot.dart';
+import 'package:techno_switch_solar_app/utils/peripherals/peripheral_config_diff_labels.dart';
+import 'package:techno_switch_solar_app/utils/peripherals/peripheral_config_snapshot.dart';
 import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
-import 'package:techno_switch_solar_app/widgets/bottom_sheets/widgets/dropdown.dart';
+import 'package:techno_switch_solar_app/widgets/common/dropdown.dart';
 
 import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
 
@@ -192,7 +192,8 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
           ),
           const SizedBox(height: 6),
           Text(
-            StringConstants.enabledBusDetailMayBeIncompleteUsePerBusDownloadOnThe,
+            StringConstants
+                .enabledBusDetailMayBeIncompleteUsePerBusDownloadOnThe,
             style: StyleConstants.textDarkGray12w400Style,
           ),
         ],
@@ -407,7 +408,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  StringConstants.thisWillOverwritePanelSettingsWithTheConfiguration,
+                  UiStrings.applyToPanelConfirmMessage,
                   style: StyleConstants.textMuted14w400Style.copyWith(
                     color: _textMuted,
                     height: 1.4,
@@ -562,8 +563,14 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
             ),
           ),
           const SizedBox(height: 4),
-          _diffValueSideRow(StringConstants.panel, '$panelN${StringConstants.entriesSuffix}'),
-          _diffValueSideRow(StringConstants.app, '$appN${StringConstants.entriesSuffix}'),
+          _diffValueSideRow(
+            StringConstants.panel,
+            '$panelN${StringConstants.entriesSuffix}',
+          ),
+          _diffValueSideRow(
+            StringConstants.app,
+            '$appN${StringConstants.entriesSuffix}',
+          ),
         ],
       );
     }
@@ -670,7 +677,8 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
       }
       if (isLBus) {
         if (hasLBusCommsFaults && !hasLBusFieldDiffs) {
-          return StringConstants.commsFaultDuringDownloadNoFieldDifferencesVsApp;
+          return StringConstants
+              .commsFaultDuringDownloadNoFieldDifferencesVsApp;
         }
         if (hasLBusCommsFaults && hasLBusFieldDiffs) {
           return '${StringConstants.commsFaultOnSomeBusesPrefix}$fieldDiffCount'
@@ -902,7 +910,8 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    StringConstants.allConfigurationSectionsMatchTheSavedAppData,
+                    StringConstants
+                        .allConfigurationSectionsMatchTheSavedAppData,
                     style: StyleConstants.successDark14w500Style,
                   ),
                 ),
@@ -918,7 +927,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
         title: StringConstants.result,
         children: [
           Text(
-            StringConstants.configurationDiffersFromSavedAppDataButNoSectionDetailIsAvailable,
+            UiStrings.configurationDiffersNoSectionDetailMessage,
             style: StyleConstants.textMuted13w400Style.copyWith(
               color: _textMuted,
               height: 1.35,
@@ -1001,7 +1010,10 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
                         FocusManager.instance.primaryFocus?.unfocus();
                         Navigator.of(context).pop();
                       },
-              child: Text(StringConstants.okay, style: StyleConstants.white16w600Style),
+              child: Text(
+                StringConstants.okay,
+                style: StyleConstants.white16w600Style,
+              ),
             ),
           ),
         ],
@@ -1100,7 +1112,10 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
                       FocusManager.instance.primaryFocus?.unfocus();
                       Navigator.of(context).pop();
                     },
-            child: Text(StringConstants.next, style: StyleConstants.white16w600Style),
+            child: Text(
+              StringConstants.next,
+              style: StyleConstants.white16w600Style,
+            ),
           ),
         ),
       ],
@@ -1328,7 +1343,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
                                 title: StringConstants.compareWithSavedSetup,
                                 children: [
                                   Text(
-                                    StringConstants.downloadTheFullConfigurationFromThePanelAndCompareItWithDataStoredInThisAppForThisDevice,
+                                    UiStrings.compareWithSavedSetupMessage,
                                     style: StyleConstants.textMuted13w400Style
                                         .copyWith(
                                           color: _textMuted,
@@ -1367,7 +1382,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
                           title: StringConstants.compareWithSavedSetup,
                           children: [
                             Text(
-                              StringConstants.downloadTheFullConfigurationFromThePanelAndCompareItWithDataStoredInThisAppForThisDevice,
+                              UiStrings.compareWithSavedSetupMessage,
                               style: StyleConstants.textMuted13w400Style
                                   .copyWith(color: _textMuted, height: 1.4),
                             ),

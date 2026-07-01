@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/ble/ble_process.dart';
 import 'package:techno_switch_solar_app/utils/logger.dart';
-import 'package:techno_switch_solar_app/widgets/ble_communication_failure_dialog.dart';
+import 'package:techno_switch_solar_app/widgets/dialogs/ble_communication_failure_dialog.dart';
 
 class BleLogController extends GetxController {
   final BleManager bleManager = Get.find<BleManager>();

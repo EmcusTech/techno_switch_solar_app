@@ -3,12 +3,13 @@ import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
-import 'package:techno_switch_solar_app/utils/ble_name_utils.dart';
+import 'package:techno_switch_solar_app/utils/constants/ble/ble_name_utils.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 
 import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
+
 class SettingsScreen extends StatefulWidget {
   final String panelName;
   final String panelVersionNo;
@@ -85,10 +86,7 @@ class _SettingsContentState extends State<_SettingsContent> {
                 ),
                 elevation: 0,
               ),
-              child: Text(
-                'Disconnect',
-                style: StyleConstants.white14w600Style,
-              ),
+              child: Text('Disconnect', style: StyleConstants.white14w600Style),
             ),
           ],
         );
@@ -147,9 +145,7 @@ class _SettingsContentState extends State<_SettingsContent> {
                               Navigator.of(context).pop();
                             }
                           },
-                          child: SvgPicture.asset(
-                            AssetConstants.arrowBackIcon,
-                          ),
+                          child: SvgPicture.asset(AssetConstants.arrowBackIcon),
                         ),
                         SizedBox(width: 8),
                         Text(
@@ -189,11 +185,7 @@ class _SettingsContentState extends State<_SettingsContent> {
         children: [
           Row(
             children: [
-              SvgPicture.asset(
-                AssetConstants.panelIcon,
-                height: 62,
-                width: 62,
-              ),
+              SvgPicture.asset(AssetConstants.panelIcon, height: 62, width: 62),
               SizedBox(width: 14),
               Column(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -218,11 +210,15 @@ class _SettingsContentState extends State<_SettingsContent> {
                               style: StyleConstants.textDisabled14w500Style,
                             ),
                             TextSpan(
-                              text: isConnected ? StringConstants.connected : StringConstants.disconnected,
+                              text:
+                                  isConnected
+                                      ? StringConstants.connected
+                                      : StringConstants.disconnected,
                               style: StyleConstants.primary14w500Style.copyWith(
-                                color: isConnected
-                                    ? ColorConstants.success
-                                    : ColorConstants.primary,
+                                color:
+                                    isConnected
+                                        ? ColorConstants.success
+                                        : ColorConstants.primary,
                               ),
                             ),
                           ],
@@ -235,25 +231,58 @@ class _SettingsContentState extends State<_SettingsContent> {
             ],
           ),
           SizedBox(height: 10),
-          Divider(color: ColorConstants.blackMaterial.withValues(alpha: 0.18), thickness: 1),
+          Divider(
+            color: ColorConstants.blackMaterial.withValues(alpha: 0.18),
+            thickness: 1,
+          ),
           _settingTile(title: StringConstants.panelSettings, onTap: () {}),
-          Divider(color: ColorConstants.blackMaterial.withValues(alpha: 0.18), thickness: 1),
+          Divider(
+            color: ColorConstants.blackMaterial.withValues(alpha: 0.18),
+            thickness: 1,
+          ),
           _settingTile(title: StringConstants.zoneSettings, onTap: () {}),
-          Divider(color: ColorConstants.blackMaterial.withValues(alpha: 0.18), thickness: 1),
+          Divider(
+            color: ColorConstants.blackMaterial.withValues(alpha: 0.18),
+            thickness: 1,
+          ),
           _settingTile(title: StringConstants.inputSettings, onTap: () {}),
-          Divider(color: ColorConstants.blackMaterial.withValues(alpha: 0.18), thickness: 1),
+          Divider(
+            color: ColorConstants.blackMaterial.withValues(alpha: 0.18),
+            thickness: 1,
+          ),
           _settingTile(title: StringConstants.relaySettings, onTap: () {}),
-          Divider(color: ColorConstants.blackMaterial.withValues(alpha: 0.18), thickness: 1),
+          Divider(
+            color: ColorConstants.blackMaterial.withValues(alpha: 0.18),
+            thickness: 1,
+          ),
           _settingTile(title: StringConstants.sounderSettings, onTap: () {}),
-          Divider(color: ColorConstants.blackMaterial.withValues(alpha: 0.18), thickness: 1),
-          _settingTile(title: StringConstants.extinguishingOutSettings, onTap: () {}),
-          Divider(color: ColorConstants.blackMaterial.withValues(alpha: 0.18), thickness: 1),
+          Divider(
+            color: ColorConstants.blackMaterial.withValues(alpha: 0.18),
+            thickness: 1,
+          ),
+          _settingTile(
+            title: StringConstants.extinguishingOutSettings,
+            onTap: () {},
+          ),
+          Divider(
+            color: ColorConstants.blackMaterial.withValues(alpha: 0.18),
+            thickness: 1,
+          ),
           _settingTile(title: StringConstants.lBusSettings, onTap: () {}),
-          Divider(color: ColorConstants.blackMaterial.withValues(alpha: 0.18), thickness: 1),
+          Divider(
+            color: ColorConstants.blackMaterial.withValues(alpha: 0.18),
+            thickness: 1,
+          ),
           _settingTile(title: StringConstants.panelInformation, onTap: () {}),
-          Divider(color: ColorConstants.blackMaterial.withValues(alpha: 0.18), thickness: 1),
+          Divider(
+            color: ColorConstants.blackMaterial.withValues(alpha: 0.18),
+            thickness: 1,
+          ),
           _settingTile(title: StringConstants.firmwareUpgrade, onTap: () {}),
-          Divider(color: ColorConstants.blackMaterial.withValues(alpha: 0.18), thickness: 1),
+          Divider(
+            color: ColorConstants.blackMaterial.withValues(alpha: 0.18),
+            thickness: 1,
+          ),
           SizedBox(height: 80),
         ],
       ),
@@ -275,10 +304,7 @@ class _SettingsContentState extends State<_SettingsContent> {
               ),
             ),
             SizedBox(width: 12),
-            Text(
-              title,
-              style: StyleConstants.black16w400Style,
-            ),
+            Text(title, style: StyleConstants.black16w400Style),
             Spacer(),
             Icon(
               Icons.arrow_forward_ios,

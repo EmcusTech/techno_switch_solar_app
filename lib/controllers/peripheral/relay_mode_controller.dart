@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/controllers/peripheral/peripheral_mode_controller.dart';
 import 'package:techno_switch_solar_app/panel_config/panel_config_cache_sync.dart';
-import 'package:techno_switch_solar_app/utils/peripheral_test_mode_sync.dart';
+import 'package:techno_switch_solar_app/utils/peripherals/peripheral_test_mode_sync.dart';
 import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
@@ -47,7 +47,12 @@ class RelayModeController extends PeripheralModeController {
       StringConstants.supervisory,
       StringConstants.fireSnd,
     ],
-    'Zone': ['Fault', 'Fire', StringConstants.disablement, StringConstants.fireSnd],
+    'Zone': [
+      'Fault',
+      'Fire',
+      StringConstants.disablement,
+      StringConstants.fireSnd,
+    ],
     StringConstants.extOut: [
       StringConstants.releaseInitiated,
       StringConstants.extAgentReleased,
@@ -92,7 +97,9 @@ class RelayModeController extends PeripheralModeController {
       final r = data[key] as Map<String, dynamic>?;
       if (r == null) continue;
       relays[i].enabled =
-          (r['enabled'] as bool?) == true ? StringConstants.yes : StringConstants.no;
+          (r['enabled'] as bool?) == true
+              ? StringConstants.yes
+              : StringConstants.no;
       final g = (r['group'] as int?) ?? 0;
       relays[i].group = groupOptions[g.clamp(0, groupOptions.length - 1)];
       final f = (r['function'] as int?) ?? 0;
@@ -118,28 +125,44 @@ class RelayModeController extends PeripheralModeController {
     manager = Get.find<BleLogController>().bleManager;
 
     relays[0].enabled =
-        manager!.isRelayOneSetupEnabled.value ? StringConstants.yes : StringConstants.no;
+        manager!.isRelayOneSetupEnabled.value
+            ? StringConstants.yes
+            : StringConstants.no;
     relays[0].group = groupOptions[manager!.relayOneSetupGroup.value];
     relays[0].function =
-        functionOptionsMap[relays[0].group]![manager!.relayOneSetupFunction.value];
-    relays[0].outputTextController.text = manager!.relayOneSetupOutputText.value;
+        functionOptionsMap[relays[0].group]![manager!
+            .relayOneSetupFunction
+            .value];
+    relays[0].outputTextController.text =
+        manager!.relayOneSetupOutputText.value;
     relays[0].dynamicController.text = manager!.relayOneSetupDynamicText.value;
 
     relays[1].enabled =
-        manager!.isRelayTwoSetupEnabled.value ? StringConstants.yes : StringConstants.no;
+        manager!.isRelayTwoSetupEnabled.value
+            ? StringConstants.yes
+            : StringConstants.no;
     relays[1].group = groupOptions[manager!.relayTwoSetupGroup.value];
     relays[1].function =
-        functionOptionsMap[relays[1].group]![manager!.relayTwoSetupFunction.value];
-    relays[1].outputTextController.text = manager!.relayTwoSetupOutputText.value;
+        functionOptionsMap[relays[1].group]![manager!
+            .relayTwoSetupFunction
+            .value];
+    relays[1].outputTextController.text =
+        manager!.relayTwoSetupOutputText.value;
     relays[1].dynamicController.text = manager!.relayTwoSetupDynamicText.value;
 
     relays[2].enabled =
-        manager!.isRelayThreeSetupEnabled.value ? StringConstants.yes : StringConstants.no;
+        manager!.isRelayThreeSetupEnabled.value
+            ? StringConstants.yes
+            : StringConstants.no;
     relays[2].group = groupOptions[manager!.relayThreeSetupGroup.value];
     relays[2].function =
-        functionOptionsMap[relays[2].group]![manager!.relayThreeSetupFunction.value];
-    relays[2].outputTextController.text = manager!.relayThreeSetupOutputText.value;
-    relays[2].dynamicController.text = manager!.relayThreeSetupDynamicText.value;
+        functionOptionsMap[relays[2].group]![manager!
+            .relayThreeSetupFunction
+            .value];
+    relays[2].outputTextController.text =
+        manager!.relayThreeSetupOutputText.value;
+    relays[2].dynamicController.text =
+        manager!.relayThreeSetupDynamicText.value;
 
     for (int i = 0; i < 3; i++) {
       if (relays[i].group == StringConstants.extOut) {
@@ -175,8 +198,10 @@ class RelayModeController extends PeripheralModeController {
           manager!.relayOneSetupFunction.value = functionIndex;
           manager!.isRelayOneSetupEnabled.value = isEnabled;
           manager!.isRelayOneSetupTest.value = isTest;
-          manager!.relayOneSetupOutputText.value = relay.outputTextController.text;
-          manager!.relayOneSetupDynamicText.value = relay.dynamicController.text;
+          manager!.relayOneSetupOutputText.value =
+              relay.outputTextController.text;
+          manager!.relayOneSetupDynamicText.value =
+              relay.dynamicController.text;
           break;
 
         case 1:
@@ -184,8 +209,10 @@ class RelayModeController extends PeripheralModeController {
           manager!.relayTwoSetupFunction.value = functionIndex;
           manager!.isRelayTwoSetupEnabled.value = isEnabled;
           manager!.isRelayTwoSetupTest.value = isTest;
-          manager!.relayTwoSetupOutputText.value = relay.outputTextController.text;
-          manager!.relayTwoSetupDynamicText.value = relay.dynamicController.text;
+          manager!.relayTwoSetupOutputText.value =
+              relay.outputTextController.text;
+          manager!.relayTwoSetupDynamicText.value =
+              relay.dynamicController.text;
           break;
 
         case 2:
@@ -193,8 +220,10 @@ class RelayModeController extends PeripheralModeController {
           manager!.relayThreeSetupFunction.value = functionIndex;
           manager!.isRelayThreeSetupEnabled.value = isEnabled;
           manager!.isRelayThreeSetupTest.value = isTest;
-          manager!.relayThreeSetupOutputText.value = relay.outputTextController.text;
-          manager!.relayThreeSetupDynamicText.value = relay.dynamicController.text;
+          manager!.relayThreeSetupOutputText.value =
+              relay.outputTextController.text;
+          manager!.relayThreeSetupDynamicText.value =
+              relay.dynamicController.text;
           break;
       }
     }

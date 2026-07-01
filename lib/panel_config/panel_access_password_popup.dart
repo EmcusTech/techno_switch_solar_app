@@ -8,7 +8,7 @@ import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/panel_config/panel_config_feedback_dialogs.dart';
 import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
-import 'package:techno_switch_solar_app/utils/peripheral_cache_to_ble.dart';
+import 'package:techno_switch_solar_app/utils/peripherals/peripheral_cache_to_ble.dart';
 import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';

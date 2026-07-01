@@ -90,15 +90,15 @@ class HelpScreen extends StatelessWidget {
         ),
         _buildFAQItem(
           StringConstants.faqHowDoICreateNewProject,
-          StringConstants.toCreateANewProjectTapOnTheNewProjectQuickLinkOnTheHomeScreenFollowTheStepByStepWizardToSetUpYourProjectDetails,
+          UiStrings.faqHowDoICreateNewProjectAnswer,
         ),
         _buildFAQItem(
           StringConstants.faqHowCanIRetrieveProjectLogs,
-          StringConstants.youCanRetrieveProjectLogsByTappingTheRetrieveLogQuickLinkOnTheHomeScreenSelectYourProjectAndChooseTheDateRangeForTheLogsYouNeed,
+          UiStrings.faqHowCanIRetrieveProjectLogsAnswer,
         ),
         _buildFAQItem(
           StringConstants.faqWhatMaintenanceTasksAvailable,
-          StringConstants.theMaintenanceSectionProvidesVariousToolsForSystemMaintenanceIncludingSystemChecksUpdatesAndTroubleshootingGuides,
+          UiStrings.faqWhatMaintenanceTasksAvailableAnswer,
         ),
       ],
     );

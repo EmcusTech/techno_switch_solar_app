@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:techno_switch_solar_app/screens/splash_screen.dart';
-import 'package:techno_switch_solar_app/services/app_services.dart';
-import 'package:techno_switch_solar_app/services/navigation_service.dart';
+import 'package:techno_switch_solar_app/utils/app/app_services.dart';
+import 'package:techno_switch_solar_app/utils/app/navigation_service.dart';
+import 'package:techno_switch_solar_app/utils/ble/ble_session_idle_timeout.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
 class TechnoSwitchApp extends StatefulWidget {
@@ -44,18 +45,20 @@ class _TechnoSwitchAppState extends State<TechnoSwitchApp>
     splitScreenMode: true,
     builder:
         (_, _) => SafeArea(
-          child: MaterialApp(
-            debugShowCheckedModeBanner: false,
-            navigatorObservers: <NavigatorObserver>[appRouteObserver],
-            title: StringConstants.appTitle,
-            theme: ThemeData(
-              textTheme: GoogleFonts.interTextTheme(
-                Theme.of(context).textTheme,
+          child: BleSessionIdleTimeout(
+            child: MaterialApp(
+              debugShowCheckedModeBanner: false,
+              navigatorObservers: <NavigatorObserver>[appRouteObserver],
+              title: StringConstants.appTitle,
+              theme: ThemeData(
+                textTheme: GoogleFonts.interTextTheme(
+                  Theme.of(context).textTheme,
+                ),
+                colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+                useMaterial3: true,
               ),
-              colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
-              useMaterial3: true,
+              home: const SplashScreen(),
             ),
-            home: const SplashScreen(),
           ),
         ),
   );

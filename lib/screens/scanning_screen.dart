@@ -8,24 +8,24 @@ import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:lottie/lottie.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
-import 'package:techno_switch_solar_app/screens/event_log_screen.dart';
-import 'package:techno_switch_solar_app/screens/log_retrieval_loading_screen.dart';
+import 'package:techno_switch_solar_app/screens/logs/event_log_screen.dart';
+import 'package:techno_switch_solar_app/screens/logs/log_retrieval_loading_screen.dart';
 import 'package:techno_switch_solar_app/screens/project_dashboard.dart';
 import 'package:techno_switch_solar_app/screens/scanned_screen.dart';
 import 'package:techno_switch_solar_app/widgets/scanning_widget.dart';
 import 'package:usb_serial/usb_serial.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:techno_switch_solar_app/utils/bluetooth_service.dart';
-import 'package:techno_switch_solar_app/services/panel_service.dart';
-import 'package:techno_switch_solar_app/services/site_service.dart';
-import 'package:techno_switch_solar_app/services/panel_site_connect_flow.dart';
+import 'package:techno_switch_solar_app/utils/constants/ble/bluetooth_service.dart';
+import 'package:techno_switch_solar_app/utils/panel_service.dart';
+import 'package:techno_switch_solar_app/utils/site_service.dart';
+import 'package:techno_switch_solar_app/utils/panel_site_connect_flow.dart';
 import 'package:techno_switch_solar_app/models/site_model.dart';
-import 'package:techno_switch_solar_app/screens/simple_site_creation_screen.dart';
-import 'package:techno_switch_solar_app/utils/ble_name_utils.dart';
+import 'package:techno_switch_solar_app/screens/sites/simple_site_creation_screen.dart';
+import 'package:techno_switch_solar_app/utils/constants/ble/ble_name_utils.dart';
 import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
 import 'package:techno_switch_solar_app/panel_config/post_connect_bulk_download_offer.dart';
-import 'package:techno_switch_solar_app/widgets/panel_access_code_dialog.dart';
-import 'package:techno_switch_solar_app/widgets/bootloader_connect_flow.dart';
+import 'package:techno_switch_solar_app/widgets/dialogs/panel_access_code_dialog.dart';
+import 'package:techno_switch_solar_app/utils/ble/bootloader_connect_flow.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
@@ -148,8 +148,7 @@ class _ScanningScreenState extends State<ScanningScreen>
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    StringConstants
-                        .thisPanelIsNotAssociatedWithAnySiteYetCreateASiteToContinue,
+                    UiStrings.panelNotAssociatedCreateSiteMessage,
                     style: StyleConstants.textMuted14w400Style,
                     textAlign: TextAlign.center,
                   ),
@@ -189,8 +188,7 @@ class _ScanningScreenState extends State<ScanningScreen>
                             Navigator.of(dialogContext).pop(true);
                           },
                           child: Text(
-                            StringConstants
-                                .thisWillSaveTheSiteAndPanelIDConfigurationWillBeStoredLocallyAndCanBeAppliedWhenYouConnectThePanelLater,
+                            UiStrings.createButton,
                             style: StyleConstants.white14w600Style,
                           ),
                         ),
@@ -430,8 +428,7 @@ class _ScanningScreenState extends State<ScanningScreen>
                                       dialogContext,
                                     ).pop('create'),
                                 child: Text(
-                                  StringConstants
-                                      .thisWillSaveTheSiteAndPanelIDConfigurationWillBeStoredLocallyAndCanBeAppliedWhenYouConnectThePanelLater,
+                                  UiStrings.createButton,
                                   style: StyleConstants.primary14w600Style,
                                 ),
                               ),

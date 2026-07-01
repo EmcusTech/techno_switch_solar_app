@@ -10,9 +10,9 @@ import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 class ZoneConfig {
   final int zoneNumber;
 
-  String type = StringConstants.none;
-  String enabled = 'No';
-  String mode = StringConstants.normal;
+  String type = PanelValues.zoneTypeNone;
+  String enabled = PanelValues.noOption;
+  String mode = PanelValues.zoneModeNormal;
 
   TextEditingController zoneTextController = TextEditingController();
   TextEditingController verificationTimeController = TextEditingController();
@@ -24,14 +24,9 @@ class ZoneConfig {
 class ZoneModeController extends PeripheralModeController {
   ZoneModeController({required super.deviceId, required super.refreshTrigger});
 
-  final List<String> typeOptions = [StringConstants.none, 'IS (MTL 5561)'];
-  final List<String> yesNoOptions = ['No', StringConstants.yes];
-  final List<String> modeOptions = [
-    StringConstants.normal,
-    StringConstants.none,
-    StringConstants.verified,
-    StringConstants.immediate,
-  ];
+  final List<String> typeOptions = PanelValues.zoneTypeOptions;
+  final List<String> yesNoOptions = [PanelValues.noOption, PanelValues.yesOption];
+  final List<String> modeOptions = PanelValues.zoneModeOptions;
 
   late List<ZoneConfig> zones;
 
@@ -62,8 +57,13 @@ class ZoneModeController extends PeripheralModeController {
       final z = data[key] as Map<String, dynamic>?;
       if (z == null) continue;
       zones[i].type =
-          (z['type'] as int?) == 1 ? 'IS (MTL 5561)' : StringConstants.none;
-      zones[i].enabled = (z['enabled'] as bool?) == true ? StringConstants.yes : 'No';
+          (z['type'] as int?) == 1
+              ? PanelValues.zoneTypeIsMtl5561
+              : PanelValues.zoneTypeNone;
+      zones[i].enabled =
+          (z['enabled'] as bool?) == true
+              ? PanelValues.yesOption
+              : PanelValues.noOption;
       final dm = (z[StringConstants.isMTL5561] as int?) ?? 0;
       zones[i].mode = modeOptions[dm.clamp(0, modeOptions.length - 1)];
       zones[i].verificationTimeController.text =

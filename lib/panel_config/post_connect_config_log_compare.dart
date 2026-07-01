@@ -8,7 +8,7 @@ import 'package:techno_switch_solar_app/panel_config/panel_access_password_popup
 import 'package:techno_switch_solar_app/panel_config/panel_config_bulk_sync.dart';
 import 'package:techno_switch_solar_app/panel_config/panel_config_cache_sync.dart';
 import 'package:techno_switch_solar_app/panel_config/panel_config_feedback_dialogs.dart';
-import 'package:techno_switch_solar_app/utils/peripheral_config_snapshot.dart';
+import 'package:techno_switch_solar_app/utils/peripherals/peripheral_config_snapshot.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/config_log_bottomsheet.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
@@ -166,7 +166,8 @@ Future<void> presentPostConnectConfigLogCompareAfterDownload({
                 context,
                 bleManager.bleProcess,
                 StringConstants.configuration,
-                subtitle: StringConstants.yourSavedSetupHasBeenAppliedToThePanel,
+                subtitle:
+                    StringConstants.yourSavedSetupHasBeenAppliedToThePanel,
               );
             }
             compareResult.value = await buildCompare();
@@ -221,7 +222,8 @@ Future<void> presentPostConnectConfigLogCompareAfterDownload({
         } catch (e, _) {
           compareResult.value = ConfigCompareResult.withError(
             e is TimeoutException
-                ? StringConstants.operationTimedOutStayCloseToTheDeviceAndTryAgain
+                ? StringConstants
+                    .operationTimedOutStayCloseToTheDeviceAndTryAgain
                 : e.toString(),
           );
         }

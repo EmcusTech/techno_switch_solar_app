@@ -4,12 +4,12 @@ import 'package:get/get.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/screens/create_project/create_project_screen_refactored.dart';
 import 'package:techno_switch_solar_app/screens/scanning_screen.dart';
-import 'package:techno_switch_solar_app/screens/site_screen.dart';
-import 'package:techno_switch_solar_app/services/app_services.dart';
-import 'package:techno_switch_solar_app/services/app_state.dart';
-import 'package:techno_switch_solar_app/services/site_service.dart';
-import 'package:techno_switch_solar_app/services/log_retrieval_service.dart';
-import 'package:techno_switch_solar_app/services/navigation_service.dart';
+import 'package:techno_switch_solar_app/screens/sites/site_screen.dart';
+import 'package:techno_switch_solar_app/utils/app/app_services.dart';
+import 'package:techno_switch_solar_app/utils/app/app_state.dart';
+import 'package:techno_switch_solar_app/utils/site_service.dart';
+import 'package:techno_switch_solar_app/utils/log_retrieval_service.dart';
+import 'package:techno_switch_solar_app/utils/app/navigation_service.dart';
 import 'package:intl/intl.dart';
 import 'settings_screen.dart';
 import 'help_screen.dart';
@@ -18,6 +18,7 @@ import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 
 import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
+
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -30,7 +31,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
   final List<Widget> _screens = [
     const _HomeContent(),
-    SettingsScreen(panelName: StringConstants.rhino2008, panelVersionNo: StringConstants.s098),
+    SettingsScreen(
+      panelName: StringConstants.rhino2008,
+      panelVersionNo: StringConstants.s098,
+    ),
     const HelpScreen(),
   ];
 
@@ -390,7 +394,9 @@ class _HomeContentState extends State<_HomeContent> with RouteAware {
           height: 64,
           decoration: BoxDecoration(
             color:
-                isEnabled == true ? ColorConstants.transparent : Colors.grey.shade200,
+                isEnabled == true
+                    ? ColorConstants.transparent
+                    : Colors.grey.shade200,
             border: Border.all(
               color:
                   isEnabled == true
@@ -415,10 +421,7 @@ class _HomeContentState extends State<_HomeContent> with RouteAware {
           ),
         ),
         SizedBox(height: 11),
-        Text(
-          text,
-          style: StyleConstants.textDark11w400Style,
-        ),
+        Text(text, style: StyleConstants.textDark11w400Style),
       ],
     );
   }

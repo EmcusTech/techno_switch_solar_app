@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/controllers/peripheral/peripheral_mode_controller.dart';
 import 'package:techno_switch_solar_app/panel_config/panel_config_cache_sync.dart';
-import 'package:techno_switch_solar_app/utils/ext_zone_mode_util.dart';
+import 'package:techno_switch_solar_app/utils/modes/ext_zone_mode_util.dart';
 import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
@@ -66,7 +66,8 @@ class ExtOutController extends PeripheralModeController {
   final String autoError = "Countdown Auto must be between 0 and 60";
   final String manError = StringConstants.countdownManMustBeBetween0And60;
   final String releaseError = StringConstants.releaseTimeMustBeBetween10And300;
-  final String resetDelayError = StringConstants.resetDelayMustBeBetween0And1800;
+  final String resetDelayError =
+      StringConstants.resetDelayMustBeBetween0And1800;
 
   late String enabled;
   late String actuatorType;
@@ -199,8 +200,9 @@ class ExtOutController extends PeripheralModeController {
 
     m.isExtZoneEnabled.value = zoneEnable;
     m.extZoneMode.value = hexValue;
-    m.extZoneCountdownAuto.value =
-        int.parse(autoCtrl.text.isEmpty ? '0' : autoCtrl.text);
+    m.extZoneCountdownAuto.value = int.parse(
+      autoCtrl.text.isEmpty ? '0' : autoCtrl.text,
+    );
     m.extZoneCountdownMan.value = int.parse(manCtrl.text);
     m.extZoneReleaseTime.value = int.parse(releaseCtrl.text);
     m.extZoneResetDelay.value = int.parse(resetDelayCtrl.text);

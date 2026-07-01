@@ -3,12 +3,9 @@ import 'package:get/get.dart';
 import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
 import 'package:techno_switch_solar_app/models/create_project/site_form_data.dart';
 import 'package:techno_switch_solar_app/models/create_project/panel_form_data.dart';
-import 'package:techno_switch_solar_app/models/create_project/general_settings_data.dart';
 import 'package:techno_switch_solar_app/models/create_project/zone_settings_data.dart';
 import 'package:techno_switch_solar_app/models/create_project/sounder_data.dart';
 import 'package:techno_switch_solar_app/models/create_project/relay_data.dart';
-import 'package:techno_switch_solar_app/models/create_project/input_data.dart';
-import 'package:techno_switch_solar_app/models/create_project/lbus_data.dart';
 import 'package:techno_switch_solar_app/models/panel_type_config.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
@@ -34,14 +31,9 @@ class CreateProjectController extends GetxController {
 
   SiteFormData siteData = SiteFormData();
   PanelFormData panelData = PanelFormData();
-  GeneralSettingsData generalSettings = GeneralSettingsData();
   ZoneSettingsData zoneSettings = ZoneSettingsData();
   SounderData sounderData = SounderData();
-  SounderSettingsData sounderSettings = SounderSettingsData();
-  InputData inputData = InputData();
   RelayData relayData = RelayData();
-  LBusData lbusData = LBusData();
-  ExtinguishingData extinguishingData = ExtinguishingData();
 
   Map<String, String> validationErrors = {};
 
@@ -151,130 +143,13 @@ class CreateProjectController extends GetxController {
     update();
   }
 
-  void updateGeneralSetting(String label, String value) {
-    switch (label) {
-      case 'Level Timeout':
-        generalSettings = generalSettings.copyWith(levelTimeout: value);
-        break;
-      case StringConstants.faultLatching:
-        generalSettings = generalSettings.copyWith(faultLatching: value);
-        break;
-      case 'Panel Date & Time':
-        generalSettings = generalSettings.copyWith(panelDateTime: value);
-        break;
-      case 'Service Due':
-        generalSettings = generalSettings.copyWith(serviceDue: value);
-        break;
-      case StringConstants.serviceDueReminder:
-        generalSettings = generalSettings.copyWith(serviceDueReminder: value);
-        break;
-      case StringConstants.eventReminder:
-        generalSettings = generalSettings.copyWith(eventReminder: value);
-        break;
-    }
-    update();
-  }
-
-  void updateSliderSetting(String label, double value) {
-    switch (label) {
-      case 'Level Timeout':
-        generalSettings = generalSettings.copyWith(
-          levelTimeout: '${value.toInt()} Seconds',
-        );
-        break;
-      case StringConstants.timerSettings:
-        generalSettings = generalSettings.copyWith(timerSettings: value);
-        break;
-    }
-    update();
-  }
-
-  void setExpandedField(String? field) {
-    generalSettings = generalSettings.copyWith(expandedField: field);
-    update();
-  }
-
-  void setExpandedZone(String? zoneName) {
-    zoneSettings.expandedZone = zoneName;
-    update();
-  }
-
-  void updateZoneField(String zoneName, String fieldType, String value) {
-    zoneSettings.updateZoneField(zoneName, fieldType, value);
-    update();
-  }
-
-  void setExpandedSounder(String? sounderName) {
-    sounderData.expandedSounder = sounderName;
-    update();
-  }
-
-  void updateSounderField(String sounderName, String fieldType, String value) {
-    sounderData.updateSounderField(sounderName, fieldType, value);
-    update();
-  }
-
-  void updateSounderSetting(String label, String value) {
-    switch (label) {
-      case 'Fire Sound':
-        sounderSettings.fireSoundTone = value;
-        break;
-      case StringConstants.sounderDelay:
-        if (sounderSettings.fireSounderDelay == value) {
-          sounderSettings.fireSounderDelay = value;
-        } else {
-          sounderSettings.extSounderDelay = value;
-        }
-        break;
-      case StringConstants.countDownAction:
-        sounderSettings.countDownAction = value;
-        break;
-      case 'Hold Action':
-        sounderSettings.holdAction = value;
-        break;
-      case StringConstants.releaseAction:
-        sounderSettings.releaseAction = value;
-        break;
-    }
-    update();
-  }
-
-  void updateInputSetting(String label, String value) {
-    inputData.updateField(label, value);
-    update();
-  }
-
-  void setExpandedRelay(String? relayName) {
-    relayData.expandedRelay = relayName;
-    update();
-  }
-
-  void updateRelayField(String relayName, String fieldType, String value) {
-    relayData.updateRelayField(relayName, fieldType, value);
-    update();
-  }
-
-  void setExpandedLBus(String? lbusName) {
-    lbusData.expandedLBus = lbusName;
-    update();
-  }
-
-  void updateLBusField(String lbusName, String fieldType, String value) {
-    lbusData.updateLBusField(lbusName, fieldType, value);
-    update();
-  }
-
-  void updateExtinguishingSetting(String label, String value) {
-    extinguishingData.updateField(label, value);
-    update();
-  }
-
   bool validateStep(int step) {
     validationErrors.clear();
 
     if (step == 1) {
       if (siteNameController.text.trim().isEmpty) {
-        validationErrors[StringConstants.sitename] = StringConstants.siteNameRequired;
+        validationErrors[StringConstants.sitename] =
+            StringConstants.siteNameRequired;
       }
       if (saqccRegNumberController.text.trim().isEmpty) {
         validationErrors[StringConstants.saqccregnumber] =
@@ -282,10 +157,12 @@ class CreateProjectController extends GetxController {
       }
     } else if (step == 2) {
       if (panelNameController.text.trim().isEmpty) {
-        validationErrors[StringConstants.panelname] = StringConstants.panelNameRequired;
+        validationErrors[StringConstants.panelname] =
+            StringConstants.panelNameRequired;
       }
       if (panelData.selectedPanelType == null) {
-        validationErrors[StringConstants.paneltype] = StringConstants.panelTypeRequired;
+        validationErrors[StringConstants.paneltype] =
+            StringConstants.panelTypeRequired;
       }
     }
 

@@ -1,7 +1,7 @@
 import 'package:get/get.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/controllers/peripheral/peripheral_mode_controller.dart';
-import 'package:techno_switch_solar_app/utils/peripheral_test_mode_sync.dart';
+import 'package:techno_switch_solar_app/utils/peripherals/peripheral_test_mode_sync.dart';
 import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 

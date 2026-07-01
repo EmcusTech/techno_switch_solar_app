@@ -1,5 +1,5 @@
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
-import 'package:techno_switch_solar_app/utils/zone_mode_util.dart';
+import 'package:techno_switch_solar_app/utils/modes/zone_mode_util.dart';
 
 void applyZoneTestFlagsFromCacheMap(
   BleManager manager,
