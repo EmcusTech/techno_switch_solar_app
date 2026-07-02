@@ -1,33 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:techno_switch_solar_app/controllers/create_project_controller.dart';
+import 'package:techno_switch_solar_app/features/create_project/controllers/create_project_controller.dart';
+import 'package:techno_switch_solar_app/models/create_project/site_creation_page_model.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
 
 class SiteCreationForm extends StatelessWidget {
-  const SiteCreationForm({
-    super.key,
-    required this.siteNameController,
-    required this.installerNameController,
-    required this.companyNameController,
-    required this.saqccRegNumberController,
-    required this.buildingNameController,
-    required this.installerContactNumberController,
-    required this.installerEmailController,
-    required this.siteDescriptionController,
-    this.validationErrors,
-  });
+  const SiteCreationForm({super.key, required this.model});
 
-  final TextEditingController siteNameController;
-  final TextEditingController installerNameController;
-  final TextEditingController companyNameController;
-  final TextEditingController saqccRegNumberController;
-  final TextEditingController buildingNameController;
-  final TextEditingController installerContactNumberController;
-  final TextEditingController installerEmailController;
-  final TextEditingController siteDescriptionController;
-  final Map<String, String>? validationErrors;
+  final SiteCreationPageModel model;
 
   Widget _buildTextField({
     required String label,
@@ -37,8 +19,8 @@ class SiteCreationForm extends StatelessWidget {
     int? maxLines = 1,
     bool isRequired = false,
   }) {
-    final hasError = validationErrors?.containsKey(validationKey) == true;
-    final errorMessage = validationErrors?[validationKey];
+    final hasError = model.validationErrors?.containsKey(validationKey) == true;
+    final errorMessage = model.validationErrors?[validationKey];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -118,7 +100,7 @@ class SiteCreationForm extends StatelessWidget {
                 children: [
                   _buildTextField(
                     label: 'Site Name',
-                    controller: siteNameController,
+                    controller: model.siteNameController,
                     hintText: 'Enter Site Name',
                     validationKey: StringConstants.sitename,
                     isRequired: true,
@@ -126,21 +108,21 @@ class SiteCreationForm extends StatelessWidget {
                   SizedBox(height: 20),
                   _buildTextField(
                     label: StringConstants.installerName,
-                    controller: installerNameController,
+                    controller: model.installerNameController,
                     hintText: 'Enter Installer Name',
                     validationKey: StringConstants.installername,
                   ),
                   SizedBox(height: 20),
                   _buildTextField(
                     label: StringConstants.companyName,
-                    controller: companyNameController,
+                    controller: model.companyNameController,
                     hintText: 'Enter Company Name',
                     validationKey: StringConstants.companyname,
                   ),
                   SizedBox(height: 20),
                   _buildTextField(
                     label: StringConstants.saqccRegistrationNumber,
-                    controller: saqccRegNumberController,
+                    controller: model.saqccRegNumberController,
                     hintText: 'Enter SAQCC Registration Number',
                     validationKey: StringConstants.saqccregnumber,
                     isRequired: true,
@@ -148,28 +130,28 @@ class SiteCreationForm extends StatelessWidget {
                   SizedBox(height: 20),
                   _buildTextField(
                     label: StringConstants.buildingName,
-                    controller: buildingNameController,
+                    controller: model.buildingNameController,
                     hintText: 'Enter Building Name',
                     validationKey: StringConstants.buildingname,
                   ),
                   SizedBox(height: 20),
                   _buildTextField(
                     label: StringConstants.installerContactNumber,
-                    controller: installerContactNumberController,
+                    controller: model.installerContactNumberController,
                     hintText: 'Enter Installer Contact Number',
                     validationKey: StringConstants.installercontactnumber,
                   ),
                   SizedBox(height: 20),
                   _buildTextField(
                     label: StringConstants.installerEmail,
-                    controller: installerEmailController,
+                    controller: model.installerEmailController,
                     hintText: 'Enter Installer Email',
                     validationKey: StringConstants.installeremail,
                   ),
                   SizedBox(height: 20),
                   _buildTextField(
                     label: StringConstants.siteDescription,
-                    controller: siteDescriptionController,
+                    controller: model.siteDescriptionController,
                     hintText: 'Enter Site Description',
                     validationKey: StringConstants.sitedescription,
                     maxLines: 5,
@@ -192,16 +174,18 @@ class SiteCreationPage extends GetView<CreateProjectController> {
     return GetBuilder<CreateProjectController>(
       builder:
           (c) => SiteCreationForm(
-            siteNameController: c.siteNameController,
-            installerNameController: c.installerNameController,
-            companyNameController: c.companyNameController,
-            saqccRegNumberController: c.saqccRegNumberController,
-            buildingNameController: c.buildingNameController,
-            installerContactNumberController:
-                c.installerContactNumberController,
-            installerEmailController: c.installerEmailController,
-            siteDescriptionController: c.siteDescriptionController,
-            validationErrors: c.validationErrors,
+            model: SiteCreationPageModel(
+              siteNameController: c.siteNameController,
+              installerNameController: c.installerNameController,
+              companyNameController: c.companyNameController,
+              saqccRegNumberController: c.saqccRegNumberController,
+              buildingNameController: c.buildingNameController,
+              installerContactNumberController:
+                  c.installerContactNumberController,
+              installerEmailController: c.installerEmailController,
+              siteDescriptionController: c.siteDescriptionController,
+              validationErrors: c.validationErrors,
+            ),
           ),
     );
   }

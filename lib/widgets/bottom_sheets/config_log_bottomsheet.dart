@@ -432,7 +432,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
                           onPressed: () => Navigator.of(ctx).pop(false),
                           child: Text(
                             StringConstants.cancel,
-                            style: StyleConstants.black16w600Style,
+                            style: StyleConstants.primary16w600Style,
                           ),
                         ),
                       ),
@@ -453,7 +453,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
                           onPressed: () => Navigator.of(ctx).pop(true),
                           child: Text(
                             StringConstants.apply,
-                            style: StyleConstants.black16w600Style,
+                            style: StyleConstants.white16w600Style,
                           ),
                         ),
                       ),

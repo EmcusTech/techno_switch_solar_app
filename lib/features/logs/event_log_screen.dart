@@ -16,7 +16,7 @@ import 'package:techno_switch_solar_app/widgets/export_tile.dart';
 import 'package:techno_switch_solar_app/utils/constants/event_constants.dart';
 import 'package:techno_switch_solar_app/utils/pdf/pdf_report_util.dart';
 import 'package:techno_switch_solar_app/widgets/dialogs/site_creation_dialog.dart';
-import 'package:techno_switch_solar_app/screens/sites/simple_site_creation_screen.dart';
+import 'package:techno_switch_solar_app/features/sites/simple_site_creation_screen.dart';
 import 'package:techno_switch_solar_app/utils/constants/ble/ble_name_utils.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';

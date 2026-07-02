@@ -4,14 +4,14 @@ import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
-import 'package:techno_switch_solar_app/controllers/create_project_controller.dart';
+import 'package:techno_switch_solar_app/features/create_project/controllers/create_project_controller.dart';
 import 'package:techno_switch_solar_app/controllers/create_project_ui_delegate.dart';
 import 'package:techno_switch_solar_app/models/site_model.dart';
-import 'package:techno_switch_solar_app/screens/create_project/panel_selection_page.dart';
-import 'package:techno_switch_solar_app/screens/create_project/site_creation_page.dart';
-import 'package:techno_switch_solar_app/screens/project_dashboard.dart';
-import 'package:techno_switch_solar_app/screens/scanning_screen.dart';
-import 'package:techno_switch_solar_app/screens/sites/site_screen.dart';
+import 'package:techno_switch_solar_app/features/create_project/views/panel_selection_page.dart';
+import 'package:techno_switch_solar_app/features/create_project/views/site_creation_page.dart';
+import 'package:techno_switch_solar_app/features/project_dashboard.dart';
+import 'package:techno_switch_solar_app/features/scanning_screen.dart';
+import 'package:techno_switch_solar_app/features/sites/site_screen.dart';
 import 'package:techno_switch_solar_app/utils/site_service.dart';
 import 'package:techno_switch_solar_app/utils/constants/ble/ble_name_utils.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/general_mode_bottomsheet.dart';
@@ -29,8 +29,8 @@ import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
 
-class CreateSiteScreenRefactored extends GetView<CreateProjectController> {
-  const CreateSiteScreenRefactored({super.key});
+class CreateSiteScreen extends GetView<CreateProjectController> {
+  const CreateSiteScreen({super.key});
 
   @override
   Widget build(BuildContext context) {

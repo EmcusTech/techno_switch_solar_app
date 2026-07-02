@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
-import 'package:techno_switch_solar_app/screens/logs/log_retrieval_loading_screen.dart';
-import 'package:techno_switch_solar_app/screens/scanning_screen.dart';
+import 'package:techno_switch_solar_app/features/logs/log_retrieval_loading_screen.dart';
+import 'package:techno_switch_solar_app/features/scanning_screen.dart';
 import 'package:techno_switch_solar_app/widgets/common/common_numeric_keypad_widget.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 

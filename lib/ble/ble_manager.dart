@@ -2965,8 +2965,9 @@ class BleManager extends GetxService {
   int _sounderGeneralEquipmentModeByteForApply() {
     try {
       final raw = sounderGeneralMode.value.trim();
-      if (raw.isEmpty)
+      if (raw.isEmpty) {
         throw FormatException(StringConstants.emptySounderGeneralMode);
+      }
       return int.parse(raw, radix: 16) & BleConstants.base;
     } catch (_) {
       final cfg = GeneralEquipmentModeConfig(

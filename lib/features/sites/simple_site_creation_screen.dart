@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
+import 'package:techno_switch_solar_app/models/create_project/site_creation_page_model.dart';
 import 'package:techno_switch_solar_app/utils/logger.dart';
 import '../../models/log_model.dart';
 import '../../utils/site_service.dart';
 import '../../utils/panel_service.dart';
-import '../create_project/site_creation_page.dart';
+import '../create_project/views/site_creation_page.dart';
 import '../home_screen.dart';
 import 'site_screen.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
@@ -274,21 +275,24 @@ class _SimpleSiteCreationScreenState extends State<SimpleSiteCreationScreen> {
                               SizedBox(height: 20),
                               Expanded(
                                 child: SiteCreationForm(
-                                  siteNameController: _siteNameController,
-                                  installerNameController:
-                                      _installerNameController,
-                                  companyNameController: _companyNameController,
-                                  saqccRegNumberController:
-                                      _saqccRegNumberController,
-                                  buildingNameController:
-                                      _buildingNameController,
-                                  installerContactNumberController:
-                                      _installerContactNumberController,
-                                  installerEmailController:
-                                      _installerEmailController,
-                                  siteDescriptionController:
-                                      _siteDescriptionController,
-                                  validationErrors: _validationErrors,
+                                  model: SiteCreationPageModel(
+                                    siteNameController: _siteNameController,
+                                    installerNameController:
+                                        _installerNameController,
+                                    companyNameController:
+                                        _companyNameController,
+                                    saqccRegNumberController:
+                                        _saqccRegNumberController,
+                                    buildingNameController:
+                                        _buildingNameController,
+                                    installerContactNumberController:
+                                        _installerContactNumberController,
+                                    installerEmailController:
+                                        _installerEmailController,
+                                    siteDescriptionController:
+                                        _siteDescriptionController,
+                                    validationErrors: _validationErrors,
+                                  ),
                                 ),
                               ),
                               SizedBox(height: 20),
