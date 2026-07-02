@@ -6,7 +6,7 @@ import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
 import 'package:techno_switch_solar_app/models/log_model.dart';
 import 'package:techno_switch_solar_app/features/logs/event_log_screen.dart';
-import 'package:techno_switch_solar_app/features/sites/simple_site_creation_screen.dart';
+import 'package:techno_switch_solar_app/features/sites/views/simple_site_creation_screen.dart';
 import 'package:techno_switch_solar_app/utils/app/navigation_service.dart';
 import 'package:techno_switch_solar_app/utils/panel_service.dart';
 import 'package:techno_switch_solar_app/utils/site_service.dart';

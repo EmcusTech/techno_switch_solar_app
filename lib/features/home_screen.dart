@@ -5,7 +5,7 @@ import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/bindings/create_project_binding.dart';
 import 'package:techno_switch_solar_app/features/create_project/views/create_project_screen.dart';
 import 'package:techno_switch_solar_app/features/scanning_screen.dart';
-import 'package:techno_switch_solar_app/features/sites/site_screen.dart';
+import 'package:techno_switch_solar_app/features/sites/views/site_screen.dart';
 import 'package:techno_switch_solar_app/utils/app/app_services.dart';
 import 'package:techno_switch_solar_app/utils/app/app_state.dart';
 import 'package:techno_switch_solar_app/utils/site_service.dart';

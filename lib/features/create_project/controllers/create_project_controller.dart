@@ -4,7 +4,7 @@ import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/ble/ble_session_idle_policy.dart';
 import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
-import 'package:techno_switch_solar_app/controllers/create_project_ui_delegate.dart';
+import 'package:techno_switch_solar_app/features/create_project/controllers/create_project_ui_delegate.dart';
 import 'package:techno_switch_solar_app/models/create_project/panel_form_data.dart';
 import 'package:techno_switch_solar_app/models/create_project/relay_data.dart';
 import 'package:techno_switch_solar_app/models/create_project/site_form_data.dart';
@@ -396,10 +396,10 @@ class CreateProjectController extends GetxController {
     final device = connectedDevice;
     if (device == null) return;
 
-    _panelCoordinator(device, useDialogOnlyBulkProgress: true).startBulkDownload(
-      context: ui.uiContext,
-      isMounted: () => ui.isMounted,
-    );
+    _panelCoordinator(
+      device,
+      useDialogOnlyBulkProgress: true,
+    ).startBulkDownload(context: ui.uiContext, isMounted: () => ui.isMounted);
   }
 
   Future<void> runBulkApply() async {
@@ -409,10 +409,9 @@ class CreateProjectController extends GetxController {
     final device = connectedDevice ?? _bleManager.selectedDevice;
     if (device == null) return;
 
-    await _panelCoordinator(device).startBulkApply(
-      context: ui.uiContext,
-      isMounted: () => ui.isMounted,
-    );
+    await _panelCoordinator(
+      device,
+    ).startBulkApply(context: ui.uiContext, isMounted: () => ui.isMounted);
   }
 
   Future<void> finishCreateSiteBulkApplyAndOpenDashboard() async {
@@ -476,7 +475,10 @@ class CreateProjectController extends GetxController {
         panelName: bleName.isNotEmpty ? bleName : null,
       );
       if (!assigned) {
-        ui.showSnackBar(StringConstants.couldNotAssignPanelToSite, isError: true);
+        ui.showSnackBar(
+          StringConstants.couldNotAssignPanelToSite,
+          isError: true,
+        );
         return;
       }
 
@@ -486,7 +488,10 @@ class CreateProjectController extends GetxController {
 
       if (!ui.isMounted) return;
 
-      ui.showSnackBar(StringConstants.siteReadyOpeningDashboard, isError: false);
+      ui.showSnackBar(
+        StringConstants.siteReadyOpeningDashboard,
+        isError: false,
+      );
 
       ui.openProjectDashboard(
         device: device,
@@ -559,7 +564,10 @@ class CreateProjectController extends GetxController {
         offlineProvisioned: true,
       );
       if (!assigned) {
-        ui.showSnackBar(StringConstants.couldNotAssignPanelToSite, isError: true);
+        ui.showSnackBar(
+          StringConstants.couldNotAssignPanelToSite,
+          isError: true,
+        );
         return;
       }
 
