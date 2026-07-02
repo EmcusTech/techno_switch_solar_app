@@ -9,6 +9,8 @@ import 'package:techno_switch_solar_app/features/create_project/controllers/crea
 import 'package:techno_switch_solar_app/models/site_model.dart';
 import 'package:techno_switch_solar_app/features/create_project/views/panel_selection_page.dart';
 import 'package:techno_switch_solar_app/features/create_project/views/site_creation_page.dart';
+import 'package:techno_switch_solar_app/features/dashboard/bindings/project_dashboard_binding.dart';
+import 'package:techno_switch_solar_app/features/dashboard/models/project_dashboard_args.dart';
 import 'package:techno_switch_solar_app/features/dashboard/views/project_dashboard.dart';
 import 'package:techno_switch_solar_app/features/scanning_screen.dart';
 import 'package:techno_switch_solar_app/features/sites/views/site_screen.dart';
@@ -336,16 +338,18 @@ class _CreateProjectPageHostState extends State<_CreateProjectPageHost>
     required int siteId,
     required String siteName,
   }) {
+    ProjectDashboardBinding(
+      args: ProjectDashboardArgs(
+        panelVersionNo: device.id,
+        panelName: device.name,
+        selectedDevice: device,
+        siteId: siteId,
+        siteName: siteName,
+      ),
+    ).dependencies();
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
-        builder:
-            (_) => ProjectDashboardScreen(
-              selectedDevice: device,
-              panelName: device.name,
-              panelVersionNo: device.id,
-              siteId: siteId,
-              siteName: siteName,
-            ),
+        builder: (_) => const ProjectDashboardScreen(),
       ),
     );
   }

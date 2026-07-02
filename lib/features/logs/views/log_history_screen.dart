@@ -4,7 +4,7 @@ import 'package:get/get.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/models/log_model.dart';
 import 'package:techno_switch_solar_app/models/log_retrieval_model.dart';
-import 'package:techno_switch_solar_app/features/logs/event_log_screen.dart';
+import 'package:techno_switch_solar_app/features/logs/views/event_log_screen.dart';
 import 'package:techno_switch_solar_app/utils/log_retrieval_service.dart';
 import 'package:techno_switch_solar_app/utils/constants/ble/ble_name_utils.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';

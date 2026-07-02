@@ -8,8 +8,10 @@ import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:lottie/lottie.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
-import 'package:techno_switch_solar_app/features/logs/event_log_screen.dart';
-import 'package:techno_switch_solar_app/features/logs/log_retrieval_loading_screen.dart';
+import 'package:techno_switch_solar_app/features/logs/views/event_log_screen.dart';
+import 'package:techno_switch_solar_app/features/logs/views/log_retrieval_loading_screen.dart';
+import 'package:techno_switch_solar_app/features/dashboard/bindings/project_dashboard_binding.dart';
+import 'package:techno_switch_solar_app/features/dashboard/models/project_dashboard_args.dart';
 import 'package:techno_switch_solar_app/features/dashboard/views/project_dashboard.dart';
 import 'package:techno_switch_solar_app/features/scanned_screen.dart';
 import 'package:techno_switch_solar_app/widgets/scanning_widget.dart';
@@ -1654,15 +1656,18 @@ class _ScanningScreenState extends State<ScanningScreen>
                   );
                   if (!context.mounted) return;
 
+                  ProjectDashboardBinding(
+                    args: ProjectDashboardArgs(
+                      panelVersionNo: activeDevice.id,
+                      panelName: activeDevice.name,
+                      selectedDevice: activeDevice,
+                      siteId: siteId,
+                    ),
+                  ).dependencies();
+
                   Navigator.of(context, rootNavigator: true).pushReplacement(
                     MaterialPageRoute(
-                      builder:
-                          (_) => ProjectDashboardScreen(
-                            selectedDevice: activeDevice,
-                            panelVersionNo: activeDevice.id,
-                            panelName: activeDevice.name,
-                            siteId: siteId,
-                          ),
+                      builder: (_) => const ProjectDashboardScreen(),
                     ),
                   );
                 }

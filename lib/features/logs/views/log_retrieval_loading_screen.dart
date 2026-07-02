@@ -6,7 +6,7 @@ import 'package:lottie/lottie.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'dart:async';
-import 'package:techno_switch_solar_app/features/logs/log_retreival_completed_screen.dart';
+import 'package:techno_switch_solar_app/features/logs/views/log_retreival_completed_screen.dart';
 import 'package:techno_switch_solar_app/features/scanning_screen.dart';
 import 'package:techno_switch_solar_app/utils/constants/ble/ble_msd_utils.dart';
 import 'package:techno_switch_solar_app/utils/constants/ble/ble_name_utils.dart';

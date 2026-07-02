@@ -1,26 +1,27 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
-import 'package:techno_switch_solar_app/ble/ble_manager.dart';
-import 'package:techno_switch_solar_app/ble/ble_session_idle_policy.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:lottie/lottie.dart';
-import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/bindings/firmware_binding.dart';
 import 'package:techno_switch_solar_app/controllers/updates_controller.dart';
-import 'package:techno_switch_solar_app/features/logs/log_history_screen.dart';
-import 'package:techno_switch_solar_app/features/logs/log_retrieval_loading_screen.dart';
+import 'package:techno_switch_solar_app/features/dashboard/controllers/project_dashboard_controller.dart';
+import 'package:techno_switch_solar_app/features/dashboard/controllers/project_dashboard_ui_delegate.dart';
+import 'package:techno_switch_solar_app/features/logs/views/log_history_screen.dart';
+import 'package:techno_switch_solar_app/features/logs/views/log_retrieval_loading_screen.dart';
 import 'package:techno_switch_solar_app/features/scanning_screen.dart';
 import 'package:techno_switch_solar_app/features/settings_screen.dart';
 import 'package:techno_switch_solar_app/features/test_mode_screen.dart';
-import 'package:techno_switch_solar_app/utils/constants/ble/bluetooth_service.dart';
-import 'package:techno_switch_solar_app/utils/constants/ble/ble_name_utils.dart';
-import 'package:techno_switch_solar_app/utils/constants/ble/ble_msd_utils.dart';
+import 'package:techno_switch_solar_app/panel_config/panel_access_password_popup.dart';
+import 'package:techno_switch_solar_app/panel_config/panel_config_bulk_sync.dart';
+import 'package:techno_switch_solar_app/panel_config/panel_config_feedback_dialogs.dart';
+import 'package:techno_switch_solar_app/panel_config/post_connect_bulk_download_offer.dart';
 import 'package:techno_switch_solar_app/utils/commissioning_test_results_helper.dart';
+import 'package:techno_switch_solar_app/utils/storage/commissioning_test_results_cache.dart';
+import 'package:techno_switch_solar_app/widgets/dialogs/ble_connecting_dialog.dart';
+import 'package:techno_switch_solar_app/utils/constants/ble/ble_msd_utils.dart';
+import 'package:techno_switch_solar_app/utils/constants/ble/ble_name_utils.dart';
 import 'package:techno_switch_solar_app/widgets/export_tile.dart';
-import 'package:techno_switch_solar_app/utils/pdf/project_report_pdf_util.dart';
-import 'package:techno_switch_solar_app/utils/site_service.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/access_code_mode_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/diagnostic_mode_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/general_mode_bottomsheet.dart';
@@ -32,14 +33,6 @@ import 'package:techno_switch_solar_app/widgets/bottom_sheets/radio_mode_bottoms
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/relay_mode_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/service_due_mode_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/setting_bottom_sheets/ext_out_bottomsheet.dart';
-import 'package:techno_switch_solar_app/panel_config/panel_access_password_popup.dart';
-import 'package:techno_switch_solar_app/panel_config/panel_config_bulk_sync.dart';
-import 'package:techno_switch_solar_app/panel_config/panel_config_cache_sync.dart';
-import 'package:techno_switch_solar_app/panel_config/panel_config_feedback_dialogs.dart';
-import 'package:techno_switch_solar_app/panel_config/post_connect_bulk_download_offer.dart';
-import 'package:techno_switch_solar_app/utils/peripherals/peripheral_config_snapshot.dart';
-import 'package:techno_switch_solar_app/utils/storage/commissioning_test_results_cache.dart';
-import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/config_log_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/sounder_mode_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/test_mode_choice_bottomsheet.dart';
@@ -48,390 +41,70 @@ import 'package:techno_switch_solar_app/widgets/bottom_sheets/test_mode_sounder_
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/walk_test_zone_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/zone_mode_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/bottom_sheets/firmware_upgrade_bottom_sheet.dart';
-import 'package:techno_switch_solar_app/widgets/dialogs/panel_access_code_dialog.dart';
+import 'package:techno_switch_solar_app/widgets/dialogs/panel_access_code_dialog.dart'
+    as panel_access_dialog;
 import 'package:techno_switch_solar_app/utils/ble/bootloader_connect_flow.dart';
-import 'package:techno_switch_solar_app/widgets/dialogs/ble_connecting_dialog.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
-
 import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
 
-class ProjectDashboardScreen extends StatefulWidget {
-  final String panelVersionNo;
-  final String panelName;
-  final int? siteId;
-  final String? siteName;
-  final DiscoveredDevice selectedDevice;
-  const ProjectDashboardScreen({
-    super.key,
-    required this.panelVersionNo,
-    required this.panelName,
-    this.siteId,
-    this.siteName,
-    required this.selectedDevice,
-  });
+class ProjectDashboardScreen extends GetView<ProjectDashboardController> {
+  const ProjectDashboardScreen({super.key});
 
   @override
-  State<ProjectDashboardScreen> createState() => _ProjectDashboardScreenState();
+  Widget build(BuildContext context) {
+    return _ProjectDashboardPageHost(controller: controller);
+  }
 }
 
-class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
-  int _selectedIndex = 0;
-  DiscoveredDevice? _currentDevice;
+class _ProjectDashboardPageHost extends StatefulWidget {
+  const _ProjectDashboardPageHost({required this.controller});
 
-  void _onDeviceReconnected(DiscoveredDevice device) {
-    setState(() {
-      _currentDevice = device;
-    });
-  }
+  final ProjectDashboardController controller;
 
-  List<Widget> get _screens => [
-    _ProjectDashboardContent(
-      panelName: widget.panelName,
-      panelVersionNo: widget.panelVersionNo,
-      siteId: widget.siteId,
-      siteName: widget.siteName,
-      selectedDevice: _currentDevice ?? widget.selectedDevice,
-      onDeviceReconnected: _onDeviceReconnected,
-    ),
-    SettingsScreen(
-      panelName: widget.panelName,
-      panelVersionNo: widget.panelVersionNo,
-    ),
-    const TestModeScreen(),
-    LogHistoryScreen(
-      panelName: widget.panelName,
-      panelVersionNo: widget.panelVersionNo,
-      siteId: widget.siteId,
-    ),
-  ];
+  @override
+  State<_ProjectDashboardPageHost> createState() =>
+      _ProjectDashboardPageHostState();
+}
 
-  void _onItemTapped(int index) {
-    if (index == 1 || index == 2) {
-      return;
-    }
-    setState(() {
-      _selectedIndex = index;
-    });
-  }
+class _ProjectDashboardPageHostState extends State<_ProjectDashboardPageHost>
+    implements ProjectDashboardUiDelegate {
+  ProjectDashboardController get _controller => widget.controller;
+
+  @override
+  bool get isMounted => mounted;
+
+  @override
+  BuildContext get uiContext => context;
 
   @override
   void initState() {
     super.initState();
-    BleSessionIdlePolicy.suppressIdleDisconnect.value = false;
+    _controller.attachUi(this);
   }
 
   @override
-  Widget build(BuildContext context) {
-    const disabledIndexes = [1, 2];
-
-    Color itemColor(int index) {
-      if (disabledIndexes.contains(index)) {
-        return Colors.grey;
-      }
-      return _selectedIndex == index
-          ? ColorConstants.white
-          : ColorConstants.blackMaterial;
+  void dispose() {
+    _controller.detachUi();
+    if (Get.isRegistered<ProjectDashboardController>()) {
+      Get.delete<ProjectDashboardController>();
     }
+    super.dispose();
+  }
 
-    Widget navItem({
-      required int index,
-      required String label,
-      required String asset,
-    }) {
-      final color = itemColor(index);
-
-      return Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          SvgPicture.asset(
-            asset,
-            height: 24,
-            width: 24,
-            colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: StyleConstants.black12w400Style.copyWith(color: color),
-          ),
-        ],
-      );
-    }
-
-    return Scaffold(
-      extendBody: true,
-      resizeToAvoidBottomInset: false,
-      body: _screens[_selectedIndex],
-      bottomNavigationBar: Container(
-        height: 80,
-        decoration: BoxDecoration(
-          boxShadow: [
-            BoxShadow(
-              color: ColorConstants.blackMaterial.withValues(alpha: 0.1),
-              blurRadius: 10,
-              offset: const Offset(0, -5),
-            ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(32),
-            topRight: Radius.circular(32),
-          ),
-          child: BottomNavigationBar(
-            backgroundColor: ColorConstants.primary,
-            elevation: 0,
-            type: BottomNavigationBarType.fixed,
-            currentIndex: _selectedIndex,
-            showSelectedLabels: false,
-            showUnselectedLabels: false,
-            onTap: (index) {
-              if (disabledIndexes.contains(index)) return;
-              _onItemTapped(index);
-            },
-            items: [
-              BottomNavigationBarItem(
-                icon: navItem(
-                  index: 0,
-                  label: StringConstants.dashboard,
-                  asset: AssetConstants.dashboardIcon,
-                ),
-                label: '',
-              ),
-              BottomNavigationBarItem(
-                icon: navItem(
-                  index: 1,
-                  label: StringConstants.settings,
-                  asset: AssetConstants.settingIcon,
-                ),
-                label: '',
-              ),
-              BottomNavigationBarItem(
-                icon: navItem(
-                  index: 2,
-                  label: StringConstants.testMode,
-                  asset: AssetConstants.testModeIcon,
-                ),
-                label: '',
-              ),
-              BottomNavigationBarItem(
-                icon: navItem(
-                  index: 3,
-                  label: StringConstants.logHistory,
-                  asset: AssetConstants.logHistoryIcon,
-                ),
-                label: '',
-              ),
-            ],
-          ),
-        ),
-      ),
+  @override
+  void showSnackBar(String message, {Color? backgroundColor}) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(uiContext).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: backgroundColor),
     );
   }
-}
-
-class _ProjectDashboardContent extends StatefulWidget {
-  final String panelName;
-  final String panelVersionNo;
-  final int? siteId;
-  final String? siteName;
-  final DiscoveredDevice selectedDevice;
-  final void Function(DiscoveredDevice)? onDeviceReconnected;
-
-  const _ProjectDashboardContent({
-    required this.panelName,
-    required this.panelVersionNo,
-    this.siteId,
-    this.siteName,
-    required this.selectedDevice,
-    this.onDeviceReconnected,
-  });
 
   @override
-  State<_ProjectDashboardContent> createState() =>
-      _ProjectDashboardContentState();
-}
-
-class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
-  final BleManager ble = Get.find<BleManager>();
-  bool _isUnexpectedDisconnectDialogOpen = false;
-  final ValueNotifier<bool> _navigatingToDeviceConnecting = ValueNotifier<bool>(
-    false,
-  );
-
-  final ValueNotifier<int> _relayRefreshTrigger = ValueNotifier(0);
-  final ValueNotifier<int> _inputRefreshTrigger = ValueNotifier(0);
-  final ValueNotifier<int> _zoneRefreshTrigger = ValueNotifier(0);
-  final ValueNotifier<int> _extOutRefreshTrigger = ValueNotifier(0);
-  final ValueNotifier<int> _sounderRefreshTrigger = ValueNotifier(0);
-  final ValueNotifier<int> _serviceDueRefreshTrigger = ValueNotifier(0);
-  final ValueNotifier<int> _accessCodeRefreshTrigger = ValueNotifier(0);
-  final ValueNotifier<int> _panelInfoRefreshTrigger = ValueNotifier(0);
-  final ValueNotifier<int> _generalModuleRefreshTrigger = ValueNotifier(0);
-  final ValueNotifier<ConfigCompareResult?> _configLogCompareResult =
-      ValueNotifier(null);
-  final ValueNotifier<bool> _configLogWorking = ValueNotifier(false);
-
-  bool _isConnecting = false;
-  StreamSubscription? _scanSubscription;
-  final BluetoothService _bluetoothService = BluetoothService();
-  final bleController = Get.find<BleLogController>();
-  final BleManager _bleManager = Get.find<BleManager>();
-  late DiscoveredDevice _selectedDevice;
-
-  bool _hadEstablishedBleSession = false;
-
-  bool _suppressUnexpectedBleDisconnectUi = false;
-
-  void _closeModalOverlaysAboveDashboard() {
-    if (!mounted) return;
-    final route = ModalRoute.of(context);
-    if (route == null) return;
-    Navigator.of(context).popUntil((r) => r == route);
-  }
-
-  void _showUnexpectedBleDisconnectDialog() {
-    if (!mounted || _isUnexpectedDisconnectDialogOpen) return;
-
-    _isUnexpectedDisconnectDialogOpen = true;
-
-    showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (dialogContext) {
-        return PopScope(
-          canPop: false,
-          child: Dialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: ColorConstants.white,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 64,
-                    height: 64,
-                    decoration: const BoxDecoration(
-                      color: ColorConstants.errorIconBackground,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Center(
-                      child: Icon(
-                        Icons.bluetooth_disabled,
-                        color: ColorConstants.primary,
-                        size: 32,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    StringConstants.bluetoothDisconnected,
-                    style: StyleConstants.textDark18w700Style,
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    UiStrings.connectionLostUseConnectMessage,
-                    style: StyleConstants.textGray14w400Style,
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 20),
-                  SizedBox(
-                    width: double.infinity,
-                    child: GestureDetector(
-                      onTap: () {
-                        _isUnexpectedDisconnectDialogOpen = false;
-                        Navigator.of(dialogContext).pop();
-                      },
-                      child: Container(
-                        height: 48,
-                        decoration: BoxDecoration(
-                          color: ColorConstants.primary,
-                          borderRadius: BorderRadius.circular(24),
-                        ),
-                        child: Center(
-                          child: Text(
-                            StringConstants.ok,
-                            style: StyleConstants.white16w600Style,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    ).then((_) {
-      _isUnexpectedDisconnectDialogOpen = false;
-    });
-  }
-
-  void _onBleSessionChanged() {
-    if (!mounted) return;
-
-    final connected = _bleManager.isConnectedNotifier.value;
-    final handshakeComplete = _bleManager.handshakeCompleteNotifier.value;
-    final sessionActive = connected && handshakeComplete;
-    final connectInProgress = _isConnecting || _bleManager.isConnectInProgress;
-
-    if (sessionActive && _isUnexpectedDisconnectDialogOpen) {
-      _isUnexpectedDisconnectDialogOpen = false;
-
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-
-        if (Navigator.of(context, rootNavigator: true).canPop()) {
-          Navigator.of(context, rootNavigator: true).pop();
-        }
-      });
-    }
-
-    if (sessionActive) {
-      _hadEstablishedBleSession = true;
-    }
-
-    final lostEstablishedSession =
-        _hadEstablishedBleSession && !sessionActive && !connectInProgress;
-
-    if (lostEstablishedSession) {
-      _hadEstablishedBleSession = false;
-
-      final suppressForFirmware =
-          BleSessionIdlePolicy.suppressFirmwareDisconnectUi.value;
-
-      if (!suppressForFirmware) {
-        _closeModalOverlaysAboveDashboard();
-
-        if (_suppressUnexpectedBleDisconnectUi) {
-          _suppressUnexpectedBleDisconnectUi = false;
-        } else {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (!mounted) return;
-            _showUnexpectedBleDisconnectDialog();
-          });
-        }
-      } else {
-        if (_suppressUnexpectedBleDisconnectUi) {
-          _suppressUnexpectedBleDisconnectUi = false;
-        }
-      }
-    }
-  }
-
-  Future<bool> _confirmAndDisconnect() async {
-    final shouldDisconnect = await showDialog<bool>(
-      context: context,
+  Future<bool?> showDisconnectConfirmDialog() {
+    return showDialog<bool>(
+      context: uiContext,
       barrierDismissible: false,
       builder: (dialogContext) {
         return Dialog(
@@ -533,53 +206,257 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
         );
       },
     );
-
-    if (shouldDisconnect == true) {
-      if (_bleManager.isConnected) {
-        _suppressUnexpectedBleDisconnectUi = true;
-        _hadEstablishedBleSession = false;
-        await _bleManager.disconnectConnectedDevice();
-      }
-      return true;
-    }
-    return false;
   }
-
-  PanelConfigRefreshNotifiers get _panelRefreshNotifiers =>
-      PanelConfigRefreshNotifiers(
-        relay: _relayRefreshTrigger,
-        input: _inputRefreshTrigger,
-        zone: _zoneRefreshTrigger,
-        extOut: _extOutRefreshTrigger,
-        sounder: _sounderRefreshTrigger,
-        serviceDue: _serviceDueRefreshTrigger,
-        accessCode: _accessCodeRefreshTrigger,
-        panelInfo: _panelInfoRefreshTrigger,
-        generalModule: _generalModuleRefreshTrigger,
-      );
 
   @override
-  void dispose() {
-    _bleManager.isConnectedNotifier.removeListener(_onBleSessionChanged);
-    _bleManager.handshakeCompleteNotifier.removeListener(_onBleSessionChanged);
-    _scanSubscription?.cancel();
-    _bluetoothService.stopScanning();
-    _configLogCompareResult.dispose();
-    _configLogWorking.dispose();
-    _navigatingToDeviceConnecting.dispose();
-    super.dispose();
+  void popScreen() {
+    if (mounted) {
+      Navigator.of(uiContext).pop();
+    }
   }
 
-  void _showConnectingDialog({
-    required DiscoveredDevice device,
-    required BuildContext context,
+  @override
+  void closeModalOverlaysAboveDashboard() {
+    if (!mounted) return;
+    final route = ModalRoute.of(uiContext);
+    if (route == null) return;
+    Navigator.of(uiContext).popUntil((r) => r == route);
+  }
+
+  @override
+  void showUnexpectedBleDisconnectDialog() {
+    if (!mounted || _controller.isUnexpectedDisconnectDialogOpen) return;
+    _controller.isUnexpectedDisconnectDialogOpen = true;
+    showDialog<void>(
+      context: uiContext,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return PopScope(
+          canPop: false,
+          child: Dialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: ColorConstants.white,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 64,
+                    height: 64,
+                    decoration: const BoxDecoration(
+                      color: ColorConstants.errorIconBackground,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Center(
+                      child: Icon(
+                        Icons.bluetooth_disabled,
+                        color: ColorConstants.primary,
+                        size: 32,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    StringConstants.bluetoothDisconnected,
+                    style: StyleConstants.textDark18w700Style,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    UiStrings.connectionLostUseConnectMessage,
+                    style: StyleConstants.textGray14w400Style,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 20),
+                  SizedBox(
+                    width: double.infinity,
+                    child: GestureDetector(
+                      onTap: () {
+                        _controller.markUnexpectedDisconnectDialogClosed();
+                        Navigator.of(dialogContext).pop();
+                      },
+                      child: Container(
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: ColorConstants.primary,
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                        child: Center(
+                          child: Text(
+                            StringConstants.ok,
+                            style: StyleConstants.white16w600Style,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    ).then((_) {
+      _controller.markUnexpectedDisconnectDialogClosed();
+    });
+  }
+
+  @override
+  void dismissRootNavigatorIfCanPop() {
+    if (!mounted) return;
+    if (Navigator.of(uiContext, rootNavigator: true).canPop()) {
+      Navigator.of(uiContext, rootNavigator: true).pop();
+    }
+  }
+
+  @override
+  void popTopDialogIfMounted() {
+    if (!mounted) return;
+    try {
+      Navigator.of(uiContext).pop();
+    } catch (_) {}
+  }
+
+  @override
+  Future<bool> showPanelAccessCodeGatewayDialog({
+    required VoidCallback onStartValidation,
   }) {
-    final bleController = Get.find<BleLogController>();
-    final connectionNotifier = bleController.bleManager.isConnectedNotifier;
+    return panel_access_dialog.showPanelAccessCodeGatewayDialog(
+      context: uiContext,
+      onStartValidation: () async => onStartValidation(),
+    );
+  }
+
+  @override
+  Future<void> offerOptionalFullConfigDownload(DiscoveredDevice device) {
+    return offerOptionalFullConfigDownloadAfterConnect(
+      context: uiContext,
+      isMounted: () => mounted,
+      device: device,
+      refreshNotifiers: _controller.panelRefreshNotifiers,
+      navigatingToDeviceConnecting: _controller.navigatingToDeviceConnecting,
+    );
+  }
+
+  @override
+  Future<DiscoveredDevice?> resolveBootloaderOnConnect(
+    DiscoveredDevice device,
+  ) {
+    return resolveBootloaderModeOnConnect(
+      context: uiContext,
+      bleController: _controller.bleController,
+      bluetoothService: _controller.bluetoothService,
+      device: device,
+    );
+  }
+
+  @override
+  void showConfigLogPasswordPopup({
+    required VoidCallback onCall,
+    bool isExtOut = false,
+    bool isInputSetup = false,
+    bool isRelaySetup = false,
+    bool isZoneSetup = false,
+    bool isLBusSetup = false,
+    bool isSounderSetup = false,
+    bool isServiceDueSetup = false,
+    bool isAccessCodeSetup = false,
+    bool isPanelInfoSetup = false,
+    bool isGeneralModuleSetup = false,
+    bool isAdcSetup = false,
+    bool isConfigLogBulk = false,
+    bool isConfigLogBulkApply = false,
+    bool showDetailedConfigLogBulkBleProgressInAccessDialog = true,
+    String? mode,
+    Future<void> Function()? onDownloadComplete,
+    String? downloadSuccessMessage,
+    Future<void> Function(BuildContext context)? onAfterApplySuccess,
+  }) {
+    showPasswordPopup(
+      onCall: onCall,
+      isExtOut: isExtOut,
+      isInputSetup: isInputSetup,
+      isRelaySetup: isRelaySetup,
+      isZoneSetup: isZoneSetup,
+      isLBusSetup: isLBusSetup,
+      isSounderSetup: isSounderSetup,
+      isServiceDueSetup: isServiceDueSetup,
+      isAccessCodeSetup: isAccessCodeSetup,
+      isPanelInfoSetup: isPanelInfoSetup,
+      isGeneralModuleSetup: isGeneralModuleSetup,
+      isAdcSetup: isAdcSetup,
+      isConfigLogBulk: isConfigLogBulk,
+      isConfigLogBulkApply: isConfigLogBulkApply,
+      showDetailedConfigLogBulkBleProgressInAccessDialog:
+          showDetailedConfigLogBulkBleProgressInAccessDialog,
+      mode: mode,
+      onDownloadComplete: onDownloadComplete,
+      downloadSuccessMessage: downloadSuccessMessage,
+      onAfterApplySuccess: onAfterApplySuccess,
+    );
+  }
+
+  @override
+  Future<void> showWalkTestResultConfirmation() {
+    return showCommissioningTestResultConfirmation(
+      context: uiContext,
+      deviceId: _controller.selectedDevice.id,
+      type: CommissioningTestType.walkTest,
+      manager: _controller.bleManager,
+    );
+  }
+
+  @override
+  Future<void> showRelayTestResultConfirmation() {
+    return showCommissioningTestResultConfirmation(
+      context: uiContext,
+      deviceId: _controller.selectedDevice.id,
+      type: CommissioningTestType.relayTest,
+      manager: _controller.bleManager,
+    );
+  }
+
+  @override
+  Future<void> showSounderTestResultConfirmation() {
+    return showCommissioningTestResultConfirmation(
+      context: uiContext,
+      deviceId: _controller.selectedDevice.id,
+      type: CommissioningTestType.sounderTest,
+      manager: _controller.bleManager,
+    );
+  }
+
+  @override
+  Future<void> showFirmwareUpgradeBottomSheet() async {
+    FirmwareBinding().dependencies();
+    await showModalBottomSheet(
+      context: uiContext,
+      isScrollControlled: true,
+      backgroundColor: ColorConstants.transparent,
+      isDismissible: false,
+      enableDrag: false,
+      builder:
+          (context) => FirmwareUpgradeBottomSheet(
+            connectedDevice: _controller.selectedDevice,
+          ),
+    );
+    Get.delete<UpdatesController>();
+  }
+
+  @override
+  void showConnectingDialog(DiscoveredDevice device) {
+    final connectionNotifier =
+        _controller.bleController.bleManager.isConnectedNotifier;
     final handshakeCompleteNotifier =
-        bleController.bleManager.handshakeCompleteNotifier;
+        _controller.bleController.bleManager.handshakeCompleteNotifier;
     final maxBleConnectionRetriesReachedNotifier =
-        bleController.bleManager.maxBleConnectionRetriesReached;
+        _controller.bleController.bleManager.maxBleConnectionRetriesReached;
     bool hasNavigated = false;
 
     final mergedListenable = Listenable.merge([
@@ -589,7 +466,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     ]);
 
     showDialog(
-      context: context,
+      context: uiContext,
       barrierDismissible: false,
       builder: (dialogContext) {
         return ListenableBuilder(
@@ -704,206 +581,25 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     );
   }
 
-  Future<void> _connectToDeviceByName() async {
-    ble.receivedPanelName.value = "";
-
-    if (_isConnecting) return;
-
-    setState(() {
-      _isConnecting = true;
-    });
-
-    bool dialogShown = false;
-
-    try {
-      final deviceName = widget.selectedDevice.name;
-      if (deviceName.isEmpty) {
-        throw Exception(StringConstants.deviceNameIsEmpty);
-      }
-
-      _showConnectingDialog(device: widget.selectedDevice, context: context);
-      dialogShown = true;
-
-      await _bluetoothService.requestPermissions();
-      final poweredOn = await _bluetoothService.ensurePoweredOn();
-      if (!poweredOn) {
-        throw Exception(StringConstants.bluetoothIsNotEnabled);
-      }
-
-      await _bluetoothService.startScanning();
-
-      final Completer<DiscoveredDevice?> deviceFoundCompleter =
-          Completer<DiscoveredDevice?>();
-
-      _scanSubscription = _bluetoothService.scanResultsStream.listen((results) {
-        for (var result in results) {
-          if (result.name == widget.panelName) {
-            if (!deviceFoundCompleter.isCompleted) {
-              deviceFoundCompleter.complete(result);
-            }
-            break;
-          }
-        }
-      });
-
-      final foundDeviceFuture = deviceFoundCompleter.future.timeout(
-        const Duration(seconds: 15),
-        onTimeout: () => null,
-      );
-
-      final device = await foundDeviceFuture;
-      await _scanSubscription?.cancel();
-      await _bluetoothService.stopScanning();
-
-      if (device == null) {
-        throw Exception('Device "$deviceName" not found');
-      }
-
-      final bleController = Get.find<BleLogController>();
-      await bleController.connectToDevice(device: device);
-
-      var activeDevice = device;
-
-      await Future.delayed(const Duration(milliseconds: 600));
-      if (!mounted) return;
-
-      final resolvedDevice = await resolveBootloaderModeOnConnect(
-        context: context,
-        bleController: bleController,
-        bluetoothService: _bluetoothService,
-        device: device,
-      );
-      if (resolvedDevice == null) {
-        if (mounted) {
-          setState(() => _isConnecting = false);
-        }
-        return;
-      }
-      activeDevice = resolvedDevice;
-
-      if (mounted) {
-        setState(() {
-          _selectedDevice = activeDevice;
-          _isConnecting = false;
-        });
-      }
-
-      widget.onDeviceReconnected?.call(activeDevice);
-
-      if (!mounted) return;
-
-      bleController.bleProcess.clearSessionAccessCode();
-      final ok = await showPanelAccessCodeGatewayDialog(
-        context: context,
-        onStartValidation:
-            () => bleController.startSessionAccessCodeValidation(),
-      );
-
-      if (!ok || !context.mounted) {
-        bleController.bleManager.disconnectConnectedDevice();
-        return;
-      }
-
-      if (!mounted) return;
-      await offerOptionalFullConfigDownloadAfterConnect(
-        context: context,
-        isMounted: () => mounted,
-        device: activeDevice,
-        refreshNotifiers: _panelRefreshNotifiers,
-        navigatingToDeviceConnecting: _navigatingToDeviceConnecting,
-      );
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _isConnecting = false;
-        });
-        if (dialogShown) {
-          try {
-            Navigator.of(context).pop();
-          } catch (_) {}
-        }
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('${StringConstants.failedToConnectPrefix}$e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-      await _scanSubscription?.cancel();
-      await _bluetoothService.stopScanning();
-    }
+  List<Widget> _screens() {
+    return [
+      _buildDashboardTab(),
+      SettingsScreen(
+        panelName: _controller.panelName,
+        panelVersionNo: _controller.panelVersionNo,
+      ),
+      const TestModeScreen(),
+      LogHistoryScreen(
+        panelName: _controller.panelName,
+        panelVersionNo: _controller.panelVersionNo,
+        siteId: _controller.siteId,
+      ),
+    ];
   }
 
-  @override
-  initState() {
-    super.initState();
-    _selectedDevice = widget.selectedDevice;
-    BleSessionIdlePolicy.suppressFirmwareDisconnectUi.value = false;
-    _hadEstablishedBleSession =
-        _bleManager.isConnectedNotifier.value &&
-        _bleManager.handshakeCompleteNotifier.value;
-    _bleManager.isConnectedNotifier.addListener(_onBleSessionChanged);
-    _bleManager.handshakeCompleteNotifier.addListener(_onBleSessionChanged);
-  }
-
-  Future<void> _exportProjectPdf() async {
-    final siteId = widget.siteId;
-    var siteName = widget.siteName?.trim() ?? '';
-    var installer = '-';
-    var company = '-';
-    var saqcc = '-';
-
-    if (siteId != null) {
-      final site = await SiteService().getSiteById(siteId);
-      if (site != null) {
-        siteName = site.siteName;
-        installer = site.installerName;
-        company = site.companyName;
-        saqcc = site.saqccRegNumber;
-      }
-    } else if (siteName.isEmpty) {
-      siteName = '-';
-    }
-
-    final bp = bleController.bleProcess;
-
-    if (!mounted) return;
-    try {
-      await ProjectReportPdfUtil.generate(
-        deviceId: _selectedDevice.id,
-        siteName: siteName,
-        installerName: installer,
-        companyName: company,
-        saqccNo: saqcc,
-        receivedPanelName: bp.receivedPanelName.value,
-        advertisedPanelName: widget.panelName,
-        hardwareVersion: bp.receivedHardwareVersion.value,
-        firmwareVersion: bp.receivedFirmwareVersion.value,
-        firmwareDate: bp.receivedFirmwareDate.value,
-        protocolVersion: bp.receivedProtocolVersion.value,
-      );
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('${StringConstants.couldNotCreatePdfPrefix}$e'),
-          ),
-        );
-      }
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildDashboardTab() {
     return WillPopScope(
-      onWillPop: () async {
-        if (bleController.isConnected) {
-          final shouldPop = await _confirmAndDisconnect();
-          return shouldPop;
-        } else {
-          return true;
-        }
-      },
+      onWillPop: _controller.handleWillPop,
       child: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -926,16 +622,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                     child: Row(
                       children: [
                         GestureDetector(
-                          onTap: () async {
-                            if (bleController.isConnected) {
-                              final shouldPop = await _confirmAndDisconnect();
-                              if (shouldPop && mounted) {
-                                Navigator.of(context).pop();
-                              }
-                            } else {
-                              Navigator.of(context).pop();
-                            }
-                          },
+                          onTap: _controller.handleBackNavigation,
                           child: Container(
                             width: 40,
                             height: 40,
@@ -966,7 +653,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                           ),
                         ),
                         GestureDetector(
-                          onTap: () => _showExportBottomSheet(context),
+                          onTap: () => showExportBottomSheet(),
                           child: Padding(
                             padding: const EdgeInsets.only(right: 12.0),
                             child: SvgPicture.asset(AssetConstants.shareIcon),
@@ -986,9 +673,10 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     );
   }
 
-  void _showExportBottomSheet(BuildContext context) {
+  @override
+  void showExportBottomSheet() {
     showModalBottomSheet(
-      context: context,
+      context: uiContext,
       backgroundColor: ColorConstants.transparent,
       isScrollControlled: false,
       builder: (_) {
@@ -1026,7 +714,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 title: StringConstants.exportAsPDF,
                 onTap: () async {
                   Navigator.pop(context);
-                  _exportProjectPdf();
+                  _controller.exportProjectPdf();
                 },
               ),
             ],
@@ -1036,35 +724,35 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     );
   }
 
-  Future<void> showBootloaderModeDialog({required BuildContext context}) async {
+  @override
+  Future<void> showBootloaderModeDialog() async {
     final bootloaderFileCorrupted = BleMsdUtils.isBootloaderCorrupt(
-      _selectedDevice.manufacturerData,
+      _controller.selectedDevice.manufacturerData,
     );
     final wantUpgrade = await showBootloaderUpgradeOfferFromDashboardDialog(
-      context,
+      uiContext,
       bootloaderFileCorrupted: bootloaderFileCorrupted,
     );
     if (wantUpgrade != true || !context.mounted) return;
 
     final upgraded = await showFirmwareUpgradeBottomSheetForConnect(
-      context: context,
-      connectedDevice: _selectedDevice,
+      context: uiContext,
+      connectedDevice: _controller.selectedDevice,
     );
     if (!upgraded || !mounted) return;
 
-    final bleController = Get.find<BleLogController>();
-    await bleController.bleManager.disconnectConnectedDevice();
+    await _controller.bleController.bleManager.disconnectConnectedDevice();
 
     final refreshed = await runWithBleConnectingDialog<DiscoveredDevice?>(
-      context: context,
-      device: _selectedDevice,
-      bleController: bleController,
+      context: uiContext,
+      device: _controller.selectedDevice,
+      bleController: _controller.bleController,
       messages: BleConnectingDialogMessages.afterFirmwareUpgrade,
       operation:
           () => reconnectBleDeviceInAppModeAfterUpgrade(
-            bleController: bleController,
-            bluetoothService: _bluetoothService,
-            originalDevice: _selectedDevice,
+            bleController: _controller.bleController,
+            bluetoothService: _controller.bluetoothService,
+            originalDevice: _controller.selectedDevice,
           ),
     );
     if (refreshed == null || !mounted) {
@@ -1080,21 +768,23 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
       return;
     }
 
-    setState(() => _selectedDevice = refreshed);
+    _controller.updateSelectedDevice(refreshed);
 
-    bleController.bleProcess.clearSessionAccessCode();
-    final ok = await showPanelAccessCodeGatewayDialog(
-      context: context,
-      onStartValidation: () => bleController.startSessionAccessCodeValidation(),
+    _controller.bleController.bleProcess.clearSessionAccessCode();
+    final ok = await panel_access_dialog.showPanelAccessCodeGatewayDialog(
+      context: uiContext,
+      onStartValidation:
+          () => _controller.bleController.startSessionAccessCodeValidation(),
     );
     if (!ok || !mounted) {
-      bleController.bleManager.disconnectConnectedDevice();
+      _controller.bleController.bleManager.disconnectConnectedDevice();
     }
   }
 
-  Future<void> showBluetootohOffDialog({required BuildContext context}) async {
+  @override
+  Future<void> showBluetoothOffDialog() async {
     await showDialog(
-      context: context,
+      context: uiContext,
       barrierDismissible: false,
       builder: (context) {
         return Dialog(
@@ -1171,7 +861,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                         onTap: () async {
                           final navigator = Navigator.of(context);
                           navigator.pop(); // close dialog
-                          await _connectToDeviceByName();
+                          await _controller.connectToDeviceByName();
                         },
                         child: Container(
                           height: 48,
@@ -1205,22 +895,20 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     );
   }
 
-  void showApplySuccessDialog(
-    BuildContext context,
-    String message, {
-    String? subtitle,
-  }) {
+  @override
+  void showApplySuccessDialog(String message, {String? subtitle}) {
     showPanelApplySuccessDialog(
-      context,
-      _bleManager.bleProcess,
+      uiContext,
+      _controller.bleManager.bleProcess,
       message,
       subtitle: subtitle,
     );
   }
 
-  void showDownloadSuccessDialog(BuildContext context, String message) {
+  @override
+  void showDownloadSuccessDialog(String message) {
     showDialog(
-      context: context,
+      context: uiContext,
       barrierDismissible: false,
       builder: (dialogContext) {
         return Dialog(
@@ -1264,7 +952,8 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 ),
                 SizedBox(height: 8),
                 Visibility(
-                  visible: !ble.bleProcess.isLbusFetchHasErrors.value,
+                  visible:
+                      !_controller.ble.bleProcess.isLbusFetchHasErrors.value,
                   child: Text(
                     message ==
                             StringConstants
@@ -1277,7 +966,8 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                   ),
                 ),
                 Visibility(
-                  visible: ble.bleProcess.isLbusFetchHasErrors.value,
+                  visible:
+                      _controller.ble.bleProcess.isLbusFetchHasErrors.value,
                   child: Text(
                     StringConstants.thereWasAnErrorDownloading,
                     style: StyleConstants.textMuted14w400Style,
@@ -1285,9 +975,10 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                   ),
                 ),
                 Visibility(
-                  visible: ble.bleProcess.isLbusFetchHasErrors.value,
+                  visible:
+                      _controller.ble.bleProcess.isLbusFetchHasErrors.value,
                   child: Text(
-                    'L-Bus ${ble.bleProcess.lbusFetchErrors.value.join(", ")} - Comms Fault',
+                    'L-Bus ${_controller.ble.bleProcess.lbusFetchErrors.value.join(", ")} - Comms Fault',
                     style: StyleConstants.primary14w400Style,
                     textAlign: TextAlign.center,
                   ),
@@ -1300,9 +991,10 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     );
   }
 
-  void showDiagnosticStopDialog(BuildContext context) {
+  @override
+  void showDiagnosticStopDialog() {
     showDialog(
-      context: context,
+      context: uiContext,
       barrierDismissible: false,
       builder: (dialogContext) {
         return Dialog(
@@ -1359,88 +1051,26 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     });
   }
 
-  Future<void> _saveAllPeripheralCachesFromBle() async {
-    await PanelConfigCacheSync.saveAllFromBle(
-      _bleManager,
-      _selectedDevice.id,
-      _panelRefreshNotifiers,
-    );
-  }
-
-  void _onConfigLogDownloadAndCompare() {
-    _configLogCompareResult.value = null;
-    showPasswordPopup(
-      onCall: () {
-        ble.bleProcess.isModuleSetupFetchCommandActive.value = true;
-        bleController.startModuleSetupFetch();
-      },
-      mode: 'bottomsheet_download',
-      isConfigLogBulk: true,
-      showDetailedConfigLogBulkBleProgressInAccessDialog: false,
-      downloadSuccessMessage: StringConstants.configuration,
-      onDownloadComplete: () async {
-        try {
-          await PanelConfigBulkSync.runConfigLogFetchRemaining(
-            bleController,
-            _bleManager,
-          );
-          _configLogCompareResult.value =
-              await PanelConfigBulkSync.buildConfigCompareResultFromCache(
-                _bleManager,
-                _selectedDevice.id,
-              );
-          await _saveAllPeripheralCachesFromBle();
-        } catch (e, _) {
-          _configLogCompareResult.value = ConfigCompareResult.withError(
-            e is TimeoutException
-                ? StringConstants
-                    .operationTimedOutStayCloseToTheDeviceAndTryAgain
-                : e.toString(),
-          );
-        }
-      },
-    );
-  }
-
-  Future<void> _onConfigLogUsePanelDataInApp() async {
-    await _saveAllPeripheralCachesFromBle();
-  }
-
-  void _onConfigLogApplyLocalToPanel() {
-    showPasswordPopup(
-      onCall: () {
-        ble.bleProcess.isPanelInfoSetupApplyCommandActive.value = true;
-        bleController.startPanelInfoSetupApply();
-      },
-      isPanelInfoSetup: true,
-      mode: 'bottomsheet_apply',
-      isConfigLogBulkApply: true,
-      showDetailedConfigLogBulkBleProgressInAccessDialog: false,
-    );
-  }
-
-  void showConfigLogBottomSheet({required BuildContext context}) {
+  @override
+  void showConfigLogBottomSheet() {
     showModalBottomSheet(
-      context: context,
+      context: uiContext,
       isScrollControlled: true,
       backgroundColor: ColorConstants.transparent,
       barrierColor: ColorConstants.blackMaterial.withOpacity(0.4),
       builder:
           (_) => ConfigLogBottomSheet(
-            deviceId: _selectedDevice.id,
-            compareResult: _configLogCompareResult,
-            isWorking: _configLogWorking,
-            onDownloadAndCompare: _onConfigLogDownloadAndCompare,
-            onUsePanelDataInApp: _onConfigLogUsePanelDataInApp,
-            onApplyLocalToPanel: _onConfigLogApplyLocalToPanel,
+            deviceId: _controller.selectedDevice.id,
+            compareResult: _controller.configLogCompareResult,
+            isWorking: _controller.configLogWorking,
+            onDownloadAndCompare: _controller.onConfigLogDownloadAndCompare,
+            onUsePanelDataInApp: _controller.onConfigLogUsePanelDataInApp,
+            onApplyLocalToPanel: _controller.onConfigLogApplyLocalToPanel,
           ),
-    ).whenComplete(() {
-      if (!mounted) return;
-      _configLogCompareResult.value = null;
-      _configLogWorking.value = false;
-    });
+    ).whenComplete(_controller.clearConfigLogState);
   }
 
+  @override
   void showPasswordPopup({
     required Function() onCall,
     bool? isExtOut = false,
@@ -1463,34 +1093,38 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     Future<void> Function(BuildContext context)? onAfterApplySuccess,
   }) {
     showPanelAccessPasswordPopup(
-      context: context,
+      context: uiContext,
       isMounted: () => mounted,
-      bleManager: _bleManager,
-      bleController: bleController,
-      selectedDevice: _selectedDevice,
-      navigatingToDeviceConnecting: _navigatingToDeviceConnecting,
+      bleManager: _controller.bleManager,
+      bleController: _controller.bleController,
+      selectedDevice: _controller.selectedDevice,
+      navigatingToDeviceConnecting: _controller.navigatingToDeviceConnecting,
       delegates: PanelAccessPasswordDelegates(
-        saveExtOutCache: _saveExtOutCacheAndNotifyRefresh,
-        saveInputCache: _saveInputCacheAndNotifyRefresh,
-        saveRelayCache: _saveRelayCacheAndNotifyRefresh,
-        saveZoneCache: _saveZoneCacheAndNotifyRefresh,
-        saveRadioCache: _saveRadioCacheAndNotifyRefresh,
-        saveLBusCache: _saveLBusCacheAndNotifyRefresh,
-        saveSounderCache: _saveSounderCacheAndNotifyRefresh,
-        saveServiceDueCache: _saveServiceDueCacheAndNotifyRefresh,
-        saveAccessCodeCache: _saveAccessCodeCacheAndNotifyRefresh,
-        savePanelInfoCache: _savePanelInfoCacheAndNotifyRefresh,
-        saveGeneralModuleCache: _saveGeneralModuleCacheAndNotifyRefresh,
-        showApplySuccess: showApplySuccessDialog,
-        showDownloadSuccess: showDownloadSuccessDialog,
+        saveExtOutCache: _controller.saveExtOutCacheAndNotifyRefresh,
+        saveInputCache: _controller.saveInputCacheAndNotifyRefresh,
+        saveRelayCache: _controller.saveRelayCacheAndNotifyRefresh,
+        saveZoneCache: _controller.saveZoneCacheAndNotifyRefresh,
+        saveRadioCache: _controller.saveRadioCacheAndNotifyRefresh,
+        saveLBusCache: _controller.saveLBusCacheAndNotifyRefresh,
+        saveSounderCache: _controller.saveSounderCacheAndNotifyRefresh,
+        saveServiceDueCache: _controller.saveServiceDueCacheAndNotifyRefresh,
+        saveAccessCodeCache: _controller.saveAccessCodeCacheAndNotifyRefresh,
+        savePanelInfoCache: _controller.savePanelInfoCacheAndNotifyRefresh,
+        saveGeneralModuleCache:
+            _controller.saveGeneralModuleCacheAndNotifyRefresh,
+        showApplySuccess:
+            (ctx, message, {subtitle}) =>
+                showApplySuccessDialog(message, subtitle: subtitle),
+        showDownloadSuccess:
+            (ctx, message) => showDownloadSuccessDialog(message),
         openLogRetrievalLoading: (dialogContext) {
           Navigator.of(dialogContext).push(
             MaterialPageRoute(
               builder:
                   (context) => LogRetrievalLoadingScreen(
                     scanType: ScanType.bluetooth,
-                    selectedDevice: widget.selectedDevice,
-                    connectedDevice: widget.selectedDevice,
+                    selectedDevice: _controller.selectedDevice,
+                    connectedDevice: _controller.selectedDevice,
                   ),
             ),
           );
@@ -1500,26 +1134,26 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 ? () async {
                   try {
                     await PanelConfigBulkSync.runConfigLogApplyRemaining(
-                      bleController,
-                      _bleManager,
+                      _controller.bleController,
+                      _controller.bleManager,
                     );
-                    await _saveAllPeripheralCachesFromBle();
+                    await _controller.saveAllPeripheralCachesFromBle();
                     if (!mounted) return;
-                    _configLogCompareResult.value =
+                    _controller.configLogCompareResult.value =
                         await PanelConfigBulkSync.buildConfigCompareResultFromCache(
-                          _bleManager,
-                          _selectedDevice.id,
+                          _controller.bleManager,
+                          _controller.selectedDevice.id,
                         );
                     if (!mounted) return;
                     showApplySuccessDialog(
-                      context,
                       StringConstants.configuration,
                       subtitle:
                           StringConstants
                               .yourSavedSetupHasBeenAppliedToThePanel,
                     );
                   } finally {
-                    _bleManager.bleProcess.clearPeripheralApplyDoneFlags();
+                    _controller.bleManager.bleProcess
+                        .clearPeripheralApplyDoneFlags();
                   }
                 }
                 : null,
@@ -1544,34 +1178,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
       onDownloadComplete: onDownloadComplete,
       downloadSuccessMessage: downloadSuccessMessage,
       onAfterApplySuccess: onAfterApplySuccess,
-      configLogWorking: _configLogWorking,
-    );
-  }
-
-  Future<void> _showWalkTestResultConfirmation(BuildContext context) {
-    return showCommissioningTestResultConfirmation(
-      context: context,
-      deviceId: _selectedDevice.id,
-      type: CommissioningTestType.walkTest,
-      manager: _bleManager,
-    );
-  }
-
-  Future<void> _showRelayTestResultConfirmation(BuildContext context) {
-    return showCommissioningTestResultConfirmation(
-      context: context,
-      deviceId: _selectedDevice.id,
-      type: CommissioningTestType.relayTest,
-      manager: _bleManager,
-    );
-  }
-
-  Future<void> _showSounderTestResultConfirmation(BuildContext context) {
-    return showCommissioningTestResultConfirmation(
-      context: context,
-      deviceId: _selectedDevice.id,
-      type: CommissioningTestType.sounderTest,
-      manager: _bleManager,
+      configLogWorking: _controller.configLogWorking,
     );
   }
 
@@ -1619,17 +1226,17 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                BleNameUtils.getDisplayPrefixFromBleName(widget.panelName),
+                BleNameUtils.getDisplayPrefixFromBleName(_controller.panelName),
                 style: StyleConstants.black16w700Style,
                 overflow: TextOverflow.ellipsis,
               ),
               Text(
-                BleNameUtils.getDisplayIdFromBleName(widget.panelName),
+                BleNameUtils.getDisplayIdFromBleName(_controller.panelName),
                 style: StyleConstants.textDisabled14w500Style,
                 overflow: TextOverflow.ellipsis,
               ),
               ValueListenableBuilder(
-                valueListenable: ble.isConnectedNotifier,
+                valueListenable: _controller.ble.isConnectedNotifier,
                 builder: (context, isConnected, child) {
                   if (isConnected) {
                     return Text(
@@ -1661,37 +1268,41 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
         ),
 
         ValueListenableBuilder(
-          valueListenable: ble.isConnectedNotifier,
+          valueListenable: _controller.ble.isConnectedNotifier,
           builder: (context, isConnected, child) {
             if (!isConnected) {
-              return _isConnecting
-                  ? SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        ColorConstants.primary,
-                      ),
-                    ),
-                  )
-                  : GestureDetector(
-                    onTap: _connectToDeviceByName,
-                    child: Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: ColorConstants.primary,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        'Connect',
-                        style: StyleConstants.white12w600Style,
-                      ),
-                    ),
-                  );
+              return GetBuilder<ProjectDashboardController>(
+                builder:
+                    (c) =>
+                        c.isConnecting
+                            ? SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  ColorConstants.primary,
+                                ),
+                              ),
+                            )
+                            : GestureDetector(
+                              onTap: _controller.connectToDeviceByName,
+                              child: Container(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: ColorConstants.primary,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  'Connect',
+                                  style: StyleConstants.white12w600Style,
+                                ),
+                              ),
+                            ),
+              );
             } else {
               return SizedBox.shrink();
             }
@@ -1728,38 +1339,43 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 iconPath: AssetConstants.peripheralRelayIcon,
                 onTap: () {
                   if (BleMsdUtils.isBootloader(
-                    _selectedDevice.manufacturerData,
+                    _controller.selectedDevice.manufacturerData,
                   )) {
-                    showBootloaderModeDialog(context: context);
+                    showBootloaderModeDialog();
                     return;
                   }
                   showRelaySetupBottomSheet(
-                    context: context,
-                    deviceId: _selectedDevice.id,
                     onDownload: () {
                       showPasswordPopup(
                         onCall: () {
-                          ble.bleProcess.isRelaySetupFetchCommandActive.value =
-                              true;
-                          bleController.startRelaySetupFetch();
+                          _controller
+                              .ble
+                              .bleProcess
+                              .isRelaySetupFetchCommandActive
+                              .value = true;
+                          _controller.bleController.startRelaySetupFetch();
                         },
                         isRelaySetup: true,
                         mode: 'bottomsheet_download',
-                        onDownloadComplete: _saveRelayCacheAndNotifyRefresh,
+                        onDownloadComplete:
+                            _controller.saveRelayCacheAndNotifyRefresh,
                       );
                     },
                     onApply: () {
                       showPasswordPopup(
                         onCall: () {
-                          ble.bleProcess.isRelaySetupCommandApplyActive.value =
-                              true;
-                          bleController.startRelaySetupApply();
+                          _controller
+                              .ble
+                              .bleProcess
+                              .isRelaySetupCommandApplyActive
+                              .value = true;
+                          _controller.bleController.startRelaySetupApply();
                         },
                         isRelaySetup: true,
                         mode: 'bottomsheet_apply',
                       );
                     },
-                    refreshTrigger: _relayRefreshTrigger,
+                    refreshTrigger: _controller.relayRefreshTrigger,
                   );
                 },
               ),
@@ -1768,37 +1384,43 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 iconPath: AssetConstants.peripheralInputIcon,
                 onTap: () {
                   if (BleMsdUtils.isBootloader(
-                    _selectedDevice.manufacturerData,
+                    _controller.selectedDevice.manufacturerData,
                   )) {
-                    showBootloaderModeDialog(context: context);
+                    showBootloaderModeDialog();
                     return;
                   }
                   showInputSetupBottomSheet(
-                    context: context,
-                    deviceId: _selectedDevice.id,
                     onDownload: () {
                       showPasswordPopup(
                         onCall: () {
-                          ble.bleProcess.isInputSetupFetchCommandActive.value =
-                              true;
-                          bleController.startInputSetupFetch();
+                          _controller
+                              .ble
+                              .bleProcess
+                              .isInputSetupFetchCommandActive
+                              .value = true;
+                          _controller.bleController.startInputSetupFetch();
                         },
                         isInputSetup: true,
                         mode: 'bottomsheet_download',
-                        onDownloadComplete: _saveInputCacheAndNotifyRefresh,
+                        onDownloadComplete:
+                            _controller.saveInputCacheAndNotifyRefresh,
                       );
                     },
                     onApply: () {
                       showPasswordPopup(
                         onCall: () {
-                          ble.bleProcess.isInputSetupApplyActive.value = true;
-                          bleController.startInputSetupApply();
+                          _controller
+                              .ble
+                              .bleProcess
+                              .isInputSetupApplyActive
+                              .value = true;
+                          _controller.bleController.startInputSetupApply();
                         },
                         isInputSetup: true,
                         mode: 'bottomsheet_apply',
                       );
                     },
-                    refreshTrigger: _inputRefreshTrigger,
+                    refreshTrigger: _controller.inputRefreshTrigger,
                   );
                 },
               ),
@@ -1807,38 +1429,43 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 iconPath: AssetConstants.peripheralZonesIcon,
                 onTap: () {
                   if (BleMsdUtils.isBootloader(
-                    _selectedDevice.manufacturerData,
+                    _controller.selectedDevice.manufacturerData,
                   )) {
-                    showBootloaderModeDialog(context: context);
+                    showBootloaderModeDialog();
                     return;
                   }
                   showZoneSetupBottomSheet(
-                    context: context,
-                    deviceId: _selectedDevice.id,
                     onDownload: () {
                       showPasswordPopup(
                         onCall: () {
-                          ble.bleProcess.isZoneSetupFetchCommandActive.value =
-                              true;
-                          bleController.startZoneSetupFetch();
+                          _controller
+                              .ble
+                              .bleProcess
+                              .isZoneSetupFetchCommandActive
+                              .value = true;
+                          _controller.bleController.startZoneSetupFetch();
                         },
                         isZoneSetup: true,
                         mode: 'bottomsheet_download',
-                        onDownloadComplete: _saveZoneCacheAndNotifyRefresh,
+                        onDownloadComplete:
+                            _controller.saveZoneCacheAndNotifyRefresh,
                       );
                     },
                     onApply: () {
                       showPasswordPopup(
                         onCall: () {
-                          ble.bleProcess.isZoneSetupCommandApplyActive.value =
-                              true;
-                          bleController.startZoneSetupApply();
+                          _controller
+                              .ble
+                              .bleProcess
+                              .isZoneSetupCommandApplyActive
+                              .value = true;
+                          _controller.bleController.startZoneSetupApply();
                         },
                         isZoneSetup: true,
                         mode: 'bottomsheet_apply',
                       );
                     },
-                    refreshTrigger: _zoneRefreshTrigger,
+                    refreshTrigger: _controller.zoneRefreshTrigger,
                   );
                 },
               ),
@@ -1847,43 +1474,44 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 iconPath: AssetConstants.peripheralSounderIcon,
                 onTap: () {
                   if (BleMsdUtils.isBootloader(
-                    _selectedDevice.manufacturerData,
+                    _controller.selectedDevice.manufacturerData,
                   )) {
-                    showBootloaderModeDialog(context: context);
+                    showBootloaderModeDialog();
                     return;
                   }
                   showSounderSetupBottomSheet(
-                    context: context,
-                    deviceId: _selectedDevice.id,
                     onDownload: () {
                       showPasswordPopup(
                         onCall: () {
-                          ble
+                          _controller
+                              .ble
                               .bleProcess
                               .isSounderSetupFetchCommandActive
                               .value = true;
-                          bleController.startSounderSetupFetch();
+                          _controller.bleController.startSounderSetupFetch();
                         },
                         isSounderSetup: true,
                         mode: 'bottomsheet_download',
-                        onDownloadComplete: _saveSounderCacheAndNotifyRefresh,
+                        onDownloadComplete:
+                            _controller.saveSounderCacheAndNotifyRefresh,
                         downloadSuccessMessage: 'Sounder',
                       );
                     },
                     onApply: () {
                       showPasswordPopup(
                         onCall: () {
-                          ble
+                          _controller
+                              .ble
                               .bleProcess
                               .isSounderSetupApplyCommandActive
                               .value = true;
-                          bleController.startSounderSetupApply();
+                          _controller.bleController.startSounderSetupApply();
                         },
                         isSounderSetup: true,
                         mode: 'bottomsheet_apply',
                       );
                     },
-                    refreshTrigger: _sounderRefreshTrigger,
+                    refreshTrigger: _controller.sounderRefreshTrigger,
                   );
                 },
               ),
@@ -1893,39 +1521,44 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 isDisabled: true,
                 onTap: () {
                   if (BleMsdUtils.isBootloader(
-                    _selectedDevice.manufacturerData,
+                    _controller.selectedDevice.manufacturerData,
                   )) {
-                    showBootloaderModeDialog(context: context);
+                    showBootloaderModeDialog();
                     return;
                   }
                   showRadioSetupBottomSheet(
-                    context: context,
-                    deviceId: _selectedDevice.id,
                     onDownload: () {
                       showPasswordPopup(
                         onCall: () {
-                          ble.bleProcess.isRadioSetupFetchCommandActive.value =
-                              true;
-                          bleController.startRadioSetupFetch();
+                          _controller
+                              .ble
+                              .bleProcess
+                              .isRadioSetupFetchCommandActive
+                              .value = true;
+                          _controller.bleController.startRadioSetupFetch();
                         },
                         isZoneSetup: true,
                         mode: 'bottomsheet_download',
-                        onDownloadComplete: _saveRadioCacheAndNotifyRefresh,
+                        onDownloadComplete:
+                            _controller.saveRadioCacheAndNotifyRefresh,
                         downloadSuccessMessage: StringConstants.radio,
                       );
                     },
                     onApply: () {
                       showPasswordPopup(
                         onCall: () {
-                          ble.bleProcess.isRadioSetupCommandApplyActive.value =
-                              true;
-                          bleController.startRadioSetupApply();
+                          _controller
+                              .ble
+                              .bleProcess
+                              .isRadioSetupCommandApplyActive
+                              .value = true;
+                          _controller.bleController.startRadioSetupApply();
                         },
                         isZoneSetup: true,
                         mode: 'bottomsheet_apply',
                       );
                     },
-                    refreshTrigger: _zoneRefreshTrigger,
+                    refreshTrigger: _controller.zoneRefreshTrigger,
                   );
                 },
               ),
@@ -1934,23 +1567,25 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 iconPath: AssetConstants.peripheralAuxIcon,
                 onTap: () {
                   if (BleMsdUtils.isBootloader(
-                    _selectedDevice.manufacturerData,
+                    _controller.selectedDevice.manufacturerData,
                   )) {
-                    showBootloaderModeDialog(context: context);
+                    showBootloaderModeDialog();
                     return;
                   }
                   showModuleSetupBottomSheet(
-                    context: context,
-                    deviceId: _selectedDevice.id,
                     onDownload: () {
                       showPasswordPopup(
                         onCall: () {
-                          ble.bleProcess.isModuleSetupFetchCommandActive.value =
-                              true;
-                          bleController.startModuleSetupFetch();
+                          _controller
+                              .ble
+                              .bleProcess
+                              .isModuleSetupFetchCommandActive
+                              .value = true;
+                          _controller.bleController.startModuleSetupFetch();
                         },
                         mode: 'bottomsheet_download',
-                        onDownloadComplete: _saveModuleCacheAndNotifyRefresh,
+                        onDownloadComplete:
+                            _controller.saveModuleCacheAndNotifyRefresh,
                         downloadSuccessMessage: 'Module',
                       );
                     },
@@ -1962,39 +1597,44 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 iconPath: AssetConstants.peripheralLBusIcon,
                 onTap: () {
                   if (BleMsdUtils.isBootloader(
-                    _selectedDevice.manufacturerData,
+                    _controller.selectedDevice.manufacturerData,
                   )) {
-                    showBootloaderModeDialog(context: context);
+                    showBootloaderModeDialog();
                     return;
                   }
                   showLBusSetupBottomSheet(
-                    context: context,
-                    deviceId: _selectedDevice.id,
                     onDownload: () {
                       showPasswordPopup(
                         onCall: () {
-                          ble.bleProcess.isLBusSetupFetchCommandActive.value =
-                              true;
-                          bleController.startLBusSetupFetch();
+                          _controller
+                              .ble
+                              .bleProcess
+                              .isLBusSetupFetchCommandActive
+                              .value = true;
+                          _controller.bleController.startLBusSetupFetch();
                         },
                         mode: 'bottomsheet_download',
-                        onDownloadComplete: _saveLBusCacheAndNotifyRefresh,
+                        onDownloadComplete:
+                            _controller.saveLBusCacheAndNotifyRefresh,
                         downloadSuccessMessage: StringConstants.lBus,
                       );
                     },
                     onApply: () {
                       showPasswordPopup(
                         onCall: () {
-                          ble.bleProcess.isLBusSetupApplyCommandActive.value =
-                              true;
-                          bleController.startLBusSetupApply();
+                          _controller
+                              .ble
+                              .bleProcess
+                              .isLBusSetupApplyCommandActive
+                              .value = true;
+                          _controller.bleController.startLBusSetupApply();
                         },
                         isLBusSetup: true,
                         mode: 'bottomsheet_apply',
                         downloadSuccessMessage: StringConstants.lBus,
                       );
                     },
-                    refreshTrigger: _zoneRefreshTrigger,
+                    refreshTrigger: _controller.zoneRefreshTrigger,
                   );
                 },
               ),
@@ -2003,38 +1643,43 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 iconPath: AssetConstants.peripheralExtOutIcon,
                 onTap: () {
                   if (BleMsdUtils.isBootloader(
-                    _selectedDevice.manufacturerData,
+                    _controller.selectedDevice.manufacturerData,
                   )) {
-                    showBootloaderModeDialog(context: context);
+                    showBootloaderModeDialog();
                     return;
                   }
                   showExtOutBottomSheet(
-                    context: context,
-                    deviceId: _selectedDevice.id,
                     onDownload: () {
                       showPasswordPopup(
                         onCall: () {
-                          ble.bleProcess.isExtOutCommandFetchActive.value =
-                              true;
-                          bleController.startExtOutFetch();
+                          _controller
+                              .ble
+                              .bleProcess
+                              .isExtOutCommandFetchActive
+                              .value = true;
+                          _controller.bleController.startExtOutFetch();
                         },
                         isExtOut: true,
                         mode: 'bottomsheet_download',
-                        onDownloadComplete: _saveExtOutCacheAndNotifyRefresh,
+                        onDownloadComplete:
+                            _controller.saveExtOutCacheAndNotifyRefresh,
                       );
                     },
                     onApply: () {
                       showPasswordPopup(
                         onCall: () {
-                          ble.bleProcess.isExtOutCommandApplyActive.value =
-                              true;
-                          bleController.startExtOutApply();
+                          _controller
+                              .ble
+                              .bleProcess
+                              .isExtOutCommandApplyActive
+                              .value = true;
+                          _controller.bleController.startExtOutApply();
                         },
                         isExtOut: true,
                         mode: 'bottomsheet_apply',
                       );
                     },
-                    refreshTrigger: _extOutRefreshTrigger,
+                    refreshTrigger: _controller.extOutRefreshTrigger,
                   );
                 },
               ),
@@ -2045,21 +1690,20 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     );
   }
 
+  @override
   void showLBusSetupBottomSheet({
-    required BuildContext context,
-    required String deviceId,
     required VoidCallback onDownload,
     required VoidCallback onApply,
     required ValueNotifier<int> refreshTrigger,
   }) {
     showModalBottomSheet(
-      context: context,
+      context: uiContext,
       isScrollControlled: true,
       backgroundColor: ColorConstants.transparent,
       barrierColor: ColorConstants.blackMaterial.withOpacity(0.4),
       builder:
           (_) => LBusBottomSheet(
-            deviceId: deviceId,
+            deviceId: _controller.selectedDevice.id,
             onDownload: onDownload,
             onApply: onApply,
             refreshTrigger: refreshTrigger,
@@ -2067,21 +1711,20 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     );
   }
 
+  @override
   void showSounderSetupBottomSheet({
-    required BuildContext context,
-    required String deviceId,
     required VoidCallback onDownload,
     required VoidCallback onApply,
     required ValueNotifier<int> refreshTrigger,
   }) {
     showModalBottomSheet(
-      context: context,
+      context: uiContext,
       isScrollControlled: true,
       backgroundColor: ColorConstants.transparent,
       barrierColor: ColorConstants.blackMaterial.withOpacity(0.4),
       builder:
           (_) => SounderModeBottomSheet(
-            deviceId: deviceId,
+            deviceId: _controller.selectedDevice.id,
             onDownload: onDownload,
             onApply: onApply,
             refreshTrigger: refreshTrigger,
@@ -2089,21 +1732,20 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     );
   }
 
+  @override
   void showServiceDueSetupBottomSheet({
-    required BuildContext context,
-    required String deviceId,
     required VoidCallback onDownload,
     required VoidCallback onApply,
     required ValueNotifier<int> refreshTrigger,
   }) {
     showModalBottomSheet(
-      context: context,
+      context: uiContext,
       isScrollControlled: true,
       backgroundColor: ColorConstants.transparent,
       barrierColor: ColorConstants.blackMaterial.withOpacity(0.4),
       builder:
           (_) => ServiceDueBottomSheet(
-            deviceId: deviceId,
+            deviceId: _controller.selectedDevice.id,
             onDownload: onDownload,
             onApply: onApply,
             refreshTrigger: refreshTrigger,
@@ -2111,21 +1753,20 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     );
   }
 
-  showAccessCodeSetupBottomSheet({
-    required BuildContext context,
-    required String deviceId,
+  @override
+  void showAccessCodeSetupBottomSheet({
     required VoidCallback onDownload,
     required VoidCallback onApply,
     required ValueNotifier<int> refreshTrigger,
   }) {
     showModalBottomSheet(
-      context: context,
+      context: uiContext,
       isScrollControlled: true,
       backgroundColor: ColorConstants.transparent,
       barrierColor: ColorConstants.blackMaterial.withOpacity(0.4),
       builder:
           (_) => AccessCodesBottomSheet(
-            deviceId: deviceId,
+            deviceId: _controller.selectedDevice.id,
             onDownload: onDownload,
             onApply: onApply,
             refreshTrigger: refreshTrigger,
@@ -2133,21 +1774,20 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     );
   }
 
-  showPanelInfoSetupBottomSheet({
-    required BuildContext context,
-    required String deviceId,
+  @override
+  void showPanelInfoSetupBottomSheet({
     required VoidCallback onDownload,
     required VoidCallback onApply,
     required ValueNotifier<int> refreshTrigger,
   }) {
     showModalBottomSheet(
-      context: context,
+      context: uiContext,
       isScrollControlled: true,
       backgroundColor: ColorConstants.transparent,
       barrierColor: ColorConstants.blackMaterial.withOpacity(0.4),
       builder:
           (_) => PanelInfoBottomSheet(
-            deviceId: deviceId,
+            deviceId: _controller.selectedDevice.id,
             onDownload: onDownload,
             onApply: onApply,
             refreshTrigger: refreshTrigger,
@@ -2155,21 +1795,20 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     );
   }
 
-  showGeneralModuleSetupBottomSheet({
-    required BuildContext context,
-    required String deviceId,
+  @override
+  void showGeneralModuleSetupBottomSheet({
     required VoidCallback onDownload,
     required VoidCallback onApply,
     required ValueNotifier<int> refreshTrigger,
   }) {
     showModalBottomSheet(
-      context: context,
+      context: uiContext,
       isScrollControlled: true,
       backgroundColor: ColorConstants.transparent,
       barrierColor: ColorConstants.blackMaterial.withOpacity(0.4),
       builder:
           (_) => GeneralModuleBottomSheet(
-            deviceId: deviceId,
+            deviceId: _controller.selectedDevice.id,
             onDownload: onDownload,
             onApply: onApply,
             refreshTrigger: refreshTrigger,
@@ -2177,60 +1816,57 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     );
   }
 
+  @override
   void showAdcDiagnosticsSetupBottomSheet({
-    required BuildContext context,
-    required String deviceId,
     required VoidCallback onDownload,
     required VoidCallback onStop,
   }) {
     showModalBottomSheet(
-      context: context,
+      context: uiContext,
       isScrollControlled: true,
       backgroundColor: ColorConstants.transparent,
       barrierColor: ColorConstants.blackMaterial.withOpacity(0.4),
       builder:
           (_) => DiagnosticInfoBottomSheet(
-            deviceId: deviceId,
+            deviceId: _controller.selectedDevice.id,
             onDownload: onDownload,
             onStop: onStop,
           ),
     ).whenComplete(() {
       if (!mounted) return;
-      ble.bleProcess.isAdcSetupFetchCommandActive.value = false;
+      _controller.ble.bleProcess.isAdcSetupFetchCommandActive.value = false;
     });
   }
 
-  void showModuleSetupBottomSheet({
-    required BuildContext context,
-    required String deviceId,
-    required VoidCallback onDownload,
-  }) {
+  @override
+  void showModuleSetupBottomSheet({required VoidCallback onDownload}) {
     showModalBottomSheet(
-      context: context,
+      context: uiContext,
       isScrollControlled: true,
       backgroundColor: ColorConstants.transparent,
       barrierColor: ColorConstants.blackMaterial.withOpacity(0.4),
       builder:
-          (_) =>
-              ModuleInfoBottomSheet(deviceId: deviceId, onDownload: onDownload),
+          (_) => ModuleInfoBottomSheet(
+            deviceId: _controller.selectedDevice.id,
+            onDownload: onDownload,
+          ),
     );
   }
 
+  @override
   void showExtOutBottomSheet({
-    required BuildContext context,
-    required String deviceId,
     required VoidCallback onDownload,
     required VoidCallback onApply,
     required ValueNotifier<int> refreshTrigger,
   }) {
     showModalBottomSheet(
-      context: context,
+      context: uiContext,
       isScrollControlled: true,
       backgroundColor: ColorConstants.transparent,
       barrierColor: ColorConstants.blackMaterial.withOpacity(0.4),
       builder:
           (_) => ExtOutBottomSheet(
-            deviceId: deviceId,
+            deviceId: _controller.selectedDevice.id,
             onDownload: onDownload,
             onApply: onApply,
             refreshTrigger: refreshTrigger,
@@ -2238,21 +1874,20 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     );
   }
 
+  @override
   void showInputSetupBottomSheet({
-    required BuildContext context,
-    required String deviceId,
     required VoidCallback onDownload,
     required VoidCallback onApply,
     required ValueNotifier<int> refreshTrigger,
   }) {
     showModalBottomSheet(
-      context: context,
+      context: uiContext,
       isScrollControlled: true,
       backgroundColor: ColorConstants.transparent,
       barrierColor: ColorConstants.blackMaterial.withOpacity(0.4),
       builder:
           (_) => InputModeBottomSheet(
-            deviceId: deviceId,
+            deviceId: _controller.selectedDevice.id,
             onDownload: onDownload,
             onApply: onApply,
             refreshTrigger: refreshTrigger,
@@ -2260,21 +1895,20 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     );
   }
 
+  @override
   void showRelaySetupBottomSheet({
-    required BuildContext context,
-    required String deviceId,
     required VoidCallback onDownload,
     required VoidCallback onApply,
     required ValueNotifier<int> refreshTrigger,
   }) {
     showModalBottomSheet(
-      context: context,
+      context: uiContext,
       isScrollControlled: true,
       backgroundColor: ColorConstants.transparent,
       barrierColor: ColorConstants.blackMaterial.withOpacity(0.4),
       builder:
           (_) => RelayModeBottomSheet(
-            deviceId: deviceId,
+            deviceId: _controller.selectedDevice.id,
             onDownload: onDownload,
             onApply: onApply,
             refreshTrigger: refreshTrigger,
@@ -2282,21 +1916,20 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     );
   }
 
+  @override
   void showZoneSetupBottomSheet({
-    required BuildContext context,
-    required String deviceId,
     required VoidCallback onDownload,
     required VoidCallback onApply,
     required ValueNotifier<int> refreshTrigger,
   }) {
     showModalBottomSheet(
-      context: context,
+      context: uiContext,
       isScrollControlled: true,
       backgroundColor: ColorConstants.transparent,
       barrierColor: ColorConstants.blackMaterial.withOpacity(0.4),
       builder:
           (_) => ZoneBottomSheet(
-            deviceId: deviceId,
+            deviceId: _controller.selectedDevice.id,
             onDownload: onDownload,
             onApply: onApply,
             refreshTrigger: refreshTrigger,
@@ -2304,21 +1937,20 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     );
   }
 
+  @override
   void showWalkTestZoneBottomSheet({
-    required BuildContext context,
-    required String deviceId,
     required VoidCallback onDownload,
     required VoidCallback onApply,
     required ValueNotifier<int> refreshTrigger,
   }) {
     showModalBottomSheet(
-      context: context,
+      context: uiContext,
       isScrollControlled: true,
       backgroundColor: ColorConstants.transparent,
       barrierColor: ColorConstants.blackMaterial.withOpacity(0.4),
       builder:
           (_) => WalkTestZoneBottomSheet(
-            deviceId: deviceId,
+            deviceId: _controller.selectedDevice.id,
             onDownload: onDownload,
             onApply: onApply,
             refreshTrigger: refreshTrigger,
@@ -2326,21 +1958,20 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     );
   }
 
+  @override
   void showTestModeSounderBottomSheet({
-    required BuildContext context,
-    required String deviceId,
     required VoidCallback onDownload,
     required VoidCallback onApply,
     required ValueNotifier<int> refreshTrigger,
   }) {
     showModalBottomSheet(
-      context: context,
+      context: uiContext,
       isScrollControlled: true,
       backgroundColor: ColorConstants.transparent,
       barrierColor: ColorConstants.blackMaterial.withOpacity(0.4),
       builder:
           (_) => TestModeSounderBottomSheet(
-            deviceId: deviceId,
+            deviceId: _controller.selectedDevice.id,
             onDownload: onDownload,
             onApply: onApply,
             refreshTrigger: refreshTrigger,
@@ -2348,21 +1979,20 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     );
   }
 
+  @override
   void showTestModeRelayBottomSheet({
-    required BuildContext context,
-    required String deviceId,
     required VoidCallback onDownload,
     required VoidCallback onApply,
     required ValueNotifier<int> refreshTrigger,
   }) {
     showModalBottomSheet(
-      context: context,
+      context: uiContext,
       isScrollControlled: true,
       backgroundColor: ColorConstants.transparent,
       barrierColor: ColorConstants.blackMaterial.withOpacity(0.4),
       builder:
           (_) => TestModeRelayBottomSheet(
-            deviceId: deviceId,
+            deviceId: _controller.selectedDevice.id,
             onDownload: onDownload,
             onApply: onApply,
             refreshTrigger: refreshTrigger,
@@ -2370,9 +2000,8 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     );
   }
 
+  @override
   void showTestModeChoiceBottomSheet({
-    required BuildContext context,
-    required String deviceId,
     required VoidCallback onDownloadRelays,
     required VoidCallback onDownloadSounders,
     required VoidCallback onApplyRelays,
@@ -2381,7 +2010,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     required ValueNotifier<int> sounderRefreshTrigger,
   }) {
     showModalBottomSheet(
-      context: context,
+      context: uiContext,
       isScrollControlled: true,
       backgroundColor: ColorConstants.transparent,
       barrierColor: ColorConstants.blackMaterial.withOpacity(0.4),
@@ -2390,8 +2019,6 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
           onSounders: () {
             Navigator.pop(sheetContext);
             showTestModeSounderBottomSheet(
-              context: context,
-              deviceId: deviceId,
               onDownload: onDownloadSounders,
               onApply: onApplySounders,
               refreshTrigger: sounderRefreshTrigger,
@@ -2400,8 +2027,6 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
           onRelays: () {
             Navigator.pop(sheetContext);
             showTestModeRelayBottomSheet(
-              context: context,
-              deviceId: deviceId,
               onDownload: onDownloadRelays,
               onApply: onApplyRelays,
               refreshTrigger: relayRefreshTrigger,
@@ -2412,133 +2037,25 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     );
   }
 
+  @override
   void showRadioSetupBottomSheet({
-    required BuildContext context,
-    required String deviceId,
     required VoidCallback onDownload,
     required VoidCallback onApply,
     required ValueNotifier<int> refreshTrigger,
   }) {
     showModalBottomSheet(
-      context: context,
+      context: uiContext,
       isScrollControlled: true,
       backgroundColor: ColorConstants.transparent,
       barrierColor: ColorConstants.blackMaterial.withOpacity(0.4),
       builder:
           (_) => RadioModeBottomSheet(
-            deviceId: deviceId,
+            deviceId: _controller.selectedDevice.id,
             onDownload: onDownload,
             onApply: onApply,
             refreshTrigger: refreshTrigger,
           ),
     );
-  }
-
-  Future<void> _saveRelayCacheAndNotifyRefresh() async {
-    final m = _bleManager;
-    await PeripheralSetupCache.saveRelaySetup(
-      _selectedDevice.id,
-      PeripheralConfigSnapshot.relayMap(m),
-    );
-    _relayRefreshTrigger.value++;
-  }
-
-  Future<void> _saveInputCacheAndNotifyRefresh() async {
-    final m = _bleManager;
-    await PeripheralSetupCache.saveInputSetup(
-      _selectedDevice.id,
-      PeripheralConfigSnapshot.inputMap(m),
-    );
-    _inputRefreshTrigger.value++;
-  }
-
-  Future<void> _saveZoneCacheAndNotifyRefresh() async {
-    final m = _bleManager;
-    await PeripheralSetupCache.saveZoneSetup(
-      _selectedDevice.id,
-      PeripheralConfigSnapshot.zoneMap(m),
-    );
-    _zoneRefreshTrigger.value++;
-  }
-
-  Future<void> _saveExtOutCacheAndNotifyRefresh() async {
-    final m = _bleManager;
-    await PeripheralSetupCache.saveExtOutSetup(
-      _selectedDevice.id,
-      PeripheralConfigSnapshot.extOutMap(m),
-    );
-    _extOutRefreshTrigger.value++;
-  }
-
-  Future<void> _saveSounderCacheAndNotifyRefresh() async {
-    final m = _bleManager;
-    await PeripheralSetupCache.saveSounderSetup(
-      _selectedDevice.id,
-      PeripheralConfigSnapshot.sounderMap(m),
-    );
-    _sounderRefreshTrigger.value++;
-  }
-
-  Future<void> _saveServiceDueCacheAndNotifyRefresh() async {
-    final m = _bleManager;
-    await PeripheralSetupCache.saveServiceDueSetup(
-      _selectedDevice.id,
-      PeripheralConfigSnapshot.serviceDueMap(m),
-    );
-    _serviceDueRefreshTrigger.value++;
-  }
-
-  Future<void> _saveRadioCacheAndNotifyRefresh() async {
-    final m = _bleManager;
-    await PeripheralSetupCache.saveRadioSetup(
-      _selectedDevice.id,
-      PeripheralConfigSnapshot.radioMap(m),
-    );
-    _zoneRefreshTrigger.value++;
-  }
-
-  Future<void> _saveModuleCacheAndNotifyRefresh() async {
-    final m = _bleManager;
-    await PeripheralSetupCache.saveModuleSetup(
-      _selectedDevice.id,
-      PeripheralConfigSnapshot.moduleMap(m),
-    );
-  }
-
-  Future<void> _saveLBusCacheAndNotifyRefresh() async {
-    final m = _bleManager;
-    await PeripheralSetupCache.saveLBusSetup(
-      _selectedDevice.id,
-      PeripheralConfigSnapshot.lBusList(m),
-    );
-    _zoneRefreshTrigger.value++;
-  }
-
-  Future<void> _saveAccessCodeCacheAndNotifyRefresh() async {
-    final m = _bleManager;
-    await PeripheralSetupCache.saveAccessCodeSetup(
-      _selectedDevice.id,
-      PeripheralConfigSnapshot.accessCodeList(m),
-    );
-    _accessCodeRefreshTrigger.value++;
-  }
-
-  Future<void> _savePanelInfoCacheAndNotifyRefresh() async {
-    final m = _bleManager;
-    await PeripheralSetupCache.savePanelInfoSetup(
-      _selectedDevice.id,
-      PeripheralConfigSnapshot.panelInfoMap(m),
-    );
-    _panelInfoRefreshTrigger.value++;
-  }
-
-  Future<void> _saveGeneralModuleCacheAndNotifyRefresh() async {
-    final m = _bleManager;
-    await PeripheralSetupCache.saveGeneralModuleSetup(
-      _selectedDevice.id,
-      PeripheralConfigSnapshot.generalModuleMap(m),
-    );
-    _generalModuleRefreshTrigger.value++;
   }
 
   Widget _peripheralTile({
@@ -2550,13 +2067,7 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
     return GestureDetector(
       onTap: () async {
         if (isDisabled == true) return;
-
-        if (!bleController.isConnected) {
-          await showBluetootohOffDialog(context: context);
-        } else {
-          ble.bleProcess.processDesc.value = "";
-          onTap?.call();
-        }
+        await _controller.onPeripheralTileTap(onTap);
       },
       child: Column(
         children: [
@@ -2631,18 +2142,19 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 iconPath: AssetConstants.panelActionEventLogIcon,
                 onTap: () {
                   if (BleMsdUtils.isBootloader(
-                    _selectedDevice.manufacturerData,
+                    _controller.selectedDevice.manufacturerData,
                   )) {
-                    showBootloaderModeDialog(context: context);
+                    showBootloaderModeDialog();
                     return;
                   }
                   showPasswordPopup(
                     onCall: () {
-                      ble
+                      _controller
+                          .ble
                           .bleProcess
                           .isEventLogRetrievalFetchCommandActive
                           .value = true;
-                      bleController.startLogRetrieval();
+                      _controller.bleController.startLogRetrieval();
                     },
                   );
                 },
@@ -2650,61 +2162,51 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
               _peripheralTile(
                 peripheralName: StringConstants.fwUpgrade,
                 iconPath: AssetConstants.firmwareIcon,
-                onTap: () async {
-                  FirmwareBinding().dependencies();
-                  await showModalBottomSheet(
-                    context: context,
-                    isScrollControlled: true,
-                    backgroundColor: ColorConstants.transparent,
-                    isDismissible: false,
-                    enableDrag: false,
-                    builder:
-                        (context) => FirmwareUpgradeBottomSheet(
-                          connectedDevice: widget.selectedDevice,
-                        ),
-                  );
-                  Get.delete<UpdatesController>();
-                },
+                onTap: showFirmwareUpgradeBottomSheet,
               ),
               _peripheralTile(
                 peripheralName: StringConstants.serviceDue,
                 iconPath: AssetConstants.panelActionServiceDueIcon,
                 onTap: () {
                   if (BleMsdUtils.isBootloader(
-                    _selectedDevice.manufacturerData,
+                    _controller.selectedDevice.manufacturerData,
                   )) {
-                    showBootloaderModeDialog(context: context);
+                    showBootloaderModeDialog();
                     return;
                   }
                   showServiceDueSetupBottomSheet(
-                    context: context,
-                    deviceId: _selectedDevice.id,
                     onDownload: () {
                       showPasswordPopup(
                         onCall: () {
-                          ble.bleProcess.isServiceDueFetchCommandActive.value =
-                              true;
-                          bleController.startServiceDueFetch();
+                          _controller
+                              .ble
+                              .bleProcess
+                              .isServiceDueFetchCommandActive
+                              .value = true;
+                          _controller.bleController.startServiceDueFetch();
                         },
                         isServiceDueSetup: true,
                         mode: 'bottomsheet_download',
                         onDownloadComplete:
-                            _saveServiceDueCacheAndNotifyRefresh,
+                            _controller.saveServiceDueCacheAndNotifyRefresh,
                         downloadSuccessMessage: StringConstants.serviceDue,
                       );
                     },
                     onApply: () {
                       showPasswordPopup(
                         onCall: () {
-                          ble.bleProcess.isServiceDueApplyCommandActive.value =
-                              true;
-                          bleController.startServiceDueApply();
+                          _controller
+                              .ble
+                              .bleProcess
+                              .isServiceDueApplyCommandActive
+                              .value = true;
+                          _controller.bleController.startServiceDueApply();
                         },
                         isServiceDueSetup: true,
                         mode: 'bottomsheet_apply',
                       );
                     },
-                    refreshTrigger: _serviceDueRefreshTrigger,
+                    refreshTrigger: _controller.serviceDueRefreshTrigger,
                   );
                 },
               ),
@@ -2713,45 +2215,45 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 iconPath: AssetConstants.panelActionAccessCodeIcon,
                 onTap: () {
                   if (BleMsdUtils.isBootloader(
-                    _selectedDevice.manufacturerData,
+                    _controller.selectedDevice.manufacturerData,
                   )) {
-                    showBootloaderModeDialog(context: context);
+                    showBootloaderModeDialog();
                     return;
                   }
 
                   showAccessCodeSetupBottomSheet(
-                    context: context,
-                    deviceId: _selectedDevice.id,
                     onDownload: () {
                       showPasswordPopup(
                         onCall: () {
-                          ble
+                          _controller
+                              .ble
                               .bleProcess
                               .isAccessCodeSetupFetchCommandActive
                               .value = true;
-                          bleController.startAccessCodeSetupFetch();
+                          _controller.bleController.startAccessCodeSetupFetch();
                         },
                         isAccessCodeSetup: true,
                         mode: 'bottomsheet_download',
                         onDownloadComplete:
-                            _saveAccessCodeCacheAndNotifyRefresh,
+                            _controller.saveAccessCodeCacheAndNotifyRefresh,
                         downloadSuccessMessage: StringConstants.accessCode,
                       );
                     },
                     onApply: () {
                       showPasswordPopup(
                         onCall: () {
-                          ble
+                          _controller
+                              .ble
                               .bleProcess
                               .isAccessCodeSetupApplyCommandActive
                               .value = true;
-                          bleController.startAccessCodeSetupApply();
+                          _controller.bleController.startAccessCodeSetupApply();
                         },
                         isAccessCodeSetup: true,
                         mode: 'bottomsheet_apply',
                       );
                     },
-                    refreshTrigger: _accessCodeRefreshTrigger,
+                    refreshTrigger: _controller.accessCodeRefreshTrigger,
                   );
                 },
               ),
@@ -2760,37 +2262,38 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 iconPath: AssetConstants.panelActionPanelInfoIcon,
                 onTap: () {
                   showPanelInfoSetupBottomSheet(
-                    context: context,
-                    deviceId: _selectedDevice.id,
                     onDownload: () {
                       showPasswordPopup(
                         onCall: () {
-                          ble
+                          _controller
+                              .ble
                               .bleProcess
                               .isPanelInfoSetupFetchCommandActive
                               .value = true;
-                          bleController.startPanelInfoSetupFetch();
+                          _controller.bleController.startPanelInfoSetupFetch();
                         },
                         isPanelInfoSetup: true,
                         mode: 'bottomsheet_download',
-                        onDownloadComplete: _savePanelInfoCacheAndNotifyRefresh,
+                        onDownloadComplete:
+                            _controller.savePanelInfoCacheAndNotifyRefresh,
                         downloadSuccessMessage: StringConstants.panelInfo,
                       );
                     },
                     onApply: () {
                       showPasswordPopup(
                         onCall: () {
-                          ble
+                          _controller
+                              .ble
                               .bleProcess
                               .isPanelInfoSetupApplyCommandActive
                               .value = true;
-                          bleController.startPanelInfoSetupApply();
+                          _controller.bleController.startPanelInfoSetupApply();
                         },
                         isPanelInfoSetup: true,
                         mode: 'bottomsheet_apply',
                       );
                     },
-                    refreshTrigger: _panelInfoRefreshTrigger,
+                    refreshTrigger: _controller.panelInfoRefreshTrigger,
                   );
                 },
               ),
@@ -2799,38 +2302,40 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 iconPath: AssetConstants.panelActionGeneralModuleIcon,
                 onTap: () {
                   showGeneralModuleSetupBottomSheet(
-                    context: context,
-                    deviceId: _selectedDevice.id,
                     onDownload: () {
                       showPasswordPopup(
                         onCall: () {
-                          ble
+                          _controller
+                              .ble
                               .bleProcess
                               .isGeneralModuleSetupFetchCommandActive
                               .value = true;
-                          bleController.startGeneralModuleSetupFetch();
+                          _controller.bleController
+                              .startGeneralModuleSetupFetch();
                         },
                         isGeneralModuleSetup: true,
                         mode: 'bottomsheet_download',
                         onDownloadComplete:
-                            _saveGeneralModuleCacheAndNotifyRefresh,
+                            _controller.saveGeneralModuleCacheAndNotifyRefresh,
                         downloadSuccessMessage: StringConstants.generalModule,
                       );
                     },
                     onApply: () {
                       showPasswordPopup(
                         onCall: () {
-                          ble
+                          _controller
+                              .ble
                               .bleProcess
                               .isGeneralModuleSetupApplyCommandActive
                               .value = true;
-                          bleController.startGeneralModuleSetupApply();
+                          _controller.bleController
+                              .startGeneralModuleSetupApply();
                         },
                         isGeneralModuleSetup: true,
                         mode: 'bottomsheet_apply',
                       );
                     },
-                    refreshTrigger: _generalModuleRefreshTrigger,
+                    refreshTrigger: _controller.generalModuleRefreshTrigger,
                   );
                 },
               ),
@@ -2841,31 +2346,37 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 iconPath: AssetConstants.diagnosticIcon,
                 onTap: () {
                   if (BleMsdUtils.isBootloader(
-                    _selectedDevice.manufacturerData,
+                    _controller.selectedDevice.manufacturerData,
                   )) {
-                    showBootloaderModeDialog(context: context);
+                    showBootloaderModeDialog();
                     return;
                   }
                   showAdcDiagnosticsSetupBottomSheet(
-                    context: context,
-                    deviceId: _selectedDevice.id,
                     onDownload: () {
                       showPasswordPopup(
                         onCall: () {
-                          ble.bleProcess.isAdcSetupFetchCommandActive.value =
-                              true;
-                          bleController.startAdcSetupFetch();
+                          _controller
+                              .ble
+                              .bleProcess
+                              .isAdcSetupFetchCommandActive
+                              .value = true;
+                          _controller.bleController.startAdcSetupFetch();
                         },
                         mode: 'bottomsheet_download',
-                        onDownloadComplete: _saveModuleCacheAndNotifyRefresh,
+                        onDownloadComplete:
+                            _controller.saveModuleCacheAndNotifyRefresh,
                         downloadSuccessMessage:
                             StringConstants
                                 .liveDataIsBeingStreamedFromTheDeviceInRealTime,
                       );
                     },
                     onStop: () {
-                      ble.bleProcess.isAdcSetupFetchCommandActive.value = false;
-                      showDiagnosticStopDialog(context);
+                      _controller
+                          .ble
+                          .bleProcess
+                          .isAdcSetupFetchCommandActive
+                          .value = false;
+                      showDiagnosticStopDialog();
                     },
                   );
                 },
@@ -2875,39 +2386,45 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 iconPath: AssetConstants.walkTestIcon,
                 onTap: () {
                   if (BleMsdUtils.isBootloader(
-                    _selectedDevice.manufacturerData,
+                    _controller.selectedDevice.manufacturerData,
                   )) {
-                    showBootloaderModeDialog(context: context);
+                    showBootloaderModeDialog();
                     return;
                   }
                   showWalkTestZoneBottomSheet(
-                    context: context,
-                    deviceId: _selectedDevice.id,
                     onDownload: () {
                       showPasswordPopup(
                         onCall: () {
-                          ble.bleProcess.isZoneSetupFetchCommandActive.value =
-                              true;
-                          bleController.startZoneSetupFetch();
+                          _controller
+                              .ble
+                              .bleProcess
+                              .isZoneSetupFetchCommandActive
+                              .value = true;
+                          _controller.bleController.startZoneSetupFetch();
                         },
                         isZoneSetup: true,
                         mode: 'bottomsheet_download',
-                        onDownloadComplete: _saveZoneCacheAndNotifyRefresh,
+                        onDownloadComplete:
+                            _controller.saveZoneCacheAndNotifyRefresh,
                       );
                     },
                     onApply: () {
                       showPasswordPopup(
                         onCall: () {
-                          ble.bleProcess.isZoneSetupCommandApplyActive.value =
-                              true;
-                          bleController.startZoneSetupApply();
+                          _controller
+                              .ble
+                              .bleProcess
+                              .isZoneSetupCommandApplyActive
+                              .value = true;
+                          _controller.bleController.startZoneSetupApply();
                         },
                         isZoneSetup: true,
                         mode: 'bottomsheet_apply',
-                        onAfterApplySuccess: _showWalkTestResultConfirmation,
+                        onAfterApplySuccess:
+                            (_) => showWalkTestResultConfirmation(),
                       );
                     },
-                    refreshTrigger: _zoneRefreshTrigger,
+                    refreshTrigger: _controller.zoneRefreshTrigger,
                   );
                 },
               ),
@@ -2916,12 +2433,12 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 iconPath: AssetConstants.panelActionConfigLogIcon,
                 onTap: () {
                   if (BleMsdUtils.isBootloader(
-                    _selectedDevice.manufacturerData,
+                    _controller.selectedDevice.manufacturerData,
                   )) {
-                    showBootloaderModeDialog(context: context);
+                    showBootloaderModeDialog();
                     return;
                   }
-                  showConfigLogBottomSheet(context: context);
+                  showConfigLogBottomSheet();
                 },
               ),
               _peripheralTile(
@@ -2929,69 +2446,79 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
                 iconPath: AssetConstants.peripheralProgHoldIcon,
                 onTap: () {
                   if (BleMsdUtils.isBootloader(
-                    _selectedDevice.manufacturerData,
+                    _controller.selectedDevice.manufacturerData,
                   )) {
-                    showBootloaderModeDialog(context: context);
+                    showBootloaderModeDialog();
                     return;
                   }
                   showTestModeChoiceBottomSheet(
-                    context: context,
-                    deviceId: _selectedDevice.id,
                     onDownloadRelays: () {
                       showPasswordPopup(
                         onCall: () {
-                          ble.bleProcess.isRelaySetupFetchCommandActive.value =
-                              true;
-                          bleController.startRelaySetupFetch();
+                          _controller
+                              .ble
+                              .bleProcess
+                              .isRelaySetupFetchCommandActive
+                              .value = true;
+                          _controller.bleController.startRelaySetupFetch();
                         },
                         isRelaySetup: true,
                         mode: 'bottomsheet_download',
-                        onDownloadComplete: _saveRelayCacheAndNotifyRefresh,
+                        onDownloadComplete:
+                            _controller.saveRelayCacheAndNotifyRefresh,
                       );
                     },
                     onDownloadSounders: () {
                       showPasswordPopup(
                         onCall: () {
-                          ble
+                          _controller
+                              .ble
                               .bleProcess
                               .isSounderSetupFetchCommandActive
                               .value = true;
-                          bleController.startSounderSetupFetch();
+                          _controller.bleController.startSounderSetupFetch();
                         },
                         isSounderSetup: true,
                         mode: 'bottomsheet_download',
-                        onDownloadComplete: _saveSounderCacheAndNotifyRefresh,
+                        onDownloadComplete:
+                            _controller.saveSounderCacheAndNotifyRefresh,
                         downloadSuccessMessage: 'Sounder',
                       );
                     },
                     onApplyRelays: () {
                       showPasswordPopup(
                         onCall: () {
-                          ble.bleProcess.isRelaySetupCommandApplyActive.value =
-                              true;
-                          bleController.startRelaySetupApply();
+                          _controller
+                              .ble
+                              .bleProcess
+                              .isRelaySetupCommandApplyActive
+                              .value = true;
+                          _controller.bleController.startRelaySetupApply();
                         },
                         isRelaySetup: true,
                         mode: 'bottomsheet_apply',
-                        onAfterApplySuccess: _showRelayTestResultConfirmation,
+                        onAfterApplySuccess:
+                            (_) => showRelayTestResultConfirmation(),
                       );
                     },
                     onApplySounders: () {
                       showPasswordPopup(
                         onCall: () {
-                          ble
+                          _controller
+                              .ble
                               .bleProcess
                               .isSounderSetupApplyCommandActive
                               .value = true;
-                          bleController.startSounderSetupApply();
+                          _controller.bleController.startSounderSetupApply();
                         },
                         isSounderSetup: true,
                         mode: 'bottomsheet_apply',
-                        onAfterApplySuccess: _showSounderTestResultConfirmation,
+                        onAfterApplySuccess:
+                            (_) => showSounderTestResultConfirmation(),
                       );
                     },
-                    relayRefreshTrigger: _relayRefreshTrigger,
-                    sounderRefreshTrigger: _sounderRefreshTrigger,
+                    relayRefreshTrigger: _controller.relayRefreshTrigger,
+                    sounderRefreshTrigger: _controller.sounderRefreshTrigger,
                   );
                 },
               ),
@@ -2999,6 +2526,118 @@ class _ProjectDashboardContentState extends State<_ProjectDashboardContent> {
           ),
         ),
       ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GetBuilder<ProjectDashboardController>(
+      builder: (c) {
+        const disabledIndexes = [1, 2];
+
+        Color itemColor(int index) {
+          if (disabledIndexes.contains(index)) {
+            return Colors.grey;
+          }
+          return c.selectedIndex == index
+              ? ColorConstants.white
+              : ColorConstants.blackMaterial;
+        }
+
+        Widget navItem({
+          required int index,
+          required String label,
+          required String asset,
+        }) {
+          final color = itemColor(index);
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SvgPicture.asset(
+                asset,
+                height: 24,
+                width: 24,
+                colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                label,
+                style: StyleConstants.black12w400Style.copyWith(color: color),
+              ),
+            ],
+          );
+        }
+
+        return Scaffold(
+          extendBody: true,
+          resizeToAvoidBottomInset: false,
+          body: _screens()[c.selectedIndex],
+          bottomNavigationBar: Container(
+            height: 80,
+            decoration: BoxDecoration(
+              boxShadow: [
+                BoxShadow(
+                  color: ColorConstants.blackMaterial.withValues(alpha: 0.1),
+                  blurRadius: 10,
+                  offset: const Offset(0, -5),
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(32),
+                topRight: Radius.circular(32),
+              ),
+              child: BottomNavigationBar(
+                backgroundColor: ColorConstants.primary,
+                elevation: 0,
+                type: BottomNavigationBarType.fixed,
+                currentIndex: c.selectedIndex,
+                showSelectedLabels: false,
+                showUnselectedLabels: false,
+                onTap: (index) {
+                  if (disabledIndexes.contains(index)) return;
+                  c.setSelectedIndex(index);
+                },
+                items: [
+                  BottomNavigationBarItem(
+                    icon: navItem(
+                      index: 0,
+                      label: StringConstants.dashboard,
+                      asset: AssetConstants.dashboardIcon,
+                    ),
+                    label: '',
+                  ),
+                  BottomNavigationBarItem(
+                    icon: navItem(
+                      index: 1,
+                      label: StringConstants.settings,
+                      asset: AssetConstants.settingIcon,
+                    ),
+                    label: '',
+                  ),
+                  BottomNavigationBarItem(
+                    icon: navItem(
+                      index: 2,
+                      label: StringConstants.testMode,
+                      asset: AssetConstants.testModeIcon,
+                    ),
+                    label: '',
+                  ),
+                  BottomNavigationBarItem(
+                    icon: navItem(
+                      index: 3,
+                      label: StringConstants.logHistory,
+                      asset: AssetConstants.logHistoryIcon,
+                    ),
+                    label: '',
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

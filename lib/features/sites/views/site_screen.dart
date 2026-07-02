@@ -8,6 +8,8 @@ import 'package:flutter_svg/svg.dart';
 import 'package:techno_switch_solar_app/models/panel_model.dart';
 import 'package:techno_switch_solar_app/models/site_model.dart';
 import 'package:techno_switch_solar_app/features/sites/views/site_detail_screen.dart';
+import 'package:techno_switch_solar_app/features/dashboard/bindings/project_dashboard_binding.dart';
+import 'package:techno_switch_solar_app/features/dashboard/models/project_dashboard_args.dart';
 import 'package:techno_switch_solar_app/features/dashboard/views/project_dashboard.dart';
 import 'package:techno_switch_solar_app/utils/site_service.dart';
 import 'package:techno_switch_solar_app/utils/log_retrieval_service.dart';
@@ -702,23 +704,26 @@ class _SiteScreenState extends State<SiteScreen> {
             final panelName = panel.panelName;
 
             void onTap() {
+              final selectedDevice = DiscoveredDevice(
+                name: panelName,
+                id: panel.panelId,
+                rssi: 0,
+                serviceData: {},
+                manufacturerData: Uint8List(0),
+                serviceUuids: [],
+              );
+              ProjectDashboardBinding(
+                args: ProjectDashboardArgs(
+                  panelVersionNo: panel.deviceDisplayInfo,
+                  panelName: panelName,
+                  selectedDevice: selectedDevice,
+                  siteId: widget.site.id!,
+                  siteName: widget.site.siteName,
+                ),
+              ).dependencies();
               Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder:
-                      (context) => ProjectDashboardScreen(
-                        selectedDevice: DiscoveredDevice(
-                          name: panelName,
-                          id: panel.panelId,
-                          rssi: 0,
-                          serviceData: {},
-                          manufacturerData: Uint8List(0),
-                          serviceUuids: [],
-                        ),
-                        panelName: panelName,
-                        panelVersionNo: panel.deviceDisplayInfo,
-                        siteId: widget.site.id!,
-                        siteName: widget.site.siteName,
-                      ),
+                  builder: (context) => const ProjectDashboardScreen(),
                 ),
               );
             }
