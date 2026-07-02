@@ -6,6 +6,7 @@ import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/features/create_project/controllers/create_project_ui_delegate.dart';
 import 'package:techno_switch_solar_app/models/create_project/panel_form_data.dart';
+import 'package:techno_switch_solar_app/models/create_project/panel_selection_page_model.dart';
 import 'package:techno_switch_solar_app/models/create_project/relay_data.dart';
 import 'package:techno_switch_solar_app/models/create_project/site_form_data.dart';
 import 'package:techno_switch_solar_app/models/create_project/sounder_data.dart';
@@ -80,6 +81,19 @@ class CreateProjectController extends GetxController {
   final ValueNotifier<bool> navigatingToDeviceConnecting = ValueNotifier(false);
 
   late final PanelConfigRefreshNotifiers panelRefreshNotifiers;
+
+  List<PanelTypeOption> get availablePanelTypeOptions =>
+      PanelTypeConfig.availablePanels
+          .map(
+            (panel) => PanelTypeOption(
+              typeName: panel.typeName,
+              zoneCount: panel.zoneCount,
+              sounderCount: panel.sounderCount,
+              relayCount: panel.relayCount,
+              fireExtinguisherCount: panel.fireExtinguisherCount,
+            ),
+          )
+          .toList();
 
   void attachUi(CreateProjectUiDelegate ui) {
     _ui = ui;

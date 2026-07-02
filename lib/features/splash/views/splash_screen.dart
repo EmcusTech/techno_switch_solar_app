@@ -1,34 +1,59 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:get/get.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:techno_switch_solar_app/features/home_screen.dart';
+import 'package:techno_switch_solar_app/features/splash/controllers/splash_controller.dart';
+import 'package:techno_switch_solar_app/features/splash/controllers/splash_ui_delegate.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
-
 import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
 
-class SplashScreen extends StatefulWidget {
+class SplashScreen extends GetView<SplashController> {
   const SplashScreen({super.key});
 
   @override
-  State<SplashScreen> createState() => _SplashScreenState();
+  Widget build(BuildContext context) {
+    return _SplashPageHost(controller: controller);
+  }
 }
 
-class _SplashScreenState extends State<SplashScreen> {
+class _SplashPageHost extends StatefulWidget {
+  const _SplashPageHost({required this.controller});
+
+  final SplashController controller;
+
   @override
-  void initState() {
-    super.initState();
-    _navigateToHome();
-  }
+  State<_SplashPageHost> createState() => _SplashPageHostState();
+}
 
-  Future<void> _navigateToHome() async {
-    await Future.delayed(const Duration(seconds: 2));
+class _SplashPageHostState extends State<_SplashPageHost>
+    implements SplashUiDelegate {
+  @override
+  bool get isMounted => mounted;
+
+  @override
+  void openHome() {
     if (!mounted) return;
-
     Navigator.of(
       context,
     ).pushReplacement(MaterialPageRoute(builder: (_) => const HomeScreen()));
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    widget.controller.attachUi(this);
+  }
+
+  @override
+  void dispose() {
+    widget.controller.detachUi();
+    if (Get.isRegistered<SplashController>()) {
+      Get.delete<SplashController>();
+    }
+    super.dispose();
   }
 
   @override
@@ -64,7 +89,6 @@ class _SplashScreenState extends State<SplashScreen> {
                 ],
               ),
             ),
-
             Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
