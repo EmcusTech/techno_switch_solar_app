@@ -437,7 +437,10 @@ abstract final class StringConstants {
   static const String hardwareVersion = "Hardware Version";
   static const String hardwareVersion2 = "Hardware version";
   static const String help = "Help";
+  static const String helpCommunityForumUrl = "https://technoswitch.com/community";
   static const String helpSupport = "Help & Support";
+  static const String helpUserManualUrl = "https://technoswitch.com/manual";
+  static const String helpVideoTutorialsUrl = "https://technoswitch.com/tutorials";
   static const String high = "High";
   static const String hold = "Hold";
   static const String holdAction = "Warble";

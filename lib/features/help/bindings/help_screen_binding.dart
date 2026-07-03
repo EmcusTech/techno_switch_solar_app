@@ -1,17 +1,12 @@
 import 'package:get/get.dart';
 import 'package:techno_switch_solar_app/features/help/controllers/help_screen_controller.dart';
-import 'package:techno_switch_solar_app/features/home/controllers/home_screen_controller.dart';
 
-class HomeScreenBinding extends Bindings {
+class HelpScreenBinding extends Bindings {
   @override
   void dependencies() {
-    if (Get.isRegistered<HomeScreenController>()) {
-      Get.delete<HomeScreenController>();
-    }
     if (Get.isRegistered<HelpScreenController>()) {
       Get.delete<HelpScreenController>();
     }
-    Get.lazyPut<HomeScreenController>(() => HomeScreenController());
     Get.lazyPut<HelpScreenController>(() => HelpScreenController());
   }
 }

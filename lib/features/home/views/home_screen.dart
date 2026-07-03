@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:techno_switch_solar_app/features/help/controllers/help_screen_controller.dart';
 import 'package:techno_switch_solar_app/features/help/views/help_screen.dart';
 import 'package:techno_switch_solar_app/features/scan/models/scan_flow_args.dart';
 import 'package:techno_switch_solar_app/features/home/controllers/home_screen_controller.dart';
@@ -100,6 +101,9 @@ class _HomePageHostState extends State<_HomePageHost>
     _controller.detachUi();
     if (Get.isRegistered<HomeScreenController>()) {
       Get.delete<HomeScreenController>();
+    }
+    if (Get.isRegistered<HelpScreenController>()) {
+      Get.delete<HelpScreenController>();
     }
     super.dispose();
   }
