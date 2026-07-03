@@ -1,59 +1,41 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
-import 'package:techno_switch_solar_app/ble/ble_manager.dart';
-import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
-import 'package:techno_switch_solar_app/utils/constants/ble/ble_name_utils.dart';
+import 'package:techno_switch_solar_app/features/settings/controllers/settings_controller.dart';
+import 'package:techno_switch_solar_app/features/settings/controllers/settings_ui_delegate.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
-
 import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
 
-class SettingsScreen extends StatefulWidget {
-  final String panelName;
-  final String panelVersionNo;
+class SettingsScreen extends GetView<SettingsController> {
+  const SettingsScreen({super.key});
 
-  const SettingsScreen({
-    super.key,
-    required this.panelName,
-    required this.panelVersionNo,
-  });
-
-  @override
-  State<SettingsScreen> createState() => _SettingsScreenState();
-}
-
-class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      extendBody: true,
-      body: _SettingsContent(
-        panelName: widget.panelName,
-        panelVersionNo: widget.panelVersionNo,
-      ),
-    );
+    return _SettingsPageHost(controller: controller);
   }
 }
 
-class _SettingsContent extends StatefulWidget {
-  final String panelName;
-  final String panelVersionNo;
-  const _SettingsContent({
-    required this.panelName,
-    required this.panelVersionNo,
-  });
+class _SettingsPageHost extends StatefulWidget {
+  const _SettingsPageHost({required this.controller});
+
+  final SettingsController controller;
 
   @override
-  State<_SettingsContent> createState() => _SettingsContentState();
+  State<_SettingsPageHost> createState() => _SettingsPageHostState();
 }
 
-class _SettingsContentState extends State<_SettingsContent> {
-  final bleController = Get.find<BleLogController>();
-  final BleManager _bleManager = Get.find<BleManager>();
-  Future<bool> _confirmAndDisconnect() async {
-    final shouldDisconnect = await showDialog<bool>(
+class _SettingsPageHostState extends State<_SettingsPageHost>
+    implements SettingsUiDelegate {
+  SettingsController get _controller => widget.controller;
+
+  @override
+  bool get isMounted => mounted;
+
+  @override
+  Future<bool?> showDisconnectConfirmDialog() {
+    return showDialog<bool>(
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) {
@@ -92,76 +74,84 @@ class _SettingsContentState extends State<_SettingsContent> {
         );
       },
     );
+  }
 
-    if (shouldDisconnect == true) {
-      if (_bleManager.isConnected) {
-        await _bleManager.disconnectConnectedDevice();
-      }
-      return true;
-    }
-    return false;
+  @override
+  void popScreen() {
+    if (!mounted) return;
+    Navigator.of(context).pop();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _controller.attachUi(this);
+  }
+
+  @override
+  void dispose() {
+    _controller.detachUi();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async {
-        if (bleController.isConnected) {
-          final shouldPop = await _confirmAndDisconnect();
-          return shouldPop;
-        } else {
-          return true;
-        }
-      },
-      child: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [ColorConstants.scaffoldGradientTop, ColorConstants.white],
-          ),
+    final content = Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [ColorConstants.scaffoldGradientTop, ColorConstants.white],
         ),
-        child: Stack(
-          children: [
-            SvgPicture.asset(AssetConstants.background1),
-            Padding(
-              padding: EdgeInsets.only(top: 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                mainAxisSize: MainAxisSize.max,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    child: Row(
-                      children: [
+      ),
+      child: Stack(
+        children: [
+          SvgPicture.asset(AssetConstants.background1),
+          Padding(
+            padding: const EdgeInsets.only(top: 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisSize: MainAxisSize.max,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Row(
+                    children: [
+                      if (!_controller.embedded)
                         GestureDetector(
-                          onTap: () async {
-                            if (bleController.isConnected) {
-                              final shouldPop = await _confirmAndDisconnect();
-                              if (shouldPop && mounted) {
-                                Navigator.of(context).pop();
-                              }
-                            } else {
-                              Navigator.of(context).pop();
-                            }
-                          },
+                          onTap: _controller.handleBackNavigation,
                           child: SvgPicture.asset(AssetConstants.arrowBackIcon),
                         ),
-                        SizedBox(width: 8),
-                        Text(
-                          StringConstants.projectSettings,
-                          style: StyleConstants.black20w700Style,
-                        ),
-                      ],
-                    ),
+                      if (!_controller.embedded) const SizedBox(width: 8),
+                      Text(
+                        StringConstants.projectSettings,
+                        style: StyleConstants.black20w700Style,
+                      ),
+                    ],
                   ),
-                  SizedBox(height: 19),
-                  _buildSettingsContainer(),
-                ],
-              ),
+                ),
+                const SizedBox(height: 19),
+                _buildSettingsContainer(),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
+      ),
+    );
+
+    return Scaffold(
+      extendBody: true,
+      body: PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (didPop, result) async {
+          if (didPop) return;
+          final shouldPop = await _controller.handleWillPop();
+          if (!context.mounted) return;
+          if (shouldPop) {
+            Navigator.of(context).pop();
+          }
+        },
+        child: content,
       ),
     );
   }
@@ -173,12 +163,12 @@ class _SettingsContentState extends State<_SettingsContent> {
           color: ColorConstants.white,
           borderRadius: BorderRadius.circular(35),
         ),
-        child: SingleChildScrollView(child: _buildLogStatus()),
+        child: SingleChildScrollView(child: _buildSettingsContent()),
       ),
     );
   }
 
-  Widget _buildLogStatus() {
+  Widget _buildSettingsContent() {
     return Padding(
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -186,21 +176,21 @@ class _SettingsContentState extends State<_SettingsContent> {
           Row(
             children: [
               SvgPicture.asset(AssetConstants.panelIcon, height: 62, width: 62),
-              SizedBox(width: 14),
+              const SizedBox(width: 14),
               Column(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    BleNameUtils.getDisplayPrefixFromBleName(widget.panelName),
+                    _controller.displayPrefix,
                     style: StyleConstants.black16w700Style,
                   ),
                   Text(
-                    BleNameUtils.getDisplayIdFromBleName(widget.panelName),
+                    _controller.displayId,
                     style: StyleConstants.textDisabled14w500Style,
                   ),
                   ValueListenableBuilder(
-                    valueListenable: _bleManager.isConnectedNotifier,
+                    valueListenable: _controller.bleManager.isConnectedNotifier,
                     builder: (context, isConnected, child) {
                       return RichText(
                         text: TextSpan(
@@ -230,60 +220,22 @@ class _SettingsContentState extends State<_SettingsContent> {
               ),
             ],
           ),
-          SizedBox(height: 10),
+          const SizedBox(height: 10),
+          for (final item in SettingsController.menuItems) ...[
+            Divider(
+              color: ColorConstants.blackMaterial.withValues(alpha: 0.18),
+              thickness: 1,
+            ),
+            _settingTile(
+              title: item.title,
+              onTap: () => _controller.onMenuItemTap(item.action),
+            ),
+          ],
           Divider(
             color: ColorConstants.blackMaterial.withValues(alpha: 0.18),
             thickness: 1,
           ),
-          _settingTile(title: StringConstants.panelSettings, onTap: () {}),
-          Divider(
-            color: ColorConstants.blackMaterial.withValues(alpha: 0.18),
-            thickness: 1,
-          ),
-          _settingTile(title: StringConstants.zoneSettings, onTap: () {}),
-          Divider(
-            color: ColorConstants.blackMaterial.withValues(alpha: 0.18),
-            thickness: 1,
-          ),
-          _settingTile(title: StringConstants.inputSettings, onTap: () {}),
-          Divider(
-            color: ColorConstants.blackMaterial.withValues(alpha: 0.18),
-            thickness: 1,
-          ),
-          _settingTile(title: StringConstants.relaySettings, onTap: () {}),
-          Divider(
-            color: ColorConstants.blackMaterial.withValues(alpha: 0.18),
-            thickness: 1,
-          ),
-          _settingTile(title: StringConstants.sounderSettings, onTap: () {}),
-          Divider(
-            color: ColorConstants.blackMaterial.withValues(alpha: 0.18),
-            thickness: 1,
-          ),
-          _settingTile(
-            title: StringConstants.extinguishingOutSettings,
-            onTap: () {},
-          ),
-          Divider(
-            color: ColorConstants.blackMaterial.withValues(alpha: 0.18),
-            thickness: 1,
-          ),
-          _settingTile(title: StringConstants.lBusSettings, onTap: () {}),
-          Divider(
-            color: ColorConstants.blackMaterial.withValues(alpha: 0.18),
-            thickness: 1,
-          ),
-          _settingTile(title: StringConstants.panelInformation, onTap: () {}),
-          Divider(
-            color: ColorConstants.blackMaterial.withValues(alpha: 0.18),
-            thickness: 1,
-          ),
-          _settingTile(title: StringConstants.firmwareUpgrade, onTap: () {}),
-          Divider(
-            color: ColorConstants.blackMaterial.withValues(alpha: 0.18),
-            thickness: 1,
-          ),
-          SizedBox(height: 80),
+          const SizedBox(height: 80),
         ],
       ),
     );
@@ -303,9 +255,9 @@ class _SettingsContentState extends State<_SettingsContent> {
                 BlendMode.srcIn,
               ),
             ),
-            SizedBox(width: 12),
+            const SizedBox(width: 12),
             Text(title, style: StyleConstants.black16w400Style),
-            Spacer(),
+            const Spacer(),
             Icon(
               Icons.arrow_forward_ios,
               size: 18,

@@ -12,6 +12,7 @@ import 'package:techno_switch_solar_app/features/logs/bindings/log_binding.dart'
 import 'package:techno_switch_solar_app/features/logs/models/log_flow_args.dart';
 import 'package:techno_switch_solar_app/features/logs/views/log_retrieval_loading_screen.dart';
 import 'package:techno_switch_solar_app/features/scan/models/scan_type.dart';
+import 'package:techno_switch_solar_app/features/settings/controllers/settings_controller.dart';
 import 'package:techno_switch_solar_app/features/settings/views/settings_screen.dart';
 import 'package:techno_switch_solar_app/features/test_mode/views/test_mode_screen.dart';
 import 'package:techno_switch_solar_app/panel_config/panel_access_password_popup.dart';
@@ -91,6 +92,9 @@ class _ProjectDashboardPageHostState extends State<_ProjectDashboardPageHost>
     _controller.detachUi();
     if (Get.isRegistered<ProjectDashboardController>()) {
       Get.delete<ProjectDashboardController>();
+    }
+    if (Get.isRegistered<SettingsController>()) {
+      Get.delete<SettingsController>();
     }
     super.dispose();
   }
@@ -586,10 +590,7 @@ class _ProjectDashboardPageHostState extends State<_ProjectDashboardPageHost>
   List<Widget> _screens() {
     return [
       _buildDashboardTab(),
-      SettingsScreen(
-        panelName: _controller.panelName,
-        panelVersionNo: _controller.panelVersionNo,
-      ),
+      const SettingsScreen(),
       const TestModeScreen(),
       LogHistoryScreen(
         panelName: _controller.panelName,

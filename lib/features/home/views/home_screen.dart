@@ -7,6 +7,7 @@ import 'package:techno_switch_solar_app/features/help/views/help_screen.dart';
 import 'package:techno_switch_solar_app/features/scan/models/scan_flow_args.dart';
 import 'package:techno_switch_solar_app/features/home/controllers/home_screen_controller.dart';
 import 'package:techno_switch_solar_app/features/home/controllers/home_screen_ui_delegate.dart';
+import 'package:techno_switch_solar_app/features/settings/controllers/settings_controller.dart';
 import 'package:techno_switch_solar_app/features/settings/views/settings_screen.dart';
 import 'package:techno_switch_solar_app/features/sites/views/site_screen.dart';
 import 'package:techno_switch_solar_app/models/site_model.dart';
@@ -105,6 +106,9 @@ class _HomePageHostState extends State<_HomePageHost>
     if (Get.isRegistered<HelpScreenController>()) {
       Get.delete<HelpScreenController>();
     }
+    if (Get.isRegistered<SettingsController>()) {
+      Get.delete<SettingsController>();
+    }
     super.dispose();
   }
 
@@ -119,10 +123,7 @@ class _HomePageHostState extends State<_HomePageHost>
   List<Widget> _screens() {
     return [
       _buildHomeContent(),
-      SettingsScreen(
-        panelName: StringConstants.rhino2008,
-        panelVersionNo: StringConstants.s098,
-      ),
+      const SettingsScreen(),
       const HelpScreen(),
     ];
   }
