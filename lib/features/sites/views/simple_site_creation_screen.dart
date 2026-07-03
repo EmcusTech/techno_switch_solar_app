@@ -8,7 +8,7 @@ import '../../../models/log_model.dart';
 import '../../../utils/site_service.dart';
 import '../../../utils/panel_service.dart';
 import '../../create_project/views/site_creation_page.dart';
-import '../../home_screen.dart';
+import '../../home/views/home_screen.dart';
 import 'site_screen.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';

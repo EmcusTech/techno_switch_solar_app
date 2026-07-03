@@ -15,7 +15,7 @@ import 'package:techno_switch_solar_app/features/logs/views/log_retrieval_loadin
 import 'package:techno_switch_solar_app/features/dashboard/bindings/project_dashboard_binding.dart';
 import 'package:techno_switch_solar_app/features/dashboard/models/project_dashboard_args.dart';
 import 'package:techno_switch_solar_app/features/dashboard/views/project_dashboard.dart';
-import 'package:techno_switch_solar_app/features/scanned_screen.dart';
+import 'package:techno_switch_solar_app/features/scan/views/scanned_screen.dart';
 import 'package:techno_switch_solar_app/widgets/scanning_widget.dart';
 import 'package:usb_serial/usb_serial.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -1635,9 +1635,7 @@ class _ScanningScreenState extends State<ScanningScreen>
                     ),
                   ).dependencies();
                   Navigator.of(context, rootNavigator: true).pushReplacement(
-                    MaterialPageRoute(
-                      builder: (_) => const EventLogScreen(),
-                    ),
+                    MaterialPageRoute(builder: (_) => const EventLogScreen()),
                   );
                 } else {
                   final ok = await showPanelAccessCodeGatewayDialog(

@@ -8,7 +8,7 @@ import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/features/logs/controllers/log_ui_delegate.dart';
 import 'package:techno_switch_solar_app/features/logs/models/log_flow_args.dart';
-import 'package:techno_switch_solar_app/features/scanning_screen.dart';
+import 'package:techno_switch_solar_app/features/scan/views/scanning_screen.dart';
 import 'package:techno_switch_solar_app/models/log_model.dart';
 import 'package:techno_switch_solar_app/models/log_retrieval_model.dart';
 import 'package:techno_switch_solar_app/utils/constants/ble/ble_msd_utils.dart';
@@ -300,8 +300,7 @@ class LogController extends GetxController {
   }
 
   String resolvedPanelName() {
-    return (eventLogArgs?.panelName ?? completedArgs?.panelName ?? '')
-        .trim();
+    return (eventLogArgs?.panelName ?? completedArgs?.panelName ?? '').trim();
   }
 
   String panelDisplayName(String name) {
@@ -529,7 +528,9 @@ class LogController extends GetxController {
       logs: logs,
       siteName: siteName,
       panelName: BleNameUtils.getDisplayPrefixFromBleName(resolvedPanelName()),
-      panelSerialNumber: BleNameUtils.getDisplayIdFromBleName(resolvedPanelName()),
+      panelSerialNumber: BleNameUtils.getDisplayIdFromBleName(
+        resolvedPanelName(),
+      ),
       installerName: installerName,
       saqccNo: saqccNo,
     );

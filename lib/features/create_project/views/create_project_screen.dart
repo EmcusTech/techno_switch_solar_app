@@ -12,7 +12,7 @@ import 'package:techno_switch_solar_app/features/create_project/views/site_creat
 import 'package:techno_switch_solar_app/features/dashboard/bindings/project_dashboard_binding.dart';
 import 'package:techno_switch_solar_app/features/dashboard/models/project_dashboard_args.dart';
 import 'package:techno_switch_solar_app/features/dashboard/views/project_dashboard.dart';
-import 'package:techno_switch_solar_app/features/scanning_screen.dart';
+import 'package:techno_switch_solar_app/features/scan/views/scanning_screen.dart';
 import 'package:techno_switch_solar_app/features/sites/views/site_screen.dart';
 import 'package:techno_switch_solar_app/utils/site_service.dart';
 import 'package:techno_switch_solar_app/utils/constants/ble/ble_name_utils.dart';
@@ -348,9 +348,7 @@ class _CreateProjectPageHostState extends State<_CreateProjectPageHost>
       ),
     ).dependencies();
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
-        builder: (_) => const ProjectDashboardScreen(),
-      ),
+      MaterialPageRoute(builder: (_) => const ProjectDashboardScreen()),
     );
   }
 

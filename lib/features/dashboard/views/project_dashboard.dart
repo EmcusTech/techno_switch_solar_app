@@ -11,9 +11,9 @@ import 'package:techno_switch_solar_app/features/logs/views/log_history_screen.d
 import 'package:techno_switch_solar_app/features/logs/bindings/log_binding.dart';
 import 'package:techno_switch_solar_app/features/logs/models/log_flow_args.dart';
 import 'package:techno_switch_solar_app/features/logs/views/log_retrieval_loading_screen.dart';
-import 'package:techno_switch_solar_app/features/scanning_screen.dart';
-import 'package:techno_switch_solar_app/features/settings_screen.dart';
-import 'package:techno_switch_solar_app/features/test_mode_screen.dart';
+import 'package:techno_switch_solar_app/features/scan/views/scanning_screen.dart';
+import 'package:techno_switch_solar_app/features/settings/views/settings_screen.dart';
+import 'package:techno_switch_solar_app/features/test_mode/views/test_mode_screen.dart';
 import 'package:techno_switch_solar_app/panel_config/panel_access_password_popup.dart';
 import 'package:techno_switch_solar_app/panel_config/panel_config_bulk_sync.dart';
 import 'package:techno_switch_solar_app/panel_config/panel_config_feedback_dialogs.dart';

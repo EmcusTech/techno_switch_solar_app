@@ -1,11 +1,17 @@
 import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
-import 'package:techno_switch_solar_app/features/scanning_screen.dart';
+import 'package:techno_switch_solar_app/features/scan/views/scanning_screen.dart';
 import 'package:techno_switch_solar_app/models/log_model.dart';
 
 enum LogFlowMode { history, loading, completed, failed, eventLog }
 
 class LogFlowArgs {
-  const LogFlowArgs({required this.mode, this.history, this.loading, this.completed, this.eventLog});
+  const LogFlowArgs({
+    required this.mode,
+    this.history,
+    this.loading,
+    this.completed,
+    this.eventLog,
+  });
 
   final LogFlowMode mode;
   final LogHistoryArgs? history;

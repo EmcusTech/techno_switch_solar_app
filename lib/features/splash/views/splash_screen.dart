@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
-import 'package:techno_switch_solar_app/features/home_screen.dart';
+import 'package:techno_switch_solar_app/features/home/views/home_screen.dart';
 import 'package:techno_switch_solar_app/features/splash/controllers/splash_controller.dart';
 import 'package:techno_switch_solar_app/features/splash/controllers/splash_ui_delegate.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
