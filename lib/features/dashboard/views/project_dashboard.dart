@@ -8,6 +8,8 @@ import 'package:techno_switch_solar_app/controllers/updates_controller.dart';
 import 'package:techno_switch_solar_app/features/dashboard/controllers/project_dashboard_controller.dart';
 import 'package:techno_switch_solar_app/features/dashboard/controllers/project_dashboard_ui_delegate.dart';
 import 'package:techno_switch_solar_app/features/logs/views/log_history_screen.dart';
+import 'package:techno_switch_solar_app/features/logs/bindings/log_binding.dart';
+import 'package:techno_switch_solar_app/features/logs/models/log_flow_args.dart';
 import 'package:techno_switch_solar_app/features/logs/views/log_retrieval_loading_screen.dart';
 import 'package:techno_switch_solar_app/features/scanning_screen.dart';
 import 'package:techno_switch_solar_app/features/settings_screen.dart';
@@ -1118,14 +1120,16 @@ class _ProjectDashboardPageHostState extends State<_ProjectDashboardPageHost>
         showDownloadSuccess:
             (ctx, message) => showDownloadSuccessDialog(message),
         openLogRetrievalLoading: (dialogContext) {
+          LogBinding(
+            args: LogFlowArgs.loading(
+              scanType: ScanType.bluetooth,
+              selectedDevice: _controller.selectedDevice,
+              connectedDevice: _controller.selectedDevice,
+            ),
+          ).dependencies();
           Navigator.of(dialogContext).push(
             MaterialPageRoute(
-              builder:
-                  (context) => LogRetrievalLoadingScreen(
-                    scanType: ScanType.bluetooth,
-                    selectedDevice: _controller.selectedDevice,
-                    connectedDevice: _controller.selectedDevice,
-                  ),
+              builder: (_) => const LogRetrievalLoadingScreen(),
             ),
           );
         },

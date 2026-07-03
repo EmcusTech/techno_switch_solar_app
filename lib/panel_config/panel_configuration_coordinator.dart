@@ -8,6 +8,8 @@ import 'package:techno_switch_solar_app/panel_config/panel_access_password_popup
 import 'package:techno_switch_solar_app/panel_config/panel_config_bulk_sync.dart';
 import 'package:techno_switch_solar_app/panel_config/panel_config_cache_sync.dart';
 import 'package:techno_switch_solar_app/panel_config/panel_config_feedback_dialogs.dart';
+import 'package:techno_switch_solar_app/features/logs/bindings/log_binding.dart';
+import 'package:techno_switch_solar_app/features/logs/models/log_flow_args.dart';
 import 'package:techno_switch_solar_app/features/logs/views/log_retrieval_loading_screen.dart';
 import 'package:techno_switch_solar_app/features/scanning_screen.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
@@ -114,14 +116,16 @@ class PanelConfigurationCoordinator {
           useDialogOnlyBulkProgress
               ? (_) {}
               : (dialogContext) {
+                LogBinding(
+                  args: LogFlowArgs.loading(
+                    scanType: ScanType.bluetooth,
+                    selectedDevice: device,
+                    connectedDevice: device,
+                  ),
+                ).dependencies();
                 Navigator.of(dialogContext).push(
                   MaterialPageRoute(
-                    builder:
-                        (context) => LogRetrievalLoadingScreen(
-                          scanType: ScanType.bluetooth,
-                          selectedDevice: device,
-                          connectedDevice: device,
-                        ),
+                    builder: (_) => const LogRetrievalLoadingScreen(),
                   ),
                 );
               },

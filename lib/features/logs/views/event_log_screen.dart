@@ -1,209 +1,59 @@
-// event_log_screen_sync_headers.dart
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-import 'package:techno_switch_solar_app/ble/ble_manager.dart';
-import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
-import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
+import 'package:techno_switch_solar_app/features/logs/controllers/log_controller.dart';
+import 'package:techno_switch_solar_app/features/logs/views/log_ui_delegate_mixin.dart';
 import 'package:techno_switch_solar_app/models/log_model.dart';
-import 'package:techno_switch_solar_app/utils/app/navigation_service.dart';
-import 'package:techno_switch_solar_app/utils/panel_service.dart';
-import 'package:techno_switch_solar_app/utils/site_service.dart';
-import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
-import 'package:techno_switch_solar_app/widgets/export_tile.dart';
-import 'package:techno_switch_solar_app/utils/constants/event_constants.dart';
-import 'package:techno_switch_solar_app/utils/pdf/pdf_report_util.dart';
-import 'package:techno_switch_solar_app/widgets/dialogs/site_creation_dialog.dart';
-import 'package:techno_switch_solar_app/features/sites/views/simple_site_creation_screen.dart';
 import 'package:techno_switch_solar_app/utils/constants/ble/ble_name_utils.dart';
+import 'package:techno_switch_solar_app/utils/constants/event_constants.dart';
+import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 
-class EventLogScreen extends StatefulWidget {
-  final List<LogModel> logDataList;
-  final String panelVersionNo;
-  final String panelName;
-  final bool isStandalone;
-  final String? panelId;
-  final bool isHistoryView;
-  final DiscoveredDevice? connectedDevice;
-  final int? siteId;
-  final bool? isDirectLogRet;
-  final bool? isLiveEventLogs;
-  const EventLogScreen({
-    super.key,
-    required this.logDataList,
-    required this.panelVersionNo,
-    required this.panelName,
-    this.isStandalone = false,
-    this.panelId,
-    this.isHistoryView = false,
-    this.connectedDevice,
-    this.siteId,
-    this.isLiveEventLogs = false,
-    this.isDirectLogRet = false,
-  });
+class EventLogScreen extends GetView<LogController> {
+  const EventLogScreen({super.key});
 
-  @override
-  State<EventLogScreen> createState() => _EventLogScreenState();
-}
-
-class _EventLogScreenState extends State<EventLogScreen> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      extendBody: true,
-      body: _EventLogContent(
-        logDataList: widget.logDataList,
-        panelName: widget.panelName,
-        panelVersionNo: widget.panelVersionNo,
-        isStandalone: widget.isStandalone,
-        panelId: widget.panelId,
-        isHistoryView: widget.isHistoryView,
-        connectedDevice: widget.connectedDevice,
-        siteId: widget.siteId,
-        isLiveEventLogs: widget.isLiveEventLogs,
-        isDirectLogRet: widget.isDirectLogRet,
-      ),
-    );
+    return _EventLogPageHost(controller: controller);
   }
 }
 
-class _EventLogContent extends StatefulWidget {
-  final List<LogModel> logDataList;
-  final String panelName;
-  final String panelVersionNo;
-  final bool isStandalone;
-  final String? panelId;
-  final bool isHistoryView;
-  final DiscoveredDevice? connectedDevice;
-  final int? siteId;
-  final bool? isLiveEventLogs;
-  final bool? isDirectLogRet;
-  const _EventLogContent({
-    required this.logDataList,
-    required this.panelName,
-    required this.panelVersionNo,
-    required this.isStandalone,
-    this.panelId,
-    this.isHistoryView = false,
-    this.connectedDevice,
-    this.siteId,
-    this.isLiveEventLogs = false,
-    this.isDirectLogRet = false,
-  });
+class _EventLogPageHost extends StatefulWidget {
+  const _EventLogPageHost({required this.controller});
+
+  final LogController controller;
 
   @override
-  State<_EventLogContent> createState() => _EventLogContentState();
+  State<_EventLogPageHost> createState() => _EventLogPageHostState();
 }
 
-class _EventLogContentState extends State<_EventLogContent> {
-  final BleManager ble = Get.find<BleManager>();
-  bool _isListSelected = true;
-  int _selectedViewIndex = 0;
-  bool _useProvidedLogs = false;
-  DateTime? _fromDate;
-  DateTime? _toDate;
-  final Set<String> _selectedStatuses = {};
-  final Set<String> _selectedEventClasses = {};
-  String? _alarmCount;
-  List<LogModel> _filteredLogs = [];
-  bool _filtersApplied = false;
-  int textFieldResetKey = 0;
-  bool _isHandlingBack = false;
-  List<LogModel>? _providedLogsOverride;
-  final TextEditingController _eventIdFilterController =
-      TextEditingController();
-  final PanelService _panelService = PanelService();
-  final SiteService _siteService = SiteService();
+class _EventLogPageHostState extends State<_EventLogPageHost>
+    with LogUiDelegateMixin {
+  LogController get _controller => widget.controller;
 
-  List<LogModel> _applyLiveSortingIfNeeded(List<LogModel> logs) {
-    if (widget.isLiveEventLogs == true) {
-      final sorted = List<LogModel>.from(logs);
-      sorted.sort((a, b) {
-        final aId = int.tryParse(a.eventId ?? '0') ?? 0;
-        final bId = int.tryParse(b.eventId ?? '0') ?? 0;
-        return bId.compareTo(aId);
-      });
-      return sorted;
+  @override
+  void initState() {
+    super.initState();
+    _controller.attachUi(this);
+  }
+
+  @override
+  void dispose() {
+    _controller.detachUi();
+    if (Get.isRegistered<LogController>()) {
+      Get.delete<LogController>();
     }
-    return logs;
+    super.dispose();
   }
 
-  String _resolvedPanelName() {
-    return widget.panelName.trim();
-  }
-
-  String _resolvedPanelId() {
-    if ((widget.panelId ?? '').isNotEmpty) return widget.panelId!;
-    return widget.panelName;
-  }
-
-  String _panelDisplayName(String name) {
-    return BleNameUtils.getDisplayPrefixFromBleName(name);
-  }
-
-  List<LogModel> _sortLogsByEventId(List<LogModel> logs) {
-    final sorted = List<LogModel>.from(logs);
-    sorted.sort((a, b) {
-      final aNum = int.tryParse(a.eventId ?? '');
-      final bNum = int.tryParse(b.eventId ?? '');
-      if (aNum != null && bNum != null) return aNum.compareTo(bNum);
-      if (aNum != null) return -1;
-      if (bNum != null) return 1;
-      return (a.eventId ?? '').compareTo(b.eventId ?? '');
-    });
-    return sorted;
-  }
-
-  List<LogModel> _providedSourceLogs() {
-    return _providedLogsOverride ?? widget.logDataList;
-  }
-
-  List<LogModel> _getBaseLogs() {
-    final sourceLogs =
-        _useProvidedLogs
-            ? _providedSourceLogs()
-            : ble.bleProcess.validEventLogs.value;
-    return _sortLogsByEventId(sourceLogs);
-  }
-
-  bool get _canClearLogs => widget.isLiveEventLogs == true;
-
-  void _performClearLogs() {
-    if (_useProvidedLogs) {
-      setState(() {
-        _providedLogsOverride = <LogModel>[];
-        _filteredLogs = [];
-        _filtersApplied = false;
-        _fromDate = null;
-        _toDate = null;
-        _selectedStatuses.clear();
-        _selectedEventClasses.clear();
-        _alarmCount = null;
-        _eventIdFilterController.clear();
-      });
-    } else {
-      ble.bleProcess.validEventLogs.value = <LogModel>[];
-      setState(() {
-        _filteredLogs = [];
-        _filtersApplied = false;
-        _fromDate = null;
-        _toDate = null;
-        _selectedStatuses.clear();
-        _selectedEventClasses.clear();
-        _alarmCount = null;
-        _eventIdFilterController.clear();
-      });
-    }
-  }
-
-  Future<void> _confirmClearLogs() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
+  @override
+  Future<bool?> showClearLogsDialog() async {
+    return showDialog<bool>(
+      context: uiContext,
       barrierDismissible: false,
       builder: (dialogContext) {
         return Dialog(
@@ -306,245 +156,407 @@ class _EventLogContentState extends State<_EventLogContent> {
         );
       },
     );
-    if (confirmed == true && mounted) {
-      _performClearLogs();
+  }
+
+  List<LogModel> _applyLiveSortingIfNeeded(List<LogModel> logs) {
+    if (_controller.eventLogArgs?.isLiveEventLogs == true) {
+      final sorted = List<LogModel>.from(logs);
+      sorted.sort((a, b) {
+        final aId = int.tryParse(a.eventId ?? '0') ?? 0;
+        final bId = int.tryParse(b.eventId ?? '0') ?? 0;
+        return bId.compareTo(aId);
+      });
+      return sorted;
     }
+    return logs;
   }
 
-  List<LogModel> _getDisplayLogs() {
-    final baseLogs = _getBaseLogs();
-    final afterSheetFilters = _filtersApplied ? _filteredLogs : baseLogs;
-    return _applyEventIdQuickFilter(afterSheetFilters);
-  }
-
-  List<LogModel> _applyEventIdQuickFilter(List<LogModel> logs) {
-    final q = _eventIdFilterController.text.trim();
-    if (q.isEmpty) return logs;
-    return logs.where((log) {
-      final eid = log.eventId?.trim() ?? '';
-      if (eid.isEmpty) return false;
-      if (eid == q) return true;
-      final qNum = int.tryParse(q);
-      final eNum = int.tryParse(eid);
-      if (qNum != null && eNum != null && qNum == eNum) return true;
-      return false;
-    }).toList();
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    if (widget.isLiveEventLogs == true) {
-      Get.find<BleLogController>().startLiveEventSetup();
-    }
-    _useProvidedLogs = widget.logDataList.isNotEmpty;
-    final initialLogs =
-        widget.logDataList.isNotEmpty
-            ? widget.logDataList
-            : ble.bleProcess.validEventLogs.value;
-    _filteredLogs = _sortLogsByEventId(initialLogs);
-  }
-
-  @override
-  void didUpdateWidget(_EventLogContent oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (!listEquals(widget.logDataList, oldWidget.logDataList)) {
-      _providedLogsOverride = null;
-      _useProvidedLogs = widget.logDataList.isNotEmpty;
-      _filteredLogs = _sortLogsByEventId(
-        widget.logDataList.isNotEmpty
-            ? widget.logDataList
-            : ble.bleProcess.validEventLogs.value,
-      );
-    }
-  }
-
-  @override
-  void dispose() {
-    _eventIdFilterController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _handleBackNavigation() async {
-    if (widget.isLiveEventLogs == true) {
-      Get.find<BleLogController>().stopLiveEventSetup();
-      if (ble.isConnected) {
-        await ble.disconnectConnectedDevice();
-      }
-      await NavigationService.navigateBackToHome(context);
-      return;
-    }
-    if (_isHandlingBack) return;
-    _isHandlingBack = true;
-    try {
-      if (widget.isHistoryView) {
-        Navigator.of(context).pop();
-        return;
-      }
-
-      final bleManager = ble;
-      final logs = bleManager.bleProcess.validEventLogs.value;
-      final panelIdToUse = _resolvedPanelId();
-      if (logs.isEmpty) {
-        await NavigationService.navigateBackToScanning(context);
-        return;
-      }
-
-      if (widget.isStandalone && logs.isNotEmpty) {
-        final existingPanel = await _panelService.getPanelByPanelId(
-          panelIdToUse,
-        );
-        if (existingPanel != null && existingPanel.siteId != null) {
-          final existingSite = await _siteService.getSiteById(
-            existingPanel.siteId!,
-          );
-          if (existingSite != null) {
-            await _siteService.storeLogs(logs, siteId: existingSite.id!);
-
-            // final allSitesWithLogCount =
-            //     await _siteService.getSitesWithLogCount();
-            // final updatedSiteWithLogCount = allSitesWithLogCount.firstWhere(
-            //   (siteWithLogCount) => siteWithLogCount.site.id == existingSite.id,
-            //   orElse:
-            //       () => SiteWithLogCount(
-            //         site: existingSite,
-            //         logCount: logs.length,
-            //         lastLogRetrieved: DateTime.now(),
-            //       ),
-            // );
-
-            if (mounted) {
-              await NavigationService.navigateBackToScanning(context);
-              if (widget.isDirectLogRet == true && mounted) {
-                Navigator.of(context).pop(true);
-              }
-            }
-
-            return;
-          }
-        }
-
-        final shouldCreateSite = await showSiteCreationDialog(
-          context,
-          logCount: logs.length,
-        );
-        final resolvedName = _resolvedPanelName();
-        final displayName = _panelDisplayName(resolvedName);
-        final resolvedPanelId = _resolvedPanelId();
-
-        if (shouldCreateSite == true) {
-          if (widget.connectedDevice != null) {
-            await widget.connectedDevice!.device!.disconnect();
-          }
-          if (mounted) {
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(
-                builder:
-                    (context) => SimpleSiteCreationScreen(
-                      retrievedLogs: logs,
-                      panelName: displayName,
-                      panelVersionNo: widget.panelVersionNo,
-                      panelId: resolvedPanelId,
-                    ),
-              ),
-            );
-          }
-          return;
-        }
-      }
-
-      if (mounted) {
-        await NavigationService.navigateBackToScanning(context);
-      }
-    } finally {
-      _isHandlingBack = false;
-    }
-  }
-
-  void _showExportBottomSheet(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: ColorConstants.transparent,
-      isScrollControlled: false,
-      builder: (_) {
+  void _showFilterBottomSheet() {
+    showFilterBottomSheet(
+      onApply: () {
+        _controller.applyFilters();
+        Navigator.pop(uiContext);
+      },
+      onReset: () {
+        _controller.resetFilters();
+        Navigator.pop(uiContext);
+      },
+      builder: (sheetSetState) {
         return Container(
           decoration: const BoxDecoration(
             color: ColorConstants.white,
             borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
           ),
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
           child: Column(
-            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  margin: const EdgeInsets.only(bottom: 16),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
-                    borderRadius: BorderRadius.circular(2),
+              Container(
+                decoration: BoxDecoration(
+                  color: ColorConstants.buttonSecondaryBackground,
+                  borderRadius: BorderRadius.vertical(
+                    top: Radius.circular(32),
                   ),
                 ),
-              ),
-              Text(
-                StringConstants.export,
-                style: StyleConstants.textBodyDark18w700Style,
-              ),
-              const SizedBox(height: 12),
-              ExportTile(
-                iconPath: AssetConstants.shareIconRed,
-                title: StringConstants.exportAsPDF,
-                onTap: () async {
-                  Navigator.pop(context);
-                  final logs = _applyEventIdQuickFilter(
-                    _filtersApplied ? _filteredLogs : _getBaseLogs(),
-                  );
-                  if (logs.isEmpty) return;
-
-                  String siteName = '-';
-                  String installerName = '-';
-                  String saqccNo = '-';
-
-                  if (widget.siteId != null) {
-                    final site = await _siteService.getSiteById(widget.siteId!);
-                    if (site != null) {
-                      siteName = site.siteName;
-                      installerName = site.installerName;
-                      saqccNo = site.saqccRegNumber;
-                    }
-                  } else {
-                    final panelId = _resolvedPanelId();
-                    if (panelId.isNotEmpty) {
-                      final panel = await _panelService.getPanelByPanelId(
-                        panelId,
-                      );
-                      if (panel?.siteId != null) {
-                        final site = await _siteService.getSiteById(
-                          panel!.siteId!,
-                        );
-                        if (site != null) {
-                          siteName = site.siteName;
-                          installerName = site.installerName;
-                          saqccNo = site.saqccRegNumber;
-                        }
-                      }
-                    }
-                  }
-                  await LogReportPdfUtil.generate(
-                    logs: logs,
-                    siteName: siteName,
-                    panelName: BleNameUtils.getDisplayPrefixFromBleName(
-                      widget.panelName,
+                child: Column(
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 4,
+                        margin: const EdgeInsets.only(bottom: 16),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade300,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
                     ),
-                    panelSerialNumber: BleNameUtils.getDisplayIdFromBleName(
-                      widget.panelName,
+                    Padding(
+                      padding: const EdgeInsets.only(
+                        left: 20.0,
+                        right: 20.0,
+                        bottom: 12.0,
+                      ),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          StringConstants.filter,
+                          style: StyleConstants.textBodyDark20w700Style,
+                        ),
+                      ),
                     ),
-                    installerName: installerName,
-                    saqccNo: saqccNo,
-                  );
-                },
+                  ],
+                ),
+              ),
+              SizedBox(height: 19),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      StringConstants.selectDate,
+                      style: StyleConstants.textBodyDark14w700Style,
+                    ),
+                    SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () async {
+                              await _controller.selectDate(true);
+                              sheetSetState(() {});
+                            },
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  StringConstants.from,
+                                  style: StyleConstants.black14w400Style,
+                                ),
+                                SizedBox(height: 10),
+                                Container(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 14,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    border: Border.all(
+                                      color: ColorConstants.borderGray,
+                                    ),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Text(
+                                        _controller.fromDate != null
+                                            ? DateFormat(
+                                              StringConstants.ddMMYyyyHHMmSs,
+                                            ).format(_controller.fromDate!)
+                                            : StringConstants.from,
+                                        style:
+                                            StyleConstants.textMuted14w400Style,
+                                      ),
+                                      Spacer(),
+                                      SvgPicture.asset(
+                                        AssetConstants.calendarIcon,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 12),
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () async {
+                              await _controller.selectDate(false);
+                              sheetSetState(() {});
+                            },
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  StringConstants.to,
+                                  style: StyleConstants.black14w400Style,
+                                ),
+                                SizedBox(height: 10),
+                                Container(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 14,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    border: Border.all(
+                                      color: ColorConstants.borderGray,
+                                    ),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Text(
+                                        _controller.toDate != null
+                                            ? DateFormat(
+                                              StringConstants.ddMMYyyyHHMmSs,
+                                            ).format(_controller.toDate!)
+                                            : StringConstants.to,
+                                        style:
+                                            StyleConstants.textMuted14w400Style,
+                                      ),
+                                      Spacer(),
+                                      SvgPicture.asset(
+                                        AssetConstants.calendarIcon,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 21),
+                    Text(
+                      StringConstants.status2,
+                      style: StyleConstants.textBodyDark14w700Style,
+                    ),
+                    SizedBox(height: 12),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children:
+                          EventConstants.statusEventStatusValue.skip(1).map((
+                            status,
+                          ) {
+                            return SizedBox(
+                              width:
+                                  (MediaQuery.of(uiContext).size.width - 56) /
+                                  3,
+                              child: SizedBox(
+                                width:
+                                    (MediaQuery.of(uiContext).size.width - 56) /
+                                    3,
+                                child: InkWell(
+                                  borderRadius: BorderRadius.circular(6),
+                                  onTap: () {
+                                    sheetSetState(() {
+                                      if (_controller.selectedStatuses.contains(
+                                        status,
+                                      )) {
+                                        _controller.selectedStatuses.remove(
+                                          status,
+                                        );
+                                      } else {
+                                        _controller.selectedStatuses.add(status);
+                                      }
+                                    });
+                                  },
+                                  child: Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
+                                    children: [
+                                      Checkbox(
+                                        materialTapTargetSize:
+                                            MaterialTapTargetSize.shrinkWrap,
+                                        visualDensity: VisualDensity.compact,
+                                        value: _controller.selectedStatuses
+                                            .contains(status),
+                                        activeColor: ColorConstants.primary,
+                                        onChanged: (value) {
+                                          sheetSetState(() {
+                                            if (value == true) {
+                                              _controller.selectedStatuses.add(
+                                                status,
+                                              );
+                                            } else {
+                                              _controller.selectedStatuses
+                                                  .remove(status);
+                                            }
+                                          });
+                                        },
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Expanded(
+                                        child: Text(
+                                          status,
+                                          overflow: TextOverflow.ellipsis,
+                                          style:
+                                              StyleConstants
+                                                  .textMuted14w400Style,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                    ),
+                    SizedBox(height: 24),
+                    Text(
+                      StringConstants.eventClass,
+                      style: StyleConstants.textBodyDark16w700Style,
+                    ),
+                    SizedBox(height: 12),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children:
+                          EventConstants.statusEventClassNames.skip(1).map((
+                            eventClass,
+                          ) {
+                            String displayName = eventClass;
+                            if (eventClass == StringConstants.release) {
+                              displayName = StringConstants.extRelease;
+                            }
+                            if (eventClass == StringConstants.evacuation) {
+                              displayName = StringConstants.fire;
+                            }
+
+                            return SizedBox(
+                              width:
+                                  (MediaQuery.of(uiContext).size.width - 56) /
+                                  3,
+                              child: SizedBox(
+                                width:
+                                    (MediaQuery.of(uiContext).size.width - 56) /
+                                    3,
+                                child: InkWell(
+                                  borderRadius: BorderRadius.circular(6),
+                                  onTap: () {
+                                    sheetSetState(() {
+                                      if (_controller.selectedEventClasses
+                                          .contains(eventClass)) {
+                                        _controller.selectedEventClasses.remove(
+                                          eventClass,
+                                        );
+                                      } else {
+                                        _controller.selectedEventClasses.add(
+                                          eventClass,
+                                        );
+                                      }
+                                    });
+                                  },
+                                  child: Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
+                                    children: [
+                                      Checkbox(
+                                        materialTapTargetSize:
+                                            MaterialTapTargetSize.shrinkWrap,
+                                        visualDensity: VisualDensity.compact,
+                                        value: _controller.selectedEventClasses
+                                            .contains(eventClass),
+                                        activeColor: ColorConstants.primary,
+                                        onChanged: (value) {
+                                          sheetSetState(() {
+                                            if (value == true) {
+                                              _controller.selectedEventClasses
+                                                  .add(eventClass);
+                                            } else {
+                                              _controller.selectedEventClasses
+                                                  .remove(eventClass);
+                                            }
+                                          });
+                                        },
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Expanded(
+                                        child: Text(
+                                          displayName,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style:
+                                              StyleConstants
+                                                  .textMuted14w400Style,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                    ),
+                    SizedBox(height: 32),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        OutlinedButton(
+                          onPressed: () {
+                            _controller.resetFilters();
+                            Navigator.pop(uiContext);
+                          },
+                          style: OutlinedButton.styleFrom(
+                            padding: EdgeInsets.symmetric(
+                              vertical: 12,
+                              horizontal: 32,
+                            ),
+                            side: BorderSide(
+                              color: ColorConstants.transparent,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          child: Text(
+                            StringConstants.reset,
+                            style: StyleConstants.textBodyDark14w600Style,
+                          ),
+                        ),
+                        SizedBox(width: 12),
+                        GestureDetector(
+                          onTap: () {
+                            _controller.applyFilters();
+                            Navigator.pop(uiContext);
+                          },
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: ColorConstants.primary,
+                              borderRadius: BorderRadius.circular(28.5),
+                            ),
+                            child: Center(
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                  horizontal: 13,
+                                ),
+                                child: Text(
+                                  StringConstants.applyNow,
+                                  style: StyleConstants.white14boldStyle,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 20),
+                  ],
+                ),
               ),
             ],
           ),
@@ -553,643 +565,13 @@ class _EventLogContentState extends State<_EventLogContent> {
     );
   }
 
-  void _applyFilters() {
-    setState(() {
-      final allLogs = _getBaseLogs();
-      _filteredLogs =
-          allLogs.where((log) {
-            if (_fromDate != null || _toDate != null) {
-              if (log.eventDateTime == null) return false;
-              final logDate = DateTime(
-                log.eventDateTime!.year,
-                log.eventDateTime!.month,
-                log.eventDateTime!.day,
-              );
-              if (_fromDate != null) {
-                final fromDate = DateTime(
-                  _fromDate!.year,
-                  _fromDate!.month,
-                  _fromDate!.day,
-                );
-                if (logDate.isBefore(fromDate)) return false;
-              }
-              if (_toDate != null) {
-                final toDate = DateTime(
-                  _toDate!.year,
-                  _toDate!.month,
-                  _toDate!.day,
-                ).add(Duration(days: 1));
-                if (logDate.isAfter(toDate.subtract(Duration(seconds: 1)))) {
-                  return false;
-                }
-              }
-            }
-
-            if (_selectedStatuses.isNotEmpty) {
-              if (log.eventStatus == null ||
-                  !_selectedStatuses.contains(log.eventStatus)) {
-                return false;
-              }
-            }
-
-            if (_selectedEventClasses.isNotEmpty) {
-              if (log.eventClass == null ||
-                  !_selectedEventClasses.contains(log.eventClass)) {
-                return false;
-              }
-            }
-
-            if (_alarmCount != null && _alarmCount!.isNotEmpty) {
-              final count = int.tryParse(_alarmCount!);
-              if (count != null) {
-                final eventId = int.tryParse(log.eventId ?? '0') ?? 0;
-                if (eventId != count) return false;
-              }
-            }
-
-            return true;
-          }).toList();
-      _filteredLogs = _sortLogsByEventId(_filteredLogs);
-      _filtersApplied =
-          _fromDate != null ||
-          _toDate != null ||
-          _selectedStatuses.isNotEmpty ||
-          _selectedEventClasses.isNotEmpty ||
-          (_alarmCount != null && _alarmCount!.isNotEmpty);
-    });
-  }
-
-  void _resetFilters() {
-    setState(() {
-      _fromDate = null;
-      _toDate = null;
-      _selectedStatuses.clear();
-      _selectedEventClasses.clear();
-      _alarmCount = null;
-      _filtersApplied = false;
-      textFieldResetKey++;
-      _filteredLogs = _getBaseLogs();
-    });
-  }
-
-  Future<void> _selectDate(
-    BuildContext context,
-    bool isFromDate, {
-    StateSetter? bottomSheetSetState,
-  }) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate:
-          isFromDate
-              ? (_fromDate ?? DateTime.now())
-              : (_toDate ?? DateTime.now()),
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
-    );
-    if (picked != null) {
-      setState(() {
-        if (isFromDate) {
-          _fromDate = picked;
-        } else {
-          _toDate = picked;
-        }
-      });
-      bottomSheetSetState?.call(() {});
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final Widget logsSection =
-        _useProvidedLogs
-            ? _buildLogStatus(_getDisplayLogs())
-            : ValueListenableBuilder<List<LogModel>>(
-              valueListenable: ble.bleProcess.validEventLogs,
-              builder: (context, validLogs, child) {
-                final baseLogs = _sortLogsByEventId(validLogs);
-                final afterSheetFilters =
-                    _filtersApplied ? _filteredLogs : baseLogs;
-                final logsToDisplay = _applyEventIdQuickFilter(
-                  afterSheetFilters,
-                );
-                return _buildLogStatus(logsToDisplay);
-              },
-            );
-
-    return PopScope(
-      canPop: false,
-      onPopInvoked: (didPop) async {
-        await _handleBackNavigation();
-      },
-      child: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [ColorConstants.scaffoldGradientTop, ColorConstants.white],
-          ),
-        ),
-        child: Stack(
-          children: [
-            SvgPicture.asset(AssetConstants.background1),
-            Padding(
-              padding: EdgeInsets.only(top: 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                mainAxisSize: MainAxisSize.max,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    child: Row(
-                      children: [
-                        GestureDetector(
-                          onTap: () async => await _handleBackNavigation(),
-                          child: SvgPicture.asset(AssetConstants.arrowBackIcon),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          StringConstants.eventLog,
-                          style: StyleConstants.black20w700Style,
-                        ),
-                        const Spacer(),
-                        if (widget.isLiveEventLogs == true)
-                          Padding(
-                            padding: const EdgeInsets.only(right: 18.0),
-                            child: GestureDetector(
-                              behavior: HitTestBehavior.opaque,
-                              onTap:
-                                  _canClearLogs
-                                      ? () => _confirmClearLogs()
-                                      : null,
-                              child: Opacity(
-                                opacity: _canClearLogs ? 1.0 : 0,
-                                child: SvgPicture.asset(
-                                  AssetConstants.clearIcon,
-                                  height: 28,
-                                  width: 28,
-                                ),
-                              ),
-                            ),
-                          ),
-                        GestureDetector(
-                          onTap: () => _showExportBottomSheet(context),
-                          child: Padding(
-                            padding: const EdgeInsets.only(right: 12.0),
-                            child: SvgPicture.asset(AssetConstants.shareIcon),
-                          ),
-                        ),
-                        GestureDetector(
-                          onTap: () => _showFilterBottomSheet(context),
-                          child: Padding(
-                            padding: const EdgeInsets.only(left: 12.0),
-                            child: SvgPicture.asset(AssetConstants.filterIcon),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  SizedBox(height: 19),
-                  Expanded(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: ColorConstants.white,
-                        borderRadius: BorderRadius.circular(35),
-                      ),
-                      child: logsSection,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showFilterBottomSheet(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: ColorConstants.transparent,
-      isScrollControlled: true,
-      builder: (_) {
-        return StatefulBuilder(
-          builder: (context, sheetSetState) {
-            return Container(
-              decoration: const BoxDecoration(
-                color: ColorConstants.white,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
-              ),
-
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      color: ColorConstants.buttonSecondaryBackground,
-                      borderRadius: BorderRadius.vertical(
-                        top: Radius.circular(32),
-                      ),
-                    ),
-                    child: Column(
-                      children: [
-                        // Drag handle
-                        Center(
-                          child: Container(
-                            width: 40,
-                            height: 4,
-                            margin: const EdgeInsets.only(bottom: 16),
-                            decoration: BoxDecoration(
-                              color: Colors.grey.shade300,
-                              borderRadius: BorderRadius.circular(2),
-                            ),
-                          ),
-                        ),
-
-                        Padding(
-                          padding: const EdgeInsets.only(
-                            left: 20.0,
-                            right: 20.0,
-                            bottom: 12.0,
-                          ),
-                          child: Align(
-                            alignment: Alignment.centerLeft,
-                            child: Text(
-                              StringConstants.filter,
-                              style: StyleConstants.textBodyDark20w700Style,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  SizedBox(height: 19),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          StringConstants.selectDate,
-                          style: StyleConstants.textBodyDark14w700Style,
-                        ),
-                        SizedBox(height: 12),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: GestureDetector(
-                                onTap:
-                                    () => _selectDate(
-                                      context,
-                                      true,
-                                      bottomSheetSetState: sheetSetState,
-                                    ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      StringConstants.from,
-                                      style: StyleConstants.black14w400Style,
-                                    ),
-                                    SizedBox(height: 10),
-                                    Container(
-                                      padding: EdgeInsets.symmetric(
-                                        horizontal: 12,
-                                        vertical: 14,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        border: Border.all(
-                                          color: ColorConstants.borderGray,
-                                        ),
-                                        borderRadius: BorderRadius.circular(4),
-                                      ),
-                                      child: Row(
-                                        children: [
-                                          Text(
-                                            _fromDate != null
-                                                ? DateFormat(
-                                                  StringConstants
-                                                      .ddMMYyyyHHMmSs,
-                                                ).format(_fromDate!)
-                                                : StringConstants.from,
-                                            style:
-                                                StyleConstants
-                                                    .textMuted14w400Style,
-                                          ),
-                                          Spacer(),
-                                          SvgPicture.asset(
-                                            AssetConstants.calendarIcon,
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            SizedBox(width: 12),
-                            Expanded(
-                              child: GestureDetector(
-                                onTap:
-                                    () => _selectDate(
-                                      context,
-                                      false,
-                                      bottomSheetSetState: sheetSetState,
-                                    ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      StringConstants.to,
-                                      style: StyleConstants.black14w400Style,
-                                    ),
-                                    SizedBox(height: 10),
-                                    Container(
-                                      padding: EdgeInsets.symmetric(
-                                        horizontal: 12,
-                                        vertical: 14,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        border: Border.all(
-                                          color: ColorConstants.borderGray,
-                                        ),
-                                        borderRadius: BorderRadius.circular(4),
-                                      ),
-                                      child: Row(
-                                        children: [
-                                          Text(
-                                            _toDate != null
-                                                ? DateFormat(
-                                                  StringConstants
-                                                      .ddMMYyyyHHMmSs,
-                                                ).format(_toDate!)
-                                                : StringConstants.to,
-                                            style:
-                                                StyleConstants
-                                                    .textMuted14w400Style,
-                                          ),
-                                          Spacer(),
-                                          SvgPicture.asset(
-                                            AssetConstants.calendarIcon,
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: 21),
-                        Text(
-                          StringConstants.status2,
-                          style: StyleConstants.textBodyDark14w700Style,
-                        ),
-                        SizedBox(height: 12),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children:
-                              EventConstants.statusEventStatusValue.skip(1).map(
-                                (status) {
-                                  return SizedBox(
-                                    width:
-                                        (MediaQuery.of(context).size.width -
-                                            56) /
-                                        3,
-                                    child: SizedBox(
-                                      width:
-                                          (MediaQuery.of(context).size.width -
-                                              56) /
-                                          3,
-                                      child: InkWell(
-                                        borderRadius: BorderRadius.circular(6),
-                                        onTap: () {
-                                          sheetSetState(() {
-                                            if (_selectedStatuses.contains(
-                                              status,
-                                            )) {
-                                              _selectedStatuses.remove(status);
-                                            } else {
-                                              _selectedStatuses.add(status);
-                                            }
-                                          });
-                                        },
-                                        child: Row(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.center,
-                                          children: [
-                                            Checkbox(
-                                              materialTapTargetSize:
-                                                  MaterialTapTargetSize
-                                                      .shrinkWrap,
-                                              visualDensity:
-                                                  VisualDensity.compact,
-                                              value: _selectedStatuses.contains(
-                                                status,
-                                              ),
-                                              activeColor:
-                                                  ColorConstants.primary,
-                                              onChanged: (value) {
-                                                sheetSetState(() {
-                                                  if (value == true) {
-                                                    _selectedStatuses.add(
-                                                      status,
-                                                    );
-                                                  } else {
-                                                    _selectedStatuses.remove(
-                                                      status,
-                                                    );
-                                                  }
-                                                });
-                                              },
-                                            ),
-                                            const SizedBox(width: 6),
-                                            Expanded(
-                                              child: Text(
-                                                status,
-                                                overflow: TextOverflow.ellipsis,
-                                                style:
-                                                    StyleConstants
-                                                        .textMuted14w400Style,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  );
-                                },
-                              ).toList(),
-                        ),
-                        SizedBox(height: 24),
-                        Text(
-                          StringConstants.eventClass,
-                          style: StyleConstants.textBodyDark16w700Style,
-                        ),
-                        SizedBox(height: 12),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children:
-                              EventConstants.statusEventClassNames.skip(1).map((
-                                eventClass,
-                              ) {
-                                String displayName = eventClass;
-                                if (eventClass == StringConstants.release) {
-                                  displayName = StringConstants.extRelease;
-                                }
-                                if (eventClass == StringConstants.evacuation) {
-                                  displayName = StringConstants.fire;
-                                }
-
-                                return SizedBox(
-                                  width:
-                                      (MediaQuery.of(context).size.width - 56) /
-                                      3,
-                                  child: SizedBox(
-                                    width:
-                                        (MediaQuery.of(context).size.width -
-                                            56) /
-                                        3,
-                                    child: InkWell(
-                                      borderRadius: BorderRadius.circular(6),
-                                      onTap: () {
-                                        sheetSetState(() {
-                                          if (_selectedEventClasses.contains(
-                                            eventClass,
-                                          )) {
-                                            _selectedEventClasses.remove(
-                                              eventClass,
-                                            );
-                                          } else {
-                                            _selectedEventClasses.add(
-                                              eventClass,
-                                            );
-                                          }
-                                        });
-                                      },
-                                      child: Row(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.center,
-                                        children: [
-                                          Checkbox(
-                                            materialTapTargetSize:
-                                                MaterialTapTargetSize
-                                                    .shrinkWrap,
-                                            visualDensity:
-                                                VisualDensity.compact,
-                                            value: _selectedEventClasses
-                                                .contains(eventClass),
-                                            activeColor: ColorConstants.primary,
-                                            onChanged: (value) {
-                                              sheetSetState(() {
-                                                if (value == true) {
-                                                  _selectedEventClasses.add(
-                                                    eventClass,
-                                                  );
-                                                } else {
-                                                  _selectedEventClasses.remove(
-                                                    eventClass,
-                                                  );
-                                                }
-                                              });
-                                            },
-                                          ),
-                                          const SizedBox(width: 6),
-                                          Expanded(
-                                            child: Text(
-                                              displayName,
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                              style:
-                                                  StyleConstants
-                                                      .textMuted14w400Style,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                );
-                              }).toList(),
-                        ),
-                        SizedBox(height: 32),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            OutlinedButton(
-                              onPressed: () {
-                                _resetFilters();
-                                Navigator.pop(context);
-                              },
-                              style: OutlinedButton.styleFrom(
-                                padding: EdgeInsets.symmetric(
-                                  vertical: 12,
-                                  horizontal: 32,
-                                ),
-                                side: BorderSide(
-                                  color: ColorConstants.transparent,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                              ),
-                              child: Text(
-                                StringConstants.reset,
-                                style: StyleConstants.textBodyDark14w600Style,
-                              ),
-                            ),
-                            SizedBox(width: 12),
-
-                            GestureDetector(
-                              onTap: () {
-                                _applyFilters();
-                                Navigator.pop(context);
-                              },
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: ColorConstants.primary,
-                                  borderRadius: BorderRadius.circular(28.5),
-                                ),
-                                child: Center(
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 12,
-                                      horizontal: 13,
-                                    ),
-                                    child: Text(
-                                      StringConstants.applyNow,
-                                      style: StyleConstants.white14boldStyle,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: 20),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
   Widget _buildLogStatus(List<LogModel> logsToDisplay) {
     final processedLogs = _applyLiveSortingIfNeeded(logsToDisplay);
+    final panelName = _controller.resolvedPanelName();
     return Padding(
       padding: const EdgeInsets.only(left: 20, right: 20, top: 20),
       child: Column(
         children: [
-          // Panel Info Row
           Row(
             children: [
               SvgPicture.asset(AssetConstants.panelIcon, height: 62, width: 62),
@@ -1200,18 +582,17 @@ class _EventLogContentState extends State<_EventLogContent> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      _panelDisplayName(_resolvedPanelName()),
+                      _controller.panelDisplayName(panelName),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: StyleConstants.textDark16w700Style,
                     ),
                     Text(
-                      BleNameUtils.getDisplayIdFromBleName(widget.panelName),
+                      BleNameUtils.getDisplayIdFromBleName(panelName),
                       style: StyleConstants.textDisabled14w500Style,
                     ),
-
                     ValueListenableBuilder(
-                      valueListenable: ble.isConnectedNotifier,
+                      valueListenable: _controller.ble.isConnectedNotifier,
                       builder: (context, isConnected, child) {
                         return RichText(
                           text: TextSpan(
@@ -1245,7 +626,6 @@ class _EventLogContentState extends State<_EventLogContent> {
           ),
           SizedBox(height: 15),
           Divider(color: ColorConstants.black.withAlpha(46), thickness: 1),
-
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.center,
@@ -1262,8 +642,8 @@ class _EventLogContentState extends State<_EventLogContent> {
                     width: 98,
                     height: 32,
                     child: TextField(
-                      controller: _eventIdFilterController,
-                      onChanged: (_) => setState(() {}),
+                      controller: _controller.eventIdFilterController,
+                      onChanged: (_) => _controller.onEventIdFilterChanged(),
                       keyboardType: TextInputType.text,
                       textAlignVertical: TextAlignVertical.center,
                       style: StyleConstants.textBodyDark13w500Style,
@@ -1295,7 +675,7 @@ class _EventLogContentState extends State<_EventLogContent> {
                           ),
                         ),
                         suffixIcon:
-                            _eventIdFilterController.text.isNotEmpty
+                            _controller.eventIdFilterController.text.isNotEmpty
                                 ? IconButton(
                                   iconSize: 16,
                                   padding: EdgeInsets.zero,
@@ -1309,8 +689,8 @@ class _EventLogContentState extends State<_EventLogContent> {
                                     color: ColorConstants.textMuted,
                                   ),
                                   onPressed: () {
-                                    _eventIdFilterController.clear();
-                                    setState(() {});
+                                    _controller.eventIdFilterController.clear();
+                                    _controller.onEventIdFilterChanged();
                                   },
                                 )
                                 : null,
@@ -1319,13 +699,12 @@ class _EventLogContentState extends State<_EventLogContent> {
                   ),
                   SizedBox(width: 8),
                   GestureDetector(
-                    onTap:
-                        () => setState(() {
-                          _isListSelected = true;
-                          _selectedViewIndex = 0;
-                        }),
+                    onTap: () {
+                      _controller.setListSelected(true);
+                      _controller.setSelectedViewIndex(0);
+                    },
                     child:
-                        _isListSelected
+                        _controller.isListSelected
                             ? Container(
                               height: 28,
                               width: 28,
@@ -1350,13 +729,12 @@ class _EventLogContentState extends State<_EventLogContent> {
                   ),
                   SizedBox(width: 5),
                   GestureDetector(
-                    onTap:
-                        () => setState(() {
-                          _isListSelected = false;
-                          _selectedViewIndex = 1;
-                        }),
+                    onTap: () {
+                      _controller.setListSelected(false);
+                      _controller.setSelectedViewIndex(1);
+                    },
                     child:
-                        _isListSelected
+                        _controller.isListSelected
                             ? SvgPicture.asset(
                               AssetConstants.tableDeselectedIcon,
                             )
@@ -1386,7 +764,7 @@ class _EventLogContentState extends State<_EventLogContent> {
           SizedBox(height: 15),
           Expanded(
             child: IndexedStack(
-              index: _selectedViewIndex,
+              index: _controller.selectedViewIndex,
               children: [
                 _LogListView(displayLogs: processedLogs),
                 _LogTableView(displayLogs: processedLogs),
@@ -1396,6 +774,143 @@ class _EventLogContentState extends State<_EventLogContent> {
           SizedBox(height: 8),
         ],
       ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GetBuilder<LogController>(
+      builder: (controller) {
+        final Widget logsSection =
+            controller.useProvidedLogs
+                ? _buildLogStatus(controller.getDisplayLogs())
+                : ValueListenableBuilder<List<LogModel>>(
+                  valueListenable: controller.ble.bleProcess.validEventLogs,
+                  builder: (context, validLogs, child) {
+                    final baseLogs = controller.sortLogsByEventId(validLogs);
+                    final afterSheetFilters =
+                        controller.filtersApplied
+                            ? controller.filteredLogs
+                            : baseLogs;
+                    final logsToDisplay = controller.applyEventIdQuickFilter(
+                      afterSheetFilters,
+                    );
+                    return _buildLogStatus(logsToDisplay);
+                  },
+                );
+
+        return Scaffold(
+          extendBody: true,
+          body: PopScope(
+            canPop: false,
+            onPopInvoked: (didPop) async {
+              await controller.handleEventLogBackNavigation();
+            },
+            child: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    ColorConstants.scaffoldGradientTop,
+                    ColorConstants.white,
+                  ],
+                ),
+              ),
+              child: Stack(
+                children: [
+                  SvgPicture.asset(AssetConstants.background1),
+                  Padding(
+                    padding: EdgeInsets.only(top: 24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      mainAxisSize: MainAxisSize.max,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 24),
+                          child: Row(
+                            children: [
+                              GestureDetector(
+                                onTap:
+                                    () async =>
+                                        await controller
+                                            .handleEventLogBackNavigation(),
+                                child: SvgPicture.asset(
+                                  AssetConstants.arrowBackIcon,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                StringConstants.eventLog,
+                                style: StyleConstants.black20w700Style,
+                              ),
+                              const Spacer(),
+                              if (controller.eventLogArgs?.isLiveEventLogs ==
+                                  true)
+                                Padding(
+                                  padding: const EdgeInsets.only(right: 18.0),
+                                  child: GestureDetector(
+                                    behavior: HitTestBehavior.opaque,
+                                    onTap:
+                                        controller.canClearLogs
+                                            ? () =>
+                                                controller
+                                                    .confirmAndClearLogs()
+                                            : null,
+                                    child: Opacity(
+                                      opacity: controller.canClearLogs ? 1.0 : 0,
+                                      child: SvgPicture.asset(
+                                        AssetConstants.clearIcon,
+                                        height: 28,
+                                        width: 28,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              GestureDetector(
+                                onTap:
+                                    () => showExportBottomSheet(
+                                      onExportPdf:
+                                          controller.exportEventLogPdf,
+                                    ),
+                                child: Padding(
+                                  padding: const EdgeInsets.only(right: 12.0),
+                                  child: SvgPicture.asset(
+                                    AssetConstants.shareIcon,
+                                  ),
+                                ),
+                              ),
+                              GestureDetector(
+                                onTap: _showFilterBottomSheet,
+                                child: Padding(
+                                  padding: const EdgeInsets.only(left: 12.0),
+                                  child: SvgPicture.asset(
+                                    AssetConstants.filterIcon,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(height: 19),
+                        Expanded(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: ColorConstants.white,
+                              borderRadius: BorderRadius.circular(35),
+                            ),
+                            child: logsSection,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

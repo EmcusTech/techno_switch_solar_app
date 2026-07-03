@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
+import 'package:techno_switch_solar_app/features/logs/bindings/log_binding.dart';
+import 'package:techno_switch_solar_app/features/logs/models/log_flow_args.dart';
 import 'package:techno_switch_solar_app/features/logs/views/log_retrieval_loading_screen.dart';
 import 'package:techno_switch_solar_app/features/scanning_screen.dart';
 import 'package:techno_switch_solar_app/widgets/common/common_numeric_keypad_widget.dart';
@@ -85,14 +87,16 @@ Future<bool> showPanelAccessCodeLogRetrievalSheet({
         Navigator.of(sheetContext, rootNavigator: true).pop(true);
       }
       if (!context.mounted) return;
+      LogBinding(
+        args: LogFlowArgs.loading(
+          selectedDevice: device,
+          scanType: ScanType.bluetooth,
+          isLiveEvent: isLiveEvent ?? false,
+        ),
+      ).dependencies();
       await Navigator.of(context).push(
         MaterialPageRoute(
-          builder:
-              (_) => LogRetrievalLoadingScreen(
-                scanType: ScanType.bluetooth,
-                selectedDevice: device,
-                isLiveEvent: isLiveEvent,
-              ),
+          builder: (_) => const LogRetrievalLoadingScreen(),
         ),
       );
     },

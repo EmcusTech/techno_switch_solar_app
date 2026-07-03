@@ -6,6 +6,8 @@ import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:lottie/lottie.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
+import 'package:techno_switch_solar_app/features/logs/bindings/log_binding.dart';
+import 'package:techno_switch_solar_app/features/logs/models/log_flow_args.dart';
 import 'package:techno_switch_solar_app/features/logs/views/event_log_screen.dart';
 import 'package:techno_switch_solar_app/features/logs/views/log_retrieval_loading_screen.dart';
 import 'package:techno_switch_solar_app/features/dashboard/bindings/project_dashboard_binding.dart';
@@ -848,14 +850,16 @@ class _ScannedScreenState extends State<ScannedScreen> {
                     await bleController.startLogRetrieval();
                     await Future.delayed(const Duration(seconds: 1));
                     if (!screenContext.mounted) return;
+                    LogBinding(
+                      args: LogFlowArgs.loading(
+                        selectedDevice: activeDevice,
+                        scanType: ScanType.bluetooth,
+                        isLiveEvent: widget.isLiveEvent ?? false,
+                      ),
+                    ).dependencies();
                     Navigator.of(screenContext).push(
                       MaterialPageRoute(
-                        builder:
-                            (context) => LogRetrievalLoadingScreen(
-                              scanType: ScanType.bluetooth,
-                              selectedDevice: activeDevice,
-                              isLiveEvent: widget.isLiveEvent,
-                            ),
+                        builder: (_) => const LogRetrievalLoadingScreen(),
                       ),
                     );
                   } else {
@@ -940,19 +944,21 @@ class _ScannedScreenState extends State<ScannedScreen> {
                   if (!screenContext.mounted) return;
 
                   if (widget.isLiveEventLogs == true) {
+                    LogBinding(
+                      args: LogFlowArgs.eventLog(
+                        logDataList: [],
+                        panelVersionNo: activeDevice.id,
+                        panelName: activeDevice.name,
+                        connectedDevice: activeDevice,
+                        isLiveEventLogs: true,
+                      ),
+                    ).dependencies();
                     Navigator.of(
                       screenContext,
                       rootNavigator: true,
                     ).pushReplacement(
                       MaterialPageRoute(
-                        builder:
-                            (_) => EventLogScreen(
-                              connectedDevice: activeDevice,
-                              logDataList: [],
-                              panelVersionNo: activeDevice.id,
-                              panelName: activeDevice.name,
-                              isLiveEventLogs: widget.isLiveEventLogs,
-                            ),
+                        builder: (_) => const EventLogScreen(),
                       ),
                     );
                   } else {

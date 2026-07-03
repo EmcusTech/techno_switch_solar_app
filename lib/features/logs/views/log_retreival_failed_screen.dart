@@ -1,27 +1,49 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:get/get.dart';
+import 'package:techno_switch_solar_app/features/logs/controllers/log_controller.dart';
+import 'package:techno_switch_solar_app/features/logs/views/log_ui_delegate_mixin.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
-
 import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
-class LogRetrievalFailedScreen extends StatefulWidget {
+
+class LogRetrievalFailedScreen extends GetView<LogController> {
   const LogRetrievalFailedScreen({super.key});
 
   @override
-  State<LogRetrievalFailedScreen> createState() =>
-      _LogRetrievalFailedScreenState();
+  Widget build(BuildContext context) {
+    return _LogRetrievalFailedPageHost(controller: controller);
+  }
 }
 
-class _LogRetrievalFailedScreenState extends State<LogRetrievalFailedScreen> {
+class _LogRetrievalFailedPageHost extends StatefulWidget {
+  const _LogRetrievalFailedPageHost({required this.controller});
+
+  final LogController controller;
+
+  @override
+  State<_LogRetrievalFailedPageHost> createState() =>
+      _LogRetrievalFailedPageHostState();
+}
+
+class _LogRetrievalFailedPageHostState extends State<_LogRetrievalFailedPageHost>
+    with LogUiDelegateMixin {
+  LogController get _controller => widget.controller;
+
   @override
   void initState() {
-    Future.delayed(const Duration(seconds: 4), () {
-      if (mounted) {
-        Navigator.pop(context);
-      }
-    });
     super.initState();
+    _controller.attachUi(this);
+  }
+
+  @override
+  void dispose() {
+    _controller.detachUi();
+    if (Get.isRegistered<LogController>()) {
+      Get.delete<LogController>();
+    }
+    super.dispose();
   }
 
   @override
@@ -50,9 +72,7 @@ class _LogRetrievalFailedScreenState extends State<LogRetrievalFailedScreen> {
                     child: Row(
                       children: [
                         GestureDetector(
-                          onTap: () async {
-                            Navigator.of(context).pop();
-                          },
+                          onTap: popScreen,
                           child: SvgPicture.asset(
                             AssetConstants.arrowBackIcon,
                           ),

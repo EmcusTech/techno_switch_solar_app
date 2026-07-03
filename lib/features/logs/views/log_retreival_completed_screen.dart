@@ -2,55 +2,57 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:lottie/lottie.dart';
-import 'package:techno_switch_solar_app/ble/ble_manager.dart';
-import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
-import 'package:techno_switch_solar_app/models/log_model.dart';
-import 'package:techno_switch_solar_app/features/logs/views/event_log_screen.dart';
-import 'package:techno_switch_solar_app/features/sites/views/simple_site_creation_screen.dart';
-import 'package:techno_switch_solar_app/utils/app/navigation_service.dart';
-import 'package:techno_switch_solar_app/utils/panel_service.dart';
-import 'package:techno_switch_solar_app/utils/site_service.dart';
-import 'package:techno_switch_solar_app/widgets/dialogs/site_creation_dialog.dart';
-import 'package:techno_switch_solar_app/utils/constants/ble/ble_name_utils.dart';
+import 'package:techno_switch_solar_app/features/logs/controllers/log_controller.dart';
+import 'package:techno_switch_solar_app/features/logs/views/log_ui_delegate_mixin.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
-
 import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
 
-class LogRetrievalCompletedScreen extends StatefulWidget {
-  final List<LogModel> logs;
-  final String panelId;
-  final String panelName;
-  final DiscoveredDevice? connectedDevice;
-  final bool? isDirectLogRet;
-  const LogRetrievalCompletedScreen({
-    super.key,
-    required this.logs,
-    required this.panelId,
-    required this.panelName,
-    this.connectedDevice,
-    this.isDirectLogRet = false,
-  });
+class LogRetrievalCompletedScreen extends GetView<LogController> {
+  const LogRetrievalCompletedScreen({super.key});
 
   @override
-  State<LogRetrievalCompletedScreen> createState() =>
-      _LogRetrievalCompletedScreenState();
+  Widget build(BuildContext context) {
+    return _LogRetrievalCompletedPageHost(controller: controller);
+  }
 }
 
-class _LogRetrievalCompletedScreenState
-    extends State<LogRetrievalCompletedScreen> {
-  final BleManager ble = Get.find<BleManager>();
-  bool _isHandlingBack = false;
-  final PanelService _panelService = PanelService();
-  final SiteService _siteService = SiteService();
+class _LogRetrievalCompletedPageHost extends StatefulWidget {
+  const _LogRetrievalCompletedPageHost({required this.controller});
+
+  final LogController controller;
+
+  @override
+  State<_LogRetrievalCompletedPageHost> createState() =>
+      _LogRetrievalCompletedPageHostState();
+}
+
+class _LogRetrievalCompletedPageHostState
+    extends State<_LogRetrievalCompletedPageHost> with LogUiDelegateMixin {
+  LogController get _controller => widget.controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller.attachUi(this);
+  }
+
+  @override
+  void dispose() {
+    _controller.detachUi();
+    if (Get.isRegistered<LogController>()) {
+      Get.delete<LogController>();
+    }
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return PopScope(
       canPop: false,
       onPopInvoked: (didPop) async {
-        await _handleBackNavigation();
+        await _controller.handleCompletedBackNavigation();
       },
       child: Scaffold(
         body: Container(
@@ -80,7 +82,7 @@ class _LogRetrievalCompletedScreenState
                         children: [
                           GestureDetector(
                             onTap: () async {
-                              await _handleBackNavigation();
+                              await _controller.handleCompletedBackNavigation();
                             },
                             child: SvgPicture.asset(
                               AssetConstants.arrowBackIcon,
@@ -104,91 +106,6 @@ class _LogRetrievalCompletedScreenState
         ),
       ),
     );
-  }
-
-  String _resolvedPanelName() {
-    return widget.panelName.trim();
-  }
-
-  String _panelDisplayName(String name) {
-    return BleNameUtils.getDisplayPrefixFromBleName(name);
-  }
-
-  String _resolvedPanelId() {
-    if (widget.panelId.isNotEmpty) return widget.panelId;
-    return widget.panelName;
-  }
-
-  Future<void> _handleBackNavigation() async {
-    if (_isHandlingBack) return;
-    _isHandlingBack = true;
-    try {
-      final bleManager = ble;
-      final logs = bleManager.bleProcess.validEventLogs.value;
-      final panelIdToUse = _resolvedPanelId();
-      if (logs.isEmpty) {
-        await NavigationService.navigateBackToScanning(context);
-        return;
-      }
-
-      if (logs.isNotEmpty) {
-        final existingPanel = await _panelService.getPanelByPanelId(
-          panelIdToUse,
-        );
-        if (existingPanel != null && existingPanel.siteId != null) {
-          final existingSite = await _siteService.getSiteById(
-            existingPanel.siteId!,
-          );
-          if (existingSite != null) {
-            await _siteService.storeLogs(logs, siteId: existingSite.id!);
-
-            if (mounted) {
-              await NavigationService.navigateBackToScanning(context);
-            }
-
-            return;
-          }
-        }
-
-        bool? shouldCreateSite = false;
-
-        if (mounted) {
-          shouldCreateSite = await showSiteCreationDialog(
-            context,
-            logCount: logs.length,
-          );
-        }
-        final resolvedName = _resolvedPanelName();
-        final displayName = _panelDisplayName(resolvedName);
-        final resolvedPanelId = _resolvedPanelId();
-
-        if (shouldCreateSite == true) {
-          if (widget.connectedDevice != null) {
-            await widget.connectedDevice!.device!.disconnect();
-          }
-          if (mounted) {
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(
-                builder:
-                    (context) => SimpleSiteCreationScreen(
-                      retrievedLogs: logs,
-                      panelName: displayName,
-                      panelVersionNo: '',
-                      panelId: resolvedPanelId,
-                    ),
-              ),
-            );
-          }
-          return;
-        }
-      }
-
-      if (mounted) {
-        await NavigationService.navigateBackToScanning(context);
-      }
-    } finally {
-      _isHandlingBack = false;
-    }
   }
 
   Widget _buildCompletedLogsContainer() {
@@ -231,7 +148,7 @@ class _LogRetrievalCompletedScreenState
                   children: [
                     GestureDetector(
                       onTap: () async {
-                        await _handleBackNavigation();
+                        await _controller.handleCompletedBackNavigation();
                       },
                       child: Container(
                         decoration: BoxDecoration(
@@ -262,22 +179,7 @@ class _LogRetrievalCompletedScreenState
                       ),
                     ),
                     GestureDetector(
-                      onTap: () {
-                        Navigator.of(context).pushReplacement(
-                          MaterialPageRoute(
-                            builder:
-                                (context) => EventLogScreen(
-                                  logDataList: widget.logs,
-                                  panelName: widget.panelName,
-                                  panelVersionNo: StringConstants.s098,
-                                  isStandalone: true,
-                                  panelId: widget.panelId,
-                                  connectedDevice: widget.connectedDevice,
-                                  isDirectLogRet: widget.isDirectLogRet,
-                                ),
-                          ),
-                        );
-                      },
+                      onTap: _controller.openEventLogFromCompleted,
                       child: Container(
                         decoration: BoxDecoration(
                           color: ColorConstants.primary,
