@@ -5,7 +5,7 @@ import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/features/logs/bindings/log_binding.dart';
 import 'package:techno_switch_solar_app/features/logs/models/log_flow_args.dart';
 import 'package:techno_switch_solar_app/features/logs/views/log_retrieval_loading_screen.dart';
-import 'package:techno_switch_solar_app/features/scan/views/scanning_screen.dart';
+import 'package:techno_switch_solar_app/features/scan/models/scan_type.dart';
 import 'package:techno_switch_solar_app/widgets/common/common_numeric_keypad_widget.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 

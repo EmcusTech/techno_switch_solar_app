@@ -1,0 +1,1 @@
+enum ScanType { usb, bluetooth }

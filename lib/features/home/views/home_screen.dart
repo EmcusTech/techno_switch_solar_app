@@ -4,6 +4,8 @@ import 'package:get/get.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/features/create_project/bindings/create_project_binding.dart';
 import 'package:techno_switch_solar_app/features/create_project/views/create_project_screen.dart';
+import 'package:techno_switch_solar_app/features/scan/bindings/scan_binding.dart';
+import 'package:techno_switch_solar_app/features/scan/models/scan_flow_args.dart';
 import 'package:techno_switch_solar_app/features/scan/views/scanning_screen.dart';
 import 'package:techno_switch_solar_app/features/sites/views/site_screen.dart';
 import 'package:techno_switch_solar_app/utils/app/app_services.dart';
@@ -276,7 +278,12 @@ class _HomeContentState extends State<_HomeContent> with RouteAware {
                       }
                       await Navigator.of(context).push(
                         MaterialPageRoute(
-                          builder: (context) => ScanningScreen(),
+                          builder: (context) {
+                            ScanBinding(
+                              args: ScanFlowArgs.scanning(),
+                            ).dependencies();
+                            return const ScanningScreen();
+                          },
                         ),
                       );
                     },
@@ -354,8 +361,12 @@ class _HomeContentState extends State<_HomeContent> with RouteAware {
                 onTap: () async {
                   await Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder:
-                          (context) => ScanningScreen(isLiveEventLogs: true),
+                      builder: (context) {
+                        ScanBinding(
+                          args: ScanFlowArgs.scanning(isLiveEventLogs: true),
+                        ).dependencies();
+                        return const ScanningScreen();
+                      },
                     ),
                   );
                 },
@@ -368,7 +379,12 @@ class _HomeContentState extends State<_HomeContent> with RouteAware {
                 onTap: () {
                   Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (context) => ScanningScreen(isLiveEvent: true),
+                      builder: (context) {
+                        ScanBinding(
+                          args: ScanFlowArgs.scanning(isLiveEvent: true),
+                        ).dependencies();
+                        return const ScanningScreen();
+                      },
                     ),
                   );
                 },

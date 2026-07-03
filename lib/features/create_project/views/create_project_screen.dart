@@ -12,6 +12,8 @@ import 'package:techno_switch_solar_app/features/create_project/views/site_creat
 import 'package:techno_switch_solar_app/features/dashboard/bindings/project_dashboard_binding.dart';
 import 'package:techno_switch_solar_app/features/dashboard/models/project_dashboard_args.dart';
 import 'package:techno_switch_solar_app/features/dashboard/views/project_dashboard.dart';
+import 'package:techno_switch_solar_app/features/scan/bindings/scan_binding.dart';
+import 'package:techno_switch_solar_app/features/scan/models/scan_flow_args.dart';
 import 'package:techno_switch_solar_app/features/scan/views/scanning_screen.dart';
 import 'package:techno_switch_solar_app/features/sites/views/site_screen.dart';
 import 'package:techno_switch_solar_app/utils/site_service.dart';
@@ -310,13 +312,13 @@ class _CreateProjectPageHostState extends State<_CreateProjectPageHost>
 
   @override
   Future<bool?> openScanningScreen(String? expectedPanelType) {
-    return Navigator.of(context).push<bool>(
-      MaterialPageRoute(
-        builder:
-            (_) => ScanningScreen(
-              createProjectExpectedPanelType: expectedPanelType,
-            ),
+    ScanBinding(
+      args: ScanFlowArgs.scanning(
+        createProjectExpectedPanelType: expectedPanelType,
       ),
+    ).dependencies();
+    return Navigator.of(context).push<bool>(
+      MaterialPageRoute(builder: (_) => const ScanningScreen()),
     );
   }
 

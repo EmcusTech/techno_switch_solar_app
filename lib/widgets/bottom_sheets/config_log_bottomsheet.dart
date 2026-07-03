@@ -973,7 +973,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet>
               onPressed: working ? null : _onUpdateAppPressed,
               child: Text(
                 StringConstants.updateApp,
-                style: StyleConstants.primary16w600Style,
+                style: StyleConstants.white16w600Style,
               ),
             ),
           ),

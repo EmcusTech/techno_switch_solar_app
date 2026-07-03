@@ -11,7 +11,7 @@ import 'package:techno_switch_solar_app/panel_config/panel_config_feedback_dialo
 import 'package:techno_switch_solar_app/features/logs/bindings/log_binding.dart';
 import 'package:techno_switch_solar_app/features/logs/models/log_flow_args.dart';
 import 'package:techno_switch_solar_app/features/logs/views/log_retrieval_loading_screen.dart';
-import 'package:techno_switch_solar_app/features/scan/views/scanning_screen.dart';
+import 'package:techno_switch_solar_app/features/scan/models/scan_type.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
 class PanelConfigurationCoordinator {
