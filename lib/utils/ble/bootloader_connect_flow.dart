@@ -6,7 +6,7 @@ import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/bindings/firmware_binding.dart';
-import 'package:techno_switch_solar_app/controllers/updates_controller.dart';
+import 'package:techno_switch_solar_app/features/peripherals/firmware/controllers/firmware_controller.dart';
 import 'package:techno_switch_solar_app/utils/constants/ble/ble_msd_utils.dart';
 import 'package:techno_switch_solar_app/utils/constants/ble/ble_name_utils.dart';
 import 'package:techno_switch_solar_app/utils/constants/ble/bluetooth_service.dart';
@@ -104,7 +104,7 @@ Future<bool> showFirmwareUpgradeBottomSheetForConnect({
         (sheetContext) =>
             FirmwareUpgradeBottomSheet(connectedDevice: connectedDevice),
   );
-  Get.delete<UpdatesController>();
+  Get.delete<FirmwareController>();
   return result ?? false;
 }
 

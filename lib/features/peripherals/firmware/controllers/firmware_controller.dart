@@ -3,11 +3,11 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:get/get.dart';
-import '../models/ble/firmware/firmware_packet_model.dart';
-import '../utils/ble/firmware_packet_service.dart';
+import '../../../../models/ble/firmware/firmware_packet_model.dart';
+import '../../../../utils/ble/firmware_packet_service.dart';
 import 'package:techno_switch_solar_app/utils/ble/firmware_upgrade_service.dart';
 
-class UpdatesController extends GetxController {
+class FirmwareController extends GetxController {
   final FirmwareUpgradeService _firmwareService = FirmwareUpgradeService();
   final FirmwarePacketService _packetService = FirmwarePacketService();
   final Rx<DownloadStatus> downloadingStatus = DownloadStatus.downloading.obs;

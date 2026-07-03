@@ -4,7 +4,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:lottie/lottie.dart';
 import 'package:techno_switch_solar_app/bindings/firmware_binding.dart';
-import 'package:techno_switch_solar_app/controllers/updates_controller.dart';
+import 'package:techno_switch_solar_app/features/peripherals/firmware/controllers/firmware_controller.dart';
 import 'package:techno_switch_solar_app/features/dashboard/controllers/project_dashboard_controller.dart';
 import 'package:techno_switch_solar_app/features/dashboard/controllers/project_dashboard_ui_delegate.dart';
 import 'package:techno_switch_solar_app/features/logs/views/log_history_screen.dart';
@@ -456,7 +456,7 @@ class _ProjectDashboardPageHostState extends State<_ProjectDashboardPageHost>
             connectedDevice: _controller.selectedDevice,
           ),
     );
-    Get.delete<UpdatesController>();
+    Get.delete<FirmwareController>();
   }
 
   @override

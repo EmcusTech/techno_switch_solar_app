@@ -17,7 +17,7 @@ import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 import 'package:techno_switch_solar_app/widgets/common/common_cta_button.dart';
 import '../../../../ble/ble_manager.dart';
 import '../../../../ble/controller/ble_log_controller.dart';
-import '../../../../controllers/updates_controller.dart';
+import '../controllers/firmware_controller.dart';
 import 'package:techno_switch_solar_app/utils/ble/firmware_upgrade_service.dart'
     as fw;
 import 'package:techno_switch_solar_app/utils/constants/ble/bluetooth_service.dart'
@@ -53,7 +53,7 @@ class FirmwareUpgradeBottomSheet extends StatefulWidget {
 
 class _FirmwareUpgradeBottomSheetState
     extends State<FirmwareUpgradeBottomSheet> {
-  final UpdatesController _controller = Get.find<UpdatesController>();
+  final FirmwareController _controller = Get.find<FirmwareController>();
   final BleManager ble = Get.find<BleManager>();
   FirmwareUpgradeStep _currentStep = FirmwareUpgradeStep.essentialSteps;
   FirmwareType? _selectedFirmwareType;

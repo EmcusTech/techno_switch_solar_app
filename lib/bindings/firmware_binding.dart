@@ -1,5 +1,5 @@
 import 'package:get/get.dart';
-import 'package:techno_switch_solar_app/controllers/updates_controller.dart';
+import 'package:techno_switch_solar_app/features/peripherals/firmware/controllers/firmware_controller.dart';
 
 /// Feature-scoped binding for the firmware update flow.
 ///
@@ -9,6 +9,6 @@ import 'package:techno_switch_solar_app/controllers/updates_controller.dart';
 class FirmwareBinding extends Bindings {
   @override
   void dependencies() {
-    Get.lazyPut<UpdatesController>(() => UpdatesController());
+    Get.lazyPut<FirmwareController>(() => FirmwareController());
   }
 }
