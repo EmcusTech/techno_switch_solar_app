@@ -8,6 +8,7 @@ import '../../../models/log_model.dart';
 import '../../../utils/site_service.dart';
 import '../../../utils/panel_service.dart';
 import '../../create_project/views/site_creation_page.dart';
+import '../../home/bindings/home_screen_binding.dart';
 import '../../home/views/home_screen.dart';
 import 'site_screen.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
@@ -211,8 +212,9 @@ class _SimpleSiteCreationScreenState extends State<SimpleSiteCreationScreen> {
       if (widget.returnCreatedSiteId) {
         Navigator.of(context).pop(site.id);
       } else {
+        HomeScreenBinding().dependencies();
         Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => HomeScreen()),
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
           (route) => false,
         );
       }
@@ -311,13 +313,14 @@ class _SimpleSiteCreationScreenState extends State<SimpleSiteCreationScreen> {
                                                   ).pop(null);
                                                   ble.disconnectConnectedDevice();
                                                 } else {
+                                                  HomeScreenBinding().dependencies();
                                                   Navigator.of(
                                                     context,
                                                   ).pushAndRemoveUntil(
                                                     MaterialPageRoute(
                                                       builder:
                                                           (context) =>
-                                                              HomeScreen(),
+                                                              const HomeScreen(),
                                                     ),
                                                     (route) => false,
                                                   );

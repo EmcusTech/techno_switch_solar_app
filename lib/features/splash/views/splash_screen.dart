@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
+import 'package:techno_switch_solar_app/features/home/bindings/home_screen_binding.dart';
 import 'package:techno_switch_solar_app/features/home/views/home_screen.dart';
 import 'package:techno_switch_solar_app/features/splash/controllers/splash_controller.dart';
 import 'package:techno_switch_solar_app/features/splash/controllers/splash_ui_delegate.dart';
@@ -36,9 +37,10 @@ class _SplashPageHostState extends State<_SplashPageHost>
   @override
   void openHome() {
     if (!mounted) return;
-    Navigator.of(
-      context,
-    ).pushReplacement(MaterialPageRoute(builder: (_) => const HomeScreen()));
+    HomeScreenBinding().dependencies();
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(builder: (_) => const HomeScreen()),
+    );
   }
 
   @override

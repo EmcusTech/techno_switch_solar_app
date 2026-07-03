@@ -1,163 +1,83 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
-import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
-import 'package:techno_switch_solar_app/features/create_project/bindings/create_project_binding.dart';
-import 'package:techno_switch_solar_app/features/create_project/views/create_project_screen.dart';
-import 'package:techno_switch_solar_app/features/scan/bindings/scan_binding.dart';
-import 'package:techno_switch_solar_app/features/scan/models/scan_flow_args.dart';
-import 'package:techno_switch_solar_app/features/scan/views/scanning_screen.dart';
-import 'package:techno_switch_solar_app/features/sites/views/site_screen.dart';
-import 'package:techno_switch_solar_app/utils/app/app_services.dart';
-import 'package:techno_switch_solar_app/utils/app/app_state.dart';
-import 'package:techno_switch_solar_app/utils/site_service.dart';
-import 'package:techno_switch_solar_app/utils/log_retrieval_service.dart';
-import 'package:techno_switch_solar_app/utils/app/navigation_service.dart';
 import 'package:intl/intl.dart';
-import '../../settings/views/settings_screen.dart';
-import '../../help/views/help_screen.dart';
+import 'package:techno_switch_solar_app/features/help/views/help_screen.dart';
+import 'package:techno_switch_solar_app/features/scan/models/scan_flow_args.dart';
+import 'package:techno_switch_solar_app/features/home/controllers/home_screen_controller.dart';
+import 'package:techno_switch_solar_app/features/home/controllers/home_screen_ui_delegate.dart';
+import 'package:techno_switch_solar_app/features/settings/views/settings_screen.dart';
+import 'package:techno_switch_solar_app/features/sites/views/site_screen.dart';
+import 'package:techno_switch_solar_app/models/site_model.dart';
+import 'package:techno_switch_solar_app/utils/app/navigation_service.dart';
+import 'package:techno_switch_solar_app/utils/site_service.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
-
 import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends GetView<HomeScreenController> {
   const HomeScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  Widget build(BuildContext context) {
+    return _HomePageHost(controller: controller);
+  }
 }
 
-class _HomeScreenState extends State<HomeScreen> {
-  int _selectedIndex = 0;
+class _HomePageHost extends StatefulWidget {
+  const _HomePageHost({required this.controller});
 
-  final List<Widget> _screens = [
-    const _HomeContent(),
-    SettingsScreen(
-      panelName: StringConstants.rhino2008,
-      panelVersionNo: StringConstants.s098,
-    ),
-    const HelpScreen(),
-  ];
+  final HomeScreenController controller;
+
+  @override
+  State<_HomePageHost> createState() => _HomePageHostState();
+}
+
+class _HomePageHostState extends State<_HomePageHost>
+    with RouteAware
+    implements HomeScreenUiDelegate {
+  HomeScreenController get _controller => widget.controller;
+  bool _routeSubscriptionRegistered = false;
+
+  @override
+  bool get isMounted => mounted;
+
+  @override
+  BuildContext get uiContext => context;
+
+  @override
+  Future<void> openScanning(ScanFlowArgs args) async {
+    if (!mounted) return;
+    await _controller.openScanning(args);
+  }
+
+  @override
+  void openCreateProject() {
+    _controller.openNewSite();
+  }
+
+  @override
+  Future<bool?> openSite({
+    required SiteModel site,
+    required SiteWithLogCount siteWithLogCount,
+  }) {
+    return Navigator.of(uiContext).push<bool>(
+      MaterialPageRoute(
+        builder:
+            (_) => SiteScreen(
+              site: site,
+              siteWithLogCount: siteWithLogCount,
+            ),
+      ),
+    );
+  }
 
   @override
   void initState() {
     super.initState();
-    _handleBluetoothCleanup();
+    _controller.attachUi(this);
   }
-
-  Future<void> _handleBluetoothCleanup() async {
-    if (AppServices.isConnected) {
-      await AppServices.disconnect();
-    }
-
-    AppState.reset();
-  }
-
-  void _onItemTapped(int index) {
-    if (index == 1 || index == 2) {
-      return;
-    }
-    setState(() {
-      _selectedIndex = index;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: ColorConstants.white,
-      extendBody: true,
-      body: _screens[_selectedIndex],
-      bottomNavigationBar: Container(
-        height: 80,
-        decoration: BoxDecoration(
-          boxShadow: [
-            BoxShadow(
-              color: ColorConstants.blackMaterial.withValues(alpha: 0.1),
-              blurRadius: 10,
-              offset: const Offset(0, -5),
-            ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(32),
-            topRight: Radius.circular(32),
-          ),
-          child: BottomNavigationBar(
-            iconSize: 24,
-            items: <BottomNavigationBarItem>[
-              BottomNavigationBarItem(
-                icon: SvgPicture.asset(
-                  AssetConstants.homeIcon,
-                  height: 24,
-                  width: 24,
-                  colorFilter: ColorFilter.mode(
-                    _selectedIndex == 0 ? ColorConstants.white : Colors.grey,
-                    BlendMode.srcIn,
-                  ),
-                ),
-                label: StringConstants.home,
-              ),
-              BottomNavigationBarItem(
-                icon: SvgPicture.asset(
-                  AssetConstants.settingIcon,
-                  height: 24,
-                  width: 24,
-                  colorFilter: ColorFilter.mode(
-                    _selectedIndex == 1 ? ColorConstants.white : Colors.grey,
-                    BlendMode.srcIn,
-                  ),
-                ),
-                label: StringConstants.settings,
-              ),
-              BottomNavigationBarItem(
-                icon: SvgPicture.asset(
-                  AssetConstants.helpIcon,
-                  height: 24,
-                  width: 24,
-                  colorFilter: ColorFilter.mode(
-                    _selectedIndex == 2 ? ColorConstants.white : Colors.grey,
-                    BlendMode.srcIn,
-                  ),
-                ),
-                label: StringConstants.help,
-              ),
-            ],
-            currentIndex: _selectedIndex,
-            selectedItemColor: ColorConstants.white,
-            unselectedItemColor: Colors.grey,
-            onTap: _onItemTapped,
-            backgroundColor: ColorConstants.primary,
-            elevation: 0,
-            type: BottomNavigationBarType.fixed,
-            selectedLabelStyle: StyleConstants.black12w600Style,
-            unselectedLabelStyle: StyleConstants.black12w500Style,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _HomeContent extends StatefulWidget {
-  const _HomeContent();
-
-  @override
-  State<_HomeContent> createState() => _HomeContentState();
-}
-
-class _HomeContentState extends State<_HomeContent> with RouteAware {
-  final SiteService _siteService = SiteService();
-  final LogRetrievalService _logRetrievalService = LogRetrievalService();
-  List<SiteWithLogCount> _sites = [];
-  bool _isLoading = true;
-  Map<int, int> lastRetrievalCounts = {};
-  Map<int, DateTime?> lastRetrievalDates = {};
-  final ble = Get.find<BleLogController>().bleManager;
-  bool _routeSubscriptionRegistered = false;
 
   @override
   void didChangeDependencies() {
@@ -177,6 +97,10 @@ class _HomeContentState extends State<_HomeContent> with RouteAware {
       appRouteObserver.unsubscribe(this);
       _routeSubscriptionRegistered = false;
     }
+    _controller.detachUi();
+    if (Get.isRegistered<HomeScreenController>()) {
+      Get.delete<HomeScreenController>();
+    }
     super.dispose();
   }
 
@@ -184,65 +108,141 @@ class _HomeContentState extends State<_HomeContent> with RouteAware {
   void didPopNext() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      _refreshSites();
+      _controller.refreshSites();
     });
   }
 
-  @override
-  void initState() {
-    super.initState();
-    _loadSites();
-  }
-
-  Future<void> _loadSites() async {
-    try {
-      final sites = await _siteService.getSitesWithLogCount();
-      await _loadLatestRetrievals(sites);
-      setState(() {
-        _sites = sites;
-        _isLoading = false;
-      });
-    } catch (error) {
-      setState(() {
-        _isLoading = false;
-      });
-    }
-  }
-
-  Future<void> _refreshSites() async {
-    setState(() {
-      _isLoading = true;
-    });
-    await _loadSites();
+  List<Widget> _screens() {
+    return [
+      _buildHomeContent(),
+      SettingsScreen(
+        panelName: StringConstants.rhino2008,
+        panelVersionNo: StringConstants.s098,
+      ),
+      const HelpScreen(),
+    ];
   }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [ColorConstants.scaffoldGradientTop, ColorConstants.white],
-        ),
-      ),
-      child: Stack(
-        children: [
-          _buildHeader(context),
-          Padding(
-            padding: const EdgeInsets.only(top: 250),
-            child: _buildQuickLinks(context),
+    return GetBuilder<HomeScreenController>(
+      init: _controller,
+      builder: (controller) {
+        return Scaffold(
+          backgroundColor: ColorConstants.white,
+          extendBody: true,
+          body: _screens()[controller.selectedIndex],
+          bottomNavigationBar: Container(
+            height: 80,
+            decoration: BoxDecoration(
+              boxShadow: [
+                BoxShadow(
+                  color: ColorConstants.blackMaterial.withValues(alpha: 0.1),
+                  blurRadius: 10,
+                  offset: const Offset(0, -5),
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(32),
+                topRight: Radius.circular(32),
+              ),
+              child: BottomNavigationBar(
+                iconSize: 24,
+                items: <BottomNavigationBarItem>[
+                  BottomNavigationBarItem(
+                    icon: SvgPicture.asset(
+                      AssetConstants.homeIcon,
+                      height: 24,
+                      width: 24,
+                      colorFilter: ColorFilter.mode(
+                        controller.selectedIndex == 0
+                            ? ColorConstants.white
+                            : Colors.grey,
+                        BlendMode.srcIn,
+                      ),
+                    ),
+                    label: StringConstants.home,
+                  ),
+                  BottomNavigationBarItem(
+                    icon: SvgPicture.asset(
+                      AssetConstants.settingIcon,
+                      height: 24,
+                      width: 24,
+                      colorFilter: ColorFilter.mode(
+                        controller.selectedIndex == 1
+                            ? ColorConstants.white
+                            : Colors.grey,
+                        BlendMode.srcIn,
+                      ),
+                    ),
+                    label: StringConstants.settings,
+                  ),
+                  BottomNavigationBarItem(
+                    icon: SvgPicture.asset(
+                      AssetConstants.helpIcon,
+                      height: 24,
+                      width: 24,
+                      colorFilter: ColorFilter.mode(
+                        controller.selectedIndex == 2
+                            ? ColorConstants.white
+                            : Colors.grey,
+                        BlendMode.srcIn,
+                      ),
+                    ),
+                    label: StringConstants.help,
+                  ),
+                ],
+                currentIndex: controller.selectedIndex,
+                selectedItemColor: ColorConstants.white,
+                unselectedItemColor: Colors.grey,
+                onTap: controller.setSelectedIndex,
+                backgroundColor: ColorConstants.primary,
+                elevation: 0,
+                type: BottomNavigationBarType.fixed,
+                selectedLabelStyle: StyleConstants.black12w600Style,
+                unselectedLabelStyle: StyleConstants.black12w500Style,
+              ),
+            ),
           ),
-          Padding(
-            padding: const EdgeInsets.only(top: 354),
-            child: _buildRecentSites(),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
-  Widget _buildHeader(BuildContext context) {
+  Widget _buildHomeContent() {
+    return GetBuilder<HomeScreenController>(
+      builder:
+          (controller) => Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  ColorConstants.scaffoldGradientTop,
+                  ColorConstants.white,
+                ],
+              ),
+            ),
+            child: Stack(
+              children: [
+                _buildHeader(controller),
+                Padding(
+                  padding: const EdgeInsets.only(top: 250),
+                  child: _buildQuickLinks(controller),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 354),
+                  child: _buildRecentSites(controller),
+                ),
+              ],
+            ),
+          ),
+    );
+  }
+
+  Widget _buildHeader(HomeScreenController controller) {
     return Stack(
       children: [
         Padding(
@@ -272,21 +272,7 @@ class _HomeContentState extends State<_HomeContent> with RouteAware {
                 child: Padding(
                   padding: const EdgeInsets.all(30.0),
                   child: InkWell(
-                    onTap: () async {
-                      if (ble.isConnected) {
-                        await ble.disconnectConnectedDevice();
-                      }
-                      await Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) {
-                            ScanBinding(
-                              args: ScanFlowArgs.scanning(),
-                            ).dependencies();
-                            return const ScanningScreen();
-                          },
-                        ),
-                      );
-                    },
+                    onTap: controller.openTapToConnectScan,
                     child: Container(
                       width: 106,
                       height: 106,
@@ -322,7 +308,7 @@ class _HomeContentState extends State<_HomeContent> with RouteAware {
     );
   }
 
-  Widget _buildQuickLinks(BuildContext context) {
+  Widget _buildQuickLinks(HomeScreenController controller) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
@@ -339,14 +325,7 @@ class _HomeContentState extends State<_HomeContent> with RouteAware {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               GestureDetector(
-                onTap: () {
-                  CreateProjectBinding().dependencies();
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => const CreateSiteScreen(),
-                    ),
-                  );
-                },
+                onTap: controller.openNewSite,
                 child: _buildQuickLinkItem(
                   AssetConstants.newProjectIcon,
                   StringConstants.newSite,
@@ -358,36 +337,14 @@ class _HomeContentState extends State<_HomeContent> with RouteAware {
                 isEnabled: false,
               ),
               GestureDetector(
-                onTap: () async {
-                  await Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) {
-                        ScanBinding(
-                          args: ScanFlowArgs.scanning(isLiveEventLogs: true),
-                        ).dependencies();
-                        return const ScanningScreen();
-                      },
-                    ),
-                  );
-                },
+                onTap: controller.openLiveEventsScan,
                 child: _buildQuickLinkItem(
                   AssetConstants.maintenanceIcon,
                   StringConstants.liveEvents,
                 ),
               ),
               GestureDetector(
-                onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) {
-                        ScanBinding(
-                          args: ScanFlowArgs.scanning(isLiveEvent: true),
-                        ).dependencies();
-                        return const ScanningScreen();
-                      },
-                    ),
-                  );
-                },
+                onTap: controller.openRetrieveLogScan,
                 child: _buildQuickLinkItem(
                   AssetConstants.retrieveLogIcon,
                   StringConstants.retrieveLog,
@@ -444,7 +401,7 @@ class _HomeContentState extends State<_HomeContent> with RouteAware {
     );
   }
 
-  Widget _buildRecentSites() {
+  Widget _buildRecentSites(HomeScreenController controller) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
@@ -457,7 +414,7 @@ class _HomeContentState extends State<_HomeContent> with RouteAware {
                 StringConstants.recentSites,
                 style: StyleConstants.textDark18w700Style,
               ),
-              if (_sites.isNotEmpty)
+              if (controller.sites.isNotEmpty)
                 Text(
                   StringConstants.viewAll,
                   style: StyleConstants.textGray14w500Style,
@@ -465,51 +422,26 @@ class _HomeContentState extends State<_HomeContent> with RouteAware {
             ],
           ),
           SizedBox(height: 12),
-          _buildRecentSitesItem(),
+          _buildRecentSitesItem(controller),
         ],
       ),
     );
   }
 
-  Future<void> _loadLatestRetrievals(List<SiteWithLogCount> sites) async {
-    final counts = <int, int>{};
-    final dates = <int, DateTime?>{};
-
-    for (final siteWithCount in sites) {
-      final siteId = siteWithCount.site.id;
-      if (siteId == null) continue;
-
-      try {
-        final latest = await _logRetrievalService.getMostRecentLogRetrieval(
-          siteId,
-        );
-        if (latest != null) {
-          counts[siteId] = latest.logCount;
-          dates[siteId] = latest.retrievalDate;
-        } else {
-          dates[siteId] = siteWithCount.lastLogRetrieved;
-        }
-      } catch (_) {
-        dates[siteId] = siteWithCount.lastLogRetrieved;
-      }
-    }
-
-    lastRetrievalCounts = counts;
-    lastRetrievalDates = dates;
-  }
-
-  Widget _buildLastLogSummary(SiteWithLogCount siteWithLogCount) {
-    final site = siteWithLogCount.site;
-    final DateTime createdAt = site.createdAt;
+  Widget _buildLastLogSummary(
+    HomeScreenController controller,
+    SiteWithLogCount siteWithLogCount,
+  ) {
+    final displayDate = controller.siteSummaryDate(siteWithLogCount);
 
     return Padding(
       padding: const EdgeInsets.only(top: 4),
       child: Row(
         children: [
           Text(
-            '${DateFormat('MMM d').format(createdAt)}, '
-            '${DateFormat('yyyy').format(createdAt)} • '
-            '${DateFormat('hh:mm a').format(createdAt)}',
+            '${DateFormat('MMM d').format(displayDate)}, '
+            '${DateFormat('yyyy').format(displayDate)} • '
+            '${DateFormat('hh:mm a').format(displayDate)}',
             style: StyleConstants.textMuted11w400Style,
           ),
         ],
@@ -517,8 +449,8 @@ class _HomeContentState extends State<_HomeContent> with RouteAware {
     );
   }
 
-  Widget _buildRecentSitesItem() {
-    if (_isLoading) {
+  Widget _buildRecentSitesItem(HomeScreenController controller) {
+    if (controller.isLoading) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(32.0),
@@ -531,16 +463,16 @@ class _HomeContentState extends State<_HomeContent> with RouteAware {
       height: MediaQuery.sizeOf(context).height - 550,
       child: RefreshIndicator(
         color: ColorConstants.primary,
-        onRefresh: _refreshSites,
+        onRefresh: controller.refreshSites,
         child: ListView.separated(
           physics: AlwaysScrollableScrollPhysics(),
           shrinkWrap: true,
-          itemCount: _sites.isEmpty ? 1 : _sites.length,
+          itemCount: controller.sites.isEmpty ? 1 : controller.sites.length,
           separatorBuilder: (context, index) {
             return SizedBox(height: 10);
           },
           itemBuilder: (context, index) {
-            if (_sites.isEmpty) {
+            if (controller.sites.isEmpty) {
               return Center(
                 child: Text(
                   StringConstants.noSitesYet,
@@ -548,25 +480,11 @@ class _HomeContentState extends State<_HomeContent> with RouteAware {
                 ),
               );
             }
-            final siteWithLogCount = _sites[index];
+            final siteWithLogCount = controller.sites[index];
             final site = siteWithLogCount.site;
 
             return GestureDetector(
-              onTap: () async {
-                final deleted = await Navigator.of(context).push<bool>(
-                  MaterialPageRoute(
-                    builder:
-                        (context) => SiteScreen(
-                          site: site,
-                          siteWithLogCount: siteWithLogCount,
-                        ),
-                  ),
-                );
-
-                if (deleted == true) {
-                  await _refreshSites();
-                }
-              },
+              onTap: () => controller.openSite(siteWithLogCount),
               child: Container(
                 decoration: BoxDecoration(
                   color: ColorConstants.white,
@@ -599,7 +517,7 @@ class _HomeContentState extends State<_HomeContent> with RouteAware {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
-                            _buildLastLogSummary(siteWithLogCount),
+                            _buildLastLogSummary(controller, siteWithLogCount),
                           ],
                         ),
                       ),
