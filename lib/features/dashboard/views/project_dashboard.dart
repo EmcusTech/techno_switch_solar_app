@@ -14,6 +14,7 @@ import 'package:techno_switch_solar_app/features/logs/views/log_retrieval_loadin
 import 'package:techno_switch_solar_app/features/scan/models/scan_type.dart';
 import 'package:techno_switch_solar_app/features/settings/controllers/settings_controller.dart';
 import 'package:techno_switch_solar_app/features/settings/views/settings_screen.dart';
+import 'package:techno_switch_solar_app/features/test_mode/controllers/test_mode_controller.dart';
 import 'package:techno_switch_solar_app/features/test_mode/views/test_mode_screen.dart';
 import 'package:techno_switch_solar_app/panel_config/panel_access_password_popup.dart';
 import 'package:techno_switch_solar_app/panel_config/panel_config_bulk_sync.dart';
@@ -95,6 +96,9 @@ class _ProjectDashboardPageHostState extends State<_ProjectDashboardPageHost>
     }
     if (Get.isRegistered<SettingsController>()) {
       Get.delete<SettingsController>();
+    }
+    if (Get.isRegistered<TestModeController>()) {
+      Get.delete<TestModeController>();
     }
     super.dispose();
   }
