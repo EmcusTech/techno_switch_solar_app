@@ -1,100 +1,53 @@
-import 'dart:typed_data';
-
-import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
-import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:techno_switch_solar_app/models/panel_model.dart';
-import 'package:techno_switch_solar_app/models/site_model.dart';
-import 'package:techno_switch_solar_app/features/sites/views/site_detail_screen.dart';
+import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import 'package:techno_switch_solar_app/features/dashboard/bindings/project_dashboard_binding.dart';
 import 'package:techno_switch_solar_app/features/dashboard/models/project_dashboard_args.dart';
 import 'package:techno_switch_solar_app/features/dashboard/views/project_dashboard.dart';
+import 'package:techno_switch_solar_app/features/sites/bindings/site_binding.dart';
+import 'package:techno_switch_solar_app/features/sites/controllers/site_controller.dart';
+import 'package:techno_switch_solar_app/features/sites/controllers/site_ui_delegate.dart';
+import 'package:techno_switch_solar_app/features/sites/models/site_args.dart';
+import 'package:techno_switch_solar_app/features/sites/views/site_detail_screen.dart';
+import 'package:techno_switch_solar_app/models/panel_model.dart';
 import 'package:techno_switch_solar_app/utils/site_service.dart';
-import 'package:techno_switch_solar_app/utils/log_retrieval_service.dart';
-import 'package:techno_switch_solar_app/utils/panel_service.dart';
-import 'package:intl/intl.dart';
-import 'package:techno_switch_solar_app/utils/logger.dart';
 import 'package:techno_switch_solar_app/widgets/common/common_cta_button.dart';
-import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/ble/ble_name_utils.dart';
-import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
+import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
-
+import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
 
-class SiteScreen extends StatefulWidget {
-  final SiteModel site;
-  final SiteWithLogCount siteWithLogCount;
-  const SiteScreen({
-    super.key,
-    required this.site,
-    required this.siteWithLogCount,
-  });
+class SiteScreen extends GetView<SiteController> {
+  const SiteScreen({super.key});
 
   @override
-  State<SiteScreen> createState() => _SiteScreenState();
+  Widget build(BuildContext context) {
+    return _SitePageHost(controller: controller);
+  }
 }
 
-class _SiteScreenState extends State<SiteScreen> {
-  final SiteService _siteService = SiteService();
-  final LogRetrievalService _logRetrievalService = LogRetrievalService();
-  final PanelService _panelService = PanelService();
-  List<PanelModel> _panels = [];
-  bool _isLoading = true;
-  bool _isDeletingSite = false;
-  int? _lastRetrievalLogCount;
-  DateTime? _lastRetrievalDate;
+class _SitePageHost extends StatefulWidget {
+  const _SitePageHost({required this.controller});
+
+  final SiteController controller;
 
   @override
-  void initState() {
-    super.initState();
-    _loadPanels();
-    _loadLatestRetrievalInfo();
-  }
+  State<_SitePageHost> createState() => _SitePageHostState();
+}
 
-  Future<void> _loadPanels() async {
-    try {
-      final panels = await _siteService.getSitePanels(widget.site.id!);
+class _SitePageHostState extends State<_SitePageHost> implements SiteUiDelegate {
+  SiteController get _controller => widget.controller;
 
-      setState(() {
-        _panels = panels;
-        _isLoading = false;
-      });
-    } catch (error) {
-      setState(() {
-        _isLoading = false;
-      });
-    }
-  }
+  @override
+  bool get isMounted => mounted;
 
-  Future<void> _loadLatestRetrievalInfo() async {
-    try {
-      final latest = await _logRetrievalService.getMostRecentLogRetrieval(
-        widget.site.id!,
-      );
-      if (!mounted) return;
-      setState(() {
-        _lastRetrievalLogCount = latest?.logCount;
-        _lastRetrievalDate = latest?.retrievalDate;
-      });
-    } catch (error) {
-      Logger('Error loading latest retrieval info: $error');
-    }
-  }
-
-  Future<void> _refreshSites() async {
-    setState(() {
-      _isLoading = true;
-    });
-    await _loadPanels();
-  }
-
-  Future<void> _confirmDeleteSite() async {
-    if (widget.site.id == null || _isDeletingSite) return;
-
-    final shouldDelete = await showDialog<bool>(
+  @override
+  Future<bool?> showDeleteSiteDialog({required String siteName}) {
+    return showDialog<bool>(
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) {
@@ -126,21 +79,18 @@ class _SiteScreenState extends State<SiteScreen> {
                     ),
                   ),
                 ),
-
                 const SizedBox(height: 16),
                 Text(
                   StringConstants.deleteSite,
                   style: StyleConstants.textDark20w700Style,
                   textAlign: TextAlign.center,
                 ),
-
                 const SizedBox(height: 8),
                 Text(
-                  UiStrings.deleteSiteConfirmMessage(widget.site.siteName),
+                  UiStrings.deleteSiteConfirmMessage(siteName),
                   style: StyleConstants.textMuted14w400Style,
                   textAlign: TextAlign.center,
                 ),
-
                 const SizedBox(height: 20),
                 Row(
                   children: [
@@ -187,58 +137,11 @@ class _SiteScreenState extends State<SiteScreen> {
         );
       },
     );
-
-    if (shouldDelete == true) {
-      await _deleteSite();
-    }
   }
 
-  Future<void> _deleteSite() async {
-    setState(() {
-      _isDeletingSite = true;
-    });
-
-    try {
-      final deleted = await _siteService.deleteSite(widget.site.id!);
-      if (!mounted) return;
-
-      if (deleted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              StringConstants.siteDeletedMessage(widget.site.siteName),
-            ),
-            backgroundColor: ColorConstants.primary,
-          ),
-        );
-        Navigator.of(context).pop(true);
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(StringConstants.unableToDeleteSite),
-            backgroundColor: ColorConstants.primary,
-          ),
-        );
-      }
-    } catch (error) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('${StringConstants.errorDeletingSitePrefix}$error'),
-          backgroundColor: ColorConstants.primary,
-        ),
-      );
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isDeletingSite = false;
-        });
-      }
-    }
-  }
-
-  Future<void> _confirmDeletePanel(PanelModel panel) async {
-    final shouldDelete = await showDialog<bool>(
+  @override
+  Future<bool?> showDeletePanelDialog({required PanelModel panel}) {
+    return showDialog<bool>(
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) {
@@ -270,14 +173,12 @@ class _SiteScreenState extends State<SiteScreen> {
                     ),
                   ),
                 ),
-
                 const SizedBox(height: 16),
                 Text(
                   StringConstants.removePanel,
                   style: StyleConstants.textDark20w700Style,
                   textAlign: TextAlign.center,
                 ),
-
                 const SizedBox(height: 8),
                 Text(
                   StringConstants.removePanelConfirmationMessage(
@@ -287,7 +188,6 @@ class _SiteScreenState extends State<SiteScreen> {
                   style: StyleConstants.textMuted14w400Style,
                   textAlign: TextAlign.center,
                 ),
-
                 const SizedBox(height: 20),
                 Row(
                   children: [
@@ -334,55 +234,65 @@ class _SiteScreenState extends State<SiteScreen> {
         );
       },
     );
-
-    if (shouldDelete == true) {
-      await _deletePanel(panel);
-    }
   }
 
-  Future<void> _deletePanel(PanelModel panel) async {
-    setState(() {
-      _isLoading = true;
-    });
-
-    try {
-      final deleted = await _panelService.deletePanel(panel.panelId);
-      if (!mounted) return;
-
-      if (deleted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(StringConstants.panelDeletedMessage(panel.panelName)),
-            backgroundColor: ColorConstants.primary,
-          ),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(StringConstants.unableToDeletePanel),
-            backgroundColor: ColorConstants.primary,
-          ),
-        );
-      }
-    } catch (error) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('${StringConstants.errorDeletingPanelPrefix}$error'),
-          backgroundColor: ColorConstants.primary,
-        ),
-      );
-    } finally {
-      if (mounted) {
-        await _loadPanels();
-      }
-    }
+  @override
+  void showSnackBar(String message, {Color? backgroundColor}) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: backgroundColor ?? ColorConstants.primary,
+      ),
+    );
   }
 
-  Widget _buildLastLogSummary() {
-    final int? lastLogCount = _lastRetrievalLogCount;
+  @override
+  void popScreen([bool? result]) {
+    if (!mounted) return;
+    Navigator.of(context).pop(result);
+  }
+
+  @override
+  Future<void> openSiteDetail({required SiteWithLogCount siteWithLogCount}) async {
+    if (!mounted) return;
+    SiteDetailBinding(
+      args: SiteDetailArgs(siteWithLogCount: siteWithLogCount),
+    ).dependencies();
+    await Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const SiteDetailScreen()),
+    );
+  }
+
+  @override
+  void openProjectDashboard({required ProjectDashboardArgs args}) {
+    if (!mounted) return;
+    ProjectDashboardBinding(args: args).dependencies();
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const ProjectDashboardScreen()),
+    );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _controller.attachUi(this);
+  }
+
+  @override
+  void dispose() {
+    _controller.detachUi();
+    if (Get.isRegistered<SiteController>()) {
+      Get.delete<SiteController>();
+    }
+    super.dispose();
+  }
+
+  Widget _buildLastLogSummary(SiteController controller) {
+    final int? lastLogCount = controller.lastRetrievalLogCount;
     final DateTime? lastLogDate =
-        _lastRetrievalDate ?? widget.siteWithLogCount.lastLogRetrieved;
+        controller.lastRetrievalDate ??
+        controller.siteWithLogCount.lastLogRetrieved;
 
     if ((lastLogCount ?? 0) <= 0) {
       return Padding(
@@ -396,7 +306,7 @@ class _SiteScreenState extends State<SiteScreen> {
 
     return Row(
       children: [
-        Icon(Icons.timeline, size: 12, color: ColorConstants.success),
+        const Icon(Icons.timeline, size: 12, color: ColorConstants.success),
         const SizedBox(width: 4),
         Text(
           '$lastLogCount log${lastLogCount == 1 ? '' : 's'}',
@@ -415,78 +325,82 @@ class _SiteScreenState extends State<SiteScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        height: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [ColorConstants.scaffoldGradientTop, ColorConstants.white],
-          ),
-        ),
-        child: Stack(children: [_buildHeader(context)]),
-      ),
-    );
-  }
-
-  Widget _buildHeader(BuildContext context) {
-    return Stack(
-      children: [
-        SvgPicture.asset(AssetConstants.background1),
-        Padding(
-          padding: const EdgeInsets.only(top: 120),
-          child: Column(
-            children: [
-              _buildSiteDetails(),
-              SizedBox(height: 20),
-              _buildPanels(),
-            ],
-          ),
-        ),
-        Positioned(
-          top: 50,
-          left: 20,
-          child: Row(
-            children: [
-              GestureDetector(
-                onTap: () {
-                  Navigator.of(context).pop();
-                },
-                child: Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: ColorConstants.white,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: ColorConstants.blackMaterial.withOpacity(0.1),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
+    return GetBuilder<SiteController>(
+      init: _controller,
+      builder: (controller) {
+        return Scaffold(
+          body: Container(
+            height: double.infinity,
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  ColorConstants.scaffoldGradientTop,
+                  ColorConstants.white,
+                ],
+              ),
+            ),
+            child: Stack(
+              children: [
+                SvgPicture.asset(AssetConstants.background1),
+                Padding(
+                  padding: const EdgeInsets.only(top: 120),
+                  child: Column(
+                    children: [
+                      _buildSiteDetails(controller),
+                      const SizedBox(height: 20),
+                      _buildPanels(controller),
+                    ],
+                  ),
+                ),
+                Positioned(
+                  top: 50,
+                  left: 20,
+                  child: Row(
+                    children: [
+                      GestureDetector(
+                        onTap: controller.popBack,
+                        child: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: ColorConstants.white,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: ColorConstants.blackMaterial.withOpacity(
+                                  0.1,
+                                ),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: const Icon(
+                            Icons.arrow_back_ios_new,
+                            color: ColorConstants.textDark,
+                            size: 18,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        StringConstants.siteInformation,
+                        style: StyleConstants.black20w700Style,
                       ),
                     ],
                   ),
-                  child: const Icon(
-                    Icons.arrow_back_ios_new,
-                    color: ColorConstants.textDark,
-                    size: 18,
-                  ),
                 ),
-              ),
-              SizedBox(width: 12),
-              Text(
-                StringConstants.siteInformation,
-                style: StyleConstants.black20w700Style,
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
-      ],
+        );
+      },
     );
   }
 
-  Widget _buildSiteDetails() {
+  Widget _buildSiteDetails(SiteController controller) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
@@ -494,7 +408,7 @@ class _SiteScreenState extends State<SiteScreen> {
           Container(
             decoration: BoxDecoration(
               color: ColorConstants.errorTint,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(8)),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
               boxShadow: [
                 BoxShadow(
                   color: ColorConstants.blackMaterial.withOpacity(0.1),
@@ -518,9 +432,9 @@ class _SiteScreenState extends State<SiteScreen> {
                       Row(
                         children: [
                           SvgPicture.asset(AssetConstants.locationIcon),
-                          SizedBox(width: 8),
+                          const SizedBox(width: 8),
                           Text(
-                            widget.site.siteName,
+                            controller.site.siteName,
                             style: StyleConstants.textBodyDark20boldStyle,
                           ),
                         ],
@@ -531,14 +445,12 @@ class _SiteScreenState extends State<SiteScreen> {
                       ),
                     ],
                   ),
-                  Spacer(),
+                  const Spacer(),
                   GestureDetector(
-                    onTap: () {
-                      _confirmDeleteSite();
-                    },
+                    onTap: controller.confirmDeleteSite,
                     child: SvgPicture.asset(
                       AssetConstants.deleteIcon,
-                      colorFilter: ColorFilter.mode(
+                      colorFilter: const ColorFilter.mode(
                         ColorConstants.errorBright,
                         BlendMode.srcIn,
                       ),
@@ -552,7 +464,9 @@ class _SiteScreenState extends State<SiteScreen> {
             width: double.infinity,
             decoration: BoxDecoration(
               color: ColorConstants.white,
-              borderRadius: BorderRadius.vertical(bottom: Radius.circular(8)),
+              borderRadius: const BorderRadius.vertical(
+                bottom: Radius.circular(8),
+              ),
               boxShadow: [
                 BoxShadow(
                   color: ColorConstants.blackMaterial.withOpacity(0.1),
@@ -569,7 +483,7 @@ class _SiteScreenState extends State<SiteScreen> {
                   Row(
                     children: [
                       SvgPicture.asset(AssetConstants.siteCalenderIcon),
-                      SizedBox(width: 12),
+                      const SizedBox(width: 12),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -580,30 +494,21 @@ class _SiteScreenState extends State<SiteScreen> {
                           Text(
                             DateFormat(
                               'MMM d, y',
-                            ).format(widget.siteWithLogCount.site.createdAt),
+                            ).format(controller.siteWithLogCount.site.createdAt),
                             style: StyleConstants.textNeutral12w400Style,
                           ),
                         ],
                       ),
                     ],
                   ),
-                  SizedBox(height: 16),
+                  const SizedBox(height: 16),
                   CommonCtaButton(
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder:
-                              (context) => SiteDetailScreen(
-                                siteWithLogCount: widget.siteWithLogCount,
-                              ),
-                        ),
-                      );
-                    },
+                    onTap: controller.openSiteDetail,
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         SvgPicture.asset(AssetConstants.detailsIcon),
-                        SizedBox(width: 8),
+                        const SizedBox(width: 8),
                         Text(
                           StringConstants.viewSiteDetails,
                           style: StyleConstants.white14w500Style,
@@ -620,7 +525,7 @@ class _SiteScreenState extends State<SiteScreen> {
     );
   }
 
-  Widget _buildPanels() {
+  Widget _buildPanels(SiteController controller) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
@@ -632,15 +537,15 @@ class _SiteScreenState extends State<SiteScreen> {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
-          SizedBox(height: 20),
-          _buildPanelItem(),
+          const SizedBox(height: 20),
+          _buildPanelList(controller),
         ],
       ),
     );
   }
 
-  Widget _buildPanelItem() {
-    if (_isLoading) {
+  Widget _buildPanelList(SiteController controller) {
+    if (controller.isLoading) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(32.0),
@@ -649,9 +554,9 @@ class _SiteScreenState extends State<SiteScreen> {
       );
     }
 
-    if (_panels.isEmpty) {
+    if (controller.panels.isEmpty) {
       return Container(
-        padding: EdgeInsets.all(32),
+        padding: const EdgeInsets.all(32),
         decoration: BoxDecoration(
           color: ColorConstants.white,
           border: Border.all(
@@ -671,12 +576,12 @@ class _SiteScreenState extends State<SiteScreen> {
                 BlendMode.srcIn,
               ),
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             Text(
               StringConstants.noPanelsYet,
               style: StyleConstants.textDark16w600Style,
             ),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             Text(
               StringConstants.connectToAPanelToAssociateItWithThisSite,
               style: StyleConstants.textGray14w400Style,
@@ -687,52 +592,25 @@ class _SiteScreenState extends State<SiteScreen> {
       );
     }
 
+    final lastLogSummary = _buildLastLogSummary(controller);
+
     return SizedBox(
       height: MediaQuery.sizeOf(context).height * 0.45,
       child: RefreshIndicator(
         color: ColorConstants.primary,
-        onRefresh: _refreshSites,
+        onRefresh: controller.refreshPanels,
         child: ListView.separated(
-          physics: AlwaysScrollableScrollPhysics(),
+          physics: const AlwaysScrollableScrollPhysics(),
           shrinkWrap: true,
-          itemCount: _panels.length,
-          separatorBuilder: (context, index) {
-            return SizedBox(height: 10);
-          },
+          itemCount: controller.panels.length,
+          separatorBuilder: (context, index) => const SizedBox(height: 10),
           itemBuilder: (context, index) {
-            final panel = _panels[index];
-            final panelName = panel.panelName;
-
-            void onTap() {
-              final selectedDevice = DiscoveredDevice(
-                name: panelName,
-                id: panel.panelId,
-                rssi: 0,
-                serviceData: {},
-                manufacturerData: Uint8List(0),
-                serviceUuids: [],
-              );
-              ProjectDashboardBinding(
-                args: ProjectDashboardArgs(
-                  panelVersionNo: panel.deviceDisplayInfo,
-                  panelName: panelName,
-                  selectedDevice: selectedDevice,
-                  siteId: widget.site.id!,
-                  siteName: widget.site.siteName,
-                ),
-              ).dependencies();
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => const ProjectDashboardScreen(),
-                ),
-              );
-            }
-
+            final panel = controller.panels[index];
             return _PanelListItemWidget(
               panel: panel,
-              lastLogSummary: _buildLastLogSummary(),
-              onTap: onTap,
-              onDelete: () => _confirmDeletePanel(panel),
+              lastLogSummary: lastLogSummary,
+              onTap: () => controller.openPanelDashboard(panel),
+              onDelete: () => controller.confirmDeletePanel(panel),
               isAutomated: index == 0,
             );
           },
@@ -743,12 +621,6 @@ class _SiteScreenState extends State<SiteScreen> {
 }
 
 class _PanelListItemWidget extends StatefulWidget {
-  final PanelModel panel;
-  final Widget lastLogSummary;
-  final VoidCallback onTap;
-  final VoidCallback onDelete;
-  final bool isAutomated;
-
   const _PanelListItemWidget({
     required this.panel,
     required this.lastLogSummary,
@@ -756,6 +628,12 @@ class _PanelListItemWidget extends StatefulWidget {
     required this.onDelete,
     required this.isAutomated,
   });
+
+  final PanelModel panel;
+  final Widget lastLogSummary;
+  final VoidCallback onTap;
+  final VoidCallback onDelete;
+  final bool isAutomated;
 
   @override
   State<_PanelListItemWidget> createState() => _PanelListItemWidgetState();
@@ -838,7 +716,7 @@ class _PanelListItemWidgetState extends State<_PanelListItemWidget>
                     height: 62,
                     width: 62,
                   ),
-                  SizedBox(width: 14.31),
+                  const SizedBox(width: 14.31),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -863,12 +741,11 @@ class _PanelListItemWidgetState extends State<_PanelListItemWidget>
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        // widget.lastLogSummary,
                       ],
                     ),
                   ),
-                  SizedBox(width: 8),
-                  Icon(
+                  const SizedBox(width: 8),
+                  const Icon(
                     Icons.arrow_forward_ios,
                     size: 16,
                     color: ColorConstants.primary,

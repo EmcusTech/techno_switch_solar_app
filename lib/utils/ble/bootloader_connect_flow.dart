@@ -14,7 +14,7 @@ import 'package:techno_switch_solar_app/widgets/dialogs/app_styled_dialogs.dart'
 import 'package:techno_switch_solar_app/widgets/dialogs/ble_connecting_dialog.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
-import 'package:techno_switch_solar_app/widgets/bottom_sheets/firmware_upgrade_bottom_sheet.dart';
+import 'package:techno_switch_solar_app/features/peripherals/firmware/sheets/firmware_upgrade_bottom_sheet.dart';
 
 /// True when scan MSD or post-connect [BleManager.bleManufacturerData] indicates bootloader.
 bool isBleDeviceInBootloaderMode({

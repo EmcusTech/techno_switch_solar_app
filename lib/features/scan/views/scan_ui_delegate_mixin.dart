@@ -17,6 +17,8 @@ import 'package:techno_switch_solar_app/features/scan/controllers/scan_ui_delega
 import 'package:techno_switch_solar_app/features/scan/models/scan_flow_args.dart';
 import 'package:techno_switch_solar_app/features/scan/views/scanned_screen.dart';
 import 'package:techno_switch_solar_app/features/scan/views/scanning_screen.dart';
+import 'package:techno_switch_solar_app/features/sites/bindings/site_binding.dart';
+import 'package:techno_switch_solar_app/features/sites/models/site_args.dart';
 import 'package:techno_switch_solar_app/features/sites/views/simple_site_creation_screen.dart';
 import 'package:techno_switch_solar_app/models/site_model.dart';
 import 'package:techno_switch_solar_app/panel_config/post_connect_bulk_download_offer.dart'
@@ -566,17 +568,17 @@ mixin ScanUiDelegateMixin<T extends StatefulWidget> on State<T>
     required String panelId,
     required String panelName,
   }) {
-    return Navigator.of(uiContext).push<int?>(
-      MaterialPageRoute(
-        builder:
-            (_) => SimpleSiteCreationScreen(
-              retrievedLogs: const [],
-              panelName: panelName,
-              panelVersionNo: '',
-              panelId: panelId,
-              returnCreatedSiteId: true,
-            ),
+    SimpleSiteCreationBinding(
+      args: SimpleSiteCreationArgs(
+        retrievedLogs: const [],
+        panelName: panelName,
+        panelVersionNo: '',
+        panelId: panelId,
+        returnCreatedSiteId: true,
       ),
+    ).dependencies();
+    return Navigator.of(uiContext).push<int?>(
+      MaterialPageRoute(builder: (_) => const SimpleSiteCreationScreen()),
     );
   }
 

@@ -9,6 +9,8 @@ import 'package:techno_switch_solar_app/features/home/controllers/home_screen_co
 import 'package:techno_switch_solar_app/features/home/controllers/home_screen_ui_delegate.dart';
 import 'package:techno_switch_solar_app/features/settings/controllers/settings_controller.dart';
 import 'package:techno_switch_solar_app/features/settings/views/settings_screen.dart';
+import 'package:techno_switch_solar_app/features/sites/bindings/site_binding.dart';
+import 'package:techno_switch_solar_app/features/sites/models/site_args.dart';
 import 'package:techno_switch_solar_app/features/sites/views/site_screen.dart';
 import 'package:techno_switch_solar_app/models/site_model.dart';
 import 'package:techno_switch_solar_app/utils/app/navigation_service.dart';
@@ -64,14 +66,11 @@ class _HomePageHostState extends State<_HomePageHost>
     required SiteModel site,
     required SiteWithLogCount siteWithLogCount,
   }) {
+    SiteBinding(
+      args: SiteArgs(site: site, siteWithLogCount: siteWithLogCount),
+    ).dependencies();
     return Navigator.of(uiContext).push<bool>(
-      MaterialPageRoute(
-        builder:
-            (_) => SiteScreen(
-              site: site,
-              siteWithLogCount: siteWithLogCount,
-            ),
-      ),
+      MaterialPageRoute(builder: (_) => const SiteScreen()),
     );
   }
 

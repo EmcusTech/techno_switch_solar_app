@@ -1,21 +1,68 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:techno_switch_solar_app/utils/site_service.dart';
+import 'package:get/get.dart';
+import 'package:techno_switch_solar_app/features/sites/controllers/site_controller.dart';
+import 'package:techno_switch_solar_app/features/sites/controllers/site_ui_delegate.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
-
 import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
 
-class SiteDetailScreen extends StatelessWidget {
-  final SiteWithLogCount siteWithLogCount;
-  const SiteDetailScreen({super.key, required this.siteWithLogCount});
+class SiteDetailScreen extends GetView<SiteDetailController> {
+  const SiteDetailScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    return _SiteDetailPageHost(controller: controller);
+  }
+}
+
+class _SiteDetailPageHost extends StatefulWidget {
+  const _SiteDetailPageHost({required this.controller});
+
+  final SiteDetailController controller;
+
+  @override
+  State<_SiteDetailPageHost> createState() => _SiteDetailPageHostState();
+}
+
+class _SiteDetailPageHostState extends State<_SiteDetailPageHost>
+    implements SiteDetailUiDelegate {
+  SiteDetailController get _controller => widget.controller;
+
+  @override
+  bool get isMounted => mounted;
+
+  @override
+  void popScreen() {
+    if (!mounted) return;
+    Navigator.of(context).pop();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _controller.attachUi(this);
+  }
+
+  @override
+  void dispose() {
+    _controller.detachUi();
+    if (Get.isRegistered<SiteDetailController>()) {
+      Get.delete<SiteDetailController>();
+    }
+    super.dispose();
+  }
+
+  String _displayValue(String value) => value.isNotEmpty ? value : '-';
+
+  @override
+  Widget build(BuildContext context) {
+    final site = _controller.siteWithLogCount.site;
+
     return Scaffold(
       body: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
@@ -32,9 +79,7 @@ class SiteDetailScreen extends StatelessWidget {
                   Row(
                     children: [
                       GestureDetector(
-                        onTap: () {
-                          Navigator.of(context).pop();
-                        },
+                        onTap: _controller.popBack,
                         child: Container(
                           width: 40,
                           height: 40,
@@ -58,14 +103,14 @@ class SiteDetailScreen extends StatelessWidget {
                           ),
                         ),
                       ),
-                      SizedBox(width: 12),
+                      const SizedBox(width: 12),
                       Text(
                         StringConstants.siteDetails,
                         style: StyleConstants.black20w700Style,
                       ),
                     ],
                   ),
-                  SizedBox(height: 12),
+                  const SizedBox(height: 12),
                   Container(
                     width: double.infinity,
                     decoration: BoxDecoration(
@@ -81,99 +126,82 @@ class SiteDetailScreen extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            "Site Name",
+                            StringConstants.siteName,
                             style: StyleConstants.textMediumGray13w700Style,
                           ),
-                          SizedBox(height: 4),
+                          const SizedBox(height: 4),
                           Text(
-                            siteWithLogCount.site.siteName,
+                            site.siteName,
                             style: StyleConstants.textBodyDark20w700Style,
                           ),
-                          SizedBox(height: 24),
+                          const SizedBox(height: 24),
                           Text(
                             StringConstants.installerName,
                             style: StyleConstants.textMediumGray13w700Style,
                           ),
-                          SizedBox(height: 4),
+                          const SizedBox(height: 4),
                           Text(
-                            siteWithLogCount.site.installerName.isNotEmpty
-                                ? siteWithLogCount.site.installerName
-                                : '-',
+                            _displayValue(site.installerName),
                             style: StyleConstants.textBodyDark20w700Style,
                           ),
-                          SizedBox(height: 24),
+                          const SizedBox(height: 24),
                           Text(
                             StringConstants.companyName,
                             style: StyleConstants.textMediumGray13w700Style,
                           ),
-                          SizedBox(height: 4),
+                          const SizedBox(height: 4),
                           Text(
-                            siteWithLogCount.site.companyName.isNotEmpty
-                                ? siteWithLogCount.site.companyName
-                                : '-',
+                            _displayValue(site.companyName),
                             style: StyleConstants.textBodyDark20w700Style,
                           ),
-                          SizedBox(height: 24),
+                          const SizedBox(height: 24),
                           Text(
                             StringConstants.saqccRegistrationNumber,
                             style: StyleConstants.textMediumGray13w700Style,
                           ),
-                          SizedBox(height: 4),
+                          const SizedBox(height: 4),
                           Text(
-                            siteWithLogCount.site.saqccRegNumber.isNotEmpty
-                                ? siteWithLogCount.site.saqccRegNumber
-                                : '-',
+                            _displayValue(site.saqccRegNumber),
                             style: StyleConstants.textBodyDark20w700Style,
                           ),
-                          SizedBox(height: 24),
+                          const SizedBox(height: 24),
                           Text(
                             StringConstants.buildingName,
                             style: StyleConstants.textMediumGray13w700Style,
                           ),
-                          SizedBox(height: 4),
+                          const SizedBox(height: 4),
                           Text(
-                            siteWithLogCount.site.buildingName.isNotEmpty
-                                ? siteWithLogCount.site.buildingName
-                                : '-',
+                            _displayValue(site.buildingName),
                             style: StyleConstants.textBodyDark20w700Style,
                           ),
-                          SizedBox(height: 24),
+                          const SizedBox(height: 24),
                           Text(
                             StringConstants.installerContactNumber,
                             style: StyleConstants.textMediumGray13w700Style,
                           ),
-                          SizedBox(height: 4),
+                          const SizedBox(height: 4),
                           Text(
-                            siteWithLogCount
-                                    .site
-                                    .installerContactNumber
-                                    .isNotEmpty
-                                ? siteWithLogCount.site.installerContactNumber
-                                : '-',
+                            _displayValue(site.installerContactNumber),
                             style: StyleConstants.textBodyDark20w700Style,
                           ),
-                          SizedBox(height: 24),
+                          const SizedBox(height: 24),
                           Text(
                             StringConstants.installerEmail,
                             style: StyleConstants.textMediumGray13w700Style,
                           ),
-                          SizedBox(height: 4),
+                          const SizedBox(height: 4),
                           Text(
-                            siteWithLogCount.site.installerEmail.isNotEmpty
-                                ? siteWithLogCount.site.installerEmail
-                                : '-',
+                            _displayValue(site.installerEmail),
                             style: StyleConstants.textBodyDark20w700Style,
                           ),
-                          SizedBox(height: 24),
+                          const SizedBox(height: 24),
                           Text(
                             StringConstants.siteDescription,
                             style: StyleConstants.textMediumGray13w700Style,
                           ),
-                          SizedBox(height: 4),
+                          const SizedBox(height: 4),
                           Text(
-                            siteWithLogCount.site.siteDescription.isNotEmpty
-                                ? siteWithLogCount.site.siteDescription
-                                : '-',
+                            _displayValue(site.siteDescription),
                             style: StyleConstants.textBodyDark20w700Style,
                           ),
                         ],

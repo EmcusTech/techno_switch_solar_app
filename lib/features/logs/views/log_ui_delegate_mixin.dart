@@ -5,6 +5,8 @@ import 'package:techno_switch_solar_app/features/logs/controllers/log_ui_delegat
 import 'package:techno_switch_solar_app/features/logs/models/log_flow_args.dart';
 import 'package:techno_switch_solar_app/features/logs/views/event_log_screen.dart';
 import 'package:techno_switch_solar_app/features/logs/views/log_retreival_completed_screen.dart';
+import 'package:techno_switch_solar_app/features/sites/bindings/site_binding.dart';
+import 'package:techno_switch_solar_app/features/sites/models/site_args.dart';
 import 'package:techno_switch_solar_app/features/sites/views/simple_site_creation_screen.dart';
 import 'package:techno_switch_solar_app/models/log_model.dart';
 import 'package:techno_switch_solar_app/utils/app/navigation_service.dart';
@@ -105,16 +107,16 @@ mixin LogUiDelegateMixin<T extends StatefulWidget> on State<T>
     required String panelVersionNo,
     required String panelId,
   }) {
-    Navigator.of(uiContext).pushReplacement(
-      MaterialPageRoute(
-        builder:
-            (_) => SimpleSiteCreationScreen(
-              retrievedLogs: logs,
-              panelName: panelName,
-              panelVersionNo: panelVersionNo,
-              panelId: panelId,
-            ),
+    SimpleSiteCreationBinding(
+      args: SimpleSiteCreationArgs(
+        retrievedLogs: logs,
+        panelName: panelName,
+        panelVersionNo: panelVersionNo,
+        panelId: panelId,
       ),
+    ).dependencies();
+    Navigator.of(uiContext).pushReplacement(
+      MaterialPageRoute(builder: (_) => const SimpleSiteCreationScreen()),
     );
   }
 

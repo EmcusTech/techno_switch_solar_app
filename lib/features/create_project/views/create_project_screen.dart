@@ -15,18 +15,20 @@ import 'package:techno_switch_solar_app/features/dashboard/views/project_dashboa
 import 'package:techno_switch_solar_app/features/scan/bindings/scan_binding.dart';
 import 'package:techno_switch_solar_app/features/scan/models/scan_flow_args.dart';
 import 'package:techno_switch_solar_app/features/scan/views/scanning_screen.dart';
+import 'package:techno_switch_solar_app/features/sites/bindings/site_binding.dart';
+import 'package:techno_switch_solar_app/features/sites/models/site_args.dart';
 import 'package:techno_switch_solar_app/features/sites/views/site_screen.dart';
 import 'package:techno_switch_solar_app/utils/site_service.dart';
 import 'package:techno_switch_solar_app/utils/constants/ble/ble_name_utils.dart';
-import 'package:techno_switch_solar_app/widgets/bottom_sheets/general_mode_bottomsheet.dart';
-import 'package:techno_switch_solar_app/widgets/bottom_sheets/input_mode_bottomsheet.dart';
-import 'package:techno_switch_solar_app/widgets/bottom_sheets/l_bus_mode_bottomsheet.dart';
-import 'package:techno_switch_solar_app/widgets/bottom_sheets/panel_info_mode_bottomsheet.dart';
-import 'package:techno_switch_solar_app/widgets/bottom_sheets/relay_mode_bottomsheet.dart';
-import 'package:techno_switch_solar_app/widgets/bottom_sheets/service_due_mode_bottomsheet.dart';
-import 'package:techno_switch_solar_app/widgets/bottom_sheets/setting_bottom_sheets/ext_out_bottomsheet.dart';
-import 'package:techno_switch_solar_app/widgets/bottom_sheets/sounder_mode_bottomsheet.dart';
-import 'package:techno_switch_solar_app/widgets/bottom_sheets/zone_mode_bottomsheet.dart';
+import 'package:techno_switch_solar_app/features/peripherals/general/sheets/general_mode_bottomsheet.dart';
+import 'package:techno_switch_solar_app/features/peripherals/inputs/sheets/input_mode_bottomsheet.dart';
+import 'package:techno_switch_solar_app/features/peripherals/l_bus/sheets/l_bus_mode_bottomsheet.dart';
+import 'package:techno_switch_solar_app/features/peripherals/panel_info/sheets/panel_info_mode_bottomsheet.dart';
+import 'package:techno_switch_solar_app/features/peripherals/relays/sheets/relay_mode_bottomsheet.dart';
+import 'package:techno_switch_solar_app/features/peripherals/service_due/sheets/service_due_mode_bottomsheet.dart';
+import 'package:techno_switch_solar_app/features/peripherals/ext_out/sheets/ext_out_bottomsheet.dart';
+import 'package:techno_switch_solar_app/features/peripherals/sounders/sheets/sounder_mode_bottomsheet.dart';
+import 'package:techno_switch_solar_app/features/peripherals/zones/sheets/zone_mode_bottomsheet.dart';
 import 'package:techno_switch_solar_app/widgets/dialogs/app_styled_dialogs.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
@@ -317,9 +319,9 @@ class _CreateProjectPageHostState extends State<_CreateProjectPageHost>
         createProjectExpectedPanelType: expectedPanelType,
       ),
     ).dependencies();
-    return Navigator.of(context).push<bool>(
-      MaterialPageRoute(builder: (_) => const ScanningScreen()),
-    );
+    return Navigator.of(
+      context,
+    ).push<bool>(MaterialPageRoute(builder: (_) => const ScanningScreen()));
   }
 
   @override
@@ -359,12 +361,12 @@ class _CreateProjectPageHostState extends State<_CreateProjectPageHost>
     required SiteModel site,
     required SiteWithLogCount siteWithLogCount,
   }) {
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
-        builder:
-            (_) => SiteScreen(site: site, siteWithLogCount: siteWithLogCount),
-      ),
-    );
+    SiteBinding(
+      args: SiteArgs(site: site, siteWithLogCount: siteWithLogCount),
+    ).dependencies();
+    Navigator.of(
+      context,
+    ).pushReplacement(MaterialPageRoute(builder: (_) => const SiteScreen()));
   }
 
   Future<bool> _commitConfigStepForCurrentPage() async {
