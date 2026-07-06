@@ -24,6 +24,9 @@ abstract class LogUiDelegate {
 
   void navigateBackToScanning();
 
+  /// Pops log screens pushed on top of [ProjectDashboardScreen].
+  void returnAfterProjectDashboardLogSave({int pops = 2});
+
   void navigateBackToHome();
 
   void openEventLogScreen({required LogFlowArgs args});

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
 import 'package:techno_switch_solar_app/features/logs/bindings/log_binding.dart';
+import 'package:techno_switch_solar_app/features/logs/controllers/log_controller.dart';
 import 'package:techno_switch_solar_app/features/logs/controllers/log_ui_delegate.dart';
 import 'package:techno_switch_solar_app/features/logs/models/log_flow_args.dart';
 import 'package:techno_switch_solar_app/features/logs/views/event_log_screen.dart';
@@ -76,6 +77,16 @@ mixin LogUiDelegateMixin<T extends StatefulWidget> on State<T>
   }
 
   @override
+  void returnAfterProjectDashboardLogSave({int pops = 2}) {
+    if (!mounted) return;
+    LogController.suppressCompletedBackSave = true;
+    final nav = Navigator.of(uiContext, rootNavigator: true);
+    for (var i = 0; i < pops && nav.canPop(); i++) {
+      nav.pop();
+    }
+  }
+
+  @override
   void navigateBackToHome() {
     NavigationService.navigateBackToHome(uiContext);
   }
@@ -91,7 +102,20 @@ mixin LogUiDelegateMixin<T extends StatefulWidget> on State<T>
   @override
   void openCompletedScreen({required LogFlowArgs args}) {
     LogBinding(args: args).dependencies();
+    final fromDashboard = args.completed?.fromProjectDashboard ?? false;
     final navigator = Navigator.of(uiContext, rootNavigator: true);
+
+    if (fromDashboard) {
+      final localNav = Navigator.of(uiContext);
+      if (localNav.canPop()) {
+        localNav.pop();
+      }
+      navigator.push(
+        MaterialPageRoute(builder: (_) => const LogRetrievalCompletedScreen()),
+      );
+      return;
+    }
+
     if (navigator.canPop()) {
       navigator.popUntil((route) => route is PageRoute);
     }

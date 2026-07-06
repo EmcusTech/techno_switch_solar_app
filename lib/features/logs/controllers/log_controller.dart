@@ -6,11 +6,13 @@ import 'package:get/get.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
+import 'package:techno_switch_solar_app/features/dashboard/controllers/project_dashboard_controller.dart';
 import 'package:techno_switch_solar_app/features/logs/controllers/log_ui_delegate.dart';
 import 'package:techno_switch_solar_app/features/logs/models/log_flow_args.dart';
 import 'package:techno_switch_solar_app/features/scan/models/scan_type.dart';
 import 'package:techno_switch_solar_app/models/log_model.dart';
 import 'package:techno_switch_solar_app/models/log_retrieval_model.dart';
+import 'package:techno_switch_solar_app/models/panel_model.dart';
 import 'package:techno_switch_solar_app/utils/constants/ble/ble_msd_utils.dart';
 import 'package:techno_switch_solar_app/utils/constants/ble/ble_name_utils.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
@@ -21,6 +23,23 @@ import 'package:techno_switch_solar_app/utils/site_service.dart';
 
 class LogController extends GetxController {
   LogController({required this.args});
+
+  /// Guards against duplicate saves when programmatically popping Completed.
+  static bool suppressCompletedBackSave = false;
+
+  /// Set after logs are persisted for a dashboard retrieval session.
+  static bool dashboardLogsStoredThisSession = false;
+
+  static void resetDashboardLogSessionFlags() {
+    suppressCompletedBackSave = false;
+    dashboardLogsStoredThisSession = false;
+  }
+
+  static bool consumeSuppressCompletedBackSave() {
+    if (!suppressCompletedBackSave) return false;
+    suppressCompletedBackSave = false;
+    return true;
+  }
 
   final LogFlowArgs args;
 
@@ -81,6 +100,9 @@ class LogController extends GetxController {
       case LogFlowMode.history:
         loadHistory();
       case LogFlowMode.loading:
+        if (loadingArgs?.fromProjectDashboard == true) {
+          resetDashboardLogSessionFlags();
+        }
         _setupLoadingListener();
       case LogFlowMode.failed:
         _startFailedAutoPop();
@@ -204,8 +226,30 @@ class LogController extends GetxController {
         panelName: resolveDeviceName(),
         connectedDevice: loading.connectedDevice,
         isDirectLogRet: loading.isLiveEvent,
+        siteId: loading.siteId,
+        fromProjectDashboard: loading.fromProjectDashboard,
       ),
     );
+  }
+
+  String resolvePanelIdFromDevice(DiscoveredDevice device) {
+    if ((loadingArgs?.panelId ?? '').isNotEmpty) {
+      return loadingArgs!.panelId!;
+    }
+
+    final msdPanelId = BleMsdUtils.panelId(device.manufacturerData);
+    if (msdPanelId != null) {
+      return msdPanelId.toString();
+    }
+
+    final bleName = device.name.trim();
+    if (bleName.isNotEmpty) {
+      final logicalId = BleNameUtils.parseTechnoswitchPanelId(bleName);
+      if (logicalId != null) return logicalId;
+      return bleName;
+    }
+
+    return device.id;
   }
 
   String resolvePanelId() {
@@ -218,16 +262,91 @@ class LogController extends GetxController {
 
     final device = loading.connectedDevice ?? loading.selectedDevice;
     if (device is DiscoveredDevice) {
-      final msdPanelId = BleMsdUtils.panelId(device.manufacturerData);
-      if (msdPanelId != null) {
-        return msdPanelId.toString();
-      }
-      if (device.name.isNotEmpty) {
-        return BleNameUtils.getDisplayPrefixFromBleName(device.name);
-      }
+      return resolvePanelIdFromDevice(device);
     }
 
     return resolveDeviceName();
+  }
+
+  Future<PanelModel?> _findPanel({
+    required String panelId,
+    required String panelName,
+  }) async {
+    if (panelId.isNotEmpty) {
+      final byId = await _panelService.getPanelByPanelId(panelId);
+      if (byId != null) return byId;
+    }
+
+    final bleName = panelName.trim();
+    if (bleName.isEmpty) return null;
+
+    final logicalId = BleNameUtils.parseTechnoswitchPanelId(bleName);
+    if (logicalId != null) {
+      final byLogical = await _panelService.getPanelByPanelId(logicalId);
+      if (byLogical != null) return byLogical;
+    }
+
+    final byBleName = await _panelService.getPanelByPanelId(bleName);
+    if (byBleName != null) return byBleName;
+
+    return _panelService.getPanelByBleName(bleName);
+  }
+
+  Future<int?> _resolveSiteIdForLogs({
+    int? explicitSiteId,
+    required String panelId,
+    required String panelName,
+  }) async {
+    if (explicitSiteId != null && explicitSiteId > 0) {
+      final site = await _siteService.getSiteById(explicitSiteId);
+      if (site != null) return explicitSiteId;
+    }
+
+    final panel = await _findPanel(panelId: panelId, panelName: panelName);
+    if (panel?.siteId != null) {
+      final site = await _siteService.getSiteById(panel!.siteId!);
+      if (site != null) return site.id;
+    }
+
+    return null;
+  }
+
+  Future<void> _storeLogsAndNavigateBack({
+    required List<LogModel> logs,
+    required int siteId,
+    required bool fromProjectDashboard,
+    bool isDirectLogRet = false,
+    int dashboardPops = 2,
+  }) async {
+    final ui = _ui;
+    if (ui == null || logs.isEmpty) return;
+
+    if (fromProjectDashboard && dashboardLogsStoredThisSession) {
+      ui.returnAfterProjectDashboardLogSave(pops: dashboardPops);
+      return;
+    }
+
+    await _siteService.storeLogs(logs, siteId: siteId);
+
+    if (_ui?.isMounted != true) return;
+
+    if (fromProjectDashboard) {
+      dashboardLogsStoredThisSession = true;
+      suppressCompletedBackSave = true;
+      _notifyProjectDashboardLogsSaved();
+      ui.returnAfterProjectDashboardLogSave(pops: dashboardPops);
+      return;
+    }
+
+    ui.navigateBackToScanning();
+    if (isDirectLogRet && _ui?.isMounted == true) {
+      ui.popScreen();
+    }
+  }
+
+  void _notifyProjectDashboardLogsSaved() {
+    if (!Get.isRegistered<ProjectDashboardController>()) return;
+    Get.find<ProjectDashboardController>().onLogsSavedToSite();
   }
 
   String resolveDeviceName() {
@@ -311,11 +430,21 @@ class LogController extends GetxController {
     final event = eventLogArgs;
     if (event != null) {
       if ((event.panelId ?? '').isNotEmpty) return event.panelId!;
+      final bleName = event.panelName.trim();
+      if (bleName.isNotEmpty) {
+        final logicalId = BleNameUtils.parseTechnoswitchPanelId(bleName);
+        if (logicalId != null) return logicalId;
+      }
       return event.panelName;
     }
     final completed = completedArgs;
     if (completed != null) {
       if (completed.panelId.isNotEmpty) return completed.panelId;
+      final bleName = completed.panelName.trim();
+      if (bleName.isNotEmpty) {
+        final logicalId = BleNameUtils.parseTechnoswitchPanelId(bleName);
+        if (logicalId != null) return logicalId;
+      }
       return completed.panelName;
     }
     return '';
@@ -570,13 +699,15 @@ class LogController extends GetxController {
       }
 
       await handleRetrievalBackNavigation(
-        logs: bleManager.bleProcess.validEventLogs.value,
+        logs: getBaseLogs(),
         panelId: resolvedPanelId(),
         panelName: resolvedPanelName(),
         panelVersionNo: event.panelVersionNo,
         connectedDevice: event.connectedDevice,
         isDirectLogRet: event.isDirectLogRet,
         isStandalone: event.isStandalone,
+        siteId: event.siteId,
+        fromProjectDashboard: event.fromProjectDashboard,
       );
     } finally {
       isHandlingBack = false;
@@ -584,23 +715,39 @@ class LogController extends GetxController {
   }
 
   Future<void> handleCompletedBackNavigation() async {
+    if (consumeSuppressCompletedBackSave()) return;
     if (isHandlingBack) return;
+
+    final completed = completedArgs;
+    if (completed == null) return;
+
+    if (completed.fromProjectDashboard && dashboardLogsStoredThisSession) {
+      returnAfterProjectDashboardIfMounted(pops: 1);
+      return;
+    }
+
     isHandlingBack = true;
     try {
-      final completed = completedArgs;
-      if (completed == null) return;
-
       await handleRetrievalBackNavigation(
-        logs: bleManager.bleProcess.validEventLogs.value,
+        logs: getBaseLogs(),
         panelId: resolvedPanelId(),
         panelName: resolvedPanelName(),
         panelVersionNo: StringConstants.s098,
         connectedDevice: completed.connectedDevice,
         isDirectLogRet: completed.isDirectLogRet,
         isStandalone: false,
+        siteId: completed.siteId,
+        fromProjectDashboard: completed.fromProjectDashboard,
+        dashboardPops: 1,
       );
     } finally {
       isHandlingBack = false;
+    }
+  }
+
+  void returnAfterProjectDashboardIfMounted({required int pops}) {
+    if (_ui?.isMounted == true) {
+      _ui!.returnAfterProjectDashboardLogSave(pops: pops);
     }
   }
 
@@ -612,33 +759,45 @@ class LogController extends GetxController {
     DiscoveredDevice? connectedDevice,
     bool isDirectLogRet = false,
     bool isStandalone = false,
+    int? siteId,
+    bool fromProjectDashboard = false,
+    int dashboardPops = 2,
   }) async {
     final ui = _ui;
     if (ui == null) return;
 
     if (logs.isEmpty) {
-      ui.navigateBackToScanning();
+      if (fromProjectDashboard) {
+        ui.returnAfterProjectDashboardLogSave(pops: dashboardPops);
+      } else {
+        ui.navigateBackToScanning();
+      }
+      return;
+    }
+
+    if (fromProjectDashboard && dashboardLogsStoredThisSession) {
+      ui.returnAfterProjectDashboardLogSave(pops: dashboardPops);
+      return;
+    }
+
+    final resolvedSiteId = await _resolveSiteIdForLogs(
+      explicitSiteId: siteId,
+      panelId: panelId,
+      panelName: panelName,
+    );
+
+    if (resolvedSiteId != null) {
+      await _storeLogsAndNavigateBack(
+        logs: logs,
+        siteId: resolvedSiteId,
+        fromProjectDashboard: fromProjectDashboard,
+        isDirectLogRet: isDirectLogRet,
+        dashboardPops: dashboardPops,
+      );
       return;
     }
 
     if (isStandalone && logs.isNotEmpty) {
-      final existingPanel = await _panelService.getPanelByPanelId(panelId);
-      if (existingPanel != null && existingPanel.siteId != null) {
-        final existingSite = await _siteService.getSiteById(
-          existingPanel.siteId!,
-        );
-        if (existingSite != null) {
-          await _siteService.storeLogs(logs, siteId: existingSite.id!);
-          if (_ui?.isMounted == true) {
-            ui.navigateBackToScanning();
-            if (isDirectLogRet && _ui?.isMounted == true) {
-              ui.popScreen();
-            }
-          }
-          return;
-        }
-      }
-
       final shouldCreateSite = await ui.showSiteCreationDialog(
         logCount: logs.length,
       );
@@ -659,20 +818,6 @@ class LogController extends GetxController {
         return;
       }
     } else if (logs.isNotEmpty) {
-      final existingPanel = await _panelService.getPanelByPanelId(panelId);
-      if (existingPanel != null && existingPanel.siteId != null) {
-        final existingSite = await _siteService.getSiteById(
-          existingPanel.siteId!,
-        );
-        if (existingSite != null) {
-          await _siteService.storeLogs(logs, siteId: existingSite.id!);
-          if (_ui?.isMounted == true) {
-            ui.navigateBackToScanning();
-          }
-          return;
-        }
-      }
-
       final shouldCreateSite = await ui.showSiteCreationDialog(
         logCount: logs.length,
       );
@@ -695,7 +840,11 @@ class LogController extends GetxController {
     }
 
     if (_ui?.isMounted == true) {
-      ui.navigateBackToScanning();
+      if (fromProjectDashboard) {
+        ui.returnAfterProjectDashboardLogSave(pops: dashboardPops);
+      } else {
+        ui.navigateBackToScanning();
+      }
     }
   }
 
@@ -709,10 +858,12 @@ class LogController extends GetxController {
         logDataList: completed.logs,
         panelName: completed.panelName,
         panelVersionNo: StringConstants.s098,
-        isStandalone: true,
+        isStandalone: !completed.fromProjectDashboard,
         panelId: completed.panelId,
         connectedDevice: completed.connectedDevice,
         isDirectLogRet: completed.isDirectLogRet,
+        siteId: completed.siteId,
+        fromProjectDashboard: completed.fromProjectDashboard,
       ),
     );
   }

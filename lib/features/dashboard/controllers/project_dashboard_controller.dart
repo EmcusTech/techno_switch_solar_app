@@ -55,6 +55,7 @@ class ProjectDashboardController extends GetxController {
   final ValueNotifier<ConfigCompareResult?> configLogCompareResult =
       ValueNotifier(null);
   final ValueNotifier<bool> configLogWorking = ValueNotifier(false);
+  final ValueNotifier<int> logHistoryRefreshTrigger = ValueNotifier(0);
 
   late final PanelConfigRefreshNotifiers panelRefreshNotifiers;
 
@@ -71,6 +72,11 @@ class ProjectDashboardController extends GetxController {
   void setSelectedIndex(int index) {
     if (index == 1 || index == 2) return;
     selectedIndex = index;
+    update();
+  }
+
+  void onLogsSavedToSite() {
+    logHistoryRefreshTrigger.value++;
     update();
   }
 
@@ -123,6 +129,7 @@ class ProjectDashboardController extends GetxController {
     accessCodeRefreshTrigger.dispose();
     panelInfoRefreshTrigger.dispose();
     generalModuleRefreshTrigger.dispose();
+    logHistoryRefreshTrigger.dispose();
     super.onClose();
   }
 

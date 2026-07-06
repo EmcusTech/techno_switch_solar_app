@@ -17,12 +17,14 @@ class LogHistoryScreen extends StatelessWidget {
   final String panelName;
   final String panelVersionNo;
   final int? siteId;
+  final ValueNotifier<int>? refreshTrigger;
 
   const LogHistoryScreen({
     super.key,
     required this.panelName,
     required this.panelVersionNo,
     required this.siteId,
+    this.refreshTrigger,
   });
 
   @override
@@ -33,16 +35,19 @@ class LogHistoryScreen extends StatelessWidget {
         panelVersionNo: panelVersionNo,
         siteId: siteId,
       ),
-      child: const _LogHistoryView(),
+      refreshTrigger: refreshTrigger,
     );
   }
 }
 
 class _LogHistoryBootstrap extends StatefulWidget {
-  const _LogHistoryBootstrap({required this.args, required this.child});
+  const _LogHistoryBootstrap({
+    required this.args,
+    this.refreshTrigger,
+  });
 
   final LogFlowArgs args;
-  final Widget child;
+  final ValueNotifier<int>? refreshTrigger;
 
   @override
   State<_LogHistoryBootstrap> createState() => _LogHistoryBootstrapState();
@@ -64,22 +69,33 @@ class _LogHistoryBootstrapState extends State<_LogHistoryBootstrap> {
   }
 
   @override
-  Widget build(BuildContext context) => widget.child;
+  Widget build(BuildContext context) {
+    return _LogHistoryView(refreshTrigger: widget.refreshTrigger);
+  }
 }
 
 class _LogHistoryView extends GetView<LogController> {
-  const _LogHistoryView();
+  const _LogHistoryView({this.refreshTrigger});
+
+  final ValueNotifier<int>? refreshTrigger;
 
   @override
   Widget build(BuildContext context) {
-    return _LogHistoryPageHost(args: controller.args);
+    return _LogHistoryPageHost(
+      args: controller.args,
+      refreshTrigger: refreshTrigger,
+    );
   }
 }
 
 class _LogHistoryPageHost extends StatefulWidget {
-  const _LogHistoryPageHost({required this.args});
+  const _LogHistoryPageHost({
+    required this.args,
+    this.refreshTrigger,
+  });
 
   final LogFlowArgs args;
+  final ValueNotifier<int>? refreshTrigger;
 
   @override
   State<_LogHistoryPageHost> createState() => _LogHistoryPageHostState();
@@ -93,9 +109,18 @@ class _LogHistoryPageHostState extends State<_LogHistoryPageHost>
   void initState() {
     super.initState();
     _controller.attachUi(this);
+    widget.refreshTrigger?.addListener(_onExternalRefresh);
   }
 
   bool _routeSubscriptionRegistered = false;
+
+  void _onExternalRefresh() {
+    if (!mounted) return;
+    LogBinding(args: widget.args).dependencies();
+    final controller = Get.find<LogController>();
+    controller.attachUi(this);
+    controller.reinitializeForHistoryTab();
+  }
 
   @override
   void didChangeDependencies() {
@@ -111,6 +136,7 @@ class _LogHistoryPageHostState extends State<_LogHistoryPageHost>
 
   @override
   void dispose() {
+    widget.refreshTrigger?.removeListener(_onExternalRefresh);
     if (_routeSubscriptionRegistered) {
       appRouteObserver.unsubscribe(this);
       _routeSubscriptionRegistered = false;

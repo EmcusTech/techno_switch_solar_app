@@ -13,9 +13,10 @@ class ProjectDashboardBinding extends Bindings {
 
   @override
   void dependencies() {
-    Get.lazyPut<ProjectDashboardController>(
-      () => ProjectDashboardController(args: args),
-    );
+    if (Get.isRegistered<ProjectDashboardController>()) {
+      Get.delete<ProjectDashboardController>();
+    }
+    Get.put(ProjectDashboardController(args: args));
     SettingsBinding(
       args: SettingsArgs(
         panelName: args.panelName,

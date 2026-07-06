@@ -40,6 +40,8 @@ class LogFlowArgs {
     bool isLiveEvent = false,
     DiscoveredDevice? connectedDevice,
     String? panelId,
+    int? siteId,
+    bool fromProjectDashboard = false,
   }) {
     return LogFlowArgs(
       mode: LogFlowMode.loading,
@@ -49,6 +51,8 @@ class LogFlowArgs {
         isLiveEvent: isLiveEvent,
         connectedDevice: connectedDevice,
         panelId: panelId,
+        siteId: siteId,
+        fromProjectDashboard: fromProjectDashboard,
       ),
     );
   }
@@ -59,6 +63,8 @@ class LogFlowArgs {
     required String panelName,
     DiscoveredDevice? connectedDevice,
     bool isDirectLogRet = false,
+    int? siteId,
+    bool fromProjectDashboard = false,
   }) {
     return LogFlowArgs(
       mode: LogFlowMode.completed,
@@ -68,6 +74,8 @@ class LogFlowArgs {
         panelName: panelName,
         connectedDevice: connectedDevice,
         isDirectLogRet: isDirectLogRet,
+        siteId: siteId,
+        fromProjectDashboard: fromProjectDashboard,
       ),
     );
   }
@@ -87,6 +95,7 @@ class LogFlowArgs {
     int? siteId,
     bool isLiveEventLogs = false,
     bool isDirectLogRet = false,
+    bool fromProjectDashboard = false,
   }) {
     return LogFlowArgs(
       mode: LogFlowMode.eventLog,
@@ -101,6 +110,7 @@ class LogFlowArgs {
         siteId: siteId,
         isLiveEventLogs: isLiveEventLogs,
         isDirectLogRet: isDirectLogRet,
+        fromProjectDashboard: fromProjectDashboard,
       ),
     );
   }
@@ -125,6 +135,8 @@ class LogLoadingArgs {
     this.isLiveEvent = false,
     this.connectedDevice,
     this.panelId,
+    this.siteId,
+    this.fromProjectDashboard = false,
   });
 
   final dynamic selectedDevice;
@@ -132,6 +144,8 @@ class LogLoadingArgs {
   final bool isLiveEvent;
   final DiscoveredDevice? connectedDevice;
   final String? panelId;
+  final int? siteId;
+  final bool fromProjectDashboard;
 }
 
 class LogCompletedArgs {
@@ -141,6 +155,8 @@ class LogCompletedArgs {
     required this.panelName,
     this.connectedDevice,
     this.isDirectLogRet = false,
+    this.siteId,
+    this.fromProjectDashboard = false,
   });
 
   final List<LogModel> logs;
@@ -148,6 +164,8 @@ class LogCompletedArgs {
   final String panelName;
   final DiscoveredDevice? connectedDevice;
   final bool isDirectLogRet;
+  final int? siteId;
+  final bool fromProjectDashboard;
 }
 
 class LogEventLogArgs {
@@ -162,6 +180,7 @@ class LogEventLogArgs {
     this.siteId,
     this.isLiveEventLogs = false,
     this.isDirectLogRet = false,
+    this.fromProjectDashboard = false,
   });
 
   final List<LogModel> logDataList;
@@ -174,4 +193,5 @@ class LogEventLogArgs {
   final int? siteId;
   final bool isLiveEventLogs;
   final bool isDirectLogRet;
+  final bool fromProjectDashboard;
 }

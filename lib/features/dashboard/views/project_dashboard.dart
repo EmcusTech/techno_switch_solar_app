@@ -600,6 +600,7 @@ class _ProjectDashboardPageHostState extends State<_ProjectDashboardPageHost>
         panelName: _controller.panelName,
         panelVersionNo: _controller.panelVersionNo,
         siteId: _controller.siteId,
+        refreshTrigger: _controller.logHistoryRefreshTrigger,
       ),
     ];
   }
@@ -1130,6 +1131,8 @@ class _ProjectDashboardPageHostState extends State<_ProjectDashboardPageHost>
               scanType: ScanType.bluetooth,
               selectedDevice: _controller.selectedDevice,
               connectedDevice: _controller.selectedDevice,
+              siteId: _controller.siteId,
+              fromProjectDashboard: true,
             ),
           ).dependencies();
           Navigator.of(dialogContext).push(
