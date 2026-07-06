@@ -7,6 +7,7 @@ import 'package:techno_switch_solar_app/features/logs/models/log_flow_args.dart'
 import 'package:techno_switch_solar_app/features/logs/views/event_log_screen.dart';
 import 'package:techno_switch_solar_app/features/logs/views/log_retreival_completed_screen.dart';
 import 'package:techno_switch_solar_app/features/logs/widgets/clear_logs_dialog.dart';
+import 'package:techno_switch_solar_app/features/logs/widgets/stop_log_retrieval_dialog.dart';
 import 'package:techno_switch_solar_app/features/sites/bindings/site_binding.dart';
 import 'package:techno_switch_solar_app/features/sites/models/site_args.dart';
 import 'package:techno_switch_solar_app/features/sites/views/simple_site_creation_screen.dart';
@@ -29,7 +30,13 @@ mixin LogUiDelegateMixin<T extends StatefulWidget> on State<T>
   BuildContext get uiContext => context;
 
   @override
-  Future<bool?> showStopLogRetrievalDialog() async => null;
+  Future<bool?> showStopLogRetrievalDialog() async {
+    return showDialog<bool>(
+      context: uiContext,
+      barrierDismissible: false,
+      builder: (_) => const StopLogRetrievalDialog(),
+    );
+  }
 
   @override
   Future<bool?> showClearLogsDialog() async {
