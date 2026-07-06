@@ -6,7 +6,7 @@ import 'package:techno_switch_solar_app/utils/modes/general_quipment_mode_util.d
 import 'package:techno_switch_solar_app/utils/peripherals/peripheral_test_mode_sync.dart';
 import 'package:techno_switch_solar_app/utils/modes/ext_out_equipment_mode_util.dart';
 import 'package:techno_switch_solar_app/utils/modes/zone_equipment_mode_util.dart';
-import 'package:techno_switch_solar_app/panel_config/panel_config_cache_sync.dart';
+import 'package:techno_switch_solar_app/utils/panel_config/panel_config_cache_sync.dart';
 import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 

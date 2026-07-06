@@ -39,7 +39,6 @@ class ScanController extends GetxController {
 
   List<dynamic> discoveredDevices = [];
   bool isScanning = false;
-  bool showSelection = true;
   ScanType? selectedScanType;
   int remainingSeconds = scanDurationSeconds;
   bool transitioningToScanned = false;
@@ -100,7 +99,6 @@ class ScanController extends GetxController {
     bleLogController = Get.find<BleLogController>();
 
     if (args.mode == ScanFlowMode.scanned) {
-      showSelection = false;
       discoveredDevices = List<dynamic>.from(args.discoveredDevices);
       selectedScanType = args.scanType;
       isScanning = false;
@@ -119,7 +117,6 @@ class ScanController extends GetxController {
 
   Future<void> startScanning(ScanType scanType) async {
     selectedScanType = scanType;
-    showSelection = false;
     isScanning = true;
     remainingSeconds = scanDurationSeconds;
     update();
@@ -395,6 +392,15 @@ class ScanController extends GetxController {
     return computeStableKey(device);
   }
 
+  DiscoveredDevice? deviceForKey(String deviceKey) {
+    for (final device in discoveredDevices) {
+      if (device is DiscoveredDevice && computeStableKey(device) == deviceKey) {
+        return device;
+      }
+    }
+    return null;
+  }
+
   void stopScanningForConnection() {
     if (_ui?.isMounted ?? false) {
       isScanning = false;
@@ -486,7 +492,7 @@ class ScanController extends GetxController {
     );
   }
 
-  void goBackToSelection() {
+  void exitScanning() {
     bleResultsSub?.cancel();
     bluetoothService.stopScanning();
     _ui?.popScreen();

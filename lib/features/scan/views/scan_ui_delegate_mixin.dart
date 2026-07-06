@@ -21,7 +21,7 @@ import 'package:techno_switch_solar_app/features/sites/bindings/site_binding.dar
 import 'package:techno_switch_solar_app/features/sites/models/site_args.dart';
 import 'package:techno_switch_solar_app/features/sites/views/simple_site_creation_screen.dart';
 import 'package:techno_switch_solar_app/models/site_model.dart';
-import 'package:techno_switch_solar_app/panel_config/post_connect_bulk_download_offer.dart'
+import 'package:techno_switch_solar_app/utils/panel_config/post_connect_bulk_download_offer.dart'
     as post_connect_offer;
 import 'package:techno_switch_solar_app/utils/app/navigation_service.dart';
 import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
@@ -46,9 +46,9 @@ mixin ScanUiDelegateMixin<T extends StatefulWidget> on State<T>
   @override
   void showSnackBar(String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(uiContext).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    ScaffoldMessenger.of(
+      uiContext,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -584,16 +584,16 @@ mixin ScanUiDelegateMixin<T extends StatefulWidget> on State<T>
 
   @override
   void replaceWithScannedScreen() {
-    Navigator.of(uiContext).pushReplacement(
-      MaterialPageRoute(builder: (_) => const ScannedScreen()),
-    );
+    Navigator.of(
+      uiContext,
+    ).pushReplacement(MaterialPageRoute(builder: (_) => const ScannedScreen()));
   }
 
   @override
   Future<bool?> pushScannedScreen() {
-    return Navigator.of(uiContext).push<bool>(
-      MaterialPageRoute(builder: (_) => const ScannedScreen()),
-    );
+    return Navigator.of(
+      uiContext,
+    ).push<bool>(MaterialPageRoute(builder: (_) => const ScannedScreen()));
   }
 
   @override

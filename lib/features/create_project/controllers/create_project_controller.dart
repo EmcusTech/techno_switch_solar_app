@@ -13,8 +13,8 @@ import 'package:techno_switch_solar_app/models/create_project/site_form_data.dar
 import 'package:techno_switch_solar_app/models/create_project/sounder_data.dart';
 import 'package:techno_switch_solar_app/models/create_project/zone_settings_data.dart';
 import 'package:techno_switch_solar_app/models/panel_type_config.dart';
-import 'package:techno_switch_solar_app/panel_config/panel_config_cache_sync.dart';
-import 'package:techno_switch_solar_app/panel_config/panel_configuration_coordinator.dart';
+import 'package:techno_switch_solar_app/utils/panel_config/panel_config_cache_sync.dart';
+import 'package:techno_switch_solar_app/utils/panel_config/panel_configuration_coordinator.dart';
 import 'package:techno_switch_solar_app/utils/constants/ble/ble_name_utils.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 import 'package:techno_switch_solar_app/utils/panel_service.dart';
@@ -108,13 +108,14 @@ class CreateProjectController extends GetxController {
     validationErrors: validationErrors,
   );
 
-  PanelSelectionPageModel get panelSelectionPageModel => PanelSelectionPageModel(
-    panelNameController: panelNameController,
-    selectedPanelType: panelData.selectedPanelType,
-    validationErrors: validationErrors,
-    panelTypes: availablePanelTypeOptions,
-    onPanelTypeChanged: updatePanelType,
-  );
+  PanelSelectionPageModel get panelSelectionPageModel =>
+      PanelSelectionPageModel(
+        panelNameController: panelNameController,
+        selectedPanelType: panelData.selectedPanelType,
+        validationErrors: validationErrors,
+        panelTypes: availablePanelTypeOptions,
+        onPanelTypeChanged: updatePanelType,
+      );
 
   void attachUi(CreateProjectUiDelegate ui) {
     _ui = ui;

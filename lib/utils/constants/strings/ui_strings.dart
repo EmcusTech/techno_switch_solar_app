@@ -66,6 +66,9 @@ abstract final class UiStrings {
   static String panelDeletedSnackBar(String panelName) =>
       'Panel "$panelName" deleted';
 
+  static String siteCreatedWithLogsSaved(int logCount) =>
+      'Site created successfully! $logCount logs saved.';
+
   static String errorDeletingSiteSnackBar(Object error) =>
       'Error deleting site: $error';
 

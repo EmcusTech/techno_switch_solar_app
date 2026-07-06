@@ -32,15 +32,16 @@ import 'package:techno_switch_solar_app/features/peripherals/test_mode/sheets/te
 import 'package:techno_switch_solar_app/features/peripherals/walk_test/sheets/walk_test_zone_bottomsheet.dart';
 import 'package:techno_switch_solar_app/features/peripherals/zones/sheets/zone_mode_bottomsheet.dart';
 import 'package:techno_switch_solar_app/features/scan/models/scan_type.dart';
-import 'package:techno_switch_solar_app/panel_config/panel_access_password_popup.dart';
-import 'package:techno_switch_solar_app/panel_config/panel_config_bulk_sync.dart';
-import 'package:techno_switch_solar_app/panel_config/panel_config_feedback_dialogs.dart';
-import 'package:techno_switch_solar_app/panel_config/post_connect_bulk_download_offer.dart';
+import 'package:techno_switch_solar_app/utils/panel_config/panel_access_password_popup.dart';
+import 'package:techno_switch_solar_app/utils/panel_config/panel_config_bulk_sync.dart';
+import 'package:techno_switch_solar_app/utils/panel_config/panel_config_feedback_dialogs.dart';
+import 'package:techno_switch_solar_app/utils/panel_config/post_connect_bulk_download_offer.dart';
 import 'package:techno_switch_solar_app/utils/ble/bootloader_connect_flow.dart';
 import 'package:techno_switch_solar_app/utils/commissioning_test_results_helper.dart';
 import 'package:techno_switch_solar_app/utils/storage/commissioning_test_results_cache.dart';
 import 'package:techno_switch_solar_app/widgets/dialogs/ble_connecting_dialog.dart';
-import 'package:techno_switch_solar_app/widgets/dialogs/panel_access_code_dialog.dart' as panel_access_dialog;
+import 'package:techno_switch_solar_app/widgets/dialogs/panel_access_code_dialog.dart'
+    as panel_access_dialog;
 import 'package:techno_switch_solar_app/widgets/export_tile.dart';
 import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/ble/ble_msd_utils.dart';
@@ -75,7 +76,6 @@ mixin ProjectDashboardUiDelegateMixin<T extends StatefulWidget> on State<T>
     );
   }
 
-
   @override
   void popScreen() {
     if (mounted) {
@@ -93,7 +93,8 @@ mixin ProjectDashboardUiDelegateMixin<T extends StatefulWidget> on State<T>
 
   @override
   void showUnexpectedBleDisconnectDialog() {
-    if (!mounted || dashboardController.isUnexpectedDisconnectDialogOpen) return;
+    if (!mounted || dashboardController.isUnexpectedDisconnectDialogOpen)
+      return;
     dashboardController.isUnexpectedDisconnectDialogOpen = true;
     showDialog<void>(
       context: uiContext,
@@ -146,7 +147,8 @@ mixin ProjectDashboardUiDelegateMixin<T extends StatefulWidget> on State<T>
                     width: double.infinity,
                     child: GestureDetector(
                       onTap: () {
-                        dashboardController.markUnexpectedDisconnectDialogClosed();
+                        dashboardController
+                            .markUnexpectedDisconnectDialogClosed();
                         Navigator.of(dialogContext).pop();
                       },
                       child: Container(
@@ -208,7 +210,8 @@ mixin ProjectDashboardUiDelegateMixin<T extends StatefulWidget> on State<T>
       isMounted: () => mounted,
       device: device,
       refreshNotifiers: dashboardController.panelRefreshNotifiers,
-      navigatingToDeviceConnecting: dashboardController.navigatingToDeviceConnecting,
+      navigatingToDeviceConnecting:
+          dashboardController.navigatingToDeviceConnecting,
     );
   }
 
@@ -324,7 +327,10 @@ mixin ProjectDashboardUiDelegateMixin<T extends StatefulWidget> on State<T>
     final handshakeCompleteNotifier =
         dashboardController.bleController.bleManager.handshakeCompleteNotifier;
     final maxBleConnectionRetriesReachedNotifier =
-        dashboardController.bleController.bleManager.maxBleConnectionRetriesReached;
+        dashboardController
+            .bleController
+            .bleManager
+            .maxBleConnectionRetriesReached;
     bool hasNavigated = false;
 
     final mergedListenable = Listenable.merge([
@@ -517,7 +523,8 @@ mixin ProjectDashboardUiDelegateMixin<T extends StatefulWidget> on State<T>
     );
     if (!upgraded || !mounted) return;
 
-    await dashboardController.bleController.bleManager.disconnectConnectedDevice();
+    await dashboardController.bleController.bleManager
+        .disconnectConnectedDevice();
 
     final refreshed = await runWithBleConnectingDialog<DiscoveredDevice?>(
       context: uiContext,
@@ -550,7 +557,9 @@ mixin ProjectDashboardUiDelegateMixin<T extends StatefulWidget> on State<T>
     final ok = await panel_access_dialog.showPanelAccessCodeGatewayDialog(
       context: uiContext,
       onStartValidation:
-          () => dashboardController.bleController.startSessionAccessCodeValidation(),
+          () =>
+              dashboardController.bleController
+                  .startSessionAccessCodeValidation(),
     );
     if (!ok || !mounted) {
       dashboardController.bleController.bleManager.disconnectConnectedDevice();
@@ -729,7 +738,11 @@ mixin ProjectDashboardUiDelegateMixin<T extends StatefulWidget> on State<T>
                 SizedBox(height: 8),
                 Visibility(
                   visible:
-                      !dashboardController.ble.bleProcess.isLbusFetchHasErrors.value,
+                      !dashboardController
+                          .ble
+                          .bleProcess
+                          .isLbusFetchHasErrors
+                          .value,
                   child: Text(
                     message ==
                             StringConstants
@@ -743,7 +756,11 @@ mixin ProjectDashboardUiDelegateMixin<T extends StatefulWidget> on State<T>
                 ),
                 Visibility(
                   visible:
-                      dashboardController.ble.bleProcess.isLbusFetchHasErrors.value,
+                      dashboardController
+                          .ble
+                          .bleProcess
+                          .isLbusFetchHasErrors
+                          .value,
                   child: Text(
                     StringConstants.thereWasAnErrorDownloading,
                     style: StyleConstants.textMuted14w400Style,
@@ -752,7 +769,11 @@ mixin ProjectDashboardUiDelegateMixin<T extends StatefulWidget> on State<T>
                 ),
                 Visibility(
                   visible:
-                      dashboardController.ble.bleProcess.isLbusFetchHasErrors.value,
+                      dashboardController
+                          .ble
+                          .bleProcess
+                          .isLbusFetchHasErrors
+                          .value,
                   child: Text(
                     'L-Bus ${dashboardController.ble.bleProcess.lbusFetchErrors.value.join(", ")} - Comms Fault',
                     style: StyleConstants.primary14w400Style,
@@ -836,9 +857,12 @@ mixin ProjectDashboardUiDelegateMixin<T extends StatefulWidget> on State<T>
             deviceId: dashboardController.selectedDevice.id,
             compareResult: dashboardController.configLogCompareResult,
             isWorking: dashboardController.configLogWorking,
-            onDownloadAndCompare: dashboardController.onConfigLogDownloadAndCompare,
-            onUsePanelDataInApp: dashboardController.onConfigLogUsePanelDataInApp,
-            onApplyLocalToPanel: dashboardController.onConfigLogApplyLocalToPanel,
+            onDownloadAndCompare:
+                dashboardController.onConfigLogDownloadAndCompare,
+            onUsePanelDataInApp:
+                dashboardController.onConfigLogUsePanelDataInApp,
+            onApplyLocalToPanel:
+                dashboardController.onConfigLogApplyLocalToPanel,
           ),
     ).whenComplete(dashboardController.clearConfigLogState);
   }
@@ -871,7 +895,8 @@ mixin ProjectDashboardUiDelegateMixin<T extends StatefulWidget> on State<T>
       bleManager: dashboardController.bleManager,
       bleController: dashboardController.bleController,
       selectedDevice: dashboardController.selectedDevice,
-      navigatingToDeviceConnecting: dashboardController.navigatingToDeviceConnecting,
+      navigatingToDeviceConnecting:
+          dashboardController.navigatingToDeviceConnecting,
       delegates: PanelAccessPasswordDelegates(
         saveExtOutCache: dashboardController.saveExtOutCacheAndNotifyRefresh,
         saveInputCache: dashboardController.saveInputCacheAndNotifyRefresh,
@@ -880,9 +905,12 @@ mixin ProjectDashboardUiDelegateMixin<T extends StatefulWidget> on State<T>
         saveRadioCache: dashboardController.saveRadioCacheAndNotifyRefresh,
         saveLBusCache: dashboardController.saveLBusCacheAndNotifyRefresh,
         saveSounderCache: dashboardController.saveSounderCacheAndNotifyRefresh,
-        saveServiceDueCache: dashboardController.saveServiceDueCacheAndNotifyRefresh,
-        saveAccessCodeCache: dashboardController.saveAccessCodeCacheAndNotifyRefresh,
-        savePanelInfoCache: dashboardController.savePanelInfoCacheAndNotifyRefresh,
+        saveServiceDueCache:
+            dashboardController.saveServiceDueCacheAndNotifyRefresh,
+        saveAccessCodeCache:
+            dashboardController.saveAccessCodeCacheAndNotifyRefresh,
+        savePanelInfoCache:
+            dashboardController.savePanelInfoCacheAndNotifyRefresh,
         saveGeneralModuleCache:
             dashboardController.saveGeneralModuleCacheAndNotifyRefresh,
         showApplySuccess:
@@ -1082,7 +1110,8 @@ mixin ProjectDashboardUiDelegateMixin<T extends StatefulWidget> on State<T>
           ),
     ).whenComplete(() {
       if (!mounted) return;
-      dashboardController.ble.bleProcess.isAdcSetupFetchCommandActive.value = false;
+      dashboardController.ble.bleProcess.isAdcSetupFetchCommandActive.value =
+          false;
     });
   }
 

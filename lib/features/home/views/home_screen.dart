@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:techno_switch_solar_app/features/help/controllers/help_screen_controller.dart';
 import 'package:techno_switch_solar_app/features/help/views/help_screen.dart';
@@ -10,7 +9,6 @@ import 'package:techno_switch_solar_app/features/home/widgets/home_tab.dart';
 import 'package:techno_switch_solar_app/features/settings/controllers/settings_controller.dart';
 import 'package:techno_switch_solar_app/features/settings/views/settings_screen.dart';
 import 'package:techno_switch_solar_app/utils/app/navigation_service.dart';
-import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 
 class HomeScreen extends StatefulWidget {

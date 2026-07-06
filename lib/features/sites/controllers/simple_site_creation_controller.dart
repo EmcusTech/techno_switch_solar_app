@@ -7,6 +7,7 @@ import 'package:techno_switch_solar_app/models/create_project/site_creation_page
 import 'package:techno_switch_solar_app/utils/logger.dart';
 import 'package:techno_switch_solar_app/utils/panel_service.dart';
 import 'package:techno_switch_solar_app/utils/site_service.dart';
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
 class SimpleSiteCreationController extends GetxController {
   SimpleSiteCreationController({required this.args});
@@ -198,7 +199,7 @@ class SimpleSiteCreationController extends GetxController {
       if (ui == null || !ui.isMounted) return;
 
       ui.showSuccessSnackBar(
-        'Site created successfully! ${args.retrievedLogs.length} logs saved.',
+        UiStrings.siteCreatedWithLogsSaved(args.retrievedLogs.length),
       );
 
       if (args.returnCreatedSiteId) {

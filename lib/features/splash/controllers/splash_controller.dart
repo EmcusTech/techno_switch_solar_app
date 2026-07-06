@@ -8,7 +8,6 @@ class SplashController extends GetxController {
 
   void attachUi(SplashUiDelegate ui) {
     _ui = ui;
-    startSplash();
   }
 
   void detachUi() {
