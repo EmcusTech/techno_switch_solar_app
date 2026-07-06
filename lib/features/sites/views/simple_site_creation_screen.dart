@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
-import 'package:techno_switch_solar_app/features/create_project/views/site_creation_page.dart';
+import 'package:techno_switch_solar_app/features/create_project/widgets/site_creation_form.dart';
 import 'package:techno_switch_solar_app/features/home/bindings/home_screen_binding.dart';
 import 'package:techno_switch_solar_app/features/home/views/home_screen.dart';
 import 'package:techno_switch_solar_app/features/sites/bindings/site_binding.dart';
@@ -9,7 +9,6 @@ import 'package:techno_switch_solar_app/features/sites/controllers/simple_site_c
 import 'package:techno_switch_solar_app/features/sites/controllers/site_ui_delegate.dart';
 import 'package:techno_switch_solar_app/features/sites/models/site_args.dart';
 import 'package:techno_switch_solar_app/features/sites/views/site_screen.dart';
-import 'package:techno_switch_solar_app/models/create_project/site_creation_page_model.dart';
 import 'package:techno_switch_solar_app/models/site_model.dart';
 import 'package:techno_switch_solar_app/utils/site_service.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
@@ -169,27 +168,7 @@ class _SimpleSiteCreationPageHostState extends State<_SimpleSiteCreationPageHost
                                   const SizedBox(height: 20),
                                   Expanded(
                                     child: SiteCreationForm(
-                                      model: SiteCreationPageModel(
-                                        siteNameController:
-                                            controller.siteNameController,
-                                        installerNameController:
-                                            controller.installerNameController,
-                                        companyNameController:
-                                            controller.companyNameController,
-                                        saqccRegNumberController:
-                                            controller.saqccRegNumberController,
-                                        buildingNameController:
-                                            controller.buildingNameController,
-                                        installerContactNumberController:
-                                            controller
-                                                .installerContactNumberController,
-                                        installerEmailController:
-                                            controller.installerEmailController,
-                                        siteDescriptionController:
-                                            controller.siteDescriptionController,
-                                        validationErrors:
-                                            controller.validationErrors,
-                                      ),
+                                      model: controller.siteCreationPageModel,
                                     ),
                                   ),
                                   const SizedBox(height: 20),

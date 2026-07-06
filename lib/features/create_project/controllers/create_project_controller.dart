@@ -7,6 +7,7 @@ import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/features/create_project/controllers/create_project_ui_delegate.dart';
 import 'package:techno_switch_solar_app/models/create_project/panel_form_data.dart';
 import 'package:techno_switch_solar_app/models/create_project/panel_selection_page_model.dart';
+import 'package:techno_switch_solar_app/models/create_project/site_creation_page_model.dart';
 import 'package:techno_switch_solar_app/models/create_project/relay_data.dart';
 import 'package:techno_switch_solar_app/models/create_project/site_form_data.dart';
 import 'package:techno_switch_solar_app/models/create_project/sounder_data.dart';
@@ -94,6 +95,26 @@ class CreateProjectController extends GetxController {
             ),
           )
           .toList();
+
+  SiteCreationPageModel get siteCreationPageModel => SiteCreationPageModel(
+    siteNameController: siteNameController,
+    installerNameController: installerNameController,
+    companyNameController: companyNameController,
+    saqccRegNumberController: saqccRegNumberController,
+    buildingNameController: buildingNameController,
+    installerContactNumberController: installerContactNumberController,
+    installerEmailController: installerEmailController,
+    siteDescriptionController: siteDescriptionController,
+    validationErrors: validationErrors,
+  );
+
+  PanelSelectionPageModel get panelSelectionPageModel => PanelSelectionPageModel(
+    panelNameController: panelNameController,
+    selectedPanelType: panelData.selectedPanelType,
+    validationErrors: validationErrors,
+    panelTypes: availablePanelTypeOptions,
+    onPanelTypeChanged: updatePanelType,
+  );
 
   void attachUi(CreateProjectUiDelegate ui) {
     _ui = ui;

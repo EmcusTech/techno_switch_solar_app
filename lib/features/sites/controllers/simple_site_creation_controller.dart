@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/features/sites/controllers/site_ui_delegate.dart';
 import 'package:techno_switch_solar_app/features/sites/models/site_args.dart';
+import 'package:techno_switch_solar_app/models/create_project/site_creation_page_model.dart';
 import 'package:techno_switch_solar_app/utils/logger.dart';
 import 'package:techno_switch_solar_app/utils/panel_service.dart';
 import 'package:techno_switch_solar_app/utils/site_service.dart';
@@ -31,6 +32,18 @@ class SimpleSiteCreationController extends GetxController {
   Map<String, String> validationErrors = {};
 
   bool get returnCreatedSiteId => args.returnCreatedSiteId;
+
+  SiteCreationPageModel get siteCreationPageModel => SiteCreationPageModel(
+    siteNameController: siteNameController,
+    installerNameController: installerNameController,
+    companyNameController: companyNameController,
+    saqccRegNumberController: saqccRegNumberController,
+    buildingNameController: buildingNameController,
+    installerContactNumberController: installerContactNumberController,
+    installerEmailController: installerEmailController,
+    siteDescriptionController: siteDescriptionController,
+    validationErrors: validationErrors,
+  );
 
   void attachUi(SimpleSiteCreationUiDelegate ui) {
     _ui = ui;

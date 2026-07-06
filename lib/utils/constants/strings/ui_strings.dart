@@ -283,6 +283,16 @@ abstract final class UiStrings {
       'Make sure Bluetooth is enabled and solar devices are in pairing mode.';
   static const String panelInfoTitle = 'Panel Info';
   static const String siteNameLabel = 'Site Name';
+  static const String enterSiteNameHint = 'Enter Site Name';
+  static const String enterInstallerNameHint = 'Enter Installer Name';
+  static const String enterCompanyNameHint = 'Enter Company Name';
+  static const String enterSaqccRegistrationNumberHint =
+      'Enter SAQCC Registration Number';
+  static const String enterBuildingNameHint = 'Enter Building Name';
+  static const String enterInstallerContactNumberHint =
+      'Enter Installer Contact Number';
+  static const String enterInstallerEmailHint = 'Enter Installer Email';
+  static const String enterSiteDescriptionHint = 'Enter Site Description';
   static const String moduleNoLabel = 'Module No';
   static const String lBusDateLabel = 'Date';
   static const String noLogEntriesAvailableMessage = 'No log entries available';
