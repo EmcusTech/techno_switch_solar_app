@@ -10,6 +10,7 @@ import 'package:techno_switch_solar_app/features/dashboard/controllers/project_d
 import 'package:techno_switch_solar_app/features/dashboard/models/project_dashboard_args.dart';
 import 'package:techno_switch_solar_app/panel_config/panel_config_bulk_sync.dart';
 import 'package:techno_switch_solar_app/panel_config/panel_config_cache_sync.dart';
+import 'package:techno_switch_solar_app/utils/constants/ble/ble_msd_utils.dart';
 import 'package:techno_switch_solar_app/utils/constants/ble/bluetooth_service.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 import 'package:techno_switch_solar_app/utils/pdf/project_report_pdf_util.dart';
@@ -60,6 +61,21 @@ class ProjectDashboardController extends GetxController {
   late final PanelConfigRefreshNotifiers panelRefreshNotifiers;
 
   BleManager get ble => bleManager;
+
+  ProjectDashboardUiDelegate? get uiDelegate => _ui;
+
+  bool get isInBootloaderMode =>
+      BleMsdUtils.isBootloader(selectedDevice.manufacturerData);
+
+  void guardBootloaderOr(void Function() action) {
+    final ui = _ui;
+    if (ui == null) return;
+    if (isInBootloaderMode) {
+      ui.showBootloaderModeDialog();
+      return;
+    }
+    action();
+  }
 
   void attachUi(ProjectDashboardUiDelegate ui) {
     _ui = ui;
