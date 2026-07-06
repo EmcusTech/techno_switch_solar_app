@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
+import 'package:techno_switch_solar_app/utils/peripherals/peripheral_cache_to_ble.dart';
 import 'package:techno_switch_solar_app/utils/peripherals/peripheral_config_snapshot.dart';
 import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
 
@@ -197,5 +198,16 @@ class PanelConfigCacheSync {
     await saveAccessCode(m, deviceId, n.accessCode);
     await savePanelInfo(m, deviceId, n.panelInfo);
     await saveGeneralModule(m, deviceId, n.generalModule);
+  }
+
+  /// Rehydrates in-memory BLE state from local cache (e.g. when the user skips
+  /// a post-connect config download).
+  static Future<void> restoreAllFromCacheToBle(
+    BleManager m,
+    String deviceId, [
+    PanelConfigRefreshNotifiers? n,
+  ]) async {
+    await PeripheralCacheToBle.applyToBleManager(m, deviceId);
+    n?.bumpAll();
   }
 }

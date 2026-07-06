@@ -42,10 +42,20 @@ Future<void> offerOptionalFullConfigDownloadAfterConnect({
     leadingValue: false,
     trailingValue: true,
   );
-  if (wantDownload != true || !isMounted()) return;
-  if (!context.mounted) return;
+  if (!isMounted()) return;
 
   final bleManager = Get.find<BleManager>();
+
+  if (wantDownload != true) {
+    await PanelConfigCacheSync.restoreAllFromCacheToBle(
+      bleManager,
+      device.id,
+      refreshNotifiers,
+    );
+    return;
+  }
+
+  if (!context.mounted) return;
   final bleController = Get.find<BleLogController>();
   final notifiers = refreshNotifiers ?? _ephemeralPanelRefreshNotifiers();
   final nav = navigatingToDeviceConnecting ?? ValueNotifier<bool>(false);

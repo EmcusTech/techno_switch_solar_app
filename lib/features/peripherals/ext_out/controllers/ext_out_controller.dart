@@ -110,6 +110,10 @@ class ExtOutController extends PeripheralModeController {
     }
     if (manager?.isConnected == true) {
       loadFromManager();
+      final cached = await loadCache();
+      if (cached != null) {
+        _applyCachedSolarMode(cached);
+      }
       return;
     }
     final cached = await loadCache();
@@ -146,6 +150,10 @@ class ExtOutController extends PeripheralModeController {
     releaseCtrl.text = (data['releaseTime'] as int?)?.toString() ?? '10';
     resetDelayCtrl.text =
         (data[StringConstants.resetdelay] as int?)?.toString() ?? '5';
+    _applyCachedSolarMode(data);
+  }
+
+  void _applyCachedSolarMode(Map<String, dynamic> data) {
     final solarRaw = data[StringConstants.issolar];
     if (manager != null && solarRaw is bool) {
       manager!.bleProcess.isExtOutApplyButtonActive.value = solarRaw;
