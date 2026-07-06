@@ -351,7 +351,20 @@ class LogController extends GetxController {
   List<LogModel> getDisplayLogs() {
     final baseLogs = getBaseLogs();
     final afterSheetFilters = filtersApplied ? filteredLogs : baseLogs;
-    return applyEventIdQuickFilter(afterSheetFilters);
+    final afterQuickFilter = applyEventIdQuickFilter(afterSheetFilters);
+    return applyLiveDisplayOrder(afterQuickFilter);
+  }
+
+  /// Live event logs show newest entries first; history/export use ascending order.
+  List<LogModel> applyLiveDisplayOrder(List<LogModel> logs) {
+    if (eventLogArgs?.isLiveEventLogs != true) return logs;
+    final sorted = List<LogModel>.from(logs);
+    sorted.sort((a, b) {
+      final aId = int.tryParse(a.eventId ?? '0') ?? 0;
+      final bId = int.tryParse(b.eventId ?? '0') ?? 0;
+      return bId.compareTo(aId);
+    });
+    return sorted;
   }
 
   List<LogModel> applyEventIdQuickFilter(List<LogModel> logs) {
@@ -492,9 +505,7 @@ class LogController extends GetxController {
   }
 
   Future<void> exportEventLogPdf() async {
-    final logs = applyEventIdQuickFilter(
-      filtersApplied ? filteredLogs : getBaseLogs(),
-    );
+    final logs = getDisplayLogs();
     if (logs.isEmpty) return;
 
     var siteName = '-';

@@ -4,6 +4,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:techno_switch_solar_app/features/logs/controllers/log_controller.dart';
+import 'package:techno_switch_solar_app/features/logs/controllers/log_list_table_controller.dart';
 import 'package:techno_switch_solar_app/features/logs/views/log_ui_delegate_mixin.dart';
 import 'package:techno_switch_solar_app/models/log_model.dart';
 import 'package:techno_switch_solar_app/utils/constants/ble/ble_name_utils.dart';
@@ -158,19 +159,6 @@ class _EventLogPageHostState extends State<_EventLogPageHost>
     );
   }
 
-  List<LogModel> _applyLiveSortingIfNeeded(List<LogModel> logs) {
-    if (_controller.eventLogArgs?.isLiveEventLogs == true) {
-      final sorted = List<LogModel>.from(logs);
-      sorted.sort((a, b) {
-        final aId = int.tryParse(a.eventId ?? '0') ?? 0;
-        final bId = int.tryParse(b.eventId ?? '0') ?? 0;
-        return bId.compareTo(aId);
-      });
-      return sorted;
-    }
-    return logs;
-  }
-
   void _showFilterBottomSheet() {
     showFilterBottomSheet(
       onApply: () {
@@ -194,9 +182,7 @@ class _EventLogPageHostState extends State<_EventLogPageHost>
               Container(
                 decoration: BoxDecoration(
                   color: ColorConstants.buttonSecondaryBackground,
-                  borderRadius: BorderRadius.vertical(
-                    top: Radius.circular(32),
-                  ),
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
                 ),
                 child: Column(
                   children: [
@@ -370,7 +356,9 @@ class _EventLogPageHostState extends State<_EventLogPageHost>
                                           status,
                                         );
                                       } else {
-                                        _controller.selectedStatuses.add(status);
+                                        _controller.selectedStatuses.add(
+                                          status,
+                                        );
                                       }
                                     });
                                   },
@@ -515,9 +503,7 @@ class _EventLogPageHostState extends State<_EventLogPageHost>
                               vertical: 12,
                               horizontal: 32,
                             ),
-                            side: BorderSide(
-                              color: ColorConstants.transparent,
-                            ),
+                            side: BorderSide(color: ColorConstants.transparent),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
                             ),
@@ -566,7 +552,6 @@ class _EventLogPageHostState extends State<_EventLogPageHost>
   }
 
   Widget _buildLogStatus(List<LogModel> logsToDisplay) {
-    final processedLogs = _applyLiveSortingIfNeeded(logsToDisplay);
     final panelName = _controller.resolvedPanelName();
     return Padding(
       padding: const EdgeInsets.only(left: 20, right: 20, top: 20),
@@ -766,8 +751,8 @@ class _EventLogPageHostState extends State<_EventLogPageHost>
             child: IndexedStack(
               index: _controller.selectedViewIndex,
               children: [
-                _LogListView(displayLogs: processedLogs),
-                _LogTableView(displayLogs: processedLogs),
+                _LogListView(displayLogs: logsToDisplay),
+                _LogTableView(displayLogs: logsToDisplay),
               ],
             ),
           ),
@@ -786,16 +771,8 @@ class _EventLogPageHostState extends State<_EventLogPageHost>
                 ? _buildLogStatus(controller.getDisplayLogs())
                 : ValueListenableBuilder<List<LogModel>>(
                   valueListenable: controller.ble.bleProcess.validEventLogs,
-                  builder: (context, validLogs, child) {
-                    final baseLogs = controller.sortLogsByEventId(validLogs);
-                    final afterSheetFilters =
-                        controller.filtersApplied
-                            ? controller.filteredLogs
-                            : baseLogs;
-                    final logsToDisplay = controller.applyEventIdQuickFilter(
-                      afterSheetFilters,
-                    );
-                    return _buildLogStatus(logsToDisplay);
+                  builder: (context, _, __) {
+                    return _buildLogStatus(controller.getDisplayLogs());
                   },
                 );
 
@@ -854,11 +831,11 @@ class _EventLogPageHostState extends State<_EventLogPageHost>
                                     onTap:
                                         controller.canClearLogs
                                             ? () =>
-                                                controller
-                                                    .confirmAndClearLogs()
+                                                controller.confirmAndClearLogs()
                                             : null,
                                     child: Opacity(
-                                      opacity: controller.canClearLogs ? 1.0 : 0,
+                                      opacity:
+                                          controller.canClearLogs ? 1.0 : 0,
                                       child: SvgPicture.asset(
                                         AssetConstants.clearIcon,
                                         height: 28,
@@ -870,8 +847,7 @@ class _EventLogPageHostState extends State<_EventLogPageHost>
                               GestureDetector(
                                 onTap:
                                     () => showExportBottomSheet(
-                                      onExportPdf:
-                                          controller.exportEventLogPdf,
+                                      onExportPdf: controller.exportEventLogPdf,
                                     ),
                                 child: Padding(
                                   padding: const EdgeInsets.only(right: 12.0),
@@ -945,9 +921,7 @@ class _LogListViewState extends State<_LogListView>
   bool get wantKeepAlive => true;
 
   final ScrollController _horizontalController = ScrollController();
-  String? _sortColumn;
-  bool _sortAscending = true;
-  List<LogModel> _sortedLogs = [];
+  late final LogListTableController _tableController;
 
   static const double wEventId = 80;
   static const double wDateTime = 140;
@@ -982,7 +956,9 @@ class _LogListViewState extends State<_LogListView>
   @override
   void initState() {
     super.initState();
-    _sortedLogs = List.from(widget.displayLogs);
+    _tableController = Get.put(
+      LogListTableController(displayLogs: widget.displayLogs),
+    );
   }
 
   @override
@@ -990,152 +966,18 @@ class _LogListViewState extends State<_LogListView>
     super.didUpdateWidget(oldWidget);
     if (widget.displayLogs.length != oldWidget.displayLogs.length ||
         !listEquals(widget.displayLogs, oldWidget.displayLogs)) {
-      setState(() {
-        _sortedLogs = List.from(widget.displayLogs);
-        if (_sortColumn != null) {
-          _sortedLogs.sort((a, b) {
-            int comparison = 0;
-
-            switch (_sortColumn) {
-              case StringConstants.eventid:
-                final aId = int.tryParse(a.eventId ?? '0') ?? 0;
-                final bId = int.tryParse(b.eventId ?? '0') ?? 0;
-                comparison = aId.compareTo(bId);
-                break;
-              case StringConstants.datetime:
-                if (a.eventDateTime != null && b.eventDateTime != null) {
-                  comparison = a.eventDateTime!.compareTo(b.eventDateTime!);
-                } else if (a.eventDateTime != null) {
-                  comparison = 1;
-                } else if (b.eventDateTime != null) {
-                  comparison = -1;
-                }
-                break;
-              case 'status':
-                comparison = (a.eventStatus ?? '').compareTo(
-                  b.eventStatus ?? '',
-                );
-                break;
-              case 'class':
-                comparison = (a.eventClass ?? '').compareTo(b.eventClass ?? '');
-                break;
-              case 'type':
-                comparison = (a.eventType ?? '').compareTo(b.eventType ?? '');
-                break;
-              case StringConstants.subtype:
-                comparison = (a.eventSubType ?? '').compareTo(
-                  b.eventSubType ?? '',
-                );
-                break;
-              case 'source':
-                comparison = (a.eventSource ?? '').compareTo(
-                  b.eventSource ?? '',
-                );
-                break;
-              case 'identifier':
-                comparison = (a.identifier ?? '').compareTo(b.identifier ?? '');
-                break;
-              case 'text':
-                comparison = (a.text ?? '').compareTo(b.text ?? '');
-                break;
-              case StringConstants.panelno:
-                comparison = (a.panelNo ?? '').compareTo(b.panelNo ?? '');
-                break;
-              case StringConstants.moduleno:
-                comparison = (a.moduleNo ?? '').compareTo(b.moduleNo ?? '');
-                break;
-              case StringConstants.lbusno:
-                comparison = (a.lBusNo ?? '').compareTo(b.lBusNo ?? '');
-                break;
-            }
-
-            return _sortAscending ? comparison : -comparison;
-          });
-        }
-      });
+      _tableController.updateDisplayLogs(widget.displayLogs);
     }
   }
 
   @override
   void dispose() {
+    Get.delete<LogListTableController>();
     _horizontalController.dispose();
     super.dispose();
   }
 
-  void _sortLogs(String column) {
-    setState(() {
-      if (_sortColumn == column) {
-        if (_sortAscending) {
-          _sortAscending = false;
-        } else {
-          _sortColumn = null;
-          _sortAscending = true;
-          _sortedLogs = List.from(widget.displayLogs);
-          return;
-        }
-      } else {
-        _sortColumn = column;
-        _sortAscending = true;
-      }
-
-      _sortedLogs = List.from(widget.displayLogs);
-
-      _sortedLogs.sort((a, b) {
-        int comparison = 0;
-
-        switch (column) {
-          case StringConstants.eventid:
-            final aId = int.tryParse(a.eventId ?? '0') ?? 0;
-            final bId = int.tryParse(b.eventId ?? '0') ?? 0;
-            comparison = aId.compareTo(bId);
-            break;
-          case StringConstants.datetime:
-            if (a.eventDateTime != null && b.eventDateTime != null) {
-              comparison = a.eventDateTime!.compareTo(b.eventDateTime!);
-            } else if (a.eventDateTime != null) {
-              comparison = 1;
-            } else if (b.eventDateTime != null) {
-              comparison = -1;
-            }
-            break;
-          case 'status':
-            comparison = (a.eventStatus ?? '').compareTo(b.eventStatus ?? '');
-            break;
-          case 'class':
-            comparison = (a.eventClass ?? '').compareTo(b.eventClass ?? '');
-            break;
-          case 'type':
-            comparison = (a.eventType ?? '').compareTo(b.eventType ?? '');
-            break;
-          case StringConstants.subtype:
-            comparison = (a.eventSubType ?? '').compareTo(b.eventSubType ?? '');
-            break;
-          case 'source':
-            comparison = (a.eventSource ?? '').compareTo(b.eventSource ?? '');
-            break;
-          case 'identifier':
-            comparison = (a.identifier ?? '').compareTo(b.identifier ?? '');
-            break;
-          case 'text':
-            comparison = (a.text ?? '').compareTo(b.text ?? '');
-            break;
-          case StringConstants.panelno:
-            comparison = (a.panelNo ?? '').compareTo(b.panelNo ?? '');
-            break;
-          case StringConstants.moduleno:
-            comparison = (a.moduleNo ?? '').compareTo(b.moduleNo ?? '');
-            break;
-          case StringConstants.lbusno:
-            comparison = (a.lBusNo ?? '').compareTo(b.lBusNo ?? '');
-            break;
-        }
-
-        return _sortAscending ? comparison : -comparison;
-      });
-    });
-  }
-
-  Widget _buildHeader() {
+  Widget _buildHeader(LogListTableController table) {
     return Container(
       height: _headerHeight,
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
@@ -1143,39 +985,72 @@ class _LogListViewState extends State<_LogListView>
       child: Row(
         children: [
           _buildHeaderCell(
+            table,
             StringConstants.id,
             wEventId,
             StringConstants.eventid,
           ),
           _buildHeaderCell(
+            table,
             StringConstants.dateTime,
             wDateTime,
             StringConstants.datetime,
           ),
-          _buildHeaderCell('Status', wEventStatus, 'status'),
-          _buildHeaderCell(StringConstants.classLabel, wEventClass, 'class'),
-          _buildHeaderCell(StringConstants.type, wEventType, 'type'),
+          _buildHeaderCell(table, 'Status', wEventStatus, 'status'),
           _buildHeaderCell(
+            table,
+            StringConstants.classLabel,
+            wEventClass,
+            'class',
+          ),
+          _buildHeaderCell(table, StringConstants.type, wEventType, 'type'),
+          _buildHeaderCell(
+            table,
             StringConstants.subType,
             wEventSubType,
             StringConstants.subtype,
           ),
-          _buildHeaderCell(StringConstants.source, wEventSource, 'source'),
-          _buildHeaderCell('Identifier', wIdentifier, 'identifier'),
-          _buildHeaderCell(StringConstants.text, wText, 'text'),
-          _buildHeaderCell('Panel no', wPanelNo, StringConstants.panelno),
-          _buildHeaderCell('Module no', wModuleNo, StringConstants.moduleno),
-          _buildHeaderCell('L-Bus no', wLbusNo, StringConstants.lbusno),
+          _buildHeaderCell(
+            table,
+            StringConstants.source,
+            wEventSource,
+            'source',
+          ),
+          _buildHeaderCell(table, 'Identifier', wIdentifier, 'identifier'),
+          _buildHeaderCell(table, StringConstants.text, wText, 'text'),
+          _buildHeaderCell(
+            table,
+            'Panel no',
+            wPanelNo,
+            StringConstants.panelno,
+          ),
+          _buildHeaderCell(
+            table,
+            'Module no',
+            wModuleNo,
+            StringConstants.moduleno,
+          ),
+          _buildHeaderCell(
+            table,
+            'L-Bus no',
+            wLbusNo,
+            StringConstants.lbusno,
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildHeaderCell(String text, double width, String columnKey) {
-    final bool isActive = _sortColumn == columnKey;
+  Widget _buildHeaderCell(
+    LogListTableController table,
+    String text,
+    double width,
+    String columnKey,
+  ) {
+    final bool isActive = table.sortColumn == columnKey;
 
     return GestureDetector(
-      onTap: () => _sortLogs(columnKey),
+      onTap: () => table.sortByColumn(columnKey),
       child: Container(
         width: width,
         padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -1195,7 +1070,7 @@ class _LogListViewState extends State<_LogListView>
             SizedBox(width: 4),
             if (isActive)
               Icon(
-                _sortAscending ? Icons.arrow_upward : Icons.arrow_downward,
+                table.sortAscending ? Icons.arrow_upward : Icons.arrow_downward,
                 size: 12,
                 color: ColorConstants.primary,
               )
@@ -1236,27 +1111,30 @@ class _LogListViewState extends State<_LogListView>
   Widget build(BuildContext context) {
     super.build(context);
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final double availableHeight = constraints.maxHeight;
+    return GetBuilder<LogListTableController>(
+      init: _tableController,
+      builder: (table) {
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final double availableHeight = constraints.maxHeight;
 
-        return SingleChildScrollView(
-          controller: _horizontalController,
-          scrollDirection: Axis.horizontal,
-          physics: const ClampingScrollPhysics(),
-          child: SizedBox(
-            width: _totalTableWidth + 16,
-            height: availableHeight,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildHeader(),
-                const Divider(height: 1, thickness: 1),
-                Expanded(
-                  child: ListView.builder(
-                    itemCount: _sortedLogs.length,
-                    itemBuilder: (context, index) {
-                      final log = _sortedLogs[index];
+            return SingleChildScrollView(
+              controller: _horizontalController,
+              scrollDirection: Axis.horizontal,
+              physics: const ClampingScrollPhysics(),
+              child: SizedBox(
+                width: _totalTableWidth + 16,
+                height: availableHeight,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildHeader(table),
+                    const Divider(height: 1, thickness: 1),
+                    Expanded(
+                      child: ListView.builder(
+                        itemCount: table.sortedLogs.length,
+                        itemBuilder: (context, index) {
+                          final log = table.sortedLogs[index];
                       return Column(
                         children: [
                           if (index > 0) const Divider(height: 1),
@@ -1342,12 +1220,14 @@ class _LogListViewState extends State<_LogListView>
                           ),
                         ],
                       );
-                    },
-                  ),
+                        },
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ),
+              ),
+            );
+          },
         );
       },
     );
