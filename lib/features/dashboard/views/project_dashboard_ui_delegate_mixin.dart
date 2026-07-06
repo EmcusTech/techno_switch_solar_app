@@ -93,8 +93,9 @@ mixin ProjectDashboardUiDelegateMixin<T extends StatefulWidget> on State<T>
 
   @override
   void showUnexpectedBleDisconnectDialog() {
-    if (!mounted || dashboardController.isUnexpectedDisconnectDialogOpen)
+    if (!mounted || dashboardController.isUnexpectedDisconnectDialogOpen) {
       return;
+    }
     dashboardController.isUnexpectedDisconnectDialogOpen = true;
     showDialog<void>(
       context: uiContext,
