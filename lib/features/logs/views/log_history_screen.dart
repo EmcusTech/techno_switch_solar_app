@@ -57,14 +57,13 @@ class _LogHistoryBootstrapState extends State<_LogHistoryBootstrap> {
   @override
   void initState() {
     super.initState();
-    LogBinding(args: widget.args).dependencies();
+    LogBinding.installHistory(widget.args);
   }
 
   @override
   void dispose() {
-    if (Get.isRegistered<LogController>()) {
-      Get.delete<LogController>();
-    }
+    LogBinding.removeHistorySession();
+    LogBinding.removeHistory();
     super.dispose();
   }
 
@@ -74,14 +73,19 @@ class _LogHistoryBootstrapState extends State<_LogHistoryBootstrap> {
   }
 }
 
-class _LogHistoryView extends GetView<LogController> {
+class _LogHistoryView extends StatelessWidget {
   const _LogHistoryView({this.refreshTrigger});
 
   final ValueNotifier<int>? refreshTrigger;
 
   @override
   Widget build(BuildContext context) {
+    final controller = LogBinding.findHistory();
+    if (controller == null) {
+      return const SizedBox.shrink();
+    }
     return _LogHistoryPageHost(
+      controller: controller,
       args: controller.args,
       refreshTrigger: refreshTrigger,
     );
@@ -90,10 +94,12 @@ class _LogHistoryView extends GetView<LogController> {
 
 class _LogHistoryPageHost extends StatefulWidget {
   const _LogHistoryPageHost({
+    required this.controller,
     required this.args,
     this.refreshTrigger,
   });
 
+  final LogController controller;
   final LogFlowArgs args;
   final ValueNotifier<int>? refreshTrigger;
 
@@ -103,7 +109,7 @@ class _LogHistoryPageHost extends StatefulWidget {
 
 class _LogHistoryPageHostState extends State<_LogHistoryPageHost>
     with LogUiDelegateMixin, RouteAware {
-  LogController get _controller => Get.find<LogController>();
+  LogController get _controller => widget.controller;
 
   @override
   void initState() {
@@ -116,8 +122,8 @@ class _LogHistoryPageHostState extends State<_LogHistoryPageHost>
 
   void _onExternalRefresh() {
     if (!mounted) return;
-    LogBinding(args: widget.args).dependencies();
-    final controller = Get.find<LogController>();
+    final controller = LogBinding.findHistory();
+    if (controller == null) return;
     controller.attachUi(this);
     controller.reinitializeForHistoryTab();
   }
@@ -147,16 +153,20 @@ class _LogHistoryPageHostState extends State<_LogHistoryPageHost>
 
   @override
   void didPopNext() {
-    LogBinding(args: widget.args).dependencies();
-    final controller = Get.find<LogController>();
+    final controller = LogBinding.findHistory();
+    if (controller == null) return;
     controller.attachUi(this);
     controller.reinitializeForHistoryTab();
   }
 
   @override
   Widget build(BuildContext context) {
-    final history = _controller.historyArgs!;
+    final history = widget.args.history;
+    if (history == null) return const SizedBox.shrink();
+
     return GetBuilder<LogController>(
+      tag: LogBinding.historyTag,
+      init: widget.controller,
       builder: (controller) {
         return WillPopScope(
           onWillPop: () async => false,

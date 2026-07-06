@@ -7,6 +7,7 @@ import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/features/dashboard/controllers/project_dashboard_controller.dart';
+import 'package:techno_switch_solar_app/features/logs/bindings/log_binding.dart';
 import 'package:techno_switch_solar_app/features/logs/controllers/log_ui_delegate.dart';
 import 'package:techno_switch_solar_app/features/logs/models/log_flow_args.dart';
 import 'package:techno_switch_solar_app/features/scan/models/scan_type.dart';
@@ -127,7 +128,7 @@ class LogController extends GetxController {
 
   void reinitializeForHistoryTab() {
     if (args.mode != LogFlowMode.history) return;
-    if (!Get.isRegistered<LogController>()) return;
+    if (!Get.isRegistered<LogController>(tag: LogBinding.historyTag)) return;
     loadHistory();
   }
 

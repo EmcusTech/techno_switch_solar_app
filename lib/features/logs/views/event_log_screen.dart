@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:techno_switch_solar_app/features/logs/bindings/log_binding.dart';
 import 'package:techno_switch_solar_app/features/logs/controllers/log_controller.dart';
 import 'package:techno_switch_solar_app/features/logs/controllers/log_list_table_controller.dart';
 import 'package:techno_switch_solar_app/features/logs/views/log_ui_delegate_mixin.dart';
@@ -14,19 +15,35 @@ import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 
-class EventLogScreen extends GetView<LogController> {
-  const EventLogScreen({super.key});
+class EventLogScreen extends StatelessWidget {
+  const EventLogScreen({super.key, this.fromLogHistory = false});
+
+  final bool fromLogHistory;
+
+  LogController get _controller {
+    if (fromLogHistory) {
+      return LogBinding.findHistorySession();
+    }
+    return Get.find<LogController>();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return _EventLogPageHost(controller: controller);
+    return _EventLogPageHost(
+      controller: _controller,
+      fromLogHistory: fromLogHistory,
+    );
   }
 }
 
 class _EventLogPageHost extends StatefulWidget {
-  const _EventLogPageHost({required this.controller});
+  const _EventLogPageHost({
+    required this.controller,
+    this.fromLogHistory = false,
+  });
 
   final LogController controller;
+  final bool fromLogHistory;
 
   @override
   State<_EventLogPageHost> createState() => _EventLogPageHostState();
@@ -45,7 +62,9 @@ class _EventLogPageHostState extends State<_EventLogPageHost>
   @override
   void dispose() {
     _controller.detachUi();
-    if (Get.isRegistered<LogController>()) {
+    if (widget.fromLogHistory) {
+      LogBinding.removeHistorySession();
+    } else if (Get.isRegistered<LogController>()) {
       Get.delete<LogController>();
     }
     super.dispose();
@@ -765,6 +784,8 @@ class _EventLogPageHostState extends State<_EventLogPageHost>
   @override
   Widget build(BuildContext context) {
     return GetBuilder<LogController>(
+      tag: widget.fromLogHistory ? LogBinding.historySessionTag : null,
+      init: widget.fromLogHistory ? widget.controller : null,
       builder: (controller) {
         final Widget logsSection =
             controller.useProvidedLogs
@@ -1030,12 +1051,7 @@ class _LogListViewState extends State<_LogListView>
             wModuleNo,
             StringConstants.moduleno,
           ),
-          _buildHeaderCell(
-            table,
-            'L-Bus no',
-            wLbusNo,
-            StringConstants.lbusno,
-          ),
+          _buildHeaderCell(table, 'L-Bus no', wLbusNo, StringConstants.lbusno),
         ],
       ),
     );
@@ -1135,91 +1151,91 @@ class _LogListViewState extends State<_LogListView>
                         itemCount: table.sortedLogs.length,
                         itemBuilder: (context, index) {
                           final log = table.sortedLogs[index];
-                      return Column(
-                        children: [
-                          if (index > 0) const Divider(height: 1),
-                          Container(
-                            color:
-                                index % 2 == 0
-                                    ? ColorConstants.white
-                                    : ColorConstants.surfaceOffWhite,
-                            height: _rowHeight,
-                            padding: const EdgeInsets.symmetric(
-                              vertical: 6,
-                              horizontal: 8,
-                            ),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                _buildDataCell(
-                                  log.eventId ?? '',
-                                  wEventId,
-                                  DataType.id,
+                          return Column(
+                            children: [
+                              if (index > 0) const Divider(height: 1),
+                              Container(
+                                color:
+                                    index % 2 == 0
+                                        ? ColorConstants.white
+                                        : ColorConstants.surfaceOffWhite,
+                                height: _rowHeight,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 6,
+                                  horizontal: 8,
                                 ),
-                                _buildDataCell(
-                                  log.eventDateTime != null
-                                      ? DateFormat(
-                                        'dd/MM/yyyy\nhh:mm:ss a',
-                                      ).format(log.eventDateTime!)
-                                      : '',
-                                  wDateTime,
-                                  DataType.dateTime,
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    _buildDataCell(
+                                      log.eventId ?? '',
+                                      wEventId,
+                                      DataType.id,
+                                    ),
+                                    _buildDataCell(
+                                      log.eventDateTime != null
+                                          ? DateFormat(
+                                            'dd/MM/yyyy\nhh:mm:ss a',
+                                          ).format(log.eventDateTime!)
+                                          : '',
+                                      wDateTime,
+                                      DataType.dateTime,
+                                    ),
+                                    _buildDataCell(
+                                      log.eventStatus ?? '',
+                                      wEventStatus,
+                                      DataType.status,
+                                    ),
+                                    _buildDataCell(
+                                      log.eventClass ?? '',
+                                      wEventClass,
+                                      DataType.eventClass,
+                                    ),
+                                    _buildDataCell(
+                                      log.eventType ?? '',
+                                      wEventType,
+                                      DataType.type,
+                                    ),
+                                    _buildDataCell(
+                                      log.eventSubType ?? '',
+                                      wEventSubType,
+                                      DataType.subType,
+                                    ),
+                                    _buildDataCell(
+                                      log.eventSource ?? '',
+                                      wEventSource,
+                                      DataType.source,
+                                    ),
+                                    _buildDataCell(
+                                      log.identifier ?? '',
+                                      wIdentifier,
+                                      DataType.identifier,
+                                    ),
+                                    _buildDataCell(
+                                      log.text ?? '',
+                                      wText,
+                                      DataType.text,
+                                    ),
+                                    _buildDataCell(
+                                      log.panelNo ?? '',
+                                      wPanelNo,
+                                      DataType.panelNo,
+                                    ),
+                                    _buildDataCell(
+                                      log.moduleNo ?? '',
+                                      wModuleNo,
+                                      DataType.moduleNo,
+                                    ),
+                                    _buildDataCell(
+                                      log.lBusNo ?? '',
+                                      wLbusNo,
+                                      DataType.lBusNo,
+                                    ),
+                                  ],
                                 ),
-                                _buildDataCell(
-                                  log.eventStatus ?? '',
-                                  wEventStatus,
-                                  DataType.status,
-                                ),
-                                _buildDataCell(
-                                  log.eventClass ?? '',
-                                  wEventClass,
-                                  DataType.eventClass,
-                                ),
-                                _buildDataCell(
-                                  log.eventType ?? '',
-                                  wEventType,
-                                  DataType.type,
-                                ),
-                                _buildDataCell(
-                                  log.eventSubType ?? '',
-                                  wEventSubType,
-                                  DataType.subType,
-                                ),
-                                _buildDataCell(
-                                  log.eventSource ?? '',
-                                  wEventSource,
-                                  DataType.source,
-                                ),
-                                _buildDataCell(
-                                  log.identifier ?? '',
-                                  wIdentifier,
-                                  DataType.identifier,
-                                ),
-                                _buildDataCell(
-                                  log.text ?? '',
-                                  wText,
-                                  DataType.text,
-                                ),
-                                _buildDataCell(
-                                  log.panelNo ?? '',
-                                  wPanelNo,
-                                  DataType.panelNo,
-                                ),
-                                _buildDataCell(
-                                  log.moduleNo ?? '',
-                                  wModuleNo,
-                                  DataType.moduleNo,
-                                ),
-                                _buildDataCell(
-                                  log.lBusNo ?? '',
-                                  wLbusNo,
-                                  DataType.lBusNo,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      );
+                              ),
+                            ],
+                          );
                         },
                       ),
                     ),

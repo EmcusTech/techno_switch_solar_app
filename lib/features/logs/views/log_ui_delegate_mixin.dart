@@ -93,6 +93,17 @@ mixin LogUiDelegateMixin<T extends StatefulWidget> on State<T>
 
   @override
   void openEventLogScreen({required LogFlowArgs args}) {
+    final fromHistory = args.eventLog?.isHistoryView ?? false;
+    if (fromHistory) {
+      LogBinding.installHistorySession(args);
+      Navigator.of(uiContext).push(
+        MaterialPageRoute(
+          builder: (_) => const EventLogScreen(fromLogHistory: true),
+        ),
+      );
+      return;
+    }
+
     LogBinding(args: args).dependencies();
     Navigator.of(uiContext).push(
       MaterialPageRoute(builder: (_) => const EventLogScreen()),
