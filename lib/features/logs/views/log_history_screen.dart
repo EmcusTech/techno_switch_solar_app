@@ -5,20 +5,14 @@ import 'package:techno_switch_solar_app/features/logs/bindings/log_binding.dart'
 import 'package:techno_switch_solar_app/features/logs/controllers/log_controller.dart';
 import 'package:techno_switch_solar_app/features/logs/models/log_flow_args.dart';
 import 'package:techno_switch_solar_app/features/logs/views/log_ui_delegate_mixin.dart';
-import 'package:techno_switch_solar_app/models/log_retrieval_model.dart';
+import 'package:techno_switch_solar_app/features/logs/widgets/log_history_dashboard.dart';
 import 'package:techno_switch_solar_app/utils/app/navigation_service.dart';
-import 'package:techno_switch_solar_app/utils/constants/ble/ble_name_utils.dart';
+import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
-import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
 
-class LogHistoryScreen extends StatelessWidget {
-  final String panelName;
-  final String panelVersionNo;
-  final int? siteId;
-  final ValueNotifier<int>? refreshTrigger;
-
+class LogHistoryScreen extends StatefulWidget {
   const LogHistoryScreen({
     super.key,
     required this.panelName,
@@ -27,103 +21,40 @@ class LogHistoryScreen extends StatelessWidget {
     this.refreshTrigger,
   });
 
-  @override
-  Widget build(BuildContext context) {
-    return _LogHistoryBootstrap(
-      args: LogFlowArgs.history(
-        panelName: panelName,
-        panelVersionNo: panelVersionNo,
-        siteId: siteId,
-      ),
-      refreshTrigger: refreshTrigger,
-    );
-  }
-}
-
-class _LogHistoryBootstrap extends StatefulWidget {
-  const _LogHistoryBootstrap({
-    required this.args,
-    this.refreshTrigger,
-  });
-
-  final LogFlowArgs args;
+  final String panelName;
+  final String panelVersionNo;
+  final int? siteId;
   final ValueNotifier<int>? refreshTrigger;
 
   @override
-  State<_LogHistoryBootstrap> createState() => _LogHistoryBootstrapState();
+  State<LogHistoryScreen> createState() => _LogHistoryScreenState();
 }
 
-class _LogHistoryBootstrapState extends State<_LogHistoryBootstrap> {
-  @override
-  void initState() {
-    super.initState();
-    LogBinding.installHistory(widget.args);
-  }
-
-  @override
-  void dispose() {
-    LogBinding.removeHistorySession();
-    LogBinding.removeHistory();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return _LogHistoryView(refreshTrigger: widget.refreshTrigger);
-  }
-}
-
-class _LogHistoryView extends StatelessWidget {
-  const _LogHistoryView({this.refreshTrigger});
-
-  final ValueNotifier<int>? refreshTrigger;
-
-  @override
-  Widget build(BuildContext context) {
-    final controller = LogBinding.findHistory();
-    if (controller == null) {
-      return const SizedBox.shrink();
-    }
-    return _LogHistoryPageHost(
-      controller: controller,
-      args: controller.args,
-      refreshTrigger: refreshTrigger,
-    );
-  }
-}
-
-class _LogHistoryPageHost extends StatefulWidget {
-  const _LogHistoryPageHost({
-    required this.controller,
-    required this.args,
-    this.refreshTrigger,
-  });
-
-  final LogController controller;
-  final LogFlowArgs args;
-  final ValueNotifier<int>? refreshTrigger;
-
-  @override
-  State<_LogHistoryPageHost> createState() => _LogHistoryPageHostState();
-}
-
-class _LogHistoryPageHostState extends State<_LogHistoryPageHost>
+class _LogHistoryScreenState extends State<LogHistoryScreen>
     with LogUiDelegateMixin, RouteAware {
-  LogController get _controller => widget.controller;
+  LogController? _controller;
+  bool _routeSubscriptionRegistered = false;
 
   @override
   void initState() {
     super.initState();
-    _controller.attachUi(this);
+    LogBinding.installHistory(
+      LogFlowArgs.history(
+        panelName: widget.panelName,
+        panelVersionNo: widget.panelVersionNo,
+        siteId: widget.siteId,
+      ),
+    );
+    _controller = LogBinding.findHistory();
+    _controller?.attachUi(this);
     widget.refreshTrigger?.addListener(_onExternalRefresh);
   }
-
-  bool _routeSubscriptionRegistered = false;
 
   void _onExternalRefresh() {
     if (!mounted) return;
     final controller = LogBinding.findHistory();
     if (controller == null) return;
+    _controller = controller;
     controller.attachUi(this);
     controller.reinitializeForHistoryTab();
   }
@@ -147,7 +78,9 @@ class _LogHistoryPageHostState extends State<_LogHistoryPageHost>
       appRouteObserver.unsubscribe(this);
       _routeSubscriptionRegistered = false;
     }
-    _controller.detachUi();
+    _controller?.detachUi();
+    LogBinding.removeHistorySession();
+    LogBinding.removeHistory();
     super.dispose();
   }
 
@@ -155,18 +88,22 @@ class _LogHistoryPageHostState extends State<_LogHistoryPageHost>
   void didPopNext() {
     final controller = LogBinding.findHistory();
     if (controller == null) return;
+    _controller = controller;
     controller.attachUi(this);
     controller.reinitializeForHistoryTab();
   }
 
   @override
   Widget build(BuildContext context) {
-    final history = widget.args.history;
-    if (history == null) return const SizedBox.shrink();
+    final controller = _controller;
+    final history = controller?.args.history;
+    if (controller == null || history == null) {
+      return const SizedBox.shrink();
+    }
 
     return GetBuilder<LogController>(
       tag: LogBinding.historyTag,
-      init: widget.controller,
+      init: controller,
       builder: (controller) {
         return WillPopScope(
           onWillPop: () async => false,
@@ -202,7 +139,12 @@ class _LogHistoryPageHostState extends State<_LogHistoryPageHost>
                         ),
                       ),
                       SizedBox(height: 23),
-                      Expanded(child: _buildDashboardContainer(history, controller)),
+                      Expanded(
+                        child: LogHistoryDashboard(
+                          history: history,
+                          controller: controller,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -211,200 +153,6 @@ class _LogHistoryPageHostState extends State<_LogHistoryPageHost>
           ),
         );
       },
-    );
-  }
-
-  Widget _buildDashboardContainer(
-    LogHistoryArgs history,
-    LogController controller,
-  ) {
-    return Container(
-      decoration: BoxDecoration(
-        color: ColorConstants.white,
-        borderRadius: BorderRadius.circular(35),
-      ),
-      child: SingleChildScrollView(
-        child: _buildDashboard(history, controller),
-      ),
-    );
-  }
-
-  Widget _buildDashboard(LogHistoryArgs history, LogController controller) {
-    return Padding(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              SvgPicture.asset(AssetConstants.panelIcon, height: 62, width: 62),
-              SizedBox(width: 14),
-              Column(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    BleNameUtils.getDisplayPrefixFromBleName(history.panelName),
-                    style: StyleConstants.black16w700Style,
-                  ),
-                  Text(
-                    BleNameUtils.getDisplayIdFromBleName(history.panelName),
-                    style: StyleConstants.textDisabled14w500Style,
-                  ),
-                  ValueListenableBuilder(
-                    valueListenable:
-                        controller.bleManager.isConnectedNotifier,
-                    builder: (context, isConnected, child) {
-                      return Text(
-                        isConnected
-                            ? StringConstants.connected
-                            : StringConstants.disconnected,
-                        style: StyleConstants.primary14w500Style.copyWith(
-                          color:
-                              isConnected
-                                  ? ColorConstants.success
-                                  : ColorConstants.primary,
-                        ),
-                      );
-                    },
-                  ),
-                ],
-              ),
-            ],
-          ),
-          SizedBox(height: 10),
-          Divider(
-            color: ColorConstants.blackMaterial.withValues(alpha: 0.18),
-            thickness: 1,
-          ),
-          SizedBox(height: 10),
-          _buildLogHistorySection(controller),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildLogHistorySection(LogController controller) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          StringConstants.logRetrievalHistory,
-          style: StyleConstants.textDark16w700Style,
-        ),
-        SizedBox(height: 16),
-        SizedBox(
-          height: MediaQuery.of(context).size.height - 350,
-          child:
-              controller.isLoading
-                  ? Center(
-                    child: CircularProgressIndicator(
-                      color: ColorConstants.primary,
-                    ),
-                  )
-                  : controller.logRetrievals.isEmpty
-                  ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.history,
-                          size: 64,
-                          color: ColorConstants.borderGray,
-                        ),
-                        SizedBox(height: 16),
-                        Text(
-                          StringConstants.noLogHistory,
-                          style: StyleConstants.textGray18w600Style,
-                        ),
-                        SizedBox(height: 8),
-                        Text(
-                          UiStrings.logRetrievalsEmptyHintMessage,
-                          textAlign: TextAlign.center,
-                          style: StyleConstants.textPlaceholder14w400Style,
-                        ),
-                      ],
-                    ),
-                  )
-                  : ListView.separated(
-                    itemCount: controller.logRetrievals.length,
-                    separatorBuilder: (context, index) => SizedBox(height: 12),
-                    itemBuilder: (context, index) {
-                      final logRetrieval = controller.logRetrievals[index];
-                      return _buildLogRetrievalItem(
-                        logRetrieval,
-                        controller,
-                      );
-                    },
-                  ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildLogRetrievalItem(
-    LogRetrievalModel logRetrieval,
-    LogController controller,
-  ) {
-    final DateTime dateRetrieved = logRetrieval.retrievalDate;
-    final String formattedDate =
-        "${dateRetrieved.day.toString().padLeft(2, '0')}/${dateRetrieved.month.toString().padLeft(2, '0')}/${dateRetrieved.year} - ${dateRetrieved.hour.toString().padLeft(2, '0')}:${dateRetrieved.minute.toString().padLeft(2, '0')}";
-
-    return GestureDetector(
-      onTap: () => controller.openLogSession(logRetrieval),
-      child: Container(
-        padding: EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: ColorConstants.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: ColorConstants.surfaceCard),
-          boxShadow: [
-            BoxShadow(
-              color: ColorConstants.blackMaterial.withOpacity(0.05),
-              blurRadius: 8,
-              offset: Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 50,
-              height: 50,
-              decoration: BoxDecoration(
-                color: ColorConstants.danger.withOpacity(0.1),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.description_outlined,
-                color: ColorConstants.danger,
-                size: 20,
-              ),
-            ),
-            SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    logRetrieval.sessionName,
-                    style: StyleConstants.blackMaterial14w700Style,
-                  ),
-                  SizedBox(height: 4),
-                  Text(
-                    'Log Records : ${logRetrieval.logCount}',
-                    style: StyleConstants.textSecondary12w400Style,
-                  ),
-                  SizedBox(height: 2),
-                  Text(
-                    'Date Retrieved : $formattedDate',
-                    style: StyleConstants.textMediumGray12w400Style,
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
