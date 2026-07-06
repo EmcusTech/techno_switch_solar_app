@@ -1,17 +1,12 @@
 import 'package:get/get.dart';
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
-import 'package:techno_switch_solar_app/features/create_project/bindings/create_project_binding.dart';
 import 'package:techno_switch_solar_app/features/home/controllers/home_screen_ui_delegate.dart';
-import 'package:techno_switch_solar_app/features/scan/bindings/scan_binding.dart';
 import 'package:techno_switch_solar_app/features/scan/models/scan_flow_args.dart';
-import 'package:techno_switch_solar_app/features/scan/views/scanning_screen.dart';
-import 'package:techno_switch_solar_app/features/create_project/views/create_project_screen.dart';
 import 'package:techno_switch_solar_app/utils/app/app_services.dart';
 import 'package:techno_switch_solar_app/utils/app/app_state.dart';
 import 'package:techno_switch_solar_app/utils/log_retrieval_service.dart';
 import 'package:techno_switch_solar_app/utils/site_service.dart';
-import 'package:flutter/material.dart';
 
 class HomeScreenController extends GetxController {
   HomeScreenUiDelegate? _ui;
@@ -51,7 +46,6 @@ class HomeScreenController extends GetxController {
   }
 
   void setSelectedIndex(int index) {
-    if (index == 1 || index == 2) return;
     selectedIndex = index;
     update();
   }
@@ -133,21 +127,13 @@ class HomeScreenController extends GetxController {
   Future<void> openScanning(ScanFlowArgs args) async {
     final ui = _ui;
     if (ui == null || !ui.isMounted) return;
-
-    ScanBinding(args: args).dependencies();
-    await Navigator.of(ui.uiContext).push(
-      MaterialPageRoute(builder: (_) => const ScanningScreen()),
-    );
+    await ui.openScanning(args);
   }
 
   void openNewSite() {
     final ui = _ui;
     if (ui == null || !ui.isMounted) return;
-
-    CreateProjectBinding().dependencies();
-    Navigator.of(ui.uiContext).push(
-      MaterialPageRoute(builder: (_) => const CreateSiteScreen()),
-    );
+    ui.openCreateProject();
   }
 
   Future<void> openSite(SiteWithLogCount siteWithLogCount) async {
