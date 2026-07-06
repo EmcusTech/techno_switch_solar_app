@@ -6,6 +6,7 @@ import 'package:techno_switch_solar_app/features/logs/controllers/log_ui_delegat
 import 'package:techno_switch_solar_app/features/logs/models/log_flow_args.dart';
 import 'package:techno_switch_solar_app/features/logs/views/event_log_screen.dart';
 import 'package:techno_switch_solar_app/features/logs/views/log_retreival_completed_screen.dart';
+import 'package:techno_switch_solar_app/features/logs/widgets/clear_logs_dialog.dart';
 import 'package:techno_switch_solar_app/features/sites/bindings/site_binding.dart';
 import 'package:techno_switch_solar_app/features/sites/models/site_args.dart';
 import 'package:techno_switch_solar_app/features/sites/views/simple_site_creation_screen.dart';
@@ -31,14 +32,20 @@ mixin LogUiDelegateMixin<T extends StatefulWidget> on State<T>
   Future<bool?> showStopLogRetrievalDialog() async => null;
 
   @override
-  Future<bool?> showClearLogsDialog() async => null;
+  Future<bool?> showClearLogsDialog() async {
+    return showDialog<bool>(
+      context: uiContext,
+      barrierDismissible: false,
+      builder: (_) => const ClearLogsDialog(),
+    );
+  }
 
   @override
   void showSnackBar(String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(uiContext).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    ScaffoldMessenger.of(
+      uiContext,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -105,9 +112,9 @@ mixin LogUiDelegateMixin<T extends StatefulWidget> on State<T>
     }
 
     LogBinding(args: args).dependencies();
-    Navigator.of(uiContext).push(
-      MaterialPageRoute(builder: (_) => const EventLogScreen()),
-    );
+    Navigator.of(
+      uiContext,
+    ).push(MaterialPageRoute(builder: (_) => const EventLogScreen()));
   }
 
   @override
@@ -156,9 +163,7 @@ mixin LogUiDelegateMixin<T extends StatefulWidget> on State<T>
   }
 
   @override
-  void showExportBottomSheet({
-    required Future<void> Function() onExportPdf,
-  }) {
+  void showExportBottomSheet({required Future<void> Function() onExportPdf}) {
     showModalBottomSheet(
       context: uiContext,
       backgroundColor: ColorConstants.transparent,
@@ -214,7 +219,9 @@ mixin LogUiDelegateMixin<T extends StatefulWidget> on State<T>
     return showDatePicker(
       context: uiContext,
       initialDate:
-          isFromDate ? (fromDate ?? DateTime.now()) : (toDate ?? DateTime.now()),
+          isFromDate
+              ? (fromDate ?? DateTime.now())
+              : (toDate ?? DateTime.now()),
       firstDate: DateTime(2000),
       lastDate: DateTime(2100),
     );

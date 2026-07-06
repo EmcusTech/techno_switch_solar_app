@@ -22,6 +22,21 @@ import 'package:techno_switch_solar_app/utils/panel_service.dart';
 import 'package:techno_switch_solar_app/utils/pdf/pdf_report_util.dart';
 import 'package:techno_switch_solar_app/utils/site_service.dart';
 
+enum DataType {
+  id,
+  dateTime,
+  status,
+  eventClass,
+  type,
+  subType,
+  source,
+  identifier,
+  text,
+  panelNo,
+  moduleNo,
+  lBusNo,
+}
+
 class LogController extends GetxController {
   LogController({required this.args});
 
@@ -601,6 +616,22 @@ class LogController extends GetxController {
         selectedEventClasses.isNotEmpty ||
         (alarmCount != null && alarmCount!.isNotEmpty);
     update();
+  }
+
+  void toggleStatus(String status) {
+    if (selectedStatuses.contains(status)) {
+      selectedStatuses.remove(status);
+    } else {
+      selectedStatuses.add(status);
+    }
+  }
+
+  void toggleEventClass(String eventClass) {
+    if (selectedEventClasses.contains(eventClass)) {
+      selectedEventClasses.remove(eventClass);
+    } else {
+      selectedEventClasses.add(eventClass);
+    }
   }
 
   void resetFilters() {
