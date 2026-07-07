@@ -19,10 +19,7 @@ class SiteShell extends StatelessWidget {
         ),
       ),
       child: Stack(
-        children: [
-          SvgPicture.asset(AssetConstants.background1),
-          child,
-        ],
+        children: [SvgPicture.asset(AssetConstants.background1), child],
       ),
     );
   }

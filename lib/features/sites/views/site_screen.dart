@@ -45,7 +45,9 @@ class _SiteScreenState extends State<SiteScreen> with SiteUiDelegateMixin {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  const SizedBox(height: 18),
                   SiteAppBar(controller: controller),
+                  const SizedBox(height: 24),
                   Expanded(
                     child: RefreshIndicator(
                       color: ColorConstants.primary,

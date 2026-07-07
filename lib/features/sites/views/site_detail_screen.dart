@@ -41,6 +41,7 @@ class _SiteDetailScreenState extends State<SiteDetailScreen>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                const SizedBox(height: 18),
                 SiteDetailAppBar(controller: _controller),
                 SiteDetailContent(controller: _controller),
               ],
