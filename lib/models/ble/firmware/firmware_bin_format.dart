@@ -1,0 +1,80 @@
+import 'dart:typed_data';
+
+class FirmwareBinFormat {
+  FirmwareBinFormat._();
+
+  static const int applicationImageOffset = 0x11800;
+
+  static const int trailerLength = 40;
+  static const int crcLength = 4;
+
+  static const int firmwareVersionLength = 10;
+  static const int hardwareVersionLength = 7;
+  static const int dateLength = 8;
+  static const int productIdLength = 11;
+
+  static int get metadataLength =>
+      firmwareVersionLength +
+      hardwareVersionLength +
+      dateLength +
+      productIdLength;
+
+  static int get minFileLength => applicationImageOffset + trailerLength;
+
+  static Uint8List applicationImageFromFile(Uint8List fileBytes) {
+    if (fileBytes.length < minFileLength) {
+      throw ArgumentError(
+        'BIN file too small (need at least $minFileLength bytes, '
+        'got ${fileBytes.length})',
+      );
+    }
+    return Uint8List.sublistView(
+      fileBytes,
+      applicationImageOffset,
+      fileBytes.length,
+    );
+  }
+}
+
+class FirmwareBinTrailer {
+  const FirmwareBinTrailer({
+    required this.firmwareVersion,
+    required this.hardwareVersion,
+    required this.date,
+    required this.productId,
+  });
+
+  final String firmwareVersion;
+  final String hardwareVersion;
+  final String date;
+  final String productId;
+
+  static String _fieldToString(Uint8List raw) {
+    if (raw.isEmpty) return '';
+    return String.fromCharCodes(
+      raw,
+    ).replaceAll(String.fromCharCode(0), '').trim();
+  }
+
+  static FirmwareBinTrailer fromLast40Bytes(Uint8List trailer) {
+    if (trailer.length != FirmwareBinFormat.trailerLength) {
+      throw ArgumentError(
+        'Trailer must be ${FirmwareBinFormat.trailerLength} bytes',
+      );
+    }
+    int o = 0;
+    final fw = trailer.sublist(o, o + FirmwareBinFormat.firmwareVersionLength);
+    o += FirmwareBinFormat.firmwareVersionLength;
+    final hw = trailer.sublist(o, o + FirmwareBinFormat.hardwareVersionLength);
+    o += FirmwareBinFormat.hardwareVersionLength;
+    final d = trailer.sublist(o, o + FirmwareBinFormat.dateLength);
+    o += FirmwareBinFormat.dateLength;
+    final pid = trailer.sublist(o, o + FirmwareBinFormat.productIdLength);
+    return FirmwareBinTrailer(
+      firmwareVersion: _fieldToString(fw),
+      hardwareVersion: _fieldToString(hw),
+      date: _fieldToString(d),
+      productId: _fieldToString(pid),
+    );
+  }
+}

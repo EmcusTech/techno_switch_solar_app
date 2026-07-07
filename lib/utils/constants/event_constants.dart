@@ -1,0 +1,581 @@
+class EventConstants {
+  static const int evtTypeAllSearchNoneRsp = 0;
+  static const int evtTypeGeneral = 1;
+  static const int evtTypeAction = 2;
+  static const int evtTypeRestart = 3;
+  static const int evtTypeNetworkAddress = 4;
+  static const int evtTypeAccess = 5;
+  static const int evtTypeZone = 6;
+  static const int evtTypeArea = 7;
+  static const int evtTypeInput = 8;
+  static const int evtTypeOutput = 9;
+  static const int evtTypeSupervisedInput = 10;
+  static const int evtTypeSupervisedOutput = 11;
+  static const int evtTypeZoneInput = 12;
+  static const int evtTypeSupervisory = 13;
+  static const int evtTypeGeneralEquipment = 14;
+  static const int evtTypeExtZone = 15;
+  static const int evtTypeZoneEquipment = 16;
+  static const int evtTypeAreaEquipment = 17;
+  static const int evtTypeExtZoneEquipment = 18;
+  static const int evtTypeTimerAlarm = 19;
+  static const int evtTypeServiceDue = 20;
+  static const int evtTypeSupply = 21;
+  static const int evtTypeNetwork = 22;
+
+  static final Map<int, String> supervisoryFaultParam12Name = {
+    2: "Open",
+    3: "Short",
+    4: "Double EOL",
+    5: "Low resistance",
+    7: "Overload",
+  };
+
+  static final Map<int, String> eventParam0NumberNameList = {
+    6: "Zone no.{par0}",
+    10: "Input no.{par0}",
+    11: "Output no.{par0}",
+    12: "Input no.{par0}",
+    15: "Ext. zone no.{par0}",
+  };
+
+  static final Map<int, String> eventParam1NumberNameList = {
+    16: "Zone no.{par1}",
+    17: "Area no.{par1}",
+    18: "Ext zone no.{par1}",
+  };
+
+  static final List<String> statusEventTypeDescriptions = [
+    "All (search), None (response)",
+    "General",
+    "Action",
+    "Restart",
+    "Network Address",
+    "Access",
+    "Zone",
+    "Area",
+    "Input",
+    "Output",
+    "Supervised Input",
+    "Supervised Output",
+    "Zone Input",
+    "Supervisory",
+    "General equipment",
+    "Ext. Out",
+    "Zone Sounder",
+    "Area equipment",
+    "Ext. zone equipment",
+    "Timer alarm",
+    "Service due",
+    "Supply",
+    "Network",
+  ];
+
+  static final List<String> statusEventClassNames = [
+    "All(search),None(Response)",
+    "Release",
+    "Alarm",
+    "Fault",
+    "Disablement",
+    "Condition",
+    "Action",
+    "Evacuation",
+  ];
+
+  static final List<String> statusEventStatusValue = [
+    "All(search),Passive(Response)",
+    "Active",
+    "Accepted",
+    "Logged",
+  ];
+
+  static final List<List<String>> eventDescriptions = [
+    ["-"],
+    [
+      "Memory lock open",
+      "Service switch open",
+      "Tamper switch open",
+      "Key-lock open",
+      "Non-volatile memory changed",
+      "Configuration changed",
+      "External fault",
+      "External alarm 1",
+      "Configuration defaulted",
+      "AUX OUT Overload",
+      "External alarm 2",
+      "Evacuation",
+      "External Supervisory on",
+      "External supply fault",
+      "Sounders disabled",
+      "Event log cleared",
+      "Non-volatile text changed",
+      "Firmware changed",
+      "Firmware check-sum error",
+    ],
+    [
+      "Memory lock closed",
+      "Service switch closed",
+      "Tamper switch closed",
+      "Key-lock closed",
+      "Reset",
+      "Time changed",
+      "Time defaulted",
+      "Controls enabled",
+      "Controls disabled",
+      "Silence buzzer",
+      "Silence sounders",
+      "Activate sounders",
+      "N/A",
+      "External fault ok",
+      "External controls disabled",
+      "Vaux Ok",
+      "External Supervisory off",
+      "External controls enabled",
+      "External supply fault ok",
+      "Sounders enabled",
+      "Sounder delays enabled",
+      "Sounder delays disabled",
+      "External reset",
+      "External silence buzzer",
+      "External silence sounders",
+      "External activate sounders",
+      "I/O suspended",
+      "Local Controls Enabled",
+      "Local Controls Disabled",
+    ],
+    [
+      "Other",
+      "Power-On",
+      "Brown-out",
+      "External reset pin",
+      "Watchdog Timeout",
+      "JTAG reset",
+      "CPU error",
+      "OCD",
+      "JTAG hard reset",
+      "Software reset",
+      "Deep software reset",
+      "Voltage monitoring reset 0",
+      "Voltage monitoring reset 1",
+      "Voltage monitoring reset 2",
+      "Independent watchdog",
+      "Cold start",
+    ],
+    [
+      "Network Comms Down",
+      "Network Comms Up",
+      "Invalid Product Type",
+      "No Permission",
+      "Invalid Hardware Version (Major & Minor)",
+      "Invalid Product Option",
+      "Invalid Product Version",
+      "Invalid Software Build",
+      "Invalid Software Version (Major & Minor)",
+      "Invalid Software Release",
+      "Invalid Software Date",
+      "Invalid Software Protocol",
+      "Invalid Product Revision",
+      "Silence Buzzer",
+      "Tamper on",
+      "Tamper off",
+      "Local controls enabled",
+      "Local controls disabled",
+      "Double address",
+      "Extnl controls enabled",
+      "Extnl controls disabled",
+    ],
+    ["Enabled", "Violation", "Disabled"],
+    [
+      "Enabled",
+      "Disabled",
+      "Test On",
+      "Test Off",
+      "Alarm (Auto)",
+      "Fault",
+      "Supervisory Fault",
+      "Supervisory Normal",
+      "Test-alarm On",
+      "Test-alarm Off",
+      "Alarm Off (Auto)",
+      "Alarm (MCP)",
+      "Alarm Off (MCP)",
+      "Evacuation",
+    ],
+    [
+      "Enabled",
+      "Disabled",
+      "Test On",
+      "Test Off",
+      "Alarm",
+      "Fault",
+      "Coincidence",
+      "Test-alarm on",
+      "Test-alarm off",
+      "Test-coincidence on",
+      "Test-coincidence off",
+      "Evacuation",
+    ],
+    [
+      "Enabled",
+      "Disabled",
+      "Test On",
+      "Test Off",
+      "Input on (test)",
+      "Input off (test)",
+      "Input duplication",
+    ],
+    ["Enabled", "Disabled", "Test On", "Test Off"],
+    ["Supervisory Fault", "Supervisory Normal"],
+    ["Supervisory Fault", "Supervisory Normal"],
+    ["Supervisory Fault", "Supervisory Normal"],
+    ["Process Limit", "Mailbox Limit", "Queue Limit"],
+    [
+      "Enabled",
+      "Disabled",
+      "Test On",
+      "Test Off",
+      "Fault",
+      "Normal",
+      "Delay Enabled",
+      "Delay Disabled",
+    ],
+    [
+      "Enabled",
+      "Disabled",
+      "Test On",
+      "Test Off",
+      "Fault On",
+      "Fault Off",
+      "Automatic mode",
+      "Manual mode",
+      "Manual release initiated",
+      "Automatic release initiated",
+      "Extinguishant released",
+      "Release aborted",
+      "Hold on",
+      "Hold off",
+      "Release end",
+      "Extinguishing reset blocked",
+      "Extinguishing reset allowed",
+      "Abort on",
+      "Abort off",
+      "Pressure monitor low",
+      "Pressure monitor normal",
+      "Valve monitoring on",
+      "Valve monitoring off",
+      "Release count down restarted",
+      "Release count down suspended",
+      "Release count down continued",
+      "Release count down terminated",
+      "Extinguishant release start",
+      "Actuator Undefined",
+      "Actuator Defined",
+      "Manual test-release on",
+      "Manual test-release off",
+      "Automatic test-release on",
+      "Automatic test-release off",
+      "Timed Extraction start",
+      "Timed Extraction end",
+      "Manual Extraction start",
+      "Manual Extraction end",
+      "External gas disable on",
+      "External gas disable off",
+      "External supervisory on",
+      "External supervisory off",
+      "MCP alarm",
+      "Extn1 MCP alarm",
+      "Valve fault on",
+      "Valve fault off",
+      "Start delayed extraction",
+      "External extinguishing fault on",
+      "External extinguishing fault off",
+      "Hold fault on",
+      "Hold fault off",
+      "Auto/Manual fault on",
+      "Auto/Manual fault off",
+      "Hold disabled",
+      "Hold enabled",
+      "Extnl Manual Trigger Fault on",
+      "Extnl Manual Trigger Fault off",
+      "Extnl Gas Disable Fault on",
+      "Extnl Gas Disable Fault off",
+      "Extnl Extinguishing Flt Fault On",
+      "Extnl Extinguishing Flt Fault Off",
+    ],
+    [
+      "Enabled",
+      "Disabled",
+      "Test On",
+      "Test Off",
+      "Fault",
+      "Normal",
+      "Delay Enabled",
+      "Delay Disabled",
+    ],
+    [
+      "Enabled",
+      "Disabled",
+      "Test On",
+      "Test Off",
+      "Fault",
+      "Normal",
+      "Delay Enabled",
+      "Delay Disabled",
+    ],
+    [
+      "Enabled",
+      "Disabled",
+      "Test On",
+      "Test Off",
+      "Fault",
+      "Normal",
+      "Delay Enabled",
+      "Delay Disabled",
+    ],
+    ["Alarm On", "Alarm Off"],
+    ["Service Due"],
+    [
+      "Earth Fault Ok",
+      "Earth Fault High",
+      "Earth Fault Low",
+      "Vin Voltage Ok",
+      "Vin Voltage High",
+      "Vin Voltage Low",
+      "Vout Voltage Ok",
+      "Vout Voltage High",
+      "Vout Voltage Low",
+      "Mains Ok",
+      "Mains Fault",
+      "Battery Voltage Ok",
+      "Battery Voltage High",
+      "Battery Voltage Low",
+      "Battery Low Warning",
+      "Battery Shut-Off",
+      "Battery Disconnected",
+      "Battery Connected",
+      "Charger Fault",
+      "Charger Ok",
+      "Booster Fault",
+      "Booster Ok",
+      "Battery Test Fault",
+      "Battery Test Ok",
+      "Supply Fault",
+      "Supply Fault Ok",
+      "Extnl Fault",
+      "Extnl Fault Ok",
+    ],
+    ["Ring Open", "Ring Closed", "Ring Disconnect", "Test On", "Test Off"],
+  ];
+
+  static String getEventStatusValue(int evtStatus) {
+    try {
+      return statusEventStatusValue[evtStatus];
+    } catch (e) {
+      return "UNKNOWN_STATUS";
+    }
+  }
+
+  static String getEventClassValue(int evtClass) {
+    try {
+      return statusEventClassNames[evtClass];
+    } catch (e) {
+      return "UNKNOWN_CLASS";
+    }
+  }
+
+  static String getEventType(int evtType) {
+    try {
+      return statusEventTypeDescriptions[evtType];
+    } catch (e) {
+      return "UNKNOWN_TYPE";
+    }
+  }
+
+  static String getEventDescription(int eventType, int eventSubtype) {
+    try {
+      return eventDescriptions[eventType][eventSubtype];
+    } catch (e) {
+      return "UNKNOWN_EVENT";
+    }
+  }
+
+  static bool checkEvtDescriptorToDisplay(
+    int evttype,
+    int evtsubTyp,
+    int rxpar0,
+    int rxpar1,
+    int rxpar2,
+  ) {
+    if ((evtTypeZone == evttype) && ((6 == evtsubTyp) || (7 == evtsubTyp))) {
+      return false;
+    } else if (evtTypeSupervisedInput == evttype) {
+      return false;
+    } else if (evtTypeSupervisedOutput == evttype) {
+      return false;
+    } else if (evtTypeZoneInput == evttype) {
+      return false;
+    } else if ((evtTypeGeneralEquipment == evttype) && (4 == evtsubTyp)) {
+      return false;
+    } else if ((evtTypeZoneEquipment == evttype) && (4 == evtsubTyp)) {
+      return false;
+    } else if ((evtTypeAreaEquipment == evttype) && (4 == evtsubTyp)) {
+      return false;
+    } else if ((evtTypeExtZoneEquipment == evttype) && (4 == evtsubTyp)) {
+      return false;
+    }
+    return true;
+  }
+
+  static String getEventIdentifier(
+    int evttype,
+    int rxpar0,
+    int rxpar1,
+    int rxpar2,
+    int ioType,
+    int ioNumber,
+    int ioParaType,
+  ) {
+    String returnIdentifier = "-";
+
+    if (evttype == evtTypeZone) {
+      if (rxpar1 == 2) {
+        returnIdentifier = "Zone $rxpar0 Open Circuit";
+      } else if (rxpar1 == 3) {
+        returnIdentifier = "Zone $rxpar0 Short Circuit";
+      } else if (rxpar1 == 4) {
+        returnIdentifier = "Zone $rxpar0 Low Resistance";
+      } else {
+        returnIdentifier = "Zone $rxpar0";
+      }
+    } else if (evttype == evtTypeArea) {
+      returnIdentifier = "Area $rxpar0";
+    } else if (evttype == evtTypeAccess) {
+      returnIdentifier = "Level $rxpar1 Code No. $rxpar2";
+    } else if (evttype == evtTypeSupervisedInput) {
+      returnIdentifier =
+          "Input No. $rxpar0 ${supervisoryFaultParam12Name[rxpar1]} ${supervisoryFaultParam12Name[rxpar2]}";
+    } else if (evttype == evtTypeRestart) {
+      if (rxpar0 == 4) {
+        if (rxpar1 == 0) {
+          returnIdentifier = "-";
+        } else if (rxpar1 == 1) {
+          returnIdentifier = "Time-out";
+        } else if (rxpar1 == 2) {
+          returnIdentifier = "Initialisation fault";
+        } else if (rxpar1 == 3) {
+          returnIdentifier = "Application restart";
+        } else if (rxpar1 == 4) {
+          returnIdentifier = "Communication time-out";
+        } else if (rxpar1 == 5) {
+          returnIdentifier = "Excessive communication NAKs";
+        } else if (rxpar1 == 6) {
+          returnIdentifier = "Invalid RTOS queue";
+        } else if (rxpar1 == 7) {
+          returnIdentifier = "Invalid RTOS queue depth";
+        } else if (rxpar1 == 8) {
+          returnIdentifier = "Invalid RTOS semaphore";
+        } else if (rxpar1 == 9) {
+          returnIdentifier = "Invalid RTOS process";
+        } else if (rxpar1 == 10) {
+          returnIdentifier = "Invalid RTOS timer";
+        } else if (rxpar1 == 11) {
+          returnIdentifier = "Invalid RTOS mailbox";
+        } else if (rxpar1 == 12) {
+          returnIdentifier = "Corrupted RTOS mailbox";
+        } else if (rxpar1 == 13) {
+          returnIdentifier = "Flash not ready";
+        } else if (rxpar1 == 14) {
+          returnIdentifier = "Database error";
+        } else if (rxpar1 == 15) {
+          returnIdentifier = "System restart";
+        } else if (rxpar1 == 16) {
+          returnIdentifier = "Invalid network";
+        } else if (rxpar1 == 17) {
+          returnIdentifier = "Invalid network address";
+        } else if (rxpar1 == 18) {
+          returnIdentifier = "Serial SRAM error";
+        } else if (rxpar1 == 19) {
+          returnIdentifier = "Serial FLASH error";
+        } else if (rxpar1 == 20) {
+          returnIdentifier = "Memory copy error";
+        } else if (rxpar1 == 21) {
+          returnIdentifier = "Serial FLASH not ready";
+        } else if (rxpar1 == 22) {
+          returnIdentifier = "Serial SRAMnot ready";
+        } else if (rxpar1 == 23) {
+          returnIdentifier = "ADC fault";
+        } else if (rxpar1 == 24) {
+          returnIdentifier = "INTC unhandled interrupt";
+        } else if (rxpar1 == 25) {
+          returnIdentifier = "SER_FLASH installation";
+        } else if (rxpar1 == 26) {
+          returnIdentifier = "RTC fault";
+        } else if (rxpar1 == 27) {
+          returnIdentifier = "USB fault";
+        }
+      } else if (rxpar0 == 14) {
+        if (rxpar1 == 0) {
+          returnIdentifier = "-";
+        } else if (rxpar1 == 1) {
+          returnIdentifier = "Time-out";
+        } else if (rxpar1 == 2) {
+          returnIdentifier = "Initialisation fault";
+        } else if (rxpar1 == 3) {
+          returnIdentifier = "Application restart";
+        } else if (rxpar1 == 4) {
+          returnIdentifier = "Communication time-out";
+        } else if (rxpar1 == 5) {
+          returnIdentifier = "Excessive communication NAKs";
+        } else if (rxpar1 == 6) {
+          returnIdentifier = "Invalid RTOS queue";
+        } else if (rxpar1 == 7) {
+          returnIdentifier = "Invalid RTOS queue depth";
+        } else if (rxpar1 == 8) {
+          returnIdentifier = "Invalid RTOS semaphore";
+        } else if (rxpar1 == 9) {
+          returnIdentifier = "Invalid RTOS process";
+        } else if (rxpar1 == 10) {
+          returnIdentifier = "Invalid RTOS timer";
+        } else if (rxpar1 == 11) {
+          returnIdentifier = "Invalid RTOS mailbox";
+        } else if (rxpar1 == 12) {
+          returnIdentifier = "Corrupted RTOS mailbox";
+        } else if (rxpar1 == 13) {
+          returnIdentifier = "Flash not ready";
+        } else if (rxpar1 == 14) {
+          returnIdentifier = "Database error";
+        } else if (rxpar1 == 15) {
+          returnIdentifier = "System restart";
+        } else if (rxpar1 == 16) {
+          returnIdentifier = "Invalid network";
+        } else if (rxpar1 == 17) {
+          returnIdentifier = "Invalid network address";
+        } else if (rxpar1 == 18) {
+          returnIdentifier = "Serial SRAM error";
+        } else if (rxpar1 == 19) {
+          returnIdentifier = "Serial FLASH error";
+        } else if (rxpar1 == 20) {
+          returnIdentifier = "Memory copy error";
+        } else if (rxpar1 == 21) {
+          returnIdentifier = "Serial FLASH not ready";
+        } else if (rxpar1 == 22) {
+          returnIdentifier = "Serial SRAM not ready";
+        }
+      }
+    } else if (evttype == evtTypeInput) {
+      returnIdentifier = "Prog in 1";
+    } else if (evttype == evtTypeOutput) {
+      if (ioParaType == 1) {
+        returnIdentifier = "Relay ${ioNumber - 3}";
+      } else if (ioParaType == 2) {
+        returnIdentifier = "SNDR $ioNumber";
+      }
+    } else if (evttype == evtTypeZoneEquipment) {
+      returnIdentifier = "Fire Snd, Zone $rxpar1";
+    } else if (evttype == evtTypeExtZoneEquipment) {
+      returnIdentifier = "Ext. Snd 2";
+    }
+
+    return returnIdentifier;
+  }
+}

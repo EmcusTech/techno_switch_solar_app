@@ -1,0 +1,13 @@
+<svg width="350" height="24" viewBox="0 0 350 24" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<path d="M350 24L0 24L6.99382e-07 16C1.4719e-06 7.16341 7.16345 -2.99717e-05 16 -2.91992e-05L334 -1.39876e-06C342.837 -6.26247e-07 350 7.16344 350 16L350 24Z" fill="url(#pattern0_4_7022)"/>
+<defs>
+<pattern id="pattern0_4_7022" patternUnits="userSpaceOnUse" viewBox="303.75 -4077.5 10.7501 8.75011" width="9.2143805367606024%" height="109.37638282775879%" x="142.75" y="-14.2503" patternContentUnits="objectBoundingBox">
+<g id="pattern0_4_7022_inner">
+<path d="M297.483 -4071L293 -4071L306 -4084L310.5 -4084L297.483 -4071Z"/>
+<path d="M301.483 -4071L297 -4071L310 -4084L314.5 -4084L301.483 -4071Z" fill="#F9D60D"/>
+</g>
+<use xlink:href="#pattern0_4_7022_inner" transform="translate(10.7501 0)"/>
+<use xlink:href="#pattern0_4_7022_inner" transform="translate(0 8.75011)"/>
+<use xlink:href="#pattern0_4_7022_inner" transform="translate(10.7501 8.75011)"/>
+</pattern></defs>
+</svg>
