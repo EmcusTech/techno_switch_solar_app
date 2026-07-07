@@ -516,7 +516,7 @@ mixin ProjectDashboardUiDelegateMixin<T extends StatefulWidget> on State<T>
       uiContext,
       bootloaderFileCorrupted: bootloaderFileCorrupted,
     );
-    if (wantUpgrade != true || !context.mounted) return;
+    if (wantUpgrade != true || !mounted) return;
 
     final upgraded = await showFirmwareUpgradeBottomSheetForConnect(
       context: uiContext,
@@ -526,6 +526,8 @@ mixin ProjectDashboardUiDelegateMixin<T extends StatefulWidget> on State<T>
 
     await dashboardController.bleController.bleManager
         .disconnectConnectedDevice();
+
+    if (!mounted) return;
 
     final refreshed = await runWithBleConnectingDialog<DiscoveredDevice?>(
       context: uiContext,

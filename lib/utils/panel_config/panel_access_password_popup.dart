@@ -224,7 +224,7 @@ Future<void> showPanelAccessPasswordPopup({
                       Future<void> afterAccessDialogPopped() async {
                         if (mode == 'bottomsheet_download') {
                           await onDownloadComplete?.call();
-                          if (isMounted()) {
+                          if (context.mounted) {
                             final message =
                                 downloadSuccessMessage ??
                                 (isExtOut == true
@@ -251,12 +251,8 @@ Future<void> showPanelAccessPasswordPopup({
                                     : StringConstants.configuration);
                             delegates.showDownloadSuccess(context, message);
                             Future.delayed(const Duration(seconds: 2), () {
-                              if (isMounted()) {
-                                Navigator.of(
-                                  context,
-                                  rootNavigator: true,
-                                ).pop();
-                              }
+                              if (!context.mounted) return;
+                              Navigator.of(context, rootNavigator: true).pop();
                             });
                           }
                         } else if (isExtOut &&
@@ -382,7 +378,7 @@ Future<void> showPanelAccessPasswordPopup({
                         try {
                           await delegates.afterBulkApplyAccessGranted?.call();
                         } catch (e, _) {
-                          if (isMounted()) {
+                          if (context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text(
@@ -393,7 +389,9 @@ Future<void> showPanelAccessPasswordPopup({
                           }
                         } finally {
                           configLogWorking?.value = false;
-                          _removeOverlayRouteFor(dialogContext);
+                          if (dialogContext.mounted) {
+                            _removeOverlayRouteFor(dialogContext);
+                          }
                           navigatingToDeviceConnecting.value = false;
                         }
                         return;
@@ -410,23 +408,19 @@ Future<void> showPanelAccessPasswordPopup({
 
                         try {
                           await onDownloadComplete?.call();
-                          if (isMounted()) {
+                          if (context.mounted) {
                             final message =
                                 downloadSuccessMessage ??
                                 StringConstants.configuration;
                             closeAccessDialog();
                             delegates.showDownloadSuccess(context, message);
                             Future.delayed(const Duration(seconds: 2), () {
-                              if (isMounted()) {
-                                Navigator.of(
-                                  context,
-                                  rootNavigator: true,
-                                ).pop();
-                              }
+                              if (!context.mounted) return;
+                              Navigator.of(context, rootNavigator: true).pop();
                             });
                           }
                         } catch (e, _) {
-                          if (isMounted()) {
+                          if (context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text(

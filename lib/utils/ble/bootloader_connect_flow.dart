@@ -241,6 +241,11 @@ Future<DiscoveredDevice?> resolveBootloaderModeOnConnect({
   // Clear stale bootloader handshake before the reconnect dialog reads BLE notifiers.
   await bleController.bleManager.disconnectConnectedDevice();
 
+  if (!context.mounted) {
+    onAbort?.call();
+    return null;
+  }
+
   final refreshed = await runWithBleConnectingDialog<DiscoveredDevice?>(
     context: context,
     device: device,
