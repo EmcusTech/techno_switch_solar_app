@@ -16,27 +16,17 @@ class DashboardTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, result) async {
-        if (didPop) return;
-        final shouldPop = await controller.handleWillPop();
-        if (shouldPop && context.mounted) {
-          Navigator.of(context).pop();
-        }
-      },
-      child: DashboardShell(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            DashboardAppBar(
-              onBack: controller.handleBackNavigation,
-              onExport: onExport,
-            ),
-            const SizedBox(height: 12),
-            DashboardContent(controller: controller),
-          ],
-        ),
+    return DashboardShell(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          DashboardAppBar(
+            onBack: controller.handleBackNavigation,
+            onExport: onExport,
+          ),
+          const SizedBox(height: 12),
+          DashboardContent(controller: controller),
+        ],
       ),
     );
   }

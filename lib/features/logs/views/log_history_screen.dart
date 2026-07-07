@@ -19,12 +19,14 @@ class LogHistoryScreen extends StatefulWidget {
     required this.panelVersionNo,
     required this.siteId,
     this.refreshTrigger,
+    this.embedded = false,
   });
 
   final String panelName;
   final String panelVersionNo;
   final int? siteId;
   final ValueNotifier<int>? refreshTrigger;
+  final bool embedded;
 
   @override
   State<LogHistoryScreen> createState() => _LogHistoryScreenState();
@@ -105,52 +107,56 @@ class _LogHistoryScreenState extends State<LogHistoryScreen>
       tag: LogBinding.historyTag,
       init: controller,
       builder: (controller) {
-        return WillPopScope(
-          onWillPop: () async => false,
-          child: Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  ColorConstants.scaffoldGradientTop,
-                  ColorConstants.white,
-                ],
-              ),
-            ),
-            child: Stack(
-              children: [
-                SvgPicture.asset(AssetConstants.background1),
-                Padding(
-                  padding: EdgeInsets.only(top: 24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    mainAxisSize: MainAxisSize.max,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 24),
-                        child: Row(
-                          children: [
-                            Text(
-                              StringConstants.logHistory,
-                              style: StyleConstants.black20w700Style,
-                            ),
-                          ],
-                        ),
-                      ),
-                      SizedBox(height: 23),
-                      Expanded(
-                        child: LogHistoryDashboard(
-                          history: history,
-                          controller: controller,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+        final content = Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                ColorConstants.scaffoldGradientTop,
+                ColorConstants.white,
               ],
             ),
           ),
+          child: Stack(
+            children: [
+              SvgPicture.asset(AssetConstants.background1),
+              Padding(
+                padding: EdgeInsets.only(top: 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  mainAxisSize: MainAxisSize.max,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: Row(
+                        children: [
+                          Text(
+                            StringConstants.logHistory,
+                            style: StyleConstants.black20w700Style,
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: 23),
+                    Expanded(
+                      child: LogHistoryDashboard(
+                        history: history,
+                        controller: controller,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+
+        if (widget.embedded) return content;
+
+        return PopScope(
+          canPop: false,
+          child: content,
         );
       },
     );

@@ -51,27 +51,38 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen>
     return GetBuilder<ProjectDashboardController>(
       init: _controller,
       builder: (controller) {
-        return Scaffold(
-          extendBody: true,
-          resizeToAvoidBottomInset: false,
-          body: IndexedStack(
-            index: controller.selectedIndex,
-            children: [
-              DashboardTab(
-                controller: controller,
-                onExport: showExportBottomSheet,
-              ),
-              const SettingsScreen(),
-              const TestModeScreen(),
-              LogHistoryScreen(
-                panelName: controller.panelName,
-                panelVersionNo: controller.panelVersionNo,
-                siteId: controller.siteId,
-                refreshTrigger: controller.logHistoryRefreshTrigger,
-              ),
-            ],
+        return PopScope(
+          canPop: !controller.bleController.isConnected,
+          onPopInvokedWithResult: (didPop, result) async {
+            if (didPop) return;
+            final shouldPop = await controller.handleWillPop();
+            if (shouldPop) {
+              popScreen();
+            }
+          },
+          child: Scaffold(
+            extendBody: true,
+            resizeToAvoidBottomInset: false,
+            body: IndexedStack(
+              index: controller.selectedIndex,
+              children: [
+                DashboardTab(
+                  controller: controller,
+                  onExport: showExportBottomSheet,
+                ),
+                const SettingsScreen(),
+                const TestModeScreen(),
+                LogHistoryScreen(
+                  panelName: controller.panelName,
+                  panelVersionNo: controller.panelVersionNo,
+                  siteId: controller.siteId,
+                  refreshTrigger: controller.logHistoryRefreshTrigger,
+                  embedded: true,
+                ),
+              ],
+            ),
+            bottomNavigationBar: DashboardBottomNav(controller: controller),
           ),
-          bottomNavigationBar: DashboardBottomNav(controller: controller),
         );
       },
     );
