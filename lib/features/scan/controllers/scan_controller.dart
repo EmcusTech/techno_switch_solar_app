@@ -80,8 +80,10 @@ class ScanController extends GetxController {
     _ui = _scanningUi;
   }
 
-  void detachUi() {
-    _ui = null;
+  void detachUi([ScanUiDelegate? delegate]) {
+    if (delegate == null || identical(_ui, delegate)) {
+      _ui = null;
+    }
   }
 
   void setAnimationCallbacks({
@@ -490,6 +492,50 @@ class ScanController extends GetxController {
         onCreateProjectPanelVerified: onCreateProjectPanelVerified,
       ),
     );
+  }
+
+  void handleScannedBack() {
+    _ui?.popScreen();
+  }
+
+  void onScannedScreenDisposed(ScanUiDelegate delegate) {
+    detachUi(delegate);
+    final isCreateWizardReturn =
+        createProjectExpectedPanelType?.trim().isNotEmpty == true &&
+        flowMode == ScanFlowMode.scanned;
+    if (isCreateWizardReturn) {
+      restoreScanningUi();
+    } else if (Get.isRegistered<ScanController>()) {
+      Get.delete<ScanController>();
+    }
+  }
+
+  String deviceDisplayName(dynamic device) {
+    if (selectedScanType == ScanType.usb && device is UsbDevice) {
+      return device.productName ?? StringConstants.usbSolarDevice;
+    }
+    if (device is DiscoveredDevice) {
+      return device.name.isNotEmpty
+          ? device.name
+          : StringConstants.bleSolarDevice;
+    }
+    return StringConstants.unknownDevice;
+  }
+
+  String deviceSubtitle(dynamic device) {
+    if (selectedScanType == ScanType.usb && device is UsbDevice) {
+      return 'VID: ${device.vid?.toRadixString(16) ?? 'Unknown'} | PID: ${device.pid?.toRadixString(16) ?? 'Unknown'}';
+    }
+    if (device is DiscoveredDevice) {
+      return 'RSSI: ${device.rssi} dBm';
+    }
+    return StringConstants.noInformationAvailable;
+  }
+
+  Future<void> onDiscoveredDeviceTapped(dynamic device) async {
+    if (device is DiscoveredDevice) {
+      await onDeviceSelected(device);
+    }
   }
 
   void exitScanning() {

@@ -50,7 +50,9 @@ class _ScanningScreenState extends State<ScanningScreen>
 
   @override
   void dispose() {
-    _controller.detachUi();
+    if (!_controller.transitioningToScanned) {
+      _controller.detachUi(this);
+    }
     if (!_controller.transitioningToScanned &&
         Get.isRegistered<ScanController>()) {
       Get.delete<ScanController>();

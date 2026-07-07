@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:techno_switch_solar_app/features/scan/controllers/scan_controller.dart';
 import 'package:techno_switch_solar_app/features/scan/widgets/radar_painter.dart';
 import 'package:techno_switch_solar_app/features/scan/widgets/scan_background_decor.dart';
+import 'package:techno_switch_solar_app/features/scan/widgets/scan_back_button.dart';
 import 'package:techno_switch_solar_app/features/scan/widgets/scan_device_grid.dart';
 import 'package:techno_switch_solar_app/features/scan/widgets/sweep_painter.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
@@ -35,33 +36,7 @@ class ScanningRadarView extends StatelessWidget {
           alignment: Alignment.center,
           child: ScanningAnimation(pausedListenable: scanAnimationsPaused),
         ),
-        Positioned(
-          top: 50,
-          left: 20,
-          child: GestureDetector(
-            onTap: controller.exitScanning,
-            child: Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: ColorConstants.white,
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: ColorConstants.blackMaterial.withOpacity(0.1),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: const Icon(
-                Icons.arrow_back_ios_new,
-                color: ColorConstants.textDark,
-                size: 18,
-              ),
-            ),
-          ),
-        ),
+        ScanBackButton(onTap: controller.exitScanning),
         Column(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
