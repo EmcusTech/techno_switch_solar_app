@@ -437,10 +437,12 @@ abstract final class StringConstants {
   static const String hardwareVersion = "Hardware Version";
   static const String hardwareVersion2 = "Hardware version";
   static const String help = "Help";
-  static const String helpCommunityForumUrl = "https://technoswitch.com/community";
+  static const String helpCommunityForumUrl =
+      "https://technoswitch.com/community";
   static const String helpSupport = "Help & Support";
   static const String helpUserManualUrl = "https://technoswitch.com/manual";
-  static const String helpVideoTutorialsUrl = "https://technoswitch.com/tutorials";
+  static const String helpVideoTutorialsUrl =
+      "https://technoswitch.com/tutorials";
   static const String high = "High";
   static const String hold = "Hold";
   static const String holdAction = "Warble";
@@ -911,7 +913,7 @@ abstract final class StringConstants {
   static const String useMobileDateTime = "Use Mobile Date & Time";
   static const String usemobiletime = "useMobileTime";
   static const String userManual = "User Manual";
-  static const String testingVersion = "v0.0.49 -- testing version";
+  static const String testingVersion = "v0.0.50 -- testing version";
   static const String validating = "Validating";
   static const String validating2 = "Validating...";
   static const String verifyingAccess = "Verifying access";
