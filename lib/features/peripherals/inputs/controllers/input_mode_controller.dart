@@ -4,6 +4,7 @@ import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/features/peripherals/shared/controllers/peripheral_mode_controller.dart';
 import 'package:techno_switch_solar_app/utils/modes/input_mode_util.dart';
 import 'package:techno_switch_solar_app/utils/panel_config/panel_config_cache_sync.dart';
+import 'package:techno_switch_solar_app/utils/peripherals/defaults/input_defaults.dart';
 import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
@@ -49,12 +50,12 @@ class InputModeController extends PeripheralModeController {
 
   @override
   void initModel() {
-    group = groupOptions[0];
-    function = functionOptionsMap[group]!.first;
-    enabled = yesNoOptions[0];
-    test = yesNoOptions[0];
-    inverted = yesNoOptions[0];
-    inputTextCtrl = TextEditingController();
+    group = InputDefaults.groupLabel;
+    function = InputDefaults.functionLabel;
+    enabled = InputDefaults.enabledLabel;
+    test = InputDefaults.testLabel;
+    inverted = InputDefaults.invertedLabel;
+    inputTextCtrl = TextEditingController(text: InputDefaults.inputText);
   }
 
   @override
@@ -68,17 +69,24 @@ class InputModeController extends PeripheralModeController {
 
   @override
   void applyCachedData(Map<String, dynamic> data) {
-    final g = (data['group'] as int?) ?? 0;
+    final g = (data['group'] as int?) ?? InputDefaults.groupBle;
     group = groupOptions[g.clamp(0, groupOptions.length - 1)];
-    final f = (data['function'] as int?) ?? 0;
+    final f = (data['function'] as int?) ?? InputDefaults.functionBle;
     final opts = functionOptionsMap[group]!;
     function = opts[f.clamp(0, opts.length - 1)];
     enabled =
-        (data['enabled'] as bool?) == true ? yesNoOptions[1] : yesNoOptions[0];
-    test = (data['test'] as bool?) == true ? yesNoOptions[1] : yesNoOptions[0];
+        (data['enabled'] as bool?) ?? InputDefaults.enabledBle
+            ? yesNoOptions[1]
+            : yesNoOptions[0];
+    test =
+        (data['test'] as bool?) ?? InputDefaults.testBle
+            ? yesNoOptions[1]
+            : yesNoOptions[0];
     inverted =
-        (data['inverted'] as bool?) == true ? yesNoOptions[1] : yesNoOptions[0];
-    inputTextCtrl.text = (data['text'] as String?) ?? '';
+        (data['inverted'] as bool?) ?? InputDefaults.invertedBle
+            ? yesNoOptions[1]
+            : yesNoOptions[0];
+    inputTextCtrl.text = (data['text'] as String?) ?? InputDefaults.inputText;
   }
 
   @override

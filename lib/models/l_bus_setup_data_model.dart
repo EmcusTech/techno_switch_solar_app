@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:techno_switch_solar_app/utils/modes/l_bus_payload_config.dart';
+import 'package:techno_switch_solar_app/utils/peripherals/defaults/l_bus_defaults.dart';
 
 class LBusSetupData {
   final String enabled;
@@ -16,17 +17,17 @@ class LBusSetupData {
   final int protocol;
 
   const LBusSetupData({
-    this.enabled = 'No',
-    this.idLed = 'No',
-    this.product = 'None',
-    this.deviceText = '',
-    this.id = 0,
-    this.revision = 0,
-    this.productRev = '',
-    this.hardware = '-',
-    this.firmware = '-',
-    this.date = '',
-    this.protocol = 0,
+    this.enabled = LBusDefaults.enabledLabel,
+    this.idLed = LBusDefaults.idLedLabel,
+    this.product = LBusDefaults.productLabel,
+    this.deviceText = LBusDefaults.deviceText,
+    this.id = LBusDefaults.id,
+    this.revision = LBusDefaults.revision,
+    this.productRev = LBusDefaults.productRev,
+    this.hardware = LBusDefaults.hardware,
+    this.firmware = LBusDefaults.firmware,
+    this.date = LBusDefaults.date,
+    this.protocol = LBusDefaults.protocol,
   });
 
   LBusSetupData copyWith({
@@ -150,16 +151,16 @@ class LBusSetupData {
   };
 
   static LBusSetupData fromJson(Map<String, dynamic> json) => LBusSetupData(
-    enabled: json['enabled'] as String? ?? 'No',
-    idLed: json['idLed'] as String? ?? 'No',
-    product: json['product'] as String? ?? 'None',
-    deviceText: json['deviceText'] as String? ?? '',
-    id: json['id'] as int? ?? 0,
-    revision: json['revision'] as int? ?? 0,
-    productRev: json['productRev'] as String? ?? '',
-    hardware: json['hardware'] as String? ?? '-',
-    firmware: json['firmware'] as String? ?? '-',
-    date: json['date'] as String? ?? '',
-    protocol: json['protocol'] as int? ?? 0,
+    enabled: json['enabled'] as String? ?? LBusDefaults.enabledLabel,
+    idLed: json['idLed'] as String? ?? LBusDefaults.idLedLabel,
+    product: json['product'] as String? ?? LBusDefaults.productLabel,
+    deviceText: json['deviceText'] as String? ?? LBusDefaults.deviceText,
+    id: json['id'] as int? ?? LBusDefaults.id,
+    revision: json['revision'] as int? ?? LBusDefaults.revision,
+    productRev: json['productRev'] as String? ?? LBusDefaults.productRev,
+    hardware: json['hardware'] as String? ?? LBusDefaults.hardware,
+    firmware: json['firmware'] as String? ?? LBusDefaults.firmware,
+    date: json['date'] as String? ?? LBusDefaults.date,
+    protocol: json['protocol'] as int? ?? LBusDefaults.protocol,
   );
 }

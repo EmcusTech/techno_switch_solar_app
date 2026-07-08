@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:techno_switch_solar_app/features/peripherals/shared/controllers/peripheral_mode_controller.dart';
+import 'package:techno_switch_solar_app/utils/peripherals/defaults/general_module_defaults.dart';
 import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
@@ -12,10 +13,10 @@ class GeneralModuleController extends PeripheralModeController {
 
   final TextEditingController lvlTimeoutController = TextEditingController();
 
-  String silenceBuzzerLevel = StringConstants.accessLevel1;
-  String silenceSoundersLevel = StringConstants.accessLevel2;
-  String resetLevel = StringConstants.accessLevel2;
-  String faultLatching = StringConstants.no;
+  String silenceBuzzerLevel = GeneralModuleDefaults.silenceBuzzerLevel;
+  String silenceSoundersLevel = GeneralModuleDefaults.silenceSoundersLevel;
+  String resetLevel = GeneralModuleDefaults.resetLevel;
+  String faultLatching = GeneralModuleDefaults.faultLatching;
 
   final List<String> buzzerOptions = [
     StringConstants.accessLevel1,
@@ -32,7 +33,9 @@ class GeneralModuleController extends PeripheralModeController {
   final List<String> yesNoOptions = [StringConstants.no, StringConstants.yes];
 
   @override
-  void initModel() {}
+  void initModel() {
+    lvlTimeoutController.text = GeneralModuleDefaults.lvlTimeout.toString();
+  }
 
   @override
   void disposeModel() {
@@ -45,16 +48,20 @@ class GeneralModuleController extends PeripheralModeController {
 
   @override
   void applyCachedData(Map<String, dynamic> data) {
-    lvlTimeoutController.text = (data['lvlTimeout'] as num?)?.toString() ?? '0';
+    lvlTimeoutController.text =
+        (data['lvlTimeout'] as num?)?.toString() ??
+        GeneralModuleDefaults.lvlTimeout.toString();
     silenceBuzzerLevel =
         (data[StringConstants.silencebuzzerlevel] as String?) ??
-        buzzerOptions.first;
+        GeneralModuleDefaults.silenceBuzzerLevel;
     silenceSoundersLevel =
-        (data['silenceSoundersLevel'] as String?) ?? sounderOptions.first;
-    resetLevel = (data['resetLevel'] as String?) ?? resetOptions.first;
+        (data['silenceSoundersLevel'] as String?) ??
+        GeneralModuleDefaults.silenceSoundersLevel;
+    resetLevel =
+        (data['resetLevel'] as String?) ?? GeneralModuleDefaults.resetLevel;
     faultLatching =
         (data[StringConstants.silencesounderslevel] as String?) ??
-        yesNoOptions.first;
+        GeneralModuleDefaults.faultLatching;
   }
 
   @override
@@ -65,19 +72,19 @@ class GeneralModuleController extends PeripheralModeController {
     silenceBuzzerLevel =
         bp.generalModuleSilenceBuzzerLvl.value < buzzerOptions.length
             ? buzzerOptions[bp.generalModuleSilenceBuzzerLvl.value]
-            : buzzerOptions.first;
+            : GeneralModuleDefaults.silenceBuzzerLevel;
     silenceSoundersLevel =
         bp.generalModuleSilenceSounderLvl.value < sounderOptions.length
             ? sounderOptions[bp.generalModuleSilenceSounderLvl.value]
-            : sounderOptions.first;
+            : GeneralModuleDefaults.silenceSoundersLevel;
     resetLevel =
         bp.generalModuleResetLvl.value < resetOptions.length
             ? resetOptions[bp.generalModuleResetLvl.value]
-            : resetOptions.first;
+            : GeneralModuleDefaults.resetLevel;
     faultLatching =
         bp.generalModuleFaultLatching.value < yesNoOptions.length
             ? yesNoOptions[bp.generalModuleFaultLatching.value]
-            : yesNoOptions.first;
+            : GeneralModuleDefaults.faultLatching;
     refreshUi();
   }
 
@@ -86,7 +93,8 @@ class GeneralModuleController extends PeripheralModeController {
     if (manager == null) return;
     final bp = manager!.bleProcess;
     bp.generalModuleLvlTimeOut.value =
-        int.tryParse(lvlTimeoutController.text) ?? 0;
+        int.tryParse(lvlTimeoutController.text) ??
+        GeneralModuleDefaults.lvlTimeoutBle;
     bp.generalModuleSilenceBuzzerLvl.value = buzzerOptions
         .indexOf(silenceBuzzerLevel)
         .clamp(0, buzzerOptions.length - 1);
@@ -103,13 +111,17 @@ class GeneralModuleController extends PeripheralModeController {
 
   @override
   Future<void> save() async {
-    await PeripheralSetupCache.saveGeneralModuleSetup(deviceId, {
-      'lvlTimeout': int.tryParse(lvlTimeoutController.text) ?? 0,
-      StringConstants.silencebuzzerlevel: silenceBuzzerLevel,
-      'silenceSoundersLevel': silenceSoundersLevel,
-      'resetLevel': resetLevel,
-      StringConstants.silencesounderslevel: faultLatching,
-    });
+    await PeripheralSetupCache.saveGeneralModuleSetup(
+      deviceId,
+      GeneralModuleDefaults.toCacheMap()
+        ..['lvlTimeout'] =
+            int.tryParse(lvlTimeoutController.text) ??
+            GeneralModuleDefaults.lvlTimeout
+        ..[StringConstants.silencebuzzerlevel] = silenceBuzzerLevel
+        ..['silenceSoundersLevel'] = silenceSoundersLevel
+        ..['resetLevel'] = resetLevel
+        ..[StringConstants.silencesounderslevel] = faultLatching,
+    );
     refreshTrigger.value++;
   }
 

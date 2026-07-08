@@ -6,6 +6,7 @@ import 'package:techno_switch_solar_app/utils/panel_config/panel_config_cache_sy
 import 'package:techno_switch_solar_app/utils/modes/ext_zone_mode_util.dart';
 import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
+import 'package:techno_switch_solar_app/utils/peripherals/defaults/ext_out_defaults.dart';
 
 /// Controller for the Ext-Out (extinguishant) configuration bottom sheet.
 ///
@@ -83,16 +84,24 @@ class ExtOutController extends PeripheralModeController {
 
   @override
   void initModel() {
-    autoCtrl = TextEditingController(text: "10");
-    manCtrl = TextEditingController(text: "15");
-    releaseCtrl = TextEditingController(text: "10");
-    resetDelayCtrl = TextEditingController(text: "5");
-    enabled = enabledOptions[0];
-    actuatorType = actuatorTypeOptions[0];
-    function = functionOptions[0];
-    resetInCount = resetInCountOptions[0];
-    holdCount = holdCountOptions[0];
-    action = actionOptions[0];
+    autoCtrl = TextEditingController(
+      text: ExtOutDefaults.countdownAutoBle.toString(),
+    );
+    manCtrl = TextEditingController(
+      text: ExtOutDefaults.countdownManBle.toString(),
+    );
+    releaseCtrl = TextEditingController(
+      text: ExtOutDefaults.releaseTimeBle.toString(),
+    );
+    resetDelayCtrl = TextEditingController(
+      text: ExtOutDefaults.resetDelayBle.toString(),
+    );
+    enabled = ExtOutDefaults.enabledLabel;
+    actuatorType = ExtOutDefaults.actuatorTypeLabel;
+    function = ExtOutDefaults.functionLabel;
+    resetInCount = ExtOutDefaults.resetInCountLabel;
+    holdCount = ExtOutDefaults.holdCountLabel;
+    action = ExtOutDefaults.actionLabel;
   }
 
   @override
@@ -131,25 +140,37 @@ class ExtOutController extends PeripheralModeController {
 
   @override
   void applyCachedData(Map<String, dynamic> data) {
-    final en = (data['enabled'] as int?) ?? 0;
+    final en = (data['enabled'] as int?) ?? ExtOutDefaults.enabledBle;
     enabled = enabledOptions[en.clamp(0, enabledOptions.length - 1)];
-    final at = (data[StringConstants.actuatortype] as int?) ?? 0;
+    final at =
+        (data[StringConstants.actuatortype] as int?) ??
+        ExtOutDefaults.actuatorTypeBle;
     actuatorType =
         actuatorTypeOptions[at.clamp(0, actuatorTypeOptions.length - 1)];
-    final fn = (data['function'] as int?) ?? 0;
+    final fn = (data['function'] as int?) ?? ExtOutDefaults.functionBle;
     function = functionOptions[fn.clamp(0, functionOptions.length - 1)];
-    final ra = (data[StringConstants.resetallowed] as int?) ?? 0;
+    final ra =
+        (data[StringConstants.resetallowed] as int?) ??
+        ExtOutDefaults.resetAllowedBle;
     resetInCount =
         resetInCountOptions[ra.clamp(0, resetInCountOptions.length - 1)];
-    final hc = (data[StringConstants.holdmode] as int?) ?? 0;
+    final hc =
+        (data[StringConstants.holdmode] as int?) ?? ExtOutDefaults.holdModeBle;
     holdCount = holdCountOptions[hc.clamp(0, holdCountOptions.length - 1)];
-    final ac = (data['action'] as int?) ?? 0;
+    final ac = (data['action'] as int?) ?? ExtOutDefaults.actionBle;
     action = actionOptions[ac.clamp(0, actionOptions.length - 1)];
-    autoCtrl.text = (data['countdownAuto'] as int?)?.toString() ?? '10';
-    manCtrl.text = (data['countdownMan'] as int?)?.toString() ?? '15';
-    releaseCtrl.text = (data['releaseTime'] as int?)?.toString() ?? '10';
+    autoCtrl.text =
+        (data['countdownAuto'] as int?)?.toString() ??
+        ExtOutDefaults.countdownAutoBle.toString();
+    manCtrl.text =
+        (data['countdownMan'] as int?)?.toString() ??
+        ExtOutDefaults.countdownManBle.toString();
+    releaseCtrl.text =
+        (data['releaseTime'] as int?)?.toString() ??
+        ExtOutDefaults.releaseTimeBle.toString();
     resetDelayCtrl.text =
-        (data[StringConstants.resetdelay] as int?)?.toString() ?? '5';
+        (data[StringConstants.resetdelay] as int?)?.toString() ??
+        ExtOutDefaults.resetDelayBle.toString();
     _applyCachedSolarMode(data);
   }
 

@@ -16,6 +16,8 @@ class PanelInfoBottomSheet extends StatefulWidget {
   final VoidCallback onApply;
   final ValueNotifier<int> refreshTrigger;
   final bool embedInCreateFlow;
+  final String? projectPanelName;
+  final bool preferFactoryDefaults;
 
   const PanelInfoBottomSheet({
     super.key,
@@ -24,6 +26,8 @@ class PanelInfoBottomSheet extends StatefulWidget {
     required this.onApply,
     required this.refreshTrigger,
     this.embedInCreateFlow = false,
+    this.projectPanelName,
+    this.preferFactoryDefaults = false,
   });
 
   @override
@@ -42,6 +46,8 @@ class PanelInfoBottomSheetState extends State<PanelInfoBottomSheet> {
       PanelInfoController(
         deviceId: widget.deviceId,
         refreshTrigger: widget.refreshTrigger,
+        projectPanelName: widget.projectPanelName,
+        preferFactoryDefaults: widget.preferFactoryDefaults,
       ),
     );
   }

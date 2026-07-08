@@ -1,7 +1,10 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/features/peripherals/shared/controllers/peripheral_mode_controller.dart';
 import 'package:techno_switch_solar_app/utils/panel_config/panel_config_cache_sync.dart';
+import 'package:techno_switch_solar_app/utils/peripherals/defaults/panel_info_defaults.dart';
 import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
@@ -31,15 +34,25 @@ class PanelInfoConfig {
 
 /// Controller for the Panel Info bottom sheet.
 class PanelInfoController extends PeripheralModeController {
-  PanelInfoController({required super.deviceId, required super.refreshTrigger});
+  PanelInfoController({
+    required super.deviceId,
+    required super.refreshTrigger,
+    this.projectPanelName,
+    this.preferFactoryDefaults = false,
+  });
+
+  final String? projectPanelName;
+  final bool preferFactoryDefaults;
 
   final PanelInfoConfig config = PanelInfoConfig();
 
-  bool useMobileTime = true;
+  bool useMobileTime = PanelInfoDefaults.useMobileTime;
   Timer? _timer;
 
   @override
-  void initModel() {}
+  void initModel() {
+    applyFactoryDefaults();
+  }
 
   @override
   void disposeModel() {
@@ -48,23 +61,95 @@ class PanelInfoController extends PeripheralModeController {
   }
 
   @override
+  void onRefreshTriggered() {
+    if (preferFactoryDefaults) {
+      applyFactoryDefaults();
+      pushToManager();
+      refreshUi();
+      return;
+    }
+    loadFromManager();
+  }
+
+  @override
+  Future<void> loadData() async {
+    if (Get.isRegistered<BleLogController>()) {
+      manager = Get.find<BleLogController>().bleManager;
+    }
+    final cached = await loadCache();
+    if (cached != null) {
+      applyCachedData(cached);
+      refreshUi();
+      return;
+    }
+    if (preferFactoryDefaults) {
+      applyFactoryDefaults();
+      pushToManager();
+      refreshUi();
+      return;
+    }
+    loadFromManager();
+    refreshUi();
+  }
+
+  @override
   Future<Map<String, dynamic>?> loadCache() =>
       PeripheralSetupCache.loadPanelInfoSetup(deviceId);
+
+  void applyFactoryDefaults() {
+    config.panelIdController.text = PanelInfoDefaults.panelNo.toString();
+    config.panelNameController.text = PanelInfoDefaults.resolvePanelName(
+      projectPanelName: projectPanelName,
+    );
+    config.delayController.text =
+        PanelInfoDefaults.eventReminderDelay.toString();
+    useMobileTime = PanelInfoDefaults.useMobileTime;
+    if (useMobileTime) {
+      startLiveTime();
+    } else {
+      _applyDateTimeToControllers(DateTime.now());
+    }
+  }
+
+  void _applyDateTimeToControllers(DateTime dateTime) {
+    config.yearController.text = dateTime.year.toString();
+    config.monthController.text = dateTime.month.toString().padLeft(2, '0');
+    config.dayController.text = dateTime.day.toString().padLeft(2, '0');
+    config.hourController.text = dateTime.hour.toString().padLeft(2, '0');
+    config.minuteController.text = dateTime.minute.toString().padLeft(2, '0');
+    config.secondController.text = dateTime.second.toString().padLeft(2, '0');
+  }
+
+  int? _readPanelIdFromCache(Map<String, dynamic> data) {
+    return (data['panelId'] as num?)?.toInt() ??
+        (data[StringConstants.offlineprovisioned] as num?)?.toInt();
+  }
+
+  String? _readPanelNameFromCache(Map<String, dynamic> data) {
+    return (data['panelName'] as String?) ??
+        (data[StringConstants.panelname] as String?);
+  }
 
   @override
   void applyCachedData(Map<String, dynamic> data) {
     config.panelIdController.text =
-        (data[StringConstants.offlineprovisioned] as num?)?.toString() ?? '0';
+        _readPanelIdFromCache(data)?.toString() ??
+        PanelInfoDefaults.panelNo.toString();
     config.panelNameController.text =
-        (data[StringConstants.panelname] as String?) ?? '';
+        _readPanelNameFromCache(data) ??
+        PanelInfoDefaults.resolvePanelName(projectPanelName: projectPanelName);
     config.yearController.text = (data['year'] as num?)?.toString() ?? '0';
     config.monthController.text = (data['month'] as num?)?.toString() ?? '0';
     config.dayController.text = (data['day'] as num?)?.toString() ?? '0';
     config.hourController.text = (data['hour'] as num?)?.toString() ?? '0';
     config.minuteController.text = (data['minute'] as num?)?.toString() ?? '0';
     config.secondController.text = (data['second'] as num?)?.toString() ?? '0';
-    config.delayController.text = (data['delay'] as num?)?.toString() ?? '0';
-    useMobileTime = (data[StringConstants.usemobiletime] as bool?) ?? true;
+    config.delayController.text =
+        (data['delay'] as num?)?.toString() ??
+        PanelInfoDefaults.eventReminderDelay.toString();
+    useMobileTime =
+        (data[StringConstants.usemobiletime] as bool?) ??
+        PanelInfoDefaults.useMobileTime;
     if (useMobileTime) {
       startLiveTime();
     }
@@ -103,14 +188,7 @@ class PanelInfoController extends PeripheralModeController {
     _timer?.cancel();
 
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
-      final now = DateTime.now();
-
-      config.yearController.text = now.year.toString();
-      config.monthController.text = now.month.toString().padLeft(2, '0');
-      config.dayController.text = now.day.toString().padLeft(2, '0');
-      config.hourController.text = now.hour.toString().padLeft(2, '0');
-      config.minuteController.text = now.minute.toString().padLeft(2, '0');
-      config.secondController.text = now.second.toString().padLeft(2, '0');
+      _applyDateTimeToControllers(DateTime.now());
       refreshUi();
     });
   }
@@ -134,21 +212,24 @@ class PanelInfoController extends PeripheralModeController {
   void pushToManager() {
     if (manager == null) return;
     manager!.panelInfoPanelNo.value =
-        int.tryParse(config.panelIdController.text) ?? 0;
+        int.tryParse(config.panelIdController.text) ??
+        PanelInfoDefaults.panelNoBle;
     manager!.panelInfoPanelName.value = config.panelNameController.text;
     manager!.panelInfoYear.value =
-        int.tryParse(config.yearController.text) ?? 0;
+        int.tryParse(config.yearController.text) ?? DateTime.now().year;
     manager!.panelInfoMonth.value =
-        int.tryParse(config.monthController.text) ?? 0;
-    manager!.panelInfoDay.value = int.tryParse(config.dayController.text) ?? 0;
+        int.tryParse(config.monthController.text) ?? DateTime.now().month;
+    manager!.panelInfoDay.value =
+        int.tryParse(config.dayController.text) ?? DateTime.now().day;
     manager!.panelInfoHour.value =
-        int.tryParse(config.hourController.text) ?? 0;
+        int.tryParse(config.hourController.text) ?? DateTime.now().hour;
     manager!.panelInfoMinute.value =
-        int.tryParse(config.minuteController.text) ?? 0;
+        int.tryParse(config.minuteController.text) ?? DateTime.now().minute;
     manager!.panelInfoSecond.value =
-        int.tryParse(config.secondController.text) ?? 0;
+        int.tryParse(config.secondController.text) ?? DateTime.now().second;
     manager!.panelInfoEventReminderDelay.value =
-        int.tryParse(config.delayController.text) ?? 0;
+        int.tryParse(config.delayController.text) ??
+        PanelInfoDefaults.delayBle;
   }
 
   @override

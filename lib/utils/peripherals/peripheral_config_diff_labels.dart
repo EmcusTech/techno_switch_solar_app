@@ -586,7 +586,11 @@ class PeripheralConfigDiffLabels {
         case 'test':
           return _yesNo(value);
         case 'normal':
-          if (value is bool) return value ? StringConstants.none : StringConstants.isMTL5525;
+          if (value is bool) {
+            return value
+                ? PanelValues.sounderTypeNormal
+                : StringConstants.isMTL5525;
+          }
           return _yesNo(value);
         case 'group':
           return _pick(_sounderGroups, _asInt(value));

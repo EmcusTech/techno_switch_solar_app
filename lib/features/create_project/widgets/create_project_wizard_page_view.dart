@@ -221,6 +221,8 @@ class CreateProjectWizardPageViewState extends State<CreateProjectWizardPageView
                     onApply: _noop,
                     refreshTrigger: controller.panelInfoRefresh,
                     embedInCreateFlow: true,
+                    projectPanelName: controller.panelNameController.text,
+                    preferFactoryDefaults: !controller.bulkDownloadCompleted,
                   ),
                 );
               default:

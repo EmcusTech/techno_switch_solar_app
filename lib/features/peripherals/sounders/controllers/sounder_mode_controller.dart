@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/features/peripherals/shared/controllers/peripheral_mode_controller.dart';
 import 'package:techno_switch_solar_app/utils/modes/general_quipment_mode_util.dart';
+import 'package:techno_switch_solar_app/utils/peripherals/defaults/sounder_defaults.dart';
 import 'package:techno_switch_solar_app/utils/peripherals/peripheral_test_mode_sync.dart';
 import 'package:techno_switch_solar_app/utils/modes/ext_out_equipment_mode_util.dart';
 import 'package:techno_switch_solar_app/utils/modes/zone_equipment_mode_util.dart';
@@ -15,8 +16,8 @@ class SounderConfig {
 
   String group = 'None';
   String function = 'None';
-  String enabled = 'No';
-  String type = StringConstants.none;
+  String enabled = SounderDefaults.enabledLabel;
+  String type = SounderDefaults.typeLabel;
 
   bool groupLocked = false;
   bool functionLocked = false;
@@ -30,9 +31,9 @@ class SounderConfig {
 class ZoneConfig {
   final int index;
 
-  String enabled = 'No';
-  String test = 'No';
-  String action = 'Continuous';
+  String enabled = SounderDefaults.zoneEnabledLabel;
+  String test = SounderDefaults.zoneTestLabel;
+  String action = SounderDefaults.actionContinuousLabel;
 
   ZoneConfig({required this.index});
 }
@@ -40,11 +41,11 @@ class ZoneConfig {
 class ExtOutConfig {
   final int index;
 
-  String enabled = 'No';
-  String test = 'No';
-  String countdownAction = 'Continuous';
-  String holdAction = 'Continuous';
-  String releaseAction = 'Continuous';
+  String enabled = SounderDefaults.extOutEnabledLabel;
+  String test = SounderDefaults.extOutTestLabel;
+  String countdownAction = SounderDefaults.countdownActionLabel;
+  String holdAction = SounderDefaults.holdActionLabel;
+  String releaseAction = SounderDefaults.releaseActionLabel;
 
   ExtOutConfig({required this.index});
 }
@@ -77,7 +78,7 @@ class SounderModeController extends PeripheralModeController {
   final List<String> yesNoOptions = ['No', StringConstants.yes];
 
   final List<String> typeOptions = [
-    StringConstants.none,
+    PanelValues.sounderTypeNormal,
     StringConstants.isMTL5525,
   ];
 
@@ -107,25 +108,126 @@ class SounderModeController extends PeripheralModeController {
   late List<ExtOutConfig> extOuts;
 
   final TextEditingController delayController = TextEditingController(
-    text: '0',
+    text: SounderDefaults.delayBle.toString(),
   );
 
-  String delayed = 'No';
+  String delayed = SounderDefaults.delayedLabel;
 
   @override
   void initModel() {
     sounders = List.generate(3, (i) {
       final config = SounderConfig(index: i);
+      _applyMainSounderConfig(config, i, SounderDefaults.mainSounderEntry(i));
       if (i == 0) {
-        config.group = 'General';
-        config.function = StringConstants.fireSnd;
         config.groupLocked = true;
         config.functionLocked = true;
       }
       return config;
     });
-    zones = List.generate(3, (i) => ZoneConfig(index: i));
-    extOuts = List.generate(3, (i) => ExtOutConfig(index: i));
+    zones = List.generate(3, (i) {
+      final zone = ZoneConfig(index: i);
+      _applyZoneFromMap(SounderDefaults.zoneEntry(), zone: zone);
+      return zone;
+    });
+    extOuts = List.generate(3, (i) {
+      final extOut = ExtOutConfig(index: i);
+      _applyExtOutFromMap(extOut, SounderDefaults.extOutEntry());
+      return extOut;
+    });
+  }
+
+  String _boolToYesNo(bool value) => value ? StringConstants.yes : 'No';
+
+  void _applyMainSounderFromMap(int index, Map<String, dynamic> data) {
+    _applyMainSounderConfig(sounders[index], index, data);
+  }
+
+  void _applyMainSounderConfig(
+    SounderConfig sounder,
+    int index,
+    Map<String, dynamic> data,
+  ) {
+    final defaults = SounderDefaults.mainSounderEntry(index);
+    final enabled = (data['enabled'] as bool?) ?? defaults['enabled'] as bool;
+    sounder.enabled = _boolToYesNo(enabled);
+    final normal = (data['normal'] as bool?) ?? defaults['normal'] as bool;
+    sounder.type = SounderDefaults.typeLabelFromNormal(normal);
+    sounder.outputController.text =
+        (data['outputText'] as String?) ?? SounderDefaults.outputText;
+    final groupIdx =
+        ((data['group'] as num?)?.toInt() ?? defaults['group'] as int).clamp(
+          0,
+          groupOptions.length - 1,
+        );
+    sounder.group = groupOptions[groupIdx];
+    final fnOpts = functionOptionsMap[sounder.group]!;
+    final fnIdx =
+        ((data['function'] as num?)?.toInt() ?? defaults['function'] as int)
+            .clamp(0, fnOpts.length - 1);
+    sounder.function = fnOpts[fnIdx];
+    if (index > 0) {
+      sounder.dynamicController.text =
+          ((data[StringConstants.functionno] as num?)?.toInt() ??
+                  defaults['functionNo'] as int)
+              .toString();
+    }
+  }
+
+  void _applyZoneFromMap(Map<String, dynamic> data, {required ZoneConfig zone}) {
+    final enabled = (data['enabled'] as bool?) ?? SounderDefaults.enabledBle;
+    zone.enabled = _boolToYesNo(enabled);
+    final test = (data['test'] as bool?) ?? SounderDefaults.testBle;
+    zone.test = _boolToYesNo(test);
+    final actionIdx =
+        ((data['action'] as num?)?.toInt() ?? SounderDefaults.actionContinuousBle)
+            .clamp(0, actionOptions.length - 1);
+    zone.action = actionOptions[actionIdx];
+  }
+
+  void _applyExtOutFromMap(ExtOutConfig extOut, Map<String, dynamic> data) {
+    final enabled = (data['enabled'] as bool?) ?? SounderDefaults.enabledBle;
+    extOut.enabled = _boolToYesNo(enabled);
+    final test = (data['test'] as bool?) ?? SounderDefaults.testBle;
+    extOut.test = _boolToYesNo(test);
+    extOut.countdownAction =
+        extOutActionOptions[((data[StringConstants.countdownaction] as num?)
+                    ?.toInt() ??
+                SounderDefaults.countdownActionBle)
+            .clamp(0, extOutActionOptions.length - 1)];
+    extOut.holdAction =
+        extOutActionOptions[((data[StringConstants.holdaction] as num?)?.toInt() ??
+                SounderDefaults.holdActionBle)
+            .clamp(0, extOutActionOptions.length - 1)];
+    extOut.releaseAction =
+        extOutActionOptions[((data[StringConstants.releaseaction] as num?)
+                    ?.toInt() ??
+                SounderDefaults.releaseActionBle)
+            .clamp(0, extOutActionOptions.length - 1)];
+  }
+
+  void _applyGeneralToManager(Map<String, dynamic> data) {
+    final m = manager;
+    if (m == null) return;
+    final enabled =
+        (data['enabled'] as bool?) ?? SounderDefaults.generalEnabledBle;
+    final test = (data['test'] as bool?) ?? SounderDefaults.generalTestBle;
+    final delayedFlag = (data['delayed'] as bool?) ?? SounderDefaults.delayedBle;
+    m.isSounderGeneralEnabled.value = enabled;
+    m.isSounderGeneralTest.value = test;
+    m.isSounderGeneralDelay.value = delayedFlag;
+    m.sounderGeneralAction.value =
+        (data['action'] as num?)?.toInt() ?? SounderDefaults.generalActionBle;
+    m.sounderGeneralDelay.value =
+        (data['delay'] as num?)?.toInt() ?? SounderDefaults.delayBle;
+    m.sounderGeneralMode.value = GeneralEquipmentModeCodec.encodeHex(
+      GeneralEquipmentModeConfig(
+        equipmentEnable:
+            enabled ? EquipmentEnable.enabled : EquipmentEnable.disabled,
+        equipmentMode: test ? EquipmentMode.test : EquipmentMode.normal,
+        sounderDelay:
+            delayedFlag ? SounderDelay.enabled : SounderDelay.disabled,
+      ),
+    );
   }
 
   @override
@@ -148,155 +250,46 @@ class SounderModeController extends PeripheralModeController {
 
   @override
   void applyCachedData(Map<String, dynamic> data) {
-    final s1 = data['s1'] as Map<String, dynamic>?;
-    final s2 = data[StringConstants.s2] as Map<String, dynamic>?;
-    final s3 = data[StringConstants.s3] as Map<String, dynamic>?;
-    final z1 = data[StringConstants.z1] as Map<String, dynamic>?;
-    final z2 = data[StringConstants.z2] as Map<String, dynamic>?;
-    final z3 = data[StringConstants.z3] as Map<String, dynamic>?;
-    final e1 = data[StringConstants.e1] as Map<String, dynamic>?;
-    final e2 = data[StringConstants.e2] as Map<String, dynamic>?;
-    final e3 = data['e3'] as Map<String, dynamic>?;
-
-    if (s1 != null) {
-      sounders[0].enabled =
-          (s1['enabled'] as bool?) ?? false ? StringConstants.yes : 'No';
-      sounders[0].type =
-          (s1['normal'] as bool?) ?? true
-              ? StringConstants.none
-              : StringConstants.isMTL5525;
-      sounders[0].outputController.text = (s1['outputText'] as String?) ?? '';
-      sounders[0].group =
-          groupOptions[((s1['group'] as int?) ?? 0).clamp(
-            0,
-            groupOptions.length - 1,
-          )];
-      sounders[0].function =
-          functionOptionsMap[sounders[0].group]![((s1['function'] as int?) ?? 0)
-              .clamp(0, functionOptionsMap[sounders[0].group]!.length - 1)];
+    if (data['s1'] != null) {
+      _applyMainSounderFromMap(0, Map<String, dynamic>.from(data['s1'] as Map));
     }
-    if (s2 != null) {
-      sounders[1].enabled =
-          (s2['enabled'] as bool?) ?? false ? StringConstants.yes : 'No';
-      sounders[1].type =
-          (s2['normal'] as bool?) ?? true
-              ? StringConstants.none
-              : StringConstants.isMTL5525;
-      sounders[1].outputController.text = (s2['outputText'] as String?) ?? '';
-      sounders[1].group =
-          groupOptions[((s2['group'] as int?) ?? 0).clamp(
-            0,
-            groupOptions.length - 1,
-          )];
-      sounders[1].function =
-          functionOptionsMap[sounders[1].group]![((s2['function'] as int?) ?? 0)
-              .clamp(0, functionOptionsMap[sounders[1].group]!.length - 1)];
-      sounders[1].dynamicController.text =
-          (s2[StringConstants.functionno] as int?)?.toString() ?? '0';
+    if (data[StringConstants.s2] != null) {
+      _applyMainSounderFromMap(
+        1,
+        Map<String, dynamic>.from(data[StringConstants.s2] as Map),
+      );
     }
-    if (s3 != null) {
-      sounders[2].enabled =
-          (s3['enabled'] as bool?) ?? false ? StringConstants.yes : 'No';
-      sounders[2].type =
-          (s3['normal'] as bool?) ?? true
-              ? StringConstants.none
-              : StringConstants.isMTL5525;
-      sounders[2].outputController.text = (s3['outputText'] as String?) ?? '';
-      sounders[2].group =
-          groupOptions[((s3['group'] as int?) ?? 0).clamp(
-            0,
-            groupOptions.length - 1,
-          )];
-      sounders[2].function =
-          functionOptionsMap[sounders[2].group]![((s3['function'] as int?) ?? 0)
-              .clamp(0, functionOptionsMap[sounders[2].group]!.length - 1)];
-      sounders[2].dynamicController.text =
-          (s3[StringConstants.functionno] as int?)?.toString() ?? '0';
+    if (data[StringConstants.s3] != null) {
+      _applyMainSounderFromMap(
+        2,
+        Map<String, dynamic>.from(data[StringConstants.s3] as Map),
+      );
     }
-    if (z1 != null) {
-      zones[0].enabled =
-          (z1['enabled'] as bool?) ?? false ? StringConstants.yes : 'No';
-      zones[0].test =
-          (z1['test'] as bool?) ?? false ? StringConstants.yes : 'No';
-      zones[0].action =
-          actionOptions[((z1['action'] as int?) ?? 0).clamp(
-            0,
-            actionOptions.length - 1,
-          )];
+    for (var i = 0; i < 3; i++) {
+      final key =
+          i == 0
+              ? StringConstants.z1
+              : i == 1
+              ? StringConstants.z2
+              : StringConstants.z3;
+      final z = data[key] as Map<String, dynamic>?;
+      if (z != null) _applyZoneFromMap(z, zone: zones[i]);
     }
-    if (z2 != null) {
-      zones[1].enabled =
-          (z2['enabled'] as bool?) ?? false ? StringConstants.yes : 'No';
-      zones[1].test =
-          (z2['test'] as bool?) ?? false ? StringConstants.yes : 'No';
-      zones[1].action =
-          actionOptions[((z2['action'] as int?) ?? 0).clamp(
-            0,
-            actionOptions.length - 1,
-          )];
-    }
-    if (z3 != null) {
-      zones[2].enabled =
-          (z3['enabled'] as bool?) ?? false ? StringConstants.yes : 'No';
-      zones[2].test =
-          (z3['test'] as bool?) ?? false ? StringConstants.yes : 'No';
-      zones[2].action =
-          actionOptions[((z3['action'] as int?) ?? 0).clamp(
-            0,
-            actionOptions.length - 1,
-          )];
-    }
-    if (e1 != null) {
-      extOuts[0].enabled =
-          (e1['enabled'] as bool?) ?? false ? StringConstants.yes : 'No';
-      extOuts[0].test =
-          (e1['test'] as bool?) ?? false ? StringConstants.yes : 'No';
-      extOuts[0].countdownAction =
-          extOutActionOptions[((e1[StringConstants.countdownaction] as int?) ??
-                  0)
-              .clamp(0, extOutActionOptions.length - 1)];
-      extOuts[0].holdAction =
-          extOutActionOptions[((e1[StringConstants.holdaction] as int?) ?? 0)
-              .clamp(0, extOutActionOptions.length - 1)];
-      extOuts[0].releaseAction =
-          extOutActionOptions[((e1[StringConstants.releaseaction] as int?) ?? 0)
-              .clamp(0, extOutActionOptions.length - 1)];
-    }
-    if (e2 != null) {
-      extOuts[1].enabled =
-          (e2['enabled'] as bool?) ?? false ? StringConstants.yes : 'No';
-      extOuts[1].test =
-          (e2['test'] as bool?) ?? false ? StringConstants.yes : 'No';
-      extOuts[1].countdownAction =
-          extOutActionOptions[((e2[StringConstants.countdownaction] as int?) ??
-                  0)
-              .clamp(0, extOutActionOptions.length - 1)];
-      extOuts[1].holdAction =
-          extOutActionOptions[((e2[StringConstants.holdaction] as int?) ?? 0)
-              .clamp(0, extOutActionOptions.length - 1)];
-      extOuts[1].releaseAction =
-          extOutActionOptions[((e2[StringConstants.releaseaction] as int?) ?? 0)
-              .clamp(0, extOutActionOptions.length - 1)];
-    }
-    if (e3 != null) {
-      extOuts[2].enabled =
-          (e3['enabled'] as bool?) ?? false ? StringConstants.yes : 'No';
-      extOuts[2].test =
-          (e3['test'] as bool?) ?? false ? StringConstants.yes : 'No';
-      extOuts[2].countdownAction =
-          extOutActionOptions[((e3[StringConstants.countdownaction] as int?) ??
-                  0)
-              .clamp(0, extOutActionOptions.length - 1)];
-      extOuts[2].holdAction =
-          extOutActionOptions[((e3[StringConstants.holdaction] as int?) ?? 0)
-              .clamp(0, extOutActionOptions.length - 1)];
-      extOuts[2].releaseAction =
-          extOutActionOptions[((e3[StringConstants.releaseaction] as int?) ?? 0)
-              .clamp(0, extOutActionOptions.length - 1)];
+    for (var i = 0; i < 3; i++) {
+      final key = i == 0 ? StringConstants.e1 : i == 1 ? StringConstants.e2 : 'e3';
+      final e = data[key] as Map<String, dynamic>?;
+      if (e != null) _applyExtOutFromMap(extOuts[i], e);
     }
     final gen = data[StringConstants.s123] as Map<String, dynamic>?;
     if (gen != null) {
-      delayController.text = (gen['delay'] as int?)?.toString() ?? '0';
+      delayController.text =
+          (gen['delay'] as int?)?.toString() ??
+          SounderDefaults.delayBle.toString();
+      delayed =
+          (gen['delayed'] as bool?) ?? SounderDefaults.delayedBle
+              ? SounderDefaults.delayedLabel
+              : PanelValues.noOption;
+      _applyGeneralToManager(gen);
     }
     if (manager != null) {
       applySounderMainTestFlagsFromCacheMap(manager!, data);
@@ -313,22 +306,19 @@ class SounderModeController extends PeripheralModeController {
 
     sounderOne.enabled =
         manager!.isSounderOneEnabled.value ? StringConstants.yes : 'No';
-    sounderOne.type =
-        manager!.isSounderOneNormal.value
-            ? StringConstants.none
-            : StringConstants.isMTL5525;
+    sounderOne.type = SounderDefaults.typeLabelFromNormal(
+      manager!.isSounderOneNormal.value,
+    );
     sounderTwo.enabled =
         manager!.isSounderTwoEnabled.value ? StringConstants.yes : 'No';
-    sounderTwo.type =
-        manager!.isSounderTwoNormal.value
-            ? StringConstants.none
-            : StringConstants.isMTL5525;
+    sounderTwo.type = SounderDefaults.typeLabelFromNormal(
+      manager!.isSounderTwoNormal.value,
+    );
     sounderThree.enabled =
         manager!.isSounderThreeEnabled.value ? StringConstants.yes : 'No';
-    sounderThree.type =
-        manager!.isSounderThreeNormal.value
-            ? StringConstants.none
-            : StringConstants.isMTL5525;
+    sounderThree.type = SounderDefaults.typeLabelFromNormal(
+      manager!.isSounderThreeNormal.value,
+    );
     sounderOne.outputController.text = manager!.sounderOneOutputText.value;
     sounderTwo.outputController.text = manager!.sounderTwoOutputText.value;
     sounderThree.outputController.text = manager!.sounderThreeOutputText.value;
@@ -358,6 +348,10 @@ class SounderModeController extends PeripheralModeController {
         manager!.sounderThreeFunctionNo.value.toString();
 
     delayController.text = manager!.sounderGeneralDelay.value.toString();
+    delayed =
+        manager!.isSounderGeneralDelay.value
+            ? SounderDefaults.delayedLabel
+            : PanelValues.noOption;
 
     final zoneOne = zones[0];
     final zoneTwo = zones[1];
@@ -430,7 +424,7 @@ class SounderModeController extends PeripheralModeController {
 
       bool isEnabled = sounder.enabled == StringConstants.yes;
       bool isTest = isEnabled && snapshotTest[i];
-      bool isNormal = sounder.type == StringConstants.none;
+      bool isNormal = sounder.type == PanelValues.sounderTypeNormal;
       String outputText = sounder.outputController.text;
       int functionNo = int.tryParse(sounder.dynamicController.text) ?? 0;
       int groupIndex = returnIndex(sounder.group, groupOptions);
@@ -488,7 +482,8 @@ class SounderModeController extends PeripheralModeController {
     m.sounderGeneralMode.value = GeneralEquipmentModeCodec.encodeHex(
       generalConfig,
     );
-    m.sounderGeneralDelay.value = int.tryParse(delayController.text) ?? 0;
+    m.sounderGeneralDelay.value =
+        int.tryParse(delayController.text) ?? SounderDefaults.delayBle;
 
     for (int i = 0; i < 3; i++) {
       final zone = zones[i];

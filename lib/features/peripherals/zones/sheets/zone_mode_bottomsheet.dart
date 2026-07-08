@@ -348,10 +348,7 @@ class ZoneBottomSheetState extends State<ZoneBottomSheet> {
     required ZoneConfig zone,
     required int zoneIndex,
   }) {
-    final isReadOnly =
-        zone.mode == StringConstants.normal ||
-        zone.mode == StringConstants.none ||
-        zone.mode == StringConstants.immediate;
+    final isReadOnly = zone.mode != StringConstants.verified;
     final errorMsg = controller.verificationErrors[zoneIndex];
 
     return Padding(

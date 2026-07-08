@@ -246,7 +246,7 @@ abstract final class StringConstants {
   static const String comparing = "Comparing…";
   static const String configLog = "Config Log";
   static const String configuration = "Configuration";
-  static const String confirmed = "Confirmed";
+  static const String confirmed = PanelValues.zoneModeConfirmed;
   static const String connect = "Connect";
   static const String connectAPanelToConfigurePeripherals =
       "Connect a panel to configure peripherals.";

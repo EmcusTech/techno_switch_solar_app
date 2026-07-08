@@ -13,6 +13,15 @@ import 'package:techno_switch_solar_app/utils/modes/relay_mode_util.dart';
 import 'package:techno_switch_solar_app/utils/modes/ext_zone_mode_util.dart';
 import 'package:techno_switch_solar_app/utils/modes/zone_equipment_mode_util.dart';
 import 'package:techno_switch_solar_app/utils/modes/zone_mode_util.dart';
+import 'package:techno_switch_solar_app/utils/peripherals/defaults/general_module_defaults.dart';
+import 'package:techno_switch_solar_app/utils/peripherals/defaults/panel_info_defaults.dart';
+import 'package:techno_switch_solar_app/utils/peripherals/defaults/service_due_defaults.dart';
+import 'package:techno_switch_solar_app/utils/peripherals/defaults/zone_defaults.dart';
+import 'package:techno_switch_solar_app/utils/peripherals/defaults/sounder_defaults.dart';
+import 'package:techno_switch_solar_app/utils/peripherals/defaults/input_defaults.dart';
+import 'package:techno_switch_solar_app/utils/peripherals/defaults/relay_defaults.dart';
+import 'package:techno_switch_solar_app/utils/peripherals/defaults/ext_out_defaults.dart';
+import 'package:techno_switch_solar_app/utils/peripherals/defaults/l_bus_defaults.dart';
 import 'ble_manager.dart';
 import 'ble_frame.dart';
 import '../models/log_model.dart';
@@ -187,27 +196,49 @@ class BleProcess {
 
   final ValueNotifier<int> bleManufacturerData = ValueNotifier<int>(0);
 
-  final ValueNotifier<String> extZoneMode = ValueNotifier<String>("18");
+  final ValueNotifier<String> extZoneMode = ValueNotifier<String>(
+    ExtOutDefaults.modeHex,
+  );
 
-  final ValueNotifier<int> isExtZoneEnabled = ValueNotifier<int>(0);
+  final ValueNotifier<int> isExtZoneEnabled = ValueNotifier<int>(
+    ExtOutDefaults.enabledBle,
+  );
 
-  final ValueNotifier<int> extZoneHoldMode = ValueNotifier<int>(0);
+  final ValueNotifier<int> extZoneHoldMode = ValueNotifier<int>(
+    ExtOutDefaults.holdModeBle,
+  );
 
-  final ValueNotifier<int> isResetAllowed = ValueNotifier<int>(0);
+  final ValueNotifier<int> isResetAllowed = ValueNotifier<int>(
+    ExtOutDefaults.resetAllowedBle,
+  );
 
-  final ValueNotifier<int> extZoneActuatorType = ValueNotifier<int>(0);
+  final ValueNotifier<int> extZoneActuatorType = ValueNotifier<int>(
+    ExtOutDefaults.actuatorTypeBle,
+  );
 
-  final ValueNotifier<int> extZoneFunction = ValueNotifier<int>(0);
+  final ValueNotifier<int> extZoneFunction = ValueNotifier<int>(
+    ExtOutDefaults.functionBle,
+  );
 
-  final ValueNotifier<int> extZoneCountdownAuto = ValueNotifier<int>(10);
+  final ValueNotifier<int> extZoneCountdownAuto = ValueNotifier<int>(
+    ExtOutDefaults.countdownAutoBle,
+  );
 
-  final ValueNotifier<int> extZoneCountdownMan = ValueNotifier<int>(15);
+  final ValueNotifier<int> extZoneCountdownMan = ValueNotifier<int>(
+    ExtOutDefaults.countdownManBle,
+  );
 
-  final ValueNotifier<int> extZoneReleaseTime = ValueNotifier<int>(10);
+  final ValueNotifier<int> extZoneReleaseTime = ValueNotifier<int>(
+    ExtOutDefaults.releaseTimeBle,
+  );
 
-  final ValueNotifier<int> extZoneResetDelay = ValueNotifier<int>(5);
+  final ValueNotifier<int> extZoneResetDelay = ValueNotifier<int>(
+    ExtOutDefaults.resetDelayBle,
+  );
 
-  final ValueNotifier<int> extZoneAction = ValueNotifier<int>(0);
+  final ValueNotifier<int> extZoneAction = ValueNotifier<int>(
+    ExtOutDefaults.actionBle,
+  );
 
   final ValueNotifier<String> extZoneText = ValueNotifier<String>(
     "EXT-Out-Text------001",
@@ -230,17 +261,29 @@ class BleProcess {
   final ValueNotifier<bool> isInputSetupFetchCommandActive =
       ValueNotifier<bool>(false);
 
-  final ValueNotifier<String> inputSetupText = ValueNotifier<String>("");
+  final ValueNotifier<String> inputSetupText = ValueNotifier<String>(
+    InputDefaults.inputText,
+  );
 
-  final ValueNotifier<int> inputSetupGroup = ValueNotifier<int>(0);
+  final ValueNotifier<int> inputSetupGroup = ValueNotifier<int>(
+    InputDefaults.groupBle,
+  );
 
-  final ValueNotifier<int> inputSetupFunction = ValueNotifier<int>(0);
+  final ValueNotifier<int> inputSetupFunction = ValueNotifier<int>(
+    InputDefaults.functionBle,
+  );
 
-  final ValueNotifier<bool> isInputSetupEnabled = ValueNotifier<bool>(false);
+  final ValueNotifier<bool> isInputSetupEnabled = ValueNotifier<bool>(
+    InputDefaults.enabledBle,
+  );
 
-  final ValueNotifier<bool> isInputSetupTest = ValueNotifier<bool>(false);
+  final ValueNotifier<bool> isInputSetupTest = ValueNotifier<bool>(
+    InputDefaults.testBle,
+  );
 
-  final ValueNotifier<bool> isInputSetupInverted = ValueNotifier<bool>(false);
+  final ValueNotifier<bool> isInputSetupInverted = ValueNotifier<bool>(
+    InputDefaults.invertedBle,
+  );
 
   final ValueNotifier<bool> isInputSetupApplyActive = ValueNotifier<bool>(
     false,
@@ -257,53 +300,75 @@ class BleProcess {
       ValueNotifier<bool>(false);
 
   final ValueNotifier<String> relayOneSetupOutputText = ValueNotifier<String>(
-    "",
+    RelayDefaults.outputText,
   );
 
-  final ValueNotifier<int> relayOneSetupGroup = ValueNotifier<int>(0);
+  final ValueNotifier<int> relayOneSetupGroup = ValueNotifier<int>(
+    RelayDefaults.groupBle,
+  );
 
-  final ValueNotifier<int> relayOneSetupFunction = ValueNotifier<int>(0);
+  final ValueNotifier<int> relayOneSetupFunction = ValueNotifier<int>(
+    RelayDefaults.functionBle,
+  );
 
   final ValueNotifier<String> relayOneSetupDynamicText = ValueNotifier<String>(
-    "",
+    RelayDefaults.zoneNumberForRelay(0),
   );
 
-  final ValueNotifier<bool> isRelayOneSetupEnabled = ValueNotifier<bool>(false);
+  final ValueNotifier<bool> isRelayOneSetupEnabled = ValueNotifier<bool>(
+    RelayDefaults.enabledBle,
+  );
 
-  final ValueNotifier<bool> isRelayOneSetupTest = ValueNotifier<bool>(false);
+  final ValueNotifier<bool> isRelayOneSetupTest = ValueNotifier<bool>(
+    RelayDefaults.testBle,
+  );
 
   final ValueNotifier<String> relayTwoSetupOutputText = ValueNotifier<String>(
-    "",
+    RelayDefaults.outputText,
   );
 
-  final ValueNotifier<int> relayTwoSetupGroup = ValueNotifier<int>(0);
+  final ValueNotifier<int> relayTwoSetupGroup = ValueNotifier<int>(
+    RelayDefaults.groupBle,
+  );
 
-  final ValueNotifier<int> relayTwoSetupFunction = ValueNotifier<int>(0);
+  final ValueNotifier<int> relayTwoSetupFunction = ValueNotifier<int>(
+    RelayDefaults.functionBle,
+  );
 
   final ValueNotifier<String> relayTwoSetupDynamicText = ValueNotifier<String>(
-    "",
+    RelayDefaults.zoneNumberForRelay(1),
   );
 
-  final ValueNotifier<bool> isRelayTwoSetupEnabled = ValueNotifier<bool>(false);
+  final ValueNotifier<bool> isRelayTwoSetupEnabled = ValueNotifier<bool>(
+    RelayDefaults.enabledBle,
+  );
 
-  final ValueNotifier<bool> isRelayTwoSetupTest = ValueNotifier<bool>(false);
+  final ValueNotifier<bool> isRelayTwoSetupTest = ValueNotifier<bool>(
+    RelayDefaults.testBle,
+  );
 
   final ValueNotifier<String> relayThreeSetupOutputText = ValueNotifier<String>(
-    "",
+    RelayDefaults.outputText,
   );
 
-  final ValueNotifier<int> relayThreeSetupGroup = ValueNotifier<int>(0);
+  final ValueNotifier<int> relayThreeSetupGroup = ValueNotifier<int>(
+    RelayDefaults.groupBle,
+  );
 
-  final ValueNotifier<int> relayThreeSetupFunction = ValueNotifier<int>(0);
+  final ValueNotifier<int> relayThreeSetupFunction = ValueNotifier<int>(
+    RelayDefaults.functionBle,
+  );
 
   final ValueNotifier<String> relayThreeSetupDynamicText =
-      ValueNotifier<String>("");
+      ValueNotifier<String>(RelayDefaults.zoneNumberForRelay(2));
 
   final ValueNotifier<bool> isRelayThreeSetupEnabled = ValueNotifier<bool>(
-    false,
+    RelayDefaults.enabledBle,
   );
 
-  final ValueNotifier<bool> isRelayThreeSetupTest = ValueNotifier<bool>(false);
+  final ValueNotifier<bool> isRelayThreeSetupTest = ValueNotifier<bool>(
+    RelayDefaults.testBle,
+  );
 
   final ValueNotifier<String> relayOneMode = ValueNotifier<String>("");
 
@@ -323,52 +388,80 @@ class BleProcess {
 
   final ValueNotifier<bool> isZoneSetupApplyDone = ValueNotifier<bool>(false);
 
-  final ValueNotifier<bool> isZoneOneSetupEnabled = ValueNotifier<bool>(false);
+  final ValueNotifier<bool> isZoneOneSetupEnabled = ValueNotifier<bool>(
+    ZoneDefaults.enabledBle,
+  );
 
-  final ValueNotifier<bool> isZoneOneSetupTest = ValueNotifier<bool>(false);
+  final ValueNotifier<bool> isZoneOneSetupTest = ValueNotifier<bool>(
+    ZoneDefaults.testBle,
+  );
 
-  final ValueNotifier<String> zoneOneSetupText = ValueNotifier<String>("");
+  final ValueNotifier<String> zoneOneSetupText = ValueNotifier<String>(
+    ZoneDefaults.text,
+  );
 
-  final ValueNotifier<int> zoneOneSetupType = ValueNotifier<int>(0);
+  final ValueNotifier<int> zoneOneSetupType = ValueNotifier<int>(
+    ZoneDefaults.typeBle,
+  );
 
-  final ValueNotifier<int> zoneOneSetupDetectionMode = ValueNotifier<int>(0);
+  final ValueNotifier<int> zoneOneSetupDetectionMode = ValueNotifier<int>(
+    ZoneDefaults.detectionModeBle,
+  );
 
   final ValueNotifier<String> zoneOneSetupMode = ValueNotifier<String>("");
 
   final ValueNotifier<String> zoneOneSetupVerificationTime =
-      ValueNotifier<String>("");
+      ValueNotifier<String>(ZoneDefaults.verificationTime);
 
-  final ValueNotifier<bool> isZoneTwoSetupEnabled = ValueNotifier<bool>(false);
+  final ValueNotifier<bool> isZoneTwoSetupEnabled = ValueNotifier<bool>(
+    ZoneDefaults.enabledBle,
+  );
 
-  final ValueNotifier<bool> isZoneTwoSetupTest = ValueNotifier<bool>(false);
+  final ValueNotifier<bool> isZoneTwoSetupTest = ValueNotifier<bool>(
+    ZoneDefaults.testBle,
+  );
 
-  final ValueNotifier<String> zoneTwoSetupText = ValueNotifier<String>("");
+  final ValueNotifier<String> zoneTwoSetupText = ValueNotifier<String>(
+    ZoneDefaults.text,
+  );
 
-  final ValueNotifier<int> zoneTwoSetupType = ValueNotifier<int>(0);
+  final ValueNotifier<int> zoneTwoSetupType = ValueNotifier<int>(
+    ZoneDefaults.typeBle,
+  );
 
-  final ValueNotifier<int> zoneTwoSetupDetectionMode = ValueNotifier<int>(0);
+  final ValueNotifier<int> zoneTwoSetupDetectionMode = ValueNotifier<int>(
+    ZoneDefaults.detectionModeBle,
+  );
 
   final ValueNotifier<String> zoneTwoSetupMode = ValueNotifier<String>("");
 
   final ValueNotifier<String> zoneTwoSetupVerificationTime =
-      ValueNotifier<String>("");
+      ValueNotifier<String>(ZoneDefaults.verificationTime);
 
   final ValueNotifier<bool> isZoneThreeSetupEnabled = ValueNotifier<bool>(
-    false,
+    ZoneDefaults.enabledBle,
   );
 
-  final ValueNotifier<bool> isZoneThreeSetupTest = ValueNotifier<bool>(false);
+  final ValueNotifier<bool> isZoneThreeSetupTest = ValueNotifier<bool>(
+    ZoneDefaults.testBle,
+  );
 
-  final ValueNotifier<String> zoneThreeSetupText = ValueNotifier<String>("");
+  final ValueNotifier<String> zoneThreeSetupText = ValueNotifier<String>(
+    ZoneDefaults.text,
+  );
 
-  final ValueNotifier<int> zoneThreeSetupType = ValueNotifier<int>(0);
+  final ValueNotifier<int> zoneThreeSetupType = ValueNotifier<int>(
+    ZoneDefaults.typeBle,
+  );
 
-  final ValueNotifier<int> zoneThreeSetupDetectionMode = ValueNotifier<int>(0);
+  final ValueNotifier<int> zoneThreeSetupDetectionMode = ValueNotifier<int>(
+    ZoneDefaults.detectionModeBle,
+  );
 
   final ValueNotifier<String> zoneThreeSetupMode = ValueNotifier<String>("");
 
   final ValueNotifier<String> zoneThreeSetupVerificationTime =
-      ValueNotifier<String>("");
+      ValueNotifier<String>(ZoneDefaults.verificationTime);
 
   final ValueNotifier<bool> isRadioSetupFetchCommandActive =
       ValueNotifier<bool>(false);
@@ -413,7 +506,7 @@ class BleProcess {
 
   final ValueNotifier<List<LBusSetupData>> lBusSetupDataList =
       ValueNotifier<List<LBusSetupData>>(
-        List.generate(31, (_) => const LBusSetupData()),
+        List.generate(LBusDefaults.busCount, (_) => const LBusSetupData()),
       );
 
   final ValueNotifier<List<int>> enabledLBusNumbers = ValueNotifier<List<int>>(
@@ -435,84 +528,176 @@ class BleProcess {
     false,
   );
 
-  final ValueNotifier<int> sounderOneRelayFunctionGroup = ValueNotifier<int>(0);
-  final ValueNotifier<int> sounderOneRelayFunction = ValueNotifier<int>(0);
+  final ValueNotifier<int> sounderOneRelayFunctionGroup = ValueNotifier<int>(
+    SounderDefaults.groupGeneralBle,
+  );
+  final ValueNotifier<int> sounderOneRelayFunction = ValueNotifier<int>(
+    SounderDefaults.functionFireSndBle,
+  );
   final ValueNotifier<int> sounderOneFunctionNo = ValueNotifier<int>(0);
-  final ValueNotifier<String> sounderOneOutputText = ValueNotifier<String>("");
-  final ValueNotifier<bool> isSounderOneEnabled = ValueNotifier<bool>(false);
-  final ValueNotifier<bool> isSounderOneTest = ValueNotifier<bool>(false);
-  final ValueNotifier<bool> isSounderOneNormal = ValueNotifier<bool>(false);
+  final ValueNotifier<String> sounderOneOutputText = ValueNotifier<String>(
+    SounderDefaults.outputText,
+  );
+  final ValueNotifier<bool> isSounderOneEnabled = ValueNotifier<bool>(
+    SounderDefaults.enabledBle,
+  );
+  final ValueNotifier<bool> isSounderOneTest = ValueNotifier<bool>(
+    SounderDefaults.testBle,
+  );
+  final ValueNotifier<bool> isSounderOneNormal = ValueNotifier<bool>(
+    SounderDefaults.normalBle,
+  );
   final ValueNotifier<String> sounderOneRelayOutputMode = ValueNotifier<String>(
     "",
   );
 
-  final ValueNotifier<int> sounderTwoRelayFunctionGroup = ValueNotifier<int>(0);
-  final ValueNotifier<int> sounderTwoRelayFunction = ValueNotifier<int>(0);
-  final ValueNotifier<int> sounderTwoFunctionNo = ValueNotifier<int>(0);
-  final ValueNotifier<String> sounderTwoOutputText = ValueNotifier<String>("");
-  final ValueNotifier<bool> isSounderTwoEnabled = ValueNotifier<bool>(false);
-  final ValueNotifier<bool> isSounderTwoTest = ValueNotifier<bool>(false);
-  final ValueNotifier<bool> isSounderTwoNormal = ValueNotifier<bool>(false);
+  final ValueNotifier<int> sounderTwoRelayFunctionGroup = ValueNotifier<int>(
+    SounderDefaults.groupExtOutBle,
+  );
+  final ValueNotifier<int> sounderTwoRelayFunction = ValueNotifier<int>(
+    SounderDefaults.functionExtSnd1Ble,
+  );
+  final ValueNotifier<int> sounderTwoFunctionNo = ValueNotifier<int>(
+    SounderDefaults.extOutFunctionNoBle,
+  );
+  final ValueNotifier<String> sounderTwoOutputText = ValueNotifier<String>(
+    SounderDefaults.outputText,
+  );
+  final ValueNotifier<bool> isSounderTwoEnabled = ValueNotifier<bool>(
+    SounderDefaults.enabledBle,
+  );
+  final ValueNotifier<bool> isSounderTwoTest = ValueNotifier<bool>(
+    SounderDefaults.testBle,
+  );
+  final ValueNotifier<bool> isSounderTwoNormal = ValueNotifier<bool>(
+    SounderDefaults.normalBle,
+  );
   final ValueNotifier<String> sounderTwoRelayOutputMode = ValueNotifier<String>(
     "",
   );
 
   final ValueNotifier<int> sounderThreeRelayFunctionGroup = ValueNotifier<int>(
-    0,
+    SounderDefaults.groupExtOutBle,
   );
-  final ValueNotifier<int> sounderThreeRelayFunction = ValueNotifier<int>(0);
-  final ValueNotifier<int> sounderThreeFunctionNo = ValueNotifier<int>(0);
+  final ValueNotifier<int> sounderThreeRelayFunction = ValueNotifier<int>(
+    SounderDefaults.functionExtSnd2Ble,
+  );
+  final ValueNotifier<int> sounderThreeFunctionNo = ValueNotifier<int>(
+    SounderDefaults.extOutFunctionNoBle,
+  );
   final ValueNotifier<String> sounderThreeOutputText = ValueNotifier<String>(
-    "",
+    SounderDefaults.outputText,
   );
-  final ValueNotifier<bool> isSounderThreeEnabled = ValueNotifier<bool>(false);
-  final ValueNotifier<bool> isSounderThreeTest = ValueNotifier<bool>(false);
-  final ValueNotifier<bool> isSounderThreeNormal = ValueNotifier<bool>(false);
+  final ValueNotifier<bool> isSounderThreeEnabled = ValueNotifier<bool>(
+    SounderDefaults.enabledBle,
+  );
+  final ValueNotifier<bool> isSounderThreeTest = ValueNotifier<bool>(
+    SounderDefaults.testBle,
+  );
+  final ValueNotifier<bool> isSounderThreeNormal = ValueNotifier<bool>(
+    SounderDefaults.normalBle,
+  );
   final ValueNotifier<String> sounderThreeRelayOutputMode =
       ValueNotifier<String>("");
 
   final ValueNotifier<bool> isSounderGeneralEnabled = ValueNotifier<bool>(
-    false,
+    SounderDefaults.generalEnabledBle,
   );
   final ValueNotifier<String> sounderGeneralMode = ValueNotifier<String>("");
-  final ValueNotifier<bool> isSounderGeneralTest = ValueNotifier<bool>(false);
-  final ValueNotifier<int> sounderGeneralAction = ValueNotifier<int>(0);
-  final ValueNotifier<bool> isSounderGeneralDelay = ValueNotifier<bool>(false);
-  final ValueNotifier<int> sounderGeneralDelay = ValueNotifier<int>(0);
+  final ValueNotifier<bool> isSounderGeneralTest = ValueNotifier<bool>(
+    SounderDefaults.generalTestBle,
+  );
+  final ValueNotifier<int> sounderGeneralAction = ValueNotifier<int>(
+    SounderDefaults.generalActionBle,
+  );
+  final ValueNotifier<bool> isSounderGeneralDelay = ValueNotifier<bool>(
+    SounderDefaults.delayedBle,
+  );
+  final ValueNotifier<int> sounderGeneralDelay = ValueNotifier<int>(
+    SounderDefaults.delayBle,
+  );
 
-  final ValueNotifier<bool> isZoneOneEnabled = ValueNotifier<bool>(false);
-  final ValueNotifier<bool> isZoneOneTest = ValueNotifier<bool>(false);
-  final ValueNotifier<int> zoneOneAction = ValueNotifier<int>(0);
+  final ValueNotifier<bool> isZoneOneEnabled = ValueNotifier<bool>(
+    SounderDefaults.enabledBle,
+  );
+  final ValueNotifier<bool> isZoneOneTest = ValueNotifier<bool>(
+    SounderDefaults.testBle,
+  );
+  final ValueNotifier<int> zoneOneAction = ValueNotifier<int>(
+    SounderDefaults.actionContinuousBle,
+  );
   final ValueNotifier<String> sounderZoneOneMode = ValueNotifier<String>("");
 
-  final ValueNotifier<bool> isZoneTwoEnabled = ValueNotifier<bool>(false);
-  final ValueNotifier<bool> isZoneTwoTest = ValueNotifier<bool>(false);
-  final ValueNotifier<int> zoneTwoAction = ValueNotifier<int>(0);
+  final ValueNotifier<bool> isZoneTwoEnabled = ValueNotifier<bool>(
+    SounderDefaults.enabledBle,
+  );
+  final ValueNotifier<bool> isZoneTwoTest = ValueNotifier<bool>(
+    SounderDefaults.testBle,
+  );
+  final ValueNotifier<int> zoneTwoAction = ValueNotifier<int>(
+    SounderDefaults.actionContinuousBle,
+  );
   final ValueNotifier<String> sounderZoneTwoMode = ValueNotifier<String>("");
 
-  final ValueNotifier<bool> isZoneThreeEnabled = ValueNotifier<bool>(false);
-  final ValueNotifier<bool> isZoneThreeTest = ValueNotifier<bool>(false);
-  final ValueNotifier<int> zoneThreeAction = ValueNotifier<int>(0);
+  final ValueNotifier<bool> isZoneThreeEnabled = ValueNotifier<bool>(
+    SounderDefaults.enabledBle,
+  );
+  final ValueNotifier<bool> isZoneThreeTest = ValueNotifier<bool>(
+    SounderDefaults.testBle,
+  );
+  final ValueNotifier<int> zoneThreeAction = ValueNotifier<int>(
+    SounderDefaults.actionContinuousBle,
+  );
   final ValueNotifier<String> sounderZoneThreeMode = ValueNotifier<String>("");
-  final ValueNotifier<bool> isExtOutOneEnabled = ValueNotifier<bool>(false);
-  final ValueNotifier<bool> isExtOutOneTest = ValueNotifier<bool>(false);
-  final ValueNotifier<int> extoutOneCountdownAction = ValueNotifier<int>(0);
-  final ValueNotifier<int> extoutOneHoldAction = ValueNotifier<int>(0);
-  final ValueNotifier<int> extoutOneReleaseAction = ValueNotifier<int>(0);
+  final ValueNotifier<bool> isExtOutOneEnabled = ValueNotifier<bool>(
+    SounderDefaults.enabledBle,
+  );
+  final ValueNotifier<bool> isExtOutOneTest = ValueNotifier<bool>(
+    SounderDefaults.testBle,
+  );
+  final ValueNotifier<int> extoutOneCountdownAction = ValueNotifier<int>(
+    SounderDefaults.countdownActionBle,
+  );
+  final ValueNotifier<int> extoutOneHoldAction = ValueNotifier<int>(
+    SounderDefaults.holdActionBle,
+  );
+  final ValueNotifier<int> extoutOneReleaseAction = ValueNotifier<int>(
+    SounderDefaults.releaseActionBle,
+  );
   final ValueNotifier<String> sounderExtOutOneMode = ValueNotifier<String>("");
 
-  final ValueNotifier<bool> isExtOutTwoEnabled = ValueNotifier<bool>(false);
-  final ValueNotifier<bool> isExtOutTwoTest = ValueNotifier<bool>(false);
-  final ValueNotifier<int> extoutTwoCountdownAction = ValueNotifier<int>(0);
-  final ValueNotifier<int> extoutTwoHoldAction = ValueNotifier<int>(0);
-  final ValueNotifier<int> extoutTwoReleaseAction = ValueNotifier<int>(0);
+  final ValueNotifier<bool> isExtOutTwoEnabled = ValueNotifier<bool>(
+    SounderDefaults.enabledBle,
+  );
+  final ValueNotifier<bool> isExtOutTwoTest = ValueNotifier<bool>(
+    SounderDefaults.testBle,
+  );
+  final ValueNotifier<int> extoutTwoCountdownAction = ValueNotifier<int>(
+    SounderDefaults.countdownActionBle,
+  );
+  final ValueNotifier<int> extoutTwoHoldAction = ValueNotifier<int>(
+    SounderDefaults.holdActionBle,
+  );
+  final ValueNotifier<int> extoutTwoReleaseAction = ValueNotifier<int>(
+    SounderDefaults.releaseActionBle,
+  );
   final ValueNotifier<String> sounderExtOutTwoMode = ValueNotifier<String>("");
 
-  final ValueNotifier<bool> isExtOutThreeEnabled = ValueNotifier<bool>(false);
-  final ValueNotifier<bool> isExtOutThreeTest = ValueNotifier<bool>(false);
-  final ValueNotifier<int> extoutThreeCountdownAction = ValueNotifier<int>(0);
-  final ValueNotifier<int> extoutThreeHoldAction = ValueNotifier<int>(0);
-  final ValueNotifier<int> extoutThreeReleaseAction = ValueNotifier<int>(0);
+  final ValueNotifier<bool> isExtOutThreeEnabled = ValueNotifier<bool>(
+    SounderDefaults.enabledBle,
+  );
+  final ValueNotifier<bool> isExtOutThreeTest = ValueNotifier<bool>(
+    SounderDefaults.testBle,
+  );
+  final ValueNotifier<int> extoutThreeCountdownAction = ValueNotifier<int>(
+    SounderDefaults.countdownActionBle,
+  );
+  final ValueNotifier<int> extoutThreeHoldAction = ValueNotifier<int>(
+    SounderDefaults.holdActionBle,
+  );
+  final ValueNotifier<int> extoutThreeReleaseAction = ValueNotifier<int>(
+    SounderDefaults.releaseActionBle,
+  );
   final ValueNotifier<String> sounderExtOutThreeMode = ValueNotifier<String>(
     "",
   );
@@ -523,14 +708,30 @@ class BleProcess {
   final ValueNotifier<bool> isServiceDueApplyCommandActive =
       ValueNotifier<bool>(false);
   final ValueNotifier<bool> isServiceDueApplyDone = ValueNotifier<bool>(false);
-  final ValueNotifier<int> serviceDueYear = ValueNotifier<int>(0);
-  final ValueNotifier<int> serviceDueMonth = ValueNotifier<int>(0);
-  final ValueNotifier<int> serviceDueDay = ValueNotifier<int>(0);
-  final ValueNotifier<int> serviceDueHour = ValueNotifier<int>(0);
-  final ValueNotifier<int> serviceDueMinute = ValueNotifier<int>(0);
-  final ValueNotifier<String> serviceDueCompany = ValueNotifier<String>("");
-  final ValueNotifier<String> serviceDueContact = ValueNotifier<String>("");
-  final ValueNotifier<int> serviceDueReminder = ValueNotifier<int>(0);
+  final ValueNotifier<int> serviceDueYear = ValueNotifier<int>(
+    ServiceDueDefaults.year,
+  );
+  final ValueNotifier<int> serviceDueMonth = ValueNotifier<int>(
+    ServiceDueDefaults.month,
+  );
+  final ValueNotifier<int> serviceDueDay = ValueNotifier<int>(
+    ServiceDueDefaults.day,
+  );
+  final ValueNotifier<int> serviceDueHour = ValueNotifier<int>(
+    ServiceDueDefaults.hour,
+  );
+  final ValueNotifier<int> serviceDueMinute = ValueNotifier<int>(
+    ServiceDueDefaults.minute,
+  );
+  final ValueNotifier<String> serviceDueCompany = ValueNotifier<String>(
+    ServiceDueDefaults.company,
+  );
+  final ValueNotifier<String> serviceDueContact = ValueNotifier<String>(
+    ServiceDueDefaults.contact,
+  );
+  final ValueNotifier<int> serviceDueReminder = ValueNotifier<int>(
+    ServiceDueDefaults.reminderBle,
+  );
 
   final ValueNotifier<bool> isAccessCodeSetupFetchCommandActive =
       ValueNotifier<bool>(false);
@@ -557,15 +758,21 @@ class BleProcess {
     false,
   );
 
-  final ValueNotifier<int> panelInfoPanelNo = ValueNotifier<int>(0);
-  final ValueNotifier<String> panelInfoPanelName = ValueNotifier<String>("");
+  final ValueNotifier<int> panelInfoPanelNo = ValueNotifier<int>(
+    PanelInfoDefaults.panelNoBle,
+  );
+  final ValueNotifier<String> panelInfoPanelName = ValueNotifier<String>(
+    PanelInfoDefaults.panelNameBle,
+  );
   final ValueNotifier<int> panelInfoYear = ValueNotifier<int>(0);
   final ValueNotifier<int> panelInfoMonth = ValueNotifier<int>(0);
   final ValueNotifier<int> panelInfoDay = ValueNotifier<int>(0);
   final ValueNotifier<int> panelInfoHour = ValueNotifier<int>(0);
   final ValueNotifier<int> panelInfoMinute = ValueNotifier<int>(0);
   final ValueNotifier<int> panelInfoSecond = ValueNotifier<int>(0);
-  final ValueNotifier<int> panelInfoEventReminderDelay = ValueNotifier<int>(0);
+  final ValueNotifier<int> panelInfoEventReminderDelay = ValueNotifier<int>(
+    PanelInfoDefaults.delayBle,
+  );
 
   final ValueNotifier<bool> isGeneralModuleSetupFetchCommandActive =
       ValueNotifier<bool>(false);
@@ -577,15 +784,21 @@ class BleProcess {
     false,
   );
 
-  final ValueNotifier<int> generalModuleLvlTimeOut = ValueNotifier<int>(0);
+  final ValueNotifier<int> generalModuleLvlTimeOut = ValueNotifier<int>(
+    GeneralModuleDefaults.lvlTimeoutBle,
+  );
   final ValueNotifier<int> generalModuleSilenceBuzzerLvl = ValueNotifier<int>(
-    0,
+    GeneralModuleDefaults.silenceBuzzerLevelIndex,
   );
   final ValueNotifier<int> generalModuleSilenceSounderLvl = ValueNotifier<int>(
-    0,
+    GeneralModuleDefaults.silenceSoundersLevelIndex,
   );
-  final ValueNotifier<int> generalModuleResetLvl = ValueNotifier<int>(0);
-  final ValueNotifier<int> generalModuleFaultLatching = ValueNotifier<int>(0);
+  final ValueNotifier<int> generalModuleResetLvl = ValueNotifier<int>(
+    GeneralModuleDefaults.resetLevelIndex,
+  );
+  final ValueNotifier<int> generalModuleFaultLatching = ValueNotifier<int>(
+    GeneralModuleDefaults.faultLatchingIndex,
+  );
 
   final ValueNotifier<bool> isAdcSetupFetchCommandActive = ValueNotifier<bool>(
     false,
@@ -629,7 +842,15 @@ class BleProcess {
 
   int receivedPollCount = 0;
 
-  BleProcess(this.bleManager);
+  BleProcess(this.bleManager) {
+    final now = DateTime.now();
+    panelInfoYear.value = now.year;
+    panelInfoMonth.value = now.month;
+    panelInfoDay.value = now.day;
+    panelInfoHour.value = now.hour;
+    panelInfoMinute.value = now.minute;
+    panelInfoSecond.value = now.second;
+  }
 
   Future<void> bleRxFrameProcess(BleRxFrame rx) async {
     rxTimeoutRetryCount = 0;

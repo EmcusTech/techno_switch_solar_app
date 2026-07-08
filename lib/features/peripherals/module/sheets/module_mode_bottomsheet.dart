@@ -200,7 +200,7 @@ class _ModuleInfoBottomSheetState extends State<ModuleInfoBottomSheet> {
                                 onPressed: widget.onDownload,
                                 child: Text(
                                   StringConstants.download,
-                                  style: StyleConstants.black16w600Style,
+                                  style: StyleConstants.primary16w600Style,
                                 ),
                               ),
                             ),

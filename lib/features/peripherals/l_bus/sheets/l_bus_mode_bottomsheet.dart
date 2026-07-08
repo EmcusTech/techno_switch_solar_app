@@ -7,6 +7,7 @@ import 'package:techno_switch_solar_app/widgets/common/dropdown.dart';
 import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
+import 'package:techno_switch_solar_app/utils/peripherals/defaults/l_bus_defaults.dart';
 
 import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
 
@@ -226,7 +227,10 @@ class LBusBottomSheetState extends State<LBusBottomSheet> {
     return DropdownWidget(
       label: 'Select L-Bus',
       value: 'L-Bus ${controller.selectedBus}',
-      items: List.generate(31, (i) => 'L-Bus ${i + 1}'),
+      items: List.generate(
+        LBusDefaults.busCount,
+        (i) => 'L-Bus ${i + LBusDefaults.firstBusNumber}',
+      ),
       dropdownListHeight: MediaQuery.sizeOf(context).height * 0.2,
       enableSearch: true,
       onChanged: (v) {

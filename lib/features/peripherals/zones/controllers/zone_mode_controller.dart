@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/features/peripherals/shared/controllers/peripheral_mode_controller.dart';
 import 'package:techno_switch_solar_app/utils/panel_config/panel_config_cache_sync.dart';
+import 'package:techno_switch_solar_app/utils/peripherals/defaults/zone_defaults.dart';
 import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
 import 'package:techno_switch_solar_app/utils/zone_setup_manager_sync.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
@@ -10,9 +11,9 @@ import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 class ZoneConfig {
   final int zoneNumber;
 
-  String type = PanelValues.zoneTypeNone;
-  String enabled = PanelValues.noOption;
-  String mode = PanelValues.zoneModeNormal;
+  String type = ZoneDefaults.typeLabel;
+  String enabled = ZoneDefaults.enabledLabel;
+  String mode = ZoneDefaults.modeLabel;
 
   TextEditingController zoneTextController = TextEditingController();
   TextEditingController verificationTimeController = TextEditingController();
@@ -38,7 +39,19 @@ class ZoneModeController extends PeripheralModeController {
 
   @override
   void initModel() {
-    zones = List.generate(3, (i) => ZoneConfig(zoneNumber: i + 1));
+    zones = List.generate(3, (i) {
+      final zone = ZoneConfig(zoneNumber: i + 1);
+      _applyDefaultsToZone(zone);
+      return zone;
+    });
+  }
+
+  void _applyDefaultsToZone(ZoneConfig zone) {
+    zone.type = ZoneDefaults.typeLabel;
+    zone.enabled = ZoneDefaults.enabledLabel;
+    zone.mode = ZoneDefaults.modeLabel;
+    zone.zoneTextController.text = ZoneDefaults.text;
+    zone.verificationTimeController.text = ZoneDefaults.verificationTime;
   }
 
   @override
@@ -62,16 +75,19 @@ class ZoneModeController extends PeripheralModeController {
       zones[i].type =
           (z['type'] as int?) == 1
               ? PanelValues.zoneTypeIsMtl5561
-              : PanelValues.zoneTypeNone;
+              : ZoneDefaults.typeLabel;
+      final enabled = (z['enabled'] as bool?) ?? ZoneDefaults.enabledBle;
       zones[i].enabled =
-          (z['enabled'] as bool?) == true
-              ? PanelValues.yesOption
-              : PanelValues.noOption;
-      final dm = (z[StringConstants.isMTL5561] as int?) ?? 0;
+          enabled ? PanelValues.yesOption : PanelValues.noOption;
+      final dm =
+          (z[StringConstants.isMTL5561] as int?) ??
+          ZoneDefaults.detectionModeBle;
       zones[i].mode = modeOptions[dm.clamp(0, modeOptions.length - 1)];
       zones[i].verificationTimeController.text =
-          (z[StringConstants.verificationtime] as String?) ?? '0';
-      zones[i].zoneTextController.text = (z['text'] as String?) ?? '';
+          (z[StringConstants.verificationtime] as String?) ??
+          ZoneDefaults.verificationTime;
+      zones[i].zoneTextController.text =
+          (z['text'] as String?) ?? ZoneDefaults.text;
     }
     if (manager != null) {
       applyZoneTestFlagsFromCacheMap(manager!, data);
@@ -82,23 +98,30 @@ class ZoneModeController extends PeripheralModeController {
   void _normalizeVerificationTimes() {
     for (int i = 0; i < 3; i++) {
       final z = zones[i];
-      if (z.mode == StringConstants.normal || z.mode == StringConstants.none) {
+      if (z.mode == StringConstants.immediate ||
+          z.mode == StringConstants.normal) {
         z.verificationTimeController.text = '0';
-      } else if (z.mode == StringConstants.immediate) {
+      } else if (z.mode == StringConstants.confirmed) {
         z.verificationTimeController.text = '30';
       }
     }
   }
+
+  bool _requiresZeroVerification(String mode) =>
+      mode == StringConstants.immediate || mode == StringConstants.normal;
+
+  bool _requiresConfirmedVerification(String mode) =>
+      mode == StringConstants.confirmed;
+
+  String _typeLabelFromBle(int typeIndex) =>
+      typeIndex == 0 ? ZoneDefaults.typeLabel : PanelValues.zoneTypeIsMtl5561;
 
   @override
   void loadFromManager() {
     if (!Get.isRegistered<BleLogController>()) return;
     manager = Get.find<BleLogController>().bleManager;
 
-    zones[0].type =
-        manager!.zoneOneSetupType.value == 0
-            ? StringConstants.none
-            : 'IS (MTL 5561)';
+    zones[0].type = _typeLabelFromBle(manager!.zoneOneSetupType.value);
     zones[0].enabled =
         manager!.isZoneOneSetupEnabled.value ? StringConstants.yes : 'No';
     final int dm1 = manager!.zoneOneSetupDetectionMode.value;
@@ -110,10 +133,7 @@ class ZoneModeController extends PeripheralModeController {
         manager!.zoneOneSetupVerificationTime.value;
     zones[0].zoneTextController.text = manager!.zoneOneSetupText.value;
 
-    zones[1].type =
-        manager!.zoneTwoSetupType.value == 0
-            ? StringConstants.none
-            : 'IS (MTL 5561)';
+    zones[1].type = _typeLabelFromBle(manager!.zoneTwoSetupType.value);
     zones[1].enabled =
         manager!.isZoneTwoSetupEnabled.value ? StringConstants.yes : 'No';
     final int dm2 = manager!.zoneTwoSetupDetectionMode.value;
@@ -125,10 +145,7 @@ class ZoneModeController extends PeripheralModeController {
         manager!.zoneTwoSetupVerificationTime.value;
     zones[1].zoneTextController.text = manager!.zoneTwoSetupText.value;
 
-    zones[2].type =
-        manager!.zoneThreeSetupType.value == 0
-            ? StringConstants.none
-            : 'IS (MTL 5561)';
+    zones[2].type = _typeLabelFromBle(manager!.zoneThreeSetupType.value);
     zones[2].enabled =
         manager!.isZoneThreeSetupEnabled.value ? StringConstants.yes : 'No';
     final int dm3 = manager!.zoneThreeSetupDetectionMode.value;
@@ -202,12 +219,12 @@ class ZoneModeController extends PeripheralModeController {
       final zone = zones[i];
       if (zone.zoneTextController.text.length > 21) return false;
       final mode = zone.mode;
-      if (mode == StringConstants.normal || mode == StringConstants.none) {
+      if (_requiresZeroVerification(mode)) {
         if (zone.verificationTimeController.text != '0') return false;
       } else if (mode == StringConstants.verified) {
         final val = int.tryParse(zone.verificationTimeController.text);
         if (val == null || val < 10 || val > 60) return false;
-      } else if (mode == StringConstants.immediate) {
+      } else if (_requiresConfirmedVerification(mode)) {
         if (zone.verificationTimeController.text != '30') return false;
       }
     }
@@ -225,7 +242,7 @@ class ZoneModeController extends PeripheralModeController {
             'Zone text must be at most 21 characters (currently ${zone.zoneTextController.text.length})';
       }
       final mode = zone.mode;
-      if (mode == StringConstants.normal || mode == StringConstants.none) {
+      if (_requiresZeroVerification(mode)) {
         if (zone.verificationTimeController.text != '0') {
           verificationErrors[i] = StringConstants.mustBe0ForImmediateNormalMode;
         }
@@ -235,7 +252,7 @@ class ZoneModeController extends PeripheralModeController {
           verificationErrors[i] =
               StringConstants.mustBeBetween10And60ForVerifiedMode;
         }
-      } else if (mode == StringConstants.immediate) {
+      } else if (_requiresConfirmedVerification(mode)) {
         if (zone.verificationTimeController.text != '30') {
           verificationErrors[i] = StringConstants.mustBe30ForConfirmedMode;
         }
@@ -261,9 +278,9 @@ class ZoneModeController extends PeripheralModeController {
   void setMode(int index, String v) {
     final zone = zones[index];
     zone.mode = v;
-    if (v == StringConstants.normal || v == StringConstants.none) {
+    if (_requiresZeroVerification(v)) {
       zone.verificationTimeController.text = '0';
-    } else if (v == StringConstants.immediate) {
+    } else if (_requiresConfirmedVerification(v)) {
       zone.verificationTimeController.text = '30';
     }
     zoneTextErrors.remove(index);

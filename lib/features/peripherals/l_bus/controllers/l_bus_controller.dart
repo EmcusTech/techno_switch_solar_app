@@ -6,6 +6,7 @@ import 'package:techno_switch_solar_app/models/l_bus_setup_data_model.dart';
 import 'package:techno_switch_solar_app/utils/panel_config/panel_config_cache_sync.dart';
 import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
+import 'package:techno_switch_solar_app/utils/peripherals/defaults/l_bus_defaults.dart';
 
 /// Controller for the L-Bus bottom sheet. Unlike the other peripheral sheets,
 /// L-Bus is list-based (31 buses, selected via [selectedBus]) and listens to the
@@ -13,14 +14,14 @@ import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 class LBusController extends PeripheralModeController {
   LBusController({required super.deviceId, required super.refreshTrigger});
 
-  int selectedBus = 1;
+  int selectedBus = LBusDefaults.firstBusNumber;
 
   final List<String> yesNoOptions = [StringConstants.no, StringConstants.yes];
   final List<String> productOptions = ['None', StringConstants.rhino103r];
 
-  String enabled = StringConstants.no;
-  String idLed = StringConstants.no;
-  String product = 'None';
+  String enabled = LBusDefaults.enabledLabel;
+  String idLed = LBusDefaults.idLedLabel;
+  String product = LBusDefaults.productLabel;
 
   late final TextEditingController deviceTextController;
   late final TextEditingController idController;
@@ -33,14 +34,18 @@ class LBusController extends PeripheralModeController {
 
   @override
   void initModel() {
-    deviceTextController = TextEditingController();
-    idController = TextEditingController();
-    revisionController = TextEditingController();
-    productRevController = TextEditingController();
-    hardwareController = TextEditingController(text: '-');
-    firmwareController = TextEditingController(text: '-');
-    dateController = TextEditingController();
-    protocolController = TextEditingController();
+    deviceTextController = TextEditingController(text: LBusDefaults.deviceText);
+    idController = TextEditingController(text: LBusDefaults.id.toString());
+    revisionController = TextEditingController(
+      text: LBusDefaults.revision.toString(),
+    );
+    productRevController = TextEditingController(text: LBusDefaults.productRev);
+    hardwareController = TextEditingController(text: LBusDefaults.hardware);
+    firmwareController = TextEditingController(text: LBusDefaults.firmware);
+    dateController = TextEditingController(text: LBusDefaults.date);
+    protocolController = TextEditingController(
+      text: LBusDefaults.protocol.toString(),
+    );
   }
 
   @override
@@ -71,7 +76,7 @@ class LBusController extends PeripheralModeController {
     final cached = await PeripheralSetupCache.loadLBusSetup(deviceId);
     if (cached != null && cached.isNotEmpty) {
       final list = cached.map((e) => LBusSetupData.fromJson(e)).toList();
-      while (list.length < 31) {
+      while (list.length < LBusDefaults.busCount) {
         list.add(const LBusSetupData());
       }
       manager?.lBusSetupDataList.value = list;
@@ -109,8 +114,10 @@ class LBusController extends PeripheralModeController {
     idController.text = data.id.toString();
     revisionController.text = data.revision.toString();
     productRevController.text = data.productRev;
-    hardwareController.text = data.hardware.isEmpty ? '-' : data.hardware;
-    firmwareController.text = data.firmware.isEmpty ? '-' : data.firmware;
+    hardwareController.text =
+        data.hardware.isEmpty ? LBusDefaults.hardware : data.hardware;
+    firmwareController.text =
+        data.firmware.isEmpty ? LBusDefaults.firmware : data.firmware;
     dateController.text = data.date;
     protocolController.text = data.protocol.toString();
     refreshUi();

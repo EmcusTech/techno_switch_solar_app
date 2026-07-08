@@ -3,14 +3,15 @@ import 'package:get/get.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/features/peripherals/shared/controllers/peripheral_mode_controller.dart';
 import 'package:techno_switch_solar_app/utils/panel_config/panel_config_cache_sync.dart';
+import 'package:techno_switch_solar_app/utils/peripherals/defaults/relay_defaults.dart';
 import 'package:techno_switch_solar_app/utils/peripherals/peripheral_test_mode_sync.dart';
 import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
 class RelayConfig {
-  String group = 'None';
-  String function = 'None';
-  String enabled = StringConstants.no;
+  String group = RelayDefaults.groupLabel;
+  String function = RelayDefaults.functionLabel;
+  String enabled = RelayDefaults.enabledLabel;
 
   TextEditingController outputTextController = TextEditingController();
   TextEditingController dynamicController = TextEditingController();
@@ -75,7 +76,39 @@ class RelayModeController extends PeripheralModeController {
 
   @override
   void initModel() {
-    relays = List.generate(3, (_) => RelayConfig());
+    relays = List.generate(3, (i) {
+      final config = RelayConfig();
+      _applyRelayFromMap(i, RelayDefaults.relayEntry(i), config: config);
+      return config;
+    });
+  }
+
+  void _applyRelayFromMap(
+    int index,
+    Map<String, dynamic> data, {
+    RelayConfig? config,
+  }) {
+    final relay = config ?? relays[index];
+    final defaults = RelayDefaults.relayEntry(index);
+    relay.enabled =
+        (data['enabled'] as bool?) ?? defaults['enabled'] as bool
+            ? StringConstants.yes
+            : StringConstants.no;
+    final g =
+        (data['group'] as int?) ?? defaults['group'] as int;
+    relay.group = groupOptions[g.clamp(0, groupOptions.length - 1)];
+    final f =
+        (data['function'] as int?) ?? defaults['function'] as int;
+    final opts = functionOptionsMap[relay.group]!;
+    relay.function = opts[f.clamp(0, opts.length - 1)];
+    relay.outputTextController.text =
+        (data['outputText'] as String?) ?? RelayDefaults.outputText;
+    relay.dynamicController.text =
+        (data[StringConstants.outputtext] as String?) ??
+        defaults[StringConstants.outputtext] as String;
+    if (relay.group == StringConstants.extOut) {
+      relay.dynamicController.text = '1';
+    }
   }
 
   @override
@@ -96,23 +129,7 @@ class RelayModeController extends PeripheralModeController {
       final key = 'r${i + 1}';
       final r = data[key] as Map<String, dynamic>?;
       if (r == null) continue;
-      relays[i].enabled =
-          (r['enabled'] as bool?) == true
-              ? StringConstants.yes
-              : StringConstants.no;
-      final g = (r['group'] as int?) ?? 0;
-      relays[i].group = groupOptions[g.clamp(0, groupOptions.length - 1)];
-      final f = (r['function'] as int?) ?? 0;
-      final opts = functionOptionsMap[relays[i].group]!;
-      relays[i].function = opts[f.clamp(0, opts.length - 1)];
-      relays[i].outputTextController.text = (r['outputText'] as String?) ?? '';
-      relays[i].dynamicController.text =
-          (r[StringConstants.outputtext] as String?) ?? '';
-    }
-    for (int i = 0; i < 3; i++) {
-      if (relays[i].group == StringConstants.extOut) {
-        relays[i].dynamicController.text = '1';
-      }
+      _applyRelayFromMap(i, Map<String, dynamic>.from(r));
     }
     if (manager != null) {
       applyRelayTestFlagsFromCacheMap(manager!, data);

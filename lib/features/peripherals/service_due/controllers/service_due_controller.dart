@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:techno_switch_solar_app/features/peripherals/shared/controllers/peripheral_mode_controller.dart';
 import 'package:techno_switch_solar_app/utils/panel_config/panel_config_cache_sync.dart';
+import 'package:techno_switch_solar_app/utils/peripherals/defaults/service_due_defaults.dart';
 import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
 class ServiceDueConfig {
-  String reminder = StringConstants.off;
+  String reminder = ServiceDueDefaults.reminderLabel;
 
   final TextEditingController yearController = TextEditingController();
   final TextEditingController monthController = TextEditingController();
@@ -31,7 +32,16 @@ class ServiceDueController extends PeripheralModeController {
   ];
 
   @override
-  void initModel() {}
+  void initModel() {
+    config.yearController.text = ServiceDueDefaults.year.toString();
+    config.monthController.text = ServiceDueDefaults.month.toString();
+    config.dayController.text = ServiceDueDefaults.day.toString();
+    config.hourController.text = ServiceDueDefaults.hour.toString();
+    config.minuteController.text = ServiceDueDefaults.minute.toString();
+    config.companyController.text = ServiceDueDefaults.company;
+    config.contactController.text = ServiceDueDefaults.contact;
+    config.reminder = ServiceDueDefaults.reminderLabel;
+  }
 
   @override
   void disposeModel() {
@@ -50,17 +60,29 @@ class ServiceDueController extends PeripheralModeController {
 
   @override
   void applyCachedData(Map<String, dynamic> data) {
-    config.yearController.text = (data['year'] as num?)?.toString() ?? '0';
-    config.monthController.text = (data['month'] as num?)?.toString() ?? '0';
-    config.dayController.text = (data['day'] as num?)?.toString() ?? '0';
-    config.hourController.text = (data['hour'] as num?)?.toString() ?? '0';
-    config.minuteController.text = (data['minute'] as num?)?.toString() ?? '0';
-    config.companyController.text = (data['company'] as String?) ?? '';
-    config.contactController.text = (data['contact'] as String?) ?? '';
+    config.yearController.text =
+        (data['year'] as num?)?.toString() ??
+        ServiceDueDefaults.year.toString();
+    config.monthController.text =
+        (data['month'] as num?)?.toString() ??
+        ServiceDueDefaults.month.toString();
+    config.dayController.text =
+        (data['day'] as num?)?.toString() ??
+        ServiceDueDefaults.day.toString();
+    config.hourController.text =
+        (data['hour'] as num?)?.toString() ??
+        ServiceDueDefaults.hour.toString();
+    config.minuteController.text =
+        (data['minute'] as num?)?.toString() ??
+        ServiceDueDefaults.minute.toString();
+    config.companyController.text =
+        (data['company'] as String?) ?? ServiceDueDefaults.company;
+    config.contactController.text =
+        (data['contact'] as String?) ?? ServiceDueDefaults.contact;
     config.reminder =
         (data['reminder'] as int?) == 1
             ? StringConstants.on
-            : StringConstants.off;
+            : ServiceDueDefaults.reminderLabel;
   }
 
   @override
@@ -83,14 +105,22 @@ class ServiceDueController extends PeripheralModeController {
   @override
   void pushToManager() {
     final m = manager!;
-    m.serviceDueYear.value = int.parse(config.yearController.text);
-    m.serviceDueMonth.value = int.parse(config.monthController.text);
-    m.serviceDueDay.value = int.parse(config.dayController.text);
-    m.serviceDueHour.value = int.parse(config.hourController.text);
-    m.serviceDueMinute.value = int.parse(config.minuteController.text);
+    m.serviceDueYear.value =
+        int.tryParse(config.yearController.text) ?? ServiceDueDefaults.year;
+    m.serviceDueMonth.value =
+        int.tryParse(config.monthController.text) ?? ServiceDueDefaults.month;
+    m.serviceDueDay.value =
+        int.tryParse(config.dayController.text) ?? ServiceDueDefaults.day;
+    m.serviceDueHour.value =
+        int.tryParse(config.hourController.text) ?? ServiceDueDefaults.hour;
+    m.serviceDueMinute.value =
+        int.tryParse(config.minuteController.text) ?? ServiceDueDefaults.minute;
     m.serviceDueCompany.value = config.companyController.text;
     m.serviceDueContact.value = config.contactController.text;
-    m.serviceDueReminder.value = config.reminder == StringConstants.on ? 1 : 0;
+    m.serviceDueReminder.value =
+        config.reminder == StringConstants.on
+            ? 1
+            : ServiceDueDefaults.reminderBle;
   }
 
   @override
