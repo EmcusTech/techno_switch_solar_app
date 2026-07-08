@@ -91,6 +91,19 @@ mixin CreateProjectUiDelegateMixin<T extends StatefulWidget> on State<T>
   }
 
   @override
+  Future<bool?> showCreateSiteNoConfigChangesConfirmDialog() {
+    return showAppStyledTwoActionDialog<bool>(
+      context: context,
+      title: UiStrings.createSiteNoConfigChangesDialogTitle,
+      message: UiStrings.createSiteNoConfigChangesConfirmMessage,
+      leadingActionLabel: UiStrings.cancelButton,
+      trailingActionLabel: UiStrings.createButton,
+      leadingValue: false,
+      trailingValue: true,
+    );
+  }
+
+  @override
   Future<bool?> showDisconnectConfirmDialog() {
     return showDialog<bool>(
       context: context,

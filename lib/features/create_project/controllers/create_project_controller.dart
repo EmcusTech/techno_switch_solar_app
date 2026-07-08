@@ -15,6 +15,7 @@ import 'package:techno_switch_solar_app/models/create_project/zone_settings_data
 import 'package:techno_switch_solar_app/models/panel_type_config.dart';
 import 'package:techno_switch_solar_app/utils/panel_config/panel_config_cache_sync.dart';
 import 'package:techno_switch_solar_app/utils/panel_config/panel_configuration_coordinator.dart';
+import 'package:techno_switch_solar_app/utils/peripherals/peripheral_config_snapshot.dart';
 import 'package:techno_switch_solar_app/utils/constants/ble/ble_name_utils.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 import 'package:techno_switch_solar_app/utils/panel_service.dart';
@@ -58,6 +59,8 @@ class CreateProjectController extends GetxController {
   int currentStep = 1;
   String wizardDeviceId = '';
   bool offeredBulkDownload = false;
+  Map<String, Object?>? downloadedConfigBaseline;
+  bool bulkDownloadCompleted = false;
 
   CreateProjectUiDelegate? _ui;
   Future<void> Function()? _animateNextPage;
@@ -328,10 +331,38 @@ class CreateProjectController extends GetxController {
       setConnectedDevice(null);
       clearSkippedPanelConnect();
       wizardDeviceId = '';
+      offeredBulkDownload = false;
+      _clearDownloadedConfigBaseline();
       update();
       return true;
     }
     return false;
+  }
+
+  void _captureDownloadedConfigBaseline() {
+    downloadedConfigBaseline = PeripheralConfigSnapshot.fromBleManager(_bleManager);
+    bulkDownloadCompleted = true;
+  }
+
+  void _clearDownloadedConfigBaseline() {
+    downloadedConfigBaseline = null;
+    bulkDownloadCompleted = false;
+  }
+
+  bool get hasPanelConfigChanges {
+    if (!bulkDownloadCompleted || downloadedConfigBaseline == null) {
+      return true;
+    }
+
+    final current = PeripheralConfigSnapshot.fromBleManager(_bleManager);
+    final result = PeripheralConfigSnapshot.compare(
+      panelBySection: downloadedConfigBaseline!,
+      localBySection: current,
+    );
+
+    return kPeripheralConfigApplyOrder.any(
+      (section) => result.sectionMatch[section.key] != true,
+    );
   }
 
   Future<void> confirmFinishAndApply() async {
@@ -348,9 +379,19 @@ class CreateProjectController extends GetxController {
       return;
     }
 
-    final proceed = await ui.showApplyPanelSettingsConfirmDialog();
+    if (commitPanelInfoHandler == null ||
+        !(await commitPanelInfoHandler!.call())) {
+      ui.showSnackBar(StringConstants.fixPanelInformationFields, isError: true);
+      return;
+    }
+
+    final needsUpload = hasPanelConfigChanges;
+    final proceed =
+        needsUpload
+            ? await ui.showApplyPanelSettingsConfirmDialog()
+            : await ui.showCreateSiteNoConfigChangesConfirmDialog();
     if (proceed != true || !ui.isMounted) return;
-    await finishCreateSiteBulkApplyAndOpenDashboard();
+    await finishCreateSiteBulkApplyAndOpenDashboard(skipUpload: !needsUpload);
   }
 
   Future<bool> runPostConnectAssignedPanelFlow() async {
@@ -432,10 +473,18 @@ class CreateProjectController extends GetxController {
     final device = connectedDevice;
     if (device == null) return;
 
-    _panelCoordinator(
+    _clearDownloadedConfigBaseline();
+    final downloadCompleted = await _panelCoordinator(
       device,
       useDialogOnlyBulkProgress: true,
-    ).startBulkDownload(context: ui.uiContext, isMounted: () => ui.isMounted);
+    ).startBulkDownloadAwaitCompletion(
+      context: ui.uiContext,
+      isMounted: () => ui.isMounted,
+    );
+    if (!ui.isMounted) return;
+    if (downloadCompleted) {
+      _captureDownloadedConfigBaseline();
+    }
   }
 
   Future<void> runBulkApply() async {
@@ -450,19 +499,15 @@ class CreateProjectController extends GetxController {
     ).startBulkApply(context: ui.uiContext, isMounted: () => ui.isMounted);
   }
 
-  Future<void> finishCreateSiteBulkApplyAndOpenDashboard() async {
+  Future<void> finishCreateSiteBulkApplyAndOpenDashboard({
+    bool skipUpload = false,
+  }) async {
     final ui = _ui;
     if (ui == null) return;
 
     final device = connectedDevice ?? _bleManager.selectedDevice;
     if (device == null) {
       ui.showSnackBar(StringConstants.noConnectedPanel, isError: true);
-      return;
-    }
-
-    if (commitPanelInfoHandler == null ||
-        !(await commitPanelInfoHandler!.call())) {
-      ui.showSnackBar(StringConstants.fixPanelInformationFields, isError: true);
       return;
     }
 
@@ -520,7 +565,15 @@ class CreateProjectController extends GetxController {
 
       if (!ui.isMounted) return;
 
-      await runBulkApply();
+      if (skipUpload) {
+        await PanelConfigCacheSync.saveAllFromBle(
+          _bleManager,
+          device.id,
+          panelRefreshNotifiers,
+        );
+      } else {
+        await runBulkApply();
+      }
 
       if (!ui.isMounted) return;
 
@@ -665,6 +718,7 @@ class CreateProjectController extends GetxController {
     setConnectedDevice(null);
     wizardDeviceId = panelId;
     offeredBulkDownload = false;
+    _clearDownloadedConfigBaseline();
 
     clearValidationErrors();
     await ui.dismissKeyboardFully();
@@ -757,6 +811,7 @@ class CreateProjectController extends GetxController {
         }
         wizardDeviceId = '';
         offeredBulkDownload = false;
+        _clearDownloadedConfigBaseline();
         update();
       }
       await _animatePreviousPage?.call();

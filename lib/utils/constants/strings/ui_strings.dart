@@ -33,6 +33,11 @@ abstract final class UiStrings {
       'This will update the panel settings with the values you configured '
       'in this setup.';
 
+  static const String createSiteNoConfigChangesDialogTitle = 'Create site';
+  static const String createSiteNoConfigChangesConfirmMessage =
+      'No configuration changes were made. This will save the site and open '
+      'the dashboard without updating the panel.';
+
   static const String movePanelToSiteMessage =
       'This panel is assigned to another site. Move it to the new site you '
       'are creating, or skip and return home.';

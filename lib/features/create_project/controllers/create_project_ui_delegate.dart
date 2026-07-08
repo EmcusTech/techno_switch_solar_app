@@ -18,6 +18,8 @@ abstract class CreateProjectUiDelegate {
 
   Future<bool?> showApplyPanelSettingsConfirmDialog();
 
+  Future<bool?> showCreateSiteNoConfigChangesConfirmDialog();
+
   Future<bool?> showDisconnectConfirmDialog();
 
   Future<String?> showEnterPanelIdDialog({String? initialValue});

@@ -171,7 +171,7 @@ class PanelConfigurationCoordinator {
     }
   }
 
-  Future<void> startBulkDownloadAwaitCompletion({
+  Future<bool> startBulkDownloadAwaitCompletion({
     required BuildContext context,
     required bool Function() isMounted,
   }) async {
@@ -199,6 +199,7 @@ class PanelConfigurationCoordinator {
     if (configDownloadFinished) {
       await Future.delayed(const Duration(milliseconds: 2200));
     }
+    return configDownloadFinished;
   }
 
   Future<void> startBulkApply({
