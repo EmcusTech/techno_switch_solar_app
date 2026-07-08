@@ -10,6 +10,8 @@ abstract class ProjectDashboardUiDelegate {
 
   Future<bool?> showDisconnectConfirmDialog();
 
+  Future<bool?> showEventLogRetrievalConfirmDialog();
+
   void popScreen();
 
   void closeModalOverlaysAboveDashboard();

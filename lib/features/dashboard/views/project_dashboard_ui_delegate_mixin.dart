@@ -39,6 +39,7 @@ import 'package:techno_switch_solar_app/utils/panel_config/post_connect_bulk_dow
 import 'package:techno_switch_solar_app/utils/ble/bootloader_connect_flow.dart';
 import 'package:techno_switch_solar_app/utils/commissioning_test_results_helper.dart';
 import 'package:techno_switch_solar_app/utils/storage/commissioning_test_results_cache.dart';
+import 'package:techno_switch_solar_app/widgets/dialogs/app_styled_dialogs.dart';
 import 'package:techno_switch_solar_app/widgets/dialogs/ble_connecting_dialog.dart';
 import 'package:techno_switch_solar_app/widgets/dialogs/panel_access_code_dialog.dart'
     as panel_access_dialog;
@@ -73,6 +74,19 @@ mixin ProjectDashboardUiDelegateMixin<T extends StatefulWidget> on State<T>
       context: uiContext,
       barrierDismissible: false,
       builder: (_) => const DisconnectDeviceDialog(),
+    );
+  }
+
+  @override
+  Future<bool?> showEventLogRetrievalConfirmDialog() {
+    return showAppStyledTwoActionDialog<bool>(
+      context: uiContext,
+      title: UiStrings.eventLogRetrievalDialogTitle,
+      message: UiStrings.eventLogRetrievalConfirmMessage,
+      leadingActionLabel: UiStrings.cancelButton,
+      trailingActionLabel: UiStrings.continueButton,
+      leadingValue: false,
+      trailingValue: true,
     );
   }
 

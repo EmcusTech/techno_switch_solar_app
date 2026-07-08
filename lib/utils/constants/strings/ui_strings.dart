@@ -248,6 +248,11 @@ abstract final class UiStrings {
       'Are you sure you want to stop the log retrieval process? '
       'This action cannot be undone.';
 
+  static const String eventLogRetrievalDialogTitle = 'Retrieve event logs';
+  static const String eventLogRetrievalConfirmMessage =
+      'This will retrieve event logs from the panel. Stay close to the device '
+      'until retrieval completes.';
+
   static const String uploadConfigurationToPanelConfirmMessage =
       'Are you sure you want to upload this configuration to the panel?';
 

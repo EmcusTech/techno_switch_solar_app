@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:techno_switch_solar_app/features/dashboard/controllers/project_dashboard_controller.dart';
 import 'package:techno_switch_solar_app/features/dashboard/controllers/project_dashboard_ui_delegate.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
@@ -218,15 +220,25 @@ abstract final class ProjectDashboardTileActions {
 
   static void openEventLog(ProjectDashboardController c) {
     c.guardBootloaderOr(() {
-      final ui = _ui(c);
-      if (ui == null) return;
-      ui.showPasswordPopup(
-        onCall: () {
-          c.ble.bleProcess.isEventLogRetrievalFetchCommandActive.value = true;
-          c.bleController.startLogRetrieval();
-        },
-      );
+      unawaited(_openEventLogAfterConfirm(c));
     });
+  }
+
+  static Future<void> _openEventLogAfterConfirm(
+    ProjectDashboardController c,
+  ) async {
+    final ui = _ui(c);
+    if (ui == null) return;
+
+    final proceed = await ui.showEventLogRetrievalConfirmDialog();
+    if (proceed != true) return;
+
+    ui.showPasswordPopup(
+      onCall: () {
+        c.ble.bleProcess.isEventLogRetrievalFetchCommandActive.value = true;
+        c.bleController.startLogRetrieval();
+      },
+    );
   }
 
   static void openFirmwareUpgrade(ProjectDashboardController c) {
