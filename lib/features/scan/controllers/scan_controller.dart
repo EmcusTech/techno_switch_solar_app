@@ -42,6 +42,7 @@ class ScanController extends GetxController {
   ScanType? selectedScanType;
   int remainingSeconds = scanDurationSeconds;
   bool transitioningToScanned = false;
+  bool navigatingToScanAgain = false;
   bool bleConnectPauseApplied = false;
 
   static const int scanDurationSeconds = 30;
@@ -72,6 +73,7 @@ class ScanController extends GetxController {
   }
 
   void attachScanningUi(ScanUiDelegate ui) {
+    navigatingToScanAgain = false;
     _scanningUi = ui;
     _ui = ui;
   }
@@ -484,6 +486,7 @@ class ScanController extends GetxController {
     final ui = _ui;
     if (ui == null) return;
 
+    navigatingToScanAgain = true;
     await ui.openScanAgain(
       scanningArgs: ScanFlowArgs.scanning(
         isLiveEvent: isLiveEvent,
@@ -505,9 +508,10 @@ class ScanController extends GetxController {
         flowMode == ScanFlowMode.scanned;
     if (isCreateWizardReturn) {
       restoreScanningUi();
-    } else if (Get.isRegistered<ScanController>()) {
+    } else if (!navigatingToScanAgain && Get.isRegistered<ScanController>()) {
       Get.delete<ScanController>();
     }
+    navigatingToScanAgain = false;
   }
 
   String deviceDisplayName(dynamic device) {

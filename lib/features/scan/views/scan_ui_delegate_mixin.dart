@@ -23,7 +23,8 @@ import 'package:techno_switch_solar_app/features/sites/views/simple_site_creatio
 import 'package:techno_switch_solar_app/models/site_model.dart';
 import 'package:techno_switch_solar_app/utils/panel_config/post_connect_bulk_download_offer.dart'
     as post_connect_offer;
-import 'package:techno_switch_solar_app/utils/app/navigation_service.dart';
+import 'package:techno_switch_solar_app/utils/app/app_services.dart';
+import 'package:techno_switch_solar_app/utils/app/app_state.dart';
 import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
@@ -598,12 +599,15 @@ mixin ScanUiDelegateMixin<T extends StatefulWidget> on State<T>
 
   @override
   Future<void> openScanAgain({required ScanFlowArgs scanningArgs}) async {
-    await NavigationService.navigateToScanAgain(uiContext);
+    if (AppServices.isConnected) {
+      await AppServices.disconnect();
+    }
+    AppState.reset();
+
     if (!mounted) return;
     ScanBinding(args: scanningArgs).dependencies();
-    Navigator.of(uiContext).pushAndRemoveUntil(
+    Navigator.of(uiContext).pushReplacement(
       MaterialPageRoute(builder: (_) => const ScanningScreen()),
-      (route) => route.isFirst,
     );
   }
 
