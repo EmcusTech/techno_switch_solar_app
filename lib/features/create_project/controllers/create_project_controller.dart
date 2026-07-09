@@ -586,6 +586,10 @@ class CreateProjectController extends GetxController {
           _bleManager,
           device.id,
           panelRefreshNotifiers,
+          mirrorCacheToDeviceId: BleNameUtils.parseTechnoswitchPanelId(
+            device.name,
+          ),
+          advertisedPanelName: device.name,
         );
       } else {
         await runBulkApply();

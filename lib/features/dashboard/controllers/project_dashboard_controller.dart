@@ -10,11 +10,13 @@ import 'package:techno_switch_solar_app/features/dashboard/controllers/project_d
 import 'package:techno_switch_solar_app/features/dashboard/models/project_dashboard_args.dart';
 import 'package:techno_switch_solar_app/utils/panel_config/panel_config_bulk_sync.dart';
 import 'package:techno_switch_solar_app/utils/panel_config/panel_config_cache_sync.dart';
+import 'package:techno_switch_solar_app/utils/constants/ble/ble_name_utils.dart';
 import 'package:techno_switch_solar_app/utils/constants/ble/ble_msd_utils.dart';
 import 'package:techno_switch_solar_app/utils/constants/ble/bluetooth_service.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 import 'package:techno_switch_solar_app/utils/pdf/project_report_pdf_util.dart';
 import 'package:techno_switch_solar_app/utils/peripherals/peripheral_config_snapshot.dart';
+import 'package:techno_switch_solar_app/utils/peripherals/peripheral_setup_cache_resolver.dart';
 import 'package:techno_switch_solar_app/utils/site_service.dart';
 import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
 
@@ -359,21 +361,26 @@ class ProjectDashboardController extends GetxController {
     }
 
     final bp = bleController.bleProcess;
+    final cacheDeviceIds = PeripheralSetupCacheResolver.cacheDeviceIdCandidates(
+      primaryDeviceId: selectedDevice.id,
+      bleName: panelName,
+      panelVersionNo: panelVersionNo,
+    );
 
     if (_ui?.isMounted != true) return;
     try {
       await ProjectReportPdfUtil.generate(
-        deviceId: selectedDevice.id,
+        cacheDeviceIds: cacheDeviceIds,
         siteName: resolvedSiteName,
         installerName: installer,
         companyName: company,
         saqccNo: saqcc,
-        receivedPanelName: bp.receivedPanelName.value,
-        advertisedPanelName: panelName,
-        hardwareVersion: bp.receivedHardwareVersion.value,
-        firmwareVersion: bp.receivedFirmwareVersion.value,
-        firmwareDate: bp.receivedFirmwareDate.value,
-        protocolVersion: bp.receivedProtocolVersion.value,
+        fallbackAdvertisedPanelName: panelName,
+        liveReceivedPanelName: bp.receivedPanelName.value,
+        liveHardwareVersion: bp.receivedHardwareVersion.value,
+        liveFirmwareVersion: bp.receivedFirmwareVersion.value,
+        liveFirmwareDate: bp.receivedFirmwareDate.value,
+        liveProtocolVersion: bp.receivedProtocolVersion.value,
       );
     } catch (e) {
       if (_ui?.isMounted == true) {
@@ -387,6 +394,8 @@ class ProjectDashboardController extends GetxController {
       bleManager,
       selectedDevice.id,
       panelRefreshNotifiers,
+      mirrorCacheToDeviceId: BleNameUtils.parseTechnoswitchPanelId(panelName),
+      advertisedPanelName: panelName,
     );
   }
 

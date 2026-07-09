@@ -22,13 +22,14 @@ import 'package:techno_switch_solar_app/utils/peripherals/defaults/input_default
 import 'package:techno_switch_solar_app/utils/peripherals/defaults/relay_defaults.dart';
 import 'package:techno_switch_solar_app/utils/peripherals/defaults/ext_out_defaults.dart';
 import 'package:techno_switch_solar_app/utils/peripherals/defaults/l_bus_defaults.dart';
+import 'package:techno_switch_solar_app/utils/constants/ble/ble_name_utils.dart';
+import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
 import 'ble_manager.dart';
 import 'ble_frame.dart';
 import '../models/log_model.dart';
 import '../models/l_bus_setup_data_model.dart';
 import '../utils/constants/event_constants.dart';
 import '../utils/adc_parser.dart';
-import '../utils/storage/peripheral_setup_cache.dart';
 import '../utils/timestamp_converter.dart';
 
 class BleProcess {
@@ -1041,6 +1042,7 @@ class BleProcess {
           startIndex: 16,
         );
         _applyNetworkPacketVersionFields(rx.payload);
+        _persistPanelNetworkSnapshotIfConnected();
       }
 
       bleManager.otaProcessState = OtaProcessState.sendPollPacket;
@@ -2576,6 +2578,30 @@ class BleProcess {
         '${day.toString().padLeft(2, '0')}-${month.toString().padLeft(2, '0')}-$year';
     final int proto = (payload[off + 12] << 8) | payload[off + 13];
     receivedProtocolVersion.value = proto.toString();
+  }
+
+  void _persistPanelNetworkSnapshotIfConnected() {
+    final deviceId = connectedDeviceId.value.trim();
+    if (deviceId.isEmpty) return;
+
+    final advertised = bleManager.selectedDevice?.name.trim() ?? '';
+    final snapshot = {
+      'receivedPanelName': receivedPanelName.value,
+      'advertisedPanelName': advertised,
+      'hardwareVersion': receivedHardwareVersion.value,
+      'firmwareVersion': receivedFirmwareVersion.value,
+      'firmwareDate': receivedFirmwareDate.value,
+      'protocolVersion': receivedProtocolVersion.value,
+    };
+
+    unawaited(PeripheralSetupCache.savePanelNetworkSnapshot(deviceId, snapshot));
+
+    final mirrorId = BleNameUtils.parseTechnoswitchPanelId(advertised);
+    if (mirrorId != null && mirrorId.isNotEmpty && mirrorId != deviceId) {
+      unawaited(
+        PeripheralSetupCache.savePanelNetworkSnapshot(mirrorId, snapshot),
+      );
+    }
   }
 
   void resetProcessState() {

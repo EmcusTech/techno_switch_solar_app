@@ -6,6 +6,7 @@ import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/utils/panel_config/panel_access_password_popup.dart';
 import 'package:techno_switch_solar_app/utils/panel_config/panel_config_bulk_sync.dart';
+import 'package:techno_switch_solar_app/utils/constants/ble/ble_name_utils.dart';
 import 'package:techno_switch_solar_app/utils/panel_config/panel_config_cache_sync.dart';
 import 'package:techno_switch_solar_app/utils/panel_config/panel_config_feedback_dialogs.dart';
 import 'package:techno_switch_solar_app/utils/peripherals/peripheral_config_snapshot.dart';
@@ -33,6 +34,16 @@ Future<void> presentPostConnectConfigLogCompareAfterDownload({
     return PanelConfigBulkSync.buildConfigCompareResultFromCache(
       bleManager,
       device.id,
+    );
+  }
+
+  Future<void> persistDownloadedConfigToCache() {
+    return PanelConfigCacheSync.saveAllFromBle(
+      bleManager,
+      device.id,
+      refreshNotifiers,
+      mirrorCacheToDeviceId: BleNameUtils.parseTechnoswitchPanelId(device.name),
+      advertisedPanelName: device.name,
     );
   }
 
@@ -130,11 +141,7 @@ Future<void> presentPostConnectConfigLogCompareAfterDownload({
 
   Future<void> onUsePanelDataInApp() async {
     userChoseAction = true;
-    await PanelConfigCacheSync.saveAllFromBle(
-      bleManager,
-      device.id,
-      refreshNotifiers,
-    );
+    await persistDownloadedConfigToCache();
     refreshNotifiers.bumpAll();
   }
 
@@ -155,11 +162,7 @@ Future<void> presentPostConnectConfigLogCompareAfterDownload({
               bleController,
               bleManager,
             );
-            await PanelConfigCacheSync.saveAllFromBle(
-              bleManager,
-              device.id,
-              refreshNotifiers,
-            );
+            await persistDownloadedConfigToCache();
             refreshNotifiers.bumpAll();
             if (isMounted() && context.mounted) {
               showPanelApplySuccessDialog(
@@ -213,11 +216,7 @@ Future<void> presentPostConnectConfigLogCompareAfterDownload({
             bleManager,
           );
           compareResult.value = await buildCompare();
-          await PanelConfigCacheSync.saveAllFromBle(
-            bleManager,
-            device.id,
-            refreshNotifiers,
-          );
+          await persistDownloadedConfigToCache();
           refreshNotifiers.bumpAll();
         } catch (e, _) {
           compareResult.value = ConfigCompareResult.withError(
@@ -255,11 +254,7 @@ Future<void> presentPostConnectConfigLogCompareAfterDownload({
     isWorking.dispose();
     if (userChoseAction || !isMounted()) return;
     unawaited(
-      PanelConfigCacheSync.saveAllFromBle(
-        bleManager,
-        device.id,
-        refreshNotifiers,
-      ).then((_) {
+      persistDownloadedConfigToCache().then((_) {
         if (isMounted()) {
           refreshNotifiers.bumpAll();
         }

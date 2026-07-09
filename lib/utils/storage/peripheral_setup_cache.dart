@@ -25,6 +25,8 @@ class PeripheralSetupCache {
       '$_keyPrefix${deviceId}_general_module';
   static String _diagnosticKey(String deviceId) =>
       '$_keyPrefix${deviceId}_diagnostic';
+  static String _panelNetworkKey(String deviceId) =>
+      '$_keyPrefix${deviceId}_panel_network';
 
   static Future<void> saveSounderSetup(
     String deviceId,
@@ -294,6 +296,45 @@ class PeripheralSetupCache {
     }
   }
 
+  static const List<String> _cacheSuffixes = [
+    '_relay',
+    '_input',
+    '_zone',
+    '_ext_out',
+    '_radio',
+    '_module',
+    '_l_bus',
+    '_sounder',
+    '_service_due',
+    '_access_code',
+    '_panel_info',
+    '_general_module',
+    '_diagnostic',
+    '_panel_network',
+  ];
+
+  /// Network / identity fields from the connect handshake (for offline PDF export).
+  static Future<void> savePanelNetworkSnapshot(
+    String deviceId,
+    Map<String, dynamic> data,
+  ) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_panelNetworkKey(deviceId), jsonEncode(data));
+  }
+
+  static Future<Map<String, dynamic>?> loadPanelNetworkSnapshot(
+    String deviceId,
+  ) async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(_panelNetworkKey(deviceId));
+    if (raw == null) return null;
+    try {
+      return Map<String, dynamic>.from(jsonDecode(raw) as Map);
+    } catch (_) {
+      return null;
+    }
+  }
+
   static Future<void> migrateDeviceCache({
     required String fromDeviceId,
     required String toDeviceId,
@@ -305,26 +346,35 @@ class PeripheralSetupCache {
     }
 
     final prefs = await SharedPreferences.getInstance();
-    final suffixes = [
-      '_relay',
-      '_input',
-      '_zone',
-      '_ext_out',
-      '_radio',
-      '_module',
-      '_l_bus',
-      '_sounder',
-      '_service_due',
-      '_access_code',
-      '_panel_info',
-      '_general_module',
-      '_diagnostic',
-    ];
 
-    for (final suffix in suffixes) {
+    for (final suffix in _cacheSuffixes) {
       final fromKey = '$_keyPrefix$fromDeviceId$suffix';
       final toKey = '$_keyPrefix$toDeviceId$suffix';
       if (prefs.containsKey(toKey)) continue;
+      final value = prefs.getString(fromKey);
+      if (value != null) {
+        await prefs.setString(toKey, value);
+      }
+    }
+  }
+
+  /// Copies all peripheral cache entries from [fromDeviceId] to [toDeviceId],
+  /// overwriting any existing entries at the destination.
+  static Future<void> duplicateDeviceCache({
+    required String fromDeviceId,
+    required String toDeviceId,
+  }) async {
+    if (fromDeviceId.trim().isEmpty ||
+        toDeviceId.trim().isEmpty ||
+        fromDeviceId == toDeviceId) {
+      return;
+    }
+
+    final prefs = await SharedPreferences.getInstance();
+
+    for (final suffix in _cacheSuffixes) {
+      final fromKey = '$_keyPrefix$fromDeviceId$suffix';
+      final toKey = '$_keyPrefix$toDeviceId$suffix';
       final value = prefs.getString(fromKey);
       if (value != null) {
         await prefs.setString(toKey, value);

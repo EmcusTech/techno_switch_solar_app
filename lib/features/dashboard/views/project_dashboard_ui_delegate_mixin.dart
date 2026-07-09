@@ -227,6 +227,7 @@ mixin ProjectDashboardUiDelegateMixin<T extends StatefulWidget> on State<T>
       refreshNotifiers: dashboardController.panelRefreshNotifiers,
       navigatingToDeviceConnecting:
           dashboardController.navigatingToDeviceConnecting,
+      awaitDownloadIfAccepted: true,
     );
   }
 

@@ -12,6 +12,7 @@ import 'package:techno_switch_solar_app/features/logs/bindings/log_binding.dart'
 import 'package:techno_switch_solar_app/features/logs/models/log_flow_args.dart';
 import 'package:techno_switch_solar_app/features/logs/views/log_retrieval_loading_screen.dart';
 import 'package:techno_switch_solar_app/features/scan/models/scan_type.dart';
+import 'package:techno_switch_solar_app/utils/constants/ble/ble_name_utils.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
 class PanelConfigurationCoordinator {
@@ -162,10 +163,13 @@ class PanelConfigurationCoordinator {
       bleManager,
     );
     if (saveCachesAfterBulkDownload) {
+      final mirrorId = BleNameUtils.parseTechnoswitchPanelId(device.name);
       await PanelConfigCacheSync.saveAllFromBle(
         bleManager,
         device.id,
         refreshNotifiers,
+        mirrorCacheToDeviceId: mirrorId,
+        advertisedPanelName: device.name,
       );
       refreshNotifiers.bumpAll();
     }
@@ -226,6 +230,10 @@ class PanelConfigurationCoordinator {
               bleManager,
               device.id,
               refreshNotifiers,
+              mirrorCacheToDeviceId: BleNameUtils.parseTechnoswitchPanelId(
+                device.name,
+              ),
+              advertisedPanelName: device.name,
             );
             refreshNotifiers.bumpAll();
             if (!completer.isCompleted) {

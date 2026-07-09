@@ -182,11 +182,33 @@ class PanelConfigCacheSync {
     trigger.value++;
   }
 
+  static Future<void> savePanelNetworkSnapshotFromBle(
+    BleManager m,
+    String deviceId, {
+    String? advertisedPanelName,
+  }) async {
+    final bp = m.bleProcess;
+    final advertised =
+        advertisedPanelName?.trim().isNotEmpty == true
+            ? advertisedPanelName!.trim()
+            : (m.selectedDevice?.name.trim() ?? '');
+    await PeripheralSetupCache.savePanelNetworkSnapshot(deviceId, {
+      'receivedPanelName': bp.receivedPanelName.value,
+      'advertisedPanelName': advertised,
+      'hardwareVersion': bp.receivedHardwareVersion.value,
+      'firmwareVersion': bp.receivedFirmwareVersion.value,
+      'firmwareDate': bp.receivedFirmwareDate.value,
+      'protocolVersion': bp.receivedProtocolVersion.value,
+    });
+  }
+
   static Future<void> saveAllFromBle(
     BleManager m,
     String deviceId,
-    PanelConfigRefreshNotifiers n,
-  ) async {
+    PanelConfigRefreshNotifiers n, {
+    String? mirrorCacheToDeviceId,
+    String? advertisedPanelName,
+  }) async {
     await saveRelay(m, deviceId, n.relay);
     await saveInput(m, deviceId, n.input);
     await saveZone(m, deviceId, n.zone);
@@ -198,6 +220,19 @@ class PanelConfigCacheSync {
     await saveAccessCode(m, deviceId, n.accessCode);
     await savePanelInfo(m, deviceId, n.panelInfo);
     await saveGeneralModule(m, deviceId, n.generalModule);
+    await savePanelNetworkSnapshotFromBle(
+      m,
+      deviceId,
+      advertisedPanelName: advertisedPanelName,
+    );
+
+    final mirror = mirrorCacheToDeviceId?.trim() ?? '';
+    if (mirror.isNotEmpty && mirror != deviceId) {
+      await PeripheralSetupCache.duplicateDeviceCache(
+        fromDeviceId: deviceId,
+        toDeviceId: mirror,
+      );
+    }
   }
 
   /// Rehydrates in-memory BLE state from local cache (e.g. when the user skips

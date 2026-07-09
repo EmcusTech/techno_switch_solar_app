@@ -6,6 +6,7 @@ import 'package:printing/printing.dart';
 import 'package:techno_switch_solar_app/models/l_bus_setup_data_model.dart';
 import 'package:techno_switch_solar_app/utils/commissioning_test_results_helper.dart';
 import 'package:techno_switch_solar_app/utils/peripherals/peripheral_config_diff_labels.dart';
+import 'package:techno_switch_solar_app/utils/peripherals/peripheral_setup_cache_resolver.dart';
 import 'package:techno_switch_solar_app/utils/storage/commissioning_test_results_cache.dart';
 import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
 import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
@@ -49,38 +50,151 @@ class ProjectReportPdfUtil {
 
   static String _dash(String v) => v.trim().isEmpty ? '-' : v.trim();
 
-  /// Loads cached setup for [deviceId] and opens the print/share PDF dialog.
+  static String _pickField(String live, String? cached) {
+    final fromLive = live.trim();
+    if (fromLive.isNotEmpty) return fromLive;
+    final fromCache = cached?.trim() ?? '';
+    if (fromCache.isNotEmpty) return fromCache;
+    return '';
+  }
+
+  static Future<({
+    String receivedPanelName,
+    String advertisedPanelName,
+    String hardwareVersion,
+    String firmwareVersion,
+    String firmwareDate,
+    String protocolVersion,
+  })> _resolvePanelInfo({
+    required List<String> cacheDeviceIds,
+    required String fallbackAdvertisedPanelName,
+    String liveReceivedPanelName = '',
+    String liveHardwareVersion = '',
+    String liveFirmwareVersion = '',
+    String liveFirmwareDate = '',
+    String liveProtocolVersion = '',
+  }) async {
+    Map<String, dynamic>? network;
+    Map<String, dynamic>? module;
+    Map<String, dynamic>? panelInfo;
+    for (final id in cacheDeviceIds) {
+      network ??= await PeripheralSetupCache.loadPanelNetworkSnapshot(id);
+      module ??= await PeripheralSetupCache.loadModuleSetup(id);
+      panelInfo ??= await PeripheralSetupCache.loadPanelInfoSetup(id);
+    }
+
+    final advertised =
+        _pickField(
+          fallbackAdvertisedPanelName,
+          network?['advertisedPanelName'] as String?,
+        ).isNotEmpty
+            ? _pickField(
+              fallbackAdvertisedPanelName,
+              network?['advertisedPanelName'] as String?,
+            )
+            : fallbackAdvertisedPanelName.trim();
+
+    return (
+      receivedPanelName: _pickField(
+        liveReceivedPanelName,
+        network?['receivedPanelName'] as String? ??
+            module?['product'] as String? ??
+            panelInfo?['panelName'] as String?,
+      ),
+      advertisedPanelName: advertised,
+      hardwareVersion: _pickField(
+        liveHardwareVersion,
+        network?['hardwareVersion'] as String? ?? module?['hardware'] as String?,
+      ),
+      firmwareVersion: _pickField(
+        liveFirmwareVersion,
+        network?['firmwareVersion'] as String? ?? module?['firmware'] as String?,
+      ),
+      firmwareDate: _pickField(
+        liveFirmwareDate,
+        network?['firmwareDate'] as String? ?? module?['date'] as String?,
+      ),
+      protocolVersion: _pickField(
+        liveProtocolVersion,
+        network?['protocolVersion'] as String? ??
+            module?['protocol']?.toString(),
+      ),
+    );
+  }
+
+  /// Loads cached setup for [cacheDeviceIds] (tried in order) and opens the
+  /// print/share PDF dialog. Live BLE panel fields are used when non-empty.
   static Future<void> generate({
-    required String deviceId,
+    required List<String> cacheDeviceIds,
     required String siteName,
     required String installerName,
     required String companyName,
     required String saqccNo,
-    required String receivedPanelName,
-    required String advertisedPanelName,
-    required String hardwareVersion,
-    required String firmwareVersion,
-    required String firmwareDate,
-    required String protocolVersion,
+    required String fallbackAdvertisedPanelName,
+    String liveReceivedPanelName = '',
+    String liveHardwareVersion = '',
+    String liveFirmwareVersion = '',
+    String liveFirmwareDate = '',
+    String liveProtocolVersion = '',
   }) async {
-    final zone = await PeripheralSetupCache.loadZoneSetup(deviceId);
-    final input = await PeripheralSetupCache.loadInputSetup(deviceId);
-    final relay = await PeripheralSetupCache.loadRelaySetup(deviceId);
-    final extOut = await PeripheralSetupCache.loadExtOutSetup(deviceId);
-    final lBus = await PeripheralSetupCache.loadLBusSetup(deviceId);
-    final sounder = await PeripheralSetupCache.loadSounderSetup(deviceId);
-    final serviceDue = await PeripheralSetupCache.loadServiceDueSetup(deviceId);
-    final walkTestResults = await CommissioningTestResultsCache.loadItems(
-      deviceId,
-      CommissioningTestType.walkTest,
+    final ids =
+        cacheDeviceIds.where((id) => id.trim().isNotEmpty).toList(growable: false);
+    if (ids.isEmpty) {
+      throw StateError('No cache device ids for project report export.');
+    }
+
+    final zone = await PeripheralSetupCacheResolver.loadMap(
+      ids,
+      PeripheralSetupCache.loadZoneSetup,
     );
-    final relayTestResults = await CommissioningTestResultsCache.loadItems(
-      deviceId,
-      CommissioningTestType.relayTest,
+    final input = await PeripheralSetupCacheResolver.loadMap(
+      ids,
+      PeripheralSetupCache.loadInputSetup,
     );
-    final sounderTestResults = await CommissioningTestResultsCache.loadItems(
-      deviceId,
-      CommissioningTestType.sounderTest,
+    final relay = await PeripheralSetupCacheResolver.loadMap(
+      ids,
+      PeripheralSetupCache.loadRelaySetup,
+    );
+    final extOut = await PeripheralSetupCacheResolver.loadMap(
+      ids,
+      PeripheralSetupCache.loadExtOutSetup,
+    );
+    final lBus = await PeripheralSetupCacheResolver.loadList(
+      ids,
+      PeripheralSetupCache.loadLBusSetup,
+    );
+    final sounder = await PeripheralSetupCacheResolver.loadMap(
+      ids,
+      PeripheralSetupCache.loadSounderSetup,
+    );
+    final serviceDue = await PeripheralSetupCacheResolver.loadMap(
+      ids,
+      PeripheralSetupCache.loadServiceDueSetup,
+    );
+    final walkTestResults =
+        await PeripheralSetupCacheResolver.loadCommissioningItems(
+          ids,
+          CommissioningTestType.walkTest,
+        );
+    final relayTestResults =
+        await PeripheralSetupCacheResolver.loadCommissioningItems(
+          ids,
+          CommissioningTestType.relayTest,
+        );
+    final sounderTestResults =
+        await PeripheralSetupCacheResolver.loadCommissioningItems(
+          ids,
+          CommissioningTestType.sounderTest,
+        );
+
+    final panelInfo = await _resolvePanelInfo(
+      cacheDeviceIds: ids,
+      fallbackAdvertisedPanelName: fallbackAdvertisedPanelName,
+      liveReceivedPanelName: liveReceivedPanelName,
+      liveHardwareVersion: liveHardwareVersion,
+      liveFirmwareVersion: liveFirmwareVersion,
+      liveFirmwareDate: liveFirmwareDate,
+      liveProtocolVersion: liveProtocolVersion,
     );
 
     final serviceDate = _serviceDateFromDue(serviceDue);
@@ -122,12 +236,12 @@ class ProjectReportPdfUtil {
                 serviceDate: serviceDate,
               ),
               _panelInfoSection(
-                receivedPanelName: receivedPanelName,
-                advertisedPanelName: advertisedPanelName,
-                hardwareVersion: hardwareVersion,
-                firmwareVersion: firmwareVersion,
-                firmwareDate: firmwareDate,
-                protocolVersion: protocolVersion,
+                receivedPanelName: panelInfo.receivedPanelName,
+                advertisedPanelName: panelInfo.advertisedPanelName,
+                hardwareVersion: panelInfo.hardwareVersion,
+                firmwareVersion: panelInfo.firmwareVersion,
+                firmwareDate: panelInfo.firmwareDate,
+                protocolVersion: panelInfo.protocolVersion,
               ),
               _sectionHeader('ZONES'),
               _zoneBlock(zone),
