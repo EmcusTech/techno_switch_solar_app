@@ -46,6 +46,18 @@ abstract final class UiStrings {
       'Download the full configuration from the panel now? This matches the '
       'dashboard “download all” flow and fills local caches before you edit.';
 
+  static const String mandatoryConfigDownloadDialogTitle =
+      'Download panel configuration';
+  static const String mandatoryConfigDownloadDialogMessage =
+      'Configuration must be downloaded from the panel before you continue. '
+      'This loads access codes and other settings so they are not overwritten '
+      'with empty values when you finish.';
+  static const String mandatoryConfigDownloadButton = 'Download';
+  static const String configDownloadRequiredSnackBar =
+      'Download panel configuration before continuing.';
+  static const String configDownloadFailedSnackBar =
+      'Configuration download did not complete. Please try again.';
+
   // --- Site / panel ---
   static const String deleteSiteDialogTitle = 'Delete site?';
   static const String deleteSiteWarningMessage =

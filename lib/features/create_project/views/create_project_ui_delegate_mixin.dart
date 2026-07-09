@@ -154,16 +154,12 @@ mixin CreateProjectUiDelegateMixin<T extends StatefulWidget> on State<T>
   }
 
   @override
-  Future<bool?> showBulkDownloadDialog() {
-    return showAppStyledTwoActionDialog<bool>(
+  Future<void> showMandatoryConfigDownloadDialog() {
+    return showAppStyledOneActionDialog(
       context: context,
-      title: StringConstants.downloadPanelConfiguration,
-      message:
-          'Download the full configuration from the panel now? This matches the dashboard “download all” flow and fills local caches before you edit.',
-      leadingActionLabel: 'No',
-      trailingActionLabel: StringConstants.yes,
-      leadingValue: false,
-      trailingValue: true,
+      title: UiStrings.mandatoryConfigDownloadDialogTitle,
+      message: UiStrings.mandatoryConfigDownloadDialogMessage,
+      actionLabel: UiStrings.mandatoryConfigDownloadButton,
     );
   }
 

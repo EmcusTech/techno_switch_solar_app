@@ -28,7 +28,7 @@ abstract class CreateProjectUiDelegate {
 
   Future<String?> showPanelAlreadyOnSiteDialog();
 
-  Future<bool?> showBulkDownloadDialog();
+  Future<void> showMandatoryConfigDownloadDialog();
 
   Future<bool?> openScanningScreen(String? expectedPanelType);
 

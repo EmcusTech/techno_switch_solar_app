@@ -385,6 +385,14 @@ class CreateProjectController extends GetxController {
       return;
     }
 
+    if (!bulkDownloadCompleted) {
+      ui.showSnackBar(
+        UiStrings.configDownloadRequiredSnackBar,
+        isError: true,
+      );
+      return;
+    }
+
     final needsUpload = hasPanelConfigChanges;
     final proceed =
         needsUpload
@@ -433,23 +441,31 @@ class CreateProjectController extends GetxController {
     return true;
   }
 
-  Future<void> offerBulkDownloadIfNeeded() async {
+  /// Downloads full panel config after connect. Required before continuing the
+  /// wizard or finishing with a connected panel.
+  ///
+  /// Returns true when download completed successfully (or panel connect was
+  /// skipped). Returns false when download failed or was not run.
+  Future<bool> requireBulkDownloadIfNeeded() async {
     final ui = _ui;
-    if (ui == null) return;
+    if (ui == null) return false;
 
-    if (skippedPanelConnect) return;
-    if (offeredBulkDownload) return;
-    offeredBulkDownload = true;
+    if (skippedPanelConnect) return true;
+    if (bulkDownloadCompleted) return true;
 
-    if (!ui.isMounted) return;
+    if (!ui.isMounted) return false;
     await ui.settleImeBeforeShowingDialog();
-    if (!ui.isMounted) return;
+    if (!ui.isMounted) return false;
 
-    final download = await ui.showBulkDownloadDialog();
-    if (download != true || !ui.isMounted) return;
+    if (!offeredBulkDownload) {
+      offeredBulkDownload = true;
+      await ui.showMandatoryConfigDownloadDialog();
+      if (!ui.isMounted) return false;
+    }
 
-    if (connectedDevice == null) return;
+    if (connectedDevice == null) return false;
     await runBulkDownload();
+    return bulkDownloadCompleted;
   }
 
   PanelConfigurationCoordinator _panelCoordinator(
@@ -772,8 +788,16 @@ class CreateProjectController extends GetxController {
       final proceed = await runPostConnectAssignedPanelFlow();
       if (!proceed || !ui.isMounted) return;
 
-      await offerBulkDownloadIfNeeded();
+      final downloaded = await requireBulkDownloadIfNeeded();
       if (!ui.isMounted) return;
+      if (!downloaded) {
+        offeredBulkDownload = false;
+        ui.showSnackBar(
+          UiStrings.configDownloadFailedSnackBar,
+          isError: true,
+        );
+        return;
+      }
 
       clearValidationErrors();
       await ui.dismissKeyboardFully();
