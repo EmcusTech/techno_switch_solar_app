@@ -913,7 +913,7 @@ abstract final class StringConstants {
   static const String useMobileDateTime = "Use Mobile Date & Time";
   static const String usemobiletime = "useMobileTime";
   static const String userManual = "User Manual";
-  static const String testingVersion = "v0.0.51 -- testing version";
+  static const String testingVersion = "v0.0.52 -- testing version";
   static const String validating = "Validating";
   static const String validating2 = "Validating...";
   static const String verifyingAccess = "Verifying access";
