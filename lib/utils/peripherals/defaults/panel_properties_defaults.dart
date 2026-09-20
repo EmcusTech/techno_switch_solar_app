@@ -9,7 +9,8 @@ abstract final class PanelPropertiesDefaults {
   static const int eventReminderDelay = PanelInfoDefaults.delayBle;
   static const int remEnable = ServiceDueDefaults.reminderBle;
   static const int lvlTimeout = GeneralModuleDefaults.lvlTimeoutBle;
-  static const int silenceBuzzLvl = GeneralModuleDefaults.silenceBuzzerLevelIndex;
+  static const int silenceBuzzLvl =
+      GeneralModuleDefaults.silenceBuzzerLevelIndex;
   static const int silenceSndrLvl =
       GeneralModuleDefaults.silenceSoundersLevelIndex;
   static const int resetLvl = GeneralModuleDefaults.resetLevelIndex;
