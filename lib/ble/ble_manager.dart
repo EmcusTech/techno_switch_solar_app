@@ -16,7 +16,7 @@ import 'ble_encryption_config.dart';
 import 'ble_process.dart';
 import 'package:techno_switch_solar_app/models/access_code_mode_model.dart';
 import 'package:techno_switch_solar_app/models/l_bus_setup_data_model.dart';
-import 'package:techno_switch_solar_app/utils/modes/input_mode_util.dart';
+import 'package:techno_switch_solar_app/config/ble/input_setup_payload.dart';
 import 'package:techno_switch_solar_app/utils/modes/relay_mode_util.dart';
 import 'package:techno_switch_solar_app/utils/modes/general_quipment_mode_util.dart';
 import 'package:techno_switch_solar_app/utils/modes/zone_equipment_mode_util.dart';
@@ -2750,8 +2750,6 @@ class BleManager extends GetxService {
     u8Pkt[10] = BleConstants.mode.request.dbSetup;
     u8Pkt[11] = BleConstants.socket.radio;
     u8Pkt[12] = BleConstants.command.inputSetup;
-    u8Pkt[13] = BleConstants.inputSetupNoHigh;
-    u8Pkt[14] = BleConstants.inputSetupNoLow;
 
     int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
@@ -2765,15 +2763,6 @@ class BleManager extends GetxService {
   Future<void> sendInputSetupApplyCmdPkt() async {
     Uint8List u8Pkt = Uint8List(216);
 
-    final String inputText = inputSetupText.value;
-    final List<int> inputTextBytes = inputText.codeUnits;
-    final inputTextLength = inputTextBytes.length;
-    final initialindex = 26;
-
-    for (int i = 0; i < inputTextLength; i++) {
-      u8Pkt[initialindex + i] = inputTextBytes[i];
-    }
-
     u8TxPktCnt += 1;
 
     u8Pkt[0] = BleConstants.sot;
@@ -2786,37 +2775,11 @@ class BleManager extends GetxService {
     u8Pkt[10] = BleConstants.mode.instruction.dbSetup;
     u8Pkt[11] = BleConstants.socket.radio;
     u8Pkt[12] = BleConstants.command.inputSetup;
-    u8Pkt[13] = BleConstants.inputSetupNoHigh;
-    u8Pkt[14] = BleConstants.inputSetupNoLow;
-    int inputModeByte;
-    try {
-      final raw = inputMode.value.trim();
-      if (raw.isEmpty) throw FormatException(StringConstants.emptyInputMode);
-      inputModeByte = int.parse(raw, radix: 16);
-    } catch (_) {
-      final cfg = InputModeConfig(
-        inputEnable:
-            isInputSetupEnabled.value
-                ? InputEnable.enabled
-                : InputEnable.disabled,
-        inputMode: isInputSetupTest.value ? InputMode.test : InputMode.normal,
-        latchMode: LatchMode.nonLatched,
-        invertMode:
-            isInputSetupInverted.value
-                ? InvertMode.inverted
-                : InvertMode.notInverted,
-      );
-      inputModeByte = InputModeCodec.encode(cfg);
-      bleProcess.inputMode.value = InputModeCodec.encodeHex(cfg);
-    }
-    u8Pkt[15] = inputModeByte & BleConstants.base;
-    u8Pkt[16] = BleConstants.inputSetupType;
-    u8Pkt[20] = BleConstants.inputSetupTypeParams;
-    u8Pkt[21] = BleConstants.inputSetupTypeParams;
-    u8Pkt[22] = BleConstants.inputSetupTypeParams;
-    u8Pkt[23] = inputSetupGroup.value;
-    u8Pkt[24] = inputSetupFunction.value;
-    u8Pkt[25] = inputTextLength & BleConstants.base;
+
+    InputSetupPayload.writeToPacket(
+      u8Pkt,
+      InputSetupPayload.fromBleProcess(bleProcess),
+    );
 
     int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/features/peripherals/shared/controllers/peripheral_mode_controller.dart';
-import 'package:techno_switch_solar_app/utils/modes/input_mode_util.dart';
 import 'package:techno_switch_solar_app/utils/panel_config/panel_config_cache_sync.dart';
 import 'package:techno_switch_solar_app/utils/peripherals/defaults/input_defaults.dart';
 import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
@@ -114,16 +113,6 @@ class InputModeController extends PeripheralModeController {
     final isTest = test == StringConstants.yes;
     final isInverted = inverted == StringConstants.yes;
 
-    final config = InputModeConfig(
-      inputEnable: InputEnable.values[isEnabled ? 1 : 0],
-      inputMode: InputMode.values[isTest ? 1 : 0],
-      latchMode: LatchMode.nonLatched,
-      invertMode: InvertMode.values[isInverted ? 1 : 0],
-    );
-
-    final String hexValue = InputModeCodec.encodeHex(config);
-
-    manager!.inputMode.value = hexValue;
     manager!.inputSetupGroup.value = groupIndex;
     manager!.inputSetupFunction.value = functionIndex;
     manager!.isInputSetupEnabled.value = isEnabled;

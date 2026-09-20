@@ -8,7 +8,7 @@ import 'package:techno_switch_solar_app/models/adc_domain_values_model.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 import 'package:techno_switch_solar_app/utils/modes/ext_out_equipment_mode_util.dart';
 import 'package:techno_switch_solar_app/utils/modes/general_quipment_mode_util.dart';
-import 'package:techno_switch_solar_app/utils/modes/input_mode_util.dart';
+import 'package:techno_switch_solar_app/config/ble/input_setup_payload.dart';
 import 'package:techno_switch_solar_app/utils/modes/relay_mode_util.dart';
 import 'package:techno_switch_solar_app/utils/modes/ext_zone_mode_util.dart';
 import 'package:techno_switch_solar_app/utils/modes/zone_equipment_mode_util.dart';
@@ -2135,16 +2135,8 @@ class BleProcess {
         checkForInputSetupFetchRes = 0;
         isInputSetupFetchCommandActive.value = false;
         isAccessKeyValid.value = true;
-        final InputModeConfig config = InputModeCodec.fromHex(
-          rx.payload[15].toRadixString(16),
-        );
-        inputSetupGroup.value = rx.payload[23];
-        inputSetupFunction.value = rx.payload[24];
-        isInputSetupEnabled.value = config.inputEnable == InputEnable.enabled;
-        isInputSetupTest.value = config.inputMode == InputMode.test;
-        isInputSetupInverted.value = config.invertMode == InvertMode.inverted;
-        inputMode.value = InputModeCodec.encodeHex(config);
-        inputSetupText.value = extractStringFromPayload(rx.payload);
+        final config = InputSetupPayload.readFromPacket(rx.payload);
+        InputSetupPayload.applyToBleProcess(config, this);
       } else {
         startRxTimeout();
         await bleManager.sendPollPacket();
@@ -2594,7 +2586,9 @@ class BleProcess {
       'protocolVersion': receivedProtocolVersion.value,
     };
 
-    unawaited(PeripheralSetupCache.savePanelNetworkSnapshot(deviceId, snapshot));
+    unawaited(
+      PeripheralSetupCache.savePanelNetworkSnapshot(deviceId, snapshot),
+    );
 
     final mirrorId = BleNameUtils.parseTechnoswitchPanelId(advertised);
     if (mirrorId != null && mirrorId.isNotEmpty && mirrorId != deviceId) {

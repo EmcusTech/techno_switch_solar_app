@@ -4,7 +4,7 @@ import 'package:techno_switch_solar_app/models/l_bus_setup_data_model.dart';
 import 'package:techno_switch_solar_app/utils/modes/ext_out_equipment_mode_util.dart';
 import 'package:techno_switch_solar_app/utils/modes/ext_zone_mode_util.dart';
 import 'package:techno_switch_solar_app/utils/modes/general_quipment_mode_util.dart';
-import 'package:techno_switch_solar_app/utils/modes/input_mode_util.dart';
+import 'package:techno_switch_solar_app/config/structs/input_cfg_def.dart';
 import 'package:techno_switch_solar_app/utils/modes/relay_mode_util.dart';
 import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
 import 'package:techno_switch_solar_app/utils/modes/zone_equipment_mode_util.dart';
@@ -13,7 +13,6 @@ import 'package:techno_switch_solar_app/utils/peripherals/defaults/panel_info_de
 import 'package:techno_switch_solar_app/utils/peripherals/defaults/service_due_defaults.dart';
 import 'package:techno_switch_solar_app/utils/peripherals/defaults/zone_defaults.dart';
 import 'package:techno_switch_solar_app/utils/peripherals/defaults/sounder_defaults.dart';
-import 'package:techno_switch_solar_app/utils/peripherals/defaults/input_defaults.dart';
 import 'package:techno_switch_solar_app/utils/peripherals/defaults/relay_defaults.dart';
 import 'package:techno_switch_solar_app/utils/peripherals/defaults/ext_out_defaults.dart';
 import 'package:techno_switch_solar_app/utils/peripherals/defaults/l_bus_defaults.dart';
@@ -208,7 +207,9 @@ class PeripheralCacheToBle {
             ? reset.indexOf(rl)
             : GeneralModuleDefaults.resetLevelIndex;
     bp.generalModuleFaultLatching.value =
-        yn.contains(fl) ? yn.indexOf(fl) : GeneralModuleDefaults.faultLatchingIndex;
+        yn.contains(fl)
+            ? yn.indexOf(fl)
+            : GeneralModuleDefaults.faultLatchingIndex;
   }
 
   static void _applyServiceDue(BleManager m, Map<String, dynamic> data) {
@@ -259,37 +260,17 @@ class PeripheralCacheToBle {
   };
 
   static void _applyInput(BleManager m, Map<String, dynamic> data) {
-    final gIdx = _clampInt(
-      (data['group'] as num?)?.toInt() ?? InputDefaults.groupBle,
-      2,
-    );
-    final groupName = _inputGroups[gIdx];
-    final fn =
-        (data['function'] as num?)?.toInt() ?? InputDefaults.functionBle;
-    final opts = _inputFunctions[groupName]!;
-    final fi = fn.clamp(0, opts.length - 1);
+    final config = InputCfgDef.fromCacheMap(data);
+    final gIdx = _clampInt(config.inputGrp, _inputGroups.length - 1);
+    final opts = _inputFunctions[_inputGroups[gIdx]]!;
+    final fIdx = _clampInt(config.inputFunc, opts.length - 1);
 
-    final isEnabled =
-        (data['enabled'] as bool?) ?? InputDefaults.enabledBle;
-    final isTest = (data['test'] as bool?) ?? InputDefaults.testBle;
-    final isInverted =
-        (data['inverted'] as bool?) ?? InputDefaults.invertedBle;
-
-    final config = InputModeConfig(
-      inputEnable: isEnabled ? InputEnable.enabled : InputEnable.disabled,
-      inputMode: isTest ? InputMode.test : InputMode.normal,
-      latchMode: LatchMode.nonLatched,
-      invertMode: isInverted ? InvertMode.inverted : InvertMode.notInverted,
-    );
-
-    m.inputMode.value = InputModeCodec.encodeHex(config);
     m.inputSetupGroup.value = gIdx;
-    m.inputSetupFunction.value = fi;
-    m.isInputSetupEnabled.value = isEnabled;
-    m.isInputSetupTest.value = isTest;
-    m.isInputSetupInverted.value = isInverted;
-    m.inputSetupText.value =
-        (data['text'] as String?) ?? InputDefaults.inputText;
+    m.inputSetupFunction.value = fIdx;
+    m.isInputSetupEnabled.value = config.inputEnable != 0;
+    m.isInputSetupTest.value = config.inputTest != 0;
+    m.isInputSetupInverted.value = config.inputInvert != 0;
+    m.inputSetupText.value = config.inputText;
   }
 
   static void _applyRelay(BleManager m, Map<String, dynamic> data) {
@@ -308,8 +289,7 @@ class PeripheralCacheToBle {
         (r['function'] as num?)?.toInt() ?? defaults['function'] as int,
         opts.length - 1,
       );
-      final isEnabled =
-          (r['enabled'] as bool?) ?? defaults['enabled'] as bool;
+      final isEnabled = (r['enabled'] as bool?) ?? defaults['enabled'] as bool;
       final isTest = (r['test'] as bool?) ?? defaults['test'] as bool;
 
       final cfg = OutputModeConfig(
@@ -365,8 +345,7 @@ class PeripheralCacheToBle {
       final z = data['z${i + 1}'] as Map<String, dynamic>?;
       if (z == null) continue;
 
-      final typeIdx =
-          (z['type'] as num?)?.toInt() ?? ZoneDefaults.typeBle;
+      final typeIdx = (z['type'] as num?)?.toInt() ?? ZoneDefaults.typeBle;
       final enabled = (z['enabled'] as bool?) ?? ZoneDefaults.enabledBle;
       final dm = _clampInt(
         (z[StringConstants.isMTL5561] as num?)?.toInt() ??
@@ -420,8 +399,7 @@ class PeripheralCacheToBle {
         (s['function'] as num?)?.toInt() ?? defaults['function'] as int,
         opts.length - 1,
       );
-      final isEnabled =
-          (s['enabled'] as bool?) ?? defaults['enabled'] as bool;
+      final isEnabled = (s['enabled'] as bool?) ?? defaults['enabled'] as bool;
       final isTest = (s['test'] as bool?) ?? defaults['test'] as bool;
       final isNormal = (s['normal'] as bool?) ?? defaults['normal'] as bool;
       final outText =
@@ -582,8 +560,7 @@ class PeripheralCacheToBle {
       m.isSounderGeneralTest.value = gt;
       m.isSounderGeneralDelay.value = gd;
       m.sounderGeneralAction.value =
-          (gen['action'] as num?)?.toInt() ??
-          SounderDefaults.generalActionBle;
+          (gen['action'] as num?)?.toInt() ?? SounderDefaults.generalActionBle;
       m.sounderGeneralDelay.value =
           (gen['delay'] as num?)?.toInt() ?? SounderDefaults.delayBle;
 
@@ -641,8 +618,7 @@ class PeripheralCacheToBle {
         (data['countdownMan'] as num?)?.toInt() ??
         ExtOutDefaults.countdownManBle;
     m.extZoneReleaseTime.value =
-        (data['releaseTime'] as num?)?.toInt() ??
-        ExtOutDefaults.releaseTimeBle;
+        (data['releaseTime'] as num?)?.toInt() ?? ExtOutDefaults.releaseTimeBle;
     m.extZoneResetDelay.value =
         (data[StringConstants.resetdelay] as num?)?.toInt() ??
         ExtOutDefaults.resetDelayBle;
