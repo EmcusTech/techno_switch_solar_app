@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:techno_switch_solar_app/config/ble/panel_properties_setup_payload_debug.dart';
 import 'package:get/get.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/features/peripherals/shared/controllers/peripheral_mode_controller.dart';
@@ -230,6 +232,10 @@ class PanelInfoController extends PeripheralModeController {
     manager!.panelInfoEventReminderDelay.value =
         int.tryParse(config.delayController.text) ??
         PanelInfoDefaults.delayBle;
+
+    if (kDebugMode) {
+      PanelPropertiesSetupPayloadDebug.printApplyFrame(manager!);
+    }
   }
 
   @override

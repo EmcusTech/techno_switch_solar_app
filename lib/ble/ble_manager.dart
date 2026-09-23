@@ -16,7 +16,20 @@ import 'ble_encryption_config.dart';
 import 'ble_process.dart';
 import 'package:techno_switch_solar_app/models/access_code_mode_model.dart';
 import 'package:techno_switch_solar_app/models/l_bus_setup_data_model.dart';
+import 'package:techno_switch_solar_app/config/ble/ext_out_setup_payload.dart';
+import 'package:techno_switch_solar_app/config/ble/ext_out_setup_payload_debug.dart';
 import 'package:techno_switch_solar_app/config/ble/input_setup_payload.dart';
+import 'package:techno_switch_solar_app/config/ble/input_setup_payload_debug.dart';
+import 'package:techno_switch_solar_app/config/ble/panel_access_lvl_setup_payload.dart';
+import 'package:techno_switch_solar_app/config/ble/panel_access_lvl_setup_payload_debug.dart';
+import 'package:techno_switch_solar_app/config/ble/panel_properties_setup_payload.dart';
+import 'package:techno_switch_solar_app/config/ble/panel_properties_setup_payload_debug.dart';
+import 'package:techno_switch_solar_app/config/ble/relay_setup_payload.dart';
+import 'package:techno_switch_solar_app/config/ble/relay_setup_payload_debug.dart';
+import 'package:techno_switch_solar_app/config/ble/sounder_setup_payload.dart';
+import 'package:techno_switch_solar_app/config/ble/sounder_setup_payload_debug.dart';
+import 'package:techno_switch_solar_app/config/ble/zone_setup_payload.dart';
+import 'package:techno_switch_solar_app/config/ble/zone_setup_payload_debug.dart';
 import 'package:techno_switch_solar_app/utils/modes/relay_mode_util.dart';
 import 'package:techno_switch_solar_app/utils/modes/general_quipment_mode_util.dart';
 import 'package:techno_switch_solar_app/utils/modes/zone_equipment_mode_util.dart';
@@ -2443,6 +2456,8 @@ class BleManager extends GetxService {
     pkt[214] = checksum & BleConstants.base;
     pkt[215] = BleConstants.eot;
 
+    Logger("Access Key Packet: $pkt");
+
     await sendSmallDataFrame(0x1000, 216, pkt);
   }
 
@@ -2652,60 +2667,47 @@ class BleManager extends GetxService {
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
 
-  Future<void> sendExtOutSetupApplyCmdPkt() async {
-    Uint8List u8Pkt = Uint8List(216);
+  /// Builds the SETUP_EXT_OUT apply packet. When [previewOnly] is true, the TX
+  /// counter is not incremented (for offline UI debugging).
+  Uint8List buildExtOutSetupApplyPacket({bool previewOnly = false}) {
+    final u8Pkt = Uint8List(216);
 
-    final int autoDelay = extZoneCountdownAuto.value;
-    final int manDelay = extZoneCountdownMan.value;
-    final int releasePeriod = extZoneReleaseTime.value;
-    final int resetDelay = extZoneResetDelay.value;
-    final String extZoneString = extZoneText.value;
-    final List<int> extZoneTextBytes = extZoneString.codeUnits;
-    final extZoneTextLength = extZoneTextBytes.length;
-    final initialindex = 41;
-
-    for (int i = 0; i < extZoneTextLength; i++) {
-      u8Pkt[initialindex + i] = extZoneTextBytes[i];
+    if (!previewOnly) {
+      u8TxPktCnt += 1;
     }
 
-    u8TxPktCnt += 1;
+    final txCount = previewOnly ? (u8TxPktCnt + 1) : u8TxPktCnt;
 
     u8Pkt[0] = BleConstants.sot;
     u8Pkt[1] = BleConstants.des;
     u8Pkt[2] = BleConstants.ori;
     u8Pkt[3] = BleConstants.type.nrm;
-    u8Pkt[4] = u8TxPktCnt & BleConstants.base;
+    u8Pkt[4] = txCount & BleConstants.base;
     u8Pkt[5] = u8RxPktCnt & BleConstants.base;
     u8Pkt[6] = BleConstants.network.radio;
     u8Pkt[10] = BleConstants.mode.instruction.dbSetup;
     u8Pkt[11] = BleConstants.socket.radio;
     u8Pkt[12] = BleConstants.command.extOut;
-    u8Pkt[13] = BleConstants.extZoneNo;
-    u8Pkt[14] = int.parse(extZoneMode.value, radix: 16);
-    u8Pkt[15] = BleConstants.extZoneTriggerArea;
-    u8Pkt[16] = extZoneActuatorType.value;
-    u8Pkt[17] = (autoDelay >> 8) & BleConstants.base;
-    u8Pkt[18] = autoDelay & BleConstants.base;
-    u8Pkt[19] = (manDelay >> 8) & BleConstants.base;
-    u8Pkt[20] = manDelay & BleConstants.base;
-    u8Pkt[21] = (releasePeriod >> 8) & BleConstants.base;
-    u8Pkt[22] = releasePeriod & BleConstants.base;
-    u8Pkt[23] = (resetDelay >> 8) & BleConstants.base;
-    u8Pkt[24] = resetDelay & BleConstants.base;
-    u8Pkt[25] = extZoneAction.value;
-    u8Pkt[26] = extZoneFunction.value;
-    u8Pkt[27] = BleConstants.extZoneValveDelay;
-    u8Pkt[28] = BleConstants.extZoneExtractionTimeHigh;
-    u8Pkt[29] = BleConstants.extZoneExtractionTimeLow;
-    u8Pkt[30] = BleConstants.extZoneExtractionDelayHigh;
-    u8Pkt[31] = BleConstants.extZoneExtractionDelayLow;
-    u8Pkt[40] = extZoneTextLength & BleConstants.base;
 
-    int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
+    final extOutConfig = ExtOutSetupPayload.fromBleProcess(bleProcess);
+    ExtOutSetupPayload.writeToPacket(u8Pkt, extOutConfig);
+
+    final checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
     u8Pkt[213] = (checksum >> 8) & BleConstants.base;
     u8Pkt[214] = checksum & BleConstants.base;
     u8Pkt[215] = BleConstants.eot;
+
+    return u8Pkt;
+  }
+
+  Future<void> sendExtOutSetupApplyCmdPkt() async {
+    final u8Pkt = buildExtOutSetupApplyPacket();
+
+    ExtOutSetupPayloadDebug.printFrame(
+      u8Pkt,
+      label: 'SETUP_EXT_OUT APPLY (TX)',
+    );
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
@@ -2760,8 +2762,54 @@ class BleManager extends GetxService {
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
 
+  /// Builds the SETUP_INPUT apply packet. When [previewOnly] is true, the TX
+  /// counter is not incremented (for offline UI debugging).
+  Uint8List buildInputSetupApplyPacket({bool previewOnly = false}) {
+    final u8Pkt = Uint8List(216);
+
+    if (!previewOnly) {
+      u8TxPktCnt += 1;
+    }
+
+    final txCount = previewOnly ? (u8TxPktCnt + 1) : u8TxPktCnt;
+
+    u8Pkt[0] = BleConstants.sot;
+    u8Pkt[1] = BleConstants.des;
+    u8Pkt[2] = BleConstants.ori;
+    u8Pkt[3] = BleConstants.type.nrm;
+    u8Pkt[4] = txCount & BleConstants.base;
+    u8Pkt[5] = u8RxPktCnt & BleConstants.base;
+    u8Pkt[6] = BleConstants.network.radio;
+    u8Pkt[10] = BleConstants.mode.instruction.dbSetup;
+    u8Pkt[11] = BleConstants.socket.radio;
+    u8Pkt[12] = BleConstants.command.inputSetup;
+
+    final inputConfig = InputSetupPayload.fromBleProcess(bleProcess);
+    InputSetupPayload.writeToPacket(u8Pkt, inputConfig);
+
+    final checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
+
+    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
+    u8Pkt[214] = checksum & BleConstants.base;
+    u8Pkt[215] = BleConstants.eot;
+
+    return u8Pkt;
+  }
+
   Future<void> sendInputSetupApplyCmdPkt() async {
-    Uint8List u8Pkt = Uint8List(216);
+    final u8Pkt = buildInputSetupApplyPacket();
+
+    InputSetupPayloadDebug.printFrame(u8Pkt, label: 'SETUP_INPUT APPLY (TX)');
+
+    await sendSmallDataFrame(0x1000, 216, u8Pkt);
+  }
+
+  Future<void> sendSounderSetupFetchCmdPkt({required int sounderNum}) async {
+    if (sounderNum < 1 || sounderNum > 3) {
+      throw RangeError('sounderNum must be 1..3, got $sounderNum');
+    }
+
+    final u8Pkt = Uint8List(216);
 
     u8TxPktCnt += 1;
 
@@ -2772,20 +2820,72 @@ class BleManager extends GetxService {
     u8Pkt[4] = u8TxPktCnt & BleConstants.base;
     u8Pkt[5] = u8RxPktCnt & BleConstants.base;
     u8Pkt[6] = BleConstants.network.radio;
-    u8Pkt[10] = BleConstants.mode.instruction.dbSetup;
+    u8Pkt[10] = BleConstants.mode.request.dbSetup;
     u8Pkt[11] = BleConstants.socket.radio;
-    u8Pkt[12] = BleConstants.command.inputSetup;
+    u8Pkt[12] = BleConstants.command.sounderSetup;
+    u8Pkt[13] = sounderNum;
 
-    InputSetupPayload.writeToPacket(
-      u8Pkt,
-      InputSetupPayload.fromBleProcess(bleProcess),
-    );
-
-    int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
+    final checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
     u8Pkt[213] = (checksum >> 8) & BleConstants.base;
     u8Pkt[214] = checksum & BleConstants.base;
     u8Pkt[215] = BleConstants.eot;
+
+    await sendSmallDataFrame(0x1000, 216, u8Pkt);
+  }
+
+  /// Builds a SETUP_SOUNDER apply packet for [sounderNum] (1..3). When
+  /// [previewOnly] is true, the TX counter is not incremented (for offline UI
+  /// debugging).
+  Uint8List buildSounderSetupApplyPacket(
+    int sounderNum, {
+    bool previewOnly = false,
+  }) {
+    if (sounderNum < 1 || sounderNum > 3) {
+      throw RangeError('sounderNum must be 1..3, got $sounderNum');
+    }
+
+    final u8Pkt = Uint8List(216);
+
+    if (!previewOnly) {
+      u8TxPktCnt += 1;
+    }
+
+    final txCount = previewOnly ? (u8TxPktCnt + 1) : u8TxPktCnt;
+
+    u8Pkt[0] = BleConstants.sot;
+    u8Pkt[1] = BleConstants.des;
+    u8Pkt[2] = BleConstants.ori;
+    u8Pkt[3] = BleConstants.type.nrm;
+    u8Pkt[4] = txCount & BleConstants.base;
+    u8Pkt[5] = u8RxPktCnt & BleConstants.base;
+    u8Pkt[6] = BleConstants.network.radio;
+    u8Pkt[10] = BleConstants.mode.instruction.dbSetup;
+    u8Pkt[11] = BleConstants.socket.radio;
+    u8Pkt[12] = BleConstants.command.sounderSetup;
+
+    final sounderConfig = SounderSetupPayload.fromBleProcess(
+      bleProcess,
+      sounderNum - 1,
+    );
+    SounderSetupPayload.writeToPacket(u8Pkt, sounderConfig);
+
+    final checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
+
+    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
+    u8Pkt[214] = checksum & BleConstants.base;
+    u8Pkt[215] = BleConstants.eot;
+
+    return u8Pkt;
+  }
+
+  Future<void> sendSounderSetupApplyCmdPkt({required int sounderNum}) async {
+    final u8Pkt = buildSounderSetupApplyPacket(sounderNum);
+
+    SounderSetupPayloadDebug.printFrame(
+      u8Pkt,
+      label: 'SETUP_SOUNDER APPLY S$sounderNum (TX)',
+    );
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
@@ -2889,16 +2989,6 @@ class BleManager extends GetxService {
       final b = OutputModeCodec.encode(cfg);
       modeHex.value = OutputModeCodec.encodeHex(cfg);
       return b;
-    }
-  }
-
-  int _parseRelayDynamicFieldByte(String raw) {
-    final t = raw.trim();
-    if (t.isEmpty) return 0;
-    try {
-      return int.parse(t, radix: 16) & BleConstants.base;
-    } catch (_) {
-      return 0;
     }
   }
 
@@ -3031,152 +3121,79 @@ class BleManager extends GetxService {
     }
   }
 
-  Future<void> sendRelaySetupApplyFirstCmdPkt() async {
-    Uint8List u8Pkt = Uint8List(216);
-
-    final String outputText = relayOneSetupOutputText.value;
-    final List<int> outputTextBytes = outputText.codeUnits;
-    final outputTextLength = outputTextBytes.length;
-    final initialindex = 26;
-
-    for (int i = 0; i < outputTextLength; i++) {
-      u8Pkt[initialindex + i] = outputTextBytes[i];
+  /// Builds a SETUP_RELAY apply packet for [relayNum] (1..3). When [previewOnly]
+  /// is true, the TX counter is not incremented (for offline UI debugging).
+  Uint8List buildRelaySetupApplyPacket(
+    int relayNum, {
+    bool previewOnly = false,
+  }) {
+    if (relayNum < 1 || relayNum > 3) {
+      throw RangeError('relayNum must be 1..3, got $relayNum');
     }
 
-    u8TxPktCnt += 1;
+    final u8Pkt = Uint8List(216);
+
+    if (!previewOnly) {
+      u8TxPktCnt += 1;
+    }
+
+    final txCount = previewOnly ? (u8TxPktCnt + 1) : u8TxPktCnt;
 
     u8Pkt[0] = BleConstants.sot;
     u8Pkt[1] = BleConstants.des;
     u8Pkt[2] = BleConstants.ori;
     u8Pkt[3] = BleConstants.type.nrm;
-    u8Pkt[4] = u8TxPktCnt & BleConstants.base;
+    u8Pkt[4] = txCount & BleConstants.base;
     u8Pkt[5] = u8RxPktCnt & BleConstants.base;
     u8Pkt[6] = BleConstants.network.radio;
     u8Pkt[10] = BleConstants.mode.instruction.dbSetup;
     u8Pkt[11] = BleConstants.socket.radio;
     u8Pkt[12] = BleConstants.command.relaySetup;
-    u8Pkt[13] = BleConstants.firstOutputNoHigh;
-    u8Pkt[14] = BleConstants.firstOutputNoLow;
-    u8Pkt[15] = _relayOutputModeByteForApply(
-      modeHex: relayOneMode,
-      enabled: isRelayOneSetupEnabled.value,
-      test: isRelayOneSetupTest.value,
-    );
-    u8Pkt[16] = BleConstants.outputSetupType;
-    u8Pkt[20] = BleConstants.firstOutputSetupTypeParams;
-    u8Pkt[22] =
-        relayOneSetupDynamicText.value.isNotEmpty
-            ? _parseRelayDynamicFieldByte(relayOneSetupDynamicText.value)
-            : BleConstants.init;
-    u8Pkt[23] = relayOneSetupGroup.value;
-    u8Pkt[24] = relayOneSetupFunction.value;
-    u8Pkt[25] = outputTextLength & BleConstants.base;
 
-    int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
+    final relayConfig = RelaySetupPayload.fromBleProcess(
+      bleProcess,
+      relayNum - 1,
+    );
+    RelaySetupPayload.writeToPacket(u8Pkt, relayConfig);
+
+    final checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
     u8Pkt[213] = (checksum >> 8) & BleConstants.base;
     u8Pkt[214] = checksum & BleConstants.base;
     u8Pkt[215] = BleConstants.eot;
+
+    return u8Pkt;
+  }
+
+  Future<void> sendRelaySetupApplyFirstCmdPkt() async {
+    final u8Pkt = buildRelaySetupApplyPacket(1);
+
+    RelaySetupPayloadDebug.printFrame(
+      u8Pkt,
+      label: 'SETUP_RELAY APPLY R1 (TX)',
+    );
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
 
   Future<void> sendRelaySetupApplySecondCmdPkt() async {
-    Uint8List u8Pkt = Uint8List(216);
+    final u8Pkt = buildRelaySetupApplyPacket(2);
 
-    final String outputText = relayTwoSetupOutputText.value;
-    final List<int> outputTextBytes = outputText.codeUnits;
-    final outputTextLength = outputTextBytes.length;
-    final initialindex = 26;
-
-    for (int i = 0; i < outputTextLength; i++) {
-      u8Pkt[initialindex + i] = outputTextBytes[i];
-    }
-
-    u8TxPktCnt += 1;
-
-    u8Pkt[0] = BleConstants.sot;
-    u8Pkt[1] = BleConstants.des;
-    u8Pkt[2] = BleConstants.ori;
-    u8Pkt[3] = BleConstants.type.nrm;
-    u8Pkt[4] = u8TxPktCnt & BleConstants.base;
-    u8Pkt[5] = u8RxPktCnt & BleConstants.base;
-    u8Pkt[6] = BleConstants.network.radio;
-    u8Pkt[10] = BleConstants.mode.instruction.dbSetup;
-    u8Pkt[11] = BleConstants.socket.radio;
-    u8Pkt[12] = BleConstants.command.relaySetup;
-    u8Pkt[13] = BleConstants.secondOutputNoHigh;
-    u8Pkt[14] = BleConstants.secondtOutputNoLow;
-    u8Pkt[15] = _relayOutputModeByteForApply(
-      modeHex: relayTwoMode,
-      enabled: isRelayTwoSetupEnabled.value,
-      test: isRelayTwoSetupTest.value,
+    RelaySetupPayloadDebug.printFrame(
+      u8Pkt,
+      label: 'SETUP_RELAY APPLY R2 (TX)',
     );
-    u8Pkt[16] = BleConstants.outputSetupType;
-    u8Pkt[20] = BleConstants.secondOutputSetupTypeParams;
-    u8Pkt[22] =
-        relayTwoSetupDynamicText.value.isNotEmpty
-            ? _parseRelayDynamicFieldByte(relayTwoSetupDynamicText.value)
-            : BleConstants.init;
-    u8Pkt[23] = relayTwoSetupGroup.value;
-    u8Pkt[24] = relayTwoSetupFunction.value;
-    u8Pkt[25] = outputTextLength & BleConstants.base;
-
-    int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
-
-    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
-    u8Pkt[214] = checksum & BleConstants.base;
-    u8Pkt[215] = BleConstants.eot;
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
 
   Future<void> sendRelaySetupApplyThirdCmdPkt() async {
-    Uint8List u8Pkt = Uint8List(216);
+    final u8Pkt = buildRelaySetupApplyPacket(3);
 
-    final String outputText = relayThreeSetupOutputText.value;
-    final List<int> outputTextBytes = outputText.codeUnits;
-    final outputTextLength = outputTextBytes.length;
-    final initialindex = 26;
-
-    for (int i = 0; i < outputTextLength; i++) {
-      u8Pkt[initialindex + i] = outputTextBytes[i];
-    }
-
-    u8TxPktCnt += 1;
-
-    u8Pkt[0] = BleConstants.sot;
-    u8Pkt[1] = BleConstants.des;
-    u8Pkt[2] = BleConstants.ori;
-    u8Pkt[3] = BleConstants.type.nrm;
-    u8Pkt[4] = u8TxPktCnt & BleConstants.base;
-    u8Pkt[5] = u8RxPktCnt & BleConstants.base;
-    u8Pkt[6] = BleConstants.network.radio;
-    u8Pkt[10] = BleConstants.mode.instruction.dbSetup;
-    u8Pkt[11] = BleConstants.socket.radio;
-    u8Pkt[12] = BleConstants.command.relaySetup;
-    u8Pkt[13] = BleConstants.thirdOutputNoHigh;
-    u8Pkt[14] = BleConstants.thirdtOutputNoLow;
-    u8Pkt[15] = _relayOutputModeByteForApply(
-      modeHex: relayThreeMode,
-      enabled: isRelayThreeSetupEnabled.value,
-      test: isRelayThreeSetupTest.value,
+    RelaySetupPayloadDebug.printFrame(
+      u8Pkt,
+      label: 'SETUP_RELAY APPLY R3 (TX)',
     );
-    u8Pkt[16] = BleConstants.outputSetupType;
-    u8Pkt[20] = BleConstants.thirdOutputSetupTypeParams;
-    u8Pkt[22] =
-        relayThreeSetupDynamicText.value.isNotEmpty
-            ? _parseRelayDynamicFieldByte(relayThreeSetupDynamicText.value)
-            : BleConstants.init;
-    u8Pkt[23] = relayThreeSetupGroup.value;
-    u8Pkt[24] = relayThreeSetupFunction.value;
-    u8Pkt[25] = outputTextLength & BleConstants.base;
-
-    int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
-
-    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
-    u8Pkt[214] = checksum & BleConstants.base;
-    u8Pkt[215] = BleConstants.eot;
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
@@ -3259,151 +3276,64 @@ class BleManager extends GetxService {
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
 
-  Future<void> sendZoneSetupApplyFirstCmdPkt() async {
-    Uint8List u8Pkt = Uint8List(216);
-
-    final String zoneText = zoneOneSetupText.value;
-    final List<int> zoneTextBytes = zoneText.codeUnits;
-    final zoneTextLength = zoneTextBytes.length;
-    final initialindex = 19;
-
-    for (int i = 0; i < zoneTextLength; i++) {
-      u8Pkt[initialindex + i] = zoneTextBytes[i];
+  /// Builds a SETUP_ZONE apply packet for [zoneNum] (1..3). When [previewOnly]
+  /// is true, the TX counter is not incremented (for offline UI debugging).
+  Uint8List buildZoneSetupApplyPacket(int zoneNum, {bool previewOnly = false}) {
+    if (zoneNum < 1 || zoneNum > 3) {
+      throw RangeError('zoneNum must be 1..3, got $zoneNum');
     }
 
-    u8TxPktCnt += 1;
+    final u8Pkt = Uint8List(216);
+
+    if (!previewOnly) {
+      u8TxPktCnt += 1;
+    }
+
+    final txCount = previewOnly ? (u8TxPktCnt + 1) : u8TxPktCnt;
 
     u8Pkt[0] = BleConstants.sot;
     u8Pkt[1] = BleConstants.des;
     u8Pkt[2] = BleConstants.ori;
     u8Pkt[3] = BleConstants.type.nrm;
-    u8Pkt[4] = u8TxPktCnt & BleConstants.base;
+    u8Pkt[4] = txCount & BleConstants.base;
     u8Pkt[5] = u8RxPktCnt & BleConstants.base;
     u8Pkt[6] = BleConstants.network.radio;
     u8Pkt[10] = BleConstants.mode.instruction.dbSetup;
     u8Pkt[11] = BleConstants.socket.radio;
     u8Pkt[12] = BleConstants.command.zoneSetup;
-    u8Pkt[13] = BleConstants.firstZoneSetupNo;
-    u8Pkt[14] =
-        zoneOneSetupMode.value.isNotEmpty
-            ? int.parse(zoneOneSetupMode.value, radix: 16)
-            : BleConstants.init;
-    u8Pkt[15] = zoneOneSetupDetectionMode.value & BleConstants.base;
-    u8Pkt[16] =
-        zoneOneSetupVerificationTime.value.isNotEmpty
-            ? int.parse(zoneOneSetupVerificationTime.value)
-            : BleConstants.init;
-    u8Pkt[17] =
-        zoneOneSetupDetectionMode.value == 3
-            ? BleConstants.extZoneValveDelay
-            : BleConstants.init;
-    u8Pkt[18] = zoneTextLength & BleConstants.base;
 
-    int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
+    final zoneConfig = ZoneSetupPayload.fromBleProcess(bleProcess, zoneNum - 1);
+    ZoneSetupPayload.writeToPacket(u8Pkt, zoneConfig);
+
+    final checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
     u8Pkt[213] = (checksum >> 8) & BleConstants.base;
     u8Pkt[214] = checksum & BleConstants.base;
     u8Pkt[215] = BleConstants.eot;
+
+    return u8Pkt;
+  }
+
+  Future<void> sendZoneSetupApplyFirstCmdPkt() async {
+    final u8Pkt = buildZoneSetupApplyPacket(1);
+
+    ZoneSetupPayloadDebug.printFrame(u8Pkt, label: 'SETUP_ZONE APPLY Z1 (TX)');
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
 
   Future<void> sendZoneSetupApplySecondCmdPkt() async {
-    Uint8List u8Pkt = Uint8List(216);
+    final u8Pkt = buildZoneSetupApplyPacket(2);
 
-    final String zoneText = zoneTwoSetupText.value;
-    final List<int> zoneTextBytes = zoneText.codeUnits;
-    final zoneTextLength = zoneTextBytes.length;
-    final initialindex = 19;
-
-    for (int i = 0; i < zoneTextLength; i++) {
-      u8Pkt[initialindex + i] = zoneTextBytes[i];
-    }
-
-    // Update global counters
-    u8TxPktCnt += 1;
-
-    u8Pkt[0] = BleConstants.sot;
-    u8Pkt[1] = BleConstants.des;
-    u8Pkt[2] = BleConstants.ori;
-    u8Pkt[3] = BleConstants.type.nrm;
-    u8Pkt[4] = u8TxPktCnt & BleConstants.base;
-    u8Pkt[5] = u8RxPktCnt & BleConstants.base;
-    u8Pkt[6] = BleConstants.network.radio;
-    u8Pkt[10] = BleConstants.mode.instruction.dbSetup;
-    u8Pkt[11] = BleConstants.socket.radio;
-    u8Pkt[12] = BleConstants.command.zoneSetup;
-    u8Pkt[13] = BleConstants.secondZoneSetupNo;
-    u8Pkt[14] =
-        zoneTwoSetupMode.value.isNotEmpty
-            ? int.parse(zoneTwoSetupMode.value, radix: 16)
-            : BleConstants.init;
-    u8Pkt[15] = zoneTwoSetupDetectionMode.value & BleConstants.base;
-    u8Pkt[16] =
-        zoneTwoSetupVerificationTime.value.isNotEmpty
-            ? int.parse(zoneTwoSetupVerificationTime.value)
-            : BleConstants.init;
-    u8Pkt[17] =
-        zoneTwoSetupDetectionMode.value == 3
-            ? BleConstants.extZoneValveDelay
-            : BleConstants.init;
-    u8Pkt[18] = zoneTextLength & BleConstants.base;
-
-    int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
-
-    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
-    u8Pkt[214] = checksum & BleConstants.base;
-    u8Pkt[215] = BleConstants.eot;
+    ZoneSetupPayloadDebug.printFrame(u8Pkt, label: 'SETUP_ZONE APPLY Z2 (TX)');
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
 
   Future<void> sendZoneSetupApplyThirdCmdPkt() async {
-    Uint8List u8Pkt = Uint8List(216);
+    final u8Pkt = buildZoneSetupApplyPacket(3);
 
-    final String zoneText = zoneThreeSetupText.value;
-    final List<int> zoneTextBytes = zoneText.codeUnits;
-    final zoneTextLength = zoneTextBytes.length;
-    final initialindex = 19;
-
-    for (int i = 0; i < zoneTextLength; i++) {
-      u8Pkt[initialindex + i] = zoneTextBytes[i];
-    }
-
-    // Update global counters
-    u8TxPktCnt += 1;
-
-    u8Pkt[0] = BleConstants.sot;
-    u8Pkt[1] = BleConstants.des;
-    u8Pkt[2] = BleConstants.ori;
-    u8Pkt[3] = BleConstants.type.nrm;
-    u8Pkt[4] = u8TxPktCnt & BleConstants.base;
-    u8Pkt[5] = u8RxPktCnt & BleConstants.base;
-    u8Pkt[6] = BleConstants.network.radio;
-    u8Pkt[10] = BleConstants.mode.instruction.dbSetup;
-    u8Pkt[11] = BleConstants.socket.radio;
-    u8Pkt[12] = BleConstants.command.zoneSetup;
-    u8Pkt[13] = BleConstants.thirdZoneSetupNo;
-    u8Pkt[14] =
-        zoneThreeSetupMode.value.isNotEmpty
-            ? int.parse(zoneThreeSetupMode.value, radix: 16)
-            : BleConstants.init;
-    u8Pkt[15] = zoneThreeSetupDetectionMode.value & BleConstants.base;
-    u8Pkt[16] =
-        zoneThreeSetupVerificationTime.value.isNotEmpty
-            ? int.parse(zoneThreeSetupVerificationTime.value)
-            : BleConstants.init;
-    u8Pkt[17] =
-        zoneThreeSetupDetectionMode.value == 3
-            ? BleConstants.extZoneValveDelay
-            : BleConstants.init;
-    u8Pkt[18] = zoneTextLength & BleConstants.base;
-
-    int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
-
-    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
-    u8Pkt[214] = checksum & BleConstants.base;
-    u8Pkt[215] = BleConstants.eot;
+    ZoneSetupPayloadDebug.printFrame(u8Pkt, label: 'SETUP_ZONE APPLY Z3 (TX)');
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
@@ -4031,6 +3961,76 @@ class BleManager extends GetxService {
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
 
+  Future<void> sendPanelPropertiesSetupFetchCmdPkt() async {
+    final u8Pkt = Uint8List(216);
+
+    u8TxPktCnt += 1;
+
+    u8Pkt[0] = BleConstants.sot;
+    u8Pkt[1] = BleConstants.des;
+    u8Pkt[2] = BleConstants.ori;
+    u8Pkt[3] = BleConstants.type.nrm;
+    u8Pkt[4] = u8TxPktCnt & BleConstants.base;
+    u8Pkt[5] = u8RxPktCnt & BleConstants.base;
+    u8Pkt[6] = BleConstants.network.radio;
+    u8Pkt[10] = BleConstants.mode.request.dbSetup;
+    u8Pkt[11] = BleConstants.socket.radio;
+    u8Pkt[12] = BleConstants.command.panelPropertiesSetup;
+
+    final checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
+
+    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
+    u8Pkt[214] = checksum & BleConstants.base;
+    u8Pkt[215] = BleConstants.eot;
+
+    await sendSmallDataFrame(0x1000, 216, u8Pkt);
+  }
+
+  /// Builds the SETUP_PANEL_PROPERTIES apply packet. When [previewOnly] is true,
+  /// the TX counter is not incremented (for offline UI debugging).
+  Uint8List buildPanelPropertiesSetupApplyPacket({bool previewOnly = false}) {
+    final u8Pkt = Uint8List(216);
+
+    if (!previewOnly) {
+      u8TxPktCnt += 1;
+    }
+
+    final txCount = previewOnly ? (u8TxPktCnt + 1) : u8TxPktCnt;
+
+    u8Pkt[0] = BleConstants.sot;
+    u8Pkt[1] = BleConstants.des;
+    u8Pkt[2] = BleConstants.ori;
+    u8Pkt[3] = BleConstants.type.nrm;
+    u8Pkt[4] = txCount & BleConstants.base;
+    u8Pkt[5] = u8RxPktCnt & BleConstants.base;
+    u8Pkt[6] = BleConstants.network.radio;
+    u8Pkt[10] = BleConstants.mode.instruction.dbSetup;
+    u8Pkt[11] = BleConstants.socket.radio;
+    u8Pkt[12] = BleConstants.command.panelPropertiesSetup;
+
+    final config = PanelPropertiesSetupPayload.fromBleProcess(bleProcess);
+    PanelPropertiesSetupPayload.writeToPacket(u8Pkt, config);
+
+    final checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
+
+    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
+    u8Pkt[214] = checksum & BleConstants.base;
+    u8Pkt[215] = BleConstants.eot;
+
+    return u8Pkt;
+  }
+
+  Future<void> sendPanelPropertiesSetupApplyCmdPkt() async {
+    final u8Pkt = buildPanelPropertiesSetupApplyPacket();
+
+    PanelPropertiesSetupPayloadDebug.printFrame(
+      u8Pkt,
+      label: 'SETUP_PANEL_PROPERTIES APPLY (TX)',
+    );
+
+    await sendSmallDataFrame(0x1000, 216, u8Pkt);
+  }
+
   Future<void> sendAccessCodeSetupFetchCmdPkt({
     required int accessCodeNo,
   }) async {
@@ -4059,45 +4059,60 @@ class BleManager extends GetxService {
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
 
-  Future<void> sendAccessCodeSetupApplyCmdPkt({
-    required int accessCodeNo,
-  }) async {
-    Uint8List u8Pkt = Uint8List(216);
-
-    final data = accessCodeSetupDataList.value[accessCodeNo - 1];
-    final String accessCodeText = data.accessCode;
-    final List<int> accessCodeTextBytes = accessCodeText.codeUnits;
-    final accessCodeTextLength = accessCodeTextBytes.length;
-
-    final initialindex = 16;
-
-    for (int i = 0; i < accessCodeTextLength; i++) {
-      if (i < accessCodeTextLength) {
-        u8Pkt[initialindex + i] = accessCodeTextBytes[i];
-      }
+  /// Builds a SETUP_ACCESS_CODE apply packet for [accessCodeNo] (1..8). When
+  /// [previewOnly] is true, the TX counter is not incremented (for offline UI
+  /// debugging).
+  Uint8List buildAccessCodeSetupApplyPacket(
+    int accessCodeNo, {
+    bool previewOnly = false,
+  }) {
+    if (accessCodeNo < 1 || accessCodeNo > 8) {
+      throw RangeError('accessCodeNo must be 1..8, got $accessCodeNo');
     }
 
-    u8TxPktCnt += 1;
+    final u8Pkt = Uint8List(216);
+
+    if (!previewOnly) {
+      u8TxPktCnt += 1;
+    }
+
+    final txCount = previewOnly ? (u8TxPktCnt + 1) : u8TxPktCnt;
 
     u8Pkt[0] = BleConstants.sot;
     u8Pkt[1] = BleConstants.des;
     u8Pkt[2] = BleConstants.ori;
     u8Pkt[3] = BleConstants.type.nrm;
-    u8Pkt[4] = u8TxPktCnt & BleConstants.base;
+    u8Pkt[4] = txCount & BleConstants.base;
     u8Pkt[5] = u8RxPktCnt & BleConstants.base;
     u8Pkt[6] = BleConstants.network.radio;
     u8Pkt[10] = BleConstants.mode.instruction.dbSetup;
     u8Pkt[11] = BleConstants.socket.radio;
     u8Pkt[12] = BleConstants.command.accessCodeSetup;
-    u8Pkt[13] = data.accessCodeNo;
-    u8Pkt[14] = data.accessLevel;
-    u8Pkt[15] = accessCodeTextLength & BleConstants.base;
 
-    int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
+    final config = PanelAccessLvlSetupPayload.fromBleManager(
+      this,
+      accessCodeNo - 1,
+    );
+    PanelAccessLvlSetupPayload.writeToPacket(u8Pkt, config);
+
+    final checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
     u8Pkt[213] = (checksum >> 8) & BleConstants.base;
     u8Pkt[214] = checksum & BleConstants.base;
     u8Pkt[215] = BleConstants.eot;
+
+    return u8Pkt;
+  }
+
+  Future<void> sendAccessCodeSetupApplyCmdPkt({
+    required int accessCodeNo,
+  }) async {
+    final u8Pkt = buildAccessCodeSetupApplyPacket(accessCodeNo);
+
+    PanelAccessLvlSetupPayloadDebug.printFrame(
+      u8Pkt,
+      label: 'SETUP_ACCESS APPLY #$accessCodeNo (TX)',
+    );
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }

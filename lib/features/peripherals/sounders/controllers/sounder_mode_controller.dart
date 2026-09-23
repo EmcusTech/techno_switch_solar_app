@@ -1,4 +1,6 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:techno_switch_solar_app/config/ble/sounder_setup_payload_debug.dart';
 import 'package:get/get.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
 import 'package:techno_switch_solar_app/features/peripherals/shared/controllers/peripheral_mode_controller.dart';
@@ -464,6 +466,10 @@ class SounderModeController extends PeripheralModeController {
       }
     }
     syncSounderMainOutputModeHexFromBleManager(m);
+
+    if (kDebugMode) {
+      SounderSetupPayloadDebug.printApplyFrames(m);
+    }
 
     final generalConfig = GeneralEquipmentModeConfig(
       equipmentEnable:

@@ -1,4 +1,6 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:techno_switch_solar_app/config/ble/panel_properties_setup_payload_debug.dart';
 import 'package:techno_switch_solar_app/features/peripherals/shared/controllers/peripheral_mode_controller.dart';
 import 'package:techno_switch_solar_app/utils/panel_config/panel_config_cache_sync.dart';
 import 'package:techno_switch_solar_app/utils/peripherals/defaults/service_due_defaults.dart';
@@ -121,6 +123,10 @@ class ServiceDueController extends PeripheralModeController {
         config.reminder == StringConstants.on
             ? 1
             : ServiceDueDefaults.reminderBle;
+
+    if (kDebugMode) {
+      PanelPropertiesSetupPayloadDebug.printApplyFrame(m);
+    }
   }
 
   @override

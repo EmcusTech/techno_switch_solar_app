@@ -1,41 +1,24 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:techno_switch_solar_app/config/ble/input_setup_payload_debug.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
+import 'package:techno_switch_solar_app/config/ui/input_config_options.dart';
+import 'package:techno_switch_solar_app/config/ui/input_config_ui_bridge.dart';
 import 'package:techno_switch_solar_app/features/peripherals/shared/controllers/peripheral_mode_controller.dart';
 import 'package:techno_switch_solar_app/utils/panel_config/panel_config_cache_sync.dart';
-import 'package:techno_switch_solar_app/utils/peripherals/defaults/input_defaults.dart';
 import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
 /// Controller for the Input Mode bottom sheet.
 class InputModeController extends PeripheralModeController {
   InputModeController({required super.deviceId, required super.refreshTrigger});
 
-  final List<String> groupOptions = ['None', 'General', StringConstants.extOut];
+  List<String> get groupOptions => InputConfigOptions.groupOptions;
 
-  final Map<String, List<String>> functionOptionsMap = {
-    'None': ['None'],
-    'General': [
-      StringConstants.extnlFault,
-      StringConstants.reset,
-      StringConstants.extnlControlsEnabled,
-      StringConstants.silenceAlarm,
-      StringConstants.soundAlarm,
-      StringConstants.silenceBuzzer,
-      StringConstants.mute,
-      StringConstants.extnlSupervisory,
-      StringConstants.extnlSupplyFault,
-    ],
-    StringConstants.extOut: [
-      StringConstants.manualTrigger,
-      StringConstants.manualMode,
-      StringConstants.hold,
-      StringConstants.extnlDisableGas,
-      StringConstants.extnlExtFault,
-    ],
-  };
+  Map<String, List<String>> get functionOptionsMap =>
+      InputConfigOptions.functionOptionsMap;
 
-  final List<String> yesNoOptions = [StringConstants.no, StringConstants.yes];
+  List<String> get yesNoOptions => InputConfigOptions.yesNoOptions;
 
   late String group;
   late String function;
@@ -49,12 +32,8 @@ class InputModeController extends PeripheralModeController {
 
   @override
   void initModel() {
-    group = InputDefaults.groupLabel;
-    function = InputDefaults.functionLabel;
-    enabled = InputDefaults.enabledLabel;
-    test = InputDefaults.testLabel;
-    inverted = InputDefaults.invertedLabel;
-    inputTextCtrl = TextEditingController(text: InputDefaults.inputText);
+    inputTextCtrl = TextEditingController();
+    _applyUiState(InputUiState.defaults());
   }
 
   @override
@@ -68,57 +47,41 @@ class InputModeController extends PeripheralModeController {
 
   @override
   void applyCachedData(Map<String, dynamic> data) {
-    final g = (data['group'] as int?) ?? InputDefaults.groupBle;
-    group = groupOptions[g.clamp(0, groupOptions.length - 1)];
-    final f = (data['function'] as int?) ?? InputDefaults.functionBle;
-    final opts = functionOptionsMap[group]!;
-    function = opts[f.clamp(0, opts.length - 1)];
-    enabled =
-        (data['enabled'] as bool?) ?? InputDefaults.enabledBle
-            ? yesNoOptions[1]
-            : yesNoOptions[0];
-    test =
-        (data['test'] as bool?) ?? InputDefaults.testBle
-            ? yesNoOptions[1]
-            : yesNoOptions[0];
-    inverted =
-        (data['inverted'] as bool?) ?? InputDefaults.invertedBle
-            ? yesNoOptions[1]
-            : yesNoOptions[0];
-    inputTextCtrl.text = (data['text'] as String?) ?? InputDefaults.inputText;
+    _applyUiState(InputConfigUiBridge.fromCacheMap(data));
   }
 
   @override
   void loadFromManager() {
     if (!Get.isRegistered<BleLogController>()) return;
     manager = Get.find<BleLogController>().bleManager;
-    group = groupOptions[manager!.inputSetupGroup.value];
-    function = functionOptionsMap[group]![manager!.inputSetupFunction.value];
-    enabled =
-        manager!.isInputSetupEnabled.value ? yesNoOptions[1] : yesNoOptions[0];
-    test = manager!.isInputSetupTest.value ? yesNoOptions[1] : yesNoOptions[0];
-    inverted =
-        manager!.isInputSetupInverted.value ? yesNoOptions[1] : yesNoOptions[0];
-    inputTextCtrl.text = manager!.inputSetupText.value;
+    _applyUiState(InputConfigUiBridge.fromBleProcess(manager!.bleProcess));
     refreshUi();
   }
 
-  int returnIndex(String value, List<String> list) => list.indexOf(value);
+  InputUiState _currentUiState() => InputUiState(
+    group: group,
+    function: function,
+    enabled: enabled,
+    test: test,
+    inverted: inverted,
+    inputText: inputTextCtrl.text,
+  );
+
+  void _applyUiState(InputUiState ui) {
+    group = ui.group;
+    function = ui.function;
+    enabled = ui.enabled;
+    test = ui.test;
+    inverted = ui.inverted;
+    inputTextCtrl.text = ui.inputText;
+  }
 
   @override
   void pushToManager() {
-    final groupIndex = returnIndex(group, groupOptions);
-    final functionIndex = returnIndex(function, functionOptionsMap[group]!);
-    final isEnabled = enabled == StringConstants.yes;
-    final isTest = test == StringConstants.yes;
-    final isInverted = inverted == StringConstants.yes;
-
-    manager!.inputSetupGroup.value = groupIndex;
-    manager!.inputSetupFunction.value = functionIndex;
-    manager!.isInputSetupEnabled.value = isEnabled;
-    manager!.isInputSetupTest.value = isTest;
-    manager!.isInputSetupInverted.value = isInverted;
-    manager!.inputSetupText.value = inputTextCtrl.text;
+    InputConfigUiBridge.applyToBleProcess(_currentUiState(), manager!.bleProcess);
+    if (kDebugMode) {
+      InputSetupPayloadDebug.printApplyFrame(manager!);
+    }
   }
 
   @override
@@ -151,16 +114,16 @@ class InputModeController extends PeripheralModeController {
 
   void setEnabled(String v) {
     enabled = v;
-    if (enabled == StringConstants.no) {
-      test = StringConstants.no;
+    if (enabled == yesNoOptions.first) {
+      test = yesNoOptions.first;
     }
     refreshUi();
   }
 
   void setTest(String v) {
     test = v;
-    if (test == StringConstants.yes) {
-      enabled = StringConstants.yes;
+    if (test == yesNoOptions.last) {
+      enabled = yesNoOptions.last;
     }
     refreshUi();
   }

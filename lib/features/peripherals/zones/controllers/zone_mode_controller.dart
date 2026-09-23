@@ -1,6 +1,10 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
+import 'package:techno_switch_solar_app/config/ble/zone_setup_payload_debug.dart';
+import 'package:techno_switch_solar_app/config/ui/zone_config_options.dart';
+import 'package:techno_switch_solar_app/config/ui/zone_config_ui_bridge.dart';
 import 'package:techno_switch_solar_app/features/peripherals/shared/controllers/peripheral_mode_controller.dart';
 import 'package:techno_switch_solar_app/utils/panel_config/panel_config_cache_sync.dart';
 import 'package:techno_switch_solar_app/utils/peripherals/defaults/zone_defaults.dart';
@@ -25,12 +29,11 @@ class ZoneConfig {
 class ZoneModeController extends PeripheralModeController {
   ZoneModeController({required super.deviceId, required super.refreshTrigger});
 
-  final List<String> typeOptions = PanelValues.zoneTypeOptions;
-  final List<String> yesNoOptions = [
-    PanelValues.noOption,
-    PanelValues.yesOption,
-  ];
-  final List<String> modeOptions = PanelValues.zoneModeOptions;
+  List<String> get typeOptions => ZoneConfigOptions.typeOptions;
+
+  List<String> get yesNoOptions => ZoneConfigOptions.yesNoOptions;
+
+  List<String> get modeOptions => ZoneConfigOptions.modeOptions;
 
   late List<ZoneConfig> zones;
 
@@ -41,17 +44,9 @@ class ZoneModeController extends PeripheralModeController {
   void initModel() {
     zones = List.generate(3, (i) {
       final zone = ZoneConfig(zoneNumber: i + 1);
-      _applyDefaultsToZone(zone);
+      _applyUiStateToZone(zone, ZoneUiState.defaults(zoneNumber: i + 1));
       return zone;
     });
-  }
-
-  void _applyDefaultsToZone(ZoneConfig zone) {
-    zone.type = ZoneDefaults.typeLabel;
-    zone.enabled = ZoneDefaults.enabledLabel;
-    zone.mode = ZoneDefaults.modeLabel;
-    zone.zoneTextController.text = ZoneDefaults.text;
-    zone.verificationTimeController.text = ZoneDefaults.verificationTime;
   }
 
   @override
@@ -72,22 +67,10 @@ class ZoneModeController extends PeripheralModeController {
       final key = 'z${i + 1}';
       final z = data[key] as Map<String, dynamic>?;
       if (z == null) continue;
-      zones[i].type =
-          (z['type'] as int?) == 1
-              ? PanelValues.zoneTypeIsMtl5561
-              : ZoneDefaults.typeLabel;
-      final enabled = (z['enabled'] as bool?) ?? ZoneDefaults.enabledBle;
-      zones[i].enabled =
-          enabled ? PanelValues.yesOption : PanelValues.noOption;
-      final dm =
-          (z[StringConstants.isMTL5561] as int?) ??
-          ZoneDefaults.detectionModeBle;
-      zones[i].mode = modeOptions[dm.clamp(0, modeOptions.length - 1)];
-      zones[i].verificationTimeController.text =
-          (z[StringConstants.verificationtime] as String?) ??
-          ZoneDefaults.verificationTime;
-      zones[i].zoneTextController.text =
-          (z['text'] as String?) ?? ZoneDefaults.text;
+      _applyUiStateToZone(
+        zones[i],
+        ZoneConfigUiBridge.fromCacheMap(z, zoneNumber: i + 1),
+      );
     }
     if (manager != null) {
       applyZoneTestFlagsFromCacheMap(manager!, data);
@@ -113,52 +96,40 @@ class ZoneModeController extends PeripheralModeController {
   bool _requiresConfirmedVerification(String mode) =>
       mode == StringConstants.confirmed;
 
-  String _typeLabelFromBle(int typeIndex) =>
-      typeIndex == 0 ? ZoneDefaults.typeLabel : PanelValues.zoneTypeIsMtl5561;
-
   @override
   void loadFromManager() {
     if (!Get.isRegistered<BleLogController>()) return;
     manager = Get.find<BleLogController>().bleManager;
 
-    zones[0].type = _typeLabelFromBle(manager!.zoneOneSetupType.value);
-    zones[0].enabled =
-        manager!.isZoneOneSetupEnabled.value ? StringConstants.yes : 'No';
-    final int dm1 = manager!.zoneOneSetupDetectionMode.value;
-    zones[0].mode =
-        (dm1 >= 0 && dm1 < modeOptions.length)
-            ? modeOptions[dm1]
-            : modeOptions.first;
-    zones[0].verificationTimeController.text =
-        manager!.zoneOneSetupVerificationTime.value;
-    zones[0].zoneTextController.text = manager!.zoneOneSetupText.value;
-
-    zones[1].type = _typeLabelFromBle(manager!.zoneTwoSetupType.value);
-    zones[1].enabled =
-        manager!.isZoneTwoSetupEnabled.value ? StringConstants.yes : 'No';
-    final int dm2 = manager!.zoneTwoSetupDetectionMode.value;
-    zones[1].mode =
-        (dm2 >= 0 && dm2 < modeOptions.length)
-            ? modeOptions[dm2]
-            : modeOptions.first;
-    zones[1].verificationTimeController.text =
-        manager!.zoneTwoSetupVerificationTime.value;
-    zones[1].zoneTextController.text = manager!.zoneTwoSetupText.value;
-
-    zones[2].type = _typeLabelFromBle(manager!.zoneThreeSetupType.value);
-    zones[2].enabled =
-        manager!.isZoneThreeSetupEnabled.value ? StringConstants.yes : 'No';
-    final int dm3 = manager!.zoneThreeSetupDetectionMode.value;
-    zones[2].mode =
-        (dm3 >= 0 && dm3 < modeOptions.length)
-            ? modeOptions[dm3]
-            : modeOptions.first;
-    zones[2].verificationTimeController.text =
-        manager!.zoneThreeSetupVerificationTime.value;
-    zones[2].zoneTextController.text = manager!.zoneThreeSetupText.value;
+    for (int i = 0; i < 3; i++) {
+      _applyUiStateToZone(
+        zones[i],
+        ZoneConfigUiBridge.fromBleProcess(manager!.bleProcess, i),
+      );
+    }
 
     _normalizeVerificationTimes();
     refreshUi();
+  }
+
+  ZoneUiState _currentUiState(int index) {
+    final zone = zones[index];
+    return ZoneUiState(
+      zoneNumber: zone.zoneNumber,
+      type: zone.type,
+      enabled: zone.enabled,
+      mode: zone.mode,
+      zoneText: zone.zoneTextController.text,
+      verificationTime: zone.verificationTimeController.text,
+    );
+  }
+
+  void _applyUiStateToZone(ZoneConfig zone, ZoneUiState ui) {
+    zone.type = ui.type;
+    zone.enabled = ui.enabled;
+    zone.mode = ui.mode;
+    zone.zoneTextController.text = ui.zoneText;
+    zone.verificationTimeController.text = ui.verificationTime;
   }
 
   @override
@@ -169,44 +140,21 @@ class ZoneModeController extends PeripheralModeController {
       m.isZoneTwoSetupTest.value,
       m.isZoneThreeSetupTest.value,
     ];
+
     for (int i = 0; i < 3; i++) {
-      final zone = zones[i];
+      final ui = _currentUiState(i);
       final effectiveTest =
-          zone.enabled == StringConstants.yes && snapshotTest[i];
-
-      switch (i) {
-        case 0:
-          m.zoneOneSetupText.value = zone.zoneTextController.text;
-          m.zoneOneSetupType.value = typeOptions.indexOf(zone.type);
-          m.isZoneOneSetupEnabled.value = zone.enabled == StringConstants.yes;
-          m.isZoneOneSetupTest.value = effectiveTest;
-          m.zoneOneSetupVerificationTime.value =
-              zone.verificationTimeController.text;
-          m.zoneOneSetupDetectionMode.value = modeOptions.indexOf(zone.mode);
-          break;
-
-        case 1:
-          m.zoneTwoSetupText.value = zone.zoneTextController.text;
-          m.zoneTwoSetupType.value = typeOptions.indexOf(zone.type);
-          m.isZoneTwoSetupEnabled.value = zone.enabled == StringConstants.yes;
-          m.isZoneTwoSetupTest.value = effectiveTest;
-          m.zoneTwoSetupVerificationTime.value =
-              zone.verificationTimeController.text;
-          m.zoneTwoSetupDetectionMode.value = modeOptions.indexOf(zone.mode);
-          break;
-
-        case 2:
-          m.zoneThreeSetupText.value = zone.zoneTextController.text;
-          m.zoneThreeSetupType.value = typeOptions.indexOf(zone.type);
-          m.isZoneThreeSetupEnabled.value = zone.enabled == StringConstants.yes;
-          m.isZoneThreeSetupTest.value = effectiveTest;
-          m.zoneThreeSetupVerificationTime.value =
-              zone.verificationTimeController.text;
-          m.zoneThreeSetupDetectionMode.value = modeOptions.indexOf(zone.mode);
-          break;
-      }
+          ZoneConfigOptions.yesNoValue(ui.enabled) && snapshotTest[i];
+      ZoneConfigUiBridge.applyToBleProcess(
+        ui,
+        m.bleProcess,
+        test: effectiveTest,
+      );
     }
-    syncZoneModeHexFromBleManager(m);
+
+    if (kDebugMode) {
+      ZoneSetupPayloadDebug.printApplyFrames(m);
+    }
   }
 
   @override

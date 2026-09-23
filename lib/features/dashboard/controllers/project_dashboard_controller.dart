@@ -558,6 +558,8 @@ class ProjectDashboardController extends GetxController {
       ble.bleProcess.processDesc.value = '';
       onTap?.call();
     }
+    // ble.bleProcess.processDesc.value = '';
+    // onTap?.call();
   }
 
   void markUnexpectedDisconnectDialogClosed() {

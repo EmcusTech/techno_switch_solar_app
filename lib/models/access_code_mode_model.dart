@@ -1,4 +1,4 @@
-import 'dart:convert';
+import 'package:techno_switch_solar_app/config/ble/panel_access_lvl_setup_payload.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
 class AccessCodeSetupData {
@@ -36,37 +36,7 @@ class AccessCodeSetupData {
   }
 
   static AccessCodeSetupData fromPayload(List<int> payload) {
-    if (payload.length < 16) {
-      return const AccessCodeSetupData();
-    }
-
-    final accessCodeNo = payload[13];
-    final level = payload[14];
-
-    String code = '';
-
-    final length = payload[15];
-
-    final start = 16;
-    final end = start + length;
-
-    if (length > 0 && end <= payload.length) {
-      try {
-        code = utf8.decode(payload.sublist(start, end));
-      } catch (_) {}
-    }
-
-    final levelName =
-        (level >= 0 && level < accessLevelNames.length)
-            ? accessLevelNames[level]
-            : accessLevelNames.first;
-
-    return AccessCodeSetupData(
-      accessCodeNo: accessCodeNo,
-      accessLevel: level,
-      accessLevelName: levelName,
-      accessCode: code,
-    );
+    return PanelAccessLvlSetupPayload.readSetupDataFromPacket(payload);
   }
 
   Map<String, dynamic> toJson() => {

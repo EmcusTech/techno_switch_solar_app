@@ -2,7 +2,13 @@ import 'package:techno_switch_solar_app/ble/ble_manager.dart';
 import 'package:techno_switch_solar_app/models/access_code_mode_model.dart';
 import 'package:techno_switch_solar_app/models/l_bus_setup_data_model.dart';
 import 'package:techno_switch_solar_app/utils/modes/ext_out_equipment_mode_util.dart';
-import 'package:techno_switch_solar_app/utils/modes/ext_zone_mode_util.dart';
+import 'package:techno_switch_solar_app/config/ble/ext_out_setup_payload.dart';
+import 'package:techno_switch_solar_app/config/ui/access_config_ui_bridge.dart';
+import 'package:techno_switch_solar_app/config/ble/relay_setup_payload.dart';
+import 'package:techno_switch_solar_app/config/ble/zone_setup_payload.dart';
+import 'package:techno_switch_solar_app/config/structs/ext_out_cfg_def.dart';
+import 'package:techno_switch_solar_app/config/structs/relay_cfg_def.dart';
+import 'package:techno_switch_solar_app/config/structs/zone_cfg_def.dart';
 import 'package:techno_switch_solar_app/utils/modes/general_quipment_mode_util.dart';
 import 'package:techno_switch_solar_app/config/structs/input_cfg_def.dart';
 import 'package:techno_switch_solar_app/utils/modes/relay_mode_util.dart';
@@ -11,61 +17,12 @@ import 'package:techno_switch_solar_app/utils/modes/zone_equipment_mode_util.dar
 import 'package:techno_switch_solar_app/utils/peripherals/defaults/general_module_defaults.dart';
 import 'package:techno_switch_solar_app/utils/peripherals/defaults/panel_info_defaults.dart';
 import 'package:techno_switch_solar_app/utils/peripherals/defaults/service_due_defaults.dart';
-import 'package:techno_switch_solar_app/utils/peripherals/defaults/zone_defaults.dart';
 import 'package:techno_switch_solar_app/utils/peripherals/defaults/sounder_defaults.dart';
-import 'package:techno_switch_solar_app/utils/peripherals/defaults/relay_defaults.dart';
-import 'package:techno_switch_solar_app/utils/peripherals/defaults/ext_out_defaults.dart';
 import 'package:techno_switch_solar_app/utils/peripherals/defaults/l_bus_defaults.dart';
-import 'package:techno_switch_solar_app/utils/zone_setup_manager_sync.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 
 class PeripheralCacheToBle {
   PeripheralCacheToBle._();
-
-  static const List<String> _relayGroups = [
-    'None',
-    'General',
-    StringConstants.zone,
-    StringConstants.extOut,
-  ];
-
-  static const Map<String, List<String>> _relayFunctions = {
-    'None': ['None'],
-    'General': [
-      'Fault',
-      StringConstants.extnlFault,
-      StringConstants.supplyFault,
-      StringConstants.extnlSupplyFault,
-      StringConstants.sounderFault,
-      StringConstants.sounderSilenced,
-      StringConstants.sounderActivated,
-      StringConstants.sounderDisabled,
-      StringConstants.disablement,
-      StringConstants.test,
-      'Fire',
-      'Reset',
-      StringConstants.controlsEnabled,
-      StringConstants.supervisory,
-      StringConstants.fireSnd,
-    ],
-    StringConstants.zone: [
-      'Fault',
-      'Fire',
-      StringConstants.disablement,
-      StringConstants.fireSnd,
-    ],
-    StringConstants.extOut: [
-      StringConstants.releaseInitiated,
-      StringConstants.extAgentReleased,
-      StringConstants.releaseHold,
-      StringConstants.manualMode,
-      StringConstants.manualRelease,
-      StringConstants.extnlExtFault,
-      StringConstants.extSnd1,
-      'Ext. Snd 2',
-      StringConstants.manReleaseSnd,
-    ],
-  };
 
   static const List<String> _sounderGroups = [
     'None',
@@ -84,8 +41,6 @@ class PeripheralCacheToBle {
       StringConstants.manReleaseSnd,
     ],
   };
-
-  static const List<String> _zoneModes = PanelValues.zoneModeOptions;
 
   static const List<String> _sounderActions = [
     'Continuous',
@@ -113,9 +68,10 @@ class PeripheralCacheToBle {
 
     final access = await PeripheralSetupCache.loadAccessCodeSetup(deviceId);
     if (access != null && access.isNotEmpty) {
-      var list = access.map((e) => AccessCodeSetupData.fromJson(e)).toList();
+      var list =
+          access.map((e) => AccessConfigUiBridge.fromCacheMap(e)).toList();
       while (list.length < 8) {
-        list.add(const AccessCodeSetupData());
+        list.add(AccessCodeSetupData(accessCodeNo: list.length + 1));
       }
       m.accessCodeSetupDataList.value = list;
     }
@@ -278,109 +234,19 @@ class PeripheralCacheToBle {
       final r = data['r${i + 1}'] as Map<String, dynamic>?;
       if (r == null) continue;
 
-      final defaults = RelayDefaults.relayEntry(i);
-      final gIdx = _clampInt(
-        (r['group'] as num?)?.toInt() ?? defaults['group'] as int,
-        3,
-      );
-      final group = _relayGroups[gIdx];
-      final opts = _relayFunctions[group]!;
-      final fIdx = _clampInt(
-        (r['function'] as num?)?.toInt() ?? defaults['function'] as int,
-        opts.length - 1,
-      );
-      final isEnabled = (r['enabled'] as bool?) ?? defaults['enabled'] as bool;
-      final isTest = (r['test'] as bool?) ?? defaults['test'] as bool;
-
-      final cfg = OutputModeConfig(
-        outputEnable: isEnabled ? OutputEnable.enabled : OutputEnable.disabled,
-        outputMode: isTest ? OutputMode.test : OutputMode.normal,
-        supervisionMode: SupervisionMode.normal,
-      );
-      final hex = OutputModeCodec.encodeHex(cfg);
-
-      var dyn =
-          (r[StringConstants.outputtext] as String?) ??
-          defaults[StringConstants.outputtext] as String;
-      if (group == StringConstants.extOut) dyn = '1';
-
-      switch (i) {
-        case 0:
-          m.relayOneMode.value = hex;
-          m.relayOneSetupGroup.value = gIdx;
-          m.relayOneSetupFunction.value = fIdx;
-          m.isRelayOneSetupEnabled.value = isEnabled;
-          m.isRelayOneSetupTest.value = isTest;
-          m.relayOneSetupOutputText.value =
-              (r['outputText'] as String?) ?? RelayDefaults.outputText;
-          m.relayOneSetupDynamicText.value = dyn;
-          break;
-        case 1:
-          m.relayTwoMode.value = hex;
-          m.relayTwoSetupGroup.value = gIdx;
-          m.relayTwoSetupFunction.value = fIdx;
-          m.isRelayTwoSetupEnabled.value = isEnabled;
-          m.isRelayTwoSetupTest.value = isTest;
-          m.relayTwoSetupOutputText.value =
-              (r['outputText'] as String?) ?? RelayDefaults.outputText;
-          m.relayTwoSetupDynamicText.value = dyn;
-          break;
-        default:
-          m.relayThreeMode.value = hex;
-          m.relayThreeSetupGroup.value = gIdx;
-          m.relayThreeSetupFunction.value = fIdx;
-          m.isRelayThreeSetupEnabled.value = isEnabled;
-          m.isRelayThreeSetupTest.value = isTest;
-          m.relayThreeSetupOutputText.value =
-              (r['outputText'] as String?) ?? RelayDefaults.outputText;
-          m.relayThreeSetupDynamicText.value = dyn;
-      }
+      final config = RelayCfgDef.fromCacheMap(r, relayNum: i + 1);
+      RelaySetupPayload.applyToBleProcess(config, m.bleProcess, i);
     }
   }
 
   static void _applyZone(BleManager m, Map<String, dynamic> data) {
-    applyZoneTestFlagsFromCacheMap(m, data);
-
     for (var i = 0; i < 3; i++) {
       final z = data['z${i + 1}'] as Map<String, dynamic>?;
       if (z == null) continue;
 
-      final typeIdx = (z['type'] as num?)?.toInt() ?? ZoneDefaults.typeBle;
-      final enabled = (z['enabled'] as bool?) ?? ZoneDefaults.enabledBle;
-      final dm = _clampInt(
-        (z[StringConstants.isMTL5561] as num?)?.toInt() ??
-            ZoneDefaults.detectionModeBle,
-        _zoneModes.length - 1,
-      );
-      final vTime =
-          (z[StringConstants.verificationtime] as String?) ??
-          ZoneDefaults.verificationTime;
-      final text = (z['text'] as String?) ?? ZoneDefaults.text;
-
-      switch (i) {
-        case 0:
-          m.zoneOneSetupText.value = text;
-          m.zoneOneSetupType.value = typeIdx.clamp(0, 1);
-          m.isZoneOneSetupEnabled.value = enabled;
-          m.zoneOneSetupVerificationTime.value = vTime;
-          m.zoneOneSetupDetectionMode.value = dm;
-          break;
-        case 1:
-          m.zoneTwoSetupText.value = text;
-          m.zoneTwoSetupType.value = typeIdx.clamp(0, 1);
-          m.isZoneTwoSetupEnabled.value = enabled;
-          m.zoneTwoSetupVerificationTime.value = vTime;
-          m.zoneTwoSetupDetectionMode.value = dm;
-          break;
-        default:
-          m.zoneThreeSetupText.value = text;
-          m.zoneThreeSetupType.value = typeIdx.clamp(0, 1);
-          m.isZoneThreeSetupEnabled.value = enabled;
-          m.zoneThreeSetupVerificationTime.value = vTime;
-          m.zoneThreeSetupDetectionMode.value = dm;
-      }
+      final config = ZoneCfgDef.fromCacheMap(z, zoneNum: i + 1);
+      ZoneSetupPayload.applyToBleProcess(config, m.bleProcess, i);
     }
-    syncZoneModeHexFromBleManager(m);
   }
 
   static void _applySounder(BleManager m, Map<String, dynamic> data) {
@@ -575,62 +441,8 @@ class PeripheralCacheToBle {
   }
 
   static void _applyExtOut(BleManager m, Map<String, dynamic> data) {
-    final en = _clampInt(
-      (data['enabled'] as num?)?.toInt() ?? ExtOutDefaults.enabledBle,
-      1,
-    );
-    final holdRestart = _clampInt(
-      (data[StringConstants.holdmode] as num?)?.toInt() ??
-          ExtOutDefaults.holdModeBle,
-      HoldMode.values.length - 1,
-    );
-    final resetAllowedInt = _clampInt(
-      (data[StringConstants.resetallowed] as num?)?.toInt() ??
-          ExtOutDefaults.resetAllowedBle,
-      1,
-    );
-    final functionInt = _clampInt(
-      (data['function'] as num?)?.toInt() ?? ExtOutDefaults.functionBle,
-      8,
-    );
-    final actuaturTypeInt = _clampInt(
-      (data[StringConstants.actuatortype] as num?)?.toInt() ??
-          ExtOutDefaults.actuatorTypeBle,
-      3,
-    );
-    final resetAllowed = resetAllowedInt == 0;
-
-    final config = ExtZoneModeConfig(
-      extZoneEnable: ExtZoneEnable.values[en],
-      extZoneMode: ExtZoneMode.normal,
-      holdMode: HoldMode.values[holdRestart],
-      resetAllowed: resetAllowed,
-      flowDetectionUsed: false,
-    );
-    final hexValue = ExtZoneModeCodec.encodeHex(config);
-
-    m.isExtZoneEnabled.value = en;
-    m.extZoneMode.value = hexValue;
-    m.extZoneCountdownAuto.value =
-        (data['countdownAuto'] as num?)?.toInt() ??
-        ExtOutDefaults.countdownAutoBle;
-    m.extZoneCountdownMan.value =
-        (data['countdownMan'] as num?)?.toInt() ??
-        ExtOutDefaults.countdownManBle;
-    m.extZoneReleaseTime.value =
-        (data['releaseTime'] as num?)?.toInt() ?? ExtOutDefaults.releaseTimeBle;
-    m.extZoneResetDelay.value =
-        (data[StringConstants.resetdelay] as num?)?.toInt() ??
-        ExtOutDefaults.resetDelayBle;
-    m.extZoneAction.value = _clampInt(
-      (data['action'] as num?)?.toInt() ?? ExtOutDefaults.actionBle,
-      9,
-    );
-    m.extZoneFunction.value = functionInt;
-    m.extZoneActuatorType.value = actuaturTypeInt;
-    m.isResetAllowed.value = resetAllowedInt;
-    m.extZoneHoldMode.value = holdRestart;
-    m.extZoneText.value = (data['text'] as String?) ?? '';
+    final config = ExtOutCfgDef.fromCacheMap(data);
+    ExtOutSetupPayload.applyToBleProcess(config, m.bleProcess);
 
     final solar = data[StringConstants.issolar] == true;
     m.bleProcess.isExtOutApplyButtonActive.value = solar;

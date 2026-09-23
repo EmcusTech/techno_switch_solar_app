@@ -1,4 +1,6 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:techno_switch_solar_app/config/ble/panel_properties_setup_payload_debug.dart';
 import 'package:techno_switch_solar_app/features/peripherals/shared/controllers/peripheral_mode_controller.dart';
 import 'package:techno_switch_solar_app/utils/peripherals/defaults/general_module_defaults.dart';
 import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
@@ -107,6 +109,10 @@ class GeneralModuleController extends PeripheralModeController {
     bp.generalModuleFaultLatching.value = yesNoOptions
         .indexOf(faultLatching)
         .clamp(0, yesNoOptions.length - 1);
+
+    if (kDebugMode) {
+      PanelPropertiesSetupPayloadDebug.printApplyFrame(manager!);
+    }
   }
 
   @override

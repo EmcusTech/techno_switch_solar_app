@@ -8,11 +8,13 @@ import 'package:techno_switch_solar_app/models/adc_domain_values_model.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 import 'package:techno_switch_solar_app/utils/modes/ext_out_equipment_mode_util.dart';
 import 'package:techno_switch_solar_app/utils/modes/general_quipment_mode_util.dart';
+import 'package:techno_switch_solar_app/config/ble/ext_out_setup_payload.dart';
 import 'package:techno_switch_solar_app/config/ble/input_setup_payload.dart';
+import 'package:techno_switch_solar_app/config/ble/panel_access_lvl_setup_payload.dart';
+import 'package:techno_switch_solar_app/config/ble/relay_setup_payload.dart';
+import 'package:techno_switch_solar_app/config/ble/zone_setup_payload.dart';
 import 'package:techno_switch_solar_app/utils/modes/relay_mode_util.dart';
-import 'package:techno_switch_solar_app/utils/modes/ext_zone_mode_util.dart';
 import 'package:techno_switch_solar_app/utils/modes/zone_equipment_mode_util.dart';
-import 'package:techno_switch_solar_app/utils/modes/zone_mode_util.dart';
 import 'package:techno_switch_solar_app/utils/peripherals/defaults/general_module_defaults.dart';
 import 'package:techno_switch_solar_app/utils/peripherals/defaults/panel_info_defaults.dart';
 import 'package:techno_switch_solar_app/utils/peripherals/defaults/service_due_defaults.dart';
@@ -1082,11 +1084,15 @@ class BleProcess {
     }
 
     if (checkForAccessKeyCmdRsp == 1) {
-      if (rx.payload[13] != 0x0a &&
-          String.fromCharCodes(
-                rx.payload.sublist(14, 14 + accessKeyLength.value),
-              ) ==
-              accessKey.value) {
+      print(
+        "TX/RX: Access code response packet: ${rx.payload.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+      );
+      // if (rx.payload[13] != 0x0a &&
+      //     String.fromCharCodes(
+      //           rx.payload.sublist(14, 14 + accessKeyLength.value),
+      //         ) ==
+      //         accessKey.value) {
+      if (rx.payload[13] == 0x02) {
         cancelAccessKeyPollDeadline();
         if (isInputSetupFetchCommandActive.value) {
           bleManager.otaProcessState =
@@ -1495,7 +1501,9 @@ class BleProcess {
       if (rx.payload[12] == 0x03) {
         final accessCodeIndex = accessCodeSetupFetchCommandStep - 1;
         if (accessCodeIndex >= 0 && accessCodeIndex < 8) {
-          final parsed = AccessCodeSetupData.fromPayload(rx.payload);
+          final parsed = PanelAccessLvlSetupPayload.readSetupDataFromPacket(
+            rx.payload,
+          );
           final updated = List<AccessCodeSetupData>.from(
             accessCodeSetupDataList.value,
           );
@@ -2188,22 +2196,8 @@ class BleProcess {
         bleManager.otaProcessState = OtaProcessState.sendDipSettingFetchCmd;
         checkForExtCmdFetchRes = 0;
         isAccessKeyValid.value = true;
-        final ExtZoneModeConfig config = ExtZoneModeCodec.fromHex(
-          rx.payload[14].toRadixString(16),
-        );
-        final bool zoneEnabled = config.extZoneEnable == ExtZoneEnable.enabled;
-        final HoldMode holdMode = config.holdMode;
-        final bool resetAllowed = config.resetAllowed;
-        isExtZoneEnabled.value = zoneEnabled ? 1 : 0;
-        extZoneHoldMode.value = holdMode.index;
-        isResetAllowed.value = resetAllowed ? 0 : 1;
-        extZoneCountdownAuto.value = (rx.payload[17] << 8) | rx.payload[18];
-        extZoneCountdownMan.value = (rx.payload[19] << 8) | rx.payload[20];
-        extZoneReleaseTime.value = (rx.payload[21] << 8) | rx.payload[22];
-        extZoneResetDelay.value = (rx.payload[23] << 8) | rx.payload[24];
-        extZoneActuatorType.value = rx.payload[16];
-        extZoneAction.value = rx.payload[25];
-        extZoneFunction.value = rx.payload[26];
+        final config = ExtOutSetupPayload.readFromPacket(rx.payload);
+        ExtOutSetupPayload.applyToBleProcess(config, this);
         startRxTimeout();
         await bleManager.sendFetchDipSettingPkt();
       } else {
@@ -2217,22 +2211,8 @@ class BleProcess {
         if (relaySetupFetchCommandStep == 1) {
           processDesc.value = "${StringConstants.downloadingRelay} 2/3";
 
-          final OutputModeConfig config = OutputModeCodec.fromHex(
-            rx.payload[15].toRadixString(16),
-          );
-          final bool outputEnabled =
-              config.outputEnable == OutputEnable.enabled;
-          final bool outputMode = config.outputMode == OutputMode.test;
-          isRelayOneSetupEnabled.value = outputEnabled;
-          isRelayOneSetupTest.value = outputMode;
-          relayOneMode.value = rx.payload[15]
-              .toRadixString(16)
-              .toUpperCase()
-              .padLeft(2, '0');
-          relayOneSetupOutputText.value = extractStringFromPayload(rx.payload);
-          relayOneSetupDynamicText.value = rx.payload[22].toRadixString(16);
-          relayOneSetupGroup.value = rx.payload[23];
-          relayOneSetupFunction.value = rx.payload[24];
+          final config = RelaySetupPayload.readFromPacket(rx.payload);
+          RelaySetupPayload.applyToBleProcess(config, this, 0);
 
           relaySetupFetchCommandStep = 2;
           startRxTimeout();
@@ -2240,45 +2220,15 @@ class BleProcess {
         } else if (relaySetupFetchCommandStep == 2) {
           processDesc.value = "${StringConstants.downloadingRelay} 3/3";
 
-          final OutputModeConfig config = OutputModeCodec.fromHex(
-            rx.payload[15].toRadixString(16),
-          );
-          final bool outputEnabled =
-              config.outputEnable == OutputEnable.enabled;
-          final bool outputMode = config.outputMode == OutputMode.test;
-          isRelayTwoSetupEnabled.value = outputEnabled;
-          isRelayTwoSetupTest.value = outputMode;
-          relayTwoMode.value = rx.payload[15]
-              .toRadixString(16)
-              .toUpperCase()
-              .padLeft(2, '0');
-          relayTwoSetupOutputText.value = extractStringFromPayload(rx.payload);
-          relayTwoSetupDynamicText.value = rx.payload[22].toRadixString(16);
-          relayTwoSetupGroup.value = rx.payload[23];
-          relayTwoSetupFunction.value = rx.payload[24];
+          final config = RelaySetupPayload.readFromPacket(rx.payload);
+          RelaySetupPayload.applyToBleProcess(config, this, 1);
 
           relaySetupFetchCommandStep = 3;
           startRxTimeout();
           await bleManager.sendRelaySetupFetchThirdCmdPkt();
         } else if (relaySetupFetchCommandStep == 3) {
-          final OutputModeConfig config = OutputModeCodec.fromHex(
-            rx.payload[15].toRadixString(16),
-          );
-          final bool outputEnabled =
-              config.outputEnable == OutputEnable.enabled;
-          final bool outputMode = config.outputMode == OutputMode.test;
-          isRelayThreeSetupEnabled.value = outputEnabled;
-          isRelayThreeSetupTest.value = outputMode;
-          relayThreeMode.value = rx.payload[15]
-              .toRadixString(16)
-              .toUpperCase()
-              .padLeft(2, '0');
-          relayThreeSetupOutputText.value = extractStringFromPayload(
-            rx.payload,
-          );
-          relayThreeSetupDynamicText.value = rx.payload[22].toRadixString(16);
-          relayThreeSetupGroup.value = rx.payload[23];
-          relayThreeSetupFunction.value = rx.payload[24];
+          final config = RelaySetupPayload.readFromPacket(rx.payload);
+          RelaySetupPayload.applyToBleProcess(config, this, 2);
 
           bleManager.otaProcessState = OtaProcessState.notInUse;
           cancelOperationDeadline();
@@ -2322,60 +2272,21 @@ class BleProcess {
       if (rx.payload[12] == 0x04) {
         if (zoneSetupFetchCommandStep == 1) {
           processDesc.value = "${StringConstants.downloadingZone} 2/3";
-          final ZoneModeConfig config = ZoneModeCodec.fromHex(
-            rx.payload[14].toRadixString(16),
-          );
-          final bool zoneEnabled = config.zoneEnable == ZoneEnable.enabled;
-          final bool zoneTestMode = config.zoneTestMode == ZoneTestMode.test;
-          final bool zoneType = config.zoneType == ZoneType.isMtl5561;
-          zoneOneSetupType.value = zoneType ? 1 : 0;
-          zoneOneSetupDetectionMode.value = rx.payload[15];
-          isZoneOneSetupEnabled.value = zoneEnabled;
-          isZoneOneSetupTest.value = zoneTestMode;
-          zoneOneSetupText.value = extractStringFromPayload(
-            rx.payload,
-            startIndex: 18,
-          );
-          zoneOneSetupVerificationTime.value = rx.payload[16].toString();
+          final config = ZoneSetupPayload.readFromPacket(rx.payload);
+          ZoneSetupPayload.applyToBleProcess(config, this, 0);
           zoneSetupFetchCommandStep = 2;
           startRxTimeout();
           await bleManager.sendZoneSetupFetchSecondCmdPkt();
         } else if (zoneSetupFetchCommandStep == 2) {
           processDesc.value = "${StringConstants.downloadingZone} 3/3";
-          final ZoneModeConfig config = ZoneModeCodec.fromHex(
-            rx.payload[14].toRadixString(16),
-          );
-          final bool zoneEnabled = config.zoneEnable == ZoneEnable.enabled;
-          final bool zoneTestMode = config.zoneTestMode == ZoneTestMode.test;
-          final bool zoneType = config.zoneType == ZoneType.isMtl5561;
-          zoneTwoSetupType.value = zoneType ? 1 : 0;
-          zoneTwoSetupDetectionMode.value = rx.payload[15];
-          isZoneTwoSetupEnabled.value = zoneEnabled;
-          isZoneTwoSetupTest.value = zoneTestMode;
-          zoneTwoSetupText.value = extractStringFromPayload(
-            rx.payload,
-            startIndex: 18,
-          );
-          zoneTwoSetupVerificationTime.value = rx.payload[16].toString();
+          final config = ZoneSetupPayload.readFromPacket(rx.payload);
+          ZoneSetupPayload.applyToBleProcess(config, this, 1);
           zoneSetupFetchCommandStep = 3;
           startRxTimeout();
           await bleManager.sendZoneSetupFetchThirdCmdPkt();
         } else if (zoneSetupFetchCommandStep == 3) {
-          final ZoneModeConfig config = ZoneModeCodec.fromHex(
-            rx.payload[14].toRadixString(16),
-          );
-          final bool zoneEnabled = config.zoneEnable == ZoneEnable.enabled;
-          final bool zoneTestMode = config.zoneTestMode == ZoneTestMode.test;
-          final bool zoneType = config.zoneType == ZoneType.isMtl5561;
-          zoneThreeSetupType.value = zoneType ? 1 : 0;
-          zoneThreeSetupDetectionMode.value = rx.payload[15];
-          isZoneThreeSetupEnabled.value = zoneEnabled;
-          isZoneThreeSetupTest.value = zoneTestMode;
-          zoneThreeSetupText.value = extractStringFromPayload(
-            rx.payload,
-            startIndex: 18,
-          );
-          zoneThreeSetupVerificationTime.value = rx.payload[16].toString();
+          final config = ZoneSetupPayload.readFromPacket(rx.payload);
+          ZoneSetupPayload.applyToBleProcess(config, this, 2);
           bleManager.otaProcessState = OtaProcessState.notInUse;
           cancelOperationDeadline();
           checkForZoneSetupFetchRes = 0;

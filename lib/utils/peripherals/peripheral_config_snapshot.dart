@@ -1,6 +1,12 @@
 import 'dart:convert';
 
 import 'package:techno_switch_solar_app/ble/ble_manager.dart';
+import 'package:techno_switch_solar_app/config/ble/ext_out_setup_payload.dart';
+import 'package:techno_switch_solar_app/config/ble/input_setup_payload.dart';
+import 'package:techno_switch_solar_app/config/ui/access_config_ui_bridge.dart';
+import 'package:techno_switch_solar_app/config/ble/relay_setup_payload.dart';
+import 'package:techno_switch_solar_app/config/ble/zone_setup_payload.dart';
+import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
 import 'package:techno_switch_solar_app/utils/peripherals/peripheral_config_diff_labels.dart';
 import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
 
@@ -169,81 +175,23 @@ class PeripheralConfigSnapshot {
   }
 
   static Map<String, dynamic> relayMap(BleManager m) => {
-    'r1': {
-      'enabled': m.isRelayOneSetupEnabled.value,
-      'test': m.isRelayOneSetupTest.value,
-      'group': m.relayOneSetupGroup.value,
-      'function': m.relayOneSetupFunction.value,
-      'outputText': m.relayOneSetupOutputText.value,
-      'dynamicText': m.relayOneSetupDynamicText.value,
-    },
-    'r2': {
-      'enabled': m.isRelayTwoSetupEnabled.value,
-      'test': m.isRelayTwoSetupTest.value,
-      'group': m.relayTwoSetupGroup.value,
-      'function': m.relayTwoSetupFunction.value,
-      'outputText': m.relayTwoSetupOutputText.value,
-      'dynamicText': m.relayTwoSetupDynamicText.value,
-    },
-    'r3': {
-      'enabled': m.isRelayThreeSetupEnabled.value,
-      'test': m.isRelayThreeSetupTest.value,
-      'group': m.relayThreeSetupGroup.value,
-      'function': m.relayThreeSetupFunction.value,
-      'outputText': m.relayThreeSetupOutputText.value,
-      'dynamicText': m.relayThreeSetupDynamicText.value,
-    },
+    'r1': RelaySetupPayload.fromBleProcess(m.bleProcess, 0).toCacheMap(),
+    'r2': RelaySetupPayload.fromBleProcess(m.bleProcess, 1).toCacheMap(),
+    'r3': RelaySetupPayload.fromBleProcess(m.bleProcess, 2).toCacheMap(),
   };
 
-  static Map<String, dynamic> inputMap(BleManager m) => {
-    'group': m.inputSetupGroup.value,
-    'function': m.inputSetupFunction.value,
-    'enabled': m.isInputSetupEnabled.value,
-    'test': m.isInputSetupTest.value,
-    'inverted': m.isInputSetupInverted.value,
-    'text': m.inputSetupText.value,
-  };
+  static Map<String, dynamic> inputMap(BleManager m) =>
+      InputSetupPayload.fromBleProcess(m.bleProcess).toCacheMap();
 
   static Map<String, dynamic> zoneMap(BleManager m) => {
-    'z1': {
-      'enabled': m.isZoneOneSetupEnabled.value,
-      'test': m.isZoneOneSetupTest.value,
-      'type': m.zoneOneSetupType.value,
-      'detectionMode': m.zoneOneSetupDetectionMode.value,
-      'verificationTime': m.zoneOneSetupVerificationTime.value,
-      'text': m.zoneOneSetupText.value,
-    },
-    'z2': {
-      'enabled': m.isZoneTwoSetupEnabled.value,
-      'test': m.isZoneTwoSetupTest.value,
-      'type': m.zoneTwoSetupType.value,
-      'detectionMode': m.zoneTwoSetupDetectionMode.value,
-      'verificationTime': m.zoneTwoSetupVerificationTime.value,
-      'text': m.zoneTwoSetupText.value,
-    },
-    'z3': {
-      'enabled': m.isZoneThreeSetupEnabled.value,
-      'test': m.isZoneThreeSetupTest.value,
-      'type': m.zoneThreeSetupType.value,
-      'detectionMode': m.zoneThreeSetupDetectionMode.value,
-      'verificationTime': m.zoneThreeSetupVerificationTime.value,
-      'text': m.zoneThreeSetupText.value,
-    },
+    'z1': ZoneSetupPayload.fromBleProcess(m.bleProcess, 0).toCacheMap(),
+    'z2': ZoneSetupPayload.fromBleProcess(m.bleProcess, 1).toCacheMap(),
+    'z3': ZoneSetupPayload.fromBleProcess(m.bleProcess, 2).toCacheMap(),
   };
 
   static Map<String, dynamic> extOutMap(BleManager m) => {
-    'enabled': m.isExtZoneEnabled.value,
-    'actuatorType': m.extZoneActuatorType.value,
-    'function': m.extZoneFunction.value,
-    'resetAllowed': m.isResetAllowed.value,
-    'holdMode': m.extZoneHoldMode.value,
-    'action': m.extZoneAction.value,
-    'countdownAuto': m.extZoneCountdownAuto.value,
-    'countdownMan': m.extZoneCountdownMan.value,
-    'releaseTime': m.extZoneReleaseTime.value,
-    'resetDelay': m.extZoneResetDelay.value,
-    'text': m.extZoneText.value,
-    'isSolar': m.bleProcess.isExtOutApplyButtonActive.value,
+    ...ExtOutSetupPayload.fromBleProcess(m.bleProcess).toCacheMap(),
+    StringConstants.issolar: m.bleProcess.isExtOutApplyButtonActive.value,
   };
 
   static Map<String, dynamic> sounderMap(BleManager m) => {
@@ -358,7 +306,9 @@ class PeripheralConfigSnapshot {
       m.lBusSetupDataList.value.map((e) => e.toJson()).toList();
 
   static List<Map<String, dynamic>> accessCodeList(BleManager m) =>
-      m.accessCodeSetupDataList.value.map((e) => e.toJson()).toList();
+      m.accessCodeSetupDataList.value
+          .map(AccessConfigUiBridge.toCacheMap)
+          .toList();
 
   static Map<String, dynamic> panelInfoMap(BleManager m) => {
     'panelId': m.panelInfoPanelNo.value,

@@ -1,12 +1,14 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
+import 'package:techno_switch_solar_app/config/ble/ext_out_setup_payload_debug.dart';
+import 'package:techno_switch_solar_app/config/ui/ext_out_config_options.dart';
+import 'package:techno_switch_solar_app/config/ui/ext_out_config_ui_bridge.dart';
 import 'package:techno_switch_solar_app/features/peripherals/shared/controllers/peripheral_mode_controller.dart';
 import 'package:techno_switch_solar_app/utils/panel_config/panel_config_cache_sync.dart';
-import 'package:techno_switch_solar_app/utils/modes/ext_zone_mode_util.dart';
 import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
-import 'package:techno_switch_solar_app/utils/peripherals/defaults/ext_out_defaults.dart';
 
 /// Controller for the Ext-Out (extinguishant) configuration bottom sheet.
 ///
@@ -23,46 +25,17 @@ class ExtOutController extends PeripheralModeController {
 
   final bool embedInCreateFlow;
 
-  final List<String> enabledOptions = [StringConstants.no, StringConstants.yes];
-  final List<String> actuatorTypeOptions = [
-    'Not Defined',
-    StringConstants.metron,
-    StringConstants.solenoid,
-    StringConstants.aerosol,
-  ];
-  final List<String> functionOptions = [
-    'Z1 and Z2',
-    StringConstants.z2AndZ3,
-    StringConstants.z1AndZ3,
-    StringConstants.z1AndZ2AndZ3,
-    StringConstants.z12,
-    StringConstants.z22,
-    StringConstants.z32,
-    StringConstants.any2Zones,
-    StringConstants.any1Zone,
-  ];
-  final List<String> resetInCountOptions = [
-    StringConstants.yes,
-    StringConstants.no,
-  ];
-  final List<String> holdCountOptions = [
-    'Disabled',
-    StringConstants.restart,
-    StringConstants.suspend,
-    StringConstants.disabled,
-  ];
-  final List<String> actionOptions = [
-    'Continous',
-    StringConstants.pulse100msOn,
-    StringConstants.pulse300msOn,
-    StringConstants.pulse600msOn,
-    StringConstants.pulse1sOn,
-    StringConstants.pulse5sOn,
-    StringConstants.pulsing100msOn500msOff,
-    StringConstants.pulsing300msOn15sOff,
-    StringConstants.pulsing600msOn3sOff,
-    StringConstants.pulsing1sOn5sOff,
-  ];
+  List<String> get enabledOptions => ExtOutConfigOptions.enabledOptions;
+
+  List<String> get actuatorTypeOptions => ExtOutConfigOptions.actuatorTypeOptions;
+
+  List<String> get functionOptions => ExtOutConfigOptions.functionOptions;
+
+  List<String> get resetInCountOptions => ExtOutConfigOptions.resetInCountOptions;
+
+  List<String> get holdCountOptions => ExtOutConfigOptions.holdCountOptions;
+
+  List<String> get actionOptions => ExtOutConfigOptions.actionOptions;
 
   final String autoError = "Countdown Auto must be between 0 and 60";
   final String manError = StringConstants.countdownManMustBeBetween0And60;
@@ -84,24 +57,11 @@ class ExtOutController extends PeripheralModeController {
 
   @override
   void initModel() {
-    autoCtrl = TextEditingController(
-      text: ExtOutDefaults.countdownAutoBle.toString(),
-    );
-    manCtrl = TextEditingController(
-      text: ExtOutDefaults.countdownManBle.toString(),
-    );
-    releaseCtrl = TextEditingController(
-      text: ExtOutDefaults.releaseTimeBle.toString(),
-    );
-    resetDelayCtrl = TextEditingController(
-      text: ExtOutDefaults.resetDelayBle.toString(),
-    );
-    enabled = ExtOutDefaults.enabledLabel;
-    actuatorType = ExtOutDefaults.actuatorTypeLabel;
-    function = ExtOutDefaults.functionLabel;
-    resetInCount = ExtOutDefaults.resetInCountLabel;
-    holdCount = ExtOutDefaults.holdCountLabel;
-    action = ExtOutDefaults.actionLabel;
+    autoCtrl = TextEditingController();
+    manCtrl = TextEditingController();
+    releaseCtrl = TextEditingController();
+    resetDelayCtrl = TextEditingController();
+    _applyUiState(ExtOutUiState.defaults());
   }
 
   @override
@@ -140,37 +100,7 @@ class ExtOutController extends PeripheralModeController {
 
   @override
   void applyCachedData(Map<String, dynamic> data) {
-    final en = (data['enabled'] as int?) ?? ExtOutDefaults.enabledBle;
-    enabled = enabledOptions[en.clamp(0, enabledOptions.length - 1)];
-    final at =
-        (data[StringConstants.actuatortype] as int?) ??
-        ExtOutDefaults.actuatorTypeBle;
-    actuatorType =
-        actuatorTypeOptions[at.clamp(0, actuatorTypeOptions.length - 1)];
-    final fn = (data['function'] as int?) ?? ExtOutDefaults.functionBle;
-    function = functionOptions[fn.clamp(0, functionOptions.length - 1)];
-    final ra =
-        (data[StringConstants.resetallowed] as int?) ??
-        ExtOutDefaults.resetAllowedBle;
-    resetInCount =
-        resetInCountOptions[ra.clamp(0, resetInCountOptions.length - 1)];
-    final hc =
-        (data[StringConstants.holdmode] as int?) ?? ExtOutDefaults.holdModeBle;
-    holdCount = holdCountOptions[hc.clamp(0, holdCountOptions.length - 1)];
-    final ac = (data['action'] as int?) ?? ExtOutDefaults.actionBle;
-    action = actionOptions[ac.clamp(0, actionOptions.length - 1)];
-    autoCtrl.text =
-        (data['countdownAuto'] as int?)?.toString() ??
-        ExtOutDefaults.countdownAutoBle.toString();
-    manCtrl.text =
-        (data['countdownMan'] as int?)?.toString() ??
-        ExtOutDefaults.countdownManBle.toString();
-    releaseCtrl.text =
-        (data['releaseTime'] as int?)?.toString() ??
-        ExtOutDefaults.releaseTimeBle.toString();
-    resetDelayCtrl.text =
-        (data[StringConstants.resetdelay] as int?)?.toString() ??
-        ExtOutDefaults.resetDelayBle.toString();
+    _applyUiState(ExtOutConfigUiBridge.fromCacheMap(data));
     _applyCachedSolarMode(data);
   }
 
@@ -185,59 +115,42 @@ class ExtOutController extends PeripheralModeController {
   void loadFromManager() {
     if (!Get.isRegistered<BleLogController>()) return;
     manager = Get.find<BleLogController>().bleManager;
-    autoCtrl.text = manager!.extZoneCountdownAuto.value.toString();
-    manCtrl.text = manager!.extZoneCountdownMan.value.toString();
-    releaseCtrl.text = manager!.extZoneReleaseTime.value.toString();
-    resetDelayCtrl.text = manager!.extZoneResetDelay.value.toString();
-    enabled = enabledOptions[manager!.isExtZoneEnabled.value];
-    actuatorType = actuatorTypeOptions[manager!.extZoneActuatorType.value];
-    function = functionOptions[manager!.extZoneFunction.value];
-    resetInCount = resetInCountOptions[manager!.isResetAllowed.value];
-    holdCount = holdCountOptions[manager!.extZoneHoldMode.value];
-    action = actionOptions[manager!.extZoneAction.value];
+    _applyUiState(ExtOutConfigUiBridge.fromBleProcess(manager!.bleProcess));
     refreshUi();
   }
 
-  int returnIndex(String value, List<String> list) {
-    for (int i = 0; i < list.length; i++) {
-      if (list[i] == value) {
-        return i;
-      }
-    }
-    return -1;
+  ExtOutUiState _currentUiState() => ExtOutUiState(
+    enabled: enabled,
+    actuatorType: actuatorType,
+    function: function,
+    resetInCount: resetInCount,
+    holdCount: holdCount,
+    action: action,
+    countdownAuto: int.tryParse(autoCtrl.text) ?? 0,
+    countdownMan: int.tryParse(manCtrl.text) ?? 0,
+    releaseTime: int.tryParse(releaseCtrl.text) ?? 0,
+    resetDelay: int.tryParse(resetDelayCtrl.text) ?? 0,
+  );
+
+  void _applyUiState(ExtOutUiState ui) {
+    enabled = ui.enabled;
+    actuatorType = ui.actuatorType;
+    function = ui.function;
+    resetInCount = ui.resetInCount;
+    holdCount = ui.holdCount;
+    action = ui.action;
+    autoCtrl.text = ui.countdownAuto.toString();
+    manCtrl.text = ui.countdownMan.toString();
+    releaseCtrl.text = ui.releaseTime.toString();
+    resetDelayCtrl.text = ui.resetDelay.toString();
   }
 
   @override
   void pushToManager() {
-    final m = manager!;
-    int zoneEnable = returnIndex(enabled, enabledOptions);
-    int holdRestart = returnIndex(holdCount, holdCountOptions);
-    int resetAllowedInt = returnIndex(resetInCount, resetInCountOptions);
-    int functionInt = returnIndex(function, functionOptions);
-    int actuaturTypeInt = returnIndex(actuatorType, actuatorTypeOptions);
-    bool resetAllowed = resetAllowedInt == 0;
-
-    final config = ExtZoneModeConfig(
-      extZoneEnable: ExtZoneEnable.values[zoneEnable],
-      extZoneMode: ExtZoneMode.normal,
-      holdMode: HoldMode.values[holdRestart],
-      resetAllowed: resetAllowed,
-      flowDetectionUsed: false,
-    );
-
-    final String hexValue = ExtZoneModeCodec.encodeHex(config);
-
-    m.isExtZoneEnabled.value = zoneEnable;
-    m.extZoneMode.value = hexValue;
-    m.extZoneCountdownAuto.value = int.parse(
-      autoCtrl.text.isEmpty ? '0' : autoCtrl.text,
-    );
-    m.extZoneCountdownMan.value = int.parse(manCtrl.text);
-    m.extZoneReleaseTime.value = int.parse(releaseCtrl.text);
-    m.extZoneResetDelay.value = int.parse(resetDelayCtrl.text);
-    m.extZoneAction.value = returnIndex(action, actionOptions);
-    m.extZoneFunction.value = functionInt;
-    m.extZoneActuatorType.value = actuaturTypeInt;
+    ExtOutConfigUiBridge.applyToBleProcess(_currentUiState(), manager!.bleProcess);
+    if (kDebugMode) {
+      ExtOutSetupPayloadDebug.printApplyFrame(manager!);
+    }
   }
 
   @override

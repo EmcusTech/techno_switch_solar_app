@@ -171,11 +171,15 @@ class _BleCommand {
   final int moduleSetup = 0x01;
   final int lBusSetup = 0x10;
   final int lBusEnabledBusData = 0x01;
+  /// Main sounder struct fetch/apply (legacy relay-style path used 0x07).
+  final int sounderSetup = 0x07;
   final int sounderSetupGeneral = 0x14;
   final int sounderSetupRelay = 0x07;
   final int sounderSetupZone = 0x19;
   final int sounderSetupExtOut = 0x1B;
   final int serviceDue = 0x18;
+  /// Temporary placeholder until firmware assigns the final command byte.L
+  final int panelPropertiesSetup = 0x00;
   final int accessCodeSetup = 0x03;
   final int panelInfoPanelId = 0x08;
   final int panelInfoDateTime = 0x01;

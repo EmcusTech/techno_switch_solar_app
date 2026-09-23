@@ -1,6 +1,10 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
+import 'package:techno_switch_solar_app/config/ble/panel_access_lvl_setup_payload_debug.dart';
+import 'package:techno_switch_solar_app/config/ui/access_config_options.dart';
+import 'package:techno_switch_solar_app/config/ui/access_config_ui_bridge.dart';
 import 'package:techno_switch_solar_app/features/peripherals/shared/controllers/peripheral_mode_controller.dart';
 import 'package:techno_switch_solar_app/models/access_code_mode_model.dart';
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
@@ -19,12 +23,7 @@ class AccessCodeController extends PeripheralModeController {
     required super.refreshTrigger,
   });
 
-  final List<String> accessLevelNames = const [
-    StringConstants.notUsed,
-    StringConstants.untrainedUser,
-    StringConstants.authorisedUser,
-    StringConstants.commissioning,
-  ];
+  List<String> get accessLevelNames => AccessConfigOptions.accessLevelNames;
 
   final TextEditingController accessLevelController = TextEditingController();
   final TextEditingController accessCodeController = TextEditingController();
@@ -55,9 +54,10 @@ class AccessCodeController extends PeripheralModeController {
     }
     final cached = await PeripheralSetupCache.loadAccessCodeSetup(deviceId);
     if (cached != null && cached.isNotEmpty) {
-      final list = cached.map((e) => AccessCodeSetupData.fromJson(e)).toList();
+      final list =
+          cached.map((e) => AccessConfigUiBridge.fromCacheMap(e)).toList();
       while (list.length < 8) {
-        list.add(const AccessCodeSetupData());
+        list.add(AccessCodeSetupData(accessCodeNo: list.length + 1));
       }
       manager?.accessCodeSetupDataList.value = list;
     }
@@ -103,11 +103,11 @@ class AccessCodeController extends PeripheralModeController {
     }
 
     final existing = manager!.accessCodeSetupDataList.value[index];
-    final levelIndex = accessLevelNames.indexOf(accessLevelName);
-    final level = levelIndex >= 0 ? levelIndex : existing.accessLevel;
+    final levelIndex = AccessConfigOptions.accessLevelIndex(accessLevelName);
 
     final updated = existing.copyWith(
-      accessLevel: level,
+      accessCodeNo: selectedCode,
+      accessLevel: levelIndex,
       accessLevelName: accessLevelName,
       accessCode: accessCodeController.text,
     );
@@ -117,6 +117,13 @@ class AccessCodeController extends PeripheralModeController {
     );
     list[index] = updated;
     manager!.accessCodeSetupDataList.value = list;
+
+    if (kDebugMode) {
+      PanelAccessLvlSetupPayloadDebug.printApplyFrame(
+        manager!,
+        selectedCode,
+      );
+    }
   }
 
   @override
@@ -170,7 +177,7 @@ class AccessCodeController extends PeripheralModeController {
 
   void setAccessLevelName(String v) {
     accessLevelName = v;
-    final index = accessLevelNames.indexOf(v);
+    final index = AccessConfigOptions.accessLevelIndex(v);
     accessLevelController.text = index.toString();
     if (v == accessLevelNames.first) {
       isAccessCodeEnabled = false;
