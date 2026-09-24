@@ -1041,8 +1041,16 @@ class BleManager extends GetxService {
 
     bleCurrentState = BleStates.SEND_ZONE_SETUP_CMD_FETCH_PACKET;
     bleStateMachineState = BleStates.SEND_ZONE_SETUP_CMD_FETCH_PACKET;
+    currentOperationMode = BleOperationMode.zoneSetupFetch;
+    otaProcessState = OtaProcessState.sendZoneSetupFetchCmdPkt;
+    bleProcess.isNetworkPacketProcess.value = false;
+    bleProcess.checkForZoneSetupFetchRes = 1;
+    bleProcess.zoneSetupFetchCommandStep = 1;
+    bleProcess.isZoneSetupFetchDone.value = false;
+    bleProcess.processDesc.value = "${StringConstants.downloadingZone} 1/3";
     bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
-    Get.find<BleLogController>().sendNetworkPacket();
+    bleProcess.startRxTimeout();
+    await sendZoneSetupFetchFirstCmdPkt();
   }
 
   Future<void> startZoneSetupApply() async {
@@ -1054,9 +1062,7 @@ class BleManager extends GetxService {
       throw Exception(StringConstants.bleCharNotInit);
     }
 
-    currentOperationMode = BleOperationMode.zoneSetupApply;
-
-    resetRelaySetupState();
+    resetZoneSetupState();
     resetProtocolZoneSetupState();
     bleProcess.resetProcessZoneSetupState();
 
@@ -1066,8 +1072,16 @@ class BleManager extends GetxService {
 
     bleCurrentState = BleStates.SEND_ZONE_SETUP_CMD_APPLY_PACKET;
     bleStateMachineState = BleStates.SEND_ZONE_SETUP_CMD_APPLY_PACKET;
+    currentOperationMode = BleOperationMode.zoneSetupApply;
+    otaProcessState = OtaProcessState.sendZoneSetupApplyCmdPkt;
+    bleProcess.isNetworkPacketProcess.value = false;
+    bleProcess.checkForZoneSetupApplyRes = 1;
+    bleProcess.zoneSetupApplyCommandStep = 1;
+    bleProcess.isZoneSetupApplyDone.value = false;
+    bleProcess.processDesc.value = "${StringConstants.applyingZone} 1/3";
     bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
-    Get.find<BleLogController>().sendNetworkPacket();
+    bleProcess.startRxTimeout();
+    await sendZoneSetupApplyFirstCmdPkt();
   }
 
   Future<void> startRadioSetupFetch() async {
@@ -3268,7 +3282,7 @@ class BleManager extends GetxService {
     u8Pkt[4] = u8TxPktCnt & BleConstants.base;
     u8Pkt[5] = u8RxPktCnt & BleConstants.base;
     u8Pkt[6] = BleConstants.network.radio;
-    u8Pkt[10] = BleConstants.mode.request.dbSetup;
+    u8Pkt[10] = BleConstants.mode.request.dbStatus;
     u8Pkt[11] = BleConstants.socket.radio;
     u8Pkt[12] = BleConstants.command.zoneSetup;
     u8Pkt[13] = BleConstants.firstZoneSetupNo;
@@ -3294,7 +3308,7 @@ class BleManager extends GetxService {
     u8Pkt[4] = u8TxPktCnt & BleConstants.base;
     u8Pkt[5] = u8RxPktCnt & BleConstants.base;
     u8Pkt[6] = BleConstants.network.radio;
-    u8Pkt[10] = BleConstants.mode.request.dbSetup;
+    u8Pkt[10] = BleConstants.mode.request.dbStatus;
     u8Pkt[11] = BleConstants.socket.radio;
     u8Pkt[12] = BleConstants.command.zoneSetup;
     u8Pkt[13] = BleConstants.secondZoneSetupNo;
@@ -3320,7 +3334,7 @@ class BleManager extends GetxService {
     u8Pkt[4] = u8TxPktCnt & BleConstants.base;
     u8Pkt[5] = u8RxPktCnt & BleConstants.base;
     u8Pkt[6] = BleConstants.network.radio;
-    u8Pkt[10] = BleConstants.mode.request.dbSetup;
+    u8Pkt[10] = BleConstants.mode.request.dbStatus;
     u8Pkt[11] = BleConstants.socket.radio;
     u8Pkt[12] = BleConstants.command.zoneSetup;
     u8Pkt[13] = BleConstants.thirdZoneSetupNo;

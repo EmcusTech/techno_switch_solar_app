@@ -48,6 +48,12 @@ abstract class ProjectDashboardUiDelegate {
 
   Future<void> runInputSetupApply();
 
+  Future<void> runZoneSetupDownload({
+    required Future<void> Function() onDownloadComplete,
+  });
+
+  Future<void> runZoneSetupApply({Future<void> Function()? onAfterApplySuccess});
+
   void showDiagnosticStopDialog();
 
   void showConfigLogBottomSheet();

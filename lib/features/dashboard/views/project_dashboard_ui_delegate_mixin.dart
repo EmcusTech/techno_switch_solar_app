@@ -35,6 +35,7 @@ import 'package:techno_switch_solar_app/features/scan/models/scan_type.dart';
 import 'package:techno_switch_solar_app/utils/panel_config/panel_access_password_popup.dart';
 import 'package:techno_switch_solar_app/utils/panel_config/panel_config_bulk_sync.dart';
 import 'package:techno_switch_solar_app/utils/panel_config/input_setup_ble_flow.dart';
+import 'package:techno_switch_solar_app/utils/panel_config/zone_setup_ble_flow.dart';
 import 'package:techno_switch_solar_app/utils/panel_config/panel_config_feedback_dialogs.dart';
 import 'package:techno_switch_solar_app/utils/panel_config/post_connect_bulk_download_offer.dart';
 import 'package:techno_switch_solar_app/utils/ble/bootloader_connect_flow.dart';
@@ -830,6 +831,46 @@ mixin ProjectDashboardUiDelegateMixin<T extends StatefulWidget> on State<T>
       bleController: dashboardController.bleController,
       onApplyComplete: dashboardController.saveInputCacheAndNotifyRefresh,
       showApplySuccess: showApplySuccessDialog,
+    );
+  }
+
+  @override
+  Future<void> runZoneSetupDownload({
+    required Future<void> Function() onDownloadComplete,
+  }) {
+    return runZoneSetupDownloadFlow(
+      context: uiContext,
+      isMounted: () => mounted,
+      bleProcess: dashboardController.bleManager.bleProcess,
+      bleController: dashboardController.bleController,
+      onDownloadComplete: onDownloadComplete,
+      showDownloadSuccess: showDownloadSuccessDialog,
+    );
+  }
+
+  @override
+  Future<void> runZoneSetupApply({
+    Future<void> Function()? onAfterApplySuccess,
+  }) {
+    return runZoneSetupApplyFlow(
+      context: uiContext,
+      isMounted: () => mounted,
+      bleProcess: dashboardController.bleManager.bleProcess,
+      bleController: dashboardController.bleController,
+      onApplyComplete: dashboardController.saveZoneCacheAndNotifyRefresh,
+      showApplySuccess: (message) {
+        showPanelApplySuccessDialog(
+          uiContext,
+          dashboardController.bleManager.bleProcess,
+          message,
+          onDismissed:
+              onAfterApplySuccess == null
+                  ? null
+                  : () {
+                    if (mounted) onAfterApplySuccess();
+                  },
+        );
+      },
     );
   }
 

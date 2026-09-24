@@ -394,6 +394,8 @@ class BleProcess {
 
   final ValueNotifier<bool> isZoneSetupApplyDone = ValueNotifier<bool>(false);
 
+  final ValueNotifier<bool> isZoneSetupFetchDone = ValueNotifier<bool>(false);
+
   final ValueNotifier<bool> isZoneOneSetupEnabled = ValueNotifier<bool>(
     ZoneDefaults.enabledBle,
   );
@@ -2281,7 +2283,7 @@ class BleProcess {
     }
 
     if (checkForZoneSetupApplyRes == 1) {
-      if (rx.payload[10] == 0x83) {
+      if (rx.payload[10] == 0x81) {
         if (zoneSetupApplyCommandStep == 1) {
           processDesc.value = "${StringConstants.applyingZone} 2/3";
           zoneSetupApplyCommandStep = 2;
@@ -2298,11 +2300,7 @@ class BleProcess {
           checkForZoneSetupApplyRes = 0;
           isZoneSetupCommandApplyActive.value = false;
           isZoneSetupApplyDone.value = true;
-          isAccessKeyValid.value = true;
         }
-      } else {
-        startRxTimeout();
-        await bleManager.sendPollPacket();
       }
     }
 
@@ -2329,11 +2327,8 @@ class BleProcess {
           cancelOperationDeadline();
           checkForZoneSetupFetchRes = 0;
           isZoneSetupFetchCommandActive.value = false;
-          isAccessKeyValid.value = true;
+          isZoneSetupFetchDone.value = true;
         }
-      } else {
-        startRxTimeout();
-        await bleManager.sendPollPacket();
       }
     }
 
@@ -2807,6 +2802,12 @@ class BleProcess {
     checkForLiveEventsRetrievalRes = 0;
     processDesc.value = "";
     checkForAdcSetupFetchRes = 0;
+    checkForZoneSetupFetchRes = 0;
+    checkForZoneSetupApplyRes = 0;
+    zoneSetupFetchCommandStep = 0;
+    zoneSetupApplyCommandStep = 0;
+    isZoneSetupFetchDone.value = false;
+    isZoneSetupApplyDone.value = false;
 
     bleManager.otaProcessState = OtaProcessState.sendNetworkPacket;
     isNetworkPacketProcess.value = true;
@@ -3553,6 +3554,15 @@ class BleProcess {
     checkForInputSetupApplyRes = 0;
   }
 
+  void _clearZoneSetupOperationFlags() {
+    isZoneSetupFetchCommandActive.value = false;
+    isZoneSetupCommandApplyActive.value = false;
+    checkForZoneSetupFetchRes = 0;
+    checkForZoneSetupApplyRes = 0;
+    zoneSetupFetchCommandStep = 0;
+    zoneSetupApplyCommandStep = 0;
+  }
+
   void startRxTimeout({bool bumpOperationDeadline = true}) {
     maxOtherPacketsRetriesReached.value = false;
     if (isOtaCompleted) return;
@@ -3603,6 +3613,17 @@ class BleProcess {
 
     if (isInputSetupFetchCommandActive.value || isInputSetupApplyActive.value) {
       _clearInputSetupOperationFlags();
+    }
+
+    if (isZoneSetupFetchCommandActive.value ||
+        isZoneSetupCommandApplyActive.value) {
+      _clearZoneSetupOperationFlags();
+      cancelRxTimeout();
+      cancelOperationDeadline();
+      bleManager.otaProcessState = OtaProcessState.notInUse;
+      processDesc.value = StringConstants.deviceNotResponding;
+      maxOtherPacketsRetriesReached.value = true;
+      return;
     }
 
     networkFlowRestartCount++;

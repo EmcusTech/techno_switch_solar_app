@@ -55,23 +55,11 @@ abstract final class ProjectDashboardTileActions {
       final ui = _ui(c);
       if (ui == null) return;
       ui.showZoneSetupBottomSheet(
-        onDownload: () => ui.showPasswordPopup(
-          onCall: () {
-            c.ble.bleProcess.isZoneSetupFetchCommandActive.value = true;
-            c.bleController.startZoneSetupFetch();
-          },
-          isZoneSetup: true,
-          mode: 'bottomsheet_download',
-          onDownloadComplete: c.saveZoneCacheAndNotifyRefresh,
-        ),
-        onApply: () => ui.showPasswordPopup(
-          onCall: () {
-            c.ble.bleProcess.isZoneSetupCommandApplyActive.value = true;
-            c.bleController.startZoneSetupApply();
-          },
-          isZoneSetup: true,
-          mode: 'bottomsheet_apply',
-        ),
+        onDownload:
+            () => ui.runZoneSetupDownload(
+              onDownloadComplete: c.saveZoneCacheAndNotifyRefresh,
+            ),
+        onApply: () => ui.runZoneSetupApply(),
         refreshTrigger: c.zoneRefreshTrigger,
       );
     });
@@ -369,24 +357,14 @@ abstract final class ProjectDashboardTileActions {
       final ui = _ui(c);
       if (ui == null) return;
       ui.showWalkTestZoneBottomSheet(
-        onDownload: () => ui.showPasswordPopup(
-          onCall: () {
-            c.ble.bleProcess.isZoneSetupFetchCommandActive.value = true;
-            c.bleController.startZoneSetupFetch();
-          },
-          isZoneSetup: true,
-          mode: 'bottomsheet_download',
-          onDownloadComplete: c.saveZoneCacheAndNotifyRefresh,
-        ),
-        onApply: () => ui.showPasswordPopup(
-          onCall: () {
-            c.ble.bleProcess.isZoneSetupCommandApplyActive.value = true;
-            c.bleController.startZoneSetupApply();
-          },
-          isZoneSetup: true,
-          mode: 'bottomsheet_apply',
-          onAfterApplySuccess: (_) => ui.showWalkTestResultConfirmation(),
-        ),
+        onDownload:
+            () => ui.runZoneSetupDownload(
+              onDownloadComplete: c.saveZoneCacheAndNotifyRefresh,
+            ),
+        onApply:
+            () => ui.runZoneSetupApply(
+              onAfterApplySuccess: ui.showWalkTestResultConfirmation,
+            ),
         refreshTrigger: c.zoneRefreshTrigger,
       );
     });
