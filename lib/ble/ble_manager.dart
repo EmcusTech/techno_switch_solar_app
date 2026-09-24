@@ -817,10 +817,15 @@ class BleManager extends GetxService {
     resetProtocolState();
     bleProcess.resetProcessState();
     bleProcess.isSessionAccessCodeValidationOnly = true;
-    bleCurrentState = BleStates.SEND_EXT_OUT_SETUP_CMD_FETCH_PACKET;
-    bleStateMachineState = BleStates.SEND_EXT_OUT_SETUP_CMD_FETCH_PACKET;
+    bleProcess.isOtaCompleted = false;
+    bleProcess.processNextOtaFrame = true;
+    bleCurrentState = BleStates.IDLE;
+    bleStateMachineState = BleStates.IDLE;
+    otaProcessState = OtaProcessState.sendAccessKeyPacket;
+    bleProcess.processDesc.value = StringConstants.validating;
     bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
-    await Get.find<BleLogController>().sendNetworkPacket();
+    bleProcess.startRxTimeout();
+    await sendAccessKeyPkt();
   }
 
   Future<void> startLiveEventsRetrieval() async {
@@ -924,8 +929,14 @@ class BleManager extends GetxService {
 
     bleCurrentState = BleStates.SEND_INPUT_SETUP_CMD_FETCH_PACKET;
     bleStateMachineState = BleStates.SEND_INPUT_SETUP_CMD_FETCH_PACKET;
+    otaProcessState = OtaProcessState.sendInputSetupFetchCmdPkt;
+    bleProcess.isNetworkPacketProcess.value = false;
+    bleProcess.checkForInputSetupFetchRes = 1;
+    bleProcess.isInputSetupFetchDone.value = false;
+    bleProcess.processDesc.value = StringConstants.downloadInputSetup;
     bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
-    Get.find<BleLogController>().sendNetworkPacket();
+    bleProcess.startRxTimeout();
+    await sendInputSetupFetchCmdPkt();
   }
 
   Future<void> startInputSetupApply() async {
@@ -949,8 +960,14 @@ class BleManager extends GetxService {
 
     bleCurrentState = BleStates.SEND_INPUT_SETUP_CMD_APPLY_PACKET;
     bleStateMachineState = BleStates.SEND_INPUT_SETUP_CMD_APPLY_PACKET;
+    otaProcessState = OtaProcessState.sendInputSetupApplyCmdPkt;
+    bleProcess.isNetworkPacketProcess.value = false;
+    bleProcess.checkForInputSetupApplyRes = 1;
+    bleProcess.isInputSetupApplyDone.value = false;
+    bleProcess.processDesc.value = StringConstants.applyingInputSetup;
     bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
-    Get.find<BleLogController>().sendNetworkPacket();
+    bleProcess.startRxTimeout();
+    await sendInputSetupApplyCmdPkt();
   }
 
   Future<void> startRelaySetupFetch() async {
@@ -2386,6 +2403,42 @@ class BleManager extends GetxService {
     u8Pkt[214] = checksum & BleConstants.base;
     u8Pkt[215] = BleConstants.eot;
 
+    if (currentOperationMode == BleOperationMode.inputSetupFetch ||
+        currentOperationMode == BleOperationMode.inputSetupApply ||
+        bleProcess.isSessionAccessCodeValidationOnly) {
+      InputSetupPayloadDebug.logBleFrame('TRANSMIT', 'network', u8Pkt);
+    }
+
+    await sendSmallDataFrame(0x1000, 216, u8Pkt);
+  }
+
+  Future<void> sendModuleIdPacket() async {
+    bleProcess.isNetworkPacketProcess.value = true;
+    u8TxPktCnt = 0;
+
+    List<int> u8Pkt = List.filled(216, 0);
+    u8Pkt[0] = BleConstants.sot;
+    u8Pkt[1] = BleConstants.des;
+    u8Pkt[2] = BleConstants.ori;
+    u8Pkt[3] = BleConstants.type.nrm;
+    u8Pkt[4] = BleConstants.txPkNoInit;
+    u8Pkt[5] = BleConstants.rxPkNoInit;
+    u8Pkt[6] = BleConstants.network.radio;
+    u8Pkt[11] = BleConstants.socket.radio;
+    u8Pkt[12] = BleConstants.command.moduleId;
+
+    int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
+
+    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
+    u8Pkt[214] = checksum & BleConstants.base;
+    u8Pkt[215] = BleConstants.eot;
+
+    if (currentOperationMode == BleOperationMode.inputSetupFetch ||
+        currentOperationMode == BleOperationMode.inputSetupApply ||
+        bleProcess.isSessionAccessCodeValidationOnly) {
+      InputSetupPayloadDebug.logBleFrame('TRANSMIT', 'network', u8Pkt);
+    }
+
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
 
@@ -2429,8 +2482,11 @@ class BleManager extends GetxService {
     List<int> pkt = List.filled(216, 0);
 
     String accessKeyString = accessKey.value;
+    print("Access Key String: $accessKeyString");
     List<int> accessKeyBytes = accessKeyString.codeUnits;
     accessKeyLength.value = accessKeyBytes.length;
+
+    print('Access Key Length: ${accessKeyLength.value}');
 
     for (int i = 0; i < accessKeyLength.value; i++) {
       if (i < accessKeyLength.value) {
@@ -2456,7 +2512,7 @@ class BleManager extends GetxService {
     pkt[214] = checksum & BleConstants.base;
     pkt[215] = BleConstants.eot;
 
-    Logger("Access Key Packet: $pkt");
+    InputSetupPayloadDebug.logBleFrame('TRANSMIT', 'access-key', pkt);
 
     await sendSmallDataFrame(0x1000, 216, pkt);
   }
@@ -2655,7 +2711,7 @@ class BleManager extends GetxService {
     u8Pkt[6] = BleConstants.network.radio;
     u8Pkt[10] = BleConstants.mode.request.dbSetup;
     u8Pkt[11] = BleConstants.socket.radio;
-    u8Pkt[12] = BleConstants.command.extOut;
+    u8Pkt[12] = BleConstants.command.extOutStatus;
     u8Pkt[13] = BleConstants.extZoneNo;
 
     int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
@@ -2687,7 +2743,7 @@ class BleManager extends GetxService {
     u8Pkt[6] = BleConstants.network.radio;
     u8Pkt[10] = BleConstants.mode.instruction.dbSetup;
     u8Pkt[11] = BleConstants.socket.radio;
-    u8Pkt[12] = BleConstants.command.extOut;
+    u8Pkt[12] = BleConstants.command.extOutSetup;
 
     final extOutConfig = ExtOutSetupPayload.fromBleProcess(bleProcess);
     ExtOutSetupPayload.writeToPacket(u8Pkt, extOutConfig);
@@ -2749,15 +2805,17 @@ class BleManager extends GetxService {
     u8Pkt[4] = u8TxPktCnt & BleConstants.base;
     u8Pkt[5] = u8RxPktCnt & BleConstants.base;
     u8Pkt[6] = BleConstants.network.radio;
-    u8Pkt[10] = BleConstants.mode.request.dbSetup;
+    u8Pkt[10] = BleConstants.mode.request.dbStatus;
     u8Pkt[11] = BleConstants.socket.radio;
-    u8Pkt[12] = BleConstants.command.inputSetup;
+    u8Pkt[12] = BleConstants.command.inputStatus;
 
     int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
     u8Pkt[213] = (checksum >> 8) & BleConstants.base;
     u8Pkt[214] = checksum & BleConstants.base;
     u8Pkt[215] = BleConstants.eot;
+
+    InputSetupPayloadDebug.logBleFrame('TRANSMIT', 'input-setup-fetch', u8Pkt);
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
@@ -2799,7 +2857,7 @@ class BleManager extends GetxService {
   Future<void> sendInputSetupApplyCmdPkt() async {
     final u8Pkt = buildInputSetupApplyPacket();
 
-    InputSetupPayloadDebug.printFrame(u8Pkt, label: 'SETUP_INPUT APPLY (TX)');
+    InputSetupPayloadDebug.logBleFrame('TRANSMIT', 'input-setup-apply', u8Pkt);
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }

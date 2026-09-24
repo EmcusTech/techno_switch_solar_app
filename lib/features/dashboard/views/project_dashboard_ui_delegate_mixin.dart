@@ -34,6 +34,7 @@ import 'package:techno_switch_solar_app/features/peripherals/zones/sheets/zone_m
 import 'package:techno_switch_solar_app/features/scan/models/scan_type.dart';
 import 'package:techno_switch_solar_app/utils/panel_config/panel_access_password_popup.dart';
 import 'package:techno_switch_solar_app/utils/panel_config/panel_config_bulk_sync.dart';
+import 'package:techno_switch_solar_app/utils/panel_config/input_setup_ble_flow.dart';
 import 'package:techno_switch_solar_app/utils/panel_config/panel_config_feedback_dialogs.dart';
 import 'package:techno_switch_solar_app/utils/panel_config/post_connect_bulk_download_offer.dart';
 import 'package:techno_switch_solar_app/utils/ble/bootloader_connect_flow.dart';
@@ -803,6 +804,32 @@ mixin ProjectDashboardUiDelegateMixin<T extends StatefulWidget> on State<T>
           ),
         );
       },
+    );
+  }
+
+  @override
+  Future<void> runInputSetupDownload({
+    required Future<void> Function() onDownloadComplete,
+  }) {
+    return runInputSetupDownloadFlow(
+      context: uiContext,
+      isMounted: () => mounted,
+      bleProcess: dashboardController.bleManager.bleProcess,
+      bleController: dashboardController.bleController,
+      onDownloadComplete: onDownloadComplete,
+      showDownloadSuccess: showDownloadSuccessDialog,
+    );
+  }
+
+  @override
+  Future<void> runInputSetupApply() {
+    return runInputSetupApplyFlow(
+      context: uiContext,
+      isMounted: () => mounted,
+      bleProcess: dashboardController.bleManager.bleProcess,
+      bleController: dashboardController.bleController,
+      onApplyComplete: dashboardController.saveInputCacheAndNotifyRefresh,
+      showApplySuccess: showApplySuccessDialog,
     );
   }
 

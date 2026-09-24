@@ -162,15 +162,18 @@ class _BleCommand {
   final int sendFirmware = 0x1002;
   final int sendFirstFirmwarePktAfterSkip = 0x1003;
   final int endFirmware = 0x1004;
-  final int extOut = 0x16;
+  final int extOutSetup = 0x15;
+  final int extOutStatus = 0x16;
   final int dipSetting = 0x1C;
   final int inputSetup = 0x06;
+  final int inputStatus = 0x07;
   final int relaySetup = 0x07;
   final int zoneSetup = 0x04;
   final int radioSetup = 0x1D;
   final int moduleSetup = 0x01;
   final int lBusSetup = 0x10;
   final int lBusEnabledBusData = 0x01;
+
   /// Main sounder struct fetch/apply (legacy relay-style path used 0x07).
   final int sounderSetup = 0x07;
   final int sounderSetupGeneral = 0x14;
@@ -178,6 +181,7 @@ class _BleCommand {
   final int sounderSetupZone = 0x19;
   final int sounderSetupExtOut = 0x1B;
   final int serviceDue = 0x18;
+
   /// Temporary placeholder until firmware assigns the final command byte.L
   final int panelPropertiesSetup = 0x00;
   final int accessCodeSetup = 0x03;

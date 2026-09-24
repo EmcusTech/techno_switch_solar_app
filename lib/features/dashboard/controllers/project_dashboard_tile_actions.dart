@@ -40,23 +40,11 @@ abstract final class ProjectDashboardTileActions {
       final ui = _ui(c);
       if (ui == null) return;
       ui.showInputSetupBottomSheet(
-        onDownload: () => ui.showPasswordPopup(
-          onCall: () {
-            c.ble.bleProcess.isInputSetupFetchCommandActive.value = true;
-            c.bleController.startInputSetupFetch();
-          },
-          isInputSetup: true,
-          mode: 'bottomsheet_download',
-          onDownloadComplete: c.saveInputCacheAndNotifyRefresh,
-        ),
-        onApply: () => ui.showPasswordPopup(
-          onCall: () {
-            c.ble.bleProcess.isInputSetupApplyActive.value = true;
-            c.bleController.startInputSetupApply();
-          },
-          isInputSetup: true,
-          mode: 'bottomsheet_apply',
-        ),
+        onDownload:
+            () => ui.runInputSetupDownload(
+              onDownloadComplete: c.saveInputCacheAndNotifyRefresh,
+            ),
+        onApply: () => ui.runInputSetupApply(),
         refreshTrigger: c.inputRefreshTrigger,
       );
     });

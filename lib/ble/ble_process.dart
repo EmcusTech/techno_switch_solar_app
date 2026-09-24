@@ -10,6 +10,7 @@ import 'package:techno_switch_solar_app/utils/modes/ext_out_equipment_mode_util.
 import 'package:techno_switch_solar_app/utils/modes/general_quipment_mode_util.dart';
 import 'package:techno_switch_solar_app/config/ble/ext_out_setup_payload.dart';
 import 'package:techno_switch_solar_app/config/ble/input_setup_payload.dart';
+import 'package:techno_switch_solar_app/config/ble/input_setup_payload_debug.dart';
 import 'package:techno_switch_solar_app/config/ble/panel_access_lvl_setup_payload.dart';
 import 'package:techno_switch_solar_app/config/ble/relay_setup_payload.dart';
 import 'package:techno_switch_solar_app/config/ble/zone_setup_payload.dart';
@@ -44,7 +45,7 @@ class BleProcess {
 
   static const Duration bleOperationDeadlineDuration = Duration(seconds: 10);
 
-  static const Duration accessKeyPollTimeoutDuration = Duration(seconds: 5);
+  static const Duration accessKeyPollTimeoutDuration = Duration(seconds: 15);
 
   int checkForNetworkPacketRsp = 0;
   int checkForCtrlCmdRsp = 0;
@@ -293,6 +294,8 @@ class BleProcess {
   );
 
   final ValueNotifier<bool> isInputSetupApplyDone = ValueNotifier<bool>(false);
+
+  final ValueNotifier<bool> isInputSetupFetchDone = ValueNotifier<bool>(false);
 
   final ValueNotifier<String> inputMode = ValueNotifier<String>("");
 
@@ -863,6 +866,12 @@ class BleProcess {
 
     bleManager.u8RxPktCnt = rx.payload[4];
 
+    InputSetupPayloadDebug.logBleFrame(
+      'RECEIVE',
+      'the notify otaProcessState: ${bleManager.otaProcessState}',
+      rx.payload,
+    );
+
     if (rx.payload[3] == 0x03) {
       isOtaCompleted = true;
       processNextOtaFrame = false;
@@ -886,6 +895,7 @@ class BleProcess {
     switch (bleManager.otaProcessState) {
       case OtaProcessState.sendNetworkPacket:
         checkForNetworkPacketRsp = 1;
+        break;
 
       case OtaProcessState.sendPollPacket:
         bleManager.otaProcessState = OtaProcessState.sendAccessKeyPacket;
@@ -1047,13 +1057,31 @@ class BleProcess {
         _persistPanelNetworkSnapshotIfConnected();
       }
 
-      bleManager.otaProcessState = OtaProcessState.sendPollPacket;
       isNetworkPacketProcess.value = false;
       checkForNetworkPacketRsp = 0;
       _otherPacketsRxTimeoutTimer?.cancel();
       _otherPacketsRxTimeoutTimer = null;
-      startRxTimeout();
-      await bleManager.sendPollPacket();
+      if (isInputSetupFetchCommandActive.value ||
+          isInputSetupApplyActive.value ||
+          isSessionAccessCodeValidationOnly) {
+        InputSetupPayloadDebug.logBleFrame(
+          'RECEIVE',
+          'network-response',
+          rx.payload,
+        );
+      }
+
+      if (isSessionAccessCodeValidationOnly) {
+        isSessionAccessCodeValidationOnly = false;
+        bleManager.otaProcessState = OtaProcessState.notInUse;
+        cancelOperationDeadline();
+        cancelRxTimeout();
+        isAccessKeyValid.value = true;
+        processDesc.value = '';
+        return;
+      }
+
+      await _continueAfterNetworkPacket();
     }
 
     if (checkForLiveEventsRetrievalRes == 1) {
@@ -1085,8 +1113,9 @@ class BleProcess {
 
     if (checkForAccessKeyCmdRsp == 1) {
       print(
-        "TX/RX: Access code response packet: ${rx.payload.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+        "TX/RX: Access code response sdcsc packet: ${rx.payload.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
       );
+      print("acces code validation : ${rx.payload[13]}");
       // if (rx.payload[13] != 0x0a &&
       //     String.fromCharCodes(
       //           rx.payload.sublist(14, 14 + accessKeyLength.value),
@@ -1094,14 +1123,16 @@ class BleProcess {
       //         accessKey.value) {
       if (rx.payload[13] == 0x02) {
         cancelAccessKeyPollDeadline();
-        if (isInputSetupFetchCommandActive.value) {
-          bleManager.otaProcessState =
-              OtaProcessState.sendInputSetupFetchCmdPkt;
-          checkForAccessKeyCmdRsp = 0;
-          processDesc.value = StringConstants.downloadInputSetup;
-          startRxTimeout();
-          await bleManager.sendInputSetupFetchCmdPkt();
-        } else if (isExtOutCommandFetchActive.value) {
+        if (isSessionAccessCodeValidationOnly ||
+            isInputSetupFetchCommandActive.value ||
+            isInputSetupApplyActive.value) {
+          InputSetupPayloadDebug.logBleFrame(
+            'RECEIVE',
+            'access-key-response',
+            rx.payload,
+          );
+        }
+        if (isExtOutCommandFetchActive.value) {
           bleManager.otaProcessState =
               OtaProcessState.sendExtOutSetupFetchCmdPkt;
           checkForAccessKeyCmdRsp = 0;
@@ -1115,13 +1146,6 @@ class BleProcess {
           processDesc.value = StringConstants.applyingExtOutSetup;
           startRxTimeout();
           await bleManager.sendExtOutSetupApplyCmdPkt();
-        } else if (isInputSetupApplyActive.value) {
-          bleManager.otaProcessState =
-              OtaProcessState.sendInputSetupApplyCmdPkt;
-          checkForAccessKeyCmdRsp = 0;
-          processDesc.value = StringConstants.applyingInputSetup;
-          startRxTimeout();
-          await bleManager.sendInputSetupApplyCmdPkt();
         } else if (isRelaySetupFetchCommandActive.value) {
           bleManager.otaProcessState =
               OtaProcessState.sendRelaySetupFetchCmdPkt;
@@ -1280,6 +1304,13 @@ class BleProcess {
           checkForAccessKeyCmdRsp = 0;
           startRxTimeout();
           await bleManager.sendStopCntrlCmdPkt();
+        } else if (isSessionAccessCodeValidationOnly) {
+          checkForAccessKeyCmdRsp = 0;
+          cancelAccessKeyPollDeadline();
+          bleManager.otaProcessState = OtaProcessState.sendNetworkPacket;
+          processDesc.value = StringConstants.sendingNetworkPacket;
+          startRxTimeout();
+          await bleManager.sendModuleIdPacket();
         } else {
           bleManager.otaProcessState = OtaProcessState.notInUse;
           cancelOperationDeadline();
@@ -1305,7 +1336,11 @@ class BleProcess {
           return;
         }
         startRxTimeout(bumpOperationDeadline: false);
-        await bleManager.sendPollPacket();
+        if (!isSessionAccessCodeValidationOnly &&
+            !isInputSetupFetchCommandActive.value &&
+            !isInputSetupApplyActive.value) {
+          await bleManager.sendPollPacket();
+        }
       }
     }
 
@@ -2137,31 +2172,34 @@ class BleProcess {
     }
 
     if (checkForInputSetupFetchRes == 1) {
-      if (rx.payload[12] == 0x06) {
+      if (rx.payload[12] == 0x07) {
+        InputSetupPayloadDebug.logBleFrame(
+          'RECEIVE',
+          'input-setup-fetch-response',
+          rx.payload,
+        );
         bleManager.otaProcessState = OtaProcessState.notInUse;
         cancelOperationDeadline();
         checkForInputSetupFetchRes = 0;
         isInputSetupFetchCommandActive.value = false;
-        isAccessKeyValid.value = true;
+        isInputSetupFetchDone.value = true;
         final config = InputSetupPayload.readFromPacket(rx.payload);
         InputSetupPayload.applyToBleProcess(config, this);
-      } else {
-        startRxTimeout();
-        await bleManager.sendPollPacket();
       }
     }
 
     if (checkForInputSetupApplyRes == 1) {
-      if (rx.payload[10] == 0x83) {
-        isAccessKeyValid.value = true;
+      if (rx.payload[10] == 0x81) {
+        InputSetupPayloadDebug.logBleFrame(
+          'RECEIVE',
+          'input-setup-apply-response',
+          rx.payload,
+        );
         bleManager.otaProcessState = OtaProcessState.notInUse;
         cancelOperationDeadline();
         checkForInputSetupApplyRes = 0;
         isInputSetupApplyActive.value = false;
         isInputSetupApplyDone.value = true;
-      } else {
-        startRxTimeout();
-        await bleManager.sendPollPacket();
       }
     }
 
@@ -2631,12 +2669,15 @@ class BleProcess {
     isOtaCompleted = false;
     processNextOtaFrame = true;
     logRetreivalEnded = false;
+    isInputSetupFetchDone.value = false;
+    isInputSetupApplyDone.value = false;
 
     checkForCtrlCmdRsp = 0;
     checkForAccessKeyCmdRsp = 0;
     checkDipSetCmdRsp = 0;
     checkForExtCmdFetchRes = 0;
     checkForInputSetupFetchRes = 0;
+    checkForInputSetupApplyRes = 0;
     checkForAccessKeyCmdRsp = 0;
     checkForRadioSetupFetchRes = 0;
     checkDipSetCmdRsp = 0;
@@ -3479,6 +3520,39 @@ class BleProcess {
     isValidLogRecieved.dispose();
   }
 
+  Future<void> _continueAfterNetworkPacket() async {
+    if (isInputSetupFetchCommandActive.value) {
+      bleManager.otaProcessState = OtaProcessState.sendInputSetupFetchCmdPkt;
+      checkForInputSetupFetchRes = 1;
+      isInputSetupFetchDone.value = false;
+      processDesc.value = StringConstants.downloadInputSetup;
+      startRxTimeout();
+      await bleManager.sendInputSetupFetchCmdPkt();
+      return;
+    }
+
+    if (isInputSetupApplyActive.value) {
+      bleManager.otaProcessState = OtaProcessState.sendInputSetupApplyCmdPkt;
+      checkForInputSetupApplyRes = 1;
+      isInputSetupApplyDone.value = false;
+      processDesc.value = StringConstants.applyingInputSetup;
+      startRxTimeout();
+      await bleManager.sendInputSetupApplyCmdPkt();
+      return;
+    }
+
+    bleManager.otaProcessState = OtaProcessState.sendPollPacket;
+    startRxTimeout();
+    await bleManager.sendPollPacket();
+  }
+
+  void _clearInputSetupOperationFlags() {
+    isInputSetupFetchCommandActive.value = false;
+    isInputSetupApplyActive.value = false;
+    checkForInputSetupFetchRes = 0;
+    checkForInputSetupApplyRes = 0;
+  }
+
   void startRxTimeout({bool bumpOperationDeadline = true}) {
     maxOtherPacketsRetriesReached.value = false;
     if (isOtaCompleted) return;
@@ -3493,7 +3567,7 @@ class BleProcess {
 
     _rxTimeoutTimer?.cancel();
 
-    _rxTimeoutTimer = Timer(const Duration(seconds: 2), () async {
+    _rxTimeoutTimer = Timer(const Duration(seconds: 15), () async {
       if (isOtaCompleted) return;
 
       rxTimeoutRetryCount++;
@@ -3525,6 +3599,10 @@ class BleProcess {
     if (checkForAccessKeyCmdRsp == 1 || isSessionAccessCodeValidationOnly) {
       _onAccessKeyPollTimeout();
       return;
+    }
+
+    if (isInputSetupFetchCommandActive.value || isInputSetupApplyActive.value) {
+      _clearInputSetupOperationFlags();
     }
 
     networkFlowRestartCount++;

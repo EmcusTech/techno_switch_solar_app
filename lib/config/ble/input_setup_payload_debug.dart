@@ -31,4 +31,12 @@ abstract final class InputSetupPayloadDebug {
     if (!kDebugMode) return;
     debugPrint('$label 216-byte frame:\n${formatHexDump(packet)}');
   }
+
+  /// Full 216-byte one-line log for live input setup BLE TX/RX.
+  static void logBleFrame(String direction, String packetName, List<int> frame) {
+    print(
+      'TX/RX: $direction: $packetName packet: '
+      '${frame.map((e) => e.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}',
+    );
+  }
 }

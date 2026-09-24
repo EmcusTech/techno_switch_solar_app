@@ -42,6 +42,12 @@ abstract class ProjectDashboardUiDelegate {
 
   void showDownloadSuccessDialog(String message);
 
+  Future<void> runInputSetupDownload({
+    required Future<void> Function() onDownloadComplete,
+  });
+
+  Future<void> runInputSetupApply();
+
   void showDiagnosticStopDialog();
 
   void showConfigLogBottomSheet();
