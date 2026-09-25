@@ -27,11 +27,13 @@ class ExtOutController extends PeripheralModeController {
 
   List<String> get enabledOptions => ExtOutConfigOptions.enabledOptions;
 
-  List<String> get actuatorTypeOptions => ExtOutConfigOptions.actuatorTypeOptions;
+  List<String> get actuatorTypeOptions =>
+      ExtOutConfigOptions.actuatorTypeOptions;
 
   List<String> get functionOptions => ExtOutConfigOptions.functionOptions;
 
-  List<String> get resetInCountOptions => ExtOutConfigOptions.resetInCountOptions;
+  List<String> get resetInCountOptions =>
+      ExtOutConfigOptions.resetInCountOptions;
 
   List<String> get holdCountOptions => ExtOutConfigOptions.holdCountOptions;
 
@@ -107,7 +109,7 @@ class ExtOutController extends PeripheralModeController {
   void _applyCachedSolarMode(Map<String, dynamic> data) {
     final solarRaw = data[StringConstants.issolar];
     if (manager != null && solarRaw is bool) {
-      manager!.bleProcess.isExtOutApplyButtonActive.value = solarRaw;
+      manager!.bleProcess.isExtOutApplyButtonActive.value = true;
     }
   }
 
@@ -147,7 +149,10 @@ class ExtOutController extends PeripheralModeController {
 
   @override
   void pushToManager() {
-    ExtOutConfigUiBridge.applyToBleProcess(_currentUiState(), manager!.bleProcess);
+    ExtOutConfigUiBridge.applyToBleProcess(
+      _currentUiState(),
+      manager!.bleProcess,
+    );
     if (kDebugMode) {
       ExtOutSetupPayloadDebug.printApplyFrame(manager!);
     }

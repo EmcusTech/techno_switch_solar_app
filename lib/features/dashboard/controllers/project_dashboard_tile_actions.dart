@@ -172,23 +172,11 @@ abstract final class ProjectDashboardTileActions {
       final ui = _ui(c);
       if (ui == null) return;
       ui.showExtOutBottomSheet(
-        onDownload: () => ui.showPasswordPopup(
-          onCall: () {
-            c.ble.bleProcess.isExtOutCommandFetchActive.value = true;
-            c.bleController.startExtOutFetch();
-          },
-          isExtOut: true,
-          mode: 'bottomsheet_download',
-          onDownloadComplete: c.saveExtOutCacheAndNotifyRefresh,
-        ),
-        onApply: () => ui.showPasswordPopup(
-          onCall: () {
-            c.ble.bleProcess.isExtOutCommandApplyActive.value = true;
-            c.bleController.startExtOutApply();
-          },
-          isExtOut: true,
-          mode: 'bottomsheet_apply',
-        ),
+        onDownload:
+            () => ui.runExtOutSetupDownload(
+              onDownloadComplete: c.saveExtOutCacheAndNotifyRefresh,
+            ),
+        onApply: () => ui.runExtOutSetupApply(),
         refreshTrigger: c.extOutRefreshTrigger,
       );
     });

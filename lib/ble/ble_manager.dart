@@ -879,8 +879,15 @@ class BleManager extends GetxService {
 
     bleCurrentState = BleStates.SEND_EXT_OUT_SETUP_CMD_FETCH_PACKET;
     bleStateMachineState = BleStates.SEND_EXT_OUT_SETUP_CMD_FETCH_PACKET;
+    currentOperationMode = BleOperationMode.extOutFetch;
+    otaProcessState = OtaProcessState.sendExtOutSetupFetchCmdPkt;
+    bleProcess.isNetworkPacketProcess.value = false;
+    bleProcess.checkForExtCmdFetchRes = 1;
+    bleProcess.isExtOutFetchDone.value = false;
+    bleProcess.processDesc.value = StringConstants.downloadExtOutSetup;
     bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
-    Get.find<BleLogController>().sendNetworkPacket();
+    bleProcess.startRxTimeout();
+    await sendExtOutSetupFetchCmdPkt();
   }
 
   Future<void> startExtOutApply() async {
@@ -892,8 +899,6 @@ class BleManager extends GetxService {
       throw Exception(StringConstants.bleCharNotInit);
     }
 
-    currentOperationMode = BleOperationMode.extOutApply;
-
     resetExtOutState();
     resetProtocolExtOutState();
     bleProcess.resetProcessExtOutState();
@@ -904,8 +909,15 @@ class BleManager extends GetxService {
 
     bleCurrentState = BleStates.SEND_EXT_OUT_SETUP_CMD_APPLY_PACKET;
     bleStateMachineState = BleStates.SEND_EXT_OUT_SETUP_CMD_APPLY_PACKET;
+    currentOperationMode = BleOperationMode.extOutApply;
+    otaProcessState = OtaProcessState.sendExtOutSetupApplyCmdPkt;
+    bleProcess.isNetworkPacketProcess.value = false;
+    bleProcess.checkForExtCmdApplyRes = 1;
+    bleProcess.isExtOutApplyDone.value = false;
+    bleProcess.processDesc.value = StringConstants.applyingExtOutSetup;
     bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
-    Get.find<BleLogController>().sendNetworkPacket();
+    bleProcess.startRxTimeout();
+    await sendExtOutSetupApplyCmdPkt();
   }
 
   Future<void> startInputSetupFetch() async {
@@ -2723,7 +2735,7 @@ class BleManager extends GetxService {
     u8Pkt[4] = u8TxPktCnt & BleConstants.base;
     u8Pkt[5] = u8RxPktCnt & BleConstants.base;
     u8Pkt[6] = BleConstants.network.radio;
-    u8Pkt[10] = BleConstants.mode.request.dbStatus;
+    u8Pkt[10] = BleConstants.mode.request.dbSetup;
     u8Pkt[11] = BleConstants.socket.radio;
     u8Pkt[12] = BleConstants.command.extOutStatus;
     u8Pkt[13] = BleConstants.extZoneNo;
@@ -2819,7 +2831,7 @@ class BleManager extends GetxService {
     u8Pkt[4] = u8TxPktCnt & BleConstants.base;
     u8Pkt[5] = u8RxPktCnt & BleConstants.base;
     u8Pkt[6] = BleConstants.network.radio;
-    u8Pkt[10] = BleConstants.mode.request.dbStatus;
+    u8Pkt[10] = BleConstants.mode.request.dbSetup;
     u8Pkt[11] = BleConstants.socket.radio;
     u8Pkt[12] = BleConstants.command.inputStatus;
 
@@ -3282,7 +3294,7 @@ class BleManager extends GetxService {
     u8Pkt[4] = u8TxPktCnt & BleConstants.base;
     u8Pkt[5] = u8RxPktCnt & BleConstants.base;
     u8Pkt[6] = BleConstants.network.radio;
-    u8Pkt[10] = BleConstants.mode.request.dbStatus;
+    u8Pkt[10] = BleConstants.mode.request.dbSetup;
     u8Pkt[11] = BleConstants.socket.radio;
     u8Pkt[12] = BleConstants.command.zoneSetup;
     u8Pkt[13] = BleConstants.firstZoneSetupNo;
@@ -3308,7 +3320,7 @@ class BleManager extends GetxService {
     u8Pkt[4] = u8TxPktCnt & BleConstants.base;
     u8Pkt[5] = u8RxPktCnt & BleConstants.base;
     u8Pkt[6] = BleConstants.network.radio;
-    u8Pkt[10] = BleConstants.mode.request.dbStatus;
+    u8Pkt[10] = BleConstants.mode.request.dbSetup;
     u8Pkt[11] = BleConstants.socket.radio;
     u8Pkt[12] = BleConstants.command.zoneSetup;
     u8Pkt[13] = BleConstants.secondZoneSetupNo;
@@ -3334,7 +3346,7 @@ class BleManager extends GetxService {
     u8Pkt[4] = u8TxPktCnt & BleConstants.base;
     u8Pkt[5] = u8RxPktCnt & BleConstants.base;
     u8Pkt[6] = BleConstants.network.radio;
-    u8Pkt[10] = BleConstants.mode.request.dbStatus;
+    u8Pkt[10] = BleConstants.mode.request.dbSetup;
     u8Pkt[11] = BleConstants.socket.radio;
     u8Pkt[12] = BleConstants.command.zoneSetup;
     u8Pkt[13] = BleConstants.thirdZoneSetupNo;

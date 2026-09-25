@@ -166,7 +166,7 @@ class _BleCommand {
   final int extOutStatus = 0x15;
   final int dipSetting = 0x1C;
   final int inputSetup = 0x06;
-  final int inputStatus = 0x07;
+  final int inputStatus = 0x06;
   final int relaySetup = 0x07;
   final int zoneSetup = 0x04;
   final int radioSetup = 0x1D;

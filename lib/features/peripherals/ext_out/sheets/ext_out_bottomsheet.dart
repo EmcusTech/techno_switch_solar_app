@@ -440,7 +440,7 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
   }
 
   Widget _applyButton({required bool formValid}) {
-    final canApply = controller.canApply;
+    final canApply = true;
 
     return SizedBox(
       height: 48,

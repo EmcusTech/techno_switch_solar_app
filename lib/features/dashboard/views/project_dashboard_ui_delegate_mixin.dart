@@ -36,6 +36,7 @@ import 'package:techno_switch_solar_app/utils/panel_config/panel_access_password
 import 'package:techno_switch_solar_app/utils/panel_config/panel_config_bulk_sync.dart';
 import 'package:techno_switch_solar_app/utils/panel_config/input_setup_ble_flow.dart';
 import 'package:techno_switch_solar_app/utils/panel_config/zone_setup_ble_flow.dart';
+import 'package:techno_switch_solar_app/utils/panel_config/ext_out_setup_ble_flow.dart';
 import 'package:techno_switch_solar_app/utils/panel_config/panel_config_feedback_dialogs.dart';
 import 'package:techno_switch_solar_app/utils/panel_config/post_connect_bulk_download_offer.dart';
 import 'package:techno_switch_solar_app/utils/ble/bootloader_connect_flow.dart';
@@ -871,6 +872,32 @@ mixin ProjectDashboardUiDelegateMixin<T extends StatefulWidget> on State<T>
                   },
         );
       },
+    );
+  }
+
+  @override
+  Future<void> runExtOutSetupDownload({
+    required Future<void> Function() onDownloadComplete,
+  }) {
+    return runExtOutSetupDownloadFlow(
+      context: uiContext,
+      isMounted: () => mounted,
+      bleProcess: dashboardController.bleManager.bleProcess,
+      bleController: dashboardController.bleController,
+      onDownloadComplete: onDownloadComplete,
+      showDownloadSuccess: showDownloadSuccessDialog,
+    );
+  }
+
+  @override
+  Future<void> runExtOutSetupApply() {
+    return runExtOutSetupApplyFlow(
+      context: uiContext,
+      isMounted: () => mounted,
+      bleProcess: dashboardController.bleManager.bleProcess,
+      bleController: dashboardController.bleController,
+      onApplyComplete: dashboardController.saveExtOutCacheAndNotifyRefresh,
+      showApplySuccess: showApplySuccessDialog,
     );
   }
 

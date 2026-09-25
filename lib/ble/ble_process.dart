@@ -257,10 +257,12 @@ class BleProcess {
   );
 
   final ValueNotifier<bool> isExtOutApplyButtonActive = ValueNotifier<bool>(
-    false,
+    true,
   );
 
   final ValueNotifier<bool> isExtOutApplyDone = ValueNotifier<bool>(false);
+
+  final ValueNotifier<bool> isExtOutFetchDone = ValueNotifier<bool>(false);
 
   final ValueNotifier<bool> isInputSetupFetchCommandActive =
       ValueNotifier<bool>(false);
@@ -948,9 +950,11 @@ class BleProcess {
 
       case OtaProcessState.sendExtOutSetupApplyCmdPkt:
         checkForExtCmdApplyRes = 1;
+        break;
 
       case OtaProcessState.sendDipSettingFetchCmd:
         checkDipSetCmdRsp = 1;
+        break;
 
       case OtaProcessState.sendInputSetupFetchCmdPkt:
         checkForInputSetupFetchRes = 1;
@@ -2163,18 +2167,14 @@ class BleProcess {
       if (rx.payload[10] == 0x83) {
         bleManager.otaProcessState = OtaProcessState.notInUse;
         cancelOperationDeadline();
-        isAccessKeyValid.value = true;
         checkForExtCmdApplyRes = 0;
         isExtOutCommandApplyActive.value = false;
         isExtOutApplyDone.value = true;
-      } else {
-        startRxTimeout();
-        await bleManager.sendPollPacket();
       }
     }
 
     if (checkForInputSetupFetchRes == 1) {
-      if (rx.payload[12] == 0x07) {
+      if (rx.payload[12] == 0x06) {
         InputSetupPayloadDebug.logBleFrame(
           'RECEIVE',
           'input-setup-fetch-response',
@@ -2191,7 +2191,7 @@ class BleProcess {
     }
 
     if (checkForInputSetupApplyRes == 1) {
-      if (rx.payload[10] == 0x81) {
+      if (rx.payload[10] == 0x83) {
         InputSetupPayloadDebug.logBleFrame(
           'RECEIVE',
           'input-setup-apply-response',
@@ -2233,16 +2233,13 @@ class BleProcess {
 
     if (checkForExtCmdFetchRes == 1) {
       if (rx.payload[12] == 0x15) {
-        bleManager.otaProcessState = OtaProcessState.sendDipSettingFetchCmd;
+        bleManager.otaProcessState = OtaProcessState.notInUse;
+        cancelOperationDeadline();
         checkForExtCmdFetchRes = 0;
-        isAccessKeyValid.value = true;
+        isExtOutCommandFetchActive.value = false;
+        isExtOutFetchDone.value = true;
         final config = ExtOutSetupPayload.readFromPacket(rx.payload);
         ExtOutSetupPayload.applyToBleProcess(config, this);
-        startRxTimeout();
-        await bleManager.sendFetchDipSettingPkt();
-      } else {
-        startRxTimeout();
-        await bleManager.sendPollPacket();
       }
     }
 
@@ -2283,7 +2280,7 @@ class BleProcess {
     }
 
     if (checkForZoneSetupApplyRes == 1) {
-      if (rx.payload[10] == 0x81) {
+      if (rx.payload[10] == 0x83) {
         if (zoneSetupApplyCommandStep == 1) {
           processDesc.value = "${StringConstants.applyingZone} 2/3";
           zoneSetupApplyCommandStep = 2;
@@ -2558,7 +2555,7 @@ class BleProcess {
     checkForRadioSetupApplyRes = 0;
     checkForModuleSetupFetchRes = 0;
     checkDipSetCmdRsp = 0;
-    isExtOutApplyButtonActive.value = false;
+    isExtOutApplyButtonActive.value = true;
     isExtOutCommandFetchActive.value = false;
     checkForLBusSetupFetchRes = 0;
     checkForLBusSetupApplyRes = 0;
@@ -2648,6 +2645,9 @@ class BleProcess {
     checkForLiveEventsRetrievalRes = 0;
     processDesc.value = "";
     checkForAdcSetupFetchRes = 0;
+    checkForExtCmdApplyRes = 0;
+    isExtOutFetchDone.value = false;
+    isExtOutApplyDone.value = false;
     bleManager.otaProcessState = OtaProcessState.sendNetworkPacket;
     isNetworkPacketProcess.value = true;
 
@@ -3554,6 +3554,14 @@ class BleProcess {
     checkForInputSetupApplyRes = 0;
   }
 
+  void _clearExtOutOperationFlags() {
+    isExtOutCommandFetchActive.value = false;
+    isExtOutCommandApplyActive.value = false;
+    checkForExtCmdFetchRes = 0;
+    checkForExtCmdApplyRes = 0;
+    checkDipSetCmdRsp = 0;
+  }
+
   void _clearZoneSetupOperationFlags() {
     isZoneSetupFetchCommandActive.value = false;
     isZoneSetupCommandApplyActive.value = false;
@@ -3613,6 +3621,16 @@ class BleProcess {
 
     if (isInputSetupFetchCommandActive.value || isInputSetupApplyActive.value) {
       _clearInputSetupOperationFlags();
+    }
+
+    if (isExtOutCommandFetchActive.value || isExtOutCommandApplyActive.value) {
+      _clearExtOutOperationFlags();
+      cancelRxTimeout();
+      cancelOperationDeadline();
+      bleManager.otaProcessState = OtaProcessState.notInUse;
+      processDesc.value = StringConstants.deviceNotResponding;
+      maxOtherPacketsRetriesReached.value = true;
+      return;
     }
 
     if (isZoneSetupFetchCommandActive.value ||
