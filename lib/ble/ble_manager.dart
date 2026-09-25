@@ -2723,7 +2723,7 @@ class BleManager extends GetxService {
     u8Pkt[4] = u8TxPktCnt & BleConstants.base;
     u8Pkt[5] = u8RxPktCnt & BleConstants.base;
     u8Pkt[6] = BleConstants.network.radio;
-    u8Pkt[10] = BleConstants.mode.request.dbSetup;
+    u8Pkt[10] = BleConstants.mode.request.dbStatus;
     u8Pkt[11] = BleConstants.socket.radio;
     u8Pkt[12] = BleConstants.command.extOutStatus;
     u8Pkt[13] = BleConstants.extZoneNo;

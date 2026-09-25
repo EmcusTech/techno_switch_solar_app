@@ -2232,7 +2232,7 @@ class BleProcess {
     }
 
     if (checkForExtCmdFetchRes == 1) {
-      if (rx.payload[12] == 0x16) {
+      if (rx.payload[12] == 0x15) {
         bleManager.otaProcessState = OtaProcessState.sendDipSettingFetchCmd;
         checkForExtCmdFetchRes = 0;
         isAccessKeyValid.value = true;
