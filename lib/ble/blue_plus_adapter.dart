@@ -284,6 +284,112 @@ class FlutterReactiveBle {
     required String id,
     Duration? connectionTimeout,
   }) {
+    if (Platform.isWindows) {
+      return _connectToDeviceWindows(id, connectionTimeout);
+    }
+    return _connectToDeviceAndroid(id, connectionTimeout);
+  }
+
+  Stream<ConnectionStateUpdate> _connectToDeviceWindows(
+    String id,
+    Duration? connectionTimeout,
+  ) {
+    final controller = StreamController<ConnectionStateUpdate>.broadcast();
+    var connected = false;
+
+    controller.add(
+      ConnectionStateUpdate(
+        deviceId: id,
+        connectionState: DeviceConnectionState.connecting,
+      ),
+    );
+
+    StreamSubscription<bool>? stateSub;
+
+    () async {
+      try {
+        WinBle.stopScanning();
+        await Future<void>.delayed(const Duration(milliseconds: 800));
+        if (controller.isClosed) return;
+
+        final deadline = DateTime.now().add(
+          connectionTimeout ?? const Duration(seconds: 10),
+        );
+        var services = <String>[];
+        var attempts = 0;
+
+        while (services.isEmpty &&
+            attempts < 3 &&
+            DateTime.now().isBefore(deadline) &&
+            !controller.isClosed) {
+          attempts++;
+          final remaining = deadline.difference(DateTime.now());
+          final attemptTimeout =
+              remaining < const Duration(seconds: 4)
+                  ? remaining
+                  : const Duration(seconds: 4);
+          try {
+            await WinBle.connect(id).timeout(attemptTimeout);
+          } catch (e) {
+            debugPrint('WinBle connect attempt failed: $e');
+          }
+
+          services = await _readWinBleServices(id);
+          if (services.isEmpty && !controller.isClosed) {
+            await Future<void>.delayed(const Duration(milliseconds: 400));
+            services = await _readWinBleServices(id);
+          }
+          debugPrint('WinBle services for $id: $services');
+        }
+
+        if (controller.isClosed) return;
+        if (services.isEmpty) {
+          controller.addError(StateError('WinBle connect failed for $id'));
+          return;
+        }
+
+        connected = true;
+        controller.add(
+          ConnectionStateUpdate(
+            deviceId: id,
+            connectionState: DeviceConnectionState.connected,
+          ),
+        );
+
+        stateSub = WinBle.connectionStreamOf(id).listen((isConnected) {
+          if (isConnected || controller.isClosed) return;
+          connected = false;
+          controller.add(
+            ConnectionStateUpdate(
+              deviceId: id,
+              connectionState: DeviceConnectionState.disconnected,
+            ),
+          );
+        });
+      } catch (e, stack) {
+        debugPrint('WinBle connect failed: $e');
+        debugPrint('$stack');
+        if (!controller.isClosed) controller.addError(e, stack);
+      }
+    }();
+
+    controller.onCancel = () async {
+      await stateSub?.cancel();
+      if (!connected) return;
+      try {
+        await WinBle.disconnect(id);
+      } catch (e) {
+        debugPrint('WinBle disconnect failed: $e');
+      }
+    };
+
+    return controller.stream;
+  }
+
+  Stream<ConnectionStateUpdate> _connectToDeviceAndroid(
+    String id,
+    Duration? connectionTimeout,
+  ) {
     final device = _deviceCache.putIfAbsent(
       id,
       () => fbp.BluetoothDevice.fromId(id),
@@ -332,6 +438,15 @@ class FlutterReactiveBle {
   }
 
   Future<void> abortConnection(String id) async {
+    if (Platform.isWindows) {
+      try {
+        await WinBle.disconnect(id);
+      } catch (e) {
+        debugPrint('WinBle disconnect failed: $e');
+      }
+      return;
+    }
+
     final device = _deviceCache.remove(id);
     if (device == null) return;
     try {
@@ -340,6 +455,8 @@ class FlutterReactiveBle {
   }
 
   Future<int> requestMtu({required String deviceId, required int mtu}) async {
+    if (Platform.isWindows) return _requestMtuWindows(deviceId, mtu);
+
     final device = _deviceCache.putIfAbsent(
       deviceId,
       () => fbp.BluetoothDevice.fromId(deviceId),
@@ -352,7 +469,68 @@ class FlutterReactiveBle {
     }
   }
 
+  Future<List<String>> _readWinBleServices(String id) async {
+    try {
+      return await WinBle.discoverServices(id);
+    } catch (e) {
+      debugPrint('WinBle discoverServices failed: $e');
+      return const <String>[];
+    }
+  }
+
+  Future<int> _requestMtuWindows(String deviceId, int mtu) async {
+    try {
+      final size = await WinBle.getMaxMtuSize(deviceId);
+      if (size is int && size > 0) return size;
+      final parsed = int.tryParse(size.toString());
+      if (parsed != null && parsed > 0) return parsed;
+    } catch (e) {
+      debugPrint('WinBle getMaxMtuSize failed: $e');
+    }
+    return mtu;
+  }
+
   Stream<List<int>> subscribeToCharacteristic(
+    QualifiedCharacteristic characteristic,
+  ) {
+    if (Platform.isWindows) {
+      return _subscribeToCharacteristicWindows(characteristic);
+    }
+    return _subscribeToCharacteristicAndroid(characteristic);
+  }
+
+  Stream<List<int>> _subscribeToCharacteristicWindows(
+    QualifiedCharacteristic characteristic,
+  ) async* {
+    final address = characteristic.deviceId;
+    final serviceId = _winBleUuid(characteristic.serviceId);
+    final characteristicId = _winBleUuid(characteristic.characteristicId);
+
+    try {
+      await WinBle.subscribeToCharacteristic(
+        address: address,
+        serviceId: serviceId,
+        characteristicId: characteristicId,
+      );
+    } catch (e) {
+      debugPrint('WinBle subscribe failed, trying pair: $e');
+      final paired = await WinBle.isPaired(address, forceRefresh: true);
+      if (!paired) await WinBle.pair(address);
+      await WinBle.subscribeToCharacteristic(
+        address: address,
+        serviceId: serviceId,
+        characteristicId: characteristicId,
+      );
+    }
+
+    yield* WinBle.characteristicValueStreamOf(
+      address: address,
+      serviceId: serviceId,
+      characteristicId: characteristicId,
+    ).map(_winBleValueBytes);
+  }
+
+  Stream<List<int>> _subscribeToCharacteristicAndroid(
     QualifiedCharacteristic characteristic,
   ) async* {
     final fbp.BluetoothCharacteristic char = await _resolveCharacteristic(
@@ -366,6 +544,10 @@ class FlutterReactiveBle {
     QualifiedCharacteristic characteristic, {
     required List<int> value,
   }) async {
+    if (Platform.isWindows) {
+      await _writeWindows(characteristic, value, false);
+      return;
+    }
     final fbp.BluetoothCharacteristic char = await _resolveCharacteristic(
       characteristic,
     );
@@ -376,6 +558,10 @@ class FlutterReactiveBle {
     QualifiedCharacteristic characteristic, {
     required List<int> value,
   }) async {
+    if (Platform.isWindows) {
+      await _writeWindows(characteristic, value, true);
+      return;
+    }
     final fbp.BluetoothCharacteristic char = await _resolveCharacteristic(
       characteristic,
     );
@@ -464,6 +650,31 @@ class FlutterReactiveBle {
       rssi: int.tryParse(device.rssi) ?? 0,
       serviceUuids: serviceUuids,
     );
+  }
+
+  Future<void> _writeWindows(
+    QualifiedCharacteristic characteristic,
+    List<int> value,
+    bool writeWithResponse,
+  ) {
+    return WinBle.write(
+      address: characteristic.deviceId,
+      service: _winBleUuid(characteristic.serviceId),
+      characteristic: _winBleUuid(characteristic.characteristicId),
+      data: Uint8List.fromList(value),
+      writeWithResponse: writeWithResponse,
+    );
+  }
+
+  String _winBleUuid(Uuid uuid) => _normalizeUuid(uuid.toString());
+
+  List<int> _winBleValueBytes(dynamic value) {
+    if (value is Uint8List) return List<int>.from(value);
+    if (value is List<int>) return List<int>.from(value);
+    if (value is List) {
+      return value.map((item) => item is int ? item : int.parse('$item')).toList();
+    }
+    return const <int>[];
   }
 
   String _normalizeUuid(String raw) =>

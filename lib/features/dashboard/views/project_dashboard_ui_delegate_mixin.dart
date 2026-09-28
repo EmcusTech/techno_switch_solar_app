@@ -718,6 +718,15 @@ mixin ProjectDashboardUiDelegateMixin<T extends StatefulWidget> on State<T>
       context: uiContext,
       barrierDismissible: false,
       builder: (dialogContext) {
+        final hasLbusErrors =
+            dashboardController.ble.bleProcess.isLbusFetchHasErrors.value;
+        if (!hasLbusErrors) {
+          Future.delayed(const Duration(seconds: 2), () {
+            if (dialogContext.mounted) {
+              Navigator.of(dialogContext, rootNavigator: true).pop();
+            }
+          });
+        }
         return Dialog(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),

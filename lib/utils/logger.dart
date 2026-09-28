@@ -20,12 +20,16 @@ class Logger {
     final String timestamp = _timestamp();
     final String formatted = "[$timestamp] $message";
 
-    FlutterLogs.logThis(
-      tag: type == LogType.main ? "TechnoSwitchLogs" : "BLELogs",
-      subTag: StringConstants.logdata,
-      logMessage: formatted,
-      level: LogLevel.INFO,
-    );
+    if (Platform.isWindows) {
+      debugPrint(formatted);
+    } else {
+      FlutterLogs.logThis(
+        tag: type == LogType.main ? "TechnoSwitchLogs" : "BLELogs",
+        subTag: StringConstants.logdata,
+        logMessage: formatted,
+        level: LogLevel.INFO,
+      );
+    }
 
     _writeToFile(formatted, type);
 
@@ -46,8 +50,14 @@ class Logger {
     if (_isInitialized) return;
 
     try {
-      Directory? directory = await getExternalStorageDirectory();
-      directory ??= await getApplicationDocumentsDirectory();
+      final Directory directory;
+      if (Platform.isWindows) {
+        directory = await getApplicationDocumentsDirectory();
+      } else {
+        directory =
+            await getExternalStorageDirectory() ??
+            await getApplicationDocumentsDirectory();
+      }
 
       final basePath = directory.path;
       final date = _dateString();

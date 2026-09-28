@@ -89,6 +89,11 @@ void showPanelDownloadSuccessDialog(BuildContext context, String message) {
     context: context,
     barrierDismissible: false,
     builder: (dialogContext) {
+      Future.delayed(const Duration(seconds: 2), () {
+        if (dialogContext.mounted) {
+          Navigator.of(dialogContext, rootNavigator: true).pop();
+        }
+      });
       return Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: Container(

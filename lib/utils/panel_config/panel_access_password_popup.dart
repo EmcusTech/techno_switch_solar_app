@@ -250,10 +250,6 @@ Future<void> showPanelAccessPasswordPopup({
                                         .liveDataIsBeingStreamedFromTheDeviceInRealTime
                                     : StringConstants.configuration);
                             delegates.showDownloadSuccess(context, message);
-                            Future.delayed(const Duration(seconds: 2), () {
-                              if (!context.mounted) return;
-                              Navigator.of(context, rootNavigator: true).pop();
-                            });
                           }
                         } else if (isExtOut &&
                             bleManager.bleProcess.isExtOutApplyDone.value) {
@@ -414,10 +410,6 @@ Future<void> showPanelAccessPasswordPopup({
                                 StringConstants.configuration;
                             closeAccessDialog();
                             delegates.showDownloadSuccess(context, message);
-                            Future.delayed(const Duration(seconds: 2), () {
-                              if (!context.mounted) return;
-                              Navigator.of(context, rootNavigator: true).pop();
-                            });
                           }
                         } catch (e, _) {
                           if (context.mounted) {
