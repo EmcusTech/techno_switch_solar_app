@@ -1003,8 +1003,16 @@ class BleManager extends GetxService {
 
     bleCurrentState = BleStates.SEND_RELAY_SETUP_CMD_FETCH_PACKET;
     bleStateMachineState = BleStates.SEND_RELAY_SETUP_CMD_FETCH_PACKET;
+    currentOperationMode = BleOperationMode.relaySetupFetch;
+    otaProcessState = OtaProcessState.sendRelaySetupFetchCmdPkt;
+    bleProcess.isNetworkPacketProcess.value = false;
+    bleProcess.checkForRelaySetupFetchRes = 1;
+    bleProcess.relaySetupFetchCommandStep = 1;
+    bleProcess.isRelaySetupFetchDone.value = false;
+    bleProcess.processDesc.value = "${StringConstants.downloadingRelay} 1/3";
     bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
-    Get.find<BleLogController>().sendNetworkPacket();
+    bleProcess.startRxTimeout();
+    await sendRelaySetupFetchFirstCmdPkt();
   }
 
   Future<void> startRelaySetupApply() async {
@@ -1028,8 +1036,16 @@ class BleManager extends GetxService {
 
     bleCurrentState = BleStates.SEND_RELAY_SETUP_CMD_APPLY_PACKET;
     bleStateMachineState = BleStates.SEND_RELAY_SETUP_CMD_APPLY_PACKET;
+    currentOperationMode = BleOperationMode.relaySetupApply;
+    otaProcessState = OtaProcessState.sendRelaySetupApplyCmdPkt;
+    bleProcess.isNetworkPacketProcess.value = false;
+    bleProcess.checkForRelaySetupApplyRes = 1;
+    bleProcess.relaySetupApplyCommandStep = 1;
+    bleProcess.isRelaySetupApplyDone.value = false;
+    bleProcess.processDesc.value = "${StringConstants.applyingRelay} 1/3";
     bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
-    Get.find<BleLogController>().sendNetworkPacket();
+    bleProcess.startRxTimeout();
+    await sendRelaySetupApplyFirstCmdPkt();
   }
 
   Future<void> startZoneSetupFetch() async {
@@ -2989,8 +3005,7 @@ class BleManager extends GetxService {
     u8Pkt[10] = BleConstants.mode.request.dbSetup;
     u8Pkt[11] = BleConstants.socket.radio;
     u8Pkt[12] = BleConstants.command.relaySetup;
-    u8Pkt[13] = BleConstants.firstOutputNoHigh;
-    u8Pkt[14] = BleConstants.firstOutputNoLow;
+    u8Pkt[13] = BleConstants.firstRelaySetupNo;
 
     int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
@@ -3016,8 +3031,7 @@ class BleManager extends GetxService {
     u8Pkt[10] = BleConstants.mode.request.dbSetup;
     u8Pkt[11] = BleConstants.socket.radio;
     u8Pkt[12] = BleConstants.command.relaySetup;
-    u8Pkt[13] = BleConstants.secondOutputNoHigh;
-    u8Pkt[14] = BleConstants.secondtOutputNoLow;
+    u8Pkt[13] = BleConstants.secondRelaySetupNo;
 
     int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
@@ -3043,8 +3057,7 @@ class BleManager extends GetxService {
     u8Pkt[10] = BleConstants.mode.request.dbSetup;
     u8Pkt[11] = BleConstants.socket.radio;
     u8Pkt[12] = BleConstants.command.relaySetup;
-    u8Pkt[13] = BleConstants.thirdOutputNoHigh;
-    u8Pkt[14] = BleConstants.thirdtOutputNoLow;
+    u8Pkt[13] = BleConstants.thirdRelaySetupNo;
 
     int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 

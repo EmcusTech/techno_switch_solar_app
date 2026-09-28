@@ -13,23 +13,11 @@ abstract final class ProjectDashboardTileActions {
       final ui = _ui(c);
       if (ui == null) return;
       ui.showRelaySetupBottomSheet(
-        onDownload: () => ui.showPasswordPopup(
-          onCall: () {
-            c.ble.bleProcess.isRelaySetupFetchCommandActive.value = true;
-            c.bleController.startRelaySetupFetch();
-          },
-          isRelaySetup: true,
-          mode: 'bottomsheet_download',
-          onDownloadComplete: c.saveRelayCacheAndNotifyRefresh,
-        ),
-        onApply: () => ui.showPasswordPopup(
-          onCall: () {
-            c.ble.bleProcess.isRelaySetupCommandApplyActive.value = true;
-            c.bleController.startRelaySetupApply();
-          },
-          isRelaySetup: true,
-          mode: 'bottomsheet_apply',
-        ),
+        onDownload:
+            () => ui.runRelaySetupDownload(
+              onDownloadComplete: c.saveRelayCacheAndNotifyRefresh,
+            ),
+        onApply: () => ui.runRelaySetupApply(),
         refreshTrigger: c.relayRefreshTrigger,
       );
     });
@@ -367,15 +355,10 @@ abstract final class ProjectDashboardTileActions {
       final ui = _ui(c);
       if (ui == null) return;
       ui.showTestModeChoiceBottomSheet(
-        onDownloadRelays: () => ui.showPasswordPopup(
-          onCall: () {
-            c.ble.bleProcess.isRelaySetupFetchCommandActive.value = true;
-            c.bleController.startRelaySetupFetch();
-          },
-          isRelaySetup: true,
-          mode: 'bottomsheet_download',
-          onDownloadComplete: c.saveRelayCacheAndNotifyRefresh,
-        ),
+        onDownloadRelays:
+            () => ui.runRelaySetupDownload(
+              onDownloadComplete: c.saveRelayCacheAndNotifyRefresh,
+            ),
         onDownloadSounders: () => ui.showPasswordPopup(
           onCall: () {
             c.ble.bleProcess.isSounderSetupFetchCommandActive.value = true;
@@ -386,15 +369,10 @@ abstract final class ProjectDashboardTileActions {
           onDownloadComplete: c.saveSounderCacheAndNotifyRefresh,
           downloadSuccessMessage: 'Sounder',
         ),
-        onApplyRelays: () => ui.showPasswordPopup(
-          onCall: () {
-            c.ble.bleProcess.isRelaySetupCommandApplyActive.value = true;
-            c.bleController.startRelaySetupApply();
-          },
-          isRelaySetup: true,
-          mode: 'bottomsheet_apply',
-          onAfterApplySuccess: (_) => ui.showRelayTestResultConfirmation(),
-        ),
+        onApplyRelays:
+            () => ui.runRelaySetupApply(
+              onAfterApplySuccess: ui.showRelayTestResultConfirmation,
+            ),
         onApplySounders: () => ui.showPasswordPopup(
           onCall: () {
             c.ble.bleProcess.isSounderSetupApplyCommandActive.value = true;

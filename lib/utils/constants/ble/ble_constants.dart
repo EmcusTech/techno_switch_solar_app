@@ -64,6 +64,9 @@ abstract final class BleConstants {
   static const int firstZoneSetupNo = 0x01;
   static const int secondZoneSetupNo = 0x02;
   static const int thirdZoneSetupNo = 0x03;
+  static const int firstRelaySetupNo = 0x01;
+  static const int secondRelaySetupNo = 0x02;
+  static const int thirdRelaySetupNo = 0x03;
   static const int radioSetupEnabled = 0x01;
   static const int radioSetupDisabled = 0x00;
   static const int radioSetupAdvertised = 0x01;

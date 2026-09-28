@@ -60,6 +60,14 @@ abstract class ProjectDashboardUiDelegate {
 
   Future<void> runExtOutSetupApply();
 
+  Future<void> runRelaySetupDownload({
+    required Future<void> Function() onDownloadComplete,
+  });
+
+  Future<void> runRelaySetupApply({
+    Future<void> Function()? onAfterApplySuccess,
+  });
+
   void showDiagnosticStopDialog();
 
   void showConfigLogBottomSheet();

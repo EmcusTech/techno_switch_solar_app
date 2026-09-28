@@ -386,6 +386,8 @@ class BleProcess {
 
   final ValueNotifier<bool> isRelaySetupApplyDone = ValueNotifier<bool>(false);
 
+  final ValueNotifier<bool> isRelaySetupFetchDone = ValueNotifier<bool>(false);
+
   final ValueNotifier<bool> isZoneSetupFetchCommandActive = ValueNotifier<bool>(
     false,
   );
@@ -2218,16 +2220,12 @@ class BleProcess {
           startRxTimeout();
           await bleManager.sendRelaySetupApplyThirdCmdPkt();
         } else if (relaySetupApplyCommandStep == 3) {
-          isAccessKeyValid.value = true;
           bleManager.otaProcessState = OtaProcessState.notInUse;
           cancelOperationDeadline();
           checkForRelaySetupApplyRes = 0;
           isRelaySetupCommandApplyActive.value = false;
           isRelaySetupApplyDone.value = true;
         }
-      } else {
-        startRxTimeout();
-        await bleManager.sendPollPacket();
       }
     }
 
@@ -2271,11 +2269,8 @@ class BleProcess {
           cancelOperationDeadline();
           checkForRelaySetupFetchRes = 0;
           isRelaySetupFetchCommandActive.value = false;
-          isAccessKeyValid.value = true;
+          isRelaySetupFetchDone.value = true;
         }
-      } else {
-        startRxTimeout();
-        await bleManager.sendPollPacket();
       }
     }
 
@@ -2731,7 +2726,10 @@ class BleProcess {
     read1000Logs = 0;
     receivedPollCount = 0;
     relaySetupFetchCommandStep = 0;
+    relaySetupApplyCommandStep = 0;
     checkForRelaySetupFetchRes = 0;
+    isRelaySetupFetchDone.value = false;
+    isRelaySetupApplyDone.value = false;
     checkForRadioSetupApplyRes = 0;
     checkForModuleSetupFetchRes = 0;
     checkForLBusSetupFetchRes = 0;
@@ -3571,6 +3569,15 @@ class BleProcess {
     zoneSetupApplyCommandStep = 0;
   }
 
+  void _clearRelaySetupOperationFlags() {
+    isRelaySetupFetchCommandActive.value = false;
+    isRelaySetupCommandApplyActive.value = false;
+    checkForRelaySetupFetchRes = 0;
+    checkForRelaySetupApplyRes = 0;
+    relaySetupFetchCommandStep = 0;
+    relaySetupApplyCommandStep = 0;
+  }
+
   void startRxTimeout({bool bumpOperationDeadline = true}) {
     maxOtherPacketsRetriesReached.value = false;
     if (isOtaCompleted) return;
@@ -3636,6 +3643,17 @@ class BleProcess {
     if (isZoneSetupFetchCommandActive.value ||
         isZoneSetupCommandApplyActive.value) {
       _clearZoneSetupOperationFlags();
+      cancelRxTimeout();
+      cancelOperationDeadline();
+      bleManager.otaProcessState = OtaProcessState.notInUse;
+      processDesc.value = StringConstants.deviceNotResponding;
+      maxOtherPacketsRetriesReached.value = true;
+      return;
+    }
+
+    if (isRelaySetupFetchCommandActive.value ||
+        isRelaySetupCommandApplyActive.value) {
+      _clearRelaySetupOperationFlags();
       cancelRxTimeout();
       cancelOperationDeadline();
       bleManager.otaProcessState = OtaProcessState.notInUse;
