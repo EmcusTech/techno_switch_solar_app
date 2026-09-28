@@ -1,6 +1,10 @@
 import 'dart:async';
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart' as fbp;
 import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
+import 'package:win_ble/win_ble.dart';
 
 class Uuid {
   const Uuid._(this.value);
@@ -147,13 +151,95 @@ class FlutterReactiveBle {
   final Map<String, fbp.BluetoothDevice> _deviceCache =
       <String, fbp.BluetoothDevice>{};
 
-  Stream<BleStatus> get statusStream =>
-      fbp.FlutterBluePlus.adapterState.map(_mapAdapterState);
+  Stream<BleStatus> get statusStream {
+    if (Platform.isWindows) return _windowsStatusStream();
+    return fbp.FlutterBluePlus.adapterState.map(_mapAdapterState);
+  }
 
   Stream<DiscoveredDevice> scanForDevices({
     required List<Uuid> withServices,
     ScanMode scanMode = ScanMode.lowLatency,
   }) {
+    if (Platform.isWindows) return _scanForDevicesWindows(withServices);
+    return _scanForDevicesAndroid(withServices, scanMode);
+  }
+
+  Stream<BleStatus> _windowsStatusStream() async* {
+    try {
+      yield _mapWinBleState(await WinBle.getBluetoothState());
+    } catch (e) {
+      debugPrint('WinBle adapter state failed: $e');
+      yield BleStatus.unknown;
+    }
+    yield* WinBle.bleState.map(_mapWinBleState);
+  }
+
+  Stream<DiscoveredDevice> _scanForDevicesWindows(List<Uuid> withServices) {
+    final controller = StreamController<DiscoveredDevice>.broadcast();
+    final namesByAddress = <String, String>{};
+    final matchedByAddress = <String, BleDevice>{};
+
+    final sub = WinBle.scanStream.listen(
+      (event) {
+        final advertisedName = _winBleAdvertisedName(event);
+        if (advertisedName != null) {
+          namesByAddress[event.address] = advertisedName;
+        }
+
+        final matchesService = _winBleMatchesServices(event, withServices);
+        if (matchesService) {
+          matchedByAddress[event.address] = event;
+        }
+
+        final matched = matchedByAddress[event.address];
+        if (matched == null) return;
+        if (!matchesService && advertisedName == null) return;
+
+        final name = namesByAddress[event.address] ?? matched.address;
+        final source = matchesService ? event : matched;
+
+        if (!controller.isClosed) {
+          debugPrint(
+            'WinBle scan shown '
+            'uiName=$name '
+            'name=${source.name} '
+            'address=${source.address} '
+            'rssi=${source.rssi} '
+            'advType=${source.advType} '
+            'serviceUuids=${source.serviceUuids} '
+            'manufacturerData=${source.manufacturerData} '
+            'adStructures=${source.adStructures?.map((ad) => 'type=${ad.type} data=${ad.data}').toList()}',
+          );
+          controller.add(_discoveredDeviceFromWinBle(source, name));
+        }
+      },
+      onError: (Object e, StackTrace stack) {
+        debugPrint('WinBle scan error: $e');
+        debugPrint('$stack');
+        if (!controller.isClosed) controller.addError(e, stack);
+      },
+    );
+
+    try {
+      WinBle.startScanning();
+    } catch (e, stack) {
+      debugPrint('WinBle startScan failed: $e');
+      debugPrint('$stack');
+      if (!controller.isClosed) controller.addError(e, stack);
+    }
+
+    controller.onCancel = () async {
+      await sub.cancel();
+      WinBle.stopScanning();
+    };
+
+    return controller.stream;
+  }
+
+  Stream<DiscoveredDevice> _scanForDevicesAndroid(
+    List<Uuid> withServices,
+    ScanMode scanMode,
+  ) {
     final controller = StreamController<DiscoveredDevice>.broadcast();
 
     fbp.AndroidScanMode? androidScanMode;
@@ -303,6 +389,97 @@ class FlutterReactiveBle {
         await device.clearGattCache();
       }
     } catch (_) {}
+  }
+
+  BleStatus _mapWinBleState(BleState state) {
+    switch (state) {
+      case BleState.On:
+        return BleStatus.ready;
+      case BleState.Off:
+      case BleState.Disabled:
+        return BleStatus.poweredOff;
+      case BleState.Unsupported:
+        return BleStatus.unsupported;
+      case BleState.Unknown:
+        return BleStatus.unknown;
+    }
+  }
+
+  bool _winBleMatchesServices(BleDevice device, List<Uuid> withServices) {
+    if (withServices.isEmpty) return true;
+
+    final targets =
+        withServices.map((uuid) => _normalizeUuid(uuid.toString())).toSet();
+    return _winBleServiceUuids(device).any(targets.contains);
+  }
+
+  Set<String> _winBleServiceUuids(BleDevice device) {
+    final advertised = <String>{};
+
+    try {
+      for (final raw in device.serviceUuids) {
+        final value = _normalizeUuid(raw.toString());
+        if (value.isNotEmpty && value != 'null') advertised.add(value);
+      }
+    } catch (_) {}
+
+    for (final ad in device.adStructures ?? const <AdStructure>[]) {
+      if (ad.type != 0x06 && ad.type != 0x07) continue;
+      for (var i = 0; i + 16 <= ad.data.length; i += 16) {
+        advertised.add(_uuidFromLittleEndian(ad.data.sublist(i, i + 16)));
+      }
+    }
+
+    return advertised;
+  }
+
+  String? _winBleAdvertisedName(BleDevice device) {
+    final name = device.name.trim();
+    if (name.isNotEmpty && name.toUpperCase() != 'N/A') return name;
+
+    for (final ad in device.adStructures ?? const <AdStructure>[]) {
+      if (ad.type != 0x08 && ad.type != 0x09) continue;
+      final decoded = String.fromCharCodes(
+        ad.data,
+      ).replaceAll('\u0000', '').trim();
+      if (decoded.isNotEmpty) return decoded;
+    }
+
+    return null;
+  }
+
+  DiscoveredDevice _discoveredDeviceFromWinBle(BleDevice device, String name) {
+    final serviceUuids = <Uuid>[];
+    for (final value in _winBleServiceUuids(device)) {
+      try {
+        serviceUuids.add(Uuid.parse(value));
+      } catch (_) {}
+    }
+
+    return DiscoveredDevice(
+      id: device.address,
+      name: name,
+      serviceData: const <Uuid, List<int>>{},
+      manufacturerData: List<int>.from(device.manufacturerData),
+      rssi: int.tryParse(device.rssi) ?? 0,
+      serviceUuids: serviceUuids,
+    );
+  }
+
+  String _normalizeUuid(String raw) =>
+      raw.replaceAll(RegExp(r'[{}]'), '').trim().toLowerCase();
+
+  String _uuidFromLittleEndian(List<int> bytes) {
+    final encoded =
+        bytes.reversed
+            .map((value) => value.toRadixString(16).padLeft(2, '0'))
+            .join();
+    return '${encoded.substring(0, 8)}-'
+            '${encoded.substring(8, 12)}-'
+            '${encoded.substring(12, 16)}-'
+            '${encoded.substring(16, 20)}-'
+            '${encoded.substring(20)}'
+        .toLowerCase();
   }
 
   BleStatus _mapAdapterState(fbp.BluetoothAdapterState state) {

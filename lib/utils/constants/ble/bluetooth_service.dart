@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -89,7 +90,7 @@ class BluetoothService {
             }
           },
           onError: (e) {
-            Logger('Scan error: $e');
+            debugPrint('Scan error: $e');
           },
         );
   }
