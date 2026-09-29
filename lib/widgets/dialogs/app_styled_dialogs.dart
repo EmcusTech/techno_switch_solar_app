@@ -16,14 +16,13 @@ Future<T?> showAppStyledTwoActionDialog<T>({
   IconData icon = Icons.info_outline_rounded,
   Color iconColor = ColorConstants.primary,
   Color iconCircleColor = ColorConstants.errorIconBackground,
+  double? maxWidth,
 }) {
   return showDialog<T>(
     context: context,
     barrierDismissible: false,
     builder: (dialogContext) {
-      return Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: Container(
+      final content = Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
             color: ColorConstants.white,
@@ -116,7 +115,16 @@ Future<T?> showAppStyledTwoActionDialog<T>({
               ),
             ],
           ),
-        ),
+        );
+      return Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child:
+            maxWidth == null
+                ? content
+                : ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: maxWidth),
+                  child: content,
+                ),
       );
     },
   );

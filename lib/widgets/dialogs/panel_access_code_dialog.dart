@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:Technoswitch/ble/blue_plus_adapter.dart';
@@ -7,6 +9,7 @@ import 'package:Technoswitch/features/logs/models/log_flow_args.dart';
 import 'package:Technoswitch/features/logs/views/log_retrieval_loading_screen.dart';
 import 'package:Technoswitch/features/scan/models/scan_type.dart';
 import 'package:Technoswitch/widgets/common/common_numeric_keypad_widget.dart';
+import 'package:Technoswitch/widgets/common/common_windows_access_code_dialog.dart';
 import 'package:Technoswitch/utils/constants/color_constants.dart';
 
 Future<bool> _showPanelAccessCodeBottomSheet({
@@ -27,6 +30,29 @@ Future<bool> _showPanelAccessCodeBottomSheet({
     bleProcess.clearSessionAccessCode();
   } else {
     bleProcess.accessKey.value = '';
+  }
+
+  if (!context.mounted) return false;
+
+  if (Platform.isWindows) {
+    final result = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return CommonWindowsAccessCodeDialog(
+          bleProcess: bleProcess,
+          onStartValidation: onStartValidation,
+          sheetContext: dialogContext,
+          onAccessGranted:
+              onAccessGranted == null
+                  ? null
+                  : () => onAccessGranted(dialogContext),
+          successCloseDelay: successCloseDelay,
+          persistSessionAccessCode: persistSessionAccessCode,
+        );
+      },
+    );
+    return result ?? false;
   }
 
   final result = await showModalBottomSheet<bool>(

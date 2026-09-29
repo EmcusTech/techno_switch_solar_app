@@ -41,6 +41,7 @@ Future<void> offerOptionalFullConfigDownloadAfterConnect({
     trailingActionLabel: UiStrings.yesButton,
     leadingValue: false,
     trailingValue: true,
+    maxWidth: 420,
   );
   if (!isMounted()) return;
 
