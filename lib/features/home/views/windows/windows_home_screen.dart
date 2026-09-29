@@ -119,7 +119,7 @@ class _WindowsHomeScreenState extends State<WindowsHomeScreen>
                   ),
                 ),
                 context.verticalSpace(16),
-                _returnRecentSitesWidget(),
+                Expanded(child: _returnRecentSitesWidget(controller)),
               ],
             ),
           ),
@@ -152,7 +152,7 @@ class _WindowsHomeScreenState extends State<WindowsHomeScreen>
     return OpenSiteWidget();
   }
 
-  Widget _returnRecentSitesWidget() {
-    return RecentSitesTableWidget();
+  Widget _returnRecentSitesWidget(HomeScreenController controller) {
+    return RecentSitesTableWidget(controller: controller);
   }
 }
