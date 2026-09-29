@@ -3,15 +3,15 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
-import 'package:techno_switch_solar_app/ble/ble_manager.dart';
-import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
-import 'package:techno_switch_solar_app/utils/panel_config/panel_config_feedback_dialogs.dart';
-import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
-import 'package:techno_switch_solar_app/utils/peripherals/peripheral_cache_to_ble.dart';
-import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
-import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
+import 'package:Technoswitch/ble/blue_plus_adapter.dart';
+import 'package:Technoswitch/ble/ble_manager.dart';
+import 'package:Technoswitch/ble/controller/ble_log_controller.dart';
+import 'package:Technoswitch/utils/panel_config/panel_config_feedback_dialogs.dart';
+import 'package:Technoswitch/utils/constants/style_constants.dart';
+import 'package:Technoswitch/utils/peripherals/peripheral_cache_to_ble.dart';
+import 'package:Technoswitch/utils/constants/asset_constants.dart';
+import 'package:Technoswitch/utils/constants/color_constants.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
 
 class PanelAccessPasswordDelegates {
   PanelAccessPasswordDelegates({

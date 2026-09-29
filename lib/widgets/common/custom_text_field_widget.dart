@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
+import 'package:Technoswitch/utils/constants/color_constants.dart';
 
-import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
+import 'package:Technoswitch/utils/constants/style_constants.dart';
+
 /// Reusable text field widget with consistent styling and validation support
 class CustomTextFieldWidget extends StatelessWidget {
   final String label;
@@ -39,8 +40,11 @@ class CustomTextFieldWidget extends StatelessWidget {
         Text(
           label,
           style: StyleConstants.primary13w600Style.copyWith(
-                                            color: hasError ? ColorConstants.primary : ColorConstants.textSecondary,
-                                            ),
+            color:
+                hasError
+                    ? ColorConstants.primary
+                    : ColorConstants.textSecondary,
+          ),
         ),
         SizedBox(height: 8),
         Container(
@@ -48,7 +52,8 @@ class CustomTextFieldWidget extends StatelessWidget {
             color: ColorConstants.white,
             borderRadius: BorderRadius.circular(4),
             border: Border.all(
-              color: hasError ? ColorConstants.primary : ColorConstants.borderGray,
+              color:
+                  hasError ? ColorConstants.primary : ColorConstants.borderGray,
               width: hasError ? 2 : 1,
             ),
           ),
@@ -69,10 +74,7 @@ class CustomTextFieldWidget extends StatelessWidget {
         ),
         if (hasError && errorMessage != null) ...[
           SizedBox(height: 4),
-          Text(
-            errorMessage,
-            style: StyleConstants.primary12w500Style,
-          ),
+          Text(errorMessage, style: StyleConstants.primary12w500Style),
         ],
       ],
     );

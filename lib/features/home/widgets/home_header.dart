@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:techno_switch_solar_app/features/home/controllers/home_screen_controller.dart';
-import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
-import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
-import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
+import 'package:Technoswitch/features/home/controllers/home_screen_controller.dart';
+import 'package:Technoswitch/utils/constants/asset_constants.dart';
+import 'package:Technoswitch/utils/constants/color_constants.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
+import 'package:Technoswitch/utils/constants/style_constants.dart';
 
 class HomeHeader extends StatelessWidget {
   const HomeHeader({super.key, required this.controller});

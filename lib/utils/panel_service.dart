@@ -1,7 +1,7 @@
 import 'dart:convert';
 import '../models/panel_model.dart';
 import 'storage/database_helper.dart';
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
 
 class PanelService {
   static final PanelService _instance = PanelService._internal();

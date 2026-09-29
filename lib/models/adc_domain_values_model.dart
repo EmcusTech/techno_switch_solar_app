@@ -1,5 +1,5 @@
-import 'package:techno_switch_solar_app/models/adc_input_model.dart';
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
+import 'package:Technoswitch/models/adc_input_model.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
 
 class AdcValues {
   final double sounder1;

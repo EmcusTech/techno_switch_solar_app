@@ -1,8 +1,8 @@
-import 'package:techno_switch_solar_app/ble/ble_process.dart';
-import 'package:techno_switch_solar_app/config/ble/input_setup_payload.dart';
-import 'package:techno_switch_solar_app/config/structs/input_cfg_def.dart';
-import 'package:techno_switch_solar_app/config/ui/input_config_options.dart';
-import 'package:techno_switch_solar_app/utils/peripherals/defaults/input_defaults.dart';
+import 'package:Technoswitch/ble/ble_process.dart';
+import 'package:Technoswitch/config/ble/input_setup_payload.dart';
+import 'package:Technoswitch/config/structs/input_cfg_def.dart';
+import 'package:Technoswitch/config/ui/input_config_options.dart';
+import 'package:Technoswitch/utils/peripherals/defaults/input_defaults.dart';
 
 /// UI-facing state for the Input configuration sheet (labels, not wire indices).
 class InputUiState {

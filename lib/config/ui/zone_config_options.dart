@@ -1,4 +1,4 @@
-import 'package:techno_switch_solar_app/utils/constants/strings/panel_values.dart';
+import 'package:Technoswitch/utils/constants/strings/panel_values.dart';
 
 /// Dropdown option catalogs for Zone configuration (index = wire value).
 abstract final class ZoneConfigOptions {

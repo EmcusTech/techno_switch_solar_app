@@ -4,30 +4,29 @@ import 'dart:typed_data';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
+import 'package:Technoswitch/ble/blue_plus_adapter.dart';
 import 'package:flutter_svg/svg.dart';
 // import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:get/get.dart';
 import 'package:lottie/lottie.dart';
 import 'package:percent_indicator/percent_indicator.dart';
-import 'package:techno_switch_solar_app/ble/ble_session_idle_policy.dart';
-import 'package:techno_switch_solar_app/models/ble/firmware/firmware_packet_model.dart';
-import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
-import 'package:techno_switch_solar_app/widgets/common/common_cta_button.dart';
+import 'package:Technoswitch/ble/ble_session_idle_policy.dart';
+import 'package:Technoswitch/models/ble/firmware/firmware_packet_model.dart';
+import 'package:Technoswitch/utils/constants/asset_constants.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
+import 'package:Technoswitch/widgets/common/common_cta_button.dart';
 import '../../../../ble/ble_manager.dart';
 import '../../../../ble/controller/ble_log_controller.dart';
 import '../controllers/firmware_controller.dart';
-import 'package:techno_switch_solar_app/utils/ble/firmware_upgrade_service.dart'
-    as fw;
-import 'package:techno_switch_solar_app/utils/constants/ble/bluetooth_service.dart'
+import 'package:Technoswitch/utils/ble/firmware_upgrade_service.dart' as fw;
+import 'package:Technoswitch/utils/constants/ble/bluetooth_service.dart'
     as app_bluetooth;
-import 'package:techno_switch_solar_app/utils/constants/ble/ble_name_utils.dart';
-import 'package:techno_switch_solar_app/utils/constants/ble/ble_msd_utils.dart';
-import 'package:techno_switch_solar_app/utils/logger.dart' as logger;
-import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
+import 'package:Technoswitch/utils/constants/ble/ble_name_utils.dart';
+import 'package:Technoswitch/utils/constants/ble/ble_msd_utils.dart';
+import 'package:Technoswitch/utils/logger.dart' as logger;
+import 'package:Technoswitch/utils/constants/color_constants.dart';
 
-import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
+import 'package:Technoswitch/utils/constants/style_constants.dart';
 
 enum FirmwareType { mainPanel, bleChip }
 

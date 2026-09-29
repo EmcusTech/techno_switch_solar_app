@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:techno_switch_solar_app/features/sites/controllers/simple_site_creation_controller.dart';
-import 'package:techno_switch_solar_app/features/sites/views/simple_site_creation_ui_delegate_mixin.dart';
-import 'package:techno_switch_solar_app/features/sites/widgets/simple_site_creation_content.dart';
-import 'package:techno_switch_solar_app/features/sites/widgets/site_shell.dart';
+import 'package:Technoswitch/features/sites/controllers/simple_site_creation_controller.dart';
+import 'package:Technoswitch/features/sites/views/simple_site_creation_ui_delegate_mixin.dart';
+import 'package:Technoswitch/features/sites/widgets/simple_site_creation_content.dart';
+import 'package:Technoswitch/features/sites/widgets/site_shell.dart';
 
 class SimpleSiteCreationScreen extends StatefulWidget {
   const SimpleSiteCreationScreen({super.key});

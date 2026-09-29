@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
-import 'package:techno_switch_solar_app/features/scan/controllers/scan_controller.dart';
-import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
-import 'package:techno_switch_solar_app/utils/constants/ble/ble_name_utils.dart';
-import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
-import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
+import 'package:Technoswitch/ble/blue_plus_adapter.dart';
+import 'package:Technoswitch/features/scan/controllers/scan_controller.dart';
+import 'package:Technoswitch/utils/constants/asset_constants.dart';
+import 'package:Technoswitch/utils/constants/ble/ble_name_utils.dart';
+import 'package:Technoswitch/utils/constants/color_constants.dart';
+import 'package:Technoswitch/utils/constants/style_constants.dart';
 
 class ScanDeviceCard extends StatelessWidget {
   const ScanDeviceCard({
@@ -23,10 +23,8 @@ class ScanDeviceCard extends StatelessWidget {
 
     return GestureDetector(
       onTap:
-          () => controller.onDeviceSelected(
-            device,
-            isScanningConnectFlow: true,
-          ),
+          () =>
+              controller.onDeviceSelected(device, isScanningConnectFlow: true),
       child: Container(
         decoration: BoxDecoration(
           color: ColorConstants.primary.withValues(alpha: 0.1),

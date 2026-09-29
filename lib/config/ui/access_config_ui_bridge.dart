@@ -1,5 +1,5 @@
-import 'package:techno_switch_solar_app/config/structs/panel_access_lvl_cfg_def.dart';
-import 'package:techno_switch_solar_app/models/access_code_mode_model.dart';
+import 'package:Technoswitch/config/structs/panel_access_lvl_cfg_def.dart';
+import 'package:Technoswitch/models/access_code_mode_model.dart';
 
 /// Thin bridge between [AccessCodeSetupData] and [PanelAccessLvlCfgDef].
 abstract final class AccessConfigUiBridge {

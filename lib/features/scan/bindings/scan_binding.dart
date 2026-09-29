@@ -1,6 +1,6 @@
 import 'package:get/get.dart';
-import 'package:techno_switch_solar_app/features/scan/controllers/scan_controller.dart';
-import 'package:techno_switch_solar_app/features/scan/models/scan_flow_args.dart';
+import 'package:Technoswitch/features/scan/controllers/scan_controller.dart';
+import 'package:Technoswitch/features/scan/models/scan_flow_args.dart';
 
 class ScanBinding extends Bindings {
   ScanBinding({required this.args});

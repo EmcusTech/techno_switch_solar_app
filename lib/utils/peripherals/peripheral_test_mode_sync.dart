@@ -1,5 +1,5 @@
-import 'package:techno_switch_solar_app/ble/ble_manager.dart';
-import 'package:techno_switch_solar_app/utils/modes/relay_mode_util.dart';
+import 'package:Technoswitch/ble/ble_manager.dart';
+import 'package:Technoswitch/utils/modes/relay_mode_util.dart';
 
 OutputModeConfig _relaySupervisionFromExistingHex(String hex) {
   try {

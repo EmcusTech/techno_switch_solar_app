@@ -1,8 +1,8 @@
-import 'package:techno_switch_solar_app/ble/ble_process.dart';
-import 'package:techno_switch_solar_app/config/ble/ext_out_setup_payload.dart';
-import 'package:techno_switch_solar_app/config/structs/ext_out_cfg_def.dart';
-import 'package:techno_switch_solar_app/config/ui/ext_out_config_options.dart';
-import 'package:techno_switch_solar_app/utils/peripherals/defaults/ext_out_defaults.dart';
+import 'package:Technoswitch/ble/ble_process.dart';
+import 'package:Technoswitch/config/ble/ext_out_setup_payload.dart';
+import 'package:Technoswitch/config/structs/ext_out_cfg_def.dart';
+import 'package:Technoswitch/config/ui/ext_out_config_options.dart';
+import 'package:Technoswitch/utils/peripherals/defaults/ext_out_defaults.dart';
 
 /// UI-facing state for the Ext-Out configuration sheet (labels, not wire indices).
 class ExtOutUiState {

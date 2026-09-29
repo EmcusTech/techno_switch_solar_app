@@ -1,8 +1,8 @@
 import 'dart:async';
 
-import 'package:techno_switch_solar_app/features/dashboard/controllers/project_dashboard_controller.dart';
-import 'package:techno_switch_solar_app/features/dashboard/controllers/project_dashboard_ui_delegate.dart';
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
+import 'package:Technoswitch/features/dashboard/controllers/project_dashboard_controller.dart';
+import 'package:Technoswitch/features/dashboard/controllers/project_dashboard_ui_delegate.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
 
 abstract final class ProjectDashboardTileActions {
   static ProjectDashboardUiDelegate? _ui(ProjectDashboardController c) =>
@@ -58,24 +58,26 @@ abstract final class ProjectDashboardTileActions {
       final ui = _ui(c);
       if (ui == null) return;
       ui.showSounderSetupBottomSheet(
-        onDownload: () => ui.showPasswordPopup(
-          onCall: () {
-            c.ble.bleProcess.isSounderSetupFetchCommandActive.value = true;
-            c.bleController.startSounderSetupFetch();
-          },
-          isSounderSetup: true,
-          mode: 'bottomsheet_download',
-          onDownloadComplete: c.saveSounderCacheAndNotifyRefresh,
-          downloadSuccessMessage: 'Sounder',
-        ),
-        onApply: () => ui.showPasswordPopup(
-          onCall: () {
-            c.ble.bleProcess.isSounderSetupApplyCommandActive.value = true;
-            c.bleController.startSounderSetupApply();
-          },
-          isSounderSetup: true,
-          mode: 'bottomsheet_apply',
-        ),
+        onDownload:
+            () => ui.showPasswordPopup(
+              onCall: () {
+                c.ble.bleProcess.isSounderSetupFetchCommandActive.value = true;
+                c.bleController.startSounderSetupFetch();
+              },
+              isSounderSetup: true,
+              mode: 'bottomsheet_download',
+              onDownloadComplete: c.saveSounderCacheAndNotifyRefresh,
+              downloadSuccessMessage: 'Sounder',
+            ),
+        onApply:
+            () => ui.showPasswordPopup(
+              onCall: () {
+                c.ble.bleProcess.isSounderSetupApplyCommandActive.value = true;
+                c.bleController.startSounderSetupApply();
+              },
+              isSounderSetup: true,
+              mode: 'bottomsheet_apply',
+            ),
         refreshTrigger: c.sounderRefreshTrigger,
       );
     });
@@ -86,24 +88,26 @@ abstract final class ProjectDashboardTileActions {
       final ui = _ui(c);
       if (ui == null) return;
       ui.showRadioSetupBottomSheet(
-        onDownload: () => ui.showPasswordPopup(
-          onCall: () {
-            c.ble.bleProcess.isRadioSetupFetchCommandActive.value = true;
-            c.bleController.startRadioSetupFetch();
-          },
-          isZoneSetup: true,
-          mode: 'bottomsheet_download',
-          onDownloadComplete: c.saveRadioCacheAndNotifyRefresh,
-          downloadSuccessMessage: StringConstants.radio,
-        ),
-        onApply: () => ui.showPasswordPopup(
-          onCall: () {
-            c.ble.bleProcess.isRadioSetupCommandApplyActive.value = true;
-            c.bleController.startRadioSetupApply();
-          },
-          isZoneSetup: true,
-          mode: 'bottomsheet_apply',
-        ),
+        onDownload:
+            () => ui.showPasswordPopup(
+              onCall: () {
+                c.ble.bleProcess.isRadioSetupFetchCommandActive.value = true;
+                c.bleController.startRadioSetupFetch();
+              },
+              isZoneSetup: true,
+              mode: 'bottomsheet_download',
+              onDownloadComplete: c.saveRadioCacheAndNotifyRefresh,
+              downloadSuccessMessage: StringConstants.radio,
+            ),
+        onApply:
+            () => ui.showPasswordPopup(
+              onCall: () {
+                c.ble.bleProcess.isRadioSetupCommandApplyActive.value = true;
+                c.bleController.startRadioSetupApply();
+              },
+              isZoneSetup: true,
+              mode: 'bottomsheet_apply',
+            ),
         refreshTrigger: c.zoneRefreshTrigger,
       );
     });
@@ -114,15 +118,16 @@ abstract final class ProjectDashboardTileActions {
       final ui = _ui(c);
       if (ui == null) return;
       ui.showModuleSetupBottomSheet(
-        onDownload: () => ui.showPasswordPopup(
-          onCall: () {
-            c.ble.bleProcess.isModuleSetupFetchCommandActive.value = true;
-            c.bleController.startModuleSetupFetch();
-          },
-          mode: 'bottomsheet_download',
-          onDownloadComplete: c.saveModuleCacheAndNotifyRefresh,
-          downloadSuccessMessage: 'Module',
-        ),
+        onDownload:
+            () => ui.showPasswordPopup(
+              onCall: () {
+                c.ble.bleProcess.isModuleSetupFetchCommandActive.value = true;
+                c.bleController.startModuleSetupFetch();
+              },
+              mode: 'bottomsheet_download',
+              onDownloadComplete: c.saveModuleCacheAndNotifyRefresh,
+              downloadSuccessMessage: 'Module',
+            ),
       );
     });
   }
@@ -132,24 +137,26 @@ abstract final class ProjectDashboardTileActions {
       final ui = _ui(c);
       if (ui == null) return;
       ui.showLBusSetupBottomSheet(
-        onDownload: () => ui.showPasswordPopup(
-          onCall: () {
-            c.ble.bleProcess.isLBusSetupFetchCommandActive.value = true;
-            c.bleController.startLBusSetupFetch();
-          },
-          mode: 'bottomsheet_download',
-          onDownloadComplete: c.saveLBusCacheAndNotifyRefresh,
-          downloadSuccessMessage: StringConstants.lBus,
-        ),
-        onApply: () => ui.showPasswordPopup(
-          onCall: () {
-            c.ble.bleProcess.isLBusSetupApplyCommandActive.value = true;
-            c.bleController.startLBusSetupApply();
-          },
-          isLBusSetup: true,
-          mode: 'bottomsheet_apply',
-          downloadSuccessMessage: StringConstants.lBus,
-        ),
+        onDownload:
+            () => ui.showPasswordPopup(
+              onCall: () {
+                c.ble.bleProcess.isLBusSetupFetchCommandActive.value = true;
+                c.bleController.startLBusSetupFetch();
+              },
+              mode: 'bottomsheet_download',
+              onDownloadComplete: c.saveLBusCacheAndNotifyRefresh,
+              downloadSuccessMessage: StringConstants.lBus,
+            ),
+        onApply:
+            () => ui.showPasswordPopup(
+              onCall: () {
+                c.ble.bleProcess.isLBusSetupApplyCommandActive.value = true;
+                c.bleController.startLBusSetupApply();
+              },
+              isLBusSetup: true,
+              mode: 'bottomsheet_apply',
+              downloadSuccessMessage: StringConstants.lBus,
+            ),
         refreshTrigger: c.zoneRefreshTrigger,
       );
     });
@@ -202,24 +209,26 @@ abstract final class ProjectDashboardTileActions {
       final ui = _ui(c);
       if (ui == null) return;
       ui.showServiceDueSetupBottomSheet(
-        onDownload: () => ui.showPasswordPopup(
-          onCall: () {
-            c.ble.bleProcess.isServiceDueFetchCommandActive.value = true;
-            c.bleController.startServiceDueFetch();
-          },
-          isServiceDueSetup: true,
-          mode: 'bottomsheet_download',
-          onDownloadComplete: c.saveServiceDueCacheAndNotifyRefresh,
-          downloadSuccessMessage: StringConstants.serviceDue,
-        ),
-        onApply: () => ui.showPasswordPopup(
-          onCall: () {
-            c.ble.bleProcess.isServiceDueApplyCommandActive.value = true;
-            c.bleController.startServiceDueApply();
-          },
-          isServiceDueSetup: true,
-          mode: 'bottomsheet_apply',
-        ),
+        onDownload:
+            () => ui.showPasswordPopup(
+              onCall: () {
+                c.ble.bleProcess.isServiceDueFetchCommandActive.value = true;
+                c.bleController.startServiceDueFetch();
+              },
+              isServiceDueSetup: true,
+              mode: 'bottomsheet_download',
+              onDownloadComplete: c.saveServiceDueCacheAndNotifyRefresh,
+              downloadSuccessMessage: StringConstants.serviceDue,
+            ),
+        onApply:
+            () => ui.showPasswordPopup(
+              onCall: () {
+                c.ble.bleProcess.isServiceDueApplyCommandActive.value = true;
+                c.bleController.startServiceDueApply();
+              },
+              isServiceDueSetup: true,
+              mode: 'bottomsheet_apply',
+            ),
         refreshTrigger: c.serviceDueRefreshTrigger,
       );
     });
@@ -230,24 +239,28 @@ abstract final class ProjectDashboardTileActions {
       final ui = _ui(c);
       if (ui == null) return;
       ui.showAccessCodeSetupBottomSheet(
-        onDownload: () => ui.showPasswordPopup(
-          onCall: () {
-            c.ble.bleProcess.isAccessCodeSetupFetchCommandActive.value = true;
-            c.bleController.startAccessCodeSetupFetch();
-          },
-          isAccessCodeSetup: true,
-          mode: 'bottomsheet_download',
-          onDownloadComplete: c.saveAccessCodeCacheAndNotifyRefresh,
-          downloadSuccessMessage: StringConstants.accessCode,
-        ),
-        onApply: () => ui.showPasswordPopup(
-          onCall: () {
-            c.ble.bleProcess.isAccessCodeSetupApplyCommandActive.value = true;
-            c.bleController.startAccessCodeSetupApply();
-          },
-          isAccessCodeSetup: true,
-          mode: 'bottomsheet_apply',
-        ),
+        onDownload:
+            () => ui.showPasswordPopup(
+              onCall: () {
+                c.ble.bleProcess.isAccessCodeSetupFetchCommandActive.value =
+                    true;
+                c.bleController.startAccessCodeSetupFetch();
+              },
+              isAccessCodeSetup: true,
+              mode: 'bottomsheet_download',
+              onDownloadComplete: c.saveAccessCodeCacheAndNotifyRefresh,
+              downloadSuccessMessage: StringConstants.accessCode,
+            ),
+        onApply:
+            () => ui.showPasswordPopup(
+              onCall: () {
+                c.ble.bleProcess.isAccessCodeSetupApplyCommandActive.value =
+                    true;
+                c.bleController.startAccessCodeSetupApply();
+              },
+              isAccessCodeSetup: true,
+              mode: 'bottomsheet_apply',
+            ),
         refreshTrigger: c.accessCodeRefreshTrigger,
       );
     });
@@ -257,24 +270,26 @@ abstract final class ProjectDashboardTileActions {
     final ui = _ui(c);
     if (ui == null) return;
     ui.showPanelInfoSetupBottomSheet(
-      onDownload: () => ui.showPasswordPopup(
-        onCall: () {
-          c.ble.bleProcess.isPanelInfoSetupFetchCommandActive.value = true;
-          c.bleController.startPanelInfoSetupFetch();
-        },
-        isPanelInfoSetup: true,
-        mode: 'bottomsheet_download',
-        onDownloadComplete: c.savePanelInfoCacheAndNotifyRefresh,
-        downloadSuccessMessage: StringConstants.panelInfo,
-      ),
-      onApply: () => ui.showPasswordPopup(
-        onCall: () {
-          c.ble.bleProcess.isPanelInfoSetupApplyCommandActive.value = true;
-          c.bleController.startPanelInfoSetupApply();
-        },
-        isPanelInfoSetup: true,
-        mode: 'bottomsheet_apply',
-      ),
+      onDownload:
+          () => ui.showPasswordPopup(
+            onCall: () {
+              c.ble.bleProcess.isPanelInfoSetupFetchCommandActive.value = true;
+              c.bleController.startPanelInfoSetupFetch();
+            },
+            isPanelInfoSetup: true,
+            mode: 'bottomsheet_download',
+            onDownloadComplete: c.savePanelInfoCacheAndNotifyRefresh,
+            downloadSuccessMessage: StringConstants.panelInfo,
+          ),
+      onApply:
+          () => ui.showPasswordPopup(
+            onCall: () {
+              c.ble.bleProcess.isPanelInfoSetupApplyCommandActive.value = true;
+              c.bleController.startPanelInfoSetupApply();
+            },
+            isPanelInfoSetup: true,
+            mode: 'bottomsheet_apply',
+          ),
       refreshTrigger: c.panelInfoRefreshTrigger,
     );
   }
@@ -283,24 +298,28 @@ abstract final class ProjectDashboardTileActions {
     final ui = _ui(c);
     if (ui == null) return;
     ui.showGeneralModuleSetupBottomSheet(
-      onDownload: () => ui.showPasswordPopup(
-        onCall: () {
-          c.ble.bleProcess.isGeneralModuleSetupFetchCommandActive.value = true;
-          c.bleController.startGeneralModuleSetupFetch();
-        },
-        isGeneralModuleSetup: true,
-        mode: 'bottomsheet_download',
-        onDownloadComplete: c.saveGeneralModuleCacheAndNotifyRefresh,
-        downloadSuccessMessage: StringConstants.generalModule,
-      ),
-      onApply: () => ui.showPasswordPopup(
-        onCall: () {
-          c.ble.bleProcess.isGeneralModuleSetupApplyCommandActive.value = true;
-          c.bleController.startGeneralModuleSetupApply();
-        },
-        isGeneralModuleSetup: true,
-        mode: 'bottomsheet_apply',
-      ),
+      onDownload:
+          () => ui.showPasswordPopup(
+            onCall: () {
+              c.ble.bleProcess.isGeneralModuleSetupFetchCommandActive.value =
+                  true;
+              c.bleController.startGeneralModuleSetupFetch();
+            },
+            isGeneralModuleSetup: true,
+            mode: 'bottomsheet_download',
+            onDownloadComplete: c.saveGeneralModuleCacheAndNotifyRefresh,
+            downloadSuccessMessage: StringConstants.generalModule,
+          ),
+      onApply:
+          () => ui.showPasswordPopup(
+            onCall: () {
+              c.ble.bleProcess.isGeneralModuleSetupApplyCommandActive.value =
+                  true;
+              c.bleController.startGeneralModuleSetupApply();
+            },
+            isGeneralModuleSetup: true,
+            mode: 'bottomsheet_apply',
+          ),
       refreshTrigger: c.generalModuleRefreshTrigger,
     );
   }
@@ -310,16 +329,18 @@ abstract final class ProjectDashboardTileActions {
       final ui = _ui(c);
       if (ui == null) return;
       ui.showAdcDiagnosticsSetupBottomSheet(
-        onDownload: () => ui.showPasswordPopup(
-          onCall: () {
-            c.ble.bleProcess.isAdcSetupFetchCommandActive.value = true;
-            c.bleController.startAdcSetupFetch();
-          },
-          mode: 'bottomsheet_download',
-          onDownloadComplete: c.saveModuleCacheAndNotifyRefresh,
-          downloadSuccessMessage:
-              StringConstants.liveDataIsBeingStreamedFromTheDeviceInRealTime,
-        ),
+        onDownload:
+            () => ui.showPasswordPopup(
+              onCall: () {
+                c.ble.bleProcess.isAdcSetupFetchCommandActive.value = true;
+                c.bleController.startAdcSetupFetch();
+              },
+              mode: 'bottomsheet_download',
+              onDownloadComplete: c.saveModuleCacheAndNotifyRefresh,
+              downloadSuccessMessage:
+                  StringConstants
+                      .liveDataIsBeingStreamedFromTheDeviceInRealTime,
+            ),
         onStop: () {
           c.ble.bleProcess.isAdcSetupFetchCommandActive.value = false;
           ui.showDiagnosticStopDialog();
@@ -359,29 +380,32 @@ abstract final class ProjectDashboardTileActions {
             () => ui.runRelaySetupDownload(
               onDownloadComplete: c.saveRelayCacheAndNotifyRefresh,
             ),
-        onDownloadSounders: () => ui.showPasswordPopup(
-          onCall: () {
-            c.ble.bleProcess.isSounderSetupFetchCommandActive.value = true;
-            c.bleController.startSounderSetupFetch();
-          },
-          isSounderSetup: true,
-          mode: 'bottomsheet_download',
-          onDownloadComplete: c.saveSounderCacheAndNotifyRefresh,
-          downloadSuccessMessage: 'Sounder',
-        ),
+        onDownloadSounders:
+            () => ui.showPasswordPopup(
+              onCall: () {
+                c.ble.bleProcess.isSounderSetupFetchCommandActive.value = true;
+                c.bleController.startSounderSetupFetch();
+              },
+              isSounderSetup: true,
+              mode: 'bottomsheet_download',
+              onDownloadComplete: c.saveSounderCacheAndNotifyRefresh,
+              downloadSuccessMessage: 'Sounder',
+            ),
         onApplyRelays:
             () => ui.runRelaySetupApply(
               onAfterApplySuccess: ui.showRelayTestResultConfirmation,
             ),
-        onApplySounders: () => ui.showPasswordPopup(
-          onCall: () {
-            c.ble.bleProcess.isSounderSetupApplyCommandActive.value = true;
-            c.bleController.startSounderSetupApply();
-          },
-          isSounderSetup: true,
-          mode: 'bottomsheet_apply',
-          onAfterApplySuccess: (_) => ui.showSounderTestResultConfirmation(),
-        ),
+        onApplySounders:
+            () => ui.showPasswordPopup(
+              onCall: () {
+                c.ble.bleProcess.isSounderSetupApplyCommandActive.value = true;
+                c.bleController.startSounderSetupApply();
+              },
+              isSounderSetup: true,
+              mode: 'bottomsheet_apply',
+              onAfterApplySuccess:
+                  (_) => ui.showSounderTestResultConfirmation(),
+            ),
         relayRefreshTrigger: c.relayRefreshTrigger,
         sounderRefreshTrigger: c.sounderRefreshTrigger,
       );

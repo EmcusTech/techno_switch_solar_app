@@ -1,5 +1,5 @@
-import 'package:techno_switch_solar_app/config/ble/panel_access_lvl_setup_payload.dart';
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
+import 'package:Technoswitch/config/ble/panel_access_lvl_setup_payload.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
 
 class AccessCodeSetupData {
   final int accessCodeNo;
@@ -50,7 +50,9 @@ class AccessCodeSetupData {
     return AccessCodeSetupData(
       accessCodeNo: json[StringConstants.accesscodeno] as int? ?? 1,
       accessLevel: json['accessLevel'] as int? ?? 0,
-      accessLevelName: json[StringConstants.accesslevelname] as String? ?? StringConstants.notUsed,
+      accessLevelName:
+          json[StringConstants.accesslevelname] as String? ??
+          StringConstants.notUsed,
       accessCode: json['accessCode'] as String? ?? '',
     );
   }

@@ -1,7 +1,7 @@
 import 'package:get/get.dart';
-import 'package:techno_switch_solar_app/features/sites/controllers/simple_site_creation_controller.dart';
-import 'package:techno_switch_solar_app/features/sites/controllers/site_controller.dart';
-import 'package:techno_switch_solar_app/features/sites/models/site_args.dart';
+import 'package:Technoswitch/features/sites/controllers/simple_site_creation_controller.dart';
+import 'package:Technoswitch/features/sites/controllers/site_controller.dart';
+import 'package:Technoswitch/features/sites/models/site_args.dart';
 
 class SiteBinding extends Bindings {
   SiteBinding({required this.args});

@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
 
 class PanelModel {
   final int? id;
@@ -130,11 +130,14 @@ class PanelModel {
     final info = parsedDeviceInfo;
     if (info['offlineProvisioned'] == true) return true;
     final mac = info[StringConstants.macaddress]?.toString().trim() ?? '';
-    return mac.isEmpty && (info[StringConstants.offlineprovisioned]?.toString().isNotEmpty ?? false);
+    return mac.isEmpty &&
+        (info[StringConstants.offlineprovisioned]?.toString().isNotEmpty ??
+            false);
   }
 
   bool isLinkedToBleMac(String mac) {
-    final stored = parsedDeviceInfo[StringConstants.macaddress]?.toString().trim() ?? '';
+    final stored =
+        parsedDeviceInfo[StringConstants.macaddress]?.toString().trim() ?? '';
     if (stored.isEmpty || mac.trim().isEmpty) return false;
     return _normalizeMac(stored) == _normalizeMac(mac);
   }
@@ -145,7 +148,10 @@ class PanelModel {
   static Map<String, dynamic> createOfflineProvisionedDeviceInfo(
     String panelId,
   ) {
-    return {StringConstants.offlineprovisioned: panelId, 'offlineProvisioned': true};
+    return {
+      StringConstants.offlineprovisioned: panelId,
+      'offlineProvisioned': true,
+    };
   }
 
   String get deviceDisplayInfo {

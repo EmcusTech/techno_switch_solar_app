@@ -1,9 +1,9 @@
-import 'package:techno_switch_solar_app/ble/ble_process.dart';
-import 'package:techno_switch_solar_app/config/ble/relay_setup_payload.dart';
-import 'package:techno_switch_solar_app/config/structs/relay_cfg_def.dart';
-import 'package:techno_switch_solar_app/config/ui/relay_config_options.dart';
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
-import 'package:techno_switch_solar_app/utils/peripherals/defaults/relay_defaults.dart';
+import 'package:Technoswitch/ble/ble_process.dart';
+import 'package:Technoswitch/config/ble/relay_setup_payload.dart';
+import 'package:Technoswitch/config/structs/relay_cfg_def.dart';
+import 'package:Technoswitch/config/ui/relay_config_options.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
+import 'package:Technoswitch/utils/peripherals/defaults/relay_defaults.dart';
 
 /// UI-facing state for one relay in the Relay configuration sheet.
 class RelayUiState {
@@ -68,10 +68,7 @@ abstract final class RelayConfigUiBridge {
     );
   }
 
-  static RelayCfgDef toStruct(
-    RelayUiState ui, {
-    bool? test,
-  }) {
+  static RelayCfgDef toStruct(RelayUiState ui, {bool? test}) {
     final groupIndex = RelayConfigOptions.groupIndex(ui.group);
     final dynamicValue =
         int.tryParse(ui.dynamicValue.trim()) ??

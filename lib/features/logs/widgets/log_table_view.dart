@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:techno_switch_solar_app/models/log_model.dart';
-import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
-import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
+import 'package:Technoswitch/models/log_model.dart';
+import 'package:Technoswitch/utils/constants/color_constants.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
+import 'package:Technoswitch/utils/constants/style_constants.dart';
 
 class LogTableView extends StatefulWidget {
   final List<LogModel> displayLogs;

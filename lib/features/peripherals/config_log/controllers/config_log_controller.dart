@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
-import 'package:techno_switch_solar_app/utils/peripherals/peripheral_config_diff_labels.dart';
-import 'package:techno_switch_solar_app/utils/peripherals/peripheral_config_snapshot.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
+import 'package:Technoswitch/utils/peripherals/peripheral_config_diff_labels.dart';
+import 'package:Technoswitch/utils/peripherals/peripheral_config_snapshot.dart';
 
 enum ConfigLogPresentationStyle { bottomSheet, dialog }
 

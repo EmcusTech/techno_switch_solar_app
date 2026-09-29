@@ -1,8 +1,8 @@
 import 'dart:typed_data';
 
-import 'package:techno_switch_solar_app/config/system_config_limits.dart';
-import 'package:techno_switch_solar_app/config/structs/struct_bytes.dart';
-import 'package:techno_switch_solar_app/utils/peripherals/defaults/sounder_defaults.dart';
+import 'package:Technoswitch/config/system_config_limits.dart';
+import 'package:Technoswitch/config/structs/struct_bytes.dart';
+import 'package:Technoswitch/utils/peripherals/defaults/sounder_defaults.dart';
 
 /// Mirrors firmware `st_sounder_cfg_def` (29 bytes, packed).
 class SounderCfgDef {
@@ -60,11 +60,9 @@ class SounderCfgDef {
     required int sounderNum,
   }) {
     final defaults = SounderDefaults.mainSounderEntry(sounderNum - 1);
-    final group =
-        (data['group'] as num?)?.toInt() ?? defaults['group'] as int;
+    final group = (data['group'] as num?)?.toInt() ?? defaults['group'] as int;
     final functionNo =
-        (data['functionNo'] as num?)?.toInt() ??
-        defaults['functionNo'] as int;
+        (data['functionNo'] as num?)?.toInt() ?? defaults['functionNo'] as int;
 
     var sounderZone = 0;
     var sounderExtOut = 0;

@@ -1,8 +1,8 @@
 import 'dart:typed_data';
 
-import 'package:techno_switch_solar_app/config/system_config_limits.dart';
-import 'package:techno_switch_solar_app/config/structs/struct_bytes.dart';
-import 'package:techno_switch_solar_app/utils/peripherals/defaults/ble_module_defaults.dart';
+import 'package:Technoswitch/config/system_config_limits.dart';
+import 'package:Technoswitch/config/structs/struct_bytes.dart';
+import 'package:Technoswitch/utils/peripherals/defaults/ble_module_defaults.dart';
 
 /// Mirrors firmware `st_ble_module_cfg_def` (31 bytes, packed).
 class BleModuleCfgDef {

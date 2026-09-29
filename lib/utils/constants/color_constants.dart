@@ -55,6 +55,7 @@ abstract final class ColorConstants {
   static const Color successBackgroundLight = Color(0xFFE8F5E9);
   static const Color surfaceCard = Color(0xFFE9ECEF);
   static const Color primary = Color(0xFFEC1D24);
+  static const Color primaryBlue = Color(0xFF098AE6);
   static const Color warningAmber = Color(0xFFEDA145);
   static const Color buttonSecondaryBackground = Color(0xFFEFEEEE);
   static const Color colorFff0F0F0 = Color(0xFFF0F0F0);
@@ -69,6 +70,8 @@ abstract final class ColorConstants {
   static const Color errorSurface = Color(0xFFFDECEA);
   static const Color errorBright = Color(0xFFFF6467);
   static const Color errorLightPink = Color(0xFFFFCDD2);
+  static const Color blueMedium = Color(0xFFD9E5FF);
+  static const Color blueLight = Color(0xFFF1F5FF);
   static const Color brightYellow = Color(0xFFFFDD00);
   static const Color errorTint = Color(0xFFFFE2E2);
   static const Color errorBackgroundLight = Color(0xFFFFEBEE);
@@ -78,4 +81,19 @@ abstract final class ColorConstants {
   static const Color white = Color(0xFFFFFFFF);
   static const Color transparent = Colors.transparent;
   static const Color blackMaterial = Colors.black;
+
+  //Windows
+  static const Color primaryColor = Color(0xFFEC1D24);
+  static const Color primaryBlueColor = Color(0xFF098AE6);
+  static const Color secondaryBlueColor = Color(0xFFD9E5FF);
+  static const Color tertiaryBlueColor = Color(0xFFF1F5FF);
+  static const Color lightPurpleColor = Color(0xFFA855F7);
+  static const Color lightGreenColor = Color(0xFF22C55E);
+  static const Color quaternaryColor = Color(0xFF000000);
+  static const Color quinaryColor = Color(0xFF000000);
+  static const Color senaryColor = Color(0xFF000000);
+  static const Color septenaryColor = Color(0xFF000000);
+  static const Color octonaryColor = Color(0xFF000000);
+  static const Color nonaryColor = Color(0xFF000000);
+  static const Color denaryColor = Color(0xFF000000);
 }

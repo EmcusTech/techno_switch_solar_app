@@ -1,10 +1,10 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
-import 'package:techno_switch_solar_app/ble/ble_manager.dart';
-import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
-import 'package:techno_switch_solar_app/utils/peripherals/peripheral_config_snapshot.dart';
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
+import 'package:Technoswitch/ble/ble_manager.dart';
+import 'package:Technoswitch/ble/controller/ble_log_controller.dart';
+import 'package:Technoswitch/utils/peripherals/peripheral_config_snapshot.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
 
 class PanelConfigBulkSync {
   PanelConfigBulkSync._();

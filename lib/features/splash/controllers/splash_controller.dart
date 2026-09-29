@@ -1,8 +1,8 @@
 import 'package:get/get.dart';
-import 'package:techno_switch_solar_app/features/splash/controllers/splash_ui_delegate.dart';
+import 'package:Technoswitch/features/splash/controllers/splash_ui_delegate.dart';
 
 class SplashController extends GetxController {
-  static const Duration splashDuration = Duration(seconds: 4);
+  static const Duration splashDuration = Duration(seconds: 5);
 
   SplashUiDelegate? _ui;
 

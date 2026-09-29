@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
+import 'package:Technoswitch/ble/blue_plus_adapter.dart';
 
 abstract class ProjectDashboardUiDelegate {
   bool get isMounted;
@@ -52,7 +52,9 @@ abstract class ProjectDashboardUiDelegate {
     required Future<void> Function() onDownloadComplete,
   });
 
-  Future<void> runZoneSetupApply({Future<void> Function()? onAfterApplySuccess});
+  Future<void> runZoneSetupApply({
+    Future<void> Function()? onAfterApplySuccess,
+  });
 
   Future<void> runExtOutSetupDownload({
     required Future<void> Function() onDownloadComplete,

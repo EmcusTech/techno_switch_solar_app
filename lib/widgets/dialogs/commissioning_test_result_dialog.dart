@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
+import 'package:Technoswitch/utils/constants/color_constants.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
 
-import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
+import 'package:Technoswitch/utils/constants/style_constants.dart';
+
 class CommissioningTestItem {
   const CommissioningTestItem({required this.id, required this.label});
 
@@ -58,8 +59,7 @@ class _CommissioningTestResultDialogState
   void initState() {
     super.initState();
     _selections = {
-      for (final item in widget.items)
-        item.id: widget.initialResults[item.id],
+      for (final item in widget.items) item.id: widget.initialResults[item.id],
     };
   }
 
@@ -206,10 +206,7 @@ class _CommissioningTestResultDialogState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            item.label,
-            style: StyleConstants.textDark14w600Style,
-          ),
+          Text(item.label, style: StyleConstants.textDark14w600Style),
           const SizedBox(height: 8),
           Row(
             children: [
@@ -261,7 +258,9 @@ class _CommissioningTestResultDialogState
         child: Center(
           child: Text(
             label,
-            style: StyleConstants.textGray14w600Style.copyWith(color: isSelected ? selectedBorder : ColorConstants.textGray),
+            style: StyleConstants.textGray14w600Style.copyWith(
+              color: isSelected ? selectedBorder : ColorConstants.textGray,
+            ),
           ),
         ),
       ),

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:techno_switch_solar_app/features/settings/controllers/settings_controller.dart';
-import 'package:techno_switch_solar_app/features/settings/widgets/settings_menu_tile.dart';
-import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
+import 'package:Technoswitch/features/settings/controllers/settings_controller.dart';
+import 'package:Technoswitch/features/settings/widgets/settings_menu_tile.dart';
+import 'package:Technoswitch/utils/constants/color_constants.dart';
 
 class SettingsMenuList extends StatelessWidget {
   const SettingsMenuList({super.key, required this.controller});

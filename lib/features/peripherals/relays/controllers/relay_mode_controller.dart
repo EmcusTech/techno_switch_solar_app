@@ -1,15 +1,15 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
-import 'package:techno_switch_solar_app/config/ble/relay_setup_payload_debug.dart';
-import 'package:techno_switch_solar_app/config/ui/relay_config_options.dart';
-import 'package:techno_switch_solar_app/config/ui/relay_config_ui_bridge.dart';
-import 'package:techno_switch_solar_app/features/peripherals/shared/controllers/peripheral_mode_controller.dart';
-import 'package:techno_switch_solar_app/utils/panel_config/panel_config_cache_sync.dart';
-import 'package:techno_switch_solar_app/utils/peripherals/peripheral_test_mode_sync.dart';
-import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
+import 'package:Technoswitch/ble/controller/ble_log_controller.dart';
+import 'package:Technoswitch/config/ble/relay_setup_payload_debug.dart';
+import 'package:Technoswitch/config/ui/relay_config_options.dart';
+import 'package:Technoswitch/config/ui/relay_config_ui_bridge.dart';
+import 'package:Technoswitch/features/peripherals/shared/controllers/peripheral_mode_controller.dart';
+import 'package:Technoswitch/utils/panel_config/panel_config_cache_sync.dart';
+import 'package:Technoswitch/utils/peripherals/peripheral_test_mode_sync.dart';
+import 'package:Technoswitch/utils/storage/peripheral_setup_cache.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
 
 class RelayConfig {
   String group = RelayUiState.defaults(relayNumber: 1).group;
@@ -41,10 +41,7 @@ class RelayModeController extends PeripheralModeController {
   void initModel() {
     relays = List.generate(3, (i) {
       final config = RelayConfig();
-      _applyUiStateToRelay(
-        config,
-        RelayUiState.defaults(relayNumber: i + 1),
-      );
+      _applyUiStateToRelay(config, RelayUiState.defaults(relayNumber: i + 1));
       return config;
     });
   }

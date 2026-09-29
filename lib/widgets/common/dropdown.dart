@@ -1,9 +1,10 @@
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
-import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
+import 'package:Technoswitch/utils/constants/color_constants.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
 
-import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
+import 'package:Technoswitch/utils/constants/style_constants.dart';
+
 class DropdownWidget extends StatefulWidget {
   final String label;
   final String value;
@@ -46,10 +47,7 @@ class _DropdownWidgetState extends State<DropdownWidget> {
   }
 
   Widget _label(String text) {
-    return Text(
-      text,
-      style: StyleConstants.textDark13w600Style,
-    );
+    return Text(text, style: StyleConstants.textDark13w600Style);
   }
 
   Widget _dropdown(
@@ -145,7 +143,8 @@ class _DropdownWidgetState extends State<DropdownWidget> {
 
                               hintText: StringConstants.search,
 
-                              hintStyle: StyleConstants.black14w400Style.copyWith(color: Colors.grey),
+                              hintStyle: StyleConstants.black14w400Style
+                                  .copyWith(color: Colors.grey),
 
                               prefixIcon: const Icon(Icons.search, size: 20),
 

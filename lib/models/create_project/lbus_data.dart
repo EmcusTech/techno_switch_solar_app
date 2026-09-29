@@ -1,4 +1,5 @@
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
+
 class LBusData {
   String? expandedLBus;
   Map<String, String> lbusInputs;
@@ -20,16 +21,47 @@ class LBusData {
     Map<String, String>? lbusEnabled,
     Map<String, String>? lbusTests,
     Map<String, String>? lbusInverted,
-  }) : lbusInputs = lbusInputs ?? {StringConstants.lBUS1: '', StringConstants.lBUS2: ''},
-       lbusInputTexts = lbusInputTexts ?? {StringConstants.lBUS1: '', StringConstants.lBUS2: ''},
+  }) : lbusInputs =
+           lbusInputs ?? {StringConstants.lBUS1: '', StringConstants.lBUS2: ''},
+       lbusInputTexts =
+           lbusInputTexts ??
+           {StringConstants.lBUS1: '', StringConstants.lBUS2: ''},
        lbusProducts =
-           lbusProducts ?? {StringConstants.lBUS1: StringConstants.onyx202, StringConstants.lBUS2: StringConstants.onyx202},
-       lbusGroups = lbusGroups ?? {StringConstants.lBUS1: StringConstants.groupA, StringConstants.lBUS2: StringConstants.groupA},
+           lbusProducts ??
+           {
+             StringConstants.lBUS1: StringConstants.onyx202,
+             StringConstants.lBUS2: StringConstants.onyx202,
+           },
+       lbusGroups =
+           lbusGroups ??
+           {
+             StringConstants.lBUS1: StringConstants.groupA,
+             StringConstants.lBUS2: StringConstants.groupA,
+           },
        lbusFunctions =
-           lbusFunctions ?? {StringConstants.lBUS1: StringConstants.functionA, StringConstants.lBUS2: StringConstants.functionA},
-       lbusEnabled = lbusEnabled ?? {StringConstants.lBUS1: StringConstants.yes, StringConstants.lBUS2: StringConstants.yes},
-       lbusTests = lbusTests ?? {StringConstants.lBUS1: StringConstants.no, StringConstants.lBUS2: StringConstants.no},
-       lbusInverted = lbusInverted ?? {StringConstants.lBUS1: StringConstants.no, StringConstants.lBUS2: StringConstants.no};
+           lbusFunctions ??
+           {
+             StringConstants.lBUS1: StringConstants.functionA,
+             StringConstants.lBUS2: StringConstants.functionA,
+           },
+       lbusEnabled =
+           lbusEnabled ??
+           {
+             StringConstants.lBUS1: StringConstants.yes,
+             StringConstants.lBUS2: StringConstants.yes,
+           },
+       lbusTests =
+           lbusTests ??
+           {
+             StringConstants.lBUS1: StringConstants.no,
+             StringConstants.lBUS2: StringConstants.no,
+           },
+       lbusInverted =
+           lbusInverted ??
+           {
+             StringConstants.lBUS1: StringConstants.no,
+             StringConstants.lBUS2: StringConstants.no,
+           };
 
   void updateLBusField(String lbusName, String fieldType, String value) {
     switch (fieldType) {

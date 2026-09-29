@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
+import 'package:Technoswitch/utils/constants/asset_constants.dart';
 
 class ScanningAnimation extends StatefulWidget {
   const ScanningAnimation({super.key, this.pausedListenable});

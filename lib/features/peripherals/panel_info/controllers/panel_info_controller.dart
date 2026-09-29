@@ -1,14 +1,14 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:techno_switch_solar_app/config/ble/panel_properties_setup_payload_debug.dart';
+import 'package:Technoswitch/config/ble/panel_properties_setup_payload_debug.dart';
 import 'package:get/get.dart';
-import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
-import 'package:techno_switch_solar_app/features/peripherals/shared/controllers/peripheral_mode_controller.dart';
-import 'package:techno_switch_solar_app/utils/panel_config/panel_config_cache_sync.dart';
-import 'package:techno_switch_solar_app/utils/peripherals/defaults/panel_info_defaults.dart';
-import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
+import 'package:Technoswitch/ble/controller/ble_log_controller.dart';
+import 'package:Technoswitch/features/peripherals/shared/controllers/peripheral_mode_controller.dart';
+import 'package:Technoswitch/utils/panel_config/panel_config_cache_sync.dart';
+import 'package:Technoswitch/utils/peripherals/defaults/panel_info_defaults.dart';
+import 'package:Technoswitch/utils/storage/peripheral_setup_cache.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
 
 class PanelInfoConfig {
   final TextEditingController panelIdController = TextEditingController();
@@ -230,8 +230,7 @@ class PanelInfoController extends PeripheralModeController {
     manager!.panelInfoSecond.value =
         int.tryParse(config.secondController.text) ?? DateTime.now().second;
     manager!.panelInfoEventReminderDelay.value =
-        int.tryParse(config.delayController.text) ??
-        PanelInfoDefaults.delayBle;
+        int.tryParse(config.delayController.text) ?? PanelInfoDefaults.delayBle;
 
     if (kDebugMode) {
       PanelPropertiesSetupPayloadDebug.printApplyFrame(manager!);

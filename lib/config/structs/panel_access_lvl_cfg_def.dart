@@ -1,9 +1,9 @@
 import 'dart:typed_data';
 
-import 'package:techno_switch_solar_app/config/system_config_limits.dart';
-import 'package:techno_switch_solar_app/config/structs/struct_bytes.dart';
-import 'package:techno_switch_solar_app/models/access_code_mode_model.dart';
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
+import 'package:Technoswitch/config/system_config_limits.dart';
+import 'package:Technoswitch/config/structs/struct_bytes.dart';
+import 'package:Technoswitch/models/access_code_mode_model.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
 
 /// Mirrors firmware `st_panel_access_lvl_def` (31 bytes, packed).
 class PanelAccessLvlCfgDef {

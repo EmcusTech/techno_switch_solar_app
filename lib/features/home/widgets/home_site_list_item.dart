@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:techno_switch_solar_app/features/home/controllers/home_screen_controller.dart';
-import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
-import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
-import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
-import 'package:techno_switch_solar_app/utils/site_service.dart';
+import 'package:Technoswitch/features/home/controllers/home_screen_controller.dart';
+import 'package:Technoswitch/utils/constants/asset_constants.dart';
+import 'package:Technoswitch/utils/constants/color_constants.dart';
+import 'package:Technoswitch/utils/constants/style_constants.dart';
+import 'package:Technoswitch/utils/site_service.dart';
 
 class HomeSiteListItem extends StatelessWidget {
   const HomeSiteListItem({
@@ -37,11 +37,7 @@ class HomeSiteListItem extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
           child: Row(
             children: [
-              Image.asset(
-                AssetConstants.panelIconImage,
-                height: 62,
-                width: 62,
-              ),
+              Image.asset(AssetConstants.panelIconImage, height: 62, width: 62),
               const SizedBox(width: 14),
               Expanded(
                 child: Column(

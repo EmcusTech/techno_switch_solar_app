@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
-import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
+import 'package:Technoswitch/utils/constants/asset_constants.dart';
+import 'package:Technoswitch/utils/constants/color_constants.dart';
 
 class DashboardShell extends StatelessWidget {
   const DashboardShell({super.key, required this.child});
@@ -21,10 +21,7 @@ class DashboardShell extends StatelessWidget {
       child: Stack(
         children: [
           SvgPicture.asset(AssetConstants.background1),
-          Padding(
-            padding: const EdgeInsets.only(top: 24),
-            child: child,
-          ),
+          Padding(padding: const EdgeInsets.only(top: 24), child: child),
         ],
       ),
     );

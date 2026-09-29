@@ -1,17 +1,17 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:techno_switch_solar_app/config/ble/sounder_setup_payload_debug.dart';
+import 'package:Technoswitch/config/ble/sounder_setup_payload_debug.dart';
 import 'package:get/get.dart';
-import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
-import 'package:techno_switch_solar_app/features/peripherals/shared/controllers/peripheral_mode_controller.dart';
-import 'package:techno_switch_solar_app/utils/modes/general_quipment_mode_util.dart';
-import 'package:techno_switch_solar_app/utils/peripherals/defaults/sounder_defaults.dart';
-import 'package:techno_switch_solar_app/utils/peripherals/peripheral_test_mode_sync.dart';
-import 'package:techno_switch_solar_app/utils/modes/ext_out_equipment_mode_util.dart';
-import 'package:techno_switch_solar_app/utils/modes/zone_equipment_mode_util.dart';
-import 'package:techno_switch_solar_app/utils/panel_config/panel_config_cache_sync.dart';
-import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
+import 'package:Technoswitch/ble/controller/ble_log_controller.dart';
+import 'package:Technoswitch/features/peripherals/shared/controllers/peripheral_mode_controller.dart';
+import 'package:Technoswitch/utils/modes/general_quipment_mode_util.dart';
+import 'package:Technoswitch/utils/peripherals/defaults/sounder_defaults.dart';
+import 'package:Technoswitch/utils/peripherals/peripheral_test_mode_sync.dart';
+import 'package:Technoswitch/utils/modes/ext_out_equipment_mode_util.dart';
+import 'package:Technoswitch/utils/modes/zone_equipment_mode_util.dart';
+import 'package:Technoswitch/utils/panel_config/panel_config_cache_sync.dart';
+import 'package:Technoswitch/utils/storage/peripheral_setup_cache.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
 
 class SounderConfig {
   final int index;
@@ -156,16 +156,14 @@ class SounderModeController extends PeripheralModeController {
     sounder.type = SounderDefaults.typeLabelFromNormal(normal);
     sounder.outputController.text =
         (data['outputText'] as String?) ?? SounderDefaults.outputText;
-    final groupIdx =
-        ((data['group'] as num?)?.toInt() ?? defaults['group'] as int).clamp(
-          0,
-          groupOptions.length - 1,
-        );
+    final groupIdx = ((data['group'] as num?)?.toInt() ??
+            defaults['group'] as int)
+        .clamp(0, groupOptions.length - 1);
     sounder.group = groupOptions[groupIdx];
     final fnOpts = functionOptionsMap[sounder.group]!;
-    final fnIdx =
-        ((data['function'] as num?)?.toInt() ?? defaults['function'] as int)
-            .clamp(0, fnOpts.length - 1);
+    final fnIdx = ((data['function'] as num?)?.toInt() ??
+            defaults['function'] as int)
+        .clamp(0, fnOpts.length - 1);
     sounder.function = fnOpts[fnIdx];
     if (index > 0) {
       sounder.dynamicController.text =
@@ -175,14 +173,17 @@ class SounderModeController extends PeripheralModeController {
     }
   }
 
-  void _applyZoneFromMap(Map<String, dynamic> data, {required ZoneConfig zone}) {
+  void _applyZoneFromMap(
+    Map<String, dynamic> data, {
+    required ZoneConfig zone,
+  }) {
     final enabled = (data['enabled'] as bool?) ?? SounderDefaults.enabledBle;
     zone.enabled = _boolToYesNo(enabled);
     final test = (data['test'] as bool?) ?? SounderDefaults.testBle;
     zone.test = _boolToYesNo(test);
-    final actionIdx =
-        ((data['action'] as num?)?.toInt() ?? SounderDefaults.actionContinuousBle)
-            .clamp(0, actionOptions.length - 1);
+    final actionIdx = ((data['action'] as num?)?.toInt() ??
+            SounderDefaults.actionContinuousBle)
+        .clamp(0, actionOptions.length - 1);
     zone.action = actionOptions[actionIdx];
   }
 
@@ -197,7 +198,8 @@ class SounderModeController extends PeripheralModeController {
                 SounderDefaults.countdownActionBle)
             .clamp(0, extOutActionOptions.length - 1)];
     extOut.holdAction =
-        extOutActionOptions[((data[StringConstants.holdaction] as num?)?.toInt() ??
+        extOutActionOptions[((data[StringConstants.holdaction] as num?)
+                    ?.toInt() ??
                 SounderDefaults.holdActionBle)
             .clamp(0, extOutActionOptions.length - 1)];
     extOut.releaseAction =
@@ -213,7 +215,8 @@ class SounderModeController extends PeripheralModeController {
     final enabled =
         (data['enabled'] as bool?) ?? SounderDefaults.generalEnabledBle;
     final test = (data['test'] as bool?) ?? SounderDefaults.generalTestBle;
-    final delayedFlag = (data['delayed'] as bool?) ?? SounderDefaults.delayedBle;
+    final delayedFlag =
+        (data['delayed'] as bool?) ?? SounderDefaults.delayedBle;
     m.isSounderGeneralEnabled.value = enabled;
     m.isSounderGeneralTest.value = test;
     m.isSounderGeneralDelay.value = delayedFlag;
@@ -278,7 +281,12 @@ class SounderModeController extends PeripheralModeController {
       if (z != null) _applyZoneFromMap(z, zone: zones[i]);
     }
     for (var i = 0; i < 3; i++) {
-      final key = i == 0 ? StringConstants.e1 : i == 1 ? StringConstants.e2 : 'e3';
+      final key =
+          i == 0
+              ? StringConstants.e1
+              : i == 1
+              ? StringConstants.e2
+              : 'e3';
       final e = data[key] as Map<String, dynamic>?;
       if (e != null) _applyExtOutFromMap(extOuts[i], e);
     }

@@ -1,11 +1,11 @@
 import 'package:get/get.dart';
-import 'package:techno_switch_solar_app/ble/ble_manager.dart';
-import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
-import 'package:techno_switch_solar_app/features/settings/controllers/settings_ui_delegate.dart';
-import 'package:techno_switch_solar_app/features/settings/models/settings_args.dart';
-import 'package:techno_switch_solar_app/features/settings/models/settings_menu_item.dart';
-import 'package:techno_switch_solar_app/utils/constants/ble/ble_name_utils.dart';
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
+import 'package:Technoswitch/ble/ble_manager.dart';
+import 'package:Technoswitch/ble/controller/ble_log_controller.dart';
+import 'package:Technoswitch/features/settings/controllers/settings_ui_delegate.dart';
+import 'package:Technoswitch/features/settings/models/settings_args.dart';
+import 'package:Technoswitch/features/settings/models/settings_menu_item.dart';
+import 'package:Technoswitch/utils/constants/ble/ble_name_utils.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
 
 class SettingsController extends GetxController {
   SettingsController({required this.args});

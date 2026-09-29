@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:techno_switch_solar_app/features/scan/controllers/scan_controller.dart';
-import 'package:techno_switch_solar_app/features/scan/models/scan_type.dart';
-import 'package:techno_switch_solar_app/features/scan/views/scan_ui_delegate_mixin.dart';
-import 'package:techno_switch_solar_app/features/scan/widgets/scan_shell.dart';
-import 'package:techno_switch_solar_app/features/scan/widgets/scanning_radar_view.dart';
+import 'package:Technoswitch/features/scan/controllers/scan_controller.dart';
+import 'package:Technoswitch/features/scan/models/scan_type.dart';
+import 'package:Technoswitch/features/scan/views/scan_ui_delegate_mixin.dart';
+import 'package:Technoswitch/features/scan/widgets/scan_shell.dart';
+import 'package:Technoswitch/features/scan/widgets/scanning_radar_view.dart';
 
 class ScanningScreen extends StatefulWidget {
   const ScanningScreen({super.key});

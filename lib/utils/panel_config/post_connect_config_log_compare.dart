@@ -2,17 +2,17 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
-import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
-import 'package:techno_switch_solar_app/utils/panel_config/panel_access_password_popup.dart';
-import 'package:techno_switch_solar_app/utils/panel_config/panel_config_bulk_sync.dart';
-import 'package:techno_switch_solar_app/utils/constants/ble/ble_name_utils.dart';
-import 'package:techno_switch_solar_app/utils/panel_config/panel_config_cache_sync.dart';
-import 'package:techno_switch_solar_app/utils/panel_config/panel_config_feedback_dialogs.dart';
-import 'package:techno_switch_solar_app/utils/peripherals/peripheral_config_snapshot.dart';
-import 'package:techno_switch_solar_app/features/peripherals/config_log/sheets/config_log_bottomsheet.dart';
-import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
+import 'package:Technoswitch/ble/blue_plus_adapter.dart';
+import 'package:Technoswitch/ble/controller/ble_log_controller.dart';
+import 'package:Technoswitch/utils/panel_config/panel_access_password_popup.dart';
+import 'package:Technoswitch/utils/panel_config/panel_config_bulk_sync.dart';
+import 'package:Technoswitch/utils/constants/ble/ble_name_utils.dart';
+import 'package:Technoswitch/utils/panel_config/panel_config_cache_sync.dart';
+import 'package:Technoswitch/utils/panel_config/panel_config_feedback_dialogs.dart';
+import 'package:Technoswitch/utils/peripherals/peripheral_config_snapshot.dart';
+import 'package:Technoswitch/features/peripherals/config_log/sheets/config_log_bottomsheet.dart';
+import 'package:Technoswitch/utils/constants/color_constants.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
 
 Future<void> presentPostConnectConfigLogCompareAfterDownload({
   required BuildContext context,

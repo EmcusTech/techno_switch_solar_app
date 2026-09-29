@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:techno_switch_solar_app/features/create_project/controllers/create_project_controller.dart';
-import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
-import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
+import 'package:Technoswitch/features/create_project/controllers/create_project_controller.dart';
+import 'package:Technoswitch/utils/constants/color_constants.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
+import 'package:Technoswitch/utils/constants/style_constants.dart';
 
 class CreateProjectNavigation extends StatelessWidget {
   const CreateProjectNavigation({super.key, required this.controller});

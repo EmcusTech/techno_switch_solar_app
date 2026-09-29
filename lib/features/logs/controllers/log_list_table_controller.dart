@@ -1,6 +1,6 @@
 import 'package:get/get.dart';
-import 'package:techno_switch_solar_app/models/log_model.dart';
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
+import 'package:Technoswitch/models/log_model.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
 
 /// Scoped controller for interactive column sorting in the event log list table.
 ///
@@ -47,9 +47,7 @@ class LogListTableController extends GetxController {
   void _rebuildSortedLogs() {
     sortedLogs = List<LogModel>.from(_displayLogs);
     if (sortColumn == null) return;
-    sortedLogs.sort(
-      (a, b) => _compareLogs(a, b, sortColumn!, sortAscending),
-    );
+    sortedLogs.sort((a, b) => _compareLogs(a, b, sortColumn!, sortAscending));
   }
 
   static int _compareLogs(

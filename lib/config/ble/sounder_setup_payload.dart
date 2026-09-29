@@ -1,8 +1,8 @@
 import 'dart:typed_data';
 
-import 'package:techno_switch_solar_app/ble/ble_process.dart';
-import 'package:techno_switch_solar_app/config/ble/config_setup_payload.dart';
-import 'package:techno_switch_solar_app/config/structs/sounder_cfg_def.dart';
+import 'package:Technoswitch/ble/ble_process.dart';
+import 'package:Technoswitch/config/ble/config_setup_payload.dart';
+import 'package:Technoswitch/config/structs/sounder_cfg_def.dart';
 
 /// SETUP_SOUNDER data section inside the 216-byte BLE frame.
 ///

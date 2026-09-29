@@ -3,13 +3,13 @@ import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
-import 'package:techno_switch_solar_app/models/l_bus_setup_data_model.dart';
-import 'package:techno_switch_solar_app/utils/commissioning_test_results_helper.dart';
-import 'package:techno_switch_solar_app/utils/peripherals/peripheral_config_diff_labels.dart';
-import 'package:techno_switch_solar_app/utils/peripherals/peripheral_setup_cache_resolver.dart';
-import 'package:techno_switch_solar_app/utils/storage/commissioning_test_results_cache.dart';
-import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
-import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
+import 'package:Technoswitch/models/l_bus_setup_data_model.dart';
+import 'package:Technoswitch/utils/commissioning_test_results_helper.dart';
+import 'package:Technoswitch/utils/peripherals/peripheral_config_diff_labels.dart';
+import 'package:Technoswitch/utils/peripherals/peripheral_setup_cache_resolver.dart';
+import 'package:Technoswitch/utils/storage/commissioning_test_results_cache.dart';
+import 'package:Technoswitch/utils/storage/peripheral_setup_cache.dart';
+import 'package:Technoswitch/utils/constants/asset_constants.dart';
 
 /// Site / panel summary + peripheral sections (cache-backed), same PDF chrome as log report.
 class ProjectReportPdfUtil {
@@ -58,14 +58,17 @@ class ProjectReportPdfUtil {
     return '';
   }
 
-  static Future<({
-    String receivedPanelName,
-    String advertisedPanelName,
-    String hardwareVersion,
-    String firmwareVersion,
-    String firmwareDate,
-    String protocolVersion,
-  })> _resolvePanelInfo({
+  static Future<
+    ({
+      String receivedPanelName,
+      String advertisedPanelName,
+      String hardwareVersion,
+      String firmwareVersion,
+      String firmwareDate,
+      String protocolVersion,
+    })
+  >
+  _resolvePanelInfo({
     required List<String> cacheDeviceIds,
     required String fallbackAdvertisedPanelName,
     String liveReceivedPanelName = '',
@@ -85,9 +88,9 @@ class ProjectReportPdfUtil {
 
     final advertised =
         _pickField(
-          fallbackAdvertisedPanelName,
-          network?['advertisedPanelName'] as String?,
-        ).isNotEmpty
+              fallbackAdvertisedPanelName,
+              network?['advertisedPanelName'] as String?,
+            ).isNotEmpty
             ? _pickField(
               fallbackAdvertisedPanelName,
               network?['advertisedPanelName'] as String?,
@@ -104,11 +107,13 @@ class ProjectReportPdfUtil {
       advertisedPanelName: advertised,
       hardwareVersion: _pickField(
         liveHardwareVersion,
-        network?['hardwareVersion'] as String? ?? module?['hardware'] as String?,
+        network?['hardwareVersion'] as String? ??
+            module?['hardware'] as String?,
       ),
       firmwareVersion: _pickField(
         liveFirmwareVersion,
-        network?['firmwareVersion'] as String? ?? module?['firmware'] as String?,
+        network?['firmwareVersion'] as String? ??
+            module?['firmware'] as String?,
       ),
       firmwareDate: _pickField(
         liveFirmwareDate,
@@ -137,8 +142,9 @@ class ProjectReportPdfUtil {
     String liveFirmwareDate = '',
     String liveProtocolVersion = '',
   }) async {
-    final ids =
-        cacheDeviceIds.where((id) => id.trim().isNotEmpty).toList(growable: false);
+    final ids = cacheDeviceIds
+        .where((id) => id.trim().isNotEmpty)
+        .toList(growable: false);
     if (ids.isEmpty) {
       throw StateError('No cache device ids for project report export.');
     }

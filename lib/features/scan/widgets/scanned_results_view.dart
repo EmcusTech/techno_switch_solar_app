@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:techno_switch_solar_app/features/scan/controllers/scan_controller.dart';
-import 'package:techno_switch_solar_app/features/scan/widgets/scan_shell.dart';
-import 'package:techno_switch_solar_app/features/scan/widgets/scanned_device_list.dart';
-import 'package:techno_switch_solar_app/features/scan/widgets/scanned_header.dart';
+import 'package:Technoswitch/features/scan/controllers/scan_controller.dart';
+import 'package:Technoswitch/features/scan/widgets/scan_shell.dart';
+import 'package:Technoswitch/features/scan/widgets/scanned_device_list.dart';
+import 'package:Technoswitch/features/scan/widgets/scanned_header.dart';
 
 class ScannedResultsView extends StatelessWidget {
   const ScannedResultsView({
@@ -19,10 +19,7 @@ class ScannedResultsView extends StatelessWidget {
     return ScanShell(
       child: Column(
         children: [
-          ScannedHeader(
-            onScanAgain: controller.openScanAgain,
-            onBack: onBack,
-          ),
+          ScannedHeader(onScanAgain: controller.openScanAgain, onBack: onBack),
           Expanded(child: ScannedDeviceList(controller: controller)),
         ],
       ),

@@ -1,11 +1,11 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:techno_switch_solar_app/config/ble/panel_properties_setup_payload_debug.dart';
-import 'package:techno_switch_solar_app/features/peripherals/shared/controllers/peripheral_mode_controller.dart';
-import 'package:techno_switch_solar_app/utils/panel_config/panel_config_cache_sync.dart';
-import 'package:techno_switch_solar_app/utils/peripherals/defaults/service_due_defaults.dart';
-import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
+import 'package:Technoswitch/config/ble/panel_properties_setup_payload_debug.dart';
+import 'package:Technoswitch/features/peripherals/shared/controllers/peripheral_mode_controller.dart';
+import 'package:Technoswitch/utils/panel_config/panel_config_cache_sync.dart';
+import 'package:Technoswitch/utils/peripherals/defaults/service_due_defaults.dart';
+import 'package:Technoswitch/utils/storage/peripheral_setup_cache.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
 
 class ServiceDueConfig {
   String reminder = ServiceDueDefaults.reminderLabel;
@@ -69,8 +69,7 @@ class ServiceDueController extends PeripheralModeController {
         (data['month'] as num?)?.toString() ??
         ServiceDueDefaults.month.toString();
     config.dayController.text =
-        (data['day'] as num?)?.toString() ??
-        ServiceDueDefaults.day.toString();
+        (data['day'] as num?)?.toString() ?? ServiceDueDefaults.day.toString();
     config.hourController.text =
         (data['hour'] as num?)?.toString() ??
         ServiceDueDefaults.hour.toString();

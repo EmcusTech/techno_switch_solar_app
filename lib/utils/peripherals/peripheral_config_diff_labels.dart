@@ -1,7 +1,7 @@
 import 'dart:convert';
 
-import 'package:techno_switch_solar_app/models/access_code_mode_model.dart';
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
+import 'package:Technoswitch/models/access_code_mode_model.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
 
 class PeripheralConfigDiffLabels {
   PeripheralConfigDiffLabels._();
@@ -31,7 +31,12 @@ class PeripheralConfigDiffLabels {
       StringConstants.supervisory,
       StringConstants.fireSnd,
     ],
-    StringConstants.zone: ['Fault', 'Fire', StringConstants.disablement, StringConstants.fireSnd],
+    StringConstants.zone: [
+      'Fault',
+      'Fire',
+      StringConstants.disablement,
+      StringConstants.fireSnd,
+    ],
     StringConstants.extOut: [
       StringConstants.releaseInitiated,
       StringConstants.extAgentReleased,
@@ -45,7 +50,11 @@ class PeripheralConfigDiffLabels {
     ],
   };
 
-  static const List<String> _inputGroups = ['None', 'General', StringConstants.extOut];
+  static const List<String> _inputGroups = [
+    'None',
+    'General',
+    StringConstants.extOut,
+  ];
   static const Map<String, List<String>> _inputFunctions = {
     'None': ['None'],
     'General': [
@@ -119,7 +128,11 @@ class PeripheralConfigDiffLabels {
     'None': ['None'],
     'General': [StringConstants.fireSnd],
     StringConstants.zone: [StringConstants.fireSnd],
-    StringConstants.extOut: [StringConstants.extSnd1, 'Ext. Snd 2', StringConstants.manReleaseSnd],
+    StringConstants.extOut: [
+      StringConstants.extSnd1,
+      'Ext. Snd 2',
+      StringConstants.manReleaseSnd,
+    ],
   };
   static const List<String> _sounderZoneActions = [
     'Continuous',

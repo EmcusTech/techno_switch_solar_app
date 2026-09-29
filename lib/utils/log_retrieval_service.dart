@@ -1,7 +1,7 @@
 import '../models/log_retrieval_model.dart';
 import '../models/log_model.dart';
 import 'storage/database_helper.dart';
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
 
 class LogRetrievalService {
   static final LogRetrievalService _instance = LogRetrievalService._internal();

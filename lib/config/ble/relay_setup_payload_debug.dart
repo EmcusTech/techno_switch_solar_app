@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:techno_switch_solar_app/ble/ble_manager.dart';
+import 'package:Technoswitch/ble/ble_manager.dart';
 
 /// Debug helpers for inspecting SETUP_RELAY 216-byte apply frames.
 abstract final class RelaySetupPayloadDebug {

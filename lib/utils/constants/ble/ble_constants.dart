@@ -1,5 +1,5 @@
-import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
+import 'package:Technoswitch/ble/blue_plus_adapter.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
 
 abstract final class BleConstants {
   const BleConstants._();

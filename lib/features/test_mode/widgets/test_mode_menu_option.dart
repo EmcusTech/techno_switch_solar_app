@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:techno_switch_solar_app/features/test_mode/models/test_mode_menu_item.dart';
-import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
-import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
+import 'package:Technoswitch/features/test_mode/models/test_mode_menu_item.dart';
+import 'package:Technoswitch/utils/constants/color_constants.dart';
+import 'package:Technoswitch/utils/constants/style_constants.dart';
 
 class TestModeMenuOption extends StatelessWidget {
   const TestModeMenuOption({

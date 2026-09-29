@@ -1,25 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:techno_switch_solar_app/ble/ble_manager.dart';
-import 'package:techno_switch_solar_app/ble/ble_session_idle_policy.dart';
-import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
-import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
-import 'package:techno_switch_solar_app/features/create_project/controllers/create_project_ui_delegate.dart';
-import 'package:techno_switch_solar_app/models/create_project/panel_form_data.dart';
-import 'package:techno_switch_solar_app/models/create_project/panel_selection_page_model.dart';
-import 'package:techno_switch_solar_app/models/create_project/site_creation_page_model.dart';
-import 'package:techno_switch_solar_app/models/create_project/relay_data.dart';
-import 'package:techno_switch_solar_app/models/create_project/site_form_data.dart';
-import 'package:techno_switch_solar_app/models/create_project/sounder_data.dart';
-import 'package:techno_switch_solar_app/models/create_project/zone_settings_data.dart';
-import 'package:techno_switch_solar_app/models/panel_type_config.dart';
-import 'package:techno_switch_solar_app/utils/panel_config/panel_config_cache_sync.dart';
-import 'package:techno_switch_solar_app/utils/panel_config/panel_configuration_coordinator.dart';
-import 'package:techno_switch_solar_app/utils/peripherals/peripheral_config_snapshot.dart';
-import 'package:techno_switch_solar_app/utils/constants/ble/ble_name_utils.dart';
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
-import 'package:techno_switch_solar_app/utils/panel_service.dart';
-import 'package:techno_switch_solar_app/utils/site_service.dart';
+import 'package:Technoswitch/ble/ble_manager.dart';
+import 'package:Technoswitch/ble/ble_session_idle_policy.dart';
+import 'package:Technoswitch/ble/blue_plus_adapter.dart';
+import 'package:Technoswitch/ble/controller/ble_log_controller.dart';
+import 'package:Technoswitch/features/create_project/controllers/create_project_ui_delegate.dart';
+import 'package:Technoswitch/models/create_project/panel_form_data.dart';
+import 'package:Technoswitch/models/create_project/panel_selection_page_model.dart';
+import 'package:Technoswitch/models/create_project/site_creation_page_model.dart';
+import 'package:Technoswitch/models/create_project/relay_data.dart';
+import 'package:Technoswitch/models/create_project/site_form_data.dart';
+import 'package:Technoswitch/models/create_project/sounder_data.dart';
+import 'package:Technoswitch/models/create_project/zone_settings_data.dart';
+import 'package:Technoswitch/models/panel_type_config.dart';
+import 'package:Technoswitch/utils/panel_config/panel_config_cache_sync.dart';
+import 'package:Technoswitch/utils/panel_config/panel_configuration_coordinator.dart';
+import 'package:Technoswitch/utils/peripherals/peripheral_config_snapshot.dart';
+import 'package:Technoswitch/utils/constants/ble/ble_name_utils.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
+import 'package:Technoswitch/utils/panel_service.dart';
+import 'package:Technoswitch/utils/site_service.dart';
 
 class CreateProjectController extends GetxController {
   static const int totalSteps = 11;
@@ -340,7 +340,9 @@ class CreateProjectController extends GetxController {
   }
 
   void _captureDownloadedConfigBaseline() {
-    downloadedConfigBaseline = PeripheralConfigSnapshot.fromBleManager(_bleManager);
+    downloadedConfigBaseline = PeripheralConfigSnapshot.fromBleManager(
+      _bleManager,
+    );
     bulkDownloadCompleted = true;
   }
 
@@ -386,10 +388,7 @@ class CreateProjectController extends GetxController {
     }
 
     if (!bulkDownloadCompleted) {
-      ui.showSnackBar(
-        UiStrings.configDownloadRequiredSnackBar,
-        isError: true,
-      );
+      ui.showSnackBar(UiStrings.configDownloadRequiredSnackBar, isError: true);
       return;
     }
 
@@ -796,10 +795,7 @@ class CreateProjectController extends GetxController {
       if (!ui.isMounted) return;
       if (!downloaded) {
         offeredBulkDownload = false;
-        ui.showSnackBar(
-          UiStrings.configDownloadFailedSnackBar,
-          isError: true,
-        );
+        ui.showSnackBar(UiStrings.configDownloadFailedSnackBar, isError: true);
         return;
       }
 

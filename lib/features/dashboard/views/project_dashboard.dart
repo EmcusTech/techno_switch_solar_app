@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:techno_switch_solar_app/features/dashboard/controllers/project_dashboard_controller.dart';
-import 'package:techno_switch_solar_app/features/dashboard/views/project_dashboard_ui_delegate_mixin.dart';
-import 'package:techno_switch_solar_app/features/dashboard/widgets/dashboard_bottom_nav.dart';
-import 'package:techno_switch_solar_app/features/dashboard/widgets/dashboard_tab.dart';
-import 'package:techno_switch_solar_app/features/logs/views/log_history_screen.dart';
-import 'package:techno_switch_solar_app/features/settings/controllers/settings_controller.dart';
-import 'package:techno_switch_solar_app/features/settings/views/settings_screen.dart';
-import 'package:techno_switch_solar_app/features/test_mode/controllers/test_mode_controller.dart';
-import 'package:techno_switch_solar_app/features/test_mode/views/test_mode_screen.dart';
+import 'package:Technoswitch/features/dashboard/controllers/project_dashboard_controller.dart';
+import 'package:Technoswitch/features/dashboard/views/project_dashboard_ui_delegate_mixin.dart';
+import 'package:Technoswitch/features/dashboard/widgets/dashboard_bottom_nav.dart';
+import 'package:Technoswitch/features/dashboard/widgets/dashboard_tab.dart';
+import 'package:Technoswitch/features/logs/views/log_history_screen.dart';
+import 'package:Technoswitch/features/settings/controllers/settings_controller.dart';
+import 'package:Technoswitch/features/settings/views/settings_screen.dart';
+import 'package:Technoswitch/features/test_mode/controllers/test_mode_controller.dart';
+import 'package:Technoswitch/features/test_mode/views/test_mode_screen.dart';
 
 class ProjectDashboardScreen extends StatefulWidget {
   const ProjectDashboardScreen({super.key});

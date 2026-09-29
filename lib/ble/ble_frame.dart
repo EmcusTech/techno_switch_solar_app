@@ -1,6 +1,6 @@
 import 'dart:typed_data';
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
-import 'package:techno_switch_solar_app/utils/logger.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
+import 'package:Technoswitch/utils/logger.dart';
 
 import 'ble_manager.dart';
 

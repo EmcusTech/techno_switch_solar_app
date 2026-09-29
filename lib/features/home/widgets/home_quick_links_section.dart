@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:techno_switch_solar_app/features/home/controllers/home_screen_controller.dart';
-import 'package:techno_switch_solar_app/features/home/widgets/home_quick_link_item.dart';
-import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
-import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
+import 'package:Technoswitch/features/home/controllers/home_screen_controller.dart';
+import 'package:Technoswitch/features/home/widgets/home_quick_link_item.dart';
+import 'package:Technoswitch/utils/constants/asset_constants.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
+import 'package:Technoswitch/utils/constants/style_constants.dart';
 
 class HomeQuickLinksSection extends StatelessWidget {
   const HomeQuickLinksSection({super.key, required this.controller});

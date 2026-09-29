@@ -1,4 +1,4 @@
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
 
 /// Factory defaults for Panel Info configuration.
 abstract final class PanelInfoDefaults {
@@ -18,7 +18,9 @@ abstract final class PanelInfoDefaults {
 
   static Map<String, dynamic> toCacheMap({String? projectPanelName}) => {
     'panelId': panelNo,
-    StringConstants.panelname: resolvePanelName(projectPanelName: projectPanelName),
+    StringConstants.panelname: resolvePanelName(
+      projectPanelName: projectPanelName,
+    ),
     'delay': eventReminderDelay,
     StringConstants.usemobiletime: useMobileTime,
   };

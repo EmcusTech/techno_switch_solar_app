@@ -1,4 +1,4 @@
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
 
 /// Dropdown option catalogs for main Sounder configuration (index = wire value).
 abstract final class SounderConfigOptions {
@@ -65,7 +65,8 @@ abstract final class SounderConfigOptions {
   static String typeLabel(bool normal) =>
       normal ? PanelValues.sounderTypeNormal : StringConstants.isMTL5525;
 
-  static bool typeIsNormal(String label) => label == PanelValues.sounderTypeNormal;
+  static bool typeIsNormal(String label) =>
+      label == PanelValues.sounderTypeNormal;
 
   static String yesNoLabel(bool value) =>
       value ? StringConstants.yes : StringConstants.no;

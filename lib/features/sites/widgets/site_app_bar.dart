@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:techno_switch_solar_app/features/sites/controllers/site_controller.dart';
-import 'package:techno_switch_solar_app/features/sites/widgets/site_circle_back_button.dart';
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
-import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
+import 'package:Technoswitch/features/sites/controllers/site_controller.dart';
+import 'package:Technoswitch/features/sites/widgets/site_circle_back_button.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
+import 'package:Technoswitch/utils/constants/style_constants.dart';
 
 class SiteAppBar extends StatelessWidget {
   const SiteAppBar({super.key, required this.controller});

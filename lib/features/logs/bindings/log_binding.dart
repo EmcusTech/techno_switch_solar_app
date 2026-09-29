@@ -1,6 +1,6 @@
 import 'package:get/get.dart';
-import 'package:techno_switch_solar_app/features/logs/controllers/log_controller.dart';
-import 'package:techno_switch_solar_app/features/logs/models/log_flow_args.dart';
+import 'package:Technoswitch/features/logs/controllers/log_controller.dart';
+import 'package:Technoswitch/features/logs/models/log_flow_args.dart';
 
 class LogBinding extends Bindings {
   LogBinding({required this.args});

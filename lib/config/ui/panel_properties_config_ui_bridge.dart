@@ -1,8 +1,8 @@
-import 'package:techno_switch_solar_app/ble/ble_process.dart';
-import 'package:techno_switch_solar_app/config/ble/panel_properties_setup_payload.dart';
-import 'package:techno_switch_solar_app/config/structs/panel_properties_cfg_def.dart';
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
-import 'package:techno_switch_solar_app/utils/peripherals/defaults/general_module_defaults.dart';
+import 'package:Technoswitch/ble/ble_process.dart';
+import 'package:Technoswitch/config/ble/panel_properties_setup_payload.dart';
+import 'package:Technoswitch/config/structs/panel_properties_cfg_def.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
+import 'package:Technoswitch/utils/peripherals/defaults/general_module_defaults.dart';
 
 /// Bridge between the combined panel-properties struct and the three UI modules.
 abstract final class PanelPropertiesConfigUiBridge {
@@ -29,7 +29,9 @@ abstract final class PanelPropertiesConfigUiBridge {
     });
   }
 
-  static Map<String, dynamic> toPanelInfoCacheMap(PanelPropertiesCfgDef config) {
+  static Map<String, dynamic> toPanelInfoCacheMap(
+    PanelPropertiesCfgDef config,
+  ) {
     return {
       'panelId': config.panelNum,
       'panelName': config.panelName,
@@ -47,9 +49,8 @@ abstract final class PanelPropertiesConfigUiBridge {
       ),
       'silenceSoundersLevel': _silenceSounderLabel(config.silenceSndrLvl),
       'resetLevel': _resetLevelLabel(config.resetLvl),
-      StringConstants.silencesounderslevel: config.faultLatch == 0
-          ? StringConstants.no
-          : StringConstants.yes,
+      StringConstants.silencesounderslevel:
+          config.faultLatch == 0 ? StringConstants.no : StringConstants.yes,
     };
   }
 

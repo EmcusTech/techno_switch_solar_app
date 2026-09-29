@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
+import 'package:Technoswitch/utils/constants/color_constants.dart';
 
 abstract final class StyleConstants {
   StyleConstants._();
@@ -282,11 +282,25 @@ abstract final class StyleConstants {
     fontWeight: FontWeight.w700,
     color: ColorConstants.textBodyDark,
   );
+
+  static TextStyle get textDark12w400Style => GoogleFonts.inter(
+    fontSize: 12.r,
+    fontWeight: FontWeight.w400,
+    color: ColorConstants.textDark,
+  );
+
   static TextStyle get textDark14w400Style => GoogleFonts.inter(
     fontSize: 14.r,
     fontWeight: FontWeight.w400,
     color: ColorConstants.textDark,
   );
+
+  static TextStyle get textDark16w800Style => GoogleFonts.inter(
+    fontSize: 16.r,
+    fontWeight: FontWeight.w800,
+    color: ColorConstants.textDark,
+  );
+
   static TextStyle get textDark14w500Style => GoogleFonts.inter(
     fontSize: 14.r,
     fontWeight: FontWeight.w500,
@@ -430,6 +444,11 @@ abstract final class StyleConstants {
     fontSize: 16.r,
     fontWeight: FontWeight.w600,
     color: ColorConstants.primary,
+  );
+  static TextStyle get primaryBlue16w600Style => GoogleFonts.inter(
+    fontSize: 16.r,
+    fontWeight: FontWeight.w600,
+    color: ColorConstants.primaryBlue,
   );
   static TextStyle get textBodyDark16w600Style => GoogleFonts.inter(
     fontSize: 16.r,

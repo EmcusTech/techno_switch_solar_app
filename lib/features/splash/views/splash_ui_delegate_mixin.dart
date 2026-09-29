@@ -1,7 +1,10 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
-import 'package:techno_switch_solar_app/features/home/bindings/home_screen_binding.dart';
-import 'package:techno_switch_solar_app/features/home/views/home_screen.dart';
-import 'package:techno_switch_solar_app/features/splash/controllers/splash_ui_delegate.dart';
+import 'package:Technoswitch/features/home/bindings/home_screen_binding.dart';
+import 'package:Technoswitch/features/home/views/home_screen.dart';
+import 'package:Technoswitch/features/home/views/windows/windows_home_screen.dart';
+import 'package:Technoswitch/features/splash/controllers/splash_ui_delegate.dart';
 
 mixin SplashUiDelegateMixin<T extends StatefulWidget> on State<T>
     implements SplashUiDelegate {
@@ -13,7 +16,13 @@ mixin SplashUiDelegateMixin<T extends StatefulWidget> on State<T>
     if (!mounted) return;
     HomeScreenBinding().dependencies();
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const HomeScreen()),
+      MaterialPageRoute(
+        builder:
+            (_) =>
+                Platform.isWindows
+                    ? const WindowsHomeScreen()
+                    : const HomeScreen(),
+      ),
     );
   }
 }

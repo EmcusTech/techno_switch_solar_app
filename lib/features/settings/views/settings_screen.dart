@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:techno_switch_solar_app/features/settings/controllers/settings_controller.dart';
-import 'package:techno_switch_solar_app/features/settings/views/settings_ui_delegate_mixin.dart';
-import 'package:techno_switch_solar_app/features/settings/widgets/settings_app_bar.dart';
-import 'package:techno_switch_solar_app/features/settings/widgets/settings_content_panel.dart';
-import 'package:techno_switch_solar_app/features/settings/widgets/settings_shell.dart';
+import 'package:Technoswitch/features/settings/controllers/settings_controller.dart';
+import 'package:Technoswitch/features/settings/views/settings_ui_delegate_mixin.dart';
+import 'package:Technoswitch/features/settings/widgets/settings_app_bar.dart';
+import 'package:Technoswitch/features/settings/widgets/settings_content_panel.dart';
+import 'package:Technoswitch/features/settings/widgets/settings_shell.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});

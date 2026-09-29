@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:techno_switch_solar_app/features/scan/models/scan_flow_args.dart';
-import 'package:techno_switch_solar_app/models/site_model.dart';
-import 'package:techno_switch_solar_app/utils/site_service.dart';
+import 'package:Technoswitch/features/scan/models/scan_flow_args.dart';
+import 'package:Technoswitch/models/site_model.dart';
+import 'package:Technoswitch/utils/site_service.dart';
 
 abstract class HomeScreenUiDelegate {
   bool get isMounted;

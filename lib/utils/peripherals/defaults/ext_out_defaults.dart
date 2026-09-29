@@ -1,5 +1,5 @@
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
-import 'package:techno_switch_solar_app/utils/modes/ext_zone_mode_util.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
+import 'package:Technoswitch/utils/modes/ext_zone_mode_util.dart';
 
 /// Factory defaults for Ext Out (extinguishant) configuration.
 abstract final class ExtOutDefaults {

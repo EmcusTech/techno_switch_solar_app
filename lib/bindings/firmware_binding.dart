@@ -1,5 +1,5 @@
 import 'package:get/get.dart';
-import 'package:techno_switch_solar_app/features/peripherals/firmware/controllers/firmware_controller.dart';
+import 'package:Technoswitch/features/peripherals/firmware/controllers/firmware_controller.dart';
 
 /// Feature-scoped binding for the firmware update flow.
 ///

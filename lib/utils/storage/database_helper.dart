@@ -5,7 +5,7 @@ import '../../models/site_model.dart';
 import '../../models/log_model.dart';
 import '../../models/panel_model.dart';
 import '../../models/log_retrieval_model.dart';
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper _instance = DatabaseHelper._internal();

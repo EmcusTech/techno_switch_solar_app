@@ -1,8 +1,8 @@
-import 'package:techno_switch_solar_app/features/dashboard/controllers/project_dashboard_controller.dart';
-import 'package:techno_switch_solar_app/features/dashboard/controllers/project_dashboard_tile_actions.dart';
-import 'package:techno_switch_solar_app/features/dashboard/widgets/peripheral_tile.dart';
-import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
+import 'package:Technoswitch/features/dashboard/controllers/project_dashboard_controller.dart';
+import 'package:Technoswitch/features/dashboard/controllers/project_dashboard_tile_actions.dart';
+import 'package:Technoswitch/features/dashboard/widgets/peripheral_tile.dart';
+import 'package:Technoswitch/utils/constants/asset_constants.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
 
 abstract final class DashboardTileRegistry {
   static List<DashboardTileConfig> overviewTiles(

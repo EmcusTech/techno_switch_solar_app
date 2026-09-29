@@ -1,8 +1,8 @@
 import 'dart:io';
 import 'dart:typed_data';
-import 'package:techno_switch_solar_app/models/ble/firmware/firmware_bin_format.dart';
-import 'package:techno_switch_solar_app/models/ble/firmware/firmware_packet_model.dart';
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
+import 'package:Technoswitch/models/ble/firmware/firmware_bin_format.dart';
+import 'package:Technoswitch/models/ble/firmware/firmware_packet_model.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
 
 class FirmwarePacketService {
   static const int payloadSize = 240;

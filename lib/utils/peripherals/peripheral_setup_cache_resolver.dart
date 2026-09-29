@@ -1,5 +1,5 @@
-import 'package:techno_switch_solar_app/utils/constants/ble/ble_name_utils.dart';
-import 'package:techno_switch_solar_app/utils/storage/commissioning_test_results_cache.dart';
+import 'package:Technoswitch/utils/constants/ble/ble_name_utils.dart';
+import 'package:Technoswitch/utils/storage/commissioning_test_results_cache.dart';
 
 /// Resolves peripheral / commissioning cache across BLE MAC and logical panel ids.
 abstract final class PeripheralSetupCacheResolver {

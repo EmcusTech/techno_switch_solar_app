@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
+import 'package:Technoswitch/utils/constants/color_constants.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
 
-import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
+import 'package:Technoswitch/utils/constants/style_constants.dart';
+
 /// Shown when the panel does not respond after repeated network-flow retries.
 class BleCommunicationFailureDialog {
   BleCommunicationFailureDialog._();
@@ -23,14 +24,8 @@ class BleCommunicationFailureDialog {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          title: Text(
-            title,
-            style: StyleConstants.textDark18w700Style,
-          ),
-          content: Text(
-            message,
-            style: StyleConstants.textMuted14w400Style,
-          ),
+          title: Text(title, style: StyleConstants.textDark18w700Style),
+          content: Text(message, style: StyleConstants.textMuted14w400Style),
           actions: [
             SizedBox(
               width: double.infinity,

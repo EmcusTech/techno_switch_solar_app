@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:techno_switch_solar_app/features/dashboard/controllers/project_dashboard_controller.dart';
-import 'package:techno_switch_solar_app/features/dashboard/widgets/dashboard_tile_registry.dart';
-import 'package:techno_switch_solar_app/features/dashboard/widgets/peripheral_tile.dart';
-import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
-import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
-import 'package:techno_switch_solar_app/features/dashboard/widgets/dashboard_panel_header.dart';
+import 'package:Technoswitch/features/dashboard/controllers/project_dashboard_controller.dart';
+import 'package:Technoswitch/features/dashboard/widgets/dashboard_tile_registry.dart';
+import 'package:Technoswitch/features/dashboard/widgets/peripheral_tile.dart';
+import 'package:Technoswitch/utils/constants/color_constants.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
+import 'package:Technoswitch/utils/constants/style_constants.dart';
+import 'package:Technoswitch/features/dashboard/widgets/dashboard_panel_header.dart';
 
 class DashboardContent extends StatelessWidget {
   const DashboardContent({super.key, required this.controller});
@@ -52,7 +52,9 @@ class DashboardContent extends StatelessWidget {
                       const SizedBox(height: 8),
                       DashboardTileGrid(
                         controller: controller,
-                        tiles: DashboardTileRegistry.panelActionTiles(controller),
+                        tiles: DashboardTileRegistry.panelActionTiles(
+                          controller,
+                        ),
                         heightFactor: 0.35,
                       ),
                     ],

@@ -1,4 +1,4 @@
-import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
+import 'package:Technoswitch/ble/blue_plus_adapter.dart';
 
 class ProjectDashboardArgs {
   const ProjectDashboardArgs({

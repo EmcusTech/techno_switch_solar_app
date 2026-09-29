@@ -1,6 +1,6 @@
-import 'package:techno_switch_solar_app/utils/peripherals/defaults/general_module_defaults.dart';
-import 'package:techno_switch_solar_app/utils/peripherals/defaults/panel_info_defaults.dart';
-import 'package:techno_switch_solar_app/utils/peripherals/defaults/service_due_defaults.dart';
+import 'package:Technoswitch/utils/peripherals/defaults/general_module_defaults.dart';
+import 'package:Technoswitch/utils/peripherals/defaults/panel_info_defaults.dart';
+import 'package:Technoswitch/utils/peripherals/defaults/service_due_defaults.dart';
 
 /// Factory defaults for `st_panel_properties_def`.
 abstract final class PanelPropertiesDefaults {

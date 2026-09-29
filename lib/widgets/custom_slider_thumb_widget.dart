@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
+import 'package:Technoswitch/utils/constants/color_constants.dart';
 
 class CustomSliderThumbShape extends SliderComponentShape {
   const CustomSliderThumbShape({this.enabledThumbRadius = 15.0});
@@ -29,9 +29,12 @@ class CustomSliderThumbShape extends SliderComponentShape {
     final Canvas canvas = context.canvas;
 
     // Draw shadow
-    final shadowPaint = Paint()
-      ..color = ColorConstants.overlayBlack25 // #00000040
-      ..maskFilter = MaskFilter.blur(BlurStyle.normal, 4.0);
+    final shadowPaint =
+        Paint()
+          ..color =
+              ColorConstants
+                  .overlayBlack25 // #00000040
+          ..maskFilter = MaskFilter.blur(BlurStyle.normal, 4.0);
 
     canvas.drawCircle(
       Offset(center.dx, center.dy + 4), // 4px vertical offset
@@ -40,17 +43,19 @@ class CustomSliderThumbShape extends SliderComponentShape {
     );
 
     // Draw main thumb
-    final thumbPaint = Paint()
-      ..color = sliderTheme.thumbColor ?? ColorConstants.linkBlue
-      ..style = PaintingStyle.fill;
+    final thumbPaint =
+        Paint()
+          ..color = sliderTheme.thumbColor ?? ColorConstants.linkBlue
+          ..style = PaintingStyle.fill;
 
     canvas.drawCircle(center, enabledThumbRadius, thumbPaint);
 
     // Draw border
-    final borderPaint = Paint()
-      ..color = ColorConstants.white
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.0;
+    final borderPaint =
+        Paint()
+          ..color = ColorConstants.white
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.0;
 
     canvas.drawCircle(center, enabledThumbRadius, borderPaint);
   }

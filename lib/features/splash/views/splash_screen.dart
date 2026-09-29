@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:techno_switch_solar_app/features/splash/controllers/splash_controller.dart';
-import 'package:techno_switch_solar_app/features/splash/views/splash_ui_delegate_mixin.dart';
-import 'package:techno_switch_solar_app/features/splash/widgets/splash_content.dart';
-import 'package:techno_switch_solar_app/features/splash/widgets/splash_shell.dart';
+import 'package:Technoswitch/features/splash/controllers/splash_controller.dart';
+import 'package:Technoswitch/features/splash/views/splash_ui_delegate_mixin.dart';
+import 'package:Technoswitch/features/splash/widgets/splash_content.dart';
+import 'package:Technoswitch/features/splash/widgets/splash_shell.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -12,7 +12,8 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> with SplashUiDelegateMixin {
+class _SplashScreenState extends State<SplashScreen>
+    with SplashUiDelegateMixin {
   late final SplashController _controller;
 
   @override
@@ -34,10 +35,6 @@ class _SplashScreenState extends State<SplashScreen> with SplashUiDelegateMixin 
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      body: SplashShell(
-        child: SplashContent(),
-      ),
-    );
+    return const Scaffold(body: SplashShell(child: SplashContent()));
   }
 }

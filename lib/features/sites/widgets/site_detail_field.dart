@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:techno_switch_solar_app/models/site_model.dart';
-import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
+import 'package:Technoswitch/models/site_model.dart';
+import 'package:Technoswitch/utils/constants/style_constants.dart';
 
 class SiteDetailField extends StatelessWidget {
   const SiteDetailField({

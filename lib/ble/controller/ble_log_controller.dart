@@ -1,9 +1,9 @@
-import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
+import 'package:Technoswitch/ble/blue_plus_adapter.dart';
 import 'package:get/get.dart';
-import 'package:techno_switch_solar_app/ble/ble_manager.dart';
-import 'package:techno_switch_solar_app/ble/ble_process.dart';
-import 'package:techno_switch_solar_app/utils/logger.dart';
-import 'package:techno_switch_solar_app/widgets/dialogs/ble_communication_failure_dialog.dart';
+import 'package:Technoswitch/ble/ble_manager.dart';
+import 'package:Technoswitch/ble/ble_process.dart';
+import 'package:Technoswitch/utils/logger.dart';
+import 'package:Technoswitch/widgets/dialogs/ble_communication_failure_dialog.dart';
 
 class BleLogController extends GetxController {
   final BleManager bleManager = Get.find<BleManager>();

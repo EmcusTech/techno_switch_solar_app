@@ -2,14 +2,14 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
-import 'package:techno_switch_solar_app/ble/ble_process.dart';
-import 'package:techno_switch_solar_app/features/peripherals/diagnostics/controllers/diagnostic_info_controller.dart';
-import 'package:techno_switch_solar_app/widgets/common/diagnostic_voltage_tile.dart';
-import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
-import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
+import 'package:Technoswitch/ble/ble_process.dart';
+import 'package:Technoswitch/features/peripherals/diagnostics/controllers/diagnostic_info_controller.dart';
+import 'package:Technoswitch/widgets/common/diagnostic_voltage_tile.dart';
+import 'package:Technoswitch/utils/constants/asset_constants.dart';
+import 'package:Technoswitch/utils/constants/color_constants.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
 
-import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
+import 'package:Technoswitch/utils/constants/style_constants.dart';
 
 enum DiagnosticSectionType { sounder, power, input, zone, other }
 

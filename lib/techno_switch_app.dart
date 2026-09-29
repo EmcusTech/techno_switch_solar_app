@@ -1,11 +1,15 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:techno_switch_solar_app/features/splash/views/splash_screen.dart';
-import 'package:techno_switch_solar_app/utils/app/app_services.dart';
-import 'package:techno_switch_solar_app/utils/app/navigation_service.dart';
-import 'package:techno_switch_solar_app/utils/ble/ble_session_idle_timeout.dart';
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
+import 'package:Technoswitch/features/splash/views/splash_screen.dart';
+import 'package:Technoswitch/features/splash/views/windows/windows_splash_screen.dart';
+import 'package:Technoswitch/utils/app/app_services.dart';
+import 'package:Technoswitch/utils/app/navigation_service.dart';
+import 'package:Technoswitch/utils/ble/ble_session_idle_timeout.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
 
 class TechnoSwitchApp extends StatefulWidget {
   const TechnoSwitchApp({super.key});
@@ -46,18 +50,25 @@ class _TechnoSwitchAppState extends State<TechnoSwitchApp>
     builder:
         (_, _) => SafeArea(
           child: BleSessionIdleTimeout(
-            child: MaterialApp(
-              debugShowCheckedModeBanner: false,
-              navigatorObservers: <NavigatorObserver>[appRouteObserver],
-              title: StringConstants.appTitle,
-              theme: ThemeData(
-                textTheme: GoogleFonts.interTextTheme(
-                  Theme.of(context).textTheme,
+            child: ScreenUtilPlusInit(
+              autoRebuild: false,
+              designSize: const Size(1440, 779),
+              minTextAdapt: true,
+              child: MaterialApp(
+                debugShowCheckedModeBanner: false,
+                navigatorObservers: <NavigatorObserver>[appRouteObserver],
+                title: StringConstants.appTitle,
+                theme: ThemeData(
+                  textTheme: GoogleFonts.interTextTheme(
+                    Theme.of(context).textTheme,
+                  ),
+                  useMaterial3: true,
                 ),
-                colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
-                useMaterial3: true,
+                home:
+                    Platform.isWindows
+                        ? const WindowsSplashScreen()
+                        : const SplashScreen(),
               ),
-              home: const SplashScreen(),
             ),
           ),
         ),

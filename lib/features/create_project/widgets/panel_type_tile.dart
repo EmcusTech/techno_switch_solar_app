@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:techno_switch_solar_app/models/create_project/panel_selection_page_model.dart';
-import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
-import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
-import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
+import 'package:Technoswitch/models/create_project/panel_selection_page_model.dart';
+import 'package:Technoswitch/utils/constants/asset_constants.dart';
+import 'package:Technoswitch/utils/constants/color_constants.dart';
+import 'package:Technoswitch/utils/constants/style_constants.dart';
 
 class PanelTypeCountIcon extends StatelessWidget {
-  const PanelTypeCountIcon({super.key, required this.asset, required this.count});
+  const PanelTypeCountIcon({
+    super.key,
+    required this.asset,
+    required this.count,
+  });
 
   final String asset;
   final String count;

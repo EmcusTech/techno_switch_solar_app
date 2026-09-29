@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:techno_switch_solar_app/features/test_mode/controllers/test_mode_controller.dart';
-import 'package:techno_switch_solar_app/features/test_mode/views/test_mode_ui_delegate_mixin.dart';
-import 'package:techno_switch_solar_app/features/test_mode/widgets/test_mode_app_bar.dart';
-import 'package:techno_switch_solar_app/features/test_mode/widgets/test_mode_content_panel.dart';
-import 'package:techno_switch_solar_app/features/test_mode/widgets/test_mode_shell.dart';
+import 'package:Technoswitch/features/test_mode/controllers/test_mode_controller.dart';
+import 'package:Technoswitch/features/test_mode/views/test_mode_ui_delegate_mixin.dart';
+import 'package:Technoswitch/features/test_mode/widgets/test_mode_app_bar.dart';
+import 'package:Technoswitch/features/test_mode/widgets/test_mode_content_panel.dart';
+import 'package:Technoswitch/features/test_mode/widgets/test_mode_shell.dart';
 
 class TestModeScreen extends StatefulWidget {
   const TestModeScreen({super.key});

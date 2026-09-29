@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:intl/intl.dart';
-import 'package:techno_switch_solar_app/features/logs/controllers/log_controller.dart';
-import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
-import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
-import 'package:techno_switch_solar_app/utils/constants/event_constants.dart';
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
-import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
+import 'package:Technoswitch/features/logs/controllers/log_controller.dart';
+import 'package:Technoswitch/utils/constants/asset_constants.dart';
+import 'package:Technoswitch/utils/constants/color_constants.dart';
+import 'package:Technoswitch/utils/constants/event_constants.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
+import 'package:Technoswitch/utils/constants/style_constants.dart';
 
 class EventLogFilterBottomSheet extends StatelessWidget {
   const EventLogFilterBottomSheet({
@@ -251,9 +251,7 @@ class _DatePickerField extends StatelessWidget {
               children: [
                 Text(
                   date != null
-                      ? DateFormat(
-                        StringConstants.ddMMYyyyHHMmSs,
-                      ).format(date!)
+                      ? DateFormat(StringConstants.ddMMYyyyHHMmSs).format(date!)
                       : label,
                   style: StyleConstants.textMuted14w400Style,
                 ),

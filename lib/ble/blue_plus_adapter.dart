@@ -3,7 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart' as fbp;
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
 import 'package:win_ble/win_ble.dart';
 
 class Uuid {
@@ -625,9 +625,8 @@ class FlutterReactiveBle {
 
     for (final ad in device.adStructures ?? const <AdStructure>[]) {
       if (ad.type != 0x08 && ad.type != 0x09) continue;
-      final decoded = String.fromCharCodes(
-        ad.data,
-      ).replaceAll('\u0000', '').trim();
+      final decoded =
+          String.fromCharCodes(ad.data).replaceAll('\u0000', '').trim();
       if (decoded.isNotEmpty) return decoded;
     }
 
@@ -672,7 +671,9 @@ class FlutterReactiveBle {
     if (value is Uint8List) return List<int>.from(value);
     if (value is List<int>) return List<int>.from(value);
     if (value is List) {
-      return value.map((item) => item is int ? item : int.parse('$item')).toList();
+      return value
+          .map((item) => item is int ? item : int.parse('$item'))
+          .toList();
     }
     return const <int>[];
   }

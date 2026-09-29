@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:techno_switch_solar_app/features/scan/controllers/scan_controller.dart';
-import 'package:techno_switch_solar_app/features/scan/widgets/scan_animated_grid_card.dart';
-import 'package:techno_switch_solar_app/features/scan/widgets/scan_device_card.dart';
+import 'package:Technoswitch/features/scan/controllers/scan_controller.dart';
+import 'package:Technoswitch/features/scan/widgets/scan_animated_grid_card.dart';
+import 'package:Technoswitch/features/scan/widgets/scan_device_card.dart';
 
 class ScanDeviceGrid extends StatelessWidget {
   const ScanDeviceGrid({
@@ -27,9 +27,7 @@ class ScanDeviceGrid extends StatelessWidget {
       left: 20,
       width: radarSize,
       height: radarSize,
-      child: Stack(
-        children: _buildSlotWidgets(),
-      ),
+      child: Stack(children: _buildSlotWidgets()),
     );
   }
 

@@ -1,8 +1,8 @@
 import 'dart:typed_data';
 
-import 'package:techno_switch_solar_app/config/system_config_limits.dart';
-import 'package:techno_switch_solar_app/config/structs/struct_bytes.dart';
-import 'package:techno_switch_solar_app/utils/peripherals/defaults/zone_defaults.dart';
+import 'package:Technoswitch/config/system_config_limits.dart';
+import 'package:Technoswitch/config/structs/struct_bytes.dart';
+import 'package:Technoswitch/utils/peripherals/defaults/zone_defaults.dart';
 
 /// Mirrors firmware `st_zone_cfg_def` (27 bytes, packed).
 class ZoneCfgDef {
@@ -28,7 +28,9 @@ class ZoneCfgDef {
 
   factory ZoneCfgDef.fromBytes(Uint8List bytes, {int offset = 0}) {
     if (offset < 0 || offset + byteLength > bytes.length) {
-      throw RangeError('ZoneCfgDef requires $byteLength bytes at offset $offset');
+      throw RangeError(
+        'ZoneCfgDef requires $byteLength bytes at offset $offset',
+      );
     }
     return ZoneCfgDef(
       zoneNum: bytes[offset],

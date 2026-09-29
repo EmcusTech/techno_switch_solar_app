@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:techno_switch_solar_app/features/help/controllers/help_screen_controller.dart';
-import 'package:techno_switch_solar_app/features/help/views/help_ui_delegate_mixin.dart';
-import 'package:techno_switch_solar_app/features/help/widgets/help_contact_section.dart';
-import 'package:techno_switch_solar_app/features/help/widgets/help_faq_section.dart';
-import 'package:techno_switch_solar_app/features/help/widgets/help_shell.dart';
-import 'package:techno_switch_solar_app/features/help/widgets/help_support_links_section.dart';
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
-import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
+import 'package:Technoswitch/features/help/controllers/help_screen_controller.dart';
+import 'package:Technoswitch/features/help/views/help_ui_delegate_mixin.dart';
+import 'package:Technoswitch/features/help/widgets/help_contact_section.dart';
+import 'package:Technoswitch/features/help/widgets/help_faq_section.dart';
+import 'package:Technoswitch/features/help/widgets/help_shell.dart';
+import 'package:Technoswitch/features/help/widgets/help_support_links_section.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
+import 'package:Technoswitch/utils/constants/style_constants.dart';
 
 class HelpScreen extends StatefulWidget {
   const HelpScreen({super.key});

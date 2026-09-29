@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
-import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
+import 'package:Technoswitch/utils/constants/asset_constants.dart';
+import 'package:Technoswitch/utils/constants/color_constants.dart';
 
 class TestModeShell extends StatelessWidget {
   const TestModeShell({super.key, required this.child});
@@ -19,10 +19,7 @@ class TestModeShell extends StatelessWidget {
         ),
       ),
       child: Stack(
-        children: [
-          SvgPicture.asset(AssetConstants.background1),
-          child,
-        ],
+        children: [SvgPicture.asset(AssetConstants.background1), child],
       ),
     );
   }

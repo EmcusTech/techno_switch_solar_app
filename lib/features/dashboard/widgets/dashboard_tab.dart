@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:techno_switch_solar_app/features/dashboard/controllers/project_dashboard_controller.dart';
-import 'package:techno_switch_solar_app/features/dashboard/widgets/dashboard_app_bar.dart';
-import 'package:techno_switch_solar_app/features/dashboard/widgets/dashboard_content.dart';
-import 'package:techno_switch_solar_app/features/dashboard/widgets/dashboard_shell.dart';
+import 'package:Technoswitch/features/dashboard/controllers/project_dashboard_controller.dart';
+import 'package:Technoswitch/features/dashboard/widgets/dashboard_app_bar.dart';
+import 'package:Technoswitch/features/dashboard/widgets/dashboard_content.dart';
+import 'package:Technoswitch/features/dashboard/widgets/dashboard_shell.dart';
 
 class DashboardTab extends StatelessWidget {
   const DashboardTab({

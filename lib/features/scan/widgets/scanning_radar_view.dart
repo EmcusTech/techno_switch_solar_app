@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:techno_switch_solar_app/features/scan/controllers/scan_controller.dart';
-import 'package:techno_switch_solar_app/features/scan/widgets/radar_painter.dart';
-import 'package:techno_switch_solar_app/features/scan/widgets/scan_background_decor.dart';
-import 'package:techno_switch_solar_app/features/scan/widgets/scan_back_button.dart';
-import 'package:techno_switch_solar_app/features/scan/widgets/scan_device_grid.dart';
-import 'package:techno_switch_solar_app/features/scan/widgets/sweep_painter.dart';
-import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
-import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
-import 'package:techno_switch_solar_app/widgets/scanning_widget.dart';
+import 'package:Technoswitch/features/scan/controllers/scan_controller.dart';
+import 'package:Technoswitch/features/scan/widgets/radar_painter.dart';
+import 'package:Technoswitch/features/scan/widgets/scan_background_decor.dart';
+import 'package:Technoswitch/features/scan/widgets/scan_back_button.dart';
+import 'package:Technoswitch/features/scan/widgets/scan_device_grid.dart';
+import 'package:Technoswitch/features/scan/widgets/sweep_painter.dart';
+import 'package:Technoswitch/utils/constants/color_constants.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
+import 'package:Technoswitch/utils/constants/style_constants.dart';
+import 'package:Technoswitch/widgets/scanning_widget.dart';
 
 class ScanningRadarView extends StatelessWidget {
   const ScanningRadarView({

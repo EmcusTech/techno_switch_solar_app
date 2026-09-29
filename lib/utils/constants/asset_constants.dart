@@ -18,6 +18,7 @@ class AssetConstants {
   static const String splashscreenBackground2 =
       '$_svgDir/splashscreen_background_2.svg';
   static const String logo = '$_svgDir/logo.svg';
+  static const String zapIcon = '$_svgDir/zap_icon.svg';
   static const String bottomsheetLogo = '$_svgDir/bottomsheet_logo.svg';
   static const String logReportWatermark = '$_svgDir/log_report_watermark.svg';
   static const String panelIcon = '$_svgDir/panel_icon.svg';
@@ -119,4 +120,5 @@ class AssetConstants {
   // ── Images ────────────────────────────────────────────────────────
   static const String fullLogo = '$_imageDir/full_logo.png';
   static const String panelIconImage = '$_imageDir/panel_icon.png';
+  static const String windowsScanBackground = '$_imageDir/win_scan_bg.png';
 }

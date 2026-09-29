@@ -1,6 +1,6 @@
 import 'package:get/get.dart';
-import 'package:techno_switch_solar_app/ble/ble_manager.dart';
-import 'package:techno_switch_solar_app/utils/app/app_state.dart';
+import 'package:Technoswitch/ble/ble_manager.dart';
+import 'package:Technoswitch/utils/app/app_state.dart';
 
 class AppServices {
   static BleManager get _bleManager => Get.find<BleManager>();

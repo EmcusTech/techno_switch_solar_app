@@ -1,7 +1,7 @@
 import 'dart:convert';
 
-import 'package:techno_switch_solar_app/utils/modes/l_bus_payload_config.dart';
-import 'package:techno_switch_solar_app/utils/peripherals/defaults/l_bus_defaults.dart';
+import 'package:Technoswitch/utils/modes/l_bus_payload_config.dart';
+import 'package:Technoswitch/utils/peripherals/defaults/l_bus_defaults.dart';
 
 class LBusSetupData {
   final String enabled;

@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:techno_switch_solar_app/features/home/bindings/home_screen_binding.dart';
-import 'package:techno_switch_solar_app/features/home/views/home_screen.dart';
-import 'package:techno_switch_solar_app/features/sites/bindings/site_binding.dart';
-import 'package:techno_switch_solar_app/features/sites/controllers/simple_site_creation_controller.dart';
-import 'package:techno_switch_solar_app/features/sites/controllers/site_ui_delegate.dart';
-import 'package:techno_switch_solar_app/features/sites/models/site_args.dart';
-import 'package:techno_switch_solar_app/features/sites/views/site_screen.dart';
-import 'package:techno_switch_solar_app/models/site_model.dart';
-import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
-import 'package:techno_switch_solar_app/utils/site_service.dart';
+import 'package:Technoswitch/features/home/bindings/home_screen_binding.dart';
+import 'package:Technoswitch/features/home/views/home_screen.dart';
+import 'package:Technoswitch/features/sites/bindings/site_binding.dart';
+import 'package:Technoswitch/features/sites/controllers/simple_site_creation_controller.dart';
+import 'package:Technoswitch/features/sites/controllers/site_ui_delegate.dart';
+import 'package:Technoswitch/features/sites/models/site_args.dart';
+import 'package:Technoswitch/features/sites/views/site_screen.dart';
+import 'package:Technoswitch/models/site_model.dart';
+import 'package:Technoswitch/utils/constants/color_constants.dart';
+import 'package:Technoswitch/utils/site_service.dart';
 
 mixin SimpleSiteCreationUiDelegateMixin<T extends StatefulWidget> on State<T>
     implements SimpleSiteCreationUiDelegate {

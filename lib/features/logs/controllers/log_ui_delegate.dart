@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
-import 'package:techno_switch_solar_app/features/logs/models/log_flow_args.dart';
-import 'package:techno_switch_solar_app/models/log_model.dart';
+import 'package:Technoswitch/ble/blue_plus_adapter.dart';
+import 'package:Technoswitch/features/logs/models/log_flow_args.dart';
+import 'package:Technoswitch/models/log_model.dart';
 
 abstract class LogUiDelegate {
   bool get isMounted;

@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:techno_switch_solar_app/features/sites/controllers/site_controller.dart';
-import 'package:techno_switch_solar_app/features/sites/views/site_ui_delegate_mixin.dart';
-import 'package:techno_switch_solar_app/features/sites/widgets/site_app_bar.dart';
-import 'package:techno_switch_solar_app/features/sites/widgets/site_panel_section.dart';
-import 'package:techno_switch_solar_app/features/sites/widgets/site_shell.dart';
-import 'package:techno_switch_solar_app/features/sites/widgets/site_summary_card.dart';
-import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
+import 'package:Technoswitch/features/sites/controllers/site_controller.dart';
+import 'package:Technoswitch/features/sites/views/site_ui_delegate_mixin.dart';
+import 'package:Technoswitch/features/sites/widgets/site_app_bar.dart';
+import 'package:Technoswitch/features/sites/widgets/site_panel_section.dart';
+import 'package:Technoswitch/features/sites/widgets/site_shell.dart';
+import 'package:Technoswitch/features/sites/widgets/site_summary_card.dart';
+import 'package:Technoswitch/utils/constants/color_constants.dart';
 
 class SiteScreen extends StatefulWidget {
   const SiteScreen({super.key});

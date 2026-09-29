@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:techno_switch_solar_app/features/logs/controllers/log_controller.dart';
-import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
+import 'package:Technoswitch/features/logs/controllers/log_controller.dart';
+import 'package:Technoswitch/utils/constants/style_constants.dart';
 
 class DataCells extends StatelessWidget {
   final double width;

@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:techno_switch_solar_app/ble/ble_process.dart';
-import 'package:techno_switch_solar_app/widgets/common/access_code_success_lottie_widget.dart';
-import 'package:techno_switch_solar_app/widgets/common/access_code_verifying_lottie_widget.dart';
-import 'package:techno_switch_solar_app/widgets/common/common_cta_button.dart';
-import 'package:techno_switch_solar_app/widgets/common/common_numeric_keypad_tile_widget.dart';
-import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
-import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
+import 'package:Technoswitch/ble/ble_process.dart';
+import 'package:Technoswitch/widgets/common/access_code_success_lottie_widget.dart';
+import 'package:Technoswitch/widgets/common/access_code_verifying_lottie_widget.dart';
+import 'package:Technoswitch/widgets/common/common_cta_button.dart';
+import 'package:Technoswitch/widgets/common/common_numeric_keypad_tile_widget.dart';
+import 'package:Technoswitch/utils/constants/asset_constants.dart';
+import 'package:Technoswitch/utils/constants/color_constants.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
 
-import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
+import 'package:Technoswitch/utils/constants/style_constants.dart';
+
 enum ValidatingStatus { empty, verifying, success, error }
 
 class CommonNumericKeypadWidget extends StatefulWidget {
@@ -288,257 +289,275 @@ class _CommonNumericKeypadWidgetState extends State<CommonNumericKeypadWidget> {
             ? MediaQuery.of(context).size.height * 0.85
             : MediaQuery.of(context).size.height * 0.82;
     final borderColor =
-        fieldBorderIsError ? ColorConstants.primary : ColorConstants.borderLight;
+        fieldBorderIsError
+            ? ColorConstants.primary
+            : ColorConstants.borderLight;
     final lockSheet = _isSheetLocked(validatingStatus);
 
     return PopScope(
       canPop: !lockSheet,
       child: SafeArea(
-      child: AnimatedContainer(
-        duration: _animDuration,
-        curve: Curves.easeInOutCubic,
-        constraints: BoxConstraints(maxHeight: maxHeight),
-        child: Container(
-          decoration: const BoxDecoration(
-            color: ColorConstants.primaryVariant,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(50)),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.only(top: 8.0),
-            child: Container(
-              clipBehavior: Clip.hardEdge,
-              decoration: const BoxDecoration(
-                color: ColorConstants.white,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(50)),
-              ),
-              child: Stack(
-                children: [
-                  SingleChildScrollView(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        const SizedBox(height: 16),
-                        _dragHandle(),
-                        const SizedBox(height: 12),
-                        AnimatedSwitcher(
-                          duration: _animDuration,
-                          switchInCurve: Curves.easeInOutCubic,
-                          switchOutCurve: Curves.easeInOutCubic,
-                          child: _buildLockOrLottieHeader(
-                            validatingStatus,
-                            isErrorStatus,
-                          ),
-                        ),
-                        const SizedBox(height: 26),
-                        AnimatedSize(
-                          duration: _animDuration,
-                          curve: Curves.easeInOutCubic,
-                          alignment: Alignment.topCenter,
-                          clipBehavior: Clip.hardEdge,
-                          child:
-                              hideInput
-                                  ? const SizedBox.shrink()
-                                  : Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 26.0,
-                                    ),
-                                    child: TextField(
-                                      controller: _controller,
-                                      readOnly: true,
-                                      keyboardType: TextInputType.number,
-                                      obscureText: true,
-                                      maxLength: 8,
-                                      textAlign: TextAlign.center,
-                                      style: StyleConstants.textDark24w600Style,
-                                      inputFormatters: [
-                                        FilteringTextInputFormatter.digitsOnly,
-                                      ],
-                                      decoration: InputDecoration(
-                                        hintText: StringConstants.strca4d661a,
-                                        hintStyle: StyleConstants.borderLight24w600Style,
-                                        counterText: '',
-                                        filled: true,
-                                        fillColor: ColorConstants.surfaceLight,
-                                        border: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            12,
-                                          ),
-                                          borderSide: BorderSide(
-                                            color: borderColor,
-                                            width: fieldBorderIsError ? 1 : 2,
-                                          ),
-                                        ),
-                                        enabledBorder: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            12,
-                                          ),
-                                          borderSide: BorderSide(
-                                            color: borderColor,
-                                            width: 1,
-                                          ),
-                                        ),
-                                        focusedBorder: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            12,
-                                          ),
-                                          borderSide: const BorderSide(
-                                            color: ColorConstants.primary,
-                                            width: 2,
-                                          ),
-                                        ),
-                                        contentPadding:
-                                            const EdgeInsets.symmetric(
-                                              horizontal: 16,
-                                              vertical: 16,
-                                            ),
-                                      ),
-                                    ),
-                                  ),
-                        ),
-                        AnimatedSize(
-                          duration: _animDuration,
-                          curve: Curves.easeInOutCubic,
-                          alignment: Alignment.topCenter,
-                          clipBehavior: Clip.hardEdge,
-                          child:
-                              status != null && status.isNotEmpty
-                                  ? Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      const SizedBox(height: 8),
-                                      Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 26,
-                                        ),
-                                        child: Text(
-                                          status,
-                                          style: StyleConstants.primary14w600Style.copyWith(
-                                            color: isErrorStatus
-                                                    ? ColorConstants.primary
-                                                    : ColorConstants.textDark,
-                                            ),
-                                          textAlign: TextAlign.center,
-                                        ),
-                                      ),
-                                    ],
-                                  )
-                                  : const SizedBox.shrink(),
-                        ),
-                        AnimatedSize(
-                          duration: _animDuration,
-                          curve: Curves.easeInOutCubic,
-                          alignment: Alignment.topCenter,
-                          clipBehavior: Clip.hardEdge,
-                          child:
-                              showKeypad
-                                  ? Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      const SizedBox(height: 18),
-                                      Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 34,
-                                        ),
-                                        child: GridView.count(
-                                          shrinkWrap: true,
-                                          crossAxisCount: 3,
-                                          crossAxisSpacing: 16,
-                                          mainAxisSpacing: 12,
-                                          childAspectRatio: 1.5,
-                                          physics:
-                                              const NeverScrollableScrollPhysics(),
-                                          children: _keypadTiles(),
-                                        ),
-                                      ),
-                                    ],
-                                  )
-                                  : const SizedBox.shrink(),
-                        ),
-                        AnimatedSize(
-                          duration: _animDuration,
-                          curve: Curves.easeInOutCubic,
-                          alignment: Alignment.topCenter,
-                          clipBehavior: Clip.hardEdge,
-                          child:
-                              showVerify
-                                  ? Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      const SizedBox(height: 18),
-                                      Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 26.0,
-                                        ),
-                                        child: ListenableBuilder(
-                                          listenable: _controller,
-                                          builder: (context, _) {
-                                            final canVerify =
-                                                _controller.text
-                                                    .trim()
-                                                    .isNotEmpty;
-                                            return CommonCtaButton(
-                                              isDisabled: !canVerify,
-                                              onTap:
-                                                  canVerify ? _onVerify : null,
-                                              child: Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.center,
-                                                children: [
-                                                  const Icon(
-                                                    Icons.verified,
-                                                    color: ColorConstants.white,
-                                                  ),
-                                                  const SizedBox(width: 8),
-                                                  Text(
-                                                    StringConstants.verify,
-                                                    style: StyleConstants.white14boldStyle,
-                                                  ),
-                                                ],
-                                              ),
-                                            );
-                                          },
-                                        ),
-                                      ),
-                                      const SizedBox(height: 16),
-                                    ],
-                                  )
-                                  : const SizedBox(height: 16),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      SvgPicture.asset(AssetConstants.bottomsheetLogo),
-                      if (!lockSheet)
-                        Padding(
-                          padding: const EdgeInsets.only(right: 32.0),
-                          child: GestureDetector(
-                            onTap: _onClose,
-                            child: Container(
-                              height: 38,
-                              width: 38,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: ColorConstants.blackMaterial.withValues(alpha: 0.06),
-                              ),
-                              child: const Icon(Icons.close, size: 20),
+        child: AnimatedContainer(
+          duration: _animDuration,
+          curve: Curves.easeInOutCubic,
+          constraints: BoxConstraints(maxHeight: maxHeight),
+          child: Container(
+            decoration: const BoxDecoration(
+              color: ColorConstants.primaryVariant,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(50)),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.only(top: 8.0),
+              child: Container(
+                clipBehavior: Clip.hardEdge,
+                decoration: const BoxDecoration(
+                  color: ColorConstants.white,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(50)),
+                ),
+                child: Stack(
+                  children: [
+                    SingleChildScrollView(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          const SizedBox(height: 16),
+                          _dragHandle(),
+                          const SizedBox(height: 12),
+                          AnimatedSwitcher(
+                            duration: _animDuration,
+                            switchInCurve: Curves.easeInOutCubic,
+                            switchOutCurve: Curves.easeInOutCubic,
+                            child: _buildLockOrLottieHeader(
+                              validatingStatus,
+                              isErrorStatus,
                             ),
                           ),
-                        )
-                      else
-                        const SizedBox(width: 70),
-                    ],
-                  ),
-                ],
+                          const SizedBox(height: 26),
+                          AnimatedSize(
+                            duration: _animDuration,
+                            curve: Curves.easeInOutCubic,
+                            alignment: Alignment.topCenter,
+                            clipBehavior: Clip.hardEdge,
+                            child:
+                                hideInput
+                                    ? const SizedBox.shrink()
+                                    : Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 26.0,
+                                      ),
+                                      child: TextField(
+                                        controller: _controller,
+                                        readOnly: true,
+                                        keyboardType: TextInputType.number,
+                                        obscureText: true,
+                                        maxLength: 8,
+                                        textAlign: TextAlign.center,
+                                        style:
+                                            StyleConstants.textDark24w600Style,
+                                        inputFormatters: [
+                                          FilteringTextInputFormatter
+                                              .digitsOnly,
+                                        ],
+                                        decoration: InputDecoration(
+                                          hintText: StringConstants.strca4d661a,
+                                          hintStyle:
+                                              StyleConstants
+                                                  .borderLight24w600Style,
+                                          counterText: '',
+                                          filled: true,
+                                          fillColor:
+                                              ColorConstants.surfaceLight,
+                                          border: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
+                                            borderSide: BorderSide(
+                                              color: borderColor,
+                                              width: fieldBorderIsError ? 1 : 2,
+                                            ),
+                                          ),
+                                          enabledBorder: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
+                                            borderSide: BorderSide(
+                                              color: borderColor,
+                                              width: 1,
+                                            ),
+                                          ),
+                                          focusedBorder: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
+                                            borderSide: const BorderSide(
+                                              color: ColorConstants.primary,
+                                              width: 2,
+                                            ),
+                                          ),
+                                          contentPadding:
+                                              const EdgeInsets.symmetric(
+                                                horizontal: 16,
+                                                vertical: 16,
+                                              ),
+                                        ),
+                                      ),
+                                    ),
+                          ),
+                          AnimatedSize(
+                            duration: _animDuration,
+                            curve: Curves.easeInOutCubic,
+                            alignment: Alignment.topCenter,
+                            clipBehavior: Clip.hardEdge,
+                            child:
+                                status != null && status.isNotEmpty
+                                    ? Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const SizedBox(height: 8),
+                                        Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 26,
+                                          ),
+                                          child: Text(
+                                            status,
+                                            style: StyleConstants
+                                                .primary14w600Style
+                                                .copyWith(
+                                                  color:
+                                                      isErrorStatus
+                                                          ? ColorConstants
+                                                              .primary
+                                                          : ColorConstants
+                                                              .textDark,
+                                                ),
+                                            textAlign: TextAlign.center,
+                                          ),
+                                        ),
+                                      ],
+                                    )
+                                    : const SizedBox.shrink(),
+                          ),
+                          AnimatedSize(
+                            duration: _animDuration,
+                            curve: Curves.easeInOutCubic,
+                            alignment: Alignment.topCenter,
+                            clipBehavior: Clip.hardEdge,
+                            child:
+                                showKeypad
+                                    ? Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const SizedBox(height: 18),
+                                        Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 34,
+                                          ),
+                                          child: GridView.count(
+                                            shrinkWrap: true,
+                                            crossAxisCount: 3,
+                                            crossAxisSpacing: 16,
+                                            mainAxisSpacing: 12,
+                                            childAspectRatio: 1.5,
+                                            physics:
+                                                const NeverScrollableScrollPhysics(),
+                                            children: _keypadTiles(),
+                                          ),
+                                        ),
+                                      ],
+                                    )
+                                    : const SizedBox.shrink(),
+                          ),
+                          AnimatedSize(
+                            duration: _animDuration,
+                            curve: Curves.easeInOutCubic,
+                            alignment: Alignment.topCenter,
+                            clipBehavior: Clip.hardEdge,
+                            child:
+                                showVerify
+                                    ? Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const SizedBox(height: 18),
+                                        Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 26.0,
+                                          ),
+                                          child: ListenableBuilder(
+                                            listenable: _controller,
+                                            builder: (context, _) {
+                                              final canVerify =
+                                                  _controller.text
+                                                      .trim()
+                                                      .isNotEmpty;
+                                              return CommonCtaButton(
+                                                isDisabled: !canVerify,
+                                                onTap:
+                                                    canVerify
+                                                        ? _onVerify
+                                                        : null,
+                                                child: Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.center,
+                                                  children: [
+                                                    const Icon(
+                                                      Icons.verified,
+                                                      color:
+                                                          ColorConstants.white,
+                                                    ),
+                                                    const SizedBox(width: 8),
+                                                    Text(
+                                                      StringConstants.verify,
+                                                      style:
+                                                          StyleConstants
+                                                              .white14boldStyle,
+                                                    ),
+                                                  ],
+                                                ),
+                                              );
+                                            },
+                                          ),
+                                        ),
+                                        const SizedBox(height: 16),
+                                      ],
+                                    )
+                                    : const SizedBox(height: 16),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        SvgPicture.asset(AssetConstants.bottomsheetLogo),
+                        if (!lockSheet)
+                          Padding(
+                            padding: const EdgeInsets.only(right: 32.0),
+                            child: GestureDetector(
+                              onTap: _onClose,
+                              child: Container(
+                                height: 38,
+                                width: 38,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: ColorConstants.blackMaterial
+                                      .withValues(alpha: 0.06),
+                                ),
+                                child: const Icon(Icons.close, size: 20),
+                              ),
+                            ),
+                          )
+                        else
+                          const SizedBox(width: 70),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
         ),
       ),
-    ),
     );
   }
 
@@ -636,7 +655,9 @@ class _CommonNumericKeypadWidgetState extends State<CommonNumericKeypadWidget> {
             ),
             const SizedBox(height: 32),
             Text(
-              isError ? StringConstants.deviceNotResponding2 : StringConstants.enterAccessCode,
+              isError
+                  ? StringConstants.deviceNotResponding2
+                  : StringConstants.enterAccessCode,
               textAlign: TextAlign.center,
               style: StyleConstants.black20w600Style,
             ),

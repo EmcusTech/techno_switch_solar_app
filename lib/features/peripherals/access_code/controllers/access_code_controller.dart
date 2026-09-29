@@ -1,14 +1,14 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
-import 'package:techno_switch_solar_app/config/ble/panel_access_lvl_setup_payload_debug.dart';
-import 'package:techno_switch_solar_app/config/ui/access_config_options.dart';
-import 'package:techno_switch_solar_app/config/ui/access_config_ui_bridge.dart';
-import 'package:techno_switch_solar_app/features/peripherals/shared/controllers/peripheral_mode_controller.dart';
-import 'package:techno_switch_solar_app/models/access_code_mode_model.dart';
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
-import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
+import 'package:Technoswitch/ble/controller/ble_log_controller.dart';
+import 'package:Technoswitch/config/ble/panel_access_lvl_setup_payload_debug.dart';
+import 'package:Technoswitch/config/ui/access_config_options.dart';
+import 'package:Technoswitch/config/ui/access_config_ui_bridge.dart';
+import 'package:Technoswitch/features/peripherals/shared/controllers/peripheral_mode_controller.dart';
+import 'package:Technoswitch/models/access_code_mode_model.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
+import 'package:Technoswitch/utils/storage/peripheral_setup_cache.dart';
 
 /// Controller for the Access Codes bottom sheet.
 ///
@@ -119,10 +119,7 @@ class AccessCodeController extends PeripheralModeController {
     manager!.accessCodeSetupDataList.value = list;
 
     if (kDebugMode) {
-      PanelAccessLvlSetupPayloadDebug.printApplyFrame(
-        manager!,
-        selectedCode,
-      );
+      PanelAccessLvlSetupPayloadDebug.printApplyFrame(manager!, selectedCode);
     }
   }
 

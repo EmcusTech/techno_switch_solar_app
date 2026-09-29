@@ -1,4 +1,4 @@
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
 
 /// Dropdown option catalogs for Access Code configuration (index = wire value).
 abstract final class AccessConfigOptions {

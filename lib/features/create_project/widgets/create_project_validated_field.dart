@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
-import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
+import 'package:Technoswitch/utils/constants/color_constants.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
+import 'package:Technoswitch/utils/constants/style_constants.dart';
 
 class CreateProjectFormLabel extends StatelessWidget {
   const CreateProjectFormLabel({
@@ -117,7 +117,9 @@ class CreateProjectValidatedField extends StatelessWidget {
             borderRadius: BorderRadius.circular(4),
             border: Border.all(
               color:
-                  _hasError ? ColorConstants.primary : ColorConstants.borderGray,
+                  _hasError
+                      ? ColorConstants.primary
+                      : ColorConstants.borderGray,
               width: _hasError ? 2 : 1,
             ),
           ),

@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:techno_switch_solar_app/features/help/controllers/help_screen_controller.dart';
-import 'package:techno_switch_solar_app/features/help/views/help_screen.dart';
-import 'package:techno_switch_solar_app/features/home/controllers/home_screen_controller.dart';
-import 'package:techno_switch_solar_app/features/home/views/home_ui_delegate_mixin.dart';
-import 'package:techno_switch_solar_app/features/home/widgets/home_bottom_nav.dart';
-import 'package:techno_switch_solar_app/features/home/widgets/home_tab.dart';
-import 'package:techno_switch_solar_app/features/settings/controllers/settings_controller.dart';
-import 'package:techno_switch_solar_app/features/settings/views/settings_screen.dart';
-import 'package:techno_switch_solar_app/utils/app/navigation_service.dart';
-import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
+import 'package:Technoswitch/features/help/controllers/help_screen_controller.dart';
+import 'package:Technoswitch/features/help/views/help_screen.dart';
+import 'package:Technoswitch/features/home/controllers/home_screen_controller.dart';
+import 'package:Technoswitch/features/home/views/home_ui_delegate_mixin.dart';
+import 'package:Technoswitch/features/home/widgets/home_bottom_nav.dart';
+import 'package:Technoswitch/features/home/widgets/home_tab.dart';
+import 'package:Technoswitch/features/settings/controllers/settings_controller.dart';
+import 'package:Technoswitch/features/settings/views/settings_screen.dart';
+import 'package:Technoswitch/utils/app/navigation_service.dart';
+import 'package:Technoswitch/utils/constants/color_constants.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});

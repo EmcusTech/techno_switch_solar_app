@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:techno_switch_solar_app/features/help/controllers/help_screen_controller.dart';
-import 'package:techno_switch_solar_app/features/help/widgets/help_action_row.dart';
-import 'package:techno_switch_solar_app/features/help/widgets/help_card.dart';
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
-import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
+import 'package:Technoswitch/features/help/controllers/help_screen_controller.dart';
+import 'package:Technoswitch/features/help/widgets/help_action_row.dart';
+import 'package:Technoswitch/features/help/widgets/help_card.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
+import 'package:Technoswitch/utils/constants/style_constants.dart';
 
 class HelpContactSection extends StatelessWidget {
   const HelpContactSection({super.key, required this.controller});

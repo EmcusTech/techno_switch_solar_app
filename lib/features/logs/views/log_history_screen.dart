@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
-import 'package:techno_switch_solar_app/features/logs/bindings/log_binding.dart';
-import 'package:techno_switch_solar_app/features/logs/controllers/log_controller.dart';
-import 'package:techno_switch_solar_app/features/logs/models/log_flow_args.dart';
-import 'package:techno_switch_solar_app/features/logs/views/log_ui_delegate_mixin.dart';
-import 'package:techno_switch_solar_app/features/logs/widgets/log_history_dashboard.dart';
-import 'package:techno_switch_solar_app/utils/app/navigation_service.dart';
-import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
-import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
-import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
+import 'package:Technoswitch/features/logs/bindings/log_binding.dart';
+import 'package:Technoswitch/features/logs/controllers/log_controller.dart';
+import 'package:Technoswitch/features/logs/models/log_flow_args.dart';
+import 'package:Technoswitch/features/logs/views/log_ui_delegate_mixin.dart';
+import 'package:Technoswitch/features/logs/widgets/log_history_dashboard.dart';
+import 'package:Technoswitch/utils/app/navigation_service.dart';
+import 'package:Technoswitch/utils/constants/asset_constants.dart';
+import 'package:Technoswitch/utils/constants/color_constants.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
+import 'package:Technoswitch/utils/constants/style_constants.dart';
 
 class LogHistoryScreen extends StatefulWidget {
   const LogHistoryScreen({
@@ -154,10 +154,7 @@ class _LogHistoryScreenState extends State<LogHistoryScreen>
 
         if (widget.embedded) return content;
 
-        return PopScope(
-          canPop: false,
-          child: content,
-        );
+        return PopScope(canPop: false, child: content);
       },
     );
   }

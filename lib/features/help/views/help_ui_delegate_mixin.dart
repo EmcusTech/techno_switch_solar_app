@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:techno_switch_solar_app/features/help/controllers/help_screen_ui_delegate.dart';
+import 'package:Technoswitch/features/help/controllers/help_screen_ui_delegate.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 mixin HelpUiDelegateMixin<T extends StatefulWidget> on State<T>

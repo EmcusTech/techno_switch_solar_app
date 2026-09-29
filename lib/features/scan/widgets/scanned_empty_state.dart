@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:techno_switch_solar_app/features/scan/models/scan_type.dart';
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
-import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
+import 'package:Technoswitch/features/scan/models/scan_type.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
+import 'package:Technoswitch/utils/constants/style_constants.dart';
 
 class ScannedEmptyState extends StatelessWidget {
   const ScannedEmptyState({super.key, required this.scanType});
@@ -37,7 +37,8 @@ class ScannedEmptyState extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             isUsb
-                ? StringConstants.makeSureYourSolarDevicesAreConnectedViaUSBAndPoweredOn
+                ? StringConstants
+                    .makeSureYourSolarDevicesAreConnectedViaUSBAndPoweredOn
                 : UiStrings.bluetoothPairingModeHintMessage,
             textAlign: TextAlign.center,
             style: StyleConstants.black12w400Style.copyWith(

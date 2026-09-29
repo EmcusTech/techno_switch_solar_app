@@ -1,9 +1,9 @@
 import 'package:get/get.dart';
-import 'package:techno_switch_solar_app/features/test_mode/controllers/test_mode_ui_delegate.dart';
-import 'package:techno_switch_solar_app/features/test_mode/models/test_mode_args.dart';
-import 'package:techno_switch_solar_app/features/test_mode/models/test_mode_menu_item.dart';
-import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
+import 'package:Technoswitch/features/test_mode/controllers/test_mode_ui_delegate.dart';
+import 'package:Technoswitch/features/test_mode/models/test_mode_args.dart';
+import 'package:Technoswitch/features/test_mode/models/test_mode_menu_item.dart';
+import 'package:Technoswitch/utils/constants/asset_constants.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
 
 class TestModeController extends GetxController {
   TestModeController({required this.args});

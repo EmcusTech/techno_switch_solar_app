@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 
-import 'package:techno_switch_solar_app/config/system_config_limits.dart';
-import 'package:techno_switch_solar_app/utils/peripherals/defaults/input_defaults.dart';
+import 'package:Technoswitch/config/system_config_limits.dart';
+import 'package:Technoswitch/utils/peripherals/defaults/input_defaults.dart';
 
 /// Mirrors firmware `st_input_1_cfg_def` (26 bytes, packed).
 class InputCfgDef {
@@ -25,7 +25,9 @@ class InputCfgDef {
 
   factory InputCfgDef.fromBytes(Uint8List bytes, {int offset = 0}) {
     if (offset < 0 || offset + byteLength > bytes.length) {
-      throw RangeError('InputCfgDef requires $byteLength bytes at offset $offset');
+      throw RangeError(
+        'InputCfgDef requires $byteLength bytes at offset $offset',
+      );
     }
     return InputCfgDef(
       inputText: _readFixedText(bytes, offset),
@@ -41,7 +43,8 @@ class InputCfgDef {
     return InputCfgDef(
       inputText: (data['text'] as String?) ?? InputDefaults.inputText,
       inputGrp: (data['group'] as num?)?.toInt() ?? InputDefaults.groupBle,
-      inputFunc: (data['function'] as num?)?.toInt() ?? InputDefaults.functionBle,
+      inputFunc:
+          (data['function'] as num?)?.toInt() ?? InputDefaults.functionBle,
       inputEnable:
           ((data['enabled'] as bool?) ?? InputDefaults.enabledBle) ? 1 : 0,
       inputTest: ((data['test'] as bool?) ?? InputDefaults.testBle) ? 1 : 0,
@@ -86,9 +89,7 @@ class InputCfgDef {
     if (len == 0) {
       return '';
     }
-    return String.fromCharCodes(
-      bytes.sublist(offset, offset + len),
-    );
+    return String.fromCharCodes(bytes.sublist(offset, offset + len));
   }
 }
 

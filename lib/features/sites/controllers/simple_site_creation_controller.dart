@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:techno_switch_solar_app/ble/ble_manager.dart';
-import 'package:techno_switch_solar_app/features/sites/controllers/site_ui_delegate.dart';
-import 'package:techno_switch_solar_app/features/sites/models/site_args.dart';
-import 'package:techno_switch_solar_app/models/create_project/site_creation_page_model.dart';
-import 'package:techno_switch_solar_app/utils/logger.dart';
-import 'package:techno_switch_solar_app/utils/panel_service.dart';
-import 'package:techno_switch_solar_app/utils/site_service.dart';
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
+import 'package:Technoswitch/ble/ble_manager.dart';
+import 'package:Technoswitch/features/sites/controllers/site_ui_delegate.dart';
+import 'package:Technoswitch/features/sites/models/site_args.dart';
+import 'package:Technoswitch/models/create_project/site_creation_page_model.dart';
+import 'package:Technoswitch/utils/logger.dart';
+import 'package:Technoswitch/utils/panel_service.dart';
+import 'package:Technoswitch/utils/site_service.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
 
 class SimpleSiteCreationController extends GetxController {
   SimpleSiteCreationController({required this.args});

@@ -1,5 +1,5 @@
 import 'package:get/get.dart';
-import 'package:techno_switch_solar_app/features/help/controllers/help_screen_controller.dart';
+import 'package:Technoswitch/features/help/controllers/help_screen_controller.dart';
 
 class HelpScreenBinding extends Bindings {
   @override

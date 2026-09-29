@@ -1,25 +1,25 @@
 import 'package:flutter/material.dart';
-import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
-import 'package:techno_switch_solar_app/features/logs/bindings/log_binding.dart';
-import 'package:techno_switch_solar_app/features/logs/controllers/log_controller.dart';
-import 'package:techno_switch_solar_app/features/logs/controllers/log_ui_delegate.dart';
-import 'package:techno_switch_solar_app/features/logs/models/log_flow_args.dart';
-import 'package:techno_switch_solar_app/features/logs/views/event_log_screen.dart';
-import 'package:techno_switch_solar_app/features/logs/views/log_retreival_completed_screen.dart';
-import 'package:techno_switch_solar_app/features/logs/widgets/clear_logs_dialog.dart';
-import 'package:techno_switch_solar_app/features/logs/widgets/stop_log_retrieval_dialog.dart';
-import 'package:techno_switch_solar_app/features/sites/bindings/site_binding.dart';
-import 'package:techno_switch_solar_app/features/sites/models/site_args.dart';
-import 'package:techno_switch_solar_app/features/sites/views/simple_site_creation_screen.dart';
-import 'package:techno_switch_solar_app/models/log_model.dart';
-import 'package:techno_switch_solar_app/utils/app/navigation_service.dart';
-import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
-import 'package:techno_switch_solar_app/widgets/dialogs/site_creation_dialog.dart'
+import 'package:Technoswitch/ble/blue_plus_adapter.dart';
+import 'package:Technoswitch/features/logs/bindings/log_binding.dart';
+import 'package:Technoswitch/features/logs/controllers/log_controller.dart';
+import 'package:Technoswitch/features/logs/controllers/log_ui_delegate.dart';
+import 'package:Technoswitch/features/logs/models/log_flow_args.dart';
+import 'package:Technoswitch/features/logs/views/event_log_screen.dart';
+import 'package:Technoswitch/features/logs/views/log_retreival_completed_screen.dart';
+import 'package:Technoswitch/features/logs/widgets/clear_logs_dialog.dart';
+import 'package:Technoswitch/features/logs/widgets/stop_log_retrieval_dialog.dart';
+import 'package:Technoswitch/features/sites/bindings/site_binding.dart';
+import 'package:Technoswitch/features/sites/models/site_args.dart';
+import 'package:Technoswitch/features/sites/views/simple_site_creation_screen.dart';
+import 'package:Technoswitch/models/log_model.dart';
+import 'package:Technoswitch/utils/app/navigation_service.dart';
+import 'package:Technoswitch/utils/constants/color_constants.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
+import 'package:Technoswitch/widgets/dialogs/site_creation_dialog.dart'
     as site_dialog;
-import 'package:techno_switch_solar_app/widgets/export_tile.dart';
-import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
-import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
+import 'package:Technoswitch/widgets/export_tile.dart';
+import 'package:Technoswitch/utils/constants/asset_constants.dart';
+import 'package:Technoswitch/utils/constants/style_constants.dart';
 
 mixin LogUiDelegateMixin<T extends StatefulWidget> on State<T>
     implements LogUiDelegate {

@@ -2,13 +2,14 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
-import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
-import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
-import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
-import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
+import 'package:Technoswitch/ble/blue_plus_adapter.dart';
+import 'package:Technoswitch/ble/controller/ble_log_controller.dart';
+import 'package:Technoswitch/utils/constants/asset_constants.dart';
+import 'package:Technoswitch/utils/constants/color_constants.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
 
-import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
+import 'package:Technoswitch/utils/constants/style_constants.dart';
+
 /// Copy for the shared BLE connecting dialog. Use [afterFirmwareUpgrade] for
 /// post-upgrade reconnect; [standard] matches the default connect flow.
 class BleConnectingDialogMessages {
@@ -39,8 +40,7 @@ class BleConnectingDialogMessages {
   static final afterFirmwareUpgrade = BleConnectingDialogMessages(
     connectingTitle: StringConstants.reconnecting,
     connectingSubtitle:
-        (_) =>
-            UiStrings.deviceRestartingSearchingForPanelMessage,
+        (_) => UiStrings.deviceRestartingSearchingForPanelMessage,
     connectedTitle: StringConstants.deviceConnectedTitle,
     connectedSubtitle: StringConstants.encryptingAndAuthenticating,
     handshakeCompleteSubtitle: StringConstants.preparing,

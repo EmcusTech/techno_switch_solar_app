@@ -1,4 +1,4 @@
-import 'package:techno_switch_solar_app/utils/logger.dart';
+import 'package:Technoswitch/utils/logger.dart';
 
 import '../models/site_model.dart';
 import '../models/log_model.dart';
@@ -7,7 +7,7 @@ import '../models/log_retrieval_model.dart';
 import 'storage/database_helper.dart';
 import 'panel_service.dart';
 import 'log_retrieval_service.dart';
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
 
 class SiteService {
   static final SiteService _instance = SiteService._internal();

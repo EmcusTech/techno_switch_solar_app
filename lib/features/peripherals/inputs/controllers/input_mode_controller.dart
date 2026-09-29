@@ -1,13 +1,13 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:techno_switch_solar_app/config/ble/input_setup_payload_debug.dart';
-import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
-import 'package:techno_switch_solar_app/config/ui/input_config_options.dart';
-import 'package:techno_switch_solar_app/config/ui/input_config_ui_bridge.dart';
-import 'package:techno_switch_solar_app/features/peripherals/shared/controllers/peripheral_mode_controller.dart';
-import 'package:techno_switch_solar_app/utils/panel_config/panel_config_cache_sync.dart';
-import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
+import 'package:Technoswitch/config/ble/input_setup_payload_debug.dart';
+import 'package:Technoswitch/ble/controller/ble_log_controller.dart';
+import 'package:Technoswitch/config/ui/input_config_options.dart';
+import 'package:Technoswitch/config/ui/input_config_ui_bridge.dart';
+import 'package:Technoswitch/features/peripherals/shared/controllers/peripheral_mode_controller.dart';
+import 'package:Technoswitch/utils/panel_config/panel_config_cache_sync.dart';
+import 'package:Technoswitch/utils/storage/peripheral_setup_cache.dart';
 
 /// Controller for the Input Mode bottom sheet.
 class InputModeController extends PeripheralModeController {
@@ -78,7 +78,10 @@ class InputModeController extends PeripheralModeController {
 
   @override
   void pushToManager() {
-    InputConfigUiBridge.applyToBleProcess(_currentUiState(), manager!.bleProcess);
+    InputConfigUiBridge.applyToBleProcess(
+      _currentUiState(),
+      manager!.bleProcess,
+    );
     if (kDebugMode) {
       InputSetupPayloadDebug.printApplyFrame(manager!);
     }

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
+import 'package:Technoswitch/utils/constants/color_constants.dart';
 
 class SiteCircleBackButton extends StatelessWidget {
   const SiteCircleBackButton({super.key, required this.onTap});

@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
-import 'package:techno_switch_solar_app/features/peripherals/walk_test/controllers/walk_test_zone_controller.dart';
-import 'package:techno_switch_solar_app/widgets/common/dropdown.dart';
-import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
-import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
+import 'package:Technoswitch/features/peripherals/walk_test/controllers/walk_test_zone_controller.dart';
+import 'package:Technoswitch/widgets/common/dropdown.dart';
+import 'package:Technoswitch/utils/constants/asset_constants.dart';
+import 'package:Technoswitch/utils/constants/color_constants.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
 
-import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
+import 'package:Technoswitch/utils/constants/style_constants.dart';
 
 class WalkTestZoneBottomSheet extends StatefulWidget {
   final String deviceId;

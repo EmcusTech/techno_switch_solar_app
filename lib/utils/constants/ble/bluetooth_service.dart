@@ -1,13 +1,13 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
-import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
+import 'package:Technoswitch/ble/blue_plus_adapter.dart';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:techno_switch_solar_app/ble/ble_manager.dart';
-import 'package:techno_switch_solar_app/utils/constants/ble/ble_constants.dart';
-import 'package:techno_switch_solar_app/utils/logger.dart';
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
+import 'package:Technoswitch/ble/ble_manager.dart';
+import 'package:Technoswitch/utils/constants/ble/ble_constants.dart';
+import 'package:Technoswitch/utils/logger.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
 
 class BluetoothService {
   final FlutterReactiveBle _ble = FlutterReactiveBle();

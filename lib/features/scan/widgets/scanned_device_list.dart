@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:techno_switch_solar_app/features/scan/controllers/scan_controller.dart';
-import 'package:techno_switch_solar_app/features/scan/models/scan_type.dart';
-import 'package:techno_switch_solar_app/features/scan/widgets/scanned_device_list_tile.dart';
-import 'package:techno_switch_solar_app/features/scan/widgets/scanned_empty_state.dart';
-import 'package:techno_switch_solar_app/utils/constants/ble/ble_name_utils.dart';
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
-import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
+import 'package:Technoswitch/features/scan/controllers/scan_controller.dart';
+import 'package:Technoswitch/features/scan/models/scan_type.dart';
+import 'package:Technoswitch/features/scan/widgets/scanned_device_list_tile.dart';
+import 'package:Technoswitch/features/scan/widgets/scanned_empty_state.dart';
+import 'package:Technoswitch/utils/constants/ble/ble_name_utils.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
+import 'package:Technoswitch/utils/constants/style_constants.dart';
 
 class ScannedDeviceList extends StatelessWidget {
   const ScannedDeviceList({super.key, required this.controller});
@@ -42,10 +42,12 @@ class ScannedDeviceList extends StatelessWidget {
                           scanType: scanType,
                           displayPrefix:
                               BleNameUtils.getDisplayPrefixFromBleName(rawName),
-                          displayId:
-                              BleNameUtils.getDisplayIdFromBleName(rawName),
+                          displayId: BleNameUtils.getDisplayIdFromBleName(
+                            rawName,
+                          ),
                           subtitle: controller.deviceSubtitle(device),
-                          onTap: () => controller.onDiscoveredDeviceTapped(device),
+                          onTap:
+                              () => controller.onDiscoveredDeviceTapped(device),
                         );
                       },
                     ),

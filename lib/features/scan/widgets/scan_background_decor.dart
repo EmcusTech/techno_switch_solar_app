@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
+import 'package:Technoswitch/utils/constants/asset_constants.dart';
 
 class ScanBackgroundDecor extends StatelessWidget {
   const ScanBackgroundDecor({super.key});

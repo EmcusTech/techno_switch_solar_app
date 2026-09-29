@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
-import 'package:techno_switch_solar_app/ble/ble_manager.dart';
-import 'package:techno_switch_solar_app/utils/peripherals/peripheral_cache_to_ble.dart';
-import 'package:techno_switch_solar_app/utils/peripherals/peripheral_config_snapshot.dart';
-import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
+import 'package:Technoswitch/ble/ble_manager.dart';
+import 'package:Technoswitch/utils/peripherals/peripheral_cache_to_ble.dart';
+import 'package:Technoswitch/utils/peripherals/peripheral_config_snapshot.dart';
+import 'package:Technoswitch/utils/storage/peripheral_setup_cache.dart';
 
 class PanelConfigRefreshNotifiers {
   PanelConfigRefreshNotifiers({

@@ -1,8 +1,8 @@
-import 'package:techno_switch_solar_app/ble/ble_process.dart';
-import 'package:techno_switch_solar_app/config/ble/zone_setup_payload.dart';
-import 'package:techno_switch_solar_app/config/structs/zone_cfg_def.dart';
-import 'package:techno_switch_solar_app/config/ui/zone_config_options.dart';
-import 'package:techno_switch_solar_app/utils/peripherals/defaults/zone_defaults.dart';
+import 'package:Technoswitch/ble/ble_process.dart';
+import 'package:Technoswitch/config/ble/zone_setup_payload.dart';
+import 'package:Technoswitch/config/structs/zone_cfg_def.dart';
+import 'package:Technoswitch/config/ui/zone_config_options.dart';
+import 'package:Technoswitch/utils/peripherals/defaults/zone_defaults.dart';
 
 /// UI-facing state for one zone in the Zone configuration sheet.
 class ZoneUiState {
@@ -48,10 +48,7 @@ abstract final class ZoneConfigUiBridge {
     );
   }
 
-  static ZoneCfgDef toStruct(
-    ZoneUiState ui, {
-    bool? test,
-  }) {
+  static ZoneCfgDef toStruct(ZoneUiState ui, {bool? test}) {
     final verifyTime =
         int.tryParse(ui.verificationTime) ??
         int.tryParse(ZoneDefaults.verificationTime) ??
@@ -101,7 +98,8 @@ abstract final class ZoneConfigUiBridge {
     List<bool>? testFlags,
   }) {
     for (var i = 0; i < zones.length; i++) {
-      final test = testFlags != null && i < testFlags.length ? testFlags[i] : null;
+      final test =
+          testFlags != null && i < testFlags.length ? testFlags[i] : null;
       applyToBleProcess(zones[i], process, test: test);
     }
   }

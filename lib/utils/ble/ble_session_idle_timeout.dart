@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:techno_switch_solar_app/ble/ble_session_idle_policy.dart';
-import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
+import 'package:Technoswitch/ble/ble_session_idle_policy.dart';
+import 'package:Technoswitch/ble/controller/ble_log_controller.dart';
 
 /// Resets a 5-minute idle timer on any pointer down while BLE is connected,
 /// handshake is complete, and [BleSessionIdlePolicy.suppressIdleDisconnect] is false;

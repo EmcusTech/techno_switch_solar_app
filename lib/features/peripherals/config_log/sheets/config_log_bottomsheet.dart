@@ -4,17 +4,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
-import 'package:techno_switch_solar_app/ble/ble_manager.dart';
-import 'package:techno_switch_solar_app/features/peripherals/config_log/controllers/config_log_controller.dart';
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
-import 'package:techno_switch_solar_app/utils/peripherals/peripheral_config_snapshot.dart';
-import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
-import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
-import 'package:techno_switch_solar_app/widgets/common/dropdown.dart';
+import 'package:Technoswitch/ble/ble_manager.dart';
+import 'package:Technoswitch/features/peripherals/config_log/controllers/config_log_controller.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
+import 'package:Technoswitch/utils/peripherals/peripheral_config_snapshot.dart';
+import 'package:Technoswitch/utils/constants/asset_constants.dart';
+import 'package:Technoswitch/utils/constants/color_constants.dart';
+import 'package:Technoswitch/widgets/common/dropdown.dart';
 
-import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
+import 'package:Technoswitch/utils/constants/style_constants.dart';
 
-export 'package:techno_switch_solar_app/features/peripherals/config_log/controllers/config_log_controller.dart'
+export 'package:Technoswitch/features/peripherals/config_log/controllers/config_log_controller.dart'
     show ConfigLogPresentationStyle;
 
 class ConfigLogBottomSheet extends StatefulWidget {

@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
-import 'package:techno_switch_solar_app/features/logs/bindings/log_binding.dart';
-import 'package:techno_switch_solar_app/features/logs/controllers/log_controller.dart';
-import 'package:techno_switch_solar_app/features/logs/views/log_ui_delegate_mixin.dart';
-import 'package:techno_switch_solar_app/features/logs/widgets/event_log_content_section.dart';
-import 'package:techno_switch_solar_app/features/logs/widgets/event_log_filter_bottom_sheet.dart';
-import 'package:techno_switch_solar_app/models/log_model.dart';
-import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
-import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
-import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
+import 'package:Technoswitch/features/logs/bindings/log_binding.dart';
+import 'package:Technoswitch/features/logs/controllers/log_controller.dart';
+import 'package:Technoswitch/features/logs/views/log_ui_delegate_mixin.dart';
+import 'package:Technoswitch/features/logs/widgets/event_log_content_section.dart';
+import 'package:Technoswitch/features/logs/widgets/event_log_filter_bottom_sheet.dart';
+import 'package:Technoswitch/models/log_model.dart';
+import 'package:Technoswitch/utils/constants/style_constants.dart';
+import 'package:Technoswitch/utils/constants/color_constants.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
+import 'package:Technoswitch/utils/constants/asset_constants.dart';
 
 class EventLogScreen extends StatelessWidget {
   const EventLogScreen({super.key, this.fromLogHistory = false});

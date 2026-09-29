@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:techno_switch_solar_app/features/scan/models/scan_type.dart';
+import 'package:Technoswitch/features/scan/models/scan_type.dart';
 
 enum ScanFlowMode { scanning, scanned }
 

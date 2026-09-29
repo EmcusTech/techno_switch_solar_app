@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:techno_switch_solar_app/features/test_mode/controllers/test_mode_controller.dart';
-import 'package:techno_switch_solar_app/features/test_mode/widgets/test_mode_menu_option.dart';
-import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
-import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
-import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
+import 'package:Technoswitch/features/test_mode/controllers/test_mode_controller.dart';
+import 'package:Technoswitch/features/test_mode/widgets/test_mode_menu_option.dart';
+import 'package:Technoswitch/utils/constants/asset_constants.dart';
+import 'package:Technoswitch/utils/constants/color_constants.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
+import 'package:Technoswitch/utils/constants/style_constants.dart';
 
 class TestModeContentPanel extends StatelessWidget {
   const TestModeContentPanel({super.key, required this.controller});

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:techno_switch_solar_app/features/help/models/help_faq_item.dart';
-import 'package:techno_switch_solar_app/features/help/widgets/help_card.dart';
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
-import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
+import 'package:Technoswitch/features/help/models/help_faq_item.dart';
+import 'package:Technoswitch/features/help/widgets/help_card.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
+import 'package:Technoswitch/utils/constants/style_constants.dart';
 
 class HelpFaqSection extends StatelessWidget {
   const HelpFaqSection({super.key, required this.items});

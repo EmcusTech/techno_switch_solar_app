@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:lottie/lottie.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
-import 'package:techno_switch_solar_app/ble/ble_manager.dart';
-import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
-import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
-import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
+import 'package:Technoswitch/ble/ble_manager.dart';
+import 'package:Technoswitch/utils/constants/asset_constants.dart';
+import 'package:Technoswitch/utils/constants/color_constants.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
+import 'package:Technoswitch/utils/constants/style_constants.dart';
 
 class LogRetrievalLoadingContent extends StatelessWidget {
   const LogRetrievalLoadingContent({
@@ -37,11 +37,7 @@ class LogRetrievalLoadingContent extends StatelessWidget {
             ),
           ),
         ),
-        Lottie.asset(
-          AssetConstants.fetchingLogJson,
-          height: 320,
-          width: 320,
-        ),
+        Lottie.asset(AssetConstants.fetchingLogJson, height: 320, width: 320),
         Padding(
           padding: const EdgeInsets.only(top: 80),
           child: ValueListenableBuilder<String>(
@@ -63,8 +59,7 @@ class LogRetrievalLoadingContent extends StatelessWidget {
             child: ValueListenableBuilder<int>(
               valueListenable: ble.bleProcess.read1000LogsCount,
               builder: (context, readCount, _) {
-                final percent =
-                    (readCount / 1000.0).clamp(0.0, 1.0).toDouble();
+                final percent = (readCount / 1000.0).clamp(0.0, 1.0).toDouble();
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   mainAxisAlignment: MainAxisAlignment.end,

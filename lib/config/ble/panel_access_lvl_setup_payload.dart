@@ -1,10 +1,10 @@
 import 'dart:typed_data';
 
-import 'package:techno_switch_solar_app/ble/ble_manager.dart';
-import 'package:techno_switch_solar_app/config/ble/config_setup_payload.dart';
-import 'package:techno_switch_solar_app/config/structs/panel_access_lvl_cfg_def.dart';
-import 'package:techno_switch_solar_app/config/system_config_limits.dart';
-import 'package:techno_switch_solar_app/models/access_code_mode_model.dart';
+import 'package:Technoswitch/ble/ble_manager.dart';
+import 'package:Technoswitch/config/ble/config_setup_payload.dart';
+import 'package:Technoswitch/config/structs/panel_access_lvl_cfg_def.dart';
+import 'package:Technoswitch/config/system_config_limits.dart';
+import 'package:Technoswitch/models/access_code_mode_model.dart';
 
 /// SETUP_ACCESS_CODE data section inside the 216-byte BLE frame.
 ///

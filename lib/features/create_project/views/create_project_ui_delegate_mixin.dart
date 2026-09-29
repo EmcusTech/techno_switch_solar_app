@@ -1,23 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
-import 'package:techno_switch_solar_app/features/create_project/controllers/create_project_ui_delegate.dart';
-import 'package:techno_switch_solar_app/features/dashboard/bindings/project_dashboard_binding.dart';
-import 'package:techno_switch_solar_app/features/dashboard/models/project_dashboard_args.dart';
-import 'package:techno_switch_solar_app/features/dashboard/views/project_dashboard.dart';
-import 'package:techno_switch_solar_app/features/scan/bindings/scan_binding.dart';
-import 'package:techno_switch_solar_app/features/scan/models/scan_flow_args.dart';
-import 'package:techno_switch_solar_app/features/scan/views/scanning_screen.dart';
-import 'package:techno_switch_solar_app/features/sites/bindings/site_binding.dart';
-import 'package:techno_switch_solar_app/features/sites/models/site_args.dart';
-import 'package:techno_switch_solar_app/features/sites/views/site_screen.dart';
-import 'package:techno_switch_solar_app/features/create_project/widgets/disconnect_device_dialog.dart';
-import 'package:techno_switch_solar_app/models/site_model.dart';
-import 'package:techno_switch_solar_app/utils/constants/ble/ble_name_utils.dart';
-import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
-import 'package:techno_switch_solar_app/utils/site_service.dart';
-import 'package:techno_switch_solar_app/widgets/dialogs/app_styled_dialogs.dart';
+import 'package:Technoswitch/ble/blue_plus_adapter.dart';
+import 'package:Technoswitch/features/create_project/controllers/create_project_ui_delegate.dart';
+import 'package:Technoswitch/features/dashboard/bindings/project_dashboard_binding.dart';
+import 'package:Technoswitch/features/dashboard/models/project_dashboard_args.dart';
+import 'package:Technoswitch/features/dashboard/views/project_dashboard.dart';
+import 'package:Technoswitch/features/scan/bindings/scan_binding.dart';
+import 'package:Technoswitch/features/scan/models/scan_flow_args.dart';
+import 'package:Technoswitch/features/scan/views/scanning_screen.dart';
+import 'package:Technoswitch/features/sites/bindings/site_binding.dart';
+import 'package:Technoswitch/features/sites/models/site_args.dart';
+import 'package:Technoswitch/features/sites/views/site_screen.dart';
+import 'package:Technoswitch/features/create_project/widgets/disconnect_device_dialog.dart';
+import 'package:Technoswitch/models/site_model.dart';
+import 'package:Technoswitch/utils/constants/ble/ble_name_utils.dart';
+import 'package:Technoswitch/utils/constants/color_constants.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
+import 'package:Technoswitch/utils/site_service.dart';
+import 'package:Technoswitch/widgets/dialogs/app_styled_dialogs.dart';
 
 mixin CreateProjectUiDelegateMixin<T extends StatefulWidget> on State<T>
     implements CreateProjectUiDelegate {

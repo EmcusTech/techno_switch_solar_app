@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
-import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
+import 'package:Technoswitch/utils/constants/asset_constants.dart';
+import 'package:Technoswitch/utils/constants/color_constants.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
 
-import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
+import 'package:Technoswitch/utils/constants/style_constants.dart';
+
 /// Reusable dropdown field widget with consistent styling
 class CustomDropdownFieldWidget extends StatelessWidget {
   final String label;
@@ -24,19 +25,13 @@ class CustomDropdownFieldWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Text(
-          label,
-          style: StyleConstants.textSecondary13w600Style,
-        ),
+        Text(label, style: StyleConstants.textSecondary13w600Style),
         Spacer(),
         GestureDetector(
           onTap: () => _showDropdownDialog(context),
           child: Row(
             children: [
-              Text(
-                value,
-                style: StyleConstants.textDark13w400Style,
-              ),
+              Text(value, style: StyleConstants.textDark13w400Style),
               SizedBox(width: 2),
               SvgPicture.asset(AssetConstants.dropDownRedIcon),
             ],
@@ -56,10 +51,7 @@ class CustomDropdownFieldWidget extends StatelessWidget {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          title: Text(
-            label,
-            style: StyleConstants.textBodyDark18w600Style,
-          ),
+          title: Text(label, style: StyleConstants.textBodyDark18w600Style),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children:

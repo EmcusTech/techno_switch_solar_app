@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:techno_switch_solar_app/features/settings/controllers/settings_controller.dart';
-import 'package:techno_switch_solar_app/features/settings/widgets/settings_menu_list.dart';
-import 'package:techno_switch_solar_app/features/settings/widgets/settings_panel_header.dart';
-import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
+import 'package:Technoswitch/features/settings/controllers/settings_controller.dart';
+import 'package:Technoswitch/features/settings/widgets/settings_menu_list.dart';
+import 'package:Technoswitch/features/settings/widgets/settings_panel_header.dart';
+import 'package:Technoswitch/utils/constants/color_constants.dart';
 
 class SettingsContentPanel extends StatelessWidget {
   const SettingsContentPanel({super.key, required this.controller});

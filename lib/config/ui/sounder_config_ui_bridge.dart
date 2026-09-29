@@ -1,8 +1,8 @@
-import 'package:techno_switch_solar_app/ble/ble_process.dart';
-import 'package:techno_switch_solar_app/config/ble/sounder_setup_payload.dart';
-import 'package:techno_switch_solar_app/config/structs/sounder_cfg_def.dart';
-import 'package:techno_switch_solar_app/config/ui/sounder_config_options.dart';
-import 'package:techno_switch_solar_app/utils/peripherals/defaults/sounder_defaults.dart';
+import 'package:Technoswitch/ble/ble_process.dart';
+import 'package:Technoswitch/config/ble/sounder_setup_payload.dart';
+import 'package:Technoswitch/config/structs/sounder_cfg_def.dart';
+import 'package:Technoswitch/config/ui/sounder_config_options.dart';
+import 'package:Technoswitch/utils/peripherals/defaults/sounder_defaults.dart';
 
 /// UI-facing state for one main sounder in the Sounder configuration sheet.
 class SounderUiState {
@@ -72,10 +72,7 @@ abstract final class SounderConfigUiBridge {
     );
   }
 
-  static SounderCfgDef toStruct(
-    SounderUiState ui, {
-    bool? test,
-  }) {
+  static SounderCfgDef toStruct(SounderUiState ui, {bool? test}) {
     final groupIndex = SounderConfigOptions.groupIndex(ui.group);
     final functionNo =
         int.tryParse(ui.functionNo.trim()) ??
@@ -117,7 +114,9 @@ abstract final class SounderConfigUiBridge {
   }
 
   static SounderUiState fromBleProcess(BleProcess process, int sounderIndex) {
-    return fromStruct(SounderSetupPayload.fromBleProcess(process, sounderIndex));
+    return fromStruct(
+      SounderSetupPayload.fromBleProcess(process, sounderIndex),
+    );
   }
 
   static void applyToBleProcess(

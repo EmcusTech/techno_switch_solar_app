@@ -1,4 +1,4 @@
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
 
 /// Factory defaults for General module configuration.
 abstract final class GeneralModuleDefaults {

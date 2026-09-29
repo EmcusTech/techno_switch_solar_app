@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:techno_switch_solar_app/features/logs/controllers/log_controller.dart';
-import 'package:techno_switch_solar_app/features/logs/views/log_ui_delegate_mixin.dart';
-import 'package:techno_switch_solar_app/features/logs/widgets/log_retrieval_failed_content.dart';
-import 'package:techno_switch_solar_app/features/logs/widgets/log_retrieval_shell.dart';
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
+import 'package:Technoswitch/features/logs/controllers/log_controller.dart';
+import 'package:Technoswitch/features/logs/views/log_ui_delegate_mixin.dart';
+import 'package:Technoswitch/features/logs/widgets/log_retrieval_failed_content.dart';
+import 'package:Technoswitch/features/logs/widgets/log_retrieval_shell.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
 
 class LogRetrievalFailedScreen extends StatefulWidget {
   const LogRetrievalFailedScreen({super.key});

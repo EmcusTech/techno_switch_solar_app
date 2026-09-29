@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
-import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
+import 'package:Technoswitch/utils/constants/asset_constants.dart';
 
 /// Shown after panel access code validation succeeds (before sheet closes).
 class AccessCodeSuccessLottieWidget extends StatelessWidget {

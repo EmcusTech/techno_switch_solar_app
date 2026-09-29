@@ -1,6 +1,6 @@
-import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
-import 'package:techno_switch_solar_app/features/scan/models/scan_type.dart';
-import 'package:techno_switch_solar_app/models/log_model.dart';
+import 'package:Technoswitch/ble/blue_plus_adapter.dart';
+import 'package:Technoswitch/features/scan/models/scan_type.dart';
+import 'package:Technoswitch/models/log_model.dart';
 
 enum LogFlowMode { history, loading, completed, failed, eventLog }
 

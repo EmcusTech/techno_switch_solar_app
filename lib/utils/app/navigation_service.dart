@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:techno_switch_solar_app/utils/app/app_services.dart';
-import 'package:techno_switch_solar_app/utils/app/app_state.dart';
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
+import 'package:Technoswitch/utils/app/app_services.dart';
+import 'package:Technoswitch/utils/app/app_state.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
 
 final RouteObserver<ModalRoute<void>> appRouteObserver =
     RouteObserver<ModalRoute<void>>();

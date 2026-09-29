@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
-import 'package:techno_switch_solar_app/utils/panel_service.dart';
-import 'package:techno_switch_solar_app/utils/site_service.dart';
-import 'package:techno_switch_solar_app/utils/constants/ble/ble_name_utils.dart';
-import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
-import 'package:techno_switch_solar_app/widgets/dialogs/app_styled_dialogs.dart';
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
+import 'package:Technoswitch/ble/blue_plus_adapter.dart';
+import 'package:Technoswitch/utils/panel_service.dart';
+import 'package:Technoswitch/utils/site_service.dart';
+import 'package:Technoswitch/utils/constants/ble/ble_name_utils.dart';
+import 'package:Technoswitch/utils/storage/peripheral_setup_cache.dart';
+import 'package:Technoswitch/widgets/dialogs/app_styled_dialogs.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
 
 class PanelSiteConnectFlow {
   PanelSiteConnectFlow._();

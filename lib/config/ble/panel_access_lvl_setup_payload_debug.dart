@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
-import 'package:techno_switch_solar_app/ble/ble_manager.dart';
-import 'package:techno_switch_solar_app/config/system_config_limits.dart';
+import 'package:Technoswitch/ble/ble_manager.dart';
+import 'package:Technoswitch/config/system_config_limits.dart';
 
 /// Debug helpers for inspecting SETUP_ACCESS_CODE 216-byte apply frames.
 abstract final class PanelAccessLvlSetupPayloadDebug {

@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
-import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
-import 'package:techno_switch_solar_app/features/logs/bindings/log_binding.dart';
-import 'package:techno_switch_solar_app/features/logs/models/log_flow_args.dart';
-import 'package:techno_switch_solar_app/features/logs/views/log_retrieval_loading_screen.dart';
-import 'package:techno_switch_solar_app/features/scan/models/scan_type.dart';
-import 'package:techno_switch_solar_app/widgets/common/common_numeric_keypad_widget.dart';
-import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
+import 'package:Technoswitch/ble/blue_plus_adapter.dart';
+import 'package:Technoswitch/ble/controller/ble_log_controller.dart';
+import 'package:Technoswitch/features/logs/bindings/log_binding.dart';
+import 'package:Technoswitch/features/logs/models/log_flow_args.dart';
+import 'package:Technoswitch/features/logs/views/log_retrieval_loading_screen.dart';
+import 'package:Technoswitch/features/scan/models/scan_type.dart';
+import 'package:Technoswitch/widgets/common/common_numeric_keypad_widget.dart';
+import 'package:Technoswitch/utils/constants/color_constants.dart';
 
 Future<bool> _showPanelAccessCodeBottomSheet({
   required BuildContext context,

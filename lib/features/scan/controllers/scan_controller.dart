@@ -4,22 +4,22 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:techno_switch_solar_app/ble/ble_manager.dart';
-import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
-import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
-import 'package:techno_switch_solar_app/features/dashboard/models/project_dashboard_args.dart';
-import 'package:techno_switch_solar_app/features/logs/models/log_flow_args.dart';
-import 'package:techno_switch_solar_app/features/scan/controllers/scan_ui_delegate.dart';
-import 'package:techno_switch_solar_app/features/scan/models/scan_flow_args.dart';
-import 'package:techno_switch_solar_app/features/scan/models/scan_type.dart';
-import 'package:techno_switch_solar_app/utils/constants/ble/bluetooth_service.dart';
-import 'package:techno_switch_solar_app/utils/constants/ble/ble_name_utils.dart';
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
-import 'package:techno_switch_solar_app/utils/ble/bootloader_connect_flow.dart';
-import 'package:techno_switch_solar_app/utils/panel_service.dart';
-import 'package:techno_switch_solar_app/utils/panel_site_connect_flow.dart';
-import 'package:techno_switch_solar_app/utils/site_service.dart';
-import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
+import 'package:Technoswitch/ble/ble_manager.dart';
+import 'package:Technoswitch/ble/blue_plus_adapter.dart';
+import 'package:Technoswitch/ble/controller/ble_log_controller.dart';
+import 'package:Technoswitch/features/dashboard/models/project_dashboard_args.dart';
+import 'package:Technoswitch/features/logs/models/log_flow_args.dart';
+import 'package:Technoswitch/features/scan/controllers/scan_ui_delegate.dart';
+import 'package:Technoswitch/features/scan/models/scan_flow_args.dart';
+import 'package:Technoswitch/features/scan/models/scan_type.dart';
+import 'package:Technoswitch/utils/constants/ble/bluetooth_service.dart';
+import 'package:Technoswitch/utils/constants/ble/ble_name_utils.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
+import 'package:Technoswitch/utils/ble/bootloader_connect_flow.dart';
+import 'package:Technoswitch/utils/panel_service.dart';
+import 'package:Technoswitch/utils/panel_site_connect_flow.dart';
+import 'package:Technoswitch/utils/site_service.dart';
+import 'package:Technoswitch/utils/storage/peripheral_setup_cache.dart';
 import 'package:usb_serial/usb_serial.dart';
 
 class ScanController extends GetxController {
@@ -63,7 +63,8 @@ class ScanController extends GetxController {
 
   bool get isLiveEvent => args.isLiveEvent;
   bool get isLiveEventLogs => args.isLiveEventLogs;
-  String? get createProjectExpectedPanelType => args.createProjectExpectedPanelType;
+  String? get createProjectExpectedPanelType =>
+      args.createProjectExpectedPanelType;
   VoidCallback? get onCreateProjectPanelVerified =>
       args.onCreateProjectPanelVerified;
   ScanFlowMode get flowMode => args.mode;
@@ -88,10 +89,7 @@ class ScanController extends GetxController {
     }
   }
 
-  void setAnimationCallbacks({
-    VoidCallback? pause,
-    VoidCallback? resume,
-  }) {
+  void setAnimationCallbacks({VoidCallback? pause, VoidCallback? resume}) {
     _pauseAnimationsCallback = pause;
     _resumeAnimationsCallback = resume;
   }
@@ -556,8 +554,10 @@ class ScanController extends GetxController {
     stopScanningForConnection();
     _ui?.showConnectingDialog(
       device,
-      onPauseAnimations: isScanningConnectFlow ? _pauseAnimationsCallback : null,
-      onResumeAnimations: isScanningConnectFlow ? _resumeAnimationsCallback : null,
+      onPauseAnimations:
+          isScanningConnectFlow ? _pauseAnimationsCallback : null,
+      onResumeAnimations:
+          isScanningConnectFlow ? _resumeAnimationsCallback : null,
       isScanningConnectFlow: isScanningConnectFlow,
     );
     await bleLogController.connectToDevice(device: device);
@@ -643,10 +643,7 @@ class ScanController extends GetxController {
     }
   }
 
-  bool panelTypeMatchesReceived(
-    String expectedPanelType,
-    String receivedName,
-  ) {
+  bool panelTypeMatchesReceived(String expectedPanelType, String receivedName) {
     final e = expectedPanelType.trim().toUpperCase();
     final r = receivedName.trim().toUpperCase();
     if (e.isEmpty || r.isEmpty) return false;

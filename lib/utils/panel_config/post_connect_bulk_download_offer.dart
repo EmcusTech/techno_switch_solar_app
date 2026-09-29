@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
-import 'package:techno_switch_solar_app/ble/ble_manager.dart';
-import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
-import 'package:techno_switch_solar_app/utils/panel_config/panel_config_cache_sync.dart';
-import 'package:techno_switch_solar_app/utils/panel_config/panel_configuration_coordinator.dart';
-import 'package:techno_switch_solar_app/utils/panel_config/post_connect_config_log_compare.dart';
-import 'package:techno_switch_solar_app/widgets/dialogs/app_styled_dialogs.dart';
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
+import 'package:Technoswitch/ble/blue_plus_adapter.dart';
+import 'package:Technoswitch/ble/ble_manager.dart';
+import 'package:Technoswitch/ble/controller/ble_log_controller.dart';
+import 'package:Technoswitch/utils/panel_config/panel_config_cache_sync.dart';
+import 'package:Technoswitch/utils/panel_config/panel_configuration_coordinator.dart';
+import 'package:Technoswitch/utils/panel_config/post_connect_config_log_compare.dart';
+import 'package:Technoswitch/widgets/dialogs/app_styled_dialogs.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
 
 PanelConfigRefreshNotifiers _ephemeralPanelRefreshNotifiers() {
   return PanelConfigRefreshNotifiers(

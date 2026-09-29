@@ -1,18 +1,18 @@
 import 'dart:typed_data';
 
 import 'package:get/get.dart';
-import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
-import 'package:techno_switch_solar_app/features/dashboard/models/project_dashboard_args.dart';
-import 'package:techno_switch_solar_app/features/sites/controllers/site_ui_delegate.dart';
-import 'package:techno_switch_solar_app/features/sites/models/site_args.dart';
-import 'package:techno_switch_solar_app/models/panel_model.dart';
-import 'package:techno_switch_solar_app/models/site_model.dart';
-import 'package:techno_switch_solar_app/utils/log_retrieval_service.dart';
-import 'package:techno_switch_solar_app/utils/logger.dart';
-import 'package:techno_switch_solar_app/utils/panel_service.dart';
-import 'package:techno_switch_solar_app/utils/site_service.dart';
-import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
+import 'package:Technoswitch/ble/blue_plus_adapter.dart';
+import 'package:Technoswitch/features/dashboard/models/project_dashboard_args.dart';
+import 'package:Technoswitch/features/sites/controllers/site_ui_delegate.dart';
+import 'package:Technoswitch/features/sites/models/site_args.dart';
+import 'package:Technoswitch/models/panel_model.dart';
+import 'package:Technoswitch/models/site_model.dart';
+import 'package:Technoswitch/utils/log_retrieval_service.dart';
+import 'package:Technoswitch/utils/logger.dart';
+import 'package:Technoswitch/utils/panel_service.dart';
+import 'package:Technoswitch/utils/site_service.dart';
+import 'package:Technoswitch/utils/constants/color_constants.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
 
 class SiteController extends GetxController {
   SiteController({required this.args});

@@ -1,7 +1,7 @@
 import 'package:get/get.dart';
-import 'package:techno_switch_solar_app/features/help/controllers/help_screen_ui_delegate.dart';
-import 'package:techno_switch_solar_app/features/help/models/help_faq_item.dart';
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
+import 'package:Technoswitch/features/help/controllers/help_screen_ui_delegate.dart';
+import 'package:Technoswitch/features/help/models/help_faq_item.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
 
 class HelpScreenController extends GetxController {
   HelpScreenUiDelegate? _ui;

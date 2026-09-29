@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:techno_switch_solar_app/features/create_project/widgets/create_project_step_form_shell.dart';
-import 'package:techno_switch_solar_app/features/create_project/widgets/create_project_validated_field.dart';
-import 'package:techno_switch_solar_app/features/create_project/widgets/panel_type_tile.dart';
-import 'package:techno_switch_solar_app/models/create_project/panel_selection_page_model.dart';
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
+import 'package:Technoswitch/features/create_project/widgets/create_project_step_form_shell.dart';
+import 'package:Technoswitch/features/create_project/widgets/create_project_validated_field.dart';
+import 'package:Technoswitch/features/create_project/widgets/panel_type_tile.dart';
+import 'package:Technoswitch/models/create_project/panel_selection_page_model.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
 
 class PanelSelectionForm extends StatelessWidget {
   const PanelSelectionForm({super.key, required this.model});

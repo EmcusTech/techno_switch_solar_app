@@ -1,6 +1,6 @@
 import 'package:get/get.dart';
-import 'package:techno_switch_solar_app/features/test_mode/controllers/test_mode_controller.dart';
-import 'package:techno_switch_solar_app/features/test_mode/models/test_mode_args.dart';
+import 'package:Technoswitch/features/test_mode/controllers/test_mode_controller.dart';
+import 'package:Technoswitch/features/test_mode/models/test_mode_args.dart';
 
 class TestModeBinding extends Bindings {
   TestModeBinding({required this.args});

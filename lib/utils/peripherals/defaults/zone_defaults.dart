@@ -1,4 +1,4 @@
-import 'package:techno_switch_solar_app/utils/constants/strings/panel_values.dart';
+import 'package:Technoswitch/utils/constants/strings/panel_values.dart';
 
 /// Factory defaults for Zone configuration (all three zones).
 abstract final class ZoneDefaults {
@@ -10,6 +10,7 @@ abstract final class ZoneDefaults {
   static const bool testBle = false;
   static const String modeLabel = PanelValues.zoneModeImmediate;
   static const int detectionModeBle = 0;
+
   /// Immediate/Normal modes require 0s; Confirmed requires 30s per [ZoneModeController].
   static const String verificationTime = '0';
 

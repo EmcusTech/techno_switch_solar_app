@@ -1,6 +1,6 @@
-import 'package:techno_switch_solar_app/models/log_model.dart';
-import 'package:techno_switch_solar_app/models/site_model.dart';
-import 'package:techno_switch_solar_app/utils/site_service.dart';
+import 'package:Technoswitch/models/log_model.dart';
+import 'package:Technoswitch/models/site_model.dart';
+import 'package:Technoswitch/utils/site_service.dart';
 
 class SiteArgs {
   const SiteArgs({

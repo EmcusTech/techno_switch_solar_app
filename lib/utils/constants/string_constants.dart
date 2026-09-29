@@ -873,6 +873,10 @@ abstract final class StringConstants {
   static const String tapOnUpdateToUpdateTheFirmware =
       "Tap on Update to update the firmware.";
   static const String tapToConnect = "Tap to connect";
+  static const String connectViaUsb = "Connect Via USB";
+  static const String connectDevice = "Connect Device";
+  static const String tapToConnectDescription =
+      "Connect your device to start setting\nup or maintaining fire alarm panel";
   static const String tapToScanAgain = "Tap to Scan Again";
   static const String technoswitch = "TECHNOSWITCH_";
   static const String test = "Test";
@@ -1289,4 +1293,10 @@ abstract final class StringConstants {
   ) =>
       '$binFileHardwareVersionLabel$binHardware\n'
       '$bleHardwareVersionLabel$bleHardware';
+
+  //Windows
+  static const String usbConnectText = 'Connect Via USB';
+  static const String connectSubText =
+      'Connect your device to start setting up or\nmaintaining fire alarm panel';
+  static const String bleConnectText = 'Connect Via BLE';
 }

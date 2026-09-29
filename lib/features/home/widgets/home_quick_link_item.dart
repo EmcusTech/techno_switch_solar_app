@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
-import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
+import 'package:Technoswitch/utils/constants/color_constants.dart';
+import 'package:Technoswitch/utils/constants/style_constants.dart';
 
 class HomeQuickLinkItem extends StatelessWidget {
   const HomeQuickLinkItem({
@@ -26,9 +26,7 @@ class HomeQuickLinkItem extends StatelessWidget {
           height: 64,
           decoration: BoxDecoration(
             color:
-                isEnabled
-                    ? ColorConstants.transparent
-                    : Colors.grey.shade200,
+                isEnabled ? ColorConstants.transparent : Colors.grey.shade200,
             border: Border.all(
               color:
                   isEnabled

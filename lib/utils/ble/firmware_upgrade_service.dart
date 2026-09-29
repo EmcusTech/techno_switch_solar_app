@@ -3,7 +3,7 @@ import 'dart:typed_data';
 
 import 'package:dio/dio.dart' as dio show Response;
 import 'package:file_picker/file_picker.dart';
-import 'package:techno_switch_solar_app/models/ble/firmware/firmware_bin_format.dart';
+import 'package:Technoswitch/models/ble/firmware/firmware_bin_format.dart';
 
 class FirmwareValidationResult {
   final bool isValid;

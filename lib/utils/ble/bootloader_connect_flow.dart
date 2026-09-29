@@ -2,19 +2,19 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:techno_switch_solar_app/ble/ble_manager.dart';
-import 'package:techno_switch_solar_app/ble/blue_plus_adapter.dart';
-import 'package:techno_switch_solar_app/ble/controller/ble_log_controller.dart';
-import 'package:techno_switch_solar_app/bindings/firmware_binding.dart';
-import 'package:techno_switch_solar_app/features/peripherals/firmware/controllers/firmware_controller.dart';
-import 'package:techno_switch_solar_app/utils/constants/ble/ble_msd_utils.dart';
-import 'package:techno_switch_solar_app/utils/constants/ble/ble_name_utils.dart';
-import 'package:techno_switch_solar_app/utils/constants/ble/bluetooth_service.dart';
-import 'package:techno_switch_solar_app/widgets/dialogs/app_styled_dialogs.dart';
-import 'package:techno_switch_solar_app/widgets/dialogs/ble_connecting_dialog.dart';
-import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
-import 'package:techno_switch_solar_app/features/peripherals/firmware/sheets/firmware_upgrade_bottom_sheet.dart';
+import 'package:Technoswitch/ble/ble_manager.dart';
+import 'package:Technoswitch/ble/blue_plus_adapter.dart';
+import 'package:Technoswitch/ble/controller/ble_log_controller.dart';
+import 'package:Technoswitch/bindings/firmware_binding.dart';
+import 'package:Technoswitch/features/peripherals/firmware/controllers/firmware_controller.dart';
+import 'package:Technoswitch/utils/constants/ble/ble_msd_utils.dart';
+import 'package:Technoswitch/utils/constants/ble/ble_name_utils.dart';
+import 'package:Technoswitch/utils/constants/ble/bluetooth_service.dart';
+import 'package:Technoswitch/widgets/dialogs/app_styled_dialogs.dart';
+import 'package:Technoswitch/widgets/dialogs/ble_connecting_dialog.dart';
+import 'package:Technoswitch/utils/constants/color_constants.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
+import 'package:Technoswitch/features/peripherals/firmware/sheets/firmware_upgrade_bottom_sheet.dart';
 
 /// True when scan MSD or post-connect [BleManager.bleManufacturerData] indicates bootloader.
 bool isBleDeviceInBootloaderMode({

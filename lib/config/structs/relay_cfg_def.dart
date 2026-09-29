@@ -1,9 +1,9 @@
 import 'dart:typed_data';
 
-import 'package:techno_switch_solar_app/config/system_config_limits.dart';
-import 'package:techno_switch_solar_app/config/structs/struct_bytes.dart';
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
-import 'package:techno_switch_solar_app/utils/peripherals/defaults/relay_defaults.dart';
+import 'package:Technoswitch/config/system_config_limits.dart';
+import 'package:Technoswitch/config/structs/struct_bytes.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
+import 'package:Technoswitch/utils/peripherals/defaults/relay_defaults.dart';
 
 /// Mirrors firmware `st_relay_cfg_def` (28 bytes, packed).
 class RelayCfgDef {
@@ -33,7 +33,9 @@ class RelayCfgDef {
 
   factory RelayCfgDef.fromBytes(Uint8List bytes, {int offset = 0}) {
     if (offset < 0 || offset + byteLength > bytes.length) {
-      throw RangeError('RelayCfgDef requires $byteLength bytes at offset $offset');
+      throw RangeError(
+        'RelayCfgDef requires $byteLength bytes at offset $offset',
+      );
     }
     return RelayCfgDef(
       relayNum: bytes[offset],
@@ -74,7 +76,8 @@ class RelayCfgDef {
       relayNum: relayNum,
       relayText: (data['outputText'] as String?) ?? RelayDefaults.outputText,
       relayGrp: group,
-      relayFunc: (data['function'] as num?)?.toInt() ?? RelayDefaults.functionBle,
+      relayFunc:
+          (data['function'] as num?)?.toInt() ?? RelayDefaults.functionBle,
       relayZone: relayZone,
       relayExtOut: relayExtOut,
       relayEnable:

@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:techno_switch_solar_app/features/create_project/controllers/create_project_controller.dart';
-import 'package:techno_switch_solar_app/features/create_project/widgets/panel_selection_form.dart';
-import 'package:techno_switch_solar_app/features/create_project/widgets/site_creation_form.dart';
-import 'package:techno_switch_solar_app/features/peripherals/ext_out/sheets/ext_out_bottomsheet.dart';
-import 'package:techno_switch_solar_app/features/peripherals/general/sheets/general_mode_bottomsheet.dart';
-import 'package:techno_switch_solar_app/features/peripherals/inputs/sheets/input_mode_bottomsheet.dart';
-import 'package:techno_switch_solar_app/features/peripherals/l_bus/sheets/l_bus_mode_bottomsheet.dart';
-import 'package:techno_switch_solar_app/features/peripherals/panel_info/sheets/panel_info_mode_bottomsheet.dart';
-import 'package:techno_switch_solar_app/features/peripherals/relays/sheets/relay_mode_bottomsheet.dart';
-import 'package:techno_switch_solar_app/features/peripherals/service_due/sheets/service_due_mode_bottomsheet.dart';
-import 'package:techno_switch_solar_app/features/peripherals/sounders/sheets/sounder_mode_bottomsheet.dart';
-import 'package:techno_switch_solar_app/features/peripherals/zones/sheets/zone_mode_bottomsheet.dart';
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
-import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
+import 'package:Technoswitch/features/create_project/controllers/create_project_controller.dart';
+import 'package:Technoswitch/features/create_project/widgets/panel_selection_form.dart';
+import 'package:Technoswitch/features/create_project/widgets/site_creation_form.dart';
+import 'package:Technoswitch/features/peripherals/ext_out/sheets/ext_out_bottomsheet.dart';
+import 'package:Technoswitch/features/peripherals/general/sheets/general_mode_bottomsheet.dart';
+import 'package:Technoswitch/features/peripherals/inputs/sheets/input_mode_bottomsheet.dart';
+import 'package:Technoswitch/features/peripherals/l_bus/sheets/l_bus_mode_bottomsheet.dart';
+import 'package:Technoswitch/features/peripherals/panel_info/sheets/panel_info_mode_bottomsheet.dart';
+import 'package:Technoswitch/features/peripherals/relays/sheets/relay_mode_bottomsheet.dart';
+import 'package:Technoswitch/features/peripherals/service_due/sheets/service_due_mode_bottomsheet.dart';
+import 'package:Technoswitch/features/peripherals/sounders/sheets/sounder_mode_bottomsheet.dart';
+import 'package:Technoswitch/features/peripherals/zones/sheets/zone_mode_bottomsheet.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
+import 'package:Technoswitch/utils/constants/style_constants.dart';
 
 class CreateProjectWizardPageView extends StatefulWidget {
   const CreateProjectWizardPageView({

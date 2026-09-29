@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
-import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
-import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
+import 'package:Technoswitch/utils/constants/asset_constants.dart';
+import 'package:Technoswitch/utils/constants/color_constants.dart';
+import 'package:Technoswitch/utils/constants/style_constants.dart';
 
 class LogRetrievalShell extends StatelessWidget {
   const LogRetrievalShell({
@@ -29,10 +29,7 @@ class LogRetrievalShell extends StatelessWidget {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              ColorConstants.scaffoldGradientTop,
-              ColorConstants.white,
-            ],
+            colors: [ColorConstants.scaffoldGradientTop, ColorConstants.white],
           ),
         ),
         child: Stack(
@@ -50,15 +47,10 @@ class LogRetrievalShell extends StatelessWidget {
                       children: [
                         GestureDetector(
                           onTap: onBack,
-                          child: SvgPicture.asset(
-                            AssetConstants.arrowBackIcon,
-                          ),
+                          child: SvgPicture.asset(AssetConstants.arrowBackIcon),
                         ),
                         SizedBox(width: 8),
-                        Text(
-                          title,
-                          style: StyleConstants.black20w700Style,
-                        ),
+                        Text(title, style: StyleConstants.black20w700Style),
                       ],
                     ),
                   ),

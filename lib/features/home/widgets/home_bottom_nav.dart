@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:techno_switch_solar_app/features/home/controllers/home_screen_controller.dart';
-import 'package:techno_switch_solar_app/utils/constants/asset_constants.dart';
-import 'package:techno_switch_solar_app/utils/constants/color_constants.dart';
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
-import 'package:techno_switch_solar_app/utils/constants/style_constants.dart';
+import 'package:Technoswitch/features/home/controllers/home_screen_controller.dart';
+import 'package:Technoswitch/utils/constants/asset_constants.dart';
+import 'package:Technoswitch/utils/constants/color_constants.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
+import 'package:Technoswitch/utils/constants/style_constants.dart';
 
 class HomeBottomNav extends StatelessWidget {
   const HomeBottomNav({super.key, required this.controller});
@@ -68,8 +68,7 @@ class HomeBottomNav extends StatelessWidget {
     required String asset,
   }) {
     final isSelected = controller.selectedIndex == index;
-    final color =
-        isSelected ? ColorConstants.white : Colors.grey;
+    final color = isSelected ? ColorConstants.white : Colors.grey;
 
     return BottomNavigationBarItem(
       icon: SvgPicture.asset(

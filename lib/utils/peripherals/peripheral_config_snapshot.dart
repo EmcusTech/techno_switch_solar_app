@@ -1,14 +1,14 @@
 import 'dart:convert';
 
-import 'package:techno_switch_solar_app/ble/ble_manager.dart';
-import 'package:techno_switch_solar_app/config/ble/ext_out_setup_payload.dart';
-import 'package:techno_switch_solar_app/config/ble/input_setup_payload.dart';
-import 'package:techno_switch_solar_app/config/ui/access_config_ui_bridge.dart';
-import 'package:techno_switch_solar_app/config/ble/relay_setup_payload.dart';
-import 'package:techno_switch_solar_app/config/ble/zone_setup_payload.dart';
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
-import 'package:techno_switch_solar_app/utils/peripherals/peripheral_config_diff_labels.dart';
-import 'package:techno_switch_solar_app/utils/storage/peripheral_setup_cache.dart';
+import 'package:Technoswitch/ble/ble_manager.dart';
+import 'package:Technoswitch/config/ble/ext_out_setup_payload.dart';
+import 'package:Technoswitch/config/ble/input_setup_payload.dart';
+import 'package:Technoswitch/config/ui/access_config_ui_bridge.dart';
+import 'package:Technoswitch/config/ble/relay_setup_payload.dart';
+import 'package:Technoswitch/config/ble/zone_setup_payload.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
+import 'package:Technoswitch/utils/peripherals/peripheral_config_diff_labels.dart';
+import 'package:Technoswitch/utils/storage/peripheral_setup_cache.dart';
 
 /// Ordered BLE fetch sequence for full config sync (tune order against captures if needed).
 const List<PeripheralConfigSection> kPeripheralConfigFetchOrder = [

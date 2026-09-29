@@ -1,8 +1,8 @@
 import 'dart:typed_data';
 
-import 'package:techno_switch_solar_app/config/structs/struct_bytes.dart';
-import 'package:techno_switch_solar_app/utils/constants/string_constants.dart';
-import 'package:techno_switch_solar_app/utils/peripherals/defaults/ext_out_defaults.dart';
+import 'package:Technoswitch/config/structs/struct_bytes.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
+import 'package:Technoswitch/utils/peripherals/defaults/ext_out_defaults.dart';
 
 /// Mirrors firmware `st_ext_out_cfg_def` (11 bytes, packed).
 class ExtOutCfgDef {
@@ -34,7 +34,9 @@ class ExtOutCfgDef {
 
   factory ExtOutCfgDef.fromBytes(Uint8List bytes, {int offset = 0}) {
     if (offset < 0 || offset + byteLength > bytes.length) {
-      throw RangeError('ExtOutCfgDef requires $byteLength bytes at offset $offset');
+      throw RangeError(
+        'ExtOutCfgDef requires $byteLength bytes at offset $offset',
+      );
     }
     return ExtOutCfgDef(
       extOutEnable: bytes[offset],
