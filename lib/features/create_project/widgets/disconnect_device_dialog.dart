@@ -10,7 +10,9 @@ class DisconnectDeviceDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Container(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 420),
+        child: Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
           color: ColorConstants.white,
@@ -100,6 +102,7 @@ class DisconnectDeviceDialog extends StatelessWidget {
               ],
             ),
           ],
+        ),
         ),
       ),
     );

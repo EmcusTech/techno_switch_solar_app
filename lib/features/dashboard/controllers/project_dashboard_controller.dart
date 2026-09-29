@@ -20,6 +20,13 @@ import 'package:Technoswitch/utils/peripherals/peripheral_setup_cache_resolver.d
 import 'package:Technoswitch/utils/site_service.dart';
 import 'package:Technoswitch/utils/storage/peripheral_setup_cache.dart';
 
+class WindowsDashboardDetail {
+  const WindowsDashboardDetail({required this.child, this.onDismissed});
+
+  final Widget child;
+  final VoidCallback? onDismissed;
+}
+
 class ProjectDashboardController extends GetxController {
   ProjectDashboardController({required this.args});
 
@@ -59,6 +66,11 @@ class ProjectDashboardController extends GetxController {
       ValueNotifier(null);
   final ValueNotifier<bool> configLogWorking = ValueNotifier(false);
   final ValueNotifier<int> logHistoryRefreshTrigger = ValueNotifier(0);
+  final ValueNotifier<WindowsDashboardDetail?> windowsDetail = ValueNotifier(
+    null,
+  );
+  final ValueNotifier<String?> selectedWindowsTile = ValueNotifier(null);
+  String? pendingWindowsTileLabel;
 
   late final PanelConfigRefreshNotifiers panelRefreshNotifiers;
 
@@ -148,7 +160,29 @@ class ProjectDashboardController extends GetxController {
     panelInfoRefreshTrigger.dispose();
     generalModuleRefreshTrigger.dispose();
     logHistoryRefreshTrigger.dispose();
+    windowsDetail.dispose();
+    selectedWindowsTile.dispose();
     super.onClose();
+  }
+
+  void showWindowsDetail(Widget child, {VoidCallback? onDismissed}) {
+    selectedWindowsTile.value = pendingWindowsTileLabel;
+    final previous = windowsDetail.value;
+    windowsDetail.value = WindowsDashboardDetail(
+      child: child,
+      onDismissed: onDismissed,
+    );
+    if (previous != null) {
+      previous.onDismissed?.call();
+    }
+  }
+
+  void clearWindowsDetail() {
+    final current = windowsDetail.value;
+    if (current == null) return;
+    windowsDetail.value = null;
+    selectedWindowsTile.value = null;
+    current.onDismissed?.call();
   }
 
   void onBleSessionChanged() {

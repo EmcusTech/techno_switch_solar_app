@@ -84,7 +84,7 @@ class _WindowsProjectDashboardScreenState
                 ),
               ],
             ),
-            bottomNavigationBar: DashboardBottomNav(controller: controller),
+            // bottomNavigationBar: DashboardBottomNav(controller: controller),
           ),
         );
       },

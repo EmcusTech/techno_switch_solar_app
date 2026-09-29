@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
@@ -64,6 +66,24 @@ mixin ProjectDashboardUiDelegateMixin<T extends StatefulWidget> on State<T>
   @override
   BuildContext get uiContext => context;
 
+  void _presentPeripheralSheet({
+    required Widget Function(BuildContext context) builder,
+    VoidCallback? whenComplete,
+  }) {
+    if (Platform.isWindows) {
+      dashboardController.showWindowsDetail(
+        Builder(builder: builder),
+        onDismissed: whenComplete,
+      );
+      return;
+    }
+    showDashboardPeripheralSheet(
+      uiContext,
+      builder: builder,
+      whenComplete: whenComplete,
+    );
+  }
+
   @override
   void showSnackBar(String message, {Color? backgroundColor}) {
     if (!mounted) return;
@@ -91,6 +111,7 @@ mixin ProjectDashboardUiDelegateMixin<T extends StatefulWidget> on State<T>
       trailingActionLabel: UiStrings.continueButton,
       leadingValue: false,
       trailingValue: true,
+      maxWidth: 420,
     );
   }
 
@@ -125,7 +146,9 @@ mixin ProjectDashboardUiDelegateMixin<T extends StatefulWidget> on State<T>
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
             ),
-            child: Container(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 420),
+              child: Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
                 color: ColorConstants.white,
@@ -186,6 +209,7 @@ mixin ProjectDashboardUiDelegateMixin<T extends StatefulWidget> on State<T>
                     ),
                   ),
                 ],
+              ),
               ),
             ),
           ),
@@ -386,7 +410,9 @@ mixin ProjectDashboardUiDelegateMixin<T extends StatefulWidget> on State<T>
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: Container(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 420),
+                child: Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
                   color: ColorConstants.white,
@@ -466,6 +492,7 @@ mixin ProjectDashboardUiDelegateMixin<T extends StatefulWidget> on State<T>
                         ),
                       ),
                   ],
+                ),
                 ),
               ),
             );
@@ -598,7 +625,9 @@ mixin ProjectDashboardUiDelegateMixin<T extends StatefulWidget> on State<T>
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          child: Container(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 420),
+            child: Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
               color: ColorConstants.white,
@@ -696,6 +725,7 @@ mixin ProjectDashboardUiDelegateMixin<T extends StatefulWidget> on State<T>
                 ),
               ],
             ),
+            ),
           ),
         );
       },
@@ -731,7 +761,9 @@ mixin ProjectDashboardUiDelegateMixin<T extends StatefulWidget> on State<T>
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          child: Container(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 420),
+            child: Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
               color: ColorConstants.white,
@@ -812,6 +844,7 @@ mixin ProjectDashboardUiDelegateMixin<T extends StatefulWidget> on State<T>
                   ),
                 ),
               ],
+            ),
             ),
           ),
         );
@@ -961,7 +994,9 @@ mixin ProjectDashboardUiDelegateMixin<T extends StatefulWidget> on State<T>
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          child: Container(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 420),
+            child: Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
               color: ColorConstants.white,
@@ -1000,6 +1035,7 @@ mixin ProjectDashboardUiDelegateMixin<T extends StatefulWidget> on State<T>
                 ),
               ],
             ),
+            ),
           ),
         );
       },
@@ -1013,8 +1049,7 @@ mixin ProjectDashboardUiDelegateMixin<T extends StatefulWidget> on State<T>
 
   @override
   void showConfigLogBottomSheet() {
-    showDashboardPeripheralSheet(
-      uiContext,
+    _presentPeripheralSheet(
       builder:
           (_) => ConfigLogBottomSheet(
             deviceId: dashboardController.selectedDevice.id,
@@ -1027,7 +1062,8 @@ mixin ProjectDashboardUiDelegateMixin<T extends StatefulWidget> on State<T>
             onApplyLocalToPanel:
                 dashboardController.onConfigLogApplyLocalToPanel,
           ),
-    ).whenComplete(dashboardController.clearConfigLogState);
+      whenComplete: dashboardController.clearConfigLogState,
+    );
   }
 
   @override
@@ -1156,8 +1192,7 @@ mixin ProjectDashboardUiDelegateMixin<T extends StatefulWidget> on State<T>
     required VoidCallback onApply,
     required ValueNotifier<int> refreshTrigger,
   }) {
-    showDashboardPeripheralSheet(
-      uiContext,
+    _presentPeripheralSheet(
       builder:
           (_) => LBusBottomSheet(
             deviceId: dashboardController.selectedDevice.id,
@@ -1174,8 +1209,7 @@ mixin ProjectDashboardUiDelegateMixin<T extends StatefulWidget> on State<T>
     required VoidCallback onApply,
     required ValueNotifier<int> refreshTrigger,
   }) {
-    showDashboardPeripheralSheet(
-      uiContext,
+    _presentPeripheralSheet(
       builder:
           (_) => SounderModeBottomSheet(
             deviceId: dashboardController.selectedDevice.id,
@@ -1192,8 +1226,7 @@ mixin ProjectDashboardUiDelegateMixin<T extends StatefulWidget> on State<T>
     required VoidCallback onApply,
     required ValueNotifier<int> refreshTrigger,
   }) {
-    showDashboardPeripheralSheet(
-      uiContext,
+    _presentPeripheralSheet(
       builder:
           (_) => ServiceDueBottomSheet(
             deviceId: dashboardController.selectedDevice.id,
@@ -1210,8 +1243,7 @@ mixin ProjectDashboardUiDelegateMixin<T extends StatefulWidget> on State<T>
     required VoidCallback onApply,
     required ValueNotifier<int> refreshTrigger,
   }) {
-    showDashboardPeripheralSheet(
-      uiContext,
+    _presentPeripheralSheet(
       builder:
           (_) => AccessCodesBottomSheet(
             deviceId: dashboardController.selectedDevice.id,
@@ -1228,8 +1260,7 @@ mixin ProjectDashboardUiDelegateMixin<T extends StatefulWidget> on State<T>
     required VoidCallback onApply,
     required ValueNotifier<int> refreshTrigger,
   }) {
-    showDashboardPeripheralSheet(
-      uiContext,
+    _presentPeripheralSheet(
       builder:
           (_) => PanelInfoBottomSheet(
             deviceId: dashboardController.selectedDevice.id,
@@ -1246,8 +1277,7 @@ mixin ProjectDashboardUiDelegateMixin<T extends StatefulWidget> on State<T>
     required VoidCallback onApply,
     required ValueNotifier<int> refreshTrigger,
   }) {
-    showDashboardPeripheralSheet(
-      uiContext,
+    _presentPeripheralSheet(
       builder:
           (_) => GeneralModuleBottomSheet(
             deviceId: dashboardController.selectedDevice.id,
@@ -1263,25 +1293,24 @@ mixin ProjectDashboardUiDelegateMixin<T extends StatefulWidget> on State<T>
     required VoidCallback onDownload,
     required VoidCallback onStop,
   }) {
-    showDashboardPeripheralSheet(
-      uiContext,
+    _presentPeripheralSheet(
       builder:
           (_) => DiagnosticInfoBottomSheet(
             deviceId: dashboardController.selectedDevice.id,
             onDownload: onDownload,
             onStop: onStop,
           ),
-    ).whenComplete(() {
-      if (!mounted) return;
-      dashboardController.ble.bleProcess.isAdcSetupFetchCommandActive.value =
-          false;
-    });
+      whenComplete: () {
+        if (!mounted) return;
+        dashboardController.ble.bleProcess.isAdcSetupFetchCommandActive.value =
+            false;
+      },
+    );
   }
 
   @override
   void showModuleSetupBottomSheet({required VoidCallback onDownload}) {
-    showDashboardPeripheralSheet(
-      uiContext,
+    _presentPeripheralSheet(
       builder:
           (_) => ModuleInfoBottomSheet(
             deviceId: dashboardController.selectedDevice.id,
@@ -1296,8 +1325,7 @@ mixin ProjectDashboardUiDelegateMixin<T extends StatefulWidget> on State<T>
     required VoidCallback onApply,
     required ValueNotifier<int> refreshTrigger,
   }) {
-    showDashboardPeripheralSheet(
-      uiContext,
+    _presentPeripheralSheet(
       builder:
           (_) => ExtOutBottomSheet(
             deviceId: dashboardController.selectedDevice.id,
@@ -1314,8 +1342,7 @@ mixin ProjectDashboardUiDelegateMixin<T extends StatefulWidget> on State<T>
     required VoidCallback onApply,
     required ValueNotifier<int> refreshTrigger,
   }) {
-    showDashboardPeripheralSheet(
-      uiContext,
+    _presentPeripheralSheet(
       builder:
           (_) => InputModeBottomSheet(
             deviceId: dashboardController.selectedDevice.id,
@@ -1332,8 +1359,7 @@ mixin ProjectDashboardUiDelegateMixin<T extends StatefulWidget> on State<T>
     required VoidCallback onApply,
     required ValueNotifier<int> refreshTrigger,
   }) {
-    showDashboardPeripheralSheet(
-      uiContext,
+    _presentPeripheralSheet(
       builder:
           (_) => RelayModeBottomSheet(
             deviceId: dashboardController.selectedDevice.id,
@@ -1350,8 +1376,7 @@ mixin ProjectDashboardUiDelegateMixin<T extends StatefulWidget> on State<T>
     required VoidCallback onApply,
     required ValueNotifier<int> refreshTrigger,
   }) {
-    showDashboardPeripheralSheet(
-      uiContext,
+    _presentPeripheralSheet(
       builder:
           (_) => ZoneBottomSheet(
             deviceId: dashboardController.selectedDevice.id,
@@ -1368,8 +1393,7 @@ mixin ProjectDashboardUiDelegateMixin<T extends StatefulWidget> on State<T>
     required VoidCallback onApply,
     required ValueNotifier<int> refreshTrigger,
   }) {
-    showDashboardPeripheralSheet(
-      uiContext,
+    _presentPeripheralSheet(
       builder:
           (_) => WalkTestZoneBottomSheet(
             deviceId: dashboardController.selectedDevice.id,
@@ -1386,8 +1410,7 @@ mixin ProjectDashboardUiDelegateMixin<T extends StatefulWidget> on State<T>
     required VoidCallback onApply,
     required ValueNotifier<int> refreshTrigger,
   }) {
-    showDashboardPeripheralSheet(
-      uiContext,
+    _presentPeripheralSheet(
       builder:
           (_) => TestModeSounderBottomSheet(
             deviceId: dashboardController.selectedDevice.id,
@@ -1404,8 +1427,7 @@ mixin ProjectDashboardUiDelegateMixin<T extends StatefulWidget> on State<T>
     required VoidCallback onApply,
     required ValueNotifier<int> refreshTrigger,
   }) {
-    showDashboardPeripheralSheet(
-      uiContext,
+    _presentPeripheralSheet(
       builder:
           (_) => TestModeRelayBottomSheet(
             deviceId: dashboardController.selectedDevice.id,
@@ -1425,8 +1447,7 @@ mixin ProjectDashboardUiDelegateMixin<T extends StatefulWidget> on State<T>
     required ValueNotifier<int> relayRefreshTrigger,
     required ValueNotifier<int> sounderRefreshTrigger,
   }) {
-    showDashboardPeripheralSheet(
-      uiContext,
+    _presentPeripheralSheet(
       builder: (sheetContext) {
         return TestModeChoiceBottomSheet(
           onSounders: () {
@@ -1456,8 +1477,7 @@ mixin ProjectDashboardUiDelegateMixin<T extends StatefulWidget> on State<T>
     required VoidCallback onApply,
     required ValueNotifier<int> refreshTrigger,
   }) {
-    showDashboardPeripheralSheet(
-      uiContext,
+    _presentPeripheralSheet(
       builder:
           (_) => RadioModeBottomSheet(
             deviceId: dashboardController.selectedDevice.id,

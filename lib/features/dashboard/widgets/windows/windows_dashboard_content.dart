@@ -3,8 +3,6 @@ import 'package:Technoswitch/features/dashboard/widgets/windows/windows_dashboar
 import 'package:Technoswitch/features/dashboard/widgets/windows/windows_peripheral_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:Technoswitch/features/dashboard/controllers/project_dashboard_controller.dart';
-import 'package:Technoswitch/features/dashboard/widgets/dashboard_tile_registry.dart';
-import 'package:Technoswitch/features/dashboard/widgets/peripheral_tile.dart';
 import 'package:Technoswitch/utils/constants/color_constants.dart';
 import 'package:Technoswitch/utils/constants/string_constants.dart';
 import 'package:Technoswitch/utils/constants/style_constants.dart';
@@ -65,19 +63,104 @@ class WindowsDashboardContent extends StatelessWidget {
                                   WindowsDashboardTileRegistry.panelActionTiles(
                                     controller,
                                   ),
-                              heightFactor: 0.35,
+                              heightFactor: 0.15,
                             ),
                           ],
                         ),
                       ),
                     ),
                   ),
-                  const Expanded(flex: 2, child: SizedBox.shrink()),
+                  Expanded(
+                    flex: 2,
+                    child: WindowsDashboardDetailPane(controller: controller),
+                  ),
                 ],
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class WindowsDashboardDetailPane extends StatefulWidget {
+  const WindowsDashboardDetailPane({super.key, required this.controller});
+
+  final ProjectDashboardController controller;
+
+  @override
+  State<WindowsDashboardDetailPane> createState() =>
+      _WindowsDashboardDetailPaneState();
+}
+
+class _WindowsDashboardDetailPaneState
+    extends State<WindowsDashboardDetailPane> {
+  final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
+
+  @override
+  void initState() {
+    super.initState();
+    widget.controller.windowsDetail.addListener(_onDetailChanged);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _onDetailChanged();
+    });
+  }
+
+  @override
+  void dispose() {
+    widget.controller.windowsDetail.removeListener(_onDetailChanged);
+    super.dispose();
+  }
+
+  void _onDetailChanged() {
+    final navigator = _navigatorKey.currentState;
+    if (!mounted || navigator == null) return;
+
+    final detail = widget.controller.windowsDetail.value;
+    navigator.popUntil((route) => route.isFirst);
+    if (detail == null) return;
+
+    navigator
+        .push<void>(
+          MaterialPageRoute<void>(
+            builder:
+                (_) => ColoredBox(
+                  color: ColorConstants.white,
+                  child: detail.child,
+                ),
+          ),
+        )
+        .then((_) {
+          if (!mounted) return;
+          if (widget.controller.windowsDetail.value == detail) {
+            widget.controller.clearWindowsDetail();
+          }
+        });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: const BoxDecoration(
+        border: Border(left: BorderSide(color: ColorConstants.borderLight)),
+      ),
+      child: Navigator(
+        key: _navigatorKey,
+        onGenerateRoute:
+            (_) => MaterialPageRoute<void>(
+              builder:
+                  (_) => ColoredBox(
+                    color: ColorConstants.white,
+                    child: Center(
+                      child: Text(
+                        'Please select a module to view',
+                        textAlign: TextAlign.center,
+                        style: StyleConstants.textMuted14w400Style,
+                      ),
+                    ),
+                  ),
+            ),
       ),
     );
   }

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -160,7 +162,9 @@ class RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
                           ),
                           child: Column(
                             children: [
-                              _dragHandle(),
+                              Platform.isWindows
+                                  ? const SizedBox(height: 16)
+                                  : _dragHandle(),
                               _title('Relay Mode'),
                               Expanded(
                                 child: NotificationListener<

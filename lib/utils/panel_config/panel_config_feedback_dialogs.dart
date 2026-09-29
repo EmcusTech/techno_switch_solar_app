@@ -39,7 +39,9 @@ void showPanelApplySuccessDialog(
       });
       return Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: Container(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 420),
+          child: Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
             color: ColorConstants.white,
@@ -78,6 +80,7 @@ void showPanelApplySuccessDialog(
               ),
             ],
           ),
+          ),
         ),
       );
     },
@@ -96,7 +99,9 @@ void showPanelDownloadSuccessDialog(BuildContext context, String message) {
       });
       return Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: Container(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 420),
+          child: Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
             color: ColorConstants.white,
@@ -134,6 +139,7 @@ void showPanelDownloadSuccessDialog(BuildContext context, String message) {
                 textAlign: TextAlign.center,
               ),
             ],
+          ),
           ),
         ),
       );

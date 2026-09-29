@@ -37,30 +37,46 @@ class PeripheralTile extends StatelessWidget {
     return GestureDetector(
       onTap: () async {
         if (config.isDisabled) return;
+        controller.pendingWindowsTileLabel = config.label;
         await controller.onPeripheralTileTap(config.onTap);
       },
       child: Column(
         children: [
           Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                color: ColorConstants.backgroundSubtle,
-                border: Border.all(color: ColorConstants.borderMedium),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Center(
-                child: SvgPicture.asset(
-                  config.iconPath,
-                  colorFilter: ColorFilter.mode(
-                    config.isDisabled
-                        ? ColorConstants.textGray.withValues(alpha: 0.2)
-                        : ColorConstants.primary,
-                    BlendMode.srcIn,
+            child: ValueListenableBuilder<String?>(
+              valueListenable: controller.selectedWindowsTile,
+              builder: (context, selectedLabel, _) {
+                final isSelected = selectedLabel == config.label;
+                return Container(
+                  decoration: BoxDecoration(
+                    color:
+                        isSelected
+                            ? ColorConstants.primary.withValues(alpha: 0.1)
+                            : ColorConstants.backgroundSubtle,
+                    border: Border.all(
+                      color:
+                          isSelected
+                              ? ColorConstants.primary
+                              : ColorConstants.borderMedium,
+                      width: isSelected ? 2 : 1,
+                    ),
+                    borderRadius: BorderRadius.circular(10),
                   ),
-                  height: config.iconHeight,
-                  width: config.iconWidth,
-                ),
-              ),
+                  child: Center(
+                    child: SvgPicture.asset(
+                      config.iconPath,
+                      colorFilter: ColorFilter.mode(
+                        config.isDisabled
+                            ? ColorConstants.textGray.withValues(alpha: 0.2)
+                            : ColorConstants.primary,
+                        BlendMode.srcIn,
+                      ),
+                      height: config.iconHeight,
+                      width: config.iconWidth,
+                    ),
+                  ),
+                );
+              },
             ),
           ),
           const SizedBox(height: 8),
