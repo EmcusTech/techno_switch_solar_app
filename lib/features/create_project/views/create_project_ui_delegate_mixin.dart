@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:Technoswitch/features/dashboard/views/windows/windows_project_dashboard.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:Technoswitch/ble/blue_plus_adapter.dart';
@@ -203,7 +206,13 @@ mixin CreateProjectUiDelegateMixin<T extends StatefulWidget> on State<T>
       ),
     ).dependencies();
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const ProjectDashboardScreen()),
+      MaterialPageRoute(
+        builder:
+            (_) =>
+                Platform.isWindows
+                    ? const WindowsProjectDashboardScreen()
+                    : const ProjectDashboardScreen(),
+      ),
     );
   }
 

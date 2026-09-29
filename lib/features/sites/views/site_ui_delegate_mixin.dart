@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:Technoswitch/features/dashboard/views/windows/windows_project_dashboard.dart';
 import 'package:flutter/material.dart';
 import 'package:Technoswitch/features/dashboard/bindings/project_dashboard_binding.dart';
 import 'package:Technoswitch/features/dashboard/models/project_dashboard_args.dart';
@@ -65,9 +68,9 @@ mixin SiteUiDelegateMixin<T extends StatefulWidget> on State<T>
     SiteDetailBinding(
       args: SiteDetailArgs(siteWithLogCount: siteWithLogCount),
     ).dependencies();
-    await Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const SiteDetailScreen()),
-    );
+    await Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const SiteDetailScreen()));
   }
 
   @override
@@ -75,7 +78,13 @@ mixin SiteUiDelegateMixin<T extends StatefulWidget> on State<T>
     if (!mounted) return;
     ProjectDashboardBinding(args: args).dependencies();
     Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const ProjectDashboardScreen()),
+      MaterialPageRoute(
+        builder:
+            (_) =>
+                Platform.isWindows
+                    ? const WindowsProjectDashboardScreen()
+                    : const ProjectDashboardScreen(),
+      ),
     );
   }
 }

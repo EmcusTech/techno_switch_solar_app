@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:Technoswitch/features/dashboard/views/windows/windows_project_dashboard.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:lottie/lottie.dart';
@@ -615,7 +618,13 @@ mixin ScanUiDelegateMixin<T extends StatefulWidget> on State<T>
   void navigateToProjectDashboard({required ProjectDashboardArgs args}) {
     ProjectDashboardBinding(args: args).dependencies();
     Navigator.of(uiContext, rootNavigator: true).pushReplacement(
-      MaterialPageRoute(builder: (_) => const ProjectDashboardScreen()),
+      MaterialPageRoute(
+        builder:
+            (_) =>
+                Platform.isWindows
+                    ? const WindowsProjectDashboardScreen()
+                    : const ProjectDashboardScreen(),
+      ),
     );
   }
 
