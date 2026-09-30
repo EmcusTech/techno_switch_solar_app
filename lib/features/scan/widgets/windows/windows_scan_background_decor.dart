@@ -13,7 +13,7 @@ class WindowsScanBackgroundDecor extends StatelessWidget {
         width: double.infinity,
         height: double.infinity,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(26),
           border: Border.all(color: ColorConstants.cardBorder),
         ),
         child: Image.asset(
