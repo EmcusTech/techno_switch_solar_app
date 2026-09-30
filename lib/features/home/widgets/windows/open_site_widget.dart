@@ -15,7 +15,7 @@ class _OpenSiteWidgetState extends State<OpenSiteWidget> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: context.w(385),
+      width: context.w(378),
       decoration: BoxDecoration(
         color: Colors.white,
         border: Border.all(color: Color(0xFFE4E4E7)),

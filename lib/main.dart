@@ -17,7 +17,7 @@ void main() async {
 
     const windowOptions = WindowOptions(
       center: true,
-      title: 'TechnoSwitch Solar',
+      title: 'TechnoSwitch',
       size: Size(1280, 720),
       minimumSize: Size(1280, 720),
     );

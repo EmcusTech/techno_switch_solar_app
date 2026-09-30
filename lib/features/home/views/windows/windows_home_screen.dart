@@ -1,11 +1,10 @@
+import 'package:Technoswitch/utils/constants/color_constants.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 import 'package:get/get.dart';
 import 'package:Technoswitch/features/help/controllers/help_screen_controller.dart';
-import 'package:Technoswitch/features/help/views/help_screen.dart';
 import 'package:Technoswitch/features/home/controllers/home_screen_controller.dart';
 import 'package:Technoswitch/features/home/views/home_ui_delegate_mixin.dart';
-import 'package:Technoswitch/features/home/widgets/home_bottom_nav.dart';
 import 'package:Technoswitch/features/home/widgets/windows/ble_connect_widget.dart';
 import 'package:Technoswitch/features/home/widgets/windows/live_event_widget.dart';
 import 'package:Technoswitch/features/home/widgets/windows/new_site_widget.dart';
@@ -13,11 +12,8 @@ import 'package:Technoswitch/features/home/widgets/windows/open_site_widget.dart
 import 'package:Technoswitch/features/home/widgets/windows/recent_sites_table_widget.dart';
 import 'package:Technoswitch/features/home/widgets/windows/retrieve_log_widget.dart';
 import 'package:Technoswitch/features/home/widgets/windows/usb_connect_widget.dart';
-import 'package:Technoswitch/features/home/widgets/windows/windows_home_tab.dart';
 import 'package:Technoswitch/features/settings/controllers/settings_controller.dart';
-import 'package:Technoswitch/features/settings/views/settings_screen.dart';
 import 'package:Technoswitch/utils/app/navigation_service.dart';
-import 'package:Technoswitch/utils/constants/color_constants.dart';
 
 class WindowsHomeScreen extends StatefulWidget {
   const WindowsHomeScreen({super.key});
@@ -83,8 +79,12 @@ class _WindowsHomeScreenState extends State<WindowsHomeScreen>
       init: _controller,
       builder: (controller) {
         return Scaffold(
+          backgroundColor: ColorConstants.backgroundSubtle,
           body: Padding(
-            padding: EdgeInsets.all(context.r(8)),
+            padding: EdgeInsets.symmetric(
+              horizontal: context.w(18),
+              vertical: context.h(20),
+            ),
             child: Column(
               children: [
                 IntrinsicHeight(
