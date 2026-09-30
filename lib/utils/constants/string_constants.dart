@@ -331,6 +331,7 @@ abstract final class StringConstants {
   static const String disconnected2 = "Disconnected.";
   static const String doubleKnock = "Double Knock";
   static const String download = "Download";
+  static const String fullScreen = "Full Screen";
   static const String downloadCompare = "Download & compare";
   static const String downloadPanelConfiguration =
       "Download panel configuration?";
@@ -621,6 +622,8 @@ abstract final class StringConstants {
   static const String outputtext = "dynamicText";
   static const String p1 = "P1";
   static const String panel = "Panel";
+  static const String add = "Add";
+  static const String addPanel = "Add Panel";
   static const String panel2 = " · app ";
   static const String panelActions = "Panel Actions";
   static const String panelAlreadyAssigned = "Panel already assigned";

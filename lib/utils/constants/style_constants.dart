@@ -376,6 +376,11 @@ abstract final class StyleConstants {
     fontWeight: FontWeight.w600,
     color: ColorConstants.textSecondary,
   );
+  static TextStyle get white12w400Style => GoogleFonts.inter(
+    fontSize: 12.r,
+    fontWeight: FontWeight.w400,
+    color: ColorConstants.white,
+  );
   static TextStyle get white14boldStyle => GoogleFonts.inter(
     fontSize: 14.r,
     fontWeight: FontWeight.bold,

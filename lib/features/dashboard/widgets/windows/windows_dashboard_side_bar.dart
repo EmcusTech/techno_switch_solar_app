@@ -1,5 +1,6 @@
 import 'package:Technoswitch/features/dashboard/controllers/project_dashboard_controller.dart';
 import 'package:Technoswitch/utils/constants/asset_constants.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
 import 'package:Technoswitch/utils/constants/style_constants.dart';
 import 'package:Technoswitch/utils/site_service.dart';
 import 'package:flutter/material.dart';
@@ -48,7 +49,7 @@ class _WindowsDashboardSideBarState extends State<WindowsDashboardSideBar> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12.0),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+        // crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
             children: [
@@ -109,6 +110,32 @@ class _WindowsDashboardSideBarState extends State<WindowsDashboardSideBar> {
               ],
             ),
           ),
+          Spacer(),
+          Container(
+            decoration: BoxDecoration(
+              color: ColorConstants.primary,
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 8.0,
+                vertical: 8.0,
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.add, color: ColorConstants.white, size: 16),
+                  SizedBox(width: 4),
+                  Text(
+                    StringConstants.addPanel,
+                    style: StyleConstants.white12w400Style,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -128,6 +155,23 @@ class _WindowsDashboardSideBarState extends State<WindowsDashboardSideBar> {
             SvgPicture.asset(AssetConstants.winPanelIcon),
             SvgPicture.asset(AssetConstants.panelIcon, height: 36, width: 36),
           ],
+        ),
+        Spacer(),
+        Container(
+          decoration: BoxDecoration(
+            color: ColorConstants.primary,
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 12.0,
+              vertical: 8.0,
+            ),
+            child: Text(
+              StringConstants.add,
+              style: StyleConstants.white12w400Style,
+            ),
+          ),
         ),
       ],
     );

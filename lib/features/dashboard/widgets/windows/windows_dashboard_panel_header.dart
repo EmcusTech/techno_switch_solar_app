@@ -20,36 +20,40 @@ class WindowsDashboardPanelHeader extends StatelessWidget {
       children: [
         SvgPicture.asset(AssetConstants.panelIcon, height: 62, width: 62),
         const SizedBox(width: 14),
-        Column(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              BleNameUtils.getDisplayPrefixFromBleName(controller.panelName),
-              style: StyleConstants.black16w700Style,
-              overflow: TextOverflow.ellipsis,
-            ),
-            Text(
-              BleNameUtils.getDisplayIdFromBleName(controller.panelName),
-              style: StyleConstants.textDisabled14w500Style,
-              overflow: TextOverflow.ellipsis,
-            ),
-            ValueListenableBuilder<bool>(
-              valueListenable: controller.ble.isConnectedNotifier,
-              builder: (context, isConnected, child) {
-                if (isConnected) {
+        Flexible(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                BleNameUtils.getDisplayPrefixFromBleName(controller.panelName),
+                style: StyleConstants.black16w700Style,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              Text(
+                BleNameUtils.getDisplayIdFromBleName(controller.panelName),
+                style: StyleConstants.textDisabled14w500Style,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              ValueListenableBuilder<bool>(
+                valueListenable: controller.ble.isConnectedNotifier,
+                builder: (context, isConnected, child) {
+                  if (isConnected) {
+                    return Text(
+                      StringConstants.connected,
+                      style: StyleConstants.success14w500Style,
+                    );
+                  }
                   return Text(
-                    StringConstants.connected,
-                    style: StyleConstants.success14w500Style,
+                    StringConstants.disconnected,
+                    style: StyleConstants.primary14w500Style,
                   );
-                }
-                return Text(
-                  StringConstants.disconnected,
-                  style: StyleConstants.primary14w500Style,
-                );
-              },
-            ),
-          ],
+                },
+              ),
+            ],
+          ),
         ),
         const SizedBox(width: 14),
         ValueListenableBuilder<bool>(

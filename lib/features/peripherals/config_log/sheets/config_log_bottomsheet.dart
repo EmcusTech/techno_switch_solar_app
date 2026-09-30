@@ -1,14 +1,13 @@
 import 'dart:math' show min;
+import 'package:Technoswitch/widgets/common/peripheral_sheet_chrome.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:Technoswitch/ble/ble_manager.dart';
 import 'package:Technoswitch/features/peripherals/config_log/controllers/config_log_controller.dart';
 import 'package:Technoswitch/utils/constants/string_constants.dart';
 import 'package:Technoswitch/utils/peripherals/peripheral_config_snapshot.dart';
-import 'package:Technoswitch/utils/constants/asset_constants.dart';
 import 'package:Technoswitch/utils/constants/color_constants.dart';
 import 'package:Technoswitch/widgets/common/dropdown.dart';
 
@@ -106,15 +105,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet> {
   }
 
   Widget _dragHandle() {
-    return Container(
-      width: 40,
-      height: 4,
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade300,
-        borderRadius: BorderRadius.circular(4),
-      ),
-    );
+    return const PeripheralSheetDragHandle();
   }
 
   Widget _title(String text) {
@@ -1131,43 +1122,21 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet> {
             maxWidth: isDialog ? min(560, screenW - 40) : double.infinity,
           ),
           child: Container(
-            decoration: const BoxDecoration(
-              color: ColorConstants.primaryVariant,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(50)),
+            decoration: BoxDecoration(
+              color: PeripheralSheetChrome.lipColor,
+              borderRadius: PeripheralSheetChrome.topRadius(),
             ),
             child: Padding(
-              padding: const EdgeInsets.only(top: 8.0),
+              padding: EdgeInsets.only(top: PeripheralSheetChrome.lipPadding),
               child: Container(
                 clipBehavior: Clip.hardEdge,
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   color: ColorConstants.white,
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(50)),
+                  borderRadius: PeripheralSheetChrome.topRadius(),
                 ),
                 child: Stack(
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        SvgPicture.asset(AssetConstants.bottomsheetLogo),
-                        Padding(
-                          padding: const EdgeInsets.only(right: 32.0),
-                          child: GestureDetector(
-                            onTap: () => Navigator.pop(context),
-                            child: Container(
-                              height: 38,
-                              width: 38,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: ColorConstants.blackMaterial.withValues(
-                                  alpha: 0.06,
-                                ),
-                              ),
-                              child: const Icon(Icons.close, size: 20),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+                    const PeripheralSheetHeaderRow(),
                     Padding(
                       padding: EdgeInsets.only(
                         left: 24,

@@ -6,6 +6,7 @@ import 'package:Technoswitch/features/peripherals/radio/controllers/radio_mode_c
 import 'package:Technoswitch/widgets/common/dropdown.dart';
 import 'package:Technoswitch/utils/constants/color_constants.dart';
 import 'package:Technoswitch/utils/constants/string_constants.dart';
+import 'package:Technoswitch/widgets/common/peripheral_sheet_chrome.dart';
 
 import 'package:Technoswitch/utils/constants/style_constants.dart';
 
@@ -66,9 +67,11 @@ class _RadioModeBottomSheetState extends State<RadioModeBottomSheet> {
             child: ConstrainedBox(
               constraints: BoxConstraints(maxHeight: screenHeight * 0.75),
               child: Container(
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   color: ColorConstants.white,
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+                  borderRadius: PeripheralSheetChrome.topRadius(
+                    phoneRadius: 16,
+                  ),
                 ),
                 padding: EdgeInsets.only(
                   left: 24,
@@ -263,15 +266,7 @@ class _RadioModeBottomSheetState extends State<RadioModeBottomSheet> {
   }
 
   Widget _dragHandle() {
-    return Container(
-      width: 40,
-      height: 4,
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade300,
-        borderRadius: BorderRadius.circular(4),
-      ),
-    );
+    return const PeripheralSheetDragHandle();
   }
 
   Widget _title(String text) {

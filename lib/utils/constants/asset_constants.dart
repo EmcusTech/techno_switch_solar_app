@@ -9,6 +9,9 @@ class AssetConstants {
 
   // ── SVGs ──────────────────────────────────────────────────────────
   static const String uploadIcon = '$_svgDir/upload_icon.svg';
+  static const String winUploadIcon = '$_svgDir/win_upload_icon.svg';
+  static const String winDownloadIcon = '$_svgDir/win_download_icon.svg';
+  static const String winFullScreenIcon = '$_svgDir/win_full_screen_icon.svg';
   static const String dropDownRedIcon = '$_svgDir/drop_down_red_icon.svg';
   static const String background1 = '$_svgDir/background_1.svg';
   static const String background2 = '$_svgDir/background_2.svg';
@@ -41,6 +44,8 @@ class AssetConstants {
   static const String winPanelInnerIcon = '$_svgDir/win_panel_inner_icon.svg';
   static const String winSidePanelCloseIcon =
       '$_svgDir/win_side_panel_close_icon.svg';
+  static const String winHomeicon = '$_svgDir/win_home_icon.svg';
+  static const String winRightArrowIcon = '$_svgDir/win_right_arrow_icon.svg';
   static const String editIcon = '$_svgDir/edit_icon.svg';
   static const String homeIcon = '$_svgDir/home_icon.svg';
   static const String helpIcon = '$_svgDir/help_icon.svg';

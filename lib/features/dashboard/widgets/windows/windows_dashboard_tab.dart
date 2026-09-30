@@ -23,10 +23,10 @@ class WindowsDashboardTab extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           WindowsDashboardAppBar(
+            controller: controller,
             onBack: controller.handleBackNavigation,
             onExport: onExport,
           ),
-          const SizedBox(height: 8),
           WindowsDashboardContent(controller: controller),
         ],
       ),

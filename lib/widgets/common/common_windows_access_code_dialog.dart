@@ -337,9 +337,12 @@ class _CommonWindowsAccessCodeDialogState
               visible: status == _AccessCodeStatus.empty,
               child: Align(
                 alignment: Alignment.topCenter,
-                child: Text(
-                  StringConstants.accessReq,
-                  style: StyleConstants.textBodyDark18w800Style,
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 32.0),
+                  child: Text(
+                    StringConstants.accessReq,
+                    style: StyleConstants.textBodyDark18w800Style,
+                  ),
                 ),
               ),
             ),

@@ -25,93 +25,101 @@ class WindowsDashboardContent extends StatelessWidget {
             color: ColorConstants.white,
             borderRadius: BorderRadius.circular(16),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(20),
-                child: WindowsDashboardPanelHeader(controller: controller),
-              ),
-              Expanded(
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    const dividerWidth = 1.0;
-                    final tileWidth =
-                        (constraints.maxWidth -
-                            WindowsDashboardSideBar.collapsedWidth -
-                            dividerWidth * 2) /
-                        3;
-                    return Row(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              const dividerWidth = 1.0;
+              final tileWidth =
+                  (constraints.maxWidth -
+                      WindowsDashboardSideBar.collapsedWidth -
+                      dividerWidth * 2) /
+                  3;
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  WindowsDashboardSideBar(controller: controller),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 12),
+                    child: VerticalDivider(
+                      width: dividerWidth,
+                      thickness: 1,
+                      color: ColorConstants.borderLight,
+                    ),
+                  ),
+                  SizedBox(
+                    width: tileWidth,
+                    child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        WindowsDashboardSideBar(controller: controller),
-                        const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 12),
-                          child: VerticalDivider(
-                            width: dividerWidth,
-                            thickness: 1,
-                            color: ColorConstants.borderLight,
-                          ),
-                        ),
-                        SizedBox(
-                          width: tileWidth,
-                          child: SingleChildScrollView(
-                            child: Padding(
-                              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    StringConstants.peripheralOverview,
-                                    style: StyleConstants.black16w700Style,
-                                  ),
-                                  const SizedBox(height: 8),
-                                  WindowsDashboardTileGrid(
-                                    controller: controller,
-                                    tiles:
-                                        WindowsDashboardTileRegistry.overviewTiles(
-                                          controller,
-                                        ),
-                                    heightFactor: 0.1,
-                                  ),
-                                  const SizedBox(height: 16),
-                                  Text(
-                                    StringConstants.panelActions,
-                                    style: StyleConstants.black16w700Style,
-                                  ),
-                                  const SizedBox(height: 8),
-                                  WindowsDashboardTileGrid(
-                                    controller: controller,
-                                    tiles:
-                                        WindowsDashboardTileRegistry.panelActionTiles(
-                                          controller,
-                                        ),
-                                    heightFactor: 0.15,
-                                  ),
-                                ],
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Panel Details',
+                                style: StyleConstants.black16w700Style,
                               ),
-                            ),
-                          ),
-                        ),
-                        const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 12),
-                          child: VerticalDivider(
-                            width: dividerWidth,
-                            thickness: 1,
-                            color: ColorConstants.borderLight,
+                              const SizedBox(height: 8),
+                              WindowsDashboardPanelHeader(
+                                controller: controller,
+                              ),
+                            ],
                           ),
                         ),
                         Expanded(
-                          child: WindowsDashboardDetailPane(
-                            controller: controller,
+                          child: SingleChildScrollView(
+                            padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  StringConstants.peripheralOverview,
+                                  style: StyleConstants.black16w700Style,
+                                ),
+                                const SizedBox(height: 8),
+                                WindowsDashboardTileGrid(
+                                  controller: controller,
+                                  tiles:
+                                      WindowsDashboardTileRegistry.overviewTiles(
+                                        controller,
+                                      ),
+                                  heightFactor: 0.1,
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  StringConstants.panelActions,
+                                  style: StyleConstants.black16w700Style,
+                                ),
+                                const SizedBox(height: 8),
+                                WindowsDashboardTileGrid(
+                                  controller: controller,
+                                  tiles:
+                                      WindowsDashboardTileRegistry.panelActionTiles(
+                                        controller,
+                                      ),
+                                  heightFactor: 0.15,
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ],
-                    );
-                  },
-                ),
-              ),
-            ],
+                    ),
+                  ),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 12),
+                    child: VerticalDivider(
+                      width: dividerWidth,
+                      thickness: 1,
+                      color: ColorConstants.borderLight,
+                    ),
+                  ),
+                  Expanded(
+                    child: WindowsDashboardDetailPane(controller: controller),
+                  ),
+                ],
+              );
+            },
           ),
         ),
       ),
