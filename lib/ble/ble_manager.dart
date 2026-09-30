@@ -1807,8 +1807,8 @@ class BleManager extends GetxService {
       handshakeCompleteNotifier.value = false;
       _handshakeCompleter = Completer<void>();
       currentOperationMode = BleOperationMode.none;
-      await registerNotifyHandler();
       try {
+        await registerNotifyHandler();
         await _handshakeCompleter!.future;
         handshakeCompleteNotifier.value = true;
       } finally {
@@ -1851,6 +1851,9 @@ class BleManager extends GetxService {
             },
           );
 
+      if (Platform.isWindows) {
+        await flutterReactiveBle.waitForWindowsNotifySubscription();
+      }
       await Future.delayed(const Duration(milliseconds: 300));
 
       if (isChipInBootLoader != true) {
@@ -2382,6 +2385,10 @@ class BleManager extends GetxService {
       }
     } catch (e) {
       Logger("Sending data failed with error: $e");
+      final handshake = _handshakeCompleter;
+      if (handshake != null && !handshake.isCompleted) {
+        handshake.completeError(e);
+      }
     }
   }
 

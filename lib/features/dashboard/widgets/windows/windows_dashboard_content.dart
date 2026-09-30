@@ -1,3 +1,4 @@
+import 'package:Technoswitch/features/dashboard/widgets/windows/windows_dashboard_access_code_pane.dart';
 import 'package:Technoswitch/features/dashboard/widgets/windows/windows_dashboard_panel_header.dart';
 import 'package:Technoswitch/features/dashboard/widgets/windows/windows_dashboard_tile_registry.dart';
 import 'package:Technoswitch/features/dashboard/widgets/windows/windows_peripheral_tile.dart';
@@ -139,29 +140,63 @@ class _WindowsDashboardDetailPaneState
         });
   }
 
+  bool _awaitingAccessCode(bool sessionReady) {
+    return !sessionReady;
+  }
+
   @override
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: const BoxDecoration(
         border: Border(left: BorderSide(color: ColorConstants.borderLight)),
       ),
-      child: Navigator(
+      child: ValueListenableBuilder<bool>(
+        valueListenable: widget.controller.ble.isConnectedNotifier,
+        builder: (context, isConnected, _) {
+          if (!isConnected) {
+            return _paneMessage('Please connect with the panel to proceed');
+          }
+          return ValueListenableBuilder<bool>(
+            valueListenable:
+                widget
+                    .controller
+                    .bleController
+                    .bleProcess
+                    .sessionAccessCodeReady,
+            builder: (context, sessionReady, _) {
+              if (_awaitingAccessCode(sessionReady)) {
+                return WindowsDashboardAccessCodePane(
+                  controller: widget.controller,
+                );
+              }
+              return _detailNavigator();
+            },
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _paneMessage(String message) {
+    return ColoredBox(
+      color: ColorConstants.white,
+      child: Center(
+        child: Text(
+          message,
+          textAlign: TextAlign.center,
+          style: StyleConstants.textMuted14w400Style,
+        ),
+      ),
+    );
+  }
+
+  Widget _detailNavigator() {
+    return Navigator(
         key: _navigatorKey,
         onGenerateRoute:
             (_) => MaterialPageRoute<void>(
-              builder:
-                  (_) => ColoredBox(
-                    color: ColorConstants.white,
-                    child: Center(
-                      child: Text(
-                        'Please select a module to view',
-                        textAlign: TextAlign.center,
-                        style: StyleConstants.textMuted14w400Style,
-                      ),
-                    ),
-                  ),
+              builder: (_) => _paneMessage('Please select a module to view'),
             ),
-      ),
     );
   }
 }

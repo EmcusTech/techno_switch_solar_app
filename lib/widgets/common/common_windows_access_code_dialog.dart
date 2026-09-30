@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:Technoswitch/ble/ble_process.dart';
 import 'package:Technoswitch/utils/constants/asset_constants.dart';
@@ -22,6 +23,7 @@ class CommonWindowsAccessCodeDialog extends StatefulWidget {
     this.onAccessGranted,
     this.successCloseDelay = const Duration(milliseconds: 400),
     this.persistSessionAccessCode = true,
+    this.embedded = false,
   });
 
   final BleProcess bleProcess;
@@ -30,6 +32,9 @@ class CommonWindowsAccessCodeDialog extends StatefulWidget {
   final Future<void> Function()? onAccessGranted;
   final Duration successCloseDelay;
   final bool persistSessionAccessCode;
+
+  /// Draws the form in a parent pane. Success calls [onAccessGranted] and does not pop.
+  final bool embedded;
 
   @override
   State<CommonWindowsAccessCodeDialog> createState() =>
@@ -212,118 +217,144 @@ class _CommonWindowsAccessCodeDialogState
     final borderColor =
         isError ? ColorConstants.primary : ColorConstants.borderLight;
 
+    final content = ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 420),
+      child: Padding(
+        padding:
+            widget.embedded
+                ? const EdgeInsets.all(24)
+                : const EdgeInsets.fromLTRB(24, 16, 16, 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (!widget.embedded)
+              Align(
+                alignment: Alignment.centerRight,
+                child:
+                    locked
+                        ? const SizedBox(height: 38, width: 38)
+                        : IconButton(
+                          onPressed: _onClose,
+                          icon: const Icon(Icons.close, size: 20),
+                        ),
+              ),
+            _buildHeader(status, isError),
+            const SizedBox(height: 24),
+            if (!hideInput)
+              TextField(
+                controller: _controller,
+                focusNode: _focusNode,
+                autofocus: true,
+                obscureText: true,
+                maxLength: _maxLength,
+                textAlign: TextAlign.center,
+                keyboardType: TextInputType.number,
+                textInputAction: TextInputAction.done,
+                style: StyleConstants.textDark24w600Style,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                onChanged: _onChanged,
+                onSubmitted: (_) {
+                  if (showVerify && _controller.text.trim().isNotEmpty) {
+                    _onVerify();
+                  }
+                },
+                decoration: InputDecoration(
+                  hintText: StringConstants.strca4d661a,
+                  hintStyle: StyleConstants.borderLight24w600Style,
+                  counterText: '',
+                  filled: true,
+                  fillColor: ColorConstants.surfaceLight,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: borderColor),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: borderColor),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(
+                      color: ColorConstants.primary,
+                      width: 2,
+                    ),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 16,
+                  ),
+                ),
+              ),
+            if (message != null && message.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Text(
+                message,
+                style: StyleConstants.primary14w600Style.copyWith(
+                  color:
+                      isError
+                          ? ColorConstants.primary
+                          : ColorConstants.textDark,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+            if (showVerify) ...[
+              const SizedBox(height: 18),
+              ListenableBuilder(
+                listenable: _controller,
+                builder: (context, _) {
+                  final canVerify = _controller.text.trim().isNotEmpty;
+                  return CommonCtaButton(
+                    isDisabled: !canVerify,
+                    onTap: canVerify ? _onVerify : null,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.verified, color: ColorConstants.white),
+                        const SizedBox(width: 8),
+                        Text(
+                          StringConstants.verify,
+                          style: StyleConstants.white14boldStyle,
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+
+    if (widget.embedded) {
+      return ColoredBox(
+        color: ColorConstants.white,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Visibility(
+              visible: status == _AccessCodeStatus.empty,
+              child: Align(
+                alignment: Alignment.topCenter,
+                child: Text(
+                  StringConstants.accessReq,
+                  style: StyleConstants.textBodyDark18w800Style,
+                ),
+              ),
+            ),
+            SizedBox(height: 140.h),
+            content,
+          ],
+        ),
+      );
+    }
+
     return PopScope(
       canPop: !locked,
       child: Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 420),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(24, 16, 16, 24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Align(
-                  alignment: Alignment.centerRight,
-                  child:
-                      locked
-                          ? const SizedBox(height: 38, width: 38)
-                          : IconButton(
-                            onPressed: _onClose,
-                            icon: const Icon(Icons.close, size: 20),
-                          ),
-                ),
-                _buildHeader(status, isError),
-                const SizedBox(height: 24),
-                if (!hideInput)
-                  TextField(
-                    controller: _controller,
-                    focusNode: _focusNode,
-                    autofocus: true,
-                    obscureText: true,
-                    maxLength: _maxLength,
-                    textAlign: TextAlign.center,
-                    keyboardType: TextInputType.number,
-                    textInputAction: TextInputAction.done,
-                    style: StyleConstants.textDark24w600Style,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    onChanged: _onChanged,
-                    onSubmitted: (_) {
-                      if (showVerify && _controller.text.trim().isNotEmpty) {
-                        _onVerify();
-                      }
-                    },
-                    decoration: InputDecoration(
-                      hintText: StringConstants.strca4d661a,
-                      hintStyle: StyleConstants.borderLight24w600Style,
-                      counterText: '',
-                      filled: true,
-                      fillColor: ColorConstants.surfaceLight,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: borderColor),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: borderColor),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(
-                          color: ColorConstants.primary,
-                          width: 2,
-                        ),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 16,
-                      ),
-                    ),
-                  ),
-                if (message != null && message.isNotEmpty) ...[
-                  const SizedBox(height: 8),
-                  Text(
-                    message,
-                    style: StyleConstants.primary14w600Style.copyWith(
-                      color:
-                          isError
-                              ? ColorConstants.primary
-                              : ColorConstants.textDark,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-                if (showVerify) ...[
-                  const SizedBox(height: 18),
-                  ListenableBuilder(
-                    listenable: _controller,
-                    builder: (context, _) {
-                      final canVerify = _controller.text.trim().isNotEmpty;
-                      return CommonCtaButton(
-                        isDisabled: !canVerify,
-                        onTap: canVerify ? _onVerify : null,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(
-                              Icons.verified,
-                              color: ColorConstants.white,
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              StringConstants.verify,
-                              style: StyleConstants.white14boldStyle,
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ),
+        child: content,
       ),
     );
   }

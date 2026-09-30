@@ -150,6 +150,15 @@ class FlutterReactiveBle {
 
   final Map<String, fbp.BluetoothDevice> _deviceCache =
       <String, fbp.BluetoothDevice>{};
+  QualifiedCharacteristic? _windowsNotifySubscription;
+  Completer<void>? _windowsNotifyReady;
+
+  /// Completes after the Windows notify characteristic is subscribed.
+  Future<void> waitForWindowsNotifySubscription() {
+    final ready = _windowsNotifyReady;
+    if (ready == null) return Future<void>.value();
+    return ready.future;
+  }
 
   Stream<BleStatus> get statusStream {
     if (Platform.isWindows) return _windowsStatusStream();
@@ -376,6 +385,7 @@ class FlutterReactiveBle {
     controller.onCancel = () async {
       await stateSub?.cancel();
       if (!connected) return;
+      await _releaseWindowsSubscription();
       try {
         await WinBle.disconnect(id);
       } catch (e) {
@@ -439,6 +449,7 @@ class FlutterReactiveBle {
 
   Future<void> abortConnection(String id) async {
     if (Platform.isWindows) {
+      await _releaseWindowsSubscription();
       try {
         await WinBle.disconnect(id);
       } catch (e) {
@@ -501,33 +512,124 @@ class FlutterReactiveBle {
 
   Stream<List<int>> _subscribeToCharacteristicWindows(
     QualifiedCharacteristic characteristic,
-  ) async* {
+  ) {
+    final controller = StreamController<List<int>>();
+    StreamSubscription<dynamic>? valueSub;
+    final ready = Completer<void>();
+    _windowsNotifyReady = ready;
+
+    controller.onListen = () async {
+      try {
+        await _ensureWindowsSubscription(characteristic);
+        if (controller.isClosed) {
+          await _releaseWindowsSubscription(characteristic);
+          if (!ready.isCompleted) {
+            ready.completeError(
+              StateError('Windows notify subscription cancelled'),
+            );
+          }
+          return;
+        }
+        if (!ready.isCompleted) ready.complete();
+        valueSub = WinBle.characteristicValueStreamOf(
+          address: characteristic.deviceId,
+          serviceId: _winBleUuid(characteristic.serviceId),
+          characteristicId: _winBleUuid(characteristic.characteristicId),
+        ).listen(
+          (value) {
+            if (!controller.isClosed) {
+              controller.add(_winBleValueBytes(value));
+            }
+          },
+          onError: (Object error, StackTrace stack) {
+            if (!controller.isClosed) controller.addError(error, stack);
+          },
+        );
+      } catch (e, stack) {
+        if (!ready.isCompleted) ready.completeError(e, stack);
+        if (!controller.isClosed) controller.addError(e, stack);
+      }
+    };
+    controller.onCancel = () async {
+      if (!ready.isCompleted) {
+        ready.completeError(StateError('Windows notify subscription cancelled'));
+      }
+      await valueSub?.cancel();
+      await _releaseWindowsSubscription(characteristic);
+    };
+
+    return controller.stream;
+  }
+
+  Future<void> _ensureWindowsSubscription(
+    QualifiedCharacteristic characteristic,
+  ) async {
     final address = characteristic.deviceId;
     final serviceId = _winBleUuid(characteristic.serviceId);
     final characteristicId = _winBleUuid(characteristic.characteristicId);
 
-    try {
-      await WinBle.subscribeToCharacteristic(
-        address: address,
-        serviceId: serviceId,
-        characteristicId: characteristicId,
-      );
-    } catch (e) {
-      debugPrint('WinBle subscribe failed, trying pair: $e');
-      final paired = await WinBle.isPaired(address, forceRefresh: true);
-      if (!paired) await WinBle.pair(address);
-      await WinBle.subscribeToCharacteristic(
+    Future<void> subscribe() {
+      return WinBle.subscribeToCharacteristic(
         address: address,
         serviceId: serviceId,
         characteristicId: characteristicId,
       );
     }
 
-    yield* WinBle.characteristicValueStreamOf(
-      address: address,
-      serviceId: serviceId,
-      characteristicId: characteristicId,
-    ).map(_winBleValueBytes);
+    try {
+      await subscribe();
+    } catch (e) {
+      final closed = e.toString().toLowerCase().contains('closed');
+      if (closed) {
+        debugPrint('WinBle subscribe hit a closed device, reconnecting: $e');
+        await _releaseWindowsSubscription(characteristic);
+        try {
+          await WinBle.connect(address);
+        } catch (connectError) {
+          debugPrint('WinBle reconnect before subscribe failed: $connectError');
+        }
+        await subscribe();
+      } else {
+        debugPrint('WinBle subscribe failed, trying pair: $e');
+        try {
+          final paired = await WinBle.isPaired(address, forceRefresh: true);
+          if (!paired) await WinBle.pair(address);
+        } catch (pairError) {
+          debugPrint('WinBle pair failed: $pairError');
+        }
+        await subscribe();
+      }
+    }
+
+    _windowsNotifySubscription = characteristic;
+  }
+
+  Future<void> _releaseWindowsSubscription([
+    QualifiedCharacteristic? characteristic,
+  ]) async {
+    final stored = _windowsNotifySubscription;
+    final current = characteristic ?? stored;
+    if (current == null) return;
+    if (stored != null &&
+        characteristic != null &&
+        (stored.deviceId != characteristic.deviceId ||
+            stored.characteristicId != characteristic.characteristicId)) {
+      return;
+    }
+    if (stored == null ||
+        (stored.deviceId == current.deviceId &&
+            stored.characteristicId == current.characteristicId)) {
+      _windowsNotifySubscription = null;
+    }
+    try {
+      await WinBle.unSubscribeFromCharacteristic(
+        address: current.deviceId,
+        serviceId: _winBleUuid(current.serviceId),
+        characteristicId: _winBleUuid(current.characteristicId),
+      );
+    } catch (e) {
+      debugPrint('WinBle unsubscribe failed: $e');
+    }
   }
 
   Stream<List<int>> _subscribeToCharacteristicAndroid(

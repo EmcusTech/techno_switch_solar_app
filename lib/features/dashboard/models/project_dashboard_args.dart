@@ -7,6 +7,8 @@ class ProjectDashboardArgs {
     required this.selectedDevice,
     this.siteId,
     this.siteName,
+    this.awaitWindowsAccessCode = false,
+    this.panelHadNoSiteBeforeConnect = false,
   });
 
   final String panelVersionNo;
@@ -14,4 +16,10 @@ class ProjectDashboardArgs {
   final int? siteId;
   final String? siteName;
   final DiscoveredDevice selectedDevice;
+
+  /// Windows connect landed here before the access code was verified.
+  final bool awaitWindowsAccessCode;
+
+  /// True when this panel had no site until the connect that opened the dashboard.
+  final bool panelHadNoSiteBeforeConnect;
 }

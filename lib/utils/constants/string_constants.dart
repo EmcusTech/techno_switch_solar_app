@@ -170,6 +170,7 @@ abstract final class StringConstants {
   static const String accessMode = "Access Mode";
   static const String accessOurComprehensiveUserManual =
       "Access our comprehensive user manual";
+  static const String accessReq = "Access required";
   static const String accesscode = "accessCode";
   static const String accesscodeno = "accessCodeNo";
   static const String accesslevel = "accessLevel";

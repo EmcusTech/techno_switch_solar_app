@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -767,6 +768,19 @@ class ScanController extends GetxController {
           panelName: activeDevice.name,
           connectedDevice: activeDevice,
           isLiveEventLogs: true,
+        ),
+      );
+    } else if (Platform.isWindows) {
+      bleLogController.bleProcess.clearSessionAccessCode();
+      if (!ui.isMounted) return;
+      ui.navigateToProjectDashboard(
+        args: ProjectDashboardArgs(
+          panelVersionNo: activeDevice.id,
+          panelName: activeDevice.name,
+          selectedDevice: activeDevice,
+          siteId: siteId,
+          awaitWindowsAccessCode: true,
+          panelHadNoSiteBeforeConnect: panelHadNoSiteBeforeConnect,
         ),
       );
     } else {

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -344,6 +345,8 @@ class ProjectDashboardController extends GetxController {
       if (_ui?.isMounted != true) return;
 
       bleController.bleProcess.clearSessionAccessCode();
+      if (Platform.isWindows) return;
+
       final ok = await ui.showPanelAccessCodeGatewayDialog(
         onStartValidation: bleController.startSessionAccessCodeValidation,
       );
