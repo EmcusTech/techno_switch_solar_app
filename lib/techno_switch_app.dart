@@ -10,6 +10,7 @@ import 'package:Technoswitch/utils/app/app_services.dart';
 import 'package:Technoswitch/utils/app/navigation_service.dart';
 import 'package:Technoswitch/utils/ble/ble_session_idle_timeout.dart';
 import 'package:Technoswitch/utils/constants/string_constants.dart';
+import 'package:Technoswitch/widgets/windows/static_page_transitions.dart';
 import 'package:Technoswitch/widgets/windows/windows_app_frame.dart';
 
 class TechnoSwitchApp extends StatefulWidget {
@@ -70,6 +71,16 @@ class _TechnoSwitchAppState extends State<TechnoSwitchApp>
                     Theme.of(context).textTheme,
                   ),
                   useMaterial3: true,
+                  pageTransitionsTheme: const PageTransitionsTheme(
+                    builders: {
+                      TargetPlatform.android:
+                          PredictiveBackPageTransitionsBuilder(),
+                      TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+                      TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
+                      TargetPlatform.linux: ZoomPageTransitionsBuilder(),
+                      TargetPlatform.windows: StaticPageTransitionsBuilder(),
+                    },
+                  ),
                 ),
                 home:
                     Platform.isWindows

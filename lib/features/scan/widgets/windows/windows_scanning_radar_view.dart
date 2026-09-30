@@ -2,9 +2,7 @@ import 'package:Technoswitch/features/scan/widgets/windows/windows_scan_device_g
 import 'package:flutter/material.dart';
 import 'package:Technoswitch/features/scan/controllers/scan_controller.dart';
 import 'package:Technoswitch/features/scan/widgets/radar_painter.dart';
-import 'package:Technoswitch/features/scan/widgets/scan_background_decor.dart';
 import 'package:Technoswitch/features/scan/widgets/scan_back_button.dart';
-import 'package:Technoswitch/features/scan/widgets/scan_device_grid.dart';
 import 'package:Technoswitch/features/scan/widgets/sweep_painter.dart';
 import 'package:Technoswitch/features/scan/widgets/windows/windows_scan_background_decor.dart';
 import 'package:Technoswitch/utils/constants/color_constants.dart';

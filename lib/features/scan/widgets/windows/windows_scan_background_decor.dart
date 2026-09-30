@@ -1,3 +1,4 @@
+import 'package:Technoswitch/utils/constants/color_constants.dart';
 import 'package:flutter/material.dart';
 import 'package:Technoswitch/utils/constants/asset_constants.dart';
 
@@ -6,12 +7,19 @@ class WindowsScanBackgroundDecor extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      height: double.infinity,
-      child: Image.asset(
-        AssetConstants.windowsScanBackground,
-        fit: BoxFit.cover,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 20.0),
+      child: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: ColorConstants.cardBorder),
+        ),
+        child: Image.asset(
+          AssetConstants.windowsScanBackground,
+          fit: BoxFit.fill,
+        ),
       ),
     );
   }
