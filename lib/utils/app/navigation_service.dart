@@ -6,6 +6,8 @@ import 'package:Technoswitch/utils/constants/string_constants.dart';
 final RouteObserver<ModalRoute<void>> appRouteObserver =
     RouteObserver<ModalRoute<void>>();
 
+final GlobalKey<NavigatorState> appNavigatorKey = GlobalKey<NavigatorState>();
+
 class NavigationService {
   static Future<void> navigateBackToHome(BuildContext context) async {
     if (AppServices.isConnected) {

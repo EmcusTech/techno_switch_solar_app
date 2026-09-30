@@ -63,6 +63,7 @@ abstract final class ColorConstants {
   static const Color backgroundGray = Color(0xFFF5F5F5);
   static const Color scaffoldGradientTop = Color(0xFFF6EBEB);
   static const Color surfaceLight = Color(0xFFF8F8F8);
+  static const Color surfaceWhiteLight = Color(0xFFF2F2F2);
   static const Color zebraStripeLight = Color(0xFFF9F9F9);
   static const Color colorFffaefef = Color(0xFFFAEFEF);
   static const Color surfaceOffWhite = Color(0xFFFAFAFA);

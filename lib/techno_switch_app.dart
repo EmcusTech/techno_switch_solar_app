@@ -10,6 +10,7 @@ import 'package:Technoswitch/utils/app/app_services.dart';
 import 'package:Technoswitch/utils/app/navigation_service.dart';
 import 'package:Technoswitch/utils/ble/ble_session_idle_timeout.dart';
 import 'package:Technoswitch/utils/constants/string_constants.dart';
+import 'package:Technoswitch/widgets/windows/windows_app_frame.dart';
 
 class TechnoSwitchApp extends StatefulWidget {
   const TechnoSwitchApp({super.key});
@@ -55,8 +56,14 @@ class _TechnoSwitchAppState extends State<TechnoSwitchApp>
               designSize: const Size(1440, 779),
               minTextAdapt: true,
               child: MaterialApp(
+                navigatorKey: appNavigatorKey,
                 debugShowCheckedModeBanner: false,
                 navigatorObservers: <NavigatorObserver>[appRouteObserver],
+                builder: (context, child) {
+                  final page = child ?? const SizedBox.shrink();
+                  if (!Platform.isWindows) return page;
+                  return WindowsAppFrame(child: page);
+                },
                 title: StringConstants.appTitle,
                 theme: ThemeData(
                   textTheme: GoogleFonts.interTextTheme(
