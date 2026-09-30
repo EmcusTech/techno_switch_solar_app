@@ -44,7 +44,7 @@ class WindowsDashboardContent extends StatelessWidget {
                     return Row(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        const WindowsDashboardSideBar(),
+                        WindowsDashboardSideBar(controller: controller),
                         const Padding(
                           padding: EdgeInsets.symmetric(vertical: 12),
                           child: VerticalDivider(
