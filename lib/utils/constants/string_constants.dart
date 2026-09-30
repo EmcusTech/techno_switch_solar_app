@@ -786,6 +786,7 @@ abstract final class StringConstants {
   static const String serviceDueConfiguration = "Service Due Configuration";
   static const String serviceDueMode = "Service Due Mode";
   static const String serviceDueReminder = "Service Due Reminder";
+  static const String setting = "Setting";
   static const String settings = "Settings";
   static const String silenceBuzzer = "Silence Buzzer";
   static const String silenceBuzzerLevel2 = "Silence Buzzer Level";

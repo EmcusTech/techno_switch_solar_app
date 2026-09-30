@@ -37,38 +37,38 @@ class WindowsScanningRadarView extends StatelessWidget {
           child: ScanningAnimation(pausedListenable: scanAnimationsPaused),
         ),
         ScanBackButton(onTap: controller.exitScanning),
-        Column(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 28),
-              child: GestureDetector(
+        Padding(
+          padding: const EdgeInsets.only(bottom: 20.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              GestureDetector(
                 onTap: () => controller.stopScanning(true),
                 child: Container(
-                  width: double.infinity,
                   decoration: BoxDecoration(
                     color: ColorConstants.primary,
                     borderRadius: BorderRadius.circular(28.5),
                   ),
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 20),
-                    child: Center(
-                      child: Text(
-                        StringConstants.stopScanning,
-                        style: StyleConstants.white14w700Style,
-                      ),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 20,
+                      horizontal: 40,
+                    ),
+                    child: Text(
+                      StringConstants.stopScanning,
+                      style: StyleConstants.white14w700Style,
                     ),
                   ),
                 ),
               ),
-            ),
-            const SizedBox(height: 20),
-            Text(
-              StringConstants.pleaseWaitTillScanIdentifiesTheDevices,
-              style: StyleConstants.textBodyDark14w400Style,
-            ),
-            const SizedBox(height: 20),
-          ],
+              const SizedBox(height: 20),
+              Text(
+                StringConstants.pleaseWaitTillScanIdentifiesTheDevices,
+                style: StyleConstants.textBodyDark14w400Style,
+              ),
+              const SizedBox(height: 20),
+            ],
+          ),
         ),
         Center(
           child: SizedBox(

@@ -1,3 +1,4 @@
+import 'package:Technoswitch/utils/constants/style_constants.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
@@ -20,11 +21,7 @@ class RecentSitesTableWidget extends StatelessWidget {
       children: [
         Text(
           StringConstants.recentSites,
-          style: GoogleFonts.inter(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: const Color(0xFF18181B),
-          ),
+          style: StyleConstants.textBodyDark20boldStyle,
         ),
         const SizedBox(height: 10),
         Expanded(
@@ -108,22 +105,14 @@ class RecentSitesTableWidget extends StatelessWidget {
                 site.siteName,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: GoogleFonts.inter(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: ColorConstants.primaryBlue,
-                ),
+                style: StyleConstants.siteTextColor16w600Style,
               ),
             ),
             SizedBox(
               width: 140,
               child: Text(
                 _dateFormat.format(site.createdAt),
-                style: GoogleFonts.inter(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w400,
-                  color: const Color(0xFF3F3F46),
-                ),
+                style: StyleConstants.siteTextColor216w400Style,
               ),
             ),
           ],
@@ -140,13 +129,6 @@ class _HeaderLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      text,
-      style: GoogleFonts.inter(
-        fontSize: 13,
-        fontWeight: FontWeight.w500,
-        color: const Color(0xFF71717A),
-      ),
-    );
+    return Text(text, style: StyleConstants.black16w600Style);
   }
 }

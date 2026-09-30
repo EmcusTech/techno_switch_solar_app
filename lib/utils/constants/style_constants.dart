@@ -430,6 +430,17 @@ abstract final class StyleConstants {
     fontWeight: FontWeight.w600,
     color: ColorConstants.black,
   );
+  static TextStyle get siteTextColor16w600Style => GoogleFonts.inter(
+    fontSize: 16.r,
+    fontWeight: FontWeight.w600,
+    color: ColorConstants.siteTextColor,
+  );
+  static TextStyle get siteTextColor216w400Style => GoogleFonts.inter(
+    fontSize: 16.r,
+    fontWeight: FontWeight.w400,
+    color: ColorConstants.siteTextColor2,
+  );
+
   static TextStyle get blueGray16w500Style => GoogleFonts.inter(
     fontSize: 16.r,
     fontWeight: FontWeight.w500,

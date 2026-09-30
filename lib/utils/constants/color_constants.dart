@@ -14,6 +14,8 @@ abstract final class ColorConstants {
   static const Color success = Color(0xFF00A706);
   static const Color accentBlue = Color(0xFF0F72E9);
   static const Color colorFf1565C0 = Color(0xFF1565C0);
+  static const Color siteTextColor = Color(0xFF397CAD);
+  static const Color siteTextColor2 = Color(0xFF717171);
   static const Color textHeading = Color(0xFF1B1F26);
   static const Color cardBorder = Color(0xFFE4E4E7);
   static const Color textPrimaryMaterial = Color(0xFF1D1B20);

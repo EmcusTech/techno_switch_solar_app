@@ -10,7 +10,7 @@ class ScanBackButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Positioned(
       top: 50,
-      left: 20,
+      left: 50,
       child: GestureDetector(
         onTap: onTap,
         child: Container(

@@ -9,6 +9,7 @@ import 'package:Technoswitch/utils/constants/string_constants.dart';
 import 'package:Technoswitch/utils/modes/ext_out_equipment_mode_util.dart';
 import 'package:Technoswitch/utils/modes/general_quipment_mode_util.dart';
 import 'package:Technoswitch/config/ble/ext_out_setup_payload.dart';
+import 'package:Technoswitch/config/ble/module_id_payload.dart';
 import 'package:Technoswitch/config/ble/input_setup_payload.dart';
 import 'package:Technoswitch/config/ble/input_setup_payload_debug.dart';
 import 'package:Technoswitch/config/ble/panel_access_lvl_setup_payload.dart';
@@ -1080,6 +1081,7 @@ class BleProcess {
       }
 
       if (isSessionAccessCodeValidationOnly) {
+        ModuleIdPayload.logResponse(rx.payload);
         isSessionAccessCodeValidationOnly = false;
         bleManager.otaProcessState = OtaProcessState.notInUse;
         cancelOperationDeadline();

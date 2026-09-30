@@ -122,7 +122,7 @@ class WindowsAppMenuBar extends StatelessWidget {
                 child: const Text(StringConstants.projectSettings),
               ),
             ],
-            child: const Text(StringConstants.settings),
+            child: const Text(StringConstants.setting),
           ),
           SubmenuButton(
             style: itemStyle,
