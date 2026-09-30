@@ -235,7 +235,9 @@ mixin ScanUiDelegateMixin<T extends StatefulWidget> on State<T>
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
             ),
-            child: Container(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 420),
+              child: Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
                 color: ColorConstants.white,
@@ -317,6 +319,7 @@ mixin ScanUiDelegateMixin<T extends StatefulWidget> on State<T>
                 ],
               ),
             ),
+            ),
           );
         },
       );
@@ -349,7 +352,9 @@ mixin ScanUiDelegateMixin<T extends StatefulWidget> on State<T>
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: Container(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 420),
+                child: Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
                   color: ColorConstants.white,
@@ -549,6 +554,7 @@ mixin ScanUiDelegateMixin<T extends StatefulWidget> on State<T>
                     ),
                   ],
                 ),
+              ),
               ),
             );
           },
