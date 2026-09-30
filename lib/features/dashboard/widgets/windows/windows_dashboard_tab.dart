@@ -26,7 +26,7 @@ class WindowsDashboardTab extends StatelessWidget {
             onBack: controller.handleBackNavigation,
             onExport: onExport,
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           WindowsDashboardContent(controller: controller),
         ],
       ),

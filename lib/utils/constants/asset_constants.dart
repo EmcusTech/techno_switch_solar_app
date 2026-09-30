@@ -36,6 +36,11 @@ class AssetConstants {
   static const String tableDeselectedIcon =
       '$_svgDir/table_deselected_icon.svg';
   static const String addCircleIcon = '$_svgDir/add_circle_icon.svg';
+  static const String winFolderIcon = '$_svgDir/win_folder_icon.svg';
+  static const String winPanelIcon = '$_svgDir/win_panel_icon.svg';
+  static const String winPanelInnerIcon = '$_svgDir/win_panel_inner_icon.svg';
+  static const String winSidePanelCloseIcon =
+      '$_svgDir/win_side_panel_close_icon.svg';
   static const String editIcon = '$_svgDir/edit_icon.svg';
   static const String homeIcon = '$_svgDir/home_icon.svg';
   static const String helpIcon = '$_svgDir/help_icon.svg';

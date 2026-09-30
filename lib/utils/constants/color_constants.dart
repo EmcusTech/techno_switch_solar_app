@@ -57,6 +57,7 @@ abstract final class ColorConstants {
   static const Color dividerLight = Color(0xFFE8E8E8);
   static const Color successBackgroundLight = Color(0xFFE8F5E9);
   static const Color surfaceCard = Color(0xFFE9ECEF);
+  static const Color blueTint = Color(0xFFECF2F7);
   static const Color primary = Color(0xFFEC1D24);
   static const Color primaryBlue = Color(0xFF098AE6);
   static const Color warningAmber = Color(0xFFEDA145);

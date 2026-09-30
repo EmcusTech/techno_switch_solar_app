@@ -12,15 +12,16 @@ class DashboardShell extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [ColorConstants.scaffoldGradientTop, ColorConstants.white],
-        ),
+        color: ColorConstants.backgroundSubtle,
+        // gradient: LinearGradient(
+        //   begin: Alignment.topCenter,
+        //   end: Alignment.bottomCenter,
+        //   colors: [ColorConstants.scaffoldGradientTop, ColorConstants.white],
+        // ),
       ),
       child: Stack(
         children: [
-          SvgPicture.asset(AssetConstants.background1),
+          // SvgPicture.asset(AssetConstants.background1),
           Padding(padding: const EdgeInsets.only(top: 24), child: child),
         ],
       ),

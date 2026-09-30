@@ -1,3 +1,4 @@
+import 'package:Technoswitch/features/dashboard/widgets/windows/windows_dashboard_side_bar.dart';
 import 'package:Technoswitch/features/dashboard/widgets/windows/windows_dashboard_access_code_pane.dart';
 import 'package:Technoswitch/features/dashboard/widgets/windows/windows_dashboard_panel_header.dart';
 import 'package:Technoswitch/features/dashboard/widgets/windows/windows_dashboard_tile_registry.dart';
@@ -16,69 +17,102 @@ class WindowsDashboardContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Expanded(
-      child: Container(
-        decoration: BoxDecoration(
-          color: ColorConstants.white,
-          borderRadius: BorderRadius.circular(35),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(20),
-              child: WindowsDashboardPanelHeader(controller: controller),
-            ),
-            Expanded(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Expanded(
-                    flex: 1,
-                    child: SingleChildScrollView(
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              StringConstants.peripheralOverview,
-                              style: StyleConstants.black16w700Style,
-                            ),
-                            const SizedBox(height: 8),
-                            WindowsDashboardTileGrid(
-                              controller: controller,
-                              tiles: WindowsDashboardTileRegistry.overviewTiles(
-                                controller,
-                              ),
-                              heightFactor: 0.1,
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              StringConstants.panelActions,
-                              style: StyleConstants.black16w700Style,
-                            ),
-                            const SizedBox(height: 8),
-                            WindowsDashboardTileGrid(
-                              controller: controller,
-                              tiles:
-                                  WindowsDashboardTileRegistry.panelActionTiles(
-                                    controller,
-                                  ),
-                              heightFactor: 0.15,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    flex: 2,
-                    child: WindowsDashboardDetailPane(controller: controller),
-                  ),
-                ],
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 20.0),
+        child: Container(
+          clipBehavior: Clip.antiAlias,
+          decoration: BoxDecoration(
+            color: ColorConstants.white,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: WindowsDashboardPanelHeader(controller: controller),
               ),
-            ),
-          ],
+              Expanded(
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    const dividerWidth = 1.0;
+                    final tileWidth =
+                        (constraints.maxWidth -
+                            WindowsDashboardSideBar.collapsedWidth -
+                            dividerWidth * 2) /
+                        3;
+                    return Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const WindowsDashboardSideBar(),
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 12),
+                          child: VerticalDivider(
+                            width: dividerWidth,
+                            thickness: 1,
+                            color: ColorConstants.borderLight,
+                          ),
+                        ),
+                        SizedBox(
+                          width: tileWidth,
+                          child: SingleChildScrollView(
+                            child: Padding(
+                              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    StringConstants.peripheralOverview,
+                                    style: StyleConstants.black16w700Style,
+                                  ),
+                                  const SizedBox(height: 8),
+                                  WindowsDashboardTileGrid(
+                                    controller: controller,
+                                    tiles:
+                                        WindowsDashboardTileRegistry.overviewTiles(
+                                          controller,
+                                        ),
+                                    heightFactor: 0.1,
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    StringConstants.panelActions,
+                                    style: StyleConstants.black16w700Style,
+                                  ),
+                                  const SizedBox(height: 8),
+                                  WindowsDashboardTileGrid(
+                                    controller: controller,
+                                    tiles:
+                                        WindowsDashboardTileRegistry.panelActionTiles(
+                                          controller,
+                                        ),
+                                    heightFactor: 0.15,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 12),
+                          child: VerticalDivider(
+                            width: dividerWidth,
+                            thickness: 1,
+                            color: ColorConstants.borderLight,
+                          ),
+                        ),
+                        Expanded(
+                          child: WindowsDashboardDetailPane(
+                            controller: controller,
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -146,34 +180,25 @@ class _WindowsDashboardDetailPaneState
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: const BoxDecoration(
-        border: Border(left: BorderSide(color: ColorConstants.borderLight)),
-      ),
-      child: ValueListenableBuilder<bool>(
-        valueListenable: widget.controller.ble.isConnectedNotifier,
-        builder: (context, isConnected, _) {
-          if (!isConnected) {
-            return _paneMessage('Please connect with the panel to proceed');
-          }
-          return ValueListenableBuilder<bool>(
-            valueListenable:
-                widget
-                    .controller
-                    .bleController
-                    .bleProcess
-                    .sessionAccessCodeReady,
-            builder: (context, sessionReady, _) {
-              if (_awaitingAccessCode(sessionReady)) {
-                return WindowsDashboardAccessCodePane(
-                  controller: widget.controller,
-                );
-              }
-              return _detailNavigator();
-            },
-          );
-        },
-      ),
+    return ValueListenableBuilder<bool>(
+      valueListenable: widget.controller.ble.isConnectedNotifier,
+      builder: (context, isConnected, _) {
+        if (!isConnected) {
+          return _paneMessage('Please connect with the panel to proceed');
+        }
+        return ValueListenableBuilder<bool>(
+          valueListenable:
+              widget.controller.bleController.bleProcess.sessionAccessCodeReady,
+          builder: (context, sessionReady, _) {
+            if (_awaitingAccessCode(sessionReady)) {
+              return WindowsDashboardAccessCodePane(
+                controller: widget.controller,
+              );
+            }
+            return _detailNavigator();
+          },
+        );
+      },
     );
   }
 
@@ -192,11 +217,11 @@ class _WindowsDashboardDetailPaneState
 
   Widget _detailNavigator() {
     return Navigator(
-        key: _navigatorKey,
-        onGenerateRoute:
-            (_) => MaterialPageRoute<void>(
-              builder: (_) => _paneMessage('Please select a module to view'),
-            ),
+      key: _navigatorKey,
+      onGenerateRoute:
+          (_) => MaterialPageRoute<void>(
+            builder: (_) => _paneMessage('Please select a module to view'),
+          ),
     );
   }
 }
