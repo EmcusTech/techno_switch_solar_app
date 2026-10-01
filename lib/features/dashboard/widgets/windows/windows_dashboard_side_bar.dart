@@ -55,8 +55,14 @@ class _WindowsDashboardSideBarState extends State<WindowsDashboardSideBar> {
             children: [
               SvgPicture.asset(AssetConstants.winFolderIcon),
               const SizedBox(width: 4),
-              Text(_siteName, maxLines: 1, overflow: TextOverflow.ellipsis),
-              Spacer(),
+              Flexible(
+                child: Text(
+                  _siteName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const Spacer(),
               InkWell(
                 onTap: () => setState(() => _expanded = false),
                 child: SvgPicture.asset(AssetConstants.winSidePanelCloseIcon),
@@ -125,12 +131,14 @@ class _WindowsDashboardSideBarState extends State<WindowsDashboardSideBar> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(Icons.add, color: ColorConstants.white, size: 16),
-                  SizedBox(width: 4),
-                  Text(
-                    StringConstants.addPanel,
-                    style: StyleConstants.white12w400Style,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                  const SizedBox(width: 4),
+                  Flexible(
+                    child: Text(
+                      StringConstants.addPanel,
+                      style: StyleConstants.white12w400Style,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                 ],
               ),
