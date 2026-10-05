@@ -18,8 +18,8 @@ class WindowsScanDeviceGrid extends StatelessWidget {
 
   static const int _columns = 3;
   static const double _spacing = 12;
-  static final double _cardWidth = 100.w;
-  static final double _cardHeight = 140.h;
+  static final double _cardWidth = 120;
+  static final double _cardHeight = 140;
 
   @override
   Widget build(BuildContext context) {

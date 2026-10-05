@@ -8,7 +8,7 @@ import 'strings/panel_values.dart';
 import 'strings/ui_strings.dart';
 
 abstract final class StringConstants {
-  static const String appTitle = "Techno Switch Solar";
+  static const String appTitle = "Technoswitch";
 
   //Errors and Validation
   static const String convError =

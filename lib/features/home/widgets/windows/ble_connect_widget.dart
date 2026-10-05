@@ -18,6 +18,7 @@ class _BleConnectWidgetState extends State<BleConnectWidget> {
   @override
   Widget build(BuildContext context) {
     return InkWell(
+      hoverColor: ColorConstants.transparent,
       onTap: widget.controller.openTapToConnectScan,
       child: Container(
         decoration: BoxDecoration(

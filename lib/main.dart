@@ -20,6 +20,7 @@ void main() async {
       title: 'TechnoSwitch',
       size: Size(1280, 720),
       minimumSize: Size(1280, 720),
+      titleBarStyle: TitleBarStyle.hidden,
     );
 
     windowManager.waitUntilReadyToShow(windowOptions, () async {
