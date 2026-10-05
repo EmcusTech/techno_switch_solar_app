@@ -30,12 +30,14 @@ class ZoneBottomSheet extends StatefulWidget {
   State<ZoneBottomSheet> createState() => ZoneBottomSheetState();
 }
 
-class ZoneBottomSheetState extends State<ZoneBottomSheet> {
+class ZoneBottomSheetState extends State<ZoneBottomSheet>
+    with SingleTickerProviderStateMixin {
   late final ZoneModeController controller;
 
   int _expandedTileCount = 0;
 
   final ScrollController _scrollController = ScrollController();
+  TabController? _tabController;
 
   late final List<GlobalKey> _tileKeys;
 
@@ -43,6 +45,9 @@ class ZoneBottomSheetState extends State<ZoneBottomSheet> {
   void initState() {
     super.initState();
     _tileKeys = List.generate(3, (_) => GlobalKey());
+    if (PeripheralSheetChrome.flat) {
+      _tabController = TabController(length: 3, vsync: this);
+    }
     controller = Get.put(
       ZoneModeController(
         deviceId: widget.deviceId,
@@ -53,6 +58,7 @@ class ZoneBottomSheetState extends State<ZoneBottomSheet> {
 
   @override
   void dispose() {
+    _tabController?.dispose();
     _scrollController.dispose();
     Get.delete<ZoneModeController>();
     super.dispose();
@@ -141,28 +147,34 @@ class ZoneBottomSheetState extends State<ZoneBottomSheet> {
                               _dragHandle(),
                               _title(StringConstants.zoneMode),
                               Expanded(
-                                child: NotificationListener<
-                                  UserScrollNotification
-                                >(
-                                  onNotification: (notification) {
-                                    if (notification.direction !=
-                                        ScrollDirection.idle) {
-                                      FocusScope.of(context).unfocus();
-                                    }
-                                    return false;
-                                  },
-                                  child: SingleChildScrollView(
-                                    controller: _scrollController,
-                                    physics: const BouncingScrollPhysics(),
-                                    padding: const EdgeInsets.only(top: 16),
-                                    child: Column(
-                                      children: List.generate(
-                                        3,
-                                        (i) => _zoneTile(i),
-                                      ),
-                                    ),
-                                  ),
-                                ),
+                                child:
+                                    PeripheralSheetChrome.flat
+                                        ? _zoneTabs()
+                                        : NotificationListener<
+                                          UserScrollNotification
+                                        >(
+                                          onNotification: (notification) {
+                                            if (notification.direction !=
+                                                ScrollDirection.idle) {
+                                              FocusScope.of(context).unfocus();
+                                            }
+                                            return false;
+                                          },
+                                          child: SingleChildScrollView(
+                                            controller: _scrollController,
+                                            physics:
+                                                const BouncingScrollPhysics(),
+                                            padding: const EdgeInsets.only(
+                                              top: 16,
+                                            ),
+                                            child: Column(
+                                              children: List.generate(
+                                                3,
+                                                (i) => _zoneTile(i),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
                               ),
                               const SizedBox(height: 12),
                               Row(
@@ -235,41 +247,102 @@ class ZoneBottomSheetState extends State<ZoneBottomSheet> {
                 style: StyleConstants.textDark15w600Style,
               ),
               children: [
-                Container(
+                Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 16,
                     vertical: 14,
                   ),
-                  child: Column(
-                    children: [
-                      _zoneTextField(zone: zone, zoneIndex: index),
-                      DropdownWidget(
-                        label: StringConstants.type,
-                        value: zone.type,
-                        items: controller.typeOptions,
-                        onChanged: (v) => controller.setType(index, v),
-                      ),
-                      DropdownWidget(
-                        label: StringConstants.enabled,
-                        value: zone.enabled,
-                        items: controller.yesNoOptions,
-                        onChanged: (v) => controller.setEnabled(index, v),
-                      ),
-                      DropdownWidget(
-                        label: StringConstants.mode,
-                        value: zone.mode,
-                        items: controller.modeOptions,
-                        onChanged: (v) => controller.setMode(index, v),
-                      ),
-                      _verificationTimeField(zone: zone, zoneIndex: index),
-                    ],
-                  ),
+                  child: _zoneFields(index),
                 ),
               ],
             ),
           ),
         ),
       ),
+    );
+  }
+
+  Widget _zoneTabs() {
+    return Column(
+      children: [
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Container(
+            width: 320,
+            height: 48,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              color: ColorConstants.surfaceLight,
+            ),
+            child: TabBar(
+              controller: _tabController,
+              indicatorSize: TabBarIndicatorSize.tab,
+              indicator: const UnderlineTabIndicator(
+                borderSide: BorderSide(
+                  width: 2.5,
+                  color: ColorConstants.primary,
+                ),
+              ),
+              labelColor: ColorConstants.primary,
+              unselectedLabelColor: ColorConstants.textSubtle,
+              labelStyle: StyleConstants.black13w600Style,
+              unselectedLabelStyle: StyleConstants.black13w500Style,
+              tabs: [
+                for (var i = 0; i < 3; i++)
+                  Tab(text: 'Zone ${controller.zones[i].zoneNumber}'),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 20),
+        Expanded(
+          child: TabBarView(
+            controller: _tabController,
+            children: List.generate(3, (i) {
+              return NotificationListener<UserScrollNotification>(
+                onNotification: (notification) {
+                  if (notification.direction != ScrollDirection.idle) {
+                    FocusScope.of(context).unfocus();
+                  }
+                  return false;
+                },
+                child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  child: _zoneFields(i),
+                ),
+              );
+            }),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _zoneFields(int index) {
+    final zone = controller.zones[index];
+    return Column(
+      children: [
+        _zoneTextField(zone: zone, zoneIndex: index),
+        DropdownWidget(
+          label: StringConstants.type,
+          value: zone.type,
+          items: controller.typeOptions,
+          onChanged: (v) => controller.setType(index, v),
+        ),
+        DropdownWidget(
+          label: StringConstants.enabled,
+          value: zone.enabled,
+          items: controller.yesNoOptions,
+          onChanged: (v) => controller.setEnabled(index, v),
+        ),
+        DropdownWidget(
+          label: StringConstants.mode,
+          value: zone.mode,
+          items: controller.modeOptions,
+          onChanged: (v) => controller.setMode(index, v),
+        ),
+        _verificationTimeField(zone: zone, zoneIndex: index),
+      ],
     );
   }
 

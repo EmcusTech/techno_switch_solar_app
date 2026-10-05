@@ -31,12 +31,14 @@ class RelayModeBottomSheet extends StatefulWidget {
   State<RelayModeBottomSheet> createState() => RelayModeBottomSheetState();
 }
 
-class RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
+class RelayModeBottomSheetState extends State<RelayModeBottomSheet>
+    with SingleTickerProviderStateMixin {
   late final RelayModeController controller;
 
   int _expandedTileCount = 0;
 
   final ScrollController _scrollController = ScrollController();
+  TabController? _tabController;
 
   late final List<GlobalKey> _tileKeys;
 
@@ -44,6 +46,9 @@ class RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
   void initState() {
     super.initState();
     _tileKeys = List.generate(3, (_) => GlobalKey());
+    if (PeripheralSheetChrome.flat) {
+      _tabController = TabController(length: 3, vsync: this);
+    }
     controller = Get.put(
       RelayModeController(
         deviceId: widget.deviceId,
@@ -54,6 +59,7 @@ class RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
 
   @override
   void dispose() {
+    _tabController?.dispose();
     _scrollController.dispose();
     Get.delete<RelayModeController>();
     super.dispose();
@@ -142,28 +148,34 @@ class RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
                               _dragHandle(),
                               _title('Relay Mode'),
                               Expanded(
-                                child: NotificationListener<
-                                  UserScrollNotification
-                                >(
-                                  onNotification: (notification) {
-                                    if (notification.direction !=
-                                        ScrollDirection.idle) {
-                                      FocusScope.of(context).unfocus();
-                                    }
-                                    return false;
-                                  },
-                                  child: SingleChildScrollView(
-                                    controller: _scrollController,
-                                    physics: const BouncingScrollPhysics(),
-                                    padding: const EdgeInsets.only(top: 16),
-                                    child: Column(
-                                      children: List.generate(
-                                        3,
-                                        (i) => _relayTile(i),
-                                      ),
-                                    ),
-                                  ),
-                                ),
+                                child:
+                                    PeripheralSheetChrome.flat
+                                        ? _relayTabs()
+                                        : NotificationListener<
+                                          UserScrollNotification
+                                        >(
+                                          onNotification: (notification) {
+                                            if (notification.direction !=
+                                                ScrollDirection.idle) {
+                                              FocusScope.of(context).unfocus();
+                                            }
+                                            return false;
+                                          },
+                                          child: SingleChildScrollView(
+                                            controller: _scrollController,
+                                            physics:
+                                                const BouncingScrollPhysics(),
+                                            padding: const EdgeInsets.only(
+                                              top: 16,
+                                            ),
+                                            child: Column(
+                                              children: List.generate(
+                                                3,
+                                                (i) => _relayTile(i),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
                               ),
                               const SizedBox(height: 12),
                               Row(
@@ -191,8 +203,6 @@ class RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
   }
 
   Widget _relayTile(int index) {
-    final relay = controller.relays[index];
-
     return Container(
       color: ColorConstants.white,
       key: _tileKeys[index],
@@ -234,36 +244,100 @@ class RelayModeBottomSheetState extends State<RelayModeBottomSheet> {
                 'Relay ${index + 1}',
                 style: StyleConstants.textDark15w600Style,
               ),
-              children: [
-                _outputTextField(relay: relay, relayIndex: index),
-                DropdownWidget(
-                  label: StringConstants.group,
-                  value: relay.group,
-                  items: controller.groupOptions,
-                  onChanged: (v) => controller.setGroup(index, v),
-                ),
-                DropdownWidget(
-                  label: StringConstants.function,
-                  value: relay.function,
-                  items: controller.functionOptionsMap[relay.group]!,
-                  onChanged: (v) => controller.setFunction(index, v),
-                ),
-                if (relay.group == 'Zone')
-                  _zoneDynamicField(relay: relay, relayIndex: index),
-                if (relay.group == StringConstants.extOut)
-                  _extOutDynamicField(relay: relay),
-                DropdownWidget(
-                  label: StringConstants.enabled,
-                  value: relay.enabled,
-                  items: controller.yesNoOptions,
-                  onChanged: (v) => controller.setEnabled(index, v),
-                ),
-                const SizedBox(height: 14),
-              ],
+              children: [_relayFields(index)],
             ),
           ),
         ),
       ),
+    );
+  }
+
+  Widget _relayTabs() {
+    return Column(
+      children: [
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Container(
+            height: 48,
+            width: 320,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              color: ColorConstants.surfaceLight,
+            ),
+            child: TabBar(
+              controller: _tabController,
+              indicatorSize: TabBarIndicatorSize.tab,
+              indicator: const UnderlineTabIndicator(
+                borderSide: BorderSide(
+                  width: 2.5,
+                  color: ColorConstants.primary,
+                ),
+              ),
+              labelColor: ColorConstants.primary,
+              unselectedLabelColor: ColorConstants.textSubtle,
+              labelStyle: StyleConstants.black13w600Style,
+              unselectedLabelStyle: StyleConstants.black13w500Style,
+              tabs: const [
+                Tab(text: 'Relay 1'),
+                Tab(text: 'Relay 2'),
+                Tab(text: 'Relay 3'),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 20),
+        Expanded(
+          child: TabBarView(
+            controller: _tabController,
+            children: List.generate(3, (i) {
+              return NotificationListener<UserScrollNotification>(
+                onNotification: (notification) {
+                  if (notification.direction != ScrollDirection.idle) {
+                    FocusScope.of(context).unfocus();
+                  }
+                  return false;
+                },
+                child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  child: _relayFields(i),
+                ),
+              );
+            }),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _relayFields(int index) {
+    final relay = controller.relays[index];
+    return Column(
+      children: [
+        _outputTextField(relay: relay, relayIndex: index),
+        DropdownWidget(
+          label: StringConstants.group,
+          value: relay.group,
+          items: controller.groupOptions,
+          onChanged: (v) => controller.setGroup(index, v),
+        ),
+        DropdownWidget(
+          label: StringConstants.function,
+          value: relay.function,
+          items: controller.functionOptionsMap[relay.group]!,
+          onChanged: (v) => controller.setFunction(index, v),
+        ),
+        if (relay.group == 'Zone')
+          _zoneDynamicField(relay: relay, relayIndex: index),
+        if (relay.group == StringConstants.extOut)
+          _extOutDynamicField(relay: relay),
+        DropdownWidget(
+          label: StringConstants.enabled,
+          value: relay.enabled,
+          items: controller.yesNoOptions,
+          onChanged: (v) => controller.setEnabled(index, v),
+        ),
+        const SizedBox(height: 14),
+      ],
     );
   }
 

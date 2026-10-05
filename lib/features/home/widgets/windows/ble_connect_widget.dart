@@ -98,15 +98,12 @@ class _BleConnectWidgetState extends State<BleConnectWidget> {
   }
 
   Widget _returnBleConnectButton() {
-    return TextButton(
-      onPressed: () {},
-      child: Text(
-        'Connect',
-        style: GoogleFonts.inter(
-          fontSize: context.sp(14),
-          fontWeight: FontWeight.w500,
-          color: ColorConstants.primaryBlueColor,
-        ),
+    return Text(
+      'Connect',
+      style: GoogleFonts.inter(
+        fontSize: context.sp(14),
+        fontWeight: FontWeight.w500,
+        color: ColorConstants.primaryBlueColor,
       ),
     );
   }
