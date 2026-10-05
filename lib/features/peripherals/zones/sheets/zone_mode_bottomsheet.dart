@@ -320,30 +320,28 @@ class ZoneBottomSheetState extends State<ZoneBottomSheet>
 
   Widget _zoneFields(int index) {
     final zone = controller.zones[index];
-    return Column(
-      children: [
-        _zoneTextField(zone: zone, zoneIndex: index),
-        DropdownWidget(
-          label: StringConstants.type,
-          value: zone.type,
-          items: controller.typeOptions,
-          onChanged: (v) => controller.setType(index, v),
-        ),
-        DropdownWidget(
-          label: StringConstants.enabled,
-          value: zone.enabled,
-          items: controller.yesNoOptions,
-          onChanged: (v) => controller.setEnabled(index, v),
-        ),
-        DropdownWidget(
-          label: StringConstants.mode,
-          value: zone.mode,
-          items: controller.modeOptions,
-          onChanged: (v) => controller.setMode(index, v),
-        ),
-        _verificationTimeField(zone: zone, zoneIndex: index),
-      ],
-    );
+    return peripheralSheetFieldGrid([
+      _zoneTextField(zone: zone, zoneIndex: index),
+      DropdownWidget(
+        label: StringConstants.type,
+        value: zone.type,
+        items: controller.typeOptions,
+        onChanged: (v) => controller.setType(index, v),
+      ),
+      DropdownWidget(
+        label: StringConstants.enabled,
+        value: zone.enabled,
+        items: controller.yesNoOptions,
+        onChanged: (v) => controller.setEnabled(index, v),
+      ),
+      DropdownWidget(
+        label: StringConstants.mode,
+        value: zone.mode,
+        items: controller.modeOptions,
+        onChanged: (v) => controller.setMode(index, v),
+      ),
+      _verificationTimeField(zone: zone, zoneIndex: index),
+    ]);
   }
 
   // ───────────────── ZONE TEXT & VERIFICATION FIELDS ─────────────────

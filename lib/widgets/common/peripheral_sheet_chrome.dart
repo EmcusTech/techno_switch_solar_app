@@ -20,6 +20,25 @@ class PeripheralSheetChrome {
   }
 }
 
+/// Windows panes place fields two across. Phone sheets stay one per row.
+Widget peripheralSheetFieldGrid(List<Widget> fields) {
+  if (!PeripheralSheetChrome.flat) {
+    return Column(children: fields);
+  }
+  return LayoutBuilder(
+    builder: (context, constraints) {
+      const gap = 16.0;
+      final width = (constraints.maxWidth - gap) / 2;
+      return Wrap(
+        spacing: gap,
+        children: [
+          for (final field in fields) SizedBox(width: width, child: field),
+        ],
+      );
+    },
+  );
+}
+
 class PeripheralSheetHeaderRow extends StatelessWidget {
   const PeripheralSheetHeaderRow({super.key});
 

@@ -311,34 +311,31 @@ class RelayModeBottomSheetState extends State<RelayModeBottomSheet>
 
   Widget _relayFields(int index) {
     final relay = controller.relays[index];
-    return Column(
-      children: [
-        _outputTextField(relay: relay, relayIndex: index),
-        DropdownWidget(
-          label: StringConstants.group,
-          value: relay.group,
-          items: controller.groupOptions,
-          onChanged: (v) => controller.setGroup(index, v),
-        ),
-        DropdownWidget(
-          label: StringConstants.function,
-          value: relay.function,
-          items: controller.functionOptionsMap[relay.group]!,
-          onChanged: (v) => controller.setFunction(index, v),
-        ),
-        if (relay.group == 'Zone')
-          _zoneDynamicField(relay: relay, relayIndex: index),
-        if (relay.group == StringConstants.extOut)
-          _extOutDynamicField(relay: relay),
-        DropdownWidget(
-          label: StringConstants.enabled,
-          value: relay.enabled,
-          items: controller.yesNoOptions,
-          onChanged: (v) => controller.setEnabled(index, v),
-        ),
-        const SizedBox(height: 14),
-      ],
-    );
+    return peripheralSheetFieldGrid([
+      _outputTextField(relay: relay, relayIndex: index),
+      DropdownWidget(
+        label: StringConstants.group,
+        value: relay.group,
+        items: controller.groupOptions,
+        onChanged: (v) => controller.setGroup(index, v),
+      ),
+      DropdownWidget(
+        label: StringConstants.function,
+        value: relay.function,
+        items: controller.functionOptionsMap[relay.group]!,
+        onChanged: (v) => controller.setFunction(index, v),
+      ),
+      if (relay.group == 'Zone')
+        _zoneDynamicField(relay: relay, relayIndex: index),
+      if (relay.group == StringConstants.extOut)
+        _extOutDynamicField(relay: relay),
+      DropdownWidget(
+        label: StringConstants.enabled,
+        value: relay.enabled,
+        items: controller.yesNoOptions,
+        onChanged: (v) => controller.setEnabled(index, v),
+      ),
+    ]);
   }
 
   Widget _dragHandle() {

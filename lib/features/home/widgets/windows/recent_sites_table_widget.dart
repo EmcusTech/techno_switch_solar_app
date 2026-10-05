@@ -86,7 +86,13 @@ class RecentSitesTableWidget extends StatelessWidget {
       child: Row(
         children: [
           Expanded(child: _HeaderLabel('Project')),
-          SizedBox(width: 140, child: _HeaderLabel('Date Created')),
+          SizedBox(width: 240, child: Center(child: _HeaderLabel('Location'))),
+          SizedBox(
+            width: 240,
+            child: Center(child: _HeaderLabel('Date Created')),
+          ),
+          SizedBox(width: 220, child: Center(child: _HeaderLabel('Status'))),
+          SizedBox(width: 172, child: Center(child: _HeaderLabel('Action'))),
         ],
       ),
     );
@@ -109,11 +115,47 @@ class RecentSitesTableWidget extends StatelessWidget {
               ),
             ),
             SizedBox(
-              width: 140,
-              child: Text(
-                _dateFormat.format(site.createdAt),
-                style: StyleConstants.siteTextColor216w400Style,
+              width: 240,
+              child: Center(
+                child: Text(
+                  '-',
+                  style: StyleConstants.siteTextColor216w400Style,
+                ),
               ),
+            ),
+            SizedBox(
+              width: 240,
+              child: Center(
+                child: Text(
+                  _dateFormat.format(site.createdAt),
+                  style: StyleConstants.siteTextColor216w400Style,
+                ),
+              ),
+            ),
+            SizedBox(
+              width: 220,
+              child: Center(
+                child: Container(
+                  decoration: BoxDecoration(
+                    border: Border.all(color: ColorConstants.borderGray),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20.0,
+                      vertical: 5.0,
+                    ),
+                    child: Text(
+                      'Completed',
+                      style: StyleConstants.siteTextColor216w400Style,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(
+              width: 172,
+              child: Center(child: Icon(Icons.more_vert, size: 20)),
             ),
           ],
         ),

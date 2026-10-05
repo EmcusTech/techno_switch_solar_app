@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:Technoswitch/bindings/initial_binding.dart';
 import 'package:Technoswitch/features/splash/bindings/splash_binding.dart';
@@ -13,6 +14,8 @@ void main() async {
   if (Platform.isWindows) {
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
+    final dir = await getApplicationSupportDirectory();
+    await databaseFactory.setDatabasesPath(dir.path);
     await windowManager.ensureInitialized();
 
     const windowOptions = WindowOptions(

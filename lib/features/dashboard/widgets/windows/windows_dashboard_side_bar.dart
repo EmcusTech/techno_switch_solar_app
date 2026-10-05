@@ -209,6 +209,7 @@ class _WindowsDashboardSideBarState extends State<WindowsDashboardSideBar> {
           // ),
           const SizedBox(height: 12),
           Expanded(child: _expanded ? _expandedItems() : _collapsedItems()),
+          const SizedBox(height: 12),
         ],
       ),
     );

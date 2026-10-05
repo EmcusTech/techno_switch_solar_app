@@ -56,43 +56,46 @@ class InputModeBottomSheetState extends State<InputModeBottomSheet> {
 
   Widget _formColumn() {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         if (widget.embedInCreateFlow) _title('Input Mode Configuration'),
-        _readOnlyField(
-          StringConstants.inputModeConfiguration,
-          StringConstants.progIN1,
-        ),
-        _inputTextField(),
-        DropdownWidget(
-          label: StringConstants.group,
-          value: controller.group,
-          items: controller.groupOptions,
-          onChanged: (v) => controller.setGroup(v),
-        ),
-        DropdownWidget(
-          label: StringConstants.function,
-          value: controller.function,
-          items: controller.functionOptionsMap[controller.group]!,
-          onChanged: (v) => controller.setFunction(v),
-        ),
-        DropdownWidget(
-          label: StringConstants.enabled,
-          value: controller.enabled,
-          items: controller.yesNoOptions,
-          onChanged: (v) => controller.setEnabled(v),
-        ),
-        DropdownWidget(
-          label: StringConstants.test,
-          value: controller.test,
-          items: controller.yesNoOptions,
-          onChanged: (v) => controller.setTest(v),
-        ),
-        DropdownWidget(
-          label: StringConstants.inverted,
-          value: controller.inverted,
-          items: controller.yesNoOptions,
-          onChanged: (v) => controller.setInverted(v),
-        ),
+        peripheralSheetFieldGrid([
+          _readOnlyField(
+            StringConstants.inputModeConfiguration,
+            StringConstants.progIN1,
+          ),
+          _inputTextField(),
+          DropdownWidget(
+            label: StringConstants.group,
+            value: controller.group,
+            items: controller.groupOptions,
+            onChanged: (v) => controller.setGroup(v),
+          ),
+          DropdownWidget(
+            label: StringConstants.function,
+            value: controller.function,
+            items: controller.functionOptionsMap[controller.group]!,
+            onChanged: (v) => controller.setFunction(v),
+          ),
+          DropdownWidget(
+            label: StringConstants.enabled,
+            value: controller.enabled,
+            items: controller.yesNoOptions,
+            onChanged: (v) => controller.setEnabled(v),
+          ),
+          DropdownWidget(
+            label: StringConstants.test,
+            value: controller.test,
+            items: controller.yesNoOptions,
+            onChanged: (v) => controller.setTest(v),
+          ),
+          DropdownWidget(
+            label: StringConstants.inverted,
+            value: controller.inverted,
+            items: controller.yesNoOptions,
+            onChanged: (v) => controller.setInverted(v),
+          ),
+        ]),
       ],
     );
   }
