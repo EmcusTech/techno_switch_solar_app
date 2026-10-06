@@ -47,6 +47,7 @@ import 'package:Technoswitch/utils/commissioning_test_results_helper.dart';
 import 'package:Technoswitch/utils/storage/commissioning_test_results_cache.dart';
 import 'package:Technoswitch/widgets/dialogs/app_styled_dialogs.dart';
 import 'package:Technoswitch/widgets/dialogs/ble_connecting_dialog.dart';
+import 'package:Technoswitch/widgets/dialogs/connect_flow_dialog_frame.dart';
 import 'package:Technoswitch/widgets/dialogs/panel_access_code_dialog.dart'
     as panel_access_dialog;
 import 'package:Technoswitch/widgets/export_tile.dart';
@@ -410,8 +411,7 @@ mixin ProjectDashboardUiDelegateMixin<T extends StatefulWidget> on State<T>
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 420),
+              child: connectFlowDialogFrame(
                 child: Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
@@ -419,7 +419,14 @@ mixin ProjectDashboardUiDelegateMixin<T extends StatefulWidget> on State<T>
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Column(
-                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment:
+                      connectFlowDialogIsFixedSize
+                          ? MainAxisAlignment.center
+                          : MainAxisAlignment.start,
+                  mainAxisSize:
+                      connectFlowDialogIsFixedSize
+                          ? MainAxisSize.max
+                          : MainAxisSize.min,
                   children: [
                     // Icon
                     Container(

@@ -6,6 +6,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:Technoswitch/utils/constants/asset_constants.dart';
 import 'package:Technoswitch/utils/constants/color_constants.dart';
 import 'package:Technoswitch/utils/constants/style_constants.dart';
+import 'package:window_manager/window_manager.dart';
 
 class WindowsDashboardAppBar extends StatefulWidget {
   const WindowsDashboardAppBar({
@@ -23,14 +24,46 @@ class WindowsDashboardAppBar extends StatefulWidget {
   State<WindowsDashboardAppBar> createState() => _WindowsDashboardAppBarState();
 }
 
-class _WindowsDashboardAppBarState extends State<WindowsDashboardAppBar> {
+class _WindowsDashboardAppBarState extends State<WindowsDashboardAppBar>
+    with WindowListener {
   String _siteName = '';
+  bool _fullScreen = false;
 
   @override
   void initState() {
     super.initState();
     _siteName = widget.controller.siteName?.trim() ?? '';
+    windowManager.addListener(this);
     _loadSiteName();
+    _syncFullScreen();
+  }
+
+  @override
+  void dispose() {
+    windowManager.removeListener(this);
+    super.dispose();
+  }
+
+  Future<void> _syncFullScreen() async {
+    final full = await windowManager.isFullScreen();
+    if (!mounted || full == _fullScreen) return;
+    setState(() => _fullScreen = full);
+  }
+
+  @override
+  void onWindowEnterFullScreen() {
+    if (!mounted) return;
+    setState(() => _fullScreen = true);
+  }
+
+  @override
+  void onWindowLeaveFullScreen() {
+    if (!mounted) return;
+    setState(() => _fullScreen = false);
+  }
+
+  Future<void> _toggleFullScreen() async {
+    await windowManager.setFullScreen(!_fullScreen);
   }
 
   Future<void> _loadSiteName() async {
@@ -84,10 +117,22 @@ class _WindowsDashboardAppBarState extends State<WindowsDashboardAppBar> {
               Text(StringConstants.download),
               SizedBox(width: 12),
               SvgPicture.asset(AssetConstants.winDownloadIcon),
-              SizedBox(width: 40),
-              Text(StringConstants.fullScreen),
-              SizedBox(width: 12),
-              SvgPicture.asset(AssetConstants.winFullScreenIcon),
+              const SizedBox(width: 40),
+              InkWell(
+                onTap: _toggleFullScreen,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      _fullScreen
+                          ? StringConstants.exitFullScreen
+                          : StringConstants.fullScreen,
+                    ),
+                    const SizedBox(width: 12),
+                    SvgPicture.asset(AssetConstants.winFullScreenIcon),
+                  ],
+                ),
+              ),
             ],
           ),
         ),

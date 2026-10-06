@@ -5,6 +5,7 @@ import 'package:Technoswitch/features/dashboard/widgets/windows/windows_dashboar
 import 'package:Technoswitch/features/dashboard/widgets/windows/windows_peripheral_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:Technoswitch/features/dashboard/controllers/project_dashboard_controller.dart';
+import 'package:Technoswitch/features/dashboard/controllers/project_dashboard_tile_actions.dart';
 import 'package:Technoswitch/utils/constants/color_constants.dart';
 import 'package:Technoswitch/utils/constants/string_constants.dart';
 import 'package:Technoswitch/utils/constants/style_constants.dart';
@@ -140,6 +141,7 @@ class WindowsDashboardDetailPane extends StatefulWidget {
 class _WindowsDashboardDetailPaneState
     extends State<WindowsDashboardDetailPane> {
   final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
+  bool _openedDefaultRelay = false;
 
   @override
   void initState() {
@@ -186,12 +188,41 @@ class _WindowsDashboardDetailPaneState
     return !sessionReady;
   }
 
+  void _scheduleDefaultRelay() {
+    if (_openedDefaultRelay) return;
+    if (widget.controller.windowsDetail.value != null) {
+      _openedDefaultRelay = true;
+      return;
+    }
+    _openedDefaultRelay = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (widget.controller.windowsDetail.value != null) return;
+      final sessionReady =
+          widget
+              .controller
+              .bleController
+              .bleProcess
+              .sessionAccessCodeReady
+              .value;
+      if (!sessionReady) {
+        _openedDefaultRelay = false;
+        return;
+      }
+      widget.controller.pendingWindowsTileLabel = StringConstants.relays;
+      widget.controller.onPeripheralTileTap(
+        () => ProjectDashboardTileActions.openRelays(widget.controller),
+      );
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder<bool>(
       valueListenable: widget.controller.ble.isConnectedNotifier,
       builder: (context, isConnected, _) {
         if (!isConnected) {
+          _openedDefaultRelay = false;
           return _paneMessage('Please connect with the panel to proceed');
         }
         return ValueListenableBuilder<bool>(
@@ -199,10 +230,12 @@ class _WindowsDashboardDetailPaneState
               widget.controller.bleController.bleProcess.sessionAccessCodeReady,
           builder: (context, sessionReady, _) {
             if (_awaitingAccessCode(sessionReady)) {
+              _openedDefaultRelay = false;
               return WindowsDashboardAccessCodePane(
                 controller: widget.controller,
               );
             }
+            _scheduleDefaultRelay();
             return _detailNavigator();
           },
         );

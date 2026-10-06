@@ -332,6 +332,7 @@ abstract final class StringConstants {
   static const String doubleKnock = "Double Knock";
   static const String download = "Download";
   static const String fullScreen = "Full Screen";
+  static const String exitFullScreen = "Exit Full Screen";
   static const String downloadCompare = "Download & compare";
   static const String downloadPanelConfiguration =
       "Download panel configuration?";

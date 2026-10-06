@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:Technoswitch/features/dashboard/controllers/project_dashboard_controller.dart';
-import 'package:Technoswitch/utils/panel_config/post_connect_bulk_download_offer.dart';
+import 'package:Technoswitch/utils/panel_config/panel_config_cache_sync.dart';
 import 'package:Technoswitch/widgets/common/common_windows_access_code_dialog.dart';
 
 /// Access-code entry in the Windows dashboard detail pane.
@@ -14,15 +14,10 @@ class WindowsDashboardAccessCodePane extends StatelessWidget {
     final code = bleProcess.accessKey.value;
     try {
       if (!context.mounted) return;
-      await offerOptionalFullConfigDownloadAfterConnect(
-        context: context,
-        isMounted: () => context.mounted,
-        device: controller.selectedDevice,
-        refreshNotifiers: controller.panelRefreshNotifiers,
-        navigatingToDeviceConnecting: controller.navigatingToDeviceConnecting,
-        awaitDownloadIfAccepted: true,
-        showConfigLogCompareAfterDownload: true,
-        panelHadNoSiteBeforeConnect: controller.args.panelHadNoSiteBeforeConnect,
+      await PanelConfigCacheSync.restoreAllFromCacheToBle(
+        controller.ble,
+        controller.selectedDevice.id,
+        controller.panelRefreshNotifiers,
       );
     } finally {
       bleProcess.setSessionAccessCode(code);

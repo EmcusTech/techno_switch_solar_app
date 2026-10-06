@@ -9,6 +9,7 @@ class DropdownWidget extends StatefulWidget {
   final String label;
   final String value;
   final List<String> items;
+  final Set<String> disabledItems;
   final double? dropdownListHeight;
   final bool enableSearch;
   final ValueChanged<String> onChanged;
@@ -19,6 +20,7 @@ class DropdownWidget extends StatefulWidget {
     required this.value,
     required this.items,
     required this.onChanged,
+    this.disabledItems = const {},
     this.dropdownListHeight,
     this.enableSearch = false,
   });
@@ -72,23 +74,27 @@ class _DropdownWidgetState extends State<DropdownWidget> {
               value: value,
 
               items:
-                  items
-                      .map(
-                        (e) => DropdownMenuItem<String>(
-                          value: e,
-                          child: Text(
-                            e,
-                            overflow: TextOverflow.ellipsis,
-                            style: StyleConstants.textDark14w500Style,
-                          ),
-                        ),
-                      )
-                      .toList(),
+                  items.map((e) {
+                    final disabled = widget.disabledItems.contains(e);
+                    return DropdownMenuItem<String>(
+                      value: e,
+                      enabled: !disabled,
+                      child: Text(
+                        e,
+                        overflow: TextOverflow.ellipsis,
+                        style:
+                            disabled
+                                ? StyleConstants.textDark14w500Style.copyWith(
+                                  color: ColorConstants.textDisabled,
+                                )
+                                : StyleConstants.textDark14w500Style,
+                      ),
+                    );
+                  }).toList(),
 
               onChanged: (v) {
-                if (v != null) {
-                  onChanged(v);
-                }
+                if (v == null || widget.disabledItems.contains(v)) return;
+                onChanged(v);
               },
 
               buttonStyleData: ButtonStyleData(

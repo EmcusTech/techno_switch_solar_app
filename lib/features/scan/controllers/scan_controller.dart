@@ -442,6 +442,8 @@ class ScanController extends GetxController {
 
     if (isCreateWizard) {
       unawaited(_openScannedForCreateWizard());
+    } else if (Platform.isWindows) {
+      exitScanning();
     } else {
       transitionToScannedScreen();
     }

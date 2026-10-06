@@ -338,6 +338,14 @@ class ZoneBottomSheetState extends State<ZoneBottomSheet>
         label: StringConstants.mode,
         value: zone.mode,
         items: controller.modeOptions,
+        disabledItems:
+            controller.modeOptions
+                .where(
+                  (item) =>
+                      item != PanelValues.zoneModeImmediate &&
+                      item != PanelValues.zoneModeNormal,
+                )
+                .toSet(),
         onChanged: (v) => controller.setMode(index, v),
       ),
       _verificationTimeField(zone: zone, zoneIndex: index),

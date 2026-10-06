@@ -317,12 +317,18 @@ class RelayModeBottomSheetState extends State<RelayModeBottomSheet>
         label: StringConstants.group,
         value: relay.group,
         items: controller.groupOptions,
+        disabledItems:
+            controller.groupOptions.where((item) => item != 'Zone').toSet(),
         onChanged: (v) => controller.setGroup(index, v),
       ),
       DropdownWidget(
         label: StringConstants.function,
         value: relay.function,
         items: controller.functionOptionsMap[relay.group]!,
+        disabledItems:
+            controller.functionOptionsMap[relay.group]!
+                .where((item) => item != 'Fault' && item != 'Fire')
+                .toSet(),
         onChanged: (v) => controller.setFunction(index, v),
       ),
       if (relay.group == 'Zone')

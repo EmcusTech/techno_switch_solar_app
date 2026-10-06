@@ -2,7 +2,6 @@ import 'package:Technoswitch/features/scan/widgets/windows/windows_scan_device_g
 import 'package:flutter/material.dart';
 import 'package:Technoswitch/features/scan/controllers/scan_controller.dart';
 import 'package:Technoswitch/features/scan/widgets/radar_painter.dart';
-import 'package:Technoswitch/features/scan/widgets/scan_back_button.dart';
 import 'package:Technoswitch/features/scan/widgets/sweep_painter.dart';
 import 'package:Technoswitch/features/scan/widgets/windows/windows_scan_background_decor.dart';
 import 'package:Technoswitch/utils/constants/color_constants.dart';
@@ -36,7 +35,6 @@ class WindowsScanningRadarView extends StatelessWidget {
           alignment: Alignment.center,
           child: ScanningAnimation(pausedListenable: scanAnimationsPaused),
         ),
-        ScanBackButton(onTap: controller.exitScanning),
         Padding(
           padding: const EdgeInsets.only(bottom: 20.0),
           child: Column(

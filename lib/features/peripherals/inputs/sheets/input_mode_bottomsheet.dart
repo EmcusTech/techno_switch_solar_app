@@ -69,12 +69,20 @@ class InputModeBottomSheetState extends State<InputModeBottomSheet> {
             label: StringConstants.group,
             value: controller.group,
             items: controller.groupOptions,
+            disabledItems:
+                controller.groupOptions
+                    .where((item) => item != StringConstants.extOut)
+                    .toSet(),
             onChanged: (v) => controller.setGroup(v),
           ),
           DropdownWidget(
             label: StringConstants.function,
             value: controller.function,
             items: controller.functionOptionsMap[controller.group]!,
+            disabledItems:
+                controller.functionOptionsMap[controller.group]!
+                    .where((item) => item != StringConstants.hold)
+                    .toSet(),
             onChanged: (v) => controller.setFunction(v),
           ),
           DropdownWidget(

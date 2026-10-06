@@ -55,7 +55,7 @@ class _WindowsDashboardSideBarState extends State<WindowsDashboardSideBar> {
             children: [
               SvgPicture.asset(AssetConstants.winFolderIcon),
               const SizedBox(width: 4),
-              Flexible(
+              Expanded(
                 child: Text(
                   _siteName,
                   maxLines: 1,

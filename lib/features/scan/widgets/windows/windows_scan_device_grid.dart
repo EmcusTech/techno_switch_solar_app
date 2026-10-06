@@ -25,7 +25,7 @@ class WindowsScanDeviceGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     return Positioned(
       top: topOffset,
-      left: 40,
+      left: 120,
       width: radarSize,
       height: radarSize,
       child: Stack(children: _buildSlotWidgets()),

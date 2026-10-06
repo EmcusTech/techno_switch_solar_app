@@ -32,6 +32,7 @@ import 'package:Technoswitch/utils/constants/asset_constants.dart';
 import 'package:Technoswitch/utils/constants/color_constants.dart';
 import 'package:Technoswitch/utils/constants/string_constants.dart';
 import 'package:Technoswitch/utils/constants/style_constants.dart';
+import 'package:Technoswitch/widgets/dialogs/connect_flow_dialog_frame.dart';
 import 'package:Technoswitch/widgets/dialogs/panel_access_code_dialog.dart'
     as panel_access_dialog;
 
@@ -40,6 +41,15 @@ mixin ScanUiDelegateMixin<T extends StatefulWidget> on State<T>
   ScanController get scanController;
 
   BleManager get _bleManager => Get.find<BleManager>();
+
+  Widget _connectSiteListSlot({
+    required bool expand,
+    required double height,
+    required Widget child,
+  }) {
+    if (expand) return Expanded(child: child);
+    return SizedBox(height: height, child: child);
+  }
 
   @override
   bool get isMounted => mounted;
@@ -235,8 +245,7 @@ mixin ScanUiDelegateMixin<T extends StatefulWidget> on State<T>
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
             ),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 420),
+            child: connectFlowDialogFrame(
               child: Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
@@ -244,7 +253,14 @@ mixin ScanUiDelegateMixin<T extends StatefulWidget> on State<T>
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Column(
-                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment:
+                    connectFlowDialogIsFixedSize
+                        ? MainAxisAlignment.center
+                        : MainAxisAlignment.start,
+                mainAxisSize:
+                    connectFlowDialogIsFixedSize
+                        ? MainAxisSize.max
+                        : MainAxisSize.min,
                 children: [
                   Container(
                     width: 64,
@@ -352,8 +368,7 @@ mixin ScanUiDelegateMixin<T extends StatefulWidget> on State<T>
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 420),
+              child: connectFlowDialogFrame(
                 child: Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
@@ -361,7 +376,10 @@ mixin ScanUiDelegateMixin<T extends StatefulWidget> on State<T>
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Column(
-                  mainAxisSize: MainAxisSize.min,
+                  mainAxisSize:
+                      connectFlowDialogIsFixedSize
+                          ? MainAxisSize.max
+                          : MainAxisSize.min,
                   children: [
                     Container(
                       width: 64,
@@ -392,7 +410,8 @@ mixin ScanUiDelegateMixin<T extends StatefulWidget> on State<T>
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 20),
-                    SizedBox(
+                    _connectSiteListSlot(
+                      expand: connectFlowDialogIsFixedSize,
                       height: listHeight.toDouble(),
                       child: ListView.separated(
                         physics:
@@ -794,14 +813,22 @@ mixin ScanUiDelegateMixin<T extends StatefulWidget> on State<T>
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: Container(
+              child: connectFlowDialogFrame(
+                child: Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
                   color: ColorConstants.white,
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Column(
-                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment:
+                      connectFlowDialogIsFixedSize
+                          ? MainAxisAlignment.center
+                          : MainAxisAlignment.start,
+                  mainAxisSize:
+                      connectFlowDialogIsFixedSize
+                          ? MainAxisSize.max
+                          : MainAxisSize.min,
                   children: [
                     Container(
                       width: 64,
@@ -886,6 +913,7 @@ mixin ScanUiDelegateMixin<T extends StatefulWidget> on State<T>
                       ),
                   ],
                 ),
+              ),
               ),
             );
           },
