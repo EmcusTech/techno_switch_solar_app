@@ -40,6 +40,7 @@ import 'package:Technoswitch/utils/panel_config/input_setup_ble_flow.dart';
 import 'package:Technoswitch/utils/panel_config/zone_setup_ble_flow.dart';
 import 'package:Technoswitch/utils/panel_config/ext_out_setup_ble_flow.dart';
 import 'package:Technoswitch/utils/panel_config/relay_setup_ble_flow.dart';
+import 'package:Technoswitch/utils/panel_config/panel_properties_setup_ble_flow.dart';
 import 'package:Technoswitch/utils/panel_config/panel_config_feedback_dialogs.dart';
 import 'package:Technoswitch/utils/panel_config/post_connect_bulk_download_offer.dart';
 import 'package:Technoswitch/utils/ble/bootloader_connect_flow.dart';
@@ -976,6 +977,48 @@ mixin ProjectDashboardUiDelegateMixin<T extends StatefulWidget> on State<T>
                   },
         );
       },
+    );
+  }
+
+  @override
+  Future<void> runPanelPropertiesDownload({
+    required String successMessage,
+    required String progressLabel,
+    required void Function() markActive,
+    required Future<void> Function() start,
+    required Future<void> Function() onDownloadComplete,
+  }) {
+    return runPanelPropertiesDownloadFlow(
+      context: uiContext,
+      isMounted: () => mounted,
+      bleProcess: dashboardController.bleManager.bleProcess,
+      successMessage: successMessage,
+      progressLabel: progressLabel,
+      markActive: markActive,
+      start: start,
+      onDownloadComplete: onDownloadComplete,
+      showDownloadSuccess: showDownloadSuccessDialog,
+    );
+  }
+
+  @override
+  Future<void> runPanelPropertiesApply({
+    required String successMessage,
+    required String progressLabel,
+    required void Function() markActive,
+    required Future<void> Function() start,
+    required Future<void> Function() onApplyComplete,
+  }) {
+    return runPanelPropertiesApplyFlow(
+      context: uiContext,
+      isMounted: () => mounted,
+      bleProcess: dashboardController.bleManager.bleProcess,
+      successMessage: successMessage,
+      progressLabel: progressLabel,
+      markActive: markActive,
+      start: start,
+      onApplyComplete: onApplyComplete,
+      showApplySuccess: showApplySuccessDialog,
     );
   }
 

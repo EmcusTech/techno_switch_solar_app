@@ -1,3 +1,4 @@
+import 'package:Technoswitch/ble/demo/demo_ble.dart';
 import 'package:Technoswitch/features/dashboard/controllers/project_dashboard_controller.dart';
 import 'package:Technoswitch/features/dashboard/controllers/project_dashboard_tile_actions.dart';
 import 'package:Technoswitch/features/dashboard/widgets/peripheral_tile.dart';
@@ -26,13 +27,14 @@ abstract final class DashboardTileRegistry {
       ),
       DashboardTileConfig(
         label: StringConstants.sounders,
+        isDisabled: !DemoBle.enabled,
         iconPath: AssetConstants.peripheralSounderIcon,
         onTap: () => ProjectDashboardTileActions.openSounders(controller),
       ),
       DashboardTileConfig(
         label: StringConstants.radio,
         iconPath: AssetConstants.peripheralProgHoldIcon,
-        isDisabled: true,
+        isDisabled: !DemoBle.enabled,
         iconHeight: 24,
         iconWidth: 24,
         onTap: () => ProjectDashboardTileActions.openRadio(controller),
@@ -40,16 +42,19 @@ abstract final class DashboardTileRegistry {
       DashboardTileConfig(
         label: StringConstants.moduleInfo,
         iconPath: AssetConstants.peripheralAuxIcon,
+        isDisabled: !DemoBle.enabled,
         onTap: () => ProjectDashboardTileActions.openModuleInfo(controller),
       ),
       DashboardTileConfig(
         label: StringConstants.lBus,
         iconPath: AssetConstants.peripheralLBusIcon,
+        isDisabled: !DemoBle.enabled,
         onTap: () => ProjectDashboardTileActions.openLBus(controller),
       ),
       DashboardTileConfig(
         label: StringConstants.extOut2,
         iconPath: AssetConstants.peripheralExtOutIcon,
+        isDisabled: !DemoBle.enabled,
         onTap: () => ProjectDashboardTileActions.openExtOut(controller),
       ),
     ];
@@ -62,12 +67,15 @@ abstract final class DashboardTileRegistry {
       DashboardTileConfig(
         label: StringConstants.eventLog,
         iconPath: AssetConstants.panelActionEventLogIcon,
+        isDisabled: true,
         onTap: () => ProjectDashboardTileActions.openEventLog(controller),
       ),
       DashboardTileConfig(
         label: StringConstants.fwUpgrade,
         iconPath: AssetConstants.firmwareIcon,
-        onTap: () => ProjectDashboardTileActions.openFirmwareUpgrade(controller),
+        isDisabled: true,
+        onTap:
+            () => ProjectDashboardTileActions.openFirmwareUpgrade(controller),
       ),
       DashboardTileConfig(
         label: StringConstants.serviceDue,
@@ -77,6 +85,7 @@ abstract final class DashboardTileRegistry {
       DashboardTileConfig(
         label: StringConstants.accessCode,
         iconPath: AssetConstants.panelActionAccessCodeIcon,
+        isDisabled: !DemoBle.enabled,
         onTap: () => ProjectDashboardTileActions.openAccessCode(controller),
       ),
       DashboardTileConfig(
@@ -94,11 +103,14 @@ abstract final class DashboardTileRegistry {
       DashboardTileConfig(
         label: StringConstants.liveDataIsBeingStreamedFromTheDeviceInRealTime,
         iconPath: AssetConstants.diagnosticIcon,
-        onTap: () => ProjectDashboardTileActions.openLiveDiagnostics(controller),
+        isDisabled: !DemoBle.enabled,
+        onTap:
+            () => ProjectDashboardTileActions.openLiveDiagnostics(controller),
       ),
       DashboardTileConfig(
         label: StringConstants.walkTest,
         iconPath: AssetConstants.walkTestIcon,
+        isDisabled: true,
         iconHeight: 32,
         iconWidth: 32,
         onTap: () => ProjectDashboardTileActions.openWalkTest(controller),
@@ -106,11 +118,13 @@ abstract final class DashboardTileRegistry {
       DashboardTileConfig(
         label: StringConstants.configLog,
         iconPath: AssetConstants.panelActionConfigLogIcon,
+        isDisabled: true,
         onTap: () => ProjectDashboardTileActions.openConfigLog(controller),
       ),
       DashboardTileConfig(
         label: StringConstants.testMode,
         iconPath: AssetConstants.peripheralProgHoldIcon,
+        isDisabled: !DemoBle.enabled,
         iconHeight: 24,
         iconWidth: 24,
         onTap: () => ProjectDashboardTileActions.openTestMode(controller),

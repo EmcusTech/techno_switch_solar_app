@@ -13,6 +13,9 @@ import 'package:Technoswitch/config/ble/module_id_payload.dart';
 import 'package:Technoswitch/config/ble/input_setup_payload.dart';
 import 'package:Technoswitch/config/ble/input_setup_payload_debug.dart';
 import 'package:Technoswitch/config/ble/panel_access_lvl_setup_payload.dart';
+import 'package:Technoswitch/config/ble/panel_properties_setup_payload.dart';
+import 'package:Technoswitch/config/ble/panel_properties_setup_payload_debug.dart';
+import 'package:Technoswitch/utils/constants/ble/ble_constants.dart';
 import 'package:Technoswitch/config/ble/relay_setup_payload.dart';
 import 'package:Technoswitch/config/ble/zone_setup_payload.dart';
 import 'package:Technoswitch/utils/modes/relay_mode_util.dart';
@@ -92,6 +95,8 @@ class BleProcess {
   int panelInfoSetupApplyCommandStep = 0;
   int checkForGeneralModuleSetupFetchRes = 0;
   int checkForGeneralModuleSetupApplyRes = 0;
+  int checkForPanelPropertiesFetchRes = 0;
+  int checkForPanelPropertiesApplyRes = 0;
   int generalModuleSetupApplyCommandStep = 0;
   int checkForLiveEventsRetrievalRes = 0;
   int checkForAdcSetupFetchRes = 0;
@@ -771,6 +776,14 @@ class BleProcess {
     false,
   );
 
+  final ValueNotifier<bool> isPanelPropertiesFetchDone = ValueNotifier<bool>(
+    false,
+  );
+
+  final ValueNotifier<bool> isPanelPropertiesApplyDone = ValueNotifier<bool>(
+    false,
+  );
+
   final ValueNotifier<int> panelInfoPanelNo = ValueNotifier<int>(
     PanelInfoDefaults.panelNoBle,
   );
@@ -1043,6 +1056,14 @@ class BleProcess {
         checkForGeneralModuleSetupApplyRes = 1;
         break;
 
+      case OtaProcessState.sendPanelPropertiesSetupFetchCmdPkt:
+        checkForPanelPropertiesFetchRes = 1;
+        break;
+
+      case OtaProcessState.sendPanelPropertiesSetupApplyCmdPkt:
+        checkForPanelPropertiesApplyRes = 1;
+        break;
+
       case OtaProcessState.sendLiveEventsRetrievalFetchCmdPkt:
         checkForLiveEventsRetrievalRes = 1;
         bleManager.otaProcessState = OtaProcessState.sendContinuousPollPacket;
@@ -1245,18 +1266,20 @@ class BleProcess {
           await bleManager.sendSounderSetupRelayApplyCmdPkt(outputMaxZone: 1);
         } else if (isServiceDueFetchCommandActive.value) {
           bleManager.otaProcessState =
-              OtaProcessState.sendServiceDueFetchCmdPkt;
+              OtaProcessState.sendPanelPropertiesSetupFetchCmdPkt;
           checkForAccessKeyCmdRsp = 0;
+          checkForPanelPropertiesFetchRes = 1;
           processDesc.value = StringConstants.downloadingServiceDue;
           startRxTimeout();
-          await bleManager.sendServiceDueFetchCmdPkt();
+          await bleManager.sendPanelPropertiesSetupFetchCmdPkt();
         } else if (isServiceDueApplyCommandActive.value) {
           bleManager.otaProcessState =
-              OtaProcessState.sendServiceDueApplyCmdPkt;
+              OtaProcessState.sendPanelPropertiesSetupApplyCmdPkt;
           checkForAccessKeyCmdRsp = 0;
+          checkForPanelPropertiesApplyRes = 1;
           processDesc.value = StringConstants.applyingServiceDue;
           startRxTimeout();
-          await bleManager.sendServiceDueApplyCmdPkt();
+          await bleManager.sendPanelPropertiesSetupApplyCmdPkt();
         } else if (isAccessCodeSetupFetchCommandActive.value) {
           bleManager.otaProcessState =
               OtaProcessState.sendAccessCodeSetupFetchCmdPkt;
@@ -1275,34 +1298,36 @@ class BleProcess {
           await bleManager.sendAccessCodeSetupApplyCmdPkt(accessCodeNo: 1);
         } else if (isPanelInfoSetupFetchCommandActive.value) {
           bleManager.otaProcessState =
-              OtaProcessState.sendPanelInfoSetupFetchCmdPkt;
+              OtaProcessState.sendPanelPropertiesSetupFetchCmdPkt;
           checkForAccessKeyCmdRsp = 0;
+          checkForPanelPropertiesFetchRes = 1;
           processDesc.value = StringConstants.downloadingPanelInfo;
           startRxTimeout();
-          await bleManager.sendPanelInfoPanelIdFetchCmdPkt();
+          await bleManager.sendPanelPropertiesSetupFetchCmdPkt();
         } else if (isPanelInfoSetupApplyCommandActive.value) {
           bleManager.otaProcessState =
-              OtaProcessState.sendPanelInfoSetupApplyCmdPkt;
-          panelInfoSetupApplyCommandStep = 1;
+              OtaProcessState.sendPanelPropertiesSetupApplyCmdPkt;
           checkForAccessKeyCmdRsp = 0;
+          checkForPanelPropertiesApplyRes = 1;
           processDesc.value = StringConstants.applyingPanelInfo;
           startRxTimeout();
-          await bleManager.sendPanelInfoPanelIdApplyCmdPkt();
+          await bleManager.sendPanelPropertiesSetupApplyCmdPkt();
         } else if (isGeneralModuleSetupFetchCommandActive.value) {
           bleManager.otaProcessState =
-              OtaProcessState.sendGeneralModuleSetupFetchCmdPkt;
+              OtaProcessState.sendPanelPropertiesSetupFetchCmdPkt;
           checkForAccessKeyCmdRsp = 0;
+          checkForPanelPropertiesFetchRes = 1;
           processDesc.value = StringConstants.downloadingGeneralModule;
           startRxTimeout();
-          await bleManager.sendGeneralModuleLvlTimeOutFetchCmdPkt();
+          await bleManager.sendPanelPropertiesSetupFetchCmdPkt();
         } else if (isGeneralModuleSetupApplyCommandActive.value) {
           bleManager.otaProcessState =
-              OtaProcessState.sendGeneralModuleSetupApplyCmdPkt;
-          generalModuleSetupApplyCommandStep = 1;
+              OtaProcessState.sendPanelPropertiesSetupApplyCmdPkt;
           checkForAccessKeyCmdRsp = 0;
+          checkForPanelPropertiesApplyRes = 1;
           processDesc.value = StringConstants.applyingGeneralModuleTimeOut;
           startRxTimeout();
-          await bleManager.sendGeneralModuleLvlTimeOutApplyCmdPkt();
+          await bleManager.sendPanelPropertiesSetupApplyCmdPkt();
         } else if (isAdcSetupFetchCommandActive.value) {
           bleManager.otaProcessState = OtaProcessState.sendAdcSetupFetchCmdPkt;
           checkForAccessKeyCmdRsp = 0;
@@ -1477,6 +1502,34 @@ class BleProcess {
       } else {
         startRxTimeout();
         await bleManager.sendPollPacket();
+      }
+    }
+
+    if (checkForPanelPropertiesFetchRes == 1) {
+      if (rx.payload[12] == BleConstants.command.panelPropertiesSetup) {
+        PanelPropertiesSetupPayloadDebug.logPacket(
+          'RECEIVE',
+          'panel-properties-fetch-response',
+          rx.payload,
+        );
+        PanelPropertiesSetupPayloadDebug.logStruct(
+          'fetch-rx',
+          rx.payload,
+        );
+        final config = PanelPropertiesSetupPayload.readFromPacket(rx.payload);
+        PanelPropertiesSetupPayload.applyToBleProcess(config, this);
+        _finishPanelPropertiesFetch();
+      }
+    }
+
+    if (checkForPanelPropertiesApplyRes == 1) {
+      if (rx.payload[10] == 0x83) {
+        PanelPropertiesSetupPayloadDebug.logPacket(
+          'RECEIVE',
+          'panel-properties-apply-response',
+          rx.payload,
+        );
+        _finishPanelPropertiesApply();
       }
     }
 
@@ -3571,6 +3624,56 @@ class BleProcess {
     zoneSetupApplyCommandStep = 0;
   }
 
+  bool get _panelPropertiesOperationActive =>
+      isPanelInfoSetupFetchCommandActive.value ||
+      isPanelInfoSetupApplyCommandActive.value ||
+      isGeneralModuleSetupFetchCommandActive.value ||
+      isGeneralModuleSetupApplyCommandActive.value ||
+      isServiceDueFetchCommandActive.value ||
+      isServiceDueApplyCommandActive.value;
+
+  void _clearPanelPropertiesOperationFlags() {
+    isPanelInfoSetupFetchCommandActive.value = false;
+    isPanelInfoSetupApplyCommandActive.value = false;
+    isGeneralModuleSetupFetchCommandActive.value = false;
+    isGeneralModuleSetupApplyCommandActive.value = false;
+    isServiceDueFetchCommandActive.value = false;
+    isServiceDueApplyCommandActive.value = false;
+    checkForPanelPropertiesFetchRes = 0;
+    checkForPanelPropertiesApplyRes = 0;
+  }
+
+  void _finishPanelPropertiesFetch() {
+    bleManager.otaProcessState = OtaProcessState.notInUse;
+    cancelOperationDeadline();
+    checkForPanelPropertiesFetchRes = 0;
+    isPanelPropertiesFetchDone.value = true;
+    isAccessKeyValid.value = true;
+    isPanelInfoSetupFetchCommandActive.value = false;
+    isGeneralModuleSetupFetchCommandActive.value = false;
+    isServiceDueFetchCommandActive.value = false;
+  }
+
+  void _finishPanelPropertiesApply() {
+    bleManager.otaProcessState = OtaProcessState.notInUse;
+    cancelOperationDeadline();
+    checkForPanelPropertiesApplyRes = 0;
+    isPanelPropertiesApplyDone.value = true;
+    isAccessKeyValid.value = true;
+    if (isPanelInfoSetupApplyCommandActive.value) {
+      isPanelInfoSetupApplyCommandActive.value = false;
+      isPanelInfoSetupApplyDone.value = true;
+    }
+    if (isGeneralModuleSetupApplyCommandActive.value) {
+      isGeneralModuleSetupApplyCommandActive.value = false;
+      isGeneralModuleSetupApplyDone.value = true;
+    }
+    if (isServiceDueApplyCommandActive.value) {
+      isServiceDueApplyCommandActive.value = false;
+      isServiceDueApplyDone.value = true;
+    }
+  }
+
   void _clearRelaySetupOperationFlags() {
     isRelaySetupFetchCommandActive.value = false;
     isRelaySetupCommandApplyActive.value = false;
@@ -3656,6 +3759,16 @@ class BleProcess {
     if (isRelaySetupFetchCommandActive.value ||
         isRelaySetupCommandApplyActive.value) {
       _clearRelaySetupOperationFlags();
+      cancelRxTimeout();
+      cancelOperationDeadline();
+      bleManager.otaProcessState = OtaProcessState.notInUse;
+      processDesc.value = StringConstants.deviceNotResponding;
+      maxOtherPacketsRetriesReached.value = true;
+      return;
+    }
+
+    if (_panelPropertiesOperationActive) {
+      _clearPanelPropertiesOperationFlags();
       cancelRxTimeout();
       cancelOperationDeadline();
       bleManager.otaProcessState = OtaProcessState.notInUse;
@@ -3781,6 +3894,10 @@ class BleProcess {
         case OtaProcessState.sendGeneralModuleSetupFetchCmdPkt:
           break;
         case OtaProcessState.sendGeneralModuleSetupApplyCmdPkt:
+          break;
+        case OtaProcessState.sendPanelPropertiesSetupFetchCmdPkt:
+          break;
+        case OtaProcessState.sendPanelPropertiesSetupApplyCmdPkt:
           break;
         case OtaProcessState.sendLiveEventsRetrievalFetchCmdPkt:
           break;

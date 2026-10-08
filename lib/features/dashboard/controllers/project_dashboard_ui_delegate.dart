@@ -70,6 +70,22 @@ abstract class ProjectDashboardUiDelegate {
     Future<void> Function()? onAfterApplySuccess,
   });
 
+  Future<void> runPanelPropertiesDownload({
+    required String successMessage,
+    required String progressLabel,
+    required void Function() markActive,
+    required Future<void> Function() start,
+    required Future<void> Function() onDownloadComplete,
+  });
+
+  Future<void> runPanelPropertiesApply({
+    required String successMessage,
+    required String progressLabel,
+    required void Function() markActive,
+    required Future<void> Function() start,
+    required Future<void> Function() onApplyComplete,
+  });
+
   void showDiagnosticStopDialog();
 
   void showConfigLogBottomSheet();

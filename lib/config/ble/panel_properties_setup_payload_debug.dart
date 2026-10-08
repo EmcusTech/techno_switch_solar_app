@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:Technoswitch/ble/ble_manager.dart';
+import 'package:Technoswitch/config/ble/panel_properties_setup_payload.dart';
 
 /// Debug helpers for inspecting SETUP_PANEL_PROPERTIES 216-byte apply frames.
 abstract final class PanelPropertiesSetupPayloadDebug {
@@ -38,5 +39,36 @@ abstract final class PanelPropertiesSetupPayloadDebug {
   }) {
     if (!kDebugMode) return;
     debugPrint('$label 216-byte frame:\n${formatHexDump(packet)}');
+  }
+
+  static void logPacket(String direction, String packetName, List<int> frame) {
+    print(
+      'TX/RX: $direction: $packetName packet: '
+      '${frame.map((e) => e.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}',
+    );
+  }
+
+  static void logStruct(String label, List<int> frame) {
+    try {
+      final config = PanelPropertiesSetupPayload.readFromPacket(frame);
+      print(
+        'PANEL_PROPERTIES $label st_panel_properties_def: '
+        'panelNum=${config.panelNum} '
+        'panelName="${config.panelName}" '
+        'evtRemDelay=${config.eventReminderDelay} '
+        'remEnable=${config.remEnable} '
+        'lvlTimeout=${config.lvlTimeout} '
+        'silenceBuzzLvl=${config.silenceBuzzLvl} '
+        'silenceSndrLvl=${config.silenceSndrLvl} '
+        'resetLvl=${config.resetLvl} '
+        'faultLatch=${config.faultLatch} '
+        'serviceDue=${config.serviceDueYear}-${config.serviceDueMonth}-${config.serviceDueDay} '
+        '${config.serviceDueHour}:${config.serviceDueMinute} '
+        'company="${config.companyName}" '
+        'contact="${config.serviceContact}"',
+      );
+    } catch (e) {
+      print('PANEL_PROPERTIES $label st_panel_properties_def: failed to read: $e');
+    }
   }
 }

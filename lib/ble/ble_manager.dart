@@ -129,6 +129,8 @@ enum OtaProcessState {
   sendPanelInfoSetupApplyCmdPkt,
   sendGeneralModuleSetupFetchCmdPkt,
   sendGeneralModuleSetupApplyCmdPkt,
+  sendPanelPropertiesSetupFetchCmdPkt,
+  sendPanelPropertiesSetupApplyCmdPkt,
   sendLiveEventsRetrievalFetchCmdPkt,
   sendAdcSetupFetchCmdPkt,
 }
@@ -1495,21 +1497,12 @@ class BleManager extends GetxService {
     Get.find<BleLogController>().sendNetworkPacket();
   }
 
-  Future<void> startServiceDueFetch() async {
-    if (DemoBle.enabled) {
-      await DemoBle.runPasswordCommand(
-        process: bleProcess,
-        steps: [StringConstants.downloadingServiceDue],
-        finish: () {
-          bleProcess.isServiceDueFetchCommandActive.value = false;
-          bleProcess.isAccessKeyValid.value = true;
-          bleProcess.processDesc.value =
-              StringConstants.serviceDueFetchCompleted;
-        },
-      );
-      return;
-    }
-
+  Future<void> _beginPanelPropertiesFetch({
+    required BleOperationMode operationMode,
+    required BleStates bleState,
+    required void Function() reset,
+    required String processDesc,
+  }) async {
     if (!isConnected) {
       throw Exception(StringConstants.deviceNotConnected);
     }
@@ -1518,60 +1511,133 @@ class BleManager extends GetxService {
       throw Exception(StringConstants.bleCharNotInit);
     }
 
-    currentOperationMode = BleOperationMode.serviceDueFetch;
-
-    resetServiceDueState();
-    resetProtocolServiceDueState();
-    bleProcess.resetProcessServiceDueState();
+    currentOperationMode = operationMode;
+    reset();
 
     if (_notifySub == null) {
       throw Exception(StringConstants.bleHandshakeIncomplete);
     }
 
-    bleCurrentState = BleStates.SEND_SERVICE_DUE_SETUP_CMD_FETCH_PACKET;
-    bleStateMachineState = BleStates.SEND_SERVICE_DUE_SETUP_CMD_FETCH_PACKET;
+    bleCurrentState = bleState;
+    bleStateMachineState = bleState;
+    currentOperationMode = operationMode;
+    otaProcessState = OtaProcessState.sendPanelPropertiesSetupFetchCmdPkt;
+    bleProcess.isNetworkPacketProcess.value = false;
+    bleProcess.checkForPanelPropertiesFetchRes = 1;
+    bleProcess.isPanelPropertiesFetchDone.value = false;
+    bleProcess.processDesc.value = processDesc;
     bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
-    Get.find<BleLogController>().sendNetworkPacket();
+    bleProcess.startRxTimeout();
+    await sendPanelPropertiesSetupFetchCmdPkt();
+  }
+
+  Future<void> _beginPanelPropertiesApply({
+    required BleOperationMode operationMode,
+    required BleStates bleState,
+    required void Function() reset,
+    required String processDesc,
+  }) async {
+    if (!isConnected) {
+      throw Exception(StringConstants.deviceNotConnected);
+    }
+
+    if (notifyChar == null || writeChar == null) {
+      throw Exception(StringConstants.bleCharNotInit);
+    }
+
+    reset();
+
+    if (_notifySub == null) {
+      throw Exception(StringConstants.bleHandshakeIncomplete);
+    }
+
+    bleCurrentState = bleState;
+    bleStateMachineState = bleState;
+    currentOperationMode = operationMode;
+    otaProcessState = OtaProcessState.sendPanelPropertiesSetupApplyCmdPkt;
+    bleProcess.isNetworkPacketProcess.value = false;
+    bleProcess.checkForPanelPropertiesApplyRes = 1;
+    bleProcess.isPanelPropertiesApplyDone.value = false;
+    bleProcess.processDesc.value = processDesc;
+    bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
+    bleProcess.startRxTimeout();
+    await sendPanelPropertiesSetupApplyCmdPkt();
+  }
+
+  Future<void> _demoPanelPropertiesFetch({
+    required String step,
+    required void Function() clearActive,
+  }) async {
+    bleProcess.isPanelPropertiesFetchDone.value = false;
+    await DemoBle.runSteppedCommand(
+      process: bleProcess,
+      steps: [step],
+      done: bleProcess.isPanelPropertiesFetchDone,
+    );
+    clearActive();
+    bleProcess.isAccessKeyValid.value = true;
+  }
+
+  Future<void> _demoPanelPropertiesApply({
+    required String step,
+    required void Function() clearActive,
+    required ValueNotifier<bool> applyDone,
+  }) async {
+    bleProcess.isPanelPropertiesApplyDone.value = false;
+    applyDone.value = false;
+    await DemoBle.runSteppedCommand(
+      process: bleProcess,
+      steps: [step],
+      done: bleProcess.isPanelPropertiesApplyDone,
+    );
+    applyDone.value = true;
+    clearActive();
+    bleProcess.isAccessKeyValid.value = true;
+  }
+
+  Future<void> startServiceDueFetch() async {
+    if (DemoBle.enabled) {
+      await _demoPanelPropertiesFetch(
+        step: StringConstants.downloadingServiceDue,
+        clearActive:
+            () => bleProcess.isServiceDueFetchCommandActive.value = false,
+      );
+      return;
+    }
+
+    await _beginPanelPropertiesFetch(
+      operationMode: BleOperationMode.serviceDueFetch,
+      bleState: BleStates.SEND_SERVICE_DUE_SETUP_CMD_FETCH_PACKET,
+      reset: () {
+        resetServiceDueState();
+        resetProtocolServiceDueState();
+        bleProcess.resetProcessServiceDueState();
+      },
+      processDesc: StringConstants.downloadingServiceDue,
+    );
   }
 
   Future<void> startServiceDueApply() async {
     if (DemoBle.enabled) {
-      await DemoBle.runPasswordCommand(
-        process: bleProcess,
-        steps: [StringConstants.applyingServiceDue],
-        finish: () {
-          bleProcess.isServiceDueApplyCommandActive.value = false;
-          bleProcess.isServiceDueApplyDone.value = true;
-          bleProcess.isAccessKeyValid.value = true;
-          bleProcess.processDesc.value =
-              StringConstants.serviceDueApplyCompleted;
-        },
+      await _demoPanelPropertiesApply(
+        step: StringConstants.applyingServiceDue,
+        clearActive:
+            () => bleProcess.isServiceDueApplyCommandActive.value = false,
+        applyDone: bleProcess.isServiceDueApplyDone,
       );
       return;
     }
 
-    if (!isConnected) {
-      throw Exception(StringConstants.deviceNotConnected);
-    }
-
-    if (notifyChar == null || writeChar == null) {
-      throw Exception(StringConstants.bleCharNotInit);
-    }
-
-    currentOperationMode = BleOperationMode.serviceDueApply;
-
-    resetServiceDueState();
-    resetProtocolServiceDueState();
-    bleProcess.resetProcessServiceDueState();
-
-    if (_notifySub == null) {
-      throw Exception(StringConstants.bleHandshakeIncomplete);
-    }
-
-    bleCurrentState = BleStates.SEND_SERVICE_DUE_SETUP_CMD_APPLY_PACKET;
-    bleStateMachineState = BleStates.SEND_SERVICE_DUE_SETUP_CMD_APPLY_PACKET;
-    bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
-    Get.find<BleLogController>().sendNetworkPacket();
+    await _beginPanelPropertiesApply(
+      operationMode: BleOperationMode.serviceDueApply,
+      bleState: BleStates.SEND_SERVICE_DUE_SETUP_CMD_APPLY_PACKET,
+      reset: () {
+        resetServiceDueState();
+        resetProtocolServiceDueState();
+        bleProcess.resetProcessServiceDueState();
+      },
+      processDesc: StringConstants.applyingServiceDue,
+    );
   }
 
   Future<void> startAccessCodeSetupFetch() async {
@@ -1655,160 +1721,98 @@ class BleManager extends GetxService {
 
   Future<void> startPanelInfoSetupFetch() async {
     if (DemoBle.enabled) {
-      await DemoBle.runPasswordCommand(
-        process: bleProcess,
-        steps: [StringConstants.downloadingPanelInfo],
-        finish: () {
-          bleProcess.isPanelInfoSetupFetchCommandActive.value = false;
-          bleProcess.isAccessKeyValid.value = true;
-          bleProcess.processDesc.value =
-              StringConstants.panelInfoSetupFetchCompleted;
-        },
+      await _demoPanelPropertiesFetch(
+        step: StringConstants.downloadingPanelInfo,
+        clearActive:
+            () =>
+                bleProcess.isPanelInfoSetupFetchCommandActive.value = false,
       );
       return;
     }
 
-    if (!isConnected) {
-      throw Exception(StringConstants.deviceNotConnected);
-    }
-
-    if (notifyChar == null || writeChar == null) {
-      throw Exception(StringConstants.bleCharNotInit);
-    }
-
-    currentOperationMode = BleOperationMode.panelInfoSetupFetch;
-
-    resetPanelInfoSetupState();
-    resetProtocolPanelInfoSetupState();
-    bleProcess.resetProcessPanelInfoSetupState();
-
-    if (_notifySub == null) {
-      throw Exception(StringConstants.bleHandshakeIncomplete);
-    }
-
-    bleCurrentState = BleStates.SEND_PANEL_INFO_SETUP_CMD_FETCH_PACKET;
-    bleStateMachineState = BleStates.SEND_PANEL_INFO_SETUP_CMD_FETCH_PACKET;
-    bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
-    Get.find<BleLogController>().sendNetworkPacket();
+    await _beginPanelPropertiesFetch(
+      operationMode: BleOperationMode.panelInfoSetupFetch,
+      bleState: BleStates.SEND_PANEL_INFO_SETUP_CMD_FETCH_PACKET,
+      reset: () {
+        resetPanelInfoSetupState();
+        resetProtocolPanelInfoSetupState();
+        bleProcess.resetProcessPanelInfoSetupState();
+      },
+      processDesc: StringConstants.downloadingPanelInfo,
+    );
   }
 
   Future<void> startPanelInfoSetupApply() async {
     if (DemoBle.enabled) {
-      await DemoBle.runPasswordCommand(
-        process: bleProcess,
-        steps: [StringConstants.applyingPanelInfo],
-        finish: () {
-          bleProcess.isPanelInfoSetupApplyCommandActive.value = false;
-          bleProcess.isPanelInfoSetupApplyDone.value = true;
-          bleProcess.isAccessKeyValid.value = true;
-          bleProcess.processDesc.value =
-              StringConstants.panelInfoSetupApplyCompleted;
-        },
+      await _demoPanelPropertiesApply(
+        step: StringConstants.applyingPanelInfo,
+        clearActive:
+            () =>
+                bleProcess.isPanelInfoSetupApplyCommandActive.value = false,
+        applyDone: bleProcess.isPanelInfoSetupApplyDone,
       );
       return;
     }
 
-    if (!isConnected) {
-      throw Exception(StringConstants.deviceNotConnected);
-    }
-
-    if (notifyChar == null || writeChar == null) {
-      throw Exception(StringConstants.bleCharNotInit);
-    }
-
-    currentOperationMode = BleOperationMode.panelInfoSetupApply;
-
-    resetPanelInfoSetupState();
-    resetProtocolPanelInfoSetupState();
-    bleProcess.resetProcessPanelInfoSetupState();
-
-    if (_notifySub == null) {
-      throw Exception(StringConstants.bleHandshakeIncomplete);
-    }
-
-    bleCurrentState = BleStates.SEND_PANEL_INFO_SETUP_CMD_APPLY_PACKET;
-    bleStateMachineState = BleStates.SEND_PANEL_INFO_SETUP_CMD_APPLY_PACKET;
-    bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
-    Get.find<BleLogController>().sendNetworkPacket();
+    await _beginPanelPropertiesApply(
+      operationMode: BleOperationMode.panelInfoSetupApply,
+      bleState: BleStates.SEND_PANEL_INFO_SETUP_CMD_APPLY_PACKET,
+      reset: () {
+        resetPanelInfoSetupState();
+        resetProtocolPanelInfoSetupState();
+        bleProcess.resetProcessPanelInfoSetupState();
+      },
+      processDesc: StringConstants.applyingPanelInfo,
+    );
   }
 
   Future<void> startGeneralModuleSetupFetch() async {
     if (DemoBle.enabled) {
-      await DemoBle.runPasswordCommand(
-        process: bleProcess,
-        steps: [StringConstants.downloadingGeneralModule],
-        finish: () {
-          bleProcess.isGeneralModuleSetupFetchCommandActive.value = false;
-          bleProcess.isAccessKeyValid.value = true;
-          bleProcess.processDesc.value =
-              StringConstants.generalModuleSetupFetchCompleted;
-        },
+      await _demoPanelPropertiesFetch(
+        step: StringConstants.downloadingGeneralModule,
+        clearActive:
+            () =>
+                bleProcess.isGeneralModuleSetupFetchCommandActive.value =
+                    false,
       );
       return;
     }
 
-    if (!isConnected) {
-      throw Exception(StringConstants.deviceNotConnected);
-    }
-
-    if (notifyChar == null || writeChar == null) {
-      throw Exception(StringConstants.bleCharNotInit);
-    }
-
-    currentOperationMode = BleOperationMode.generalModuleSetupFetch;
-
-    resetGeneralModuleSetupState();
-    resetProtocolGeneralModuleSetupState();
-    bleProcess.resetProcessGeneralModuleSetupState();
-
-    if (_notifySub == null) {
-      throw Exception(StringConstants.bleHandshakeIncomplete);
-    }
-
-    bleCurrentState = BleStates.SEND_GENERAL_MODULE_SETUP_CMD_FETCH_PACKET;
-    bleStateMachineState = BleStates.SEND_GENERAL_MODULE_SETUP_CMD_FETCH_PACKET;
-    bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
-    Get.find<BleLogController>().sendNetworkPacket();
+    await _beginPanelPropertiesFetch(
+      operationMode: BleOperationMode.generalModuleSetupFetch,
+      bleState: BleStates.SEND_GENERAL_MODULE_SETUP_CMD_FETCH_PACKET,
+      reset: () {
+        resetGeneralModuleSetupState();
+        resetProtocolGeneralModuleSetupState();
+        bleProcess.resetProcessGeneralModuleSetupState();
+      },
+      processDesc: StringConstants.downloadingGeneralModule,
+    );
   }
 
   Future<void> startGeneralModuleSetupApply() async {
     if (DemoBle.enabled) {
-      await DemoBle.runPasswordCommand(
-        process: bleProcess,
-        steps: [StringConstants.applyingGeneralModuleTimeOut],
-        finish: () {
-          bleProcess.isGeneralModuleSetupApplyCommandActive.value = false;
-          bleProcess.isGeneralModuleSetupApplyDone.value = true;
-          bleProcess.isAccessKeyValid.value = true;
-          bleProcess.processDesc.value =
-              StringConstants.generalModuleSetupApplyCompleted;
-        },
+      await _demoPanelPropertiesApply(
+        step: StringConstants.applyingGeneralModuleTimeOut,
+        clearActive:
+            () =>
+                bleProcess.isGeneralModuleSetupApplyCommandActive.value =
+                    false,
+        applyDone: bleProcess.isGeneralModuleSetupApplyDone,
       );
       return;
     }
 
-    if (!isConnected) {
-      throw Exception(StringConstants.deviceNotConnected);
-    }
-
-    if (notifyChar == null || writeChar == null) {
-      throw Exception(StringConstants.bleCharNotInit);
-    }
-
-    currentOperationMode = BleOperationMode.generalModuleSetupApply;
-
-    resetGeneralModuleSetupState();
-    resetProtocolGeneralModuleSetupState();
-    bleProcess.resetProcessGeneralModuleSetupState();
-
-    if (_notifySub == null) {
-      throw Exception(StringConstants.bleHandshakeIncomplete);
-    }
-
-    bleCurrentState = BleStates.SEND_GENERAL_MODULE_SETUP_CMD_APPLY_PACKET;
-    bleStateMachineState = BleStates.SEND_GENERAL_MODULE_SETUP_CMD_APPLY_PACKET;
-    bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
-    Get.find<BleLogController>().sendNetworkPacket();
+    await _beginPanelPropertiesApply(
+      operationMode: BleOperationMode.generalModuleSetupApply,
+      bleState: BleStates.SEND_GENERAL_MODULE_SETUP_CMD_APPLY_PACKET,
+      reset: () {
+        resetGeneralModuleSetupState();
+        resetProtocolGeneralModuleSetupState();
+        bleProcess.resetProcessGeneralModuleSetupState();
+      },
+      processDesc: StringConstants.applyingGeneralModuleTimeOut,
+    );
   }
 
   Future<void> startAdcSetupFetch() async {
@@ -4447,6 +4451,12 @@ class BleManager extends GetxService {
     u8Pkt[214] = checksum & BleConstants.base;
     u8Pkt[215] = BleConstants.eot;
 
+    PanelPropertiesSetupPayloadDebug.logPacket(
+      'TRANSMIT',
+      'panel-properties-fetch',
+      u8Pkt,
+    );
+
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
 
@@ -4490,6 +4500,15 @@ class BleManager extends GetxService {
     PanelPropertiesSetupPayloadDebug.printFrame(
       u8Pkt,
       label: 'SETUP_PANEL_PROPERTIES APPLY (TX)',
+    );
+    PanelPropertiesSetupPayloadDebug.logPacket(
+      'TRANSMIT',
+      'panel-properties-apply',
+      u8Pkt,
+    );
+    PanelPropertiesSetupPayloadDebug.logStruct(
+      'apply-tx',
+      u8Pkt,
     );
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);

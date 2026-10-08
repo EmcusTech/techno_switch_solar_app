@@ -210,24 +210,26 @@ abstract final class ProjectDashboardTileActions {
       if (ui == null) return;
       ui.showServiceDueSetupBottomSheet(
         onDownload:
-            () => ui.showPasswordPopup(
-              onCall: () {
-                c.ble.bleProcess.isServiceDueFetchCommandActive.value = true;
-                c.bleController.startServiceDueFetch();
-              },
-              isServiceDueSetup: true,
-              mode: 'bottomsheet_download',
-              onDownloadComplete: c.saveServiceDueCacheAndNotifyRefresh,
-              downloadSuccessMessage: StringConstants.serviceDue,
+            () => ui.runPanelPropertiesDownload(
+              successMessage: StringConstants.serviceDue,
+              progressLabel: StringConstants.downloadingServiceDue,
+              markActive:
+                  () =>
+                      c.ble.bleProcess.isServiceDueFetchCommandActive.value =
+                          true,
+              start: c.bleController.startServiceDueFetch,
+              onDownloadComplete: c.savePanelPropertiesCachesAndNotifyRefresh,
             ),
         onApply:
-            () => ui.showPasswordPopup(
-              onCall: () {
-                c.ble.bleProcess.isServiceDueApplyCommandActive.value = true;
-                c.bleController.startServiceDueApply();
-              },
-              isServiceDueSetup: true,
-              mode: 'bottomsheet_apply',
+            () => ui.runPanelPropertiesApply(
+              successMessage: StringConstants.serviceDue,
+              progressLabel: StringConstants.applyingServiceDue,
+              markActive:
+                  () =>
+                      c.ble.bleProcess.isServiceDueApplyCommandActive.value =
+                          true,
+              start: c.bleController.startServiceDueApply,
+              onApplyComplete: c.savePanelPropertiesCachesAndNotifyRefresh,
             ),
         refreshTrigger: c.serviceDueRefreshTrigger,
       );
@@ -271,24 +273,26 @@ abstract final class ProjectDashboardTileActions {
     if (ui == null) return;
     ui.showPanelInfoSetupBottomSheet(
       onDownload:
-          () => ui.showPasswordPopup(
-            onCall: () {
-              c.ble.bleProcess.isPanelInfoSetupFetchCommandActive.value = true;
-              c.bleController.startPanelInfoSetupFetch();
-            },
-            isPanelInfoSetup: true,
-            mode: 'bottomsheet_download',
-            onDownloadComplete: c.savePanelInfoCacheAndNotifyRefresh,
-            downloadSuccessMessage: StringConstants.panelInfo,
+          () => ui.runPanelPropertiesDownload(
+            successMessage: StringConstants.panelInfo,
+            progressLabel: StringConstants.downloadingPanelInfo,
+            markActive:
+                () =>
+                    c.ble.bleProcess.isPanelInfoSetupFetchCommandActive.value =
+                        true,
+            start: c.bleController.startPanelInfoSetupFetch,
+            onDownloadComplete: c.savePanelPropertiesCachesAndNotifyRefresh,
           ),
       onApply:
-          () => ui.showPasswordPopup(
-            onCall: () {
-              c.ble.bleProcess.isPanelInfoSetupApplyCommandActive.value = true;
-              c.bleController.startPanelInfoSetupApply();
-            },
-            isPanelInfoSetup: true,
-            mode: 'bottomsheet_apply',
+          () => ui.runPanelPropertiesApply(
+            successMessage: StringConstants.panelInfo,
+            progressLabel: StringConstants.applyingPanelInfo,
+            markActive:
+                () =>
+                    c.ble.bleProcess.isPanelInfoSetupApplyCommandActive.value =
+                        true,
+            start: c.bleController.startPanelInfoSetupApply,
+            onApplyComplete: c.savePanelPropertiesCachesAndNotifyRefresh,
           ),
       refreshTrigger: c.panelInfoRefreshTrigger,
     );
@@ -299,26 +303,32 @@ abstract final class ProjectDashboardTileActions {
     if (ui == null) return;
     ui.showGeneralModuleSetupBottomSheet(
       onDownload:
-          () => ui.showPasswordPopup(
-            onCall: () {
-              c.ble.bleProcess.isGeneralModuleSetupFetchCommandActive.value =
-                  true;
-              c.bleController.startGeneralModuleSetupFetch();
-            },
-            isGeneralModuleSetup: true,
-            mode: 'bottomsheet_download',
-            onDownloadComplete: c.saveGeneralModuleCacheAndNotifyRefresh,
-            downloadSuccessMessage: StringConstants.generalModule,
+          () => ui.runPanelPropertiesDownload(
+            successMessage: StringConstants.generalModule,
+            progressLabel: StringConstants.downloadingGeneralModule,
+            markActive:
+                () =>
+                    c
+                        .ble
+                        .bleProcess
+                        .isGeneralModuleSetupFetchCommandActive
+                        .value = true,
+            start: c.bleController.startGeneralModuleSetupFetch,
+            onDownloadComplete: c.savePanelPropertiesCachesAndNotifyRefresh,
           ),
       onApply:
-          () => ui.showPasswordPopup(
-            onCall: () {
-              c.ble.bleProcess.isGeneralModuleSetupApplyCommandActive.value =
-                  true;
-              c.bleController.startGeneralModuleSetupApply();
-            },
-            isGeneralModuleSetup: true,
-            mode: 'bottomsheet_apply',
+          () => ui.runPanelPropertiesApply(
+            successMessage: StringConstants.generalModule,
+            progressLabel: StringConstants.applyingGeneralModuleTimeOut,
+            markActive:
+                () =>
+                    c
+                        .ble
+                        .bleProcess
+                        .isGeneralModuleSetupApplyCommandActive
+                        .value = true,
+            start: c.bleController.startGeneralModuleSetupApply,
+            onApplyComplete: c.savePanelPropertiesCachesAndNotifyRefresh,
           ),
       refreshTrigger: c.generalModuleRefreshTrigger,
     );

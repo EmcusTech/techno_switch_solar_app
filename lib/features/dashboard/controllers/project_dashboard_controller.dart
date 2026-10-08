@@ -581,6 +581,12 @@ class ProjectDashboardController extends GetxController {
     accessCodeRefreshTrigger.value++;
   }
 
+  Future<void> savePanelPropertiesCachesAndNotifyRefresh() async {
+    await savePanelInfoCacheAndNotifyRefresh();
+    await saveGeneralModuleCacheAndNotifyRefresh();
+    await saveServiceDueCacheAndNotifyRefresh();
+  }
+
   Future<void> savePanelInfoCacheAndNotifyRefresh() async {
     await PeripheralSetupCache.savePanelInfoSetup(
       selectedDevice.id,
