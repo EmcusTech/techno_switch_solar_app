@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:Technoswitch/ble/ble_manager.dart';
+import 'package:Technoswitch/ble/demo/demo_ble.dart';
 import 'package:Technoswitch/ble/blue_plus_adapter.dart';
 import 'package:Technoswitch/ble/controller/ble_log_controller.dart';
 import 'package:Technoswitch/features/dashboard/models/project_dashboard_args.dart';
@@ -126,7 +127,12 @@ class ScanController extends GetxController {
 
     await requestPermissions(scanType);
 
-    if (scanType == ScanType.bluetooth) {
+    if (scanType == ScanType.bluetooth && DemoBle.enabled) {
+      Future<void>.delayed(const Duration(milliseconds: 1200), () {
+        if (!isScanning) return;
+        handleNewScanResults(DemoBle.scanDevices());
+      });
+    } else if (scanType == ScanType.bluetooth) {
       try {
         await bluetoothService.requestPermissions();
       } catch (_) {}

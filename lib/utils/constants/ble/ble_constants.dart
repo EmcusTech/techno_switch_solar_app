@@ -184,9 +184,7 @@ class _BleCommand {
   final int sounderSetupZone = 0x19;
   final int sounderSetupExtOut = 0x1B;
   final int serviceDue = 0x18;
-
-  /// Temporary placeholder until firmware assigns the final command byte.L
-  final int panelPropertiesSetup = 0x00;
+  final int panelPropertiesSetup = 0x0F;
   final int accessCodeSetup = 0x03;
   final int panelInfoPanelId = 0x08;
   final int panelInfoDateTime = 0x01;

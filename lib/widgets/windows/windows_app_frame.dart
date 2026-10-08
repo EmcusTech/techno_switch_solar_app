@@ -7,6 +7,11 @@ import 'package:Technoswitch/utils/constants/string_constants.dart';
 import 'package:Technoswitch/widgets/windows/windows_app_menu.dart';
 import 'package:window_manager/window_manager.dart';
 
+/// True while the Windows window is in fullscreen.
+/// The dashboard fullscreen control writes this, and the frame hides the
+/// custom title bar while it is true.
+final ValueNotifier<bool> windowsFullScreen = ValueNotifier<bool>(false);
+
 class WindowsAppFrame extends StatefulWidget {
   const WindowsAppFrame({super.key, required this.child});
 
@@ -26,9 +31,17 @@ class _WindowsAppFrameState extends State<WindowsAppFrame> {
   }
 
   Widget _buildFrame(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [const WindowsAppMenuBar(), Expanded(child: widget.child)],
+    return ValueListenableBuilder<bool>(
+      valueListenable: windowsFullScreen,
+      builder: (context, fullScreen, _) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (!fullScreen) const WindowsAppMenuBar(),
+            Expanded(child: widget.child),
+          ],
+        );
+      },
     );
   }
 

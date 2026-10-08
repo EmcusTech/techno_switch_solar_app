@@ -1,3 +1,4 @@
+import 'package:Technoswitch/ble/demo/demo_ble.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -339,13 +340,15 @@ class ZoneBottomSheetState extends State<ZoneBottomSheet>
         value: zone.mode,
         items: controller.modeOptions,
         disabledItems:
-            controller.modeOptions
-                .where(
-                  (item) =>
-                      item != PanelValues.zoneModeImmediate &&
-                      item != PanelValues.zoneModeNormal,
-                )
-                .toSet(),
+            DemoBle.restrictPeripheralOptions
+                ? controller.modeOptions
+                    .where(
+                      (item) =>
+                          item != PanelValues.zoneModeImmediate &&
+                          item != PanelValues.zoneModeNormal,
+                    )
+                    .toSet()
+                : const <String>{},
         onChanged: (v) => controller.setMode(index, v),
       ),
       _verificationTimeField(zone: zone, zoneIndex: index),

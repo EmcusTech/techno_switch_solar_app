@@ -6,6 +6,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:Technoswitch/utils/constants/asset_constants.dart';
 import 'package:Technoswitch/utils/constants/color_constants.dart';
 import 'package:Technoswitch/utils/constants/style_constants.dart';
+import 'package:Technoswitch/widgets/windows/windows_app_frame.dart';
 import 'package:window_manager/window_manager.dart';
 
 class WindowsDashboardAppBar extends StatefulWidget {
@@ -44,26 +45,31 @@ class _WindowsDashboardAppBarState extends State<WindowsDashboardAppBar>
     super.dispose();
   }
 
-  Future<void> _syncFullScreen() async {
-    final full = await windowManager.isFullScreen();
+  void _applyFullScreen(bool full) {
+    windowsFullScreen.value = full;
     if (!mounted || full == _fullScreen) return;
     setState(() => _fullScreen = full);
   }
 
+  Future<void> _syncFullScreen() async {
+    final full = await windowManager.isFullScreen();
+    _applyFullScreen(full);
+  }
+
   @override
   void onWindowEnterFullScreen() {
-    if (!mounted) return;
-    setState(() => _fullScreen = true);
+    _applyFullScreen(true);
   }
 
   @override
   void onWindowLeaveFullScreen() {
-    if (!mounted) return;
-    setState(() => _fullScreen = false);
+    _applyFullScreen(false);
   }
 
   Future<void> _toggleFullScreen() async {
-    await windowManager.setFullScreen(!_fullScreen);
+    final next = !_fullScreen;
+    await windowManager.setFullScreen(next);
+    _applyFullScreen(next);
   }
 
   Future<void> _loadSiteName() async {

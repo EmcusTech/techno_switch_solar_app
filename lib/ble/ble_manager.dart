@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart' as fbp;
 import 'package:Technoswitch/ble/blue_plus_adapter.dart';
+import 'package:Technoswitch/ble/demo/demo_ble.dart';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:Technoswitch/ble/controller/ble_log_controller.dart';
@@ -802,6 +803,19 @@ class BleManager extends GetxService {
   }
 
   Future<void> startSessionAccessCodeValidation() async {
+    if (DemoBle.enabled) {
+      await Future.delayed(DemoBle.stepDelay);
+      final code = accessKey.value.trim();
+      if (code == DemoBle.accessCode) {
+        bleProcess.isAccessKeyValid.value = true;
+        bleProcess.processDesc.value = '';
+      } else {
+        bleProcess.isAccessKeyValid.value = false;
+        bleProcess.processDesc.value = StringConstants.wrongPassword;
+      }
+      return;
+    }
+
     if (!isConnected) {
       throw Exception(StringConstants.deviceNotConnected);
     }
@@ -859,6 +873,15 @@ class BleManager extends GetxService {
   }
 
   Future<void> startExtOutFetch() async {
+    if (DemoBle.enabled) {
+      await DemoBle.runSteppedCommand(
+        process: bleProcess,
+        steps: [StringConstants.downloadExtOutSetup],
+        done: bleProcess.isExtOutFetchDone,
+      );
+      return;
+    }
+
     if (!isConnected) {
       throw Exception(StringConstants.deviceNotConnected);
     }
@@ -891,6 +914,15 @@ class BleManager extends GetxService {
   }
 
   Future<void> startExtOutApply() async {
+    if (DemoBle.enabled) {
+      await DemoBle.runSteppedCommand(
+        process: bleProcess,
+        steps: [StringConstants.applyingExtOutSetup],
+        done: bleProcess.isExtOutApplyDone,
+      );
+      return;
+    }
+
     if (!isConnected) {
       throw Exception(StringConstants.deviceNotConnected);
     }
@@ -921,6 +953,15 @@ class BleManager extends GetxService {
   }
 
   Future<void> startInputSetupFetch() async {
+    if (DemoBle.enabled) {
+      await DemoBle.runSteppedCommand(
+        process: bleProcess,
+        steps: [StringConstants.downloadInputSetup],
+        done: bleProcess.isInputSetupFetchDone,
+      );
+      return;
+    }
+
     if (!isConnected) {
       throw Exception(StringConstants.deviceNotConnected);
     }
@@ -952,6 +993,15 @@ class BleManager extends GetxService {
   }
 
   Future<void> startInputSetupApply() async {
+    if (DemoBle.enabled) {
+      await DemoBle.runSteppedCommand(
+        process: bleProcess,
+        steps: [StringConstants.applyingInputSetup],
+        done: bleProcess.isInputSetupApplyDone,
+      );
+      return;
+    }
+
     if (!isConnected) {
       throw Exception(StringConstants.deviceNotConnected);
     }
@@ -983,6 +1033,19 @@ class BleManager extends GetxService {
   }
 
   Future<void> startRelaySetupFetch() async {
+    if (DemoBle.enabled) {
+      await DemoBle.runSteppedCommand(
+        process: bleProcess,
+        steps: [
+          '${StringConstants.downloadingRelay} 1/3',
+          '${StringConstants.downloadingRelay} 2/3',
+          '${StringConstants.downloadingRelay} 3/3',
+        ],
+        done: bleProcess.isRelaySetupFetchDone,
+      );
+      return;
+    }
+
     if (!isConnected) {
       throw Exception(StringConstants.deviceNotConnected);
     }
@@ -1016,6 +1079,19 @@ class BleManager extends GetxService {
   }
 
   Future<void> startRelaySetupApply() async {
+    if (DemoBle.enabled) {
+      await DemoBle.runSteppedCommand(
+        process: bleProcess,
+        steps: [
+          '${StringConstants.applyingRelay} 1/3',
+          '${StringConstants.applyingRelay} 2/3',
+          '${StringConstants.applyingRelay} 3/3',
+        ],
+        done: bleProcess.isRelaySetupApplyDone,
+      );
+      return;
+    }
+
     if (!isConnected) {
       throw Exception(StringConstants.deviceNotConnected);
     }
@@ -1049,6 +1125,19 @@ class BleManager extends GetxService {
   }
 
   Future<void> startZoneSetupFetch() async {
+    if (DemoBle.enabled) {
+      await DemoBle.runSteppedCommand(
+        process: bleProcess,
+        steps: [
+          '${StringConstants.downloadingZone} 1/3',
+          '${StringConstants.downloadingZone} 2/3',
+          '${StringConstants.downloadingZone} 3/3',
+        ],
+        done: bleProcess.isZoneSetupFetchDone,
+      );
+      return;
+    }
+
     if (!isConnected) {
       throw Exception(StringConstants.deviceNotConnected);
     }
@@ -1082,6 +1171,19 @@ class BleManager extends GetxService {
   }
 
   Future<void> startZoneSetupApply() async {
+    if (DemoBle.enabled) {
+      await DemoBle.runSteppedCommand(
+        process: bleProcess,
+        steps: [
+          '${StringConstants.applyingZone} 1/3',
+          '${StringConstants.applyingZone} 2/3',
+          '${StringConstants.applyingZone} 3/3',
+        ],
+        done: bleProcess.isZoneSetupApplyDone,
+      );
+      return;
+    }
+
     if (!isConnected) {
       throw Exception(StringConstants.deviceNotConnected);
     }
@@ -1113,6 +1215,18 @@ class BleManager extends GetxService {
   }
 
   Future<void> startRadioSetupFetch() async {
+    if (DemoBle.enabled) {
+      await DemoBle.runPasswordCommand(
+        process: bleProcess,
+        steps: [StringConstants.downloadingRadio],
+        finish: () {
+          bleProcess.isRadioSetupFetchCommandActive.value = false;
+          bleProcess.isAccessKeyValid.value = true;
+        },
+      );
+      return;
+    }
+
     if (!isConnected) {
       throw Exception(StringConstants.deviceNotConnected);
     }
@@ -1138,6 +1252,19 @@ class BleManager extends GetxService {
   }
 
   Future<void> startRadioSetupApply() async {
+    if (DemoBle.enabled) {
+      await DemoBle.runPasswordCommand(
+        process: bleProcess,
+        steps: [StringConstants.applyingRadio],
+        finish: () {
+          bleProcess.isRadioSetupCommandApplyActive.value = false;
+          bleProcess.isRadioSetupApplyDone.value = true;
+          bleProcess.isAccessKeyValid.value = true;
+        },
+      );
+      return;
+    }
+
     if (!isConnected) {
       throw Exception(StringConstants.deviceNotConnected);
     }
@@ -1163,6 +1290,18 @@ class BleManager extends GetxService {
   }
 
   Future<void> startModuleSetupFetch() async {
+    if (DemoBle.enabled) {
+      await DemoBle.runPasswordCommand(
+        process: bleProcess,
+        steps: [StringConstants.downloadingModule],
+        finish: () {
+          bleProcess.isModuleSetupFetchCommandActive.value = false;
+          bleProcess.isAccessKeyValid.value = true;
+        },
+      );
+      return;
+    }
+
     if (!isConnected) {
       throw Exception(StringConstants.deviceNotConnected);
     }
@@ -1188,6 +1327,22 @@ class BleManager extends GetxService {
   }
 
   Future<void> startLBusSetupFetch() async {
+    if (DemoBle.enabled) {
+      await DemoBle.runPasswordCommand(
+        process: bleProcess,
+        steps: [
+          '${StringConstants.downloadingLBus} 1/31',
+          '${StringConstants.downloadingLBus} 2/31',
+          '${StringConstants.downloadingLBus} 31/31',
+        ],
+        finish: () {
+          bleProcess.isLBusSetupFetchCommandActive.value = false;
+          bleProcess.isAccessKeyValid.value = true;
+        },
+      );
+      return;
+    }
+
     if (!isConnected) {
       throw Exception(StringConstants.deviceNotConnected);
     }
@@ -1213,6 +1368,23 @@ class BleManager extends GetxService {
   }
 
   Future<void> startLBusSetupApply() async {
+    if (DemoBle.enabled) {
+      await DemoBle.runPasswordCommand(
+        process: bleProcess,
+        steps: [
+          '${StringConstants.applyingLBus} 1/31',
+          '${StringConstants.applyingLBus} 2/31',
+          '${StringConstants.applyingLBus} 31/31',
+        ],
+        finish: () {
+          bleProcess.isLBusSetupApplyCommandActive.value = false;
+          bleProcess.isLBusSetupApplyDone.value = true;
+          bleProcess.isAccessKeyValid.value = true;
+        },
+      );
+      return;
+    }
+
     if (!isConnected) {
       throw Exception(StringConstants.deviceNotConnected);
     }
@@ -1238,6 +1410,24 @@ class BleManager extends GetxService {
   }
 
   Future<void> startSounderSetupFetch() async {
+    if (DemoBle.enabled) {
+      await DemoBle.runPasswordCommand(
+        process: bleProcess,
+        steps: [
+          '${StringConstants.downloadingSounderRelays} 1/3',
+          '${StringConstants.downloadingSounderZones} 1/3',
+          StringConstants.downloadingSounderExtOut,
+        ],
+        finish: () {
+          bleProcess.isSounderSetupFetchCommandActive.value = false;
+          bleProcess.isAccessKeyValid.value = true;
+          bleProcess.processDesc.value =
+              StringConstants.sounderSetupFetchCompleted;
+        },
+      );
+      return;
+    }
+
     if (!isConnected) {
       throw Exception(StringConstants.deviceNotConnected);
     }
@@ -1263,6 +1453,24 @@ class BleManager extends GetxService {
   }
 
   Future<void> startSounderSetupApply() async {
+    if (DemoBle.enabled) {
+      await DemoBle.runPasswordCommand(
+        process: bleProcess,
+        steps: [
+          '${StringConstants.applyingSounderRelays} 1/3',
+          StringConstants.applyingSounderZones,
+          StringConstants.applyingSounderExtOut,
+          StringConstants.applyingSounderGeneral,
+        ],
+        finish: () {
+          bleProcess.isSounderSetupApplyCommandActive.value = false;
+          bleProcess.isSounderSetupApplyDone.value = true;
+          bleProcess.isAccessKeyValid.value = true;
+        },
+      );
+      return;
+    }
+
     if (!isConnected) {
       throw Exception(StringConstants.deviceNotConnected);
     }
@@ -1288,6 +1496,20 @@ class BleManager extends GetxService {
   }
 
   Future<void> startServiceDueFetch() async {
+    if (DemoBle.enabled) {
+      await DemoBle.runPasswordCommand(
+        process: bleProcess,
+        steps: [StringConstants.downloadingServiceDue],
+        finish: () {
+          bleProcess.isServiceDueFetchCommandActive.value = false;
+          bleProcess.isAccessKeyValid.value = true;
+          bleProcess.processDesc.value =
+              StringConstants.serviceDueFetchCompleted;
+        },
+      );
+      return;
+    }
+
     if (!isConnected) {
       throw Exception(StringConstants.deviceNotConnected);
     }
@@ -1313,6 +1535,21 @@ class BleManager extends GetxService {
   }
 
   Future<void> startServiceDueApply() async {
+    if (DemoBle.enabled) {
+      await DemoBle.runPasswordCommand(
+        process: bleProcess,
+        steps: [StringConstants.applyingServiceDue],
+        finish: () {
+          bleProcess.isServiceDueApplyCommandActive.value = false;
+          bleProcess.isServiceDueApplyDone.value = true;
+          bleProcess.isAccessKeyValid.value = true;
+          bleProcess.processDesc.value =
+              StringConstants.serviceDueApplyCompleted;
+        },
+      );
+      return;
+    }
+
     if (!isConnected) {
       throw Exception(StringConstants.deviceNotConnected);
     }
@@ -1338,6 +1575,20 @@ class BleManager extends GetxService {
   }
 
   Future<void> startAccessCodeSetupFetch() async {
+    if (DemoBle.enabled) {
+      await DemoBle.runPasswordCommand(
+        process: bleProcess,
+        steps: [StringConstants.downloadingAccessCodeOne],
+        finish: () {
+          bleProcess.isAccessCodeSetupFetchCommandActive.value = false;
+          bleProcess.isAccessKeyValid.value = true;
+          bleProcess.processDesc.value =
+              StringConstants.accessCodeSetupFetchCompleted;
+        },
+      );
+      return;
+    }
+
     if (!isConnected) {
       throw Exception(StringConstants.deviceNotConnected);
     }
@@ -1363,6 +1614,21 @@ class BleManager extends GetxService {
   }
 
   Future<void> startAccessCodeSetupApply() async {
+    if (DemoBle.enabled) {
+      await DemoBle.runPasswordCommand(
+        process: bleProcess,
+        steps: [StringConstants.applyingAccessCodeOne],
+        finish: () {
+          bleProcess.isAccessCodeSetupApplyCommandActive.value = false;
+          bleProcess.isAccessCodeSetupApplyDone.value = true;
+          bleProcess.isAccessKeyValid.value = true;
+          bleProcess.processDesc.value =
+              StringConstants.accessCodeSetupApplyCompleted;
+        },
+      );
+      return;
+    }
+
     if (!isConnected) {
       throw Exception(StringConstants.deviceNotConnected);
     }
@@ -1388,6 +1654,20 @@ class BleManager extends GetxService {
   }
 
   Future<void> startPanelInfoSetupFetch() async {
+    if (DemoBle.enabled) {
+      await DemoBle.runPasswordCommand(
+        process: bleProcess,
+        steps: [StringConstants.downloadingPanelInfo],
+        finish: () {
+          bleProcess.isPanelInfoSetupFetchCommandActive.value = false;
+          bleProcess.isAccessKeyValid.value = true;
+          bleProcess.processDesc.value =
+              StringConstants.panelInfoSetupFetchCompleted;
+        },
+      );
+      return;
+    }
+
     if (!isConnected) {
       throw Exception(StringConstants.deviceNotConnected);
     }
@@ -1413,6 +1693,21 @@ class BleManager extends GetxService {
   }
 
   Future<void> startPanelInfoSetupApply() async {
+    if (DemoBle.enabled) {
+      await DemoBle.runPasswordCommand(
+        process: bleProcess,
+        steps: [StringConstants.applyingPanelInfo],
+        finish: () {
+          bleProcess.isPanelInfoSetupApplyCommandActive.value = false;
+          bleProcess.isPanelInfoSetupApplyDone.value = true;
+          bleProcess.isAccessKeyValid.value = true;
+          bleProcess.processDesc.value =
+              StringConstants.panelInfoSetupApplyCompleted;
+        },
+      );
+      return;
+    }
+
     if (!isConnected) {
       throw Exception(StringConstants.deviceNotConnected);
     }
@@ -1438,6 +1733,20 @@ class BleManager extends GetxService {
   }
 
   Future<void> startGeneralModuleSetupFetch() async {
+    if (DemoBle.enabled) {
+      await DemoBle.runPasswordCommand(
+        process: bleProcess,
+        steps: [StringConstants.downloadingGeneralModule],
+        finish: () {
+          bleProcess.isGeneralModuleSetupFetchCommandActive.value = false;
+          bleProcess.isAccessKeyValid.value = true;
+          bleProcess.processDesc.value =
+              StringConstants.generalModuleSetupFetchCompleted;
+        },
+      );
+      return;
+    }
+
     if (!isConnected) {
       throw Exception(StringConstants.deviceNotConnected);
     }
@@ -1463,6 +1772,21 @@ class BleManager extends GetxService {
   }
 
   Future<void> startGeneralModuleSetupApply() async {
+    if (DemoBle.enabled) {
+      await DemoBle.runPasswordCommand(
+        process: bleProcess,
+        steps: [StringConstants.applyingGeneralModuleTimeOut],
+        finish: () {
+          bleProcess.isGeneralModuleSetupApplyCommandActive.value = false;
+          bleProcess.isGeneralModuleSetupApplyDone.value = true;
+          bleProcess.isAccessKeyValid.value = true;
+          bleProcess.processDesc.value =
+              StringConstants.generalModuleSetupApplyCompleted;
+        },
+      );
+      return;
+    }
+
     if (!isConnected) {
       throw Exception(StringConstants.deviceNotConnected);
     }
@@ -1488,6 +1812,19 @@ class BleManager extends GetxService {
   }
 
   Future<void> startAdcSetupFetch() async {
+    if (DemoBle.enabled) {
+      await DemoBle.runPasswordCommand(
+        process: bleProcess,
+        steps: [StringConstants.downloadingAdcSetup],
+        finish: () {
+          bleProcess.isAdcSetupFetchCommandActive.value = false;
+          bleProcess.isAccessKeyValid.value = true;
+          bleProcess.processDesc.value = StringConstants.adcSetupFetchCompleted;
+        },
+      );
+      return;
+    }
+
     if (!isConnected) {
       throw Exception(StringConstants.deviceNotConnected);
     }
@@ -1611,6 +1948,24 @@ class BleManager extends GetxService {
   }) async {
     if (isConnected) {
       shutdown();
+      return;
+    }
+
+    if (DemoBle.enabled) {
+      _connectInProgress = true;
+      try {
+        selectedDevice = device;
+        connectedDeviceId.value = device.id;
+        receivedPanelName.value = device.name;
+        _isConnectedNotifier.value = false;
+        handshakeCompleteNotifier.value = false;
+        maxBleConnectionRetriesReached.value = false;
+        await Future.delayed(const Duration(milliseconds: 700));
+        _isConnectedNotifier.value = true;
+        handshakeCompleteNotifier.value = true;
+      } finally {
+        _connectInProgress = false;
+      }
       return;
     }
 
@@ -1872,6 +2227,11 @@ class BleManager extends GetxService {
   Future<void> disconnectConnectedDevice() async {
     receivedPanelName.value = "";
     if (!isConnected) {
+      return;
+    }
+
+    if (DemoBle.enabled) {
+      await disconnectHandler(deviceId: connectedDeviceId.value);
       return;
     }
 

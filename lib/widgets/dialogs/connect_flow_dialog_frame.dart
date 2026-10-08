@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 
 /// Shared card size for dialogs shown while connecting on Windows.
-const Size connectFlowDialogSize = Size(420, 270);
+const Size connectFlowDialogSize = Size(420, 370);
 
 bool get connectFlowDialogIsFixedSize => Platform.isWindows;
 

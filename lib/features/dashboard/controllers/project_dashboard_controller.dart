@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:Technoswitch/ble/ble_manager.dart';
+import 'package:Technoswitch/ble/demo/demo_ble.dart';
 import 'package:Technoswitch/ble/ble_session_idle_policy.dart';
 import 'package:Technoswitch/ble/blue_plus_adapter.dart';
 import 'package:Technoswitch/ble/controller/ble_log_controller.dart';
@@ -291,36 +292,44 @@ class ProjectDashboardController extends GetxController {
       ui.showConnectingDialog(selectedDevice);
       dialogShown = true;
 
-      await bluetoothService.requestPermissions();
-      final poweredOn = await bluetoothService.ensurePoweredOn();
-      if (!poweredOn) {
-        throw Exception(StringConstants.bluetoothIsNotEnabled);
-      }
-
-      await bluetoothService.startScanning();
-
-      final deviceFoundCompleter = Completer<DiscoveredDevice?>();
-
-      scanSubscription = bluetoothService.scanResultsStream.listen((results) {
-        for (final result in results) {
-          if (result.name == panelName) {
-            if (!deviceFoundCompleter.isCompleted) {
-              deviceFoundCompleter.complete(result);
-            }
-            break;
-          }
+      final DiscoveredDevice device;
+      if (DemoBle.enabled) {
+        device = selectedDevice;
+      } else {
+        await bluetoothService.requestPermissions();
+        final poweredOn = await bluetoothService.ensurePoweredOn();
+        if (!poweredOn) {
+          throw Exception(StringConstants.bluetoothIsNotEnabled);
         }
-      });
 
-      final device = await deviceFoundCompleter.future.timeout(
-        const Duration(seconds: 15),
-        onTimeout: () => null,
-      );
-      await scanSubscription?.cancel();
-      await bluetoothService.stopScanning();
+        await bluetoothService.startScanning();
 
-      if (device == null) {
-        throw Exception('Device "$deviceName" not found');
+        final deviceFoundCompleter = Completer<DiscoveredDevice?>();
+
+        scanSubscription = bluetoothService.scanResultsStream.listen((
+          results,
+        ) {
+          for (final result in results) {
+            if (result.name == panelName) {
+              if (!deviceFoundCompleter.isCompleted) {
+                deviceFoundCompleter.complete(result);
+              }
+              break;
+            }
+          }
+        });
+
+        final found = await deviceFoundCompleter.future.timeout(
+          const Duration(seconds: 15),
+          onTimeout: () => null,
+        );
+        await scanSubscription?.cancel();
+        await bluetoothService.stopScanning();
+
+        if (found == null) {
+          throw Exception('Device "$deviceName" not found');
+        }
+        device = found;
       }
 
       await bleController.connectToDevice(device: device);

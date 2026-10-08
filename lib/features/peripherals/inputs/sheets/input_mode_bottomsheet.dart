@@ -1,3 +1,4 @@
+import 'package:Technoswitch/ble/demo/demo_ble.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -70,9 +71,11 @@ class InputModeBottomSheetState extends State<InputModeBottomSheet> {
             value: controller.group,
             items: controller.groupOptions,
             disabledItems:
-                controller.groupOptions
-                    .where((item) => item != StringConstants.extOut)
-                    .toSet(),
+                DemoBle.restrictPeripheralOptions
+                    ? controller.groupOptions
+                        .where((item) => item != StringConstants.extOut)
+                        .toSet()
+                    : const <String>{},
             onChanged: (v) => controller.setGroup(v),
           ),
           DropdownWidget(
@@ -80,9 +83,11 @@ class InputModeBottomSheetState extends State<InputModeBottomSheet> {
             value: controller.function,
             items: controller.functionOptionsMap[controller.group]!,
             disabledItems:
-                controller.functionOptionsMap[controller.group]!
-                    .where((item) => item != StringConstants.hold)
-                    .toSet(),
+                DemoBle.restrictPeripheralOptions
+                    ? controller.functionOptionsMap[controller.group]!
+                        .where((item) => item != StringConstants.hold)
+                        .toSet()
+                    : const <String>{},
             onChanged: (v) => controller.setFunction(v),
           ),
           DropdownWidget(

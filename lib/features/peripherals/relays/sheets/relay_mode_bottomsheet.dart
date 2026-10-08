@@ -1,3 +1,4 @@
+import 'package:Technoswitch/ble/demo/demo_ble.dart';
 import 'package:Technoswitch/widgets/common/peripheral_sheet_chrome.dart';
 
 import 'package:flutter/material.dart';
@@ -318,7 +319,11 @@ class RelayModeBottomSheetState extends State<RelayModeBottomSheet>
         value: relay.group,
         items: controller.groupOptions,
         disabledItems:
-            controller.groupOptions.where((item) => item != 'Zone').toSet(),
+            DemoBle.restrictPeripheralOptions
+                ? controller.groupOptions
+                    .where((item) => item != 'Zone')
+                    .toSet()
+                : const <String>{},
         onChanged: (v) => controller.setGroup(index, v),
       ),
       DropdownWidget(
@@ -326,9 +331,11 @@ class RelayModeBottomSheetState extends State<RelayModeBottomSheet>
         value: relay.function,
         items: controller.functionOptionsMap[relay.group]!,
         disabledItems:
-            controller.functionOptionsMap[relay.group]!
-                .where((item) => item != 'Fault' && item != 'Fire')
-                .toSet(),
+            DemoBle.restrictPeripheralOptions
+                ? controller.functionOptionsMap[relay.group]!
+                    .where((item) => item != 'Fault' && item != 'Fire')
+                    .toSet()
+                : const <String>{},
         onChanged: (v) => controller.setFunction(index, v),
       ),
       if (relay.group == 'Zone')
