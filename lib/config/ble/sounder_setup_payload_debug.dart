@@ -24,13 +24,15 @@ abstract final class SounderSetupPayloadDebug {
         sounderNum,
         previewOnly: true,
       );
-      debugPrint(
-        'SETUP_SOUNDER APPLY S$sounderNum 216-byte frame (preview):\n'
-        '${formatHexDump(packet)}',
+      final hex = packet
+          .map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase())
+          .join(' ');
+      print(
+        'TX/RX: TRANSMIT: sounder-apply-S$sounderNum packet: $hex',
       );
-      debugPrint(
-        'SETUP_SOUNDER APPLY S$sounderNum struct bytes [13..41]: '
-        '${packet.sublist(13, 42).map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}',
+      print(
+        'SETUP_SOUNDER APPLY S$sounderNum struct bytes [13..49]: '
+        '${packet.sublist(13, 50).map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}',
       );
     }
   }

@@ -59,27 +59,10 @@ abstract final class ProjectDashboardTileActions {
       if (ui == null) return;
       ui.showSounderSetupBottomSheet(
         onDownload:
-            () => ui.runCompactSetupDownload(
-              successMessage: StringConstants.sounders,
-              fallbackStatus: '${StringConstants.downloadingSounderRelays} 1/3',
-              markActive:
-                  () =>
-                      c.ble.bleProcess.isSounderSetupFetchCommandActive.value =
-                          true,
-              start: c.bleController.startSounderSetupFetch,
+            () => ui.runSounderSetupDownload(
               onDownloadComplete: c.saveSounderCacheAndNotifyRefresh,
             ),
-        onApply:
-            () => ui.runCompactSetupApply(
-              successMessage: StringConstants.sounders,
-              fallbackStatus: '${StringConstants.applyingSounderRelays} 1/3',
-              markActive:
-                  () =>
-                      c.ble.bleProcess.isSounderSetupApplyCommandActive.value =
-                          true,
-              start: c.bleController.startSounderSetupApply,
-              onApplyComplete: c.saveSounderCacheAndNotifyRefresh,
-            ),
+        onApply: () => ui.runSounderSetupApply(),
         refreshTrigger: c.sounderRefreshTrigger,
       );
     });
@@ -381,30 +364,16 @@ abstract final class ProjectDashboardTileActions {
               onDownloadComplete: c.saveRelayCacheAndNotifyRefresh,
             ),
         onDownloadSounders:
-            () => ui.showPasswordPopup(
-              onCall: () {
-                c.ble.bleProcess.isSounderSetupFetchCommandActive.value = true;
-                c.bleController.startSounderSetupFetch();
-              },
-              isSounderSetup: true,
-              mode: 'bottomsheet_download',
+            () => ui.runSounderSetupDownload(
               onDownloadComplete: c.saveSounderCacheAndNotifyRefresh,
-              downloadSuccessMessage: 'Sounder',
             ),
         onApplyRelays:
             () => ui.runRelaySetupApply(
               onAfterApplySuccess: ui.showRelayTestResultConfirmation,
             ),
         onApplySounders:
-            () => ui.showPasswordPopup(
-              onCall: () {
-                c.ble.bleProcess.isSounderSetupApplyCommandActive.value = true;
-                c.bleController.startSounderSetupApply();
-              },
-              isSounderSetup: true,
-              mode: 'bottomsheet_apply',
-              onAfterApplySuccess:
-                  (_) => ui.showSounderTestResultConfirmation(),
+            () => ui.runSounderSetupApply(
+              onAfterApplySuccess: ui.showSounderTestResultConfirmation,
             ),
         relayRefreshTrigger: c.relayRefreshTrigger,
         sounderRefreshTrigger: c.sounderRefreshTrigger,

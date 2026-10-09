@@ -1413,20 +1413,17 @@ class BleManager extends GetxService {
 
   Future<void> startSounderSetupFetch() async {
     if (DemoBle.enabled) {
-      await DemoBle.runPasswordCommand(
+      bleProcess.isSounderSetupFetchDone.value = false;
+      await DemoBle.runSteppedCommand(
         process: bleProcess,
         steps: [
-          '${StringConstants.downloadingSounderRelays} 1/3',
-          '${StringConstants.downloadingSounderZones} 1/3',
-          StringConstants.downloadingSounderExtOut,
+          '${StringConstants.downloadingSounder} 1/3',
+          '${StringConstants.downloadingSounder} 2/3',
+          '${StringConstants.downloadingSounder} 3/3',
         ],
-        finish: () {
-          bleProcess.isSounderSetupFetchCommandActive.value = false;
-          bleProcess.isAccessKeyValid.value = true;
-          bleProcess.processDesc.value =
-              StringConstants.sounderSetupFetchCompleted;
-        },
+        done: bleProcess.isSounderSetupFetchDone,
       );
+      bleProcess.isSounderSetupFetchCommandActive.value = false;
       return;
     }
 
@@ -1437,8 +1434,6 @@ class BleManager extends GetxService {
     if (notifyChar == null || writeChar == null) {
       throw Exception(StringConstants.bleCharNotInit);
     }
-
-    currentOperationMode = BleOperationMode.sounderSetupFetch;
 
     resetSounderSetupState();
     resetProtocolSounderSetupState();
@@ -1450,26 +1445,32 @@ class BleManager extends GetxService {
 
     bleCurrentState = BleStates.SEND_SOUNDER_SETUP_CMD_FETCH_PACKET;
     bleStateMachineState = BleStates.SEND_SOUNDER_SETUP_CMD_FETCH_PACKET;
+    currentOperationMode = BleOperationMode.sounderSetupFetch;
+    otaProcessState = OtaProcessState.sendSounderSetupFetchCmdPkt;
+    bleProcess.isNetworkPacketProcess.value = false;
+    bleProcess.checkForSounderSetupFetchRes = 1;
+    bleProcess.sounderSetupFetchRelayCommandStep = 1;
+    bleProcess.isSounderSetupFetchDone.value = false;
+    bleProcess.processDesc.value = "${StringConstants.downloadingSounder} 1/3";
     bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
-    Get.find<BleLogController>().sendNetworkPacket();
+    bleProcess.startRxTimeout();
+    await sendSounderSetupFetchCmdPkt(sounderNum: 1);
   }
 
   Future<void> startSounderSetupApply() async {
     if (DemoBle.enabled) {
-      await DemoBle.runPasswordCommand(
+      SounderSetupPayloadDebug.printApplyFrames(this);
+      bleProcess.isSounderSetupApplyDone.value = false;
+      await DemoBle.runSteppedCommand(
         process: bleProcess,
         steps: [
-          '${StringConstants.applyingSounderRelays} 1/3',
-          StringConstants.applyingSounderZones,
-          StringConstants.applyingSounderExtOut,
-          StringConstants.applyingSounderGeneral,
+          '${StringConstants.applyingSounder} 1/3',
+          '${StringConstants.applyingSounder} 2/3',
+          '${StringConstants.applyingSounder} 3/3',
         ],
-        finish: () {
-          bleProcess.isSounderSetupApplyCommandActive.value = false;
-          bleProcess.isSounderSetupApplyDone.value = true;
-          bleProcess.isAccessKeyValid.value = true;
-        },
+        done: bleProcess.isSounderSetupApplyDone,
       );
+      bleProcess.isSounderSetupApplyCommandActive.value = false;
       return;
     }
 
@@ -1481,8 +1482,6 @@ class BleManager extends GetxService {
       throw Exception(StringConstants.bleCharNotInit);
     }
 
-    currentOperationMode = BleOperationMode.sounderSetupApply;
-
     resetSounderSetupState();
     resetProtocolSounderSetupState();
     bleProcess.resetProcessSounderSetupState();
@@ -1493,8 +1492,16 @@ class BleManager extends GetxService {
 
     bleCurrentState = BleStates.SEND_SOUNDER_SETUP_CMD_APPLY_PACKET;
     bleStateMachineState = BleStates.SEND_SOUNDER_SETUP_CMD_APPLY_PACKET;
+    currentOperationMode = BleOperationMode.sounderSetupApply;
+    otaProcessState = OtaProcessState.sendSounderSetupApplyCmdPkt;
+    bleProcess.isNetworkPacketProcess.value = false;
+    bleProcess.checkForSounderSetupApplyRes = 1;
+    bleProcess.sounderSetupApplyRelayCommandStep = 1;
+    bleProcess.isSounderSetupApplyDone.value = false;
+    bleProcess.processDesc.value = "${StringConstants.applyingSounder} 1/3";
     bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
-    Get.find<BleLogController>().sendNetworkPacket();
+    bleProcess.startRxTimeout();
+    await sendSounderSetupApplyCmdPkt(sounderNum: 1);
   }
 
   Future<void> _beginPanelPropertiesFetch({
@@ -3302,7 +3309,7 @@ class BleManager extends GetxService {
     u8Pkt[6] = BleConstants.network.radio;
     u8Pkt[10] = BleConstants.mode.request.dbSetup;
     u8Pkt[11] = BleConstants.socket.radio;
-    u8Pkt[12] = BleConstants.command.sounderSetup;
+    u8Pkt[12] = BleConstants.command.newStructSounderCommand;
     u8Pkt[13] = sounderNum;
 
     final checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
@@ -3342,7 +3349,7 @@ class BleManager extends GetxService {
     u8Pkt[6] = BleConstants.network.radio;
     u8Pkt[10] = BleConstants.mode.instruction.dbSetup;
     u8Pkt[11] = BleConstants.socket.radio;
-    u8Pkt[12] = BleConstants.command.sounderSetup;
+    u8Pkt[12] = BleConstants.command.newStructSounderCommand;
 
     final sounderConfig = SounderSetupPayload.fromBleProcess(
       bleProcess,

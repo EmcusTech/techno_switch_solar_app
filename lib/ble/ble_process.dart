@@ -6,8 +6,6 @@ import 'package:Technoswitch/ble/controller/ble_log_controller.dart';
 import 'package:Technoswitch/models/access_code_mode_model.dart';
 import 'package:Technoswitch/models/adc_domain_values_model.dart';
 import 'package:Technoswitch/utils/constants/string_constants.dart';
-import 'package:Technoswitch/utils/modes/ext_out_equipment_mode_util.dart';
-import 'package:Technoswitch/utils/modes/general_quipment_mode_util.dart';
 import 'package:Technoswitch/config/ble/ext_out_setup_payload.dart';
 import 'package:Technoswitch/config/ble/module_id_payload.dart';
 import 'package:Technoswitch/config/ble/input_setup_payload.dart';
@@ -17,9 +15,8 @@ import 'package:Technoswitch/config/ble/panel_properties_setup_payload.dart';
 import 'package:Technoswitch/config/ble/panel_properties_setup_payload_debug.dart';
 import 'package:Technoswitch/utils/constants/ble/ble_constants.dart';
 import 'package:Technoswitch/config/ble/relay_setup_payload.dart';
+import 'package:Technoswitch/config/ble/sounder_setup_payload.dart';
 import 'package:Technoswitch/config/ble/zone_setup_payload.dart';
-import 'package:Technoswitch/utils/modes/relay_mode_util.dart';
-import 'package:Technoswitch/utils/modes/zone_equipment_mode_util.dart';
 import 'package:Technoswitch/utils/peripherals/defaults/general_module_defaults.dart';
 import 'package:Technoswitch/utils/peripherals/defaults/panel_info_defaults.dart';
 import 'package:Technoswitch/utils/peripherals/defaults/service_due_defaults.dart';
@@ -543,6 +540,10 @@ class BleProcess {
       ValueNotifier<bool>(false);
 
   final ValueNotifier<bool> isSounderSetupApplyDone = ValueNotifier<bool>(
+    false,
+  );
+
+  final ValueNotifier<bool> isSounderSetupFetchDone = ValueNotifier<bool>(
     false,
   );
 
@@ -1254,23 +1255,20 @@ class BleProcess {
           bleManager.otaProcessState =
               OtaProcessState.sendSounderSetupFetchCmdPkt;
           checkForAccessKeyCmdRsp = 0;
+          checkForSounderSetupFetchRes = 1;
           sounderSetupFetchRelayCommandStep = 1;
-          sounderSetupFetchZoneCommandStep = 1;
-          sounderSetupFetchExtOutCommandStep = 1;
-          processDesc.value = "${StringConstants.downloadingSounderRelays} 1/3";
+          processDesc.value = "${StringConstants.downloadingSounder} 1/3";
           startRxTimeout();
-          await bleManager.sendSounderSetupRelayFetchCmdPkt(outputMaxZone: 1);
+          await bleManager.sendSounderSetupFetchCmdPkt(sounderNum: 1);
         } else if (isSounderSetupApplyCommandActive.value) {
           bleManager.otaProcessState =
               OtaProcessState.sendSounderSetupApplyCmdPkt;
           checkForAccessKeyCmdRsp = 0;
+          checkForSounderSetupApplyRes = 1;
           sounderSetupApplyRelayCommandStep = 1;
-          sounderSetupApplyZoneCommandStep = 1;
-          sounderSetupApplyExtOutCommandStep = 1;
-          sounderSetupApplyGeneralCommandStep = 1;
-          processDesc.value = "${StringConstants.applyingSounderRelays} 1/3";
+          processDesc.value = "${StringConstants.applyingSounder} 1/3";
           startRxTimeout();
-          await bleManager.sendSounderSetupRelayApplyCmdPkt(outputMaxZone: 1);
+          await bleManager.sendSounderSetupApplyCmdPkt(sounderNum: 1);
         } else if (isServiceDueFetchCommandActive.value) {
           bleManager.otaProcessState =
               OtaProcessState.sendPanelPropertiesSetupFetchCmdPkt;
@@ -1704,332 +1702,45 @@ class BleProcess {
     }
 
     if (checkForSounderSetupFetchRes == 1) {
-      if (rx.payload[12] == 0x07) {
-        if (sounderSetupFetchRelayCommandStep >= 1 &&
-            sounderSetupFetchRelayCommandStep <= 3) {
-          final nextRelayNo = sounderSetupFetchRelayCommandStep + 1;
-          processDesc.value =
-              "${StringConstants.downloadingSounderRelays} $nextRelayNo/3";
-
-          if (sounderSetupFetchRelayCommandStep == 1) {
-            final OutputModeConfig config = OutputModeCodec.fromHex(
-              rx.payload[15].toRadixString(16),
-            );
-            final bool outputEnabled =
-                config.outputEnable == OutputEnable.enabled;
-            final bool outputMode = config.outputMode == OutputMode.test;
-            final bool supervisionMode =
-                config.supervisionMode == SupervisionMode.normal;
-            isSounderOneEnabled.value = outputEnabled;
-            isSounderOneTest.value = outputMode;
-            isSounderOneNormal.value = supervisionMode;
-            sounderOneRelayOutputMode.value = rx.payload[15]
-                .toRadixString(16)
-                .toUpperCase()
-                .padLeft(2, '0');
-            sounderOneRelayFunctionGroup.value = rx.payload[23];
-            sounderOneRelayFunction.value = rx.payload[24];
-            sounderOneFunctionNo.value = rx.payload[22];
-            sounderOneOutputText.value = extractStringFromPayload(
-              rx.payload,
-              startIndex: 25,
-            );
-          } else if (sounderSetupFetchRelayCommandStep == 2) {
-            final OutputModeConfig config = OutputModeCodec.fromHex(
-              rx.payload[15].toRadixString(16),
-            );
-            final bool outputEnabled =
-                config.outputEnable == OutputEnable.enabled;
-            final bool outputMode = config.outputMode == OutputMode.test;
-            final bool supervisionMode =
-                config.supervisionMode == SupervisionMode.normal;
-            isSounderTwoEnabled.value = outputEnabled;
-            isSounderTwoTest.value = outputMode;
-            isSounderTwoNormal.value = supervisionMode;
-            sounderTwoRelayOutputMode.value = rx.payload[15]
-                .toRadixString(16)
-                .toUpperCase()
-                .padLeft(2, '0');
-            sounderTwoRelayFunctionGroup.value = rx.payload[23];
-            sounderTwoRelayFunction.value = rx.payload[24];
-            sounderTwoFunctionNo.value = rx.payload[22];
-            sounderTwoOutputText.value = extractStringFromPayload(
-              rx.payload,
-              startIndex: 25,
-            );
-          } else if (sounderSetupFetchRelayCommandStep == 3) {
-            final OutputModeConfig config = OutputModeCodec.fromHex(
-              rx.payload[15].toRadixString(16),
-            );
-            final bool outputEnabled =
-                config.outputEnable == OutputEnable.enabled;
-            final bool outputMode = config.outputMode == OutputMode.test;
-            final bool supervisionMode =
-                config.supervisionMode == SupervisionMode.normal;
-            isSounderThreeEnabled.value = outputEnabled;
-            isSounderThreeTest.value = outputMode;
-            isSounderThreeNormal.value = supervisionMode;
-            sounderThreeRelayOutputMode.value = rx.payload[15]
-                .toRadixString(16)
-                .toUpperCase()
-                .padLeft(2, '0');
-            sounderThreeRelayFunctionGroup.value = rx.payload[23];
-            sounderThreeRelayFunction.value = rx.payload[24];
-            sounderThreeFunctionNo.value = rx.payload[22];
-            sounderThreeOutputText.value = extractStringFromPayload(
-              rx.payload,
-              startIndex: 25,
-            );
-          }
-          sounderSetupFetchRelayCommandStep = nextRelayNo;
-          if (sounderSetupFetchRelayCommandStep <= 3) {
-            startRxTimeout();
-            await bleManager.sendSounderSetupRelayFetchCmdPkt(
-              outputMaxZone: nextRelayNo,
-            );
-          } else {
-            processDesc.value = StringConstants.downloadingSounderGeneral;
-            startRxTimeout();
-            await bleManager.sendSounderSetupGeneralFetchCmdPkt();
-          }
+      if (rx.payload[12] == BleConstants.command.newStructSounderCommand) {
+        final step = sounderSetupFetchRelayCommandStep;
+        if (step >= 1 && step <= 3) {
+          final config = SounderSetupPayload.readFromPacket(rx.payload);
+          SounderSetupPayload.applyToBleProcess(config, this, step - 1);
         }
-      } else if (rx.payload[12] == 0x14) {
-        final GeneralEquipmentModeConfig config =
-            GeneralEquipmentModeCodec.fromHex(rx.payload[14].toRadixString(16));
-        final bool equipmentEnabled =
-            config.equipmentEnable == EquipmentEnable.enabled;
-        final bool equipmentMode = config.equipmentMode == EquipmentMode.test;
-        final bool sounderDelay = config.sounderDelay == SounderDelay.enabled;
-        isSounderGeneralEnabled.value = equipmentEnabled;
-        isSounderGeneralTest.value = equipmentMode;
-        isSounderGeneralDelay.value = sounderDelay;
-        sounderGeneralMode.value = rx.payload[14]
-            .toRadixString(16)
-            .toUpperCase()
-            .padLeft(2, '0');
-        sounderGeneralAction.value = rx.payload[15];
-        sounderGeneralDelay.value = rx.payload[18] << 8 | rx.payload[19];
-        processDesc.value = "${StringConstants.downloadingSounderZones} 1/3";
-        startRxTimeout();
-        await bleManager.sendSounderSetupZoneFetchCmdPkt(zoneMaxZone: 1);
-      } else if (rx.payload[12] == 0x19) {
-        if (sounderSetupFetchZoneCommandStep >= 1 &&
-            sounderSetupFetchZoneCommandStep <= 3) {
-          final nextZoneNo = sounderSetupFetchZoneCommandStep + 1;
-          processDesc.value =
-              "${StringConstants.downloadingSounderZones} $nextZoneNo/3";
-          if (sounderSetupFetchZoneCommandStep == 1) {
-            final ZoneEquipmentModeConfig config =
-                ZoneEquipmentModeCodec.fromHex(
-                  rx.payload[15].toRadixString(16),
-                );
-            final bool zoneEnabled =
-                config.zoneEnable == ZoneEquipmentEnable.enabled;
-            final bool zoneMode = config.zoneMode == ZoneEquipmentMode.test;
-
-            isZoneOneEnabled.value = zoneEnabled;
-            isZoneOneTest.value = zoneMode;
-            sounderZoneOneMode.value = rx.payload[15]
-                .toRadixString(16)
-                .toUpperCase()
-                .padLeft(2, '0');
-            zoneOneAction.value = rx.payload[16];
-          } else if (sounderSetupFetchZoneCommandStep == 2) {
-            final ZoneEquipmentModeConfig config =
-                ZoneEquipmentModeCodec.fromHex(
-                  rx.payload[15].toRadixString(16),
-                );
-            final bool zoneEnabled =
-                config.zoneEnable == ZoneEquipmentEnable.enabled;
-            final bool zoneMode = config.zoneMode == ZoneEquipmentMode.test;
-            isZoneTwoEnabled.value = zoneEnabled;
-            isZoneTwoTest.value = zoneMode;
-            sounderZoneTwoMode.value = rx.payload[15]
-                .toRadixString(16)
-                .toUpperCase()
-                .padLeft(2, '0');
-            zoneTwoAction.value = rx.payload[16];
-          } else if (sounderSetupFetchZoneCommandStep == 3) {
-            final ZoneEquipmentModeConfig config =
-                ZoneEquipmentModeCodec.fromHex(
-                  rx.payload[15].toRadixString(16),
-                );
-            final bool zoneEnabled =
-                config.zoneEnable == ZoneEquipmentEnable.enabled;
-            final bool zoneMode = config.zoneMode == ZoneEquipmentMode.test;
-            isZoneThreeEnabled.value = zoneEnabled;
-            isZoneThreeTest.value = zoneMode;
-            sounderZoneThreeMode.value = rx.payload[15]
-                .toRadixString(16)
-                .toUpperCase()
-                .padLeft(2, '0');
-            zoneThreeAction.value = rx.payload[16];
-          }
-          sounderSetupFetchZoneCommandStep = nextZoneNo;
-          if (sounderSetupFetchZoneCommandStep <= 3) {
-            startRxTimeout();
-            await bleManager.sendSounderSetupZoneFetchCmdPkt(
-              zoneMaxZone: nextZoneNo,
-            );
-          } else {
-            processDesc.value =
-                "${StringConstants.downloadingSounderExtOut} 1/3";
-            startRxTimeout();
-            await bleManager.sendSounderSetupExtOutFetchCmdPkt(extMaxZone: 1);
-          }
-        }
-      } else if (rx.payload[12] == 0x1B) {
-        if (sounderSetupFetchExtOutCommandStep >= 1 &&
-            sounderSetupFetchExtOutCommandStep <= 3) {
-          final nextExtOutNo = sounderSetupFetchExtOutCommandStep + 1;
-          processDesc.value =
-              "${StringConstants.downloadingSounderExtOut} $nextExtOutNo/3";
-          if (sounderSetupFetchExtOutCommandStep == 1) {
-            final ExtZoneEquipmentModeConfig config =
-                ExtZoneEquipmentModeCodec.fromHex(
-                  rx.payload[15].toRadixString(16),
-                );
-            final bool zoneEnabled =
-                config.zoneEnable == ExtZoneEquipmentEnable.enabled;
-            final bool zoneMode = config.zoneMode == ExtZoneEquipmentMode.test;
-
-            isExtOutOneEnabled.value = zoneEnabled;
-            isExtOutOneTest.value = zoneMode;
-            sounderExtOutOneMode.value = rx.payload[15]
-                .toRadixString(16)
-                .toUpperCase()
-                .padLeft(2, '0');
-            extoutOneCountdownAction.value = rx.payload[16];
-            extoutOneHoldAction.value = rx.payload[17];
-            extoutOneReleaseAction.value = rx.payload[18];
-          } else if (sounderSetupFetchExtOutCommandStep == 2) {
-            final ExtZoneEquipmentModeConfig config =
-                ExtZoneEquipmentModeCodec.fromHex(
-                  rx.payload[15].toRadixString(16),
-                );
-            final bool zoneEnabled =
-                config.zoneEnable == ExtZoneEquipmentEnable.enabled;
-            final bool zoneMode = config.zoneMode == ExtZoneEquipmentMode.test;
-            isExtOutTwoEnabled.value = zoneEnabled;
-            isExtOutTwoTest.value = zoneMode;
-            sounderExtOutTwoMode.value = rx.payload[15]
-                .toRadixString(16)
-                .toUpperCase()
-                .padLeft(2, '0');
-            extoutTwoCountdownAction.value = rx.payload[16];
-            extoutTwoHoldAction.value = rx.payload[17];
-            extoutTwoReleaseAction.value = rx.payload[18];
-          } else if (sounderSetupFetchExtOutCommandStep == 3) {
-            final ExtZoneEquipmentModeConfig config =
-                ExtZoneEquipmentModeCodec.fromHex(
-                  rx.payload[15].toRadixString(16),
-                );
-            final bool zoneEnabled =
-                config.zoneEnable == ExtZoneEquipmentEnable.enabled;
-            final bool zoneMode = config.zoneMode == ExtZoneEquipmentMode.test;
-            isExtOutThreeEnabled.value = zoneEnabled;
-            isExtOutThreeTest.value = zoneMode;
-            sounderExtOutThreeMode.value = rx.payload[15]
-                .toRadixString(16)
-                .toUpperCase()
-                .padLeft(2, '0');
-            extoutThreeCountdownAction.value = rx.payload[16];
-            extoutThreeHoldAction.value = rx.payload[17];
-            extoutThreeReleaseAction.value = rx.payload[18];
-          }
-          sounderSetupFetchExtOutCommandStep = nextExtOutNo;
-          if (sounderSetupFetchExtOutCommandStep <= 3) {
-            startRxTimeout();
-            await bleManager.sendSounderSetupExtOutFetchCmdPkt(
-              extMaxZone: nextExtOutNo,
-            );
-          } else {
-            bleManager.otaProcessState = OtaProcessState.notInUse;
-            cancelOperationDeadline();
-            checkForSounderSetupFetchRes = 0;
-            isSounderSetupFetchCommandActive.value = false;
-            isAccessKeyValid.value = true;
-            processDesc.value = StringConstants.sounderSetupFetchCompleted;
-          }
+        if (step >= 1 && step < 3) {
+          final next = step + 1;
+          sounderSetupFetchRelayCommandStep = next;
+          processDesc.value = "${StringConstants.downloadingSounder} $next/3";
+          startRxTimeout();
+          await bleManager.sendSounderSetupFetchCmdPkt(sounderNum: next);
         } else {
           bleManager.otaProcessState = OtaProcessState.notInUse;
           cancelOperationDeadline();
           checkForSounderSetupFetchRes = 0;
           isSounderSetupFetchCommandActive.value = false;
-          isAccessKeyValid.value = true;
+          isSounderSetupFetchDone.value = true;
           processDesc.value = StringConstants.sounderSetupFetchCompleted;
         }
-      } else {
-        startRxTimeout();
-        await bleManager.sendPollPacket();
       }
     }
 
     if (checkForSounderSetupApplyRes == 1) {
-      if (rx.payload[10] == 0x83 && rx.payload[12] == 0x02) {
-        if (sounderSetupApplyRelayCommandStep >= 1 &&
-            sounderSetupApplyRelayCommandStep <= 3) {
-          final nextRelayNo = sounderSetupApplyRelayCommandStep + 1;
-          sounderSetupApplyRelayCommandStep = nextRelayNo;
-          if (sounderSetupApplyRelayCommandStep <= 3) {
-            startRxTimeout();
-            processDesc.value =
-                "${StringConstants.applyingSounderRelays} $nextRelayNo/3";
-            await bleManager.sendSounderSetupRelayApplyCmdPkt(
-              outputMaxZone: nextRelayNo,
-            );
-          } else {
-            processDesc.value = StringConstants.applyingSounderGeneral;
-            sounderSetupApplyGeneralCommandStep = 1;
-            startRxTimeout();
-            await bleManager.sendSounderSetupGeneralApplyCmdPkt();
-          }
-        } else if (sounderSetupApplyGeneralCommandStep == 1) {
-          processDesc.value = "${StringConstants.applyingSounderZones} 1/3";
-          sounderSetupApplyGeneralCommandStep = 0;
-          sounderSetupApplyZoneCommandStep = 1;
+      if (rx.payload[10] == 0x83) {
+        final step = sounderSetupApplyRelayCommandStep;
+        if (step >= 1 && step < 3) {
+          final next = step + 1;
+          sounderSetupApplyRelayCommandStep = next;
+          processDesc.value = "${StringConstants.applyingSounder} $next/3";
           startRxTimeout();
-          await bleManager.sendSounderSetupZoneApplyCmdPkt(zoneMaxZone: 1);
-        } else if (sounderSetupApplyZoneCommandStep >= 1 &&
-            sounderSetupApplyZoneCommandStep <= 3) {
-          final nextZoneNo = sounderSetupApplyZoneCommandStep + 1;
-          sounderSetupApplyZoneCommandStep = nextZoneNo;
-          if (sounderSetupApplyZoneCommandStep <= 3) {
-            processDesc.value =
-                "${StringConstants.applyingSounderZones} $nextZoneNo/3";
-            startRxTimeout();
-            await bleManager.sendSounderSetupZoneApplyCmdPkt(
-              zoneMaxZone: nextZoneNo,
-            );
-          } else {
-            sounderSetupApplyExtOutCommandStep = 1;
-            processDesc.value = "${StringConstants.applyingSounderExtOut} 1/3";
-            startRxTimeout();
-            await bleManager.sendSounderSetupExtOutApplyCmdPkt(extMaxZone: 1);
-          }
-        } else if (sounderSetupApplyExtOutCommandStep >= 1 &&
-            sounderSetupApplyExtOutCommandStep <= 3) {
-          final nextExtOutNo = sounderSetupApplyExtOutCommandStep + 1;
-          sounderSetupApplyExtOutCommandStep = nextExtOutNo;
-          if (sounderSetupApplyExtOutCommandStep <= 3) {
-            processDesc.value =
-                "${StringConstants.applyingSounderExtOut} $nextExtOutNo/3";
-            startRxTimeout();
-            await bleManager.sendSounderSetupExtOutApplyCmdPkt(
-              extMaxZone: nextExtOutNo,
-            );
-          } else {
-            bleManager.otaProcessState = OtaProcessState.notInUse;
-            cancelOperationDeadline();
-            checkForSounderSetupApplyRes = 0;
-            isSounderSetupApplyCommandActive.value = false;
-            isSounderSetupApplyDone.value = true;
-            isAccessKeyValid.value = true;
-          }
+          await bleManager.sendSounderSetupApplyCmdPkt(sounderNum: next);
+        } else {
+          bleManager.otaProcessState = OtaProcessState.notInUse;
+          cancelOperationDeadline();
+          checkForSounderSetupApplyRes = 0;
+          isSounderSetupApplyCommandActive.value = false;
+          isSounderSetupApplyDone.value = true;
         }
-      } else {
-        startRxTimeout();
-        await bleManager.sendPollPacket();
       }
     }
 
@@ -3759,6 +3470,22 @@ class BleProcess {
     if (isRelaySetupFetchCommandActive.value ||
         isRelaySetupCommandApplyActive.value) {
       _clearRelaySetupOperationFlags();
+      cancelRxTimeout();
+      cancelOperationDeadline();
+      bleManager.otaProcessState = OtaProcessState.notInUse;
+      processDesc.value = StringConstants.deviceNotResponding;
+      maxOtherPacketsRetriesReached.value = true;
+      return;
+    }
+
+    if (isSounderSetupFetchCommandActive.value ||
+        isSounderSetupApplyCommandActive.value) {
+      isSounderSetupFetchCommandActive.value = false;
+      isSounderSetupApplyCommandActive.value = false;
+      checkForSounderSetupFetchRes = 0;
+      checkForSounderSetupApplyRes = 0;
+      sounderSetupFetchRelayCommandStep = 0;
+      sounderSetupApplyRelayCommandStep = 0;
       cancelRxTimeout();
       cancelOperationDeadline();
       bleManager.otaProcessState = OtaProcessState.notInUse;

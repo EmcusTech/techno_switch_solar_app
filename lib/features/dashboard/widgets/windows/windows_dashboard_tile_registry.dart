@@ -28,7 +28,6 @@ abstract final class WindowsDashboardTileRegistry {
       WindowsDashboardTileConfig(
         label: StringConstants.sounders,
         iconPath: AssetConstants.peripheralSounderIcon,
-        isDisabled: !DemoBle.enabled,
         onTap: () => ProjectDashboardTileActions.openSounders(controller),
       ),
       WindowsDashboardTileConfig(

@@ -70,6 +70,14 @@ abstract class ProjectDashboardUiDelegate {
     Future<void> Function()? onAfterApplySuccess,
   });
 
+  Future<void> runSounderSetupDownload({
+    required Future<void> Function() onDownloadComplete,
+  });
+
+  Future<void> runSounderSetupApply({
+    Future<void> Function()? onAfterApplySuccess,
+  });
+
   Future<void> runPanelPropertiesDownload({
     required String successMessage,
     required String progressLabel,

@@ -89,6 +89,8 @@ abstract final class StringConstants {
   static const String downloadingModule = "Downloading Module";
   static const String downloadingLBus = "Downloading L-Bus";
   static const String applyingLBus = "Applying L-Bus";
+  static const String downloadingSounder = "Downloading Sounder";
+  static const String applyingSounder = "Applying Sounder";
   static const String downloadingSounderRelays = "Downloading Sounder (Relays)";
   static const String applyingSounderRelays = "Applying Sounder (Relays)";
   static const String downloadingServiceDue = "Downloading Service Due";
