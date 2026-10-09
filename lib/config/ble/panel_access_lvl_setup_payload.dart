@@ -23,11 +23,18 @@ abstract final class PanelAccessLvlSetupPayload {
     }
 
     final list = manager.accessCodeSetupDataList.value;
+    final accessCodeNo = index + 1;
     if (index >= list.length) {
-      return PanelAccessLvlCfgDef(accessCodeNo: index + 1);
+      return PanelAccessLvlCfgDef(accessCodeNo: accessCodeNo);
     }
 
-    return PanelAccessLvlCfgDef.fromSetupData(list[index]);
+    final data = list[index];
+    return PanelAccessLvlCfgDef(
+      accessCodeNo: accessCodeNo,
+      accessLevel: data.accessLevel,
+      accessLevelName: data.accessLevelName,
+      accessCode: data.accessCode,
+    );
   }
 
   static void applyToBleManager(

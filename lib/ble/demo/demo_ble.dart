@@ -4,13 +4,13 @@ import 'package:Technoswitch/ble/blue_plus_adapter.dart';
 
 /// Demo stand-in for the radio. Set [enabled] to false to use a real panel.
 abstract final class DemoBle {
-  static const bool enabled = false;
+  static const bool enabled = true;
 
   /// When true, relay, input, and zone dropdowns keep only the demo choices selectable.
   static const bool restrictPeripheralOptions = false;
 
   /// Access code accepted by the demo validator.
-  static const String accessCode = '1234';
+  static const String accessCode = '1974';
 
   static const Duration stepDelay = Duration(milliseconds: 450);
 

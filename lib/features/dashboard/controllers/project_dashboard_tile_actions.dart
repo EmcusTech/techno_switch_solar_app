@@ -242,27 +242,10 @@ abstract final class ProjectDashboardTileActions {
       if (ui == null) return;
       ui.showAccessCodeSetupBottomSheet(
         onDownload:
-            () => ui.showPasswordPopup(
-              onCall: () {
-                c.ble.bleProcess.isAccessCodeSetupFetchCommandActive.value =
-                    true;
-                c.bleController.startAccessCodeSetupFetch();
-              },
-              isAccessCodeSetup: true,
-              mode: 'bottomsheet_download',
+            () => ui.runAccessCodeSetupDownload(
               onDownloadComplete: c.saveAccessCodeCacheAndNotifyRefresh,
-              downloadSuccessMessage: StringConstants.accessCode,
             ),
-        onApply:
-            () => ui.showPasswordPopup(
-              onCall: () {
-                c.ble.bleProcess.isAccessCodeSetupApplyCommandActive.value =
-                    true;
-                c.bleController.startAccessCodeSetupApply();
-              },
-              isAccessCodeSetup: true,
-              mode: 'bottomsheet_apply',
-            ),
+        onApply: () => ui.runAccessCodeSetupApply(),
         refreshTrigger: c.accessCodeRefreshTrigger,
       );
     });

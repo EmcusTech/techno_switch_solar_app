@@ -1640,18 +1640,21 @@ class BleManager extends GetxService {
     );
   }
 
+  List<String> _accessCodeProgressSteps(String label) {
+    return List.generate(8, (index) => '$label ${index + 1}/8');
+  }
+
   Future<void> startAccessCodeSetupFetch() async {
     if (DemoBle.enabled) {
-      await DemoBle.runPasswordCommand(
+      bleProcess.isAccessCodeSetupFetchDone.value = false;
+      await DemoBle.runSteppedCommand(
         process: bleProcess,
-        steps: [StringConstants.downloadingAccessCodeOne],
-        finish: () {
-          bleProcess.isAccessCodeSetupFetchCommandActive.value = false;
-          bleProcess.isAccessKeyValid.value = true;
-          bleProcess.processDesc.value =
-              StringConstants.accessCodeSetupFetchCompleted;
-        },
+        steps: _accessCodeProgressSteps(
+          StringConstants.downloadingAccessCodeOne,
+        ),
+        done: bleProcess.isAccessCodeSetupFetchDone,
       );
+      bleProcess.isAccessCodeSetupFetchCommandActive.value = false;
       return;
     }
 
@@ -1662,8 +1665,6 @@ class BleManager extends GetxService {
     if (notifyChar == null || writeChar == null) {
       throw Exception(StringConstants.bleCharNotInit);
     }
-
-    currentOperationMode = BleOperationMode.accessCodeSetupFetch;
 
     resetAccessCodeSetupState();
     resetProtocolAccessCodeSetupState();
@@ -1675,23 +1676,28 @@ class BleManager extends GetxService {
 
     bleCurrentState = BleStates.SEND_ACCESS_CODE_SETUP_CMD_FETCH_PACKET;
     bleStateMachineState = BleStates.SEND_ACCESS_CODE_SETUP_CMD_FETCH_PACKET;
+    currentOperationMode = BleOperationMode.accessCodeSetupFetch;
+    otaProcessState = OtaProcessState.sendAccessCodeSetupFetchCmdPkt;
+    bleProcess.isNetworkPacketProcess.value = false;
+    bleProcess.checkForAccessCodeSetupFetchRes = 1;
+    bleProcess.accessCodeSetupFetchCommandStep = 1;
+    bleProcess.isAccessCodeSetupFetchDone.value = false;
+    bleProcess.processDesc.value =
+        "${StringConstants.downloadingAccessCodeOne} 1/8";
     bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
-    Get.find<BleLogController>().sendNetworkPacket();
+    bleProcess.startRxTimeout();
+    await sendAccessCodeSetupFetchCmdPkt(accessCodeNo: 1);
   }
 
   Future<void> startAccessCodeSetupApply() async {
     if (DemoBle.enabled) {
-      await DemoBle.runPasswordCommand(
+      bleProcess.isAccessCodeSetupApplyDone.value = false;
+      await DemoBle.runSteppedCommand(
         process: bleProcess,
-        steps: [StringConstants.applyingAccessCodeOne],
-        finish: () {
-          bleProcess.isAccessCodeSetupApplyCommandActive.value = false;
-          bleProcess.isAccessCodeSetupApplyDone.value = true;
-          bleProcess.isAccessKeyValid.value = true;
-          bleProcess.processDesc.value =
-              StringConstants.accessCodeSetupApplyCompleted;
-        },
+        steps: _accessCodeProgressSteps(StringConstants.applyingAccessCodeOne),
+        done: bleProcess.isAccessCodeSetupApplyDone,
       );
+      bleProcess.isAccessCodeSetupApplyCommandActive.value = false;
       return;
     }
 
@@ -1703,8 +1709,6 @@ class BleManager extends GetxService {
       throw Exception(StringConstants.bleCharNotInit);
     }
 
-    currentOperationMode = BleOperationMode.accessCodeSetupApply;
-
     resetAccessCodeSetupState();
     resetProtocolAccessCodeSetupState();
     bleProcess.resetProcessAccessCodeSetupState();
@@ -1715,8 +1719,17 @@ class BleManager extends GetxService {
 
     bleCurrentState = BleStates.SEND_ACCESS_CODE_SETUP_CMD_APPLY_PACKET;
     bleStateMachineState = BleStates.SEND_ACCESS_CODE_SETUP_CMD_APPLY_PACKET;
+    currentOperationMode = BleOperationMode.accessCodeSetupApply;
+    otaProcessState = OtaProcessState.sendAccessCodeSetupApplyCmdPkt;
+    bleProcess.isNetworkPacketProcess.value = false;
+    bleProcess.checkForAccessCodeSetupApplyRes = 1;
+    bleProcess.accessCodeSetupApplyCommandStep = 1;
+    bleProcess.isAccessCodeSetupApplyDone.value = false;
+    bleProcess.processDesc.value =
+        "${StringConstants.applyingAccessCodeOne} 1/8";
     bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
-    Get.find<BleLogController>().sendNetworkPacket();
+    bleProcess.startRxTimeout();
+    await sendAccessCodeSetupApplyCmdPkt(accessCodeNo: 1);
   }
 
   Future<void> startPanelInfoSetupFetch() async {
@@ -1724,8 +1737,7 @@ class BleManager extends GetxService {
       await _demoPanelPropertiesFetch(
         step: StringConstants.downloadingPanelInfo,
         clearActive:
-            () =>
-                bleProcess.isPanelInfoSetupFetchCommandActive.value = false,
+            () => bleProcess.isPanelInfoSetupFetchCommandActive.value = false,
       );
       return;
     }
@@ -1747,8 +1759,7 @@ class BleManager extends GetxService {
       await _demoPanelPropertiesApply(
         step: StringConstants.applyingPanelInfo,
         clearActive:
-            () =>
-                bleProcess.isPanelInfoSetupApplyCommandActive.value = false,
+            () => bleProcess.isPanelInfoSetupApplyCommandActive.value = false,
         applyDone: bleProcess.isPanelInfoSetupApplyDone,
       );
       return;
@@ -1772,8 +1783,7 @@ class BleManager extends GetxService {
         step: StringConstants.downloadingGeneralModule,
         clearActive:
             () =>
-                bleProcess.isGeneralModuleSetupFetchCommandActive.value =
-                    false,
+                bleProcess.isGeneralModuleSetupFetchCommandActive.value = false,
       );
       return;
     }
@@ -1796,8 +1806,7 @@ class BleManager extends GetxService {
         step: StringConstants.applyingGeneralModuleTimeOut,
         clearActive:
             () =>
-                bleProcess.isGeneralModuleSetupApplyCommandActive.value =
-                    false,
+                bleProcess.isGeneralModuleSetupApplyCommandActive.value = false,
         applyDone: bleProcess.isGeneralModuleSetupApplyDone,
       );
       return;
@@ -4506,10 +4515,7 @@ class BleManager extends GetxService {
       'panel-properties-apply',
       u8Pkt,
     );
-    PanelPropertiesSetupPayloadDebug.logStruct(
-      'apply-tx',
-      u8Pkt,
-    );
+    PanelPropertiesSetupPayloadDebug.logStruct('apply-tx', u8Pkt);
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
@@ -4538,6 +4544,12 @@ class BleManager extends GetxService {
     u8Pkt[213] = (checksum >> 8) & BleConstants.base;
     u8Pkt[214] = checksum & BleConstants.base;
     u8Pkt[215] = BleConstants.eot;
+
+    print(
+      u8Pkt
+          .map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase())
+          .join(' '),
+    );
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }

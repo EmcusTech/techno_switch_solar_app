@@ -86,6 +86,12 @@ abstract class ProjectDashboardUiDelegate {
     required Future<void> Function() onApplyComplete,
   });
 
+  Future<void> runAccessCodeSetupDownload({
+    required Future<void> Function() onDownloadComplete,
+  });
+
+  Future<void> runAccessCodeSetupApply();
+
   void showDiagnosticStopDialog();
 
   void showConfigLogBottomSheet();

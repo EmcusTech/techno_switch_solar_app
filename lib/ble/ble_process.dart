@@ -761,9 +761,16 @@ class BleProcess {
     false,
   );
 
+  final ValueNotifier<bool> isAccessCodeSetupFetchDone = ValueNotifier<bool>(
+    false,
+  );
+
   final ValueNotifier<List<AccessCodeSetupData>> accessCodeSetupDataList =
       ValueNotifier<List<AccessCodeSetupData>>(
-        List.generate(8, (_) => const AccessCodeSetupData()),
+        List.generate(
+          8,
+          (index) => AccessCodeSetupData(accessCodeNo: index + 1),
+        ),
       );
 
   final ValueNotifier<bool> isPanelInfoSetupFetchCommandActive =
@@ -1596,7 +1603,7 @@ class BleProcess {
     }
 
     if (checkForAccessCodeSetupFetchRes == 1) {
-      if (rx.payload[12] == 0x03) {
+      if (rx.payload[12] == BleConstants.command.accessCodeSetup) {
         final accessCodeIndex = accessCodeSetupFetchCommandStep - 1;
         if (accessCodeIndex >= 0 && accessCodeIndex < 8) {
           final parsed = PanelAccessLvlSetupPayload.readSetupDataFromPacket(
@@ -1624,17 +1631,14 @@ class BleProcess {
           cancelOperationDeadline();
           checkForAccessCodeSetupFetchRes = 0;
           isAccessCodeSetupFetchCommandActive.value = false;
-          isAccessKeyValid.value = true;
+          isAccessCodeSetupFetchDone.value = true;
           processDesc.value = StringConstants.accessCodeSetupFetchCompleted;
         }
-      } else {
-        startRxTimeout();
-        await bleManager.sendPollPacket();
       }
     }
 
     if (checkForAccessCodeSetupApplyRes == 1) {
-      if (rx.payload[10] == 0x83 && rx.payload[12] == 0x02) {
+      if (rx.payload[10] == 0x83) {
         if (accessCodeSetupApplyCommandStep >= 1 &&
             accessCodeSetupApplyCommandStep < 8) {
           final nextAccessCodeNo = accessCodeSetupApplyCommandStep + 1;
@@ -1651,12 +1655,8 @@ class BleProcess {
           checkForAccessCodeSetupApplyRes = 0;
           isAccessCodeSetupApplyCommandActive.value = false;
           isAccessCodeSetupApplyDone.value = true;
-          isAccessKeyValid.value = true;
           processDesc.value = StringConstants.accessCodeSetupApplyCompleted;
         }
-      } else {
-        startRxTimeout();
-        await bleManager.sendPollPacket();
       }
     }
 
@@ -3759,6 +3759,22 @@ class BleProcess {
     if (isRelaySetupFetchCommandActive.value ||
         isRelaySetupCommandApplyActive.value) {
       _clearRelaySetupOperationFlags();
+      cancelRxTimeout();
+      cancelOperationDeadline();
+      bleManager.otaProcessState = OtaProcessState.notInUse;
+      processDesc.value = StringConstants.deviceNotResponding;
+      maxOtherPacketsRetriesReached.value = true;
+      return;
+    }
+
+    if (isAccessCodeSetupFetchCommandActive.value ||
+        isAccessCodeSetupApplyCommandActive.value) {
+      isAccessCodeSetupFetchCommandActive.value = false;
+      isAccessCodeSetupApplyCommandActive.value = false;
+      checkForAccessCodeSetupFetchRes = 0;
+      checkForAccessCodeSetupApplyRes = 0;
+      accessCodeSetupFetchCommandStep = 0;
+      accessCodeSetupApplyCommandStep = 0;
       cancelRxTimeout();
       cancelOperationDeadline();
       bleManager.otaProcessState = OtaProcessState.notInUse;
