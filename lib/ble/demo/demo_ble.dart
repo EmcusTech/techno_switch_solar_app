@@ -12,7 +12,10 @@ abstract final class DemoBle {
   /// Access code accepted by the demo validator.
   static const String accessCode = '1974';
 
-  static const Duration stepDelay = Duration(milliseconds: 450);
+  static const Duration stepDelay = Duration(milliseconds: 200);
+
+  /// Short enough that a 31-step count still finishes in about two seconds.
+  static const Duration fastStepDelay = Duration(milliseconds: 150);
 
   static List<DiscoveredDevice> scanDevices() {
     return [
@@ -39,10 +42,12 @@ abstract final class DemoBle {
     required BleProcess process,
     required List<String> steps,
     required ValueNotifier<bool> done,
+    Duration? stepDelay,
   }) async {
+    final delay = stepDelay ?? DemoBle.stepDelay;
     for (final step in steps) {
       process.processDesc.value = step;
-      await Future.delayed(stepDelay);
+      await Future.delayed(delay);
     }
     done.value = true;
   }
@@ -52,10 +57,12 @@ abstract final class DemoBle {
     required BleProcess process,
     required List<String> steps,
     required void Function() finish,
+    Duration? stepDelay,
   }) async {
+    final delay = stepDelay ?? DemoBle.stepDelay;
     for (final step in steps) {
       process.processDesc.value = step;
-      await Future.delayed(stepDelay);
+      await Future.delayed(delay);
     }
     finish();
   }

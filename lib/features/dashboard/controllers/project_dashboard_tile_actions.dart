@@ -59,24 +59,26 @@ abstract final class ProjectDashboardTileActions {
       if (ui == null) return;
       ui.showSounderSetupBottomSheet(
         onDownload:
-            () => ui.showPasswordPopup(
-              onCall: () {
-                c.ble.bleProcess.isSounderSetupFetchCommandActive.value = true;
-                c.bleController.startSounderSetupFetch();
-              },
-              isSounderSetup: true,
-              mode: 'bottomsheet_download',
+            () => ui.runCompactSetupDownload(
+              successMessage: StringConstants.sounders,
+              fallbackStatus: '${StringConstants.downloadingSounderRelays} 1/3',
+              markActive:
+                  () =>
+                      c.ble.bleProcess.isSounderSetupFetchCommandActive.value =
+                          true,
+              start: c.bleController.startSounderSetupFetch,
               onDownloadComplete: c.saveSounderCacheAndNotifyRefresh,
-              downloadSuccessMessage: 'Sounder',
             ),
         onApply:
-            () => ui.showPasswordPopup(
-              onCall: () {
-                c.ble.bleProcess.isSounderSetupApplyCommandActive.value = true;
-                c.bleController.startSounderSetupApply();
-              },
-              isSounderSetup: true,
-              mode: 'bottomsheet_apply',
+            () => ui.runCompactSetupApply(
+              successMessage: StringConstants.sounders,
+              fallbackStatus: '${StringConstants.applyingSounderRelays} 1/3',
+              markActive:
+                  () =>
+                      c.ble.bleProcess.isSounderSetupApplyCommandActive.value =
+                          true,
+              start: c.bleController.startSounderSetupApply,
+              onApplyComplete: c.saveSounderCacheAndNotifyRefresh,
             ),
         refreshTrigger: c.sounderRefreshTrigger,
       );
@@ -89,24 +91,26 @@ abstract final class ProjectDashboardTileActions {
       if (ui == null) return;
       ui.showRadioSetupBottomSheet(
         onDownload:
-            () => ui.showPasswordPopup(
-              onCall: () {
-                c.ble.bleProcess.isRadioSetupFetchCommandActive.value = true;
-                c.bleController.startRadioSetupFetch();
-              },
-              isZoneSetup: true,
-              mode: 'bottomsheet_download',
+            () => ui.runCompactSetupDownload(
+              successMessage: StringConstants.radio,
+              fallbackStatus: StringConstants.downloadingRadio,
+              markActive:
+                  () =>
+                      c.ble.bleProcess.isRadioSetupFetchCommandActive.value =
+                          true,
+              start: c.bleController.startRadioSetupFetch,
               onDownloadComplete: c.saveRadioCacheAndNotifyRefresh,
-              downloadSuccessMessage: StringConstants.radio,
             ),
         onApply:
-            () => ui.showPasswordPopup(
-              onCall: () {
-                c.ble.bleProcess.isRadioSetupCommandApplyActive.value = true;
-                c.bleController.startRadioSetupApply();
-              },
-              isZoneSetup: true,
-              mode: 'bottomsheet_apply',
+            () => ui.runCompactSetupApply(
+              successMessage: StringConstants.radio,
+              fallbackStatus: StringConstants.applyingRadio,
+              markActive:
+                  () =>
+                      c.ble.bleProcess.isRadioSetupCommandApplyActive.value =
+                          true,
+              start: c.bleController.startRadioSetupApply,
+              onApplyComplete: c.saveRadioCacheAndNotifyRefresh,
             ),
         refreshTrigger: c.zoneRefreshTrigger,
       );
@@ -119,14 +123,15 @@ abstract final class ProjectDashboardTileActions {
       if (ui == null) return;
       ui.showModuleSetupBottomSheet(
         onDownload:
-            () => ui.showPasswordPopup(
-              onCall: () {
-                c.ble.bleProcess.isModuleSetupFetchCommandActive.value = true;
-                c.bleController.startModuleSetupFetch();
-              },
-              mode: 'bottomsheet_download',
+            () => ui.runCompactSetupDownload(
+              successMessage: StringConstants.module,
+              fallbackStatus: StringConstants.downloadingModule,
+              markActive:
+                  () =>
+                      c.ble.bleProcess.isModuleSetupFetchCommandActive.value =
+                          true,
+              start: c.bleController.startModuleSetupFetch,
               onDownloadComplete: c.saveModuleCacheAndNotifyRefresh,
-              downloadSuccessMessage: 'Module',
             ),
       );
     });
@@ -138,24 +143,26 @@ abstract final class ProjectDashboardTileActions {
       if (ui == null) return;
       ui.showLBusSetupBottomSheet(
         onDownload:
-            () => ui.showPasswordPopup(
-              onCall: () {
-                c.ble.bleProcess.isLBusSetupFetchCommandActive.value = true;
-                c.bleController.startLBusSetupFetch();
-              },
-              mode: 'bottomsheet_download',
+            () => ui.runCompactSetupDownload(
+              successMessage: StringConstants.lBus,
+              fallbackStatus: '${StringConstants.downloadingLBus} 1/31',
+              markActive:
+                  () =>
+                      c.ble.bleProcess.isLBusSetupFetchCommandActive.value =
+                          true,
+              start: c.bleController.startLBusSetupFetch,
               onDownloadComplete: c.saveLBusCacheAndNotifyRefresh,
-              downloadSuccessMessage: StringConstants.lBus,
             ),
         onApply:
-            () => ui.showPasswordPopup(
-              onCall: () {
-                c.ble.bleProcess.isLBusSetupApplyCommandActive.value = true;
-                c.bleController.startLBusSetupApply();
-              },
-              isLBusSetup: true,
-              mode: 'bottomsheet_apply',
-              downloadSuccessMessage: StringConstants.lBus,
+            () => ui.runCompactSetupApply(
+              successMessage: StringConstants.lBus,
+              fallbackStatus: '${StringConstants.applyingLBus} 1/31',
+              markActive:
+                  () =>
+                      c.ble.bleProcess.isLBusSetupApplyCommandActive.value =
+                          true,
+              start: c.bleController.startLBusSetupApply,
+              onApplyComplete: c.saveLBusCacheAndNotifyRefresh,
             ),
         refreshTrigger: c.zoneRefreshTrigger,
       );

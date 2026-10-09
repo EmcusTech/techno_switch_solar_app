@@ -1332,10 +1332,10 @@ class BleManager extends GetxService {
     if (DemoBle.enabled) {
       await DemoBle.runPasswordCommand(
         process: bleProcess,
+        stepDelay: DemoBle.fastStepDelay,
         steps: [
-          '${StringConstants.downloadingLBus} 1/31',
-          '${StringConstants.downloadingLBus} 2/31',
-          '${StringConstants.downloadingLBus} 31/31',
+          for (var bus = 1; bus <= 31; bus++)
+            '${StringConstants.downloadingLBus} $bus/31',
         ],
         finish: () {
           bleProcess.isLBusSetupFetchCommandActive.value = false;
@@ -1373,10 +1373,10 @@ class BleManager extends GetxService {
     if (DemoBle.enabled) {
       await DemoBle.runPasswordCommand(
         process: bleProcess,
+        stepDelay: DemoBle.fastStepDelay,
         steps: [
-          '${StringConstants.applyingLBus} 1/31',
-          '${StringConstants.applyingLBus} 2/31',
-          '${StringConstants.applyingLBus} 31/31',
+          for (var bus = 1; bus <= 31; bus++)
+            '${StringConstants.applyingLBus} $bus/31',
         ],
         finish: () {
           bleProcess.isLBusSetupApplyCommandActive.value = false;

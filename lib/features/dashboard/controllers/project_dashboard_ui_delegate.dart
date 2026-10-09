@@ -86,6 +86,22 @@ abstract class ProjectDashboardUiDelegate {
     required Future<void> Function() onApplyComplete,
   });
 
+  Future<void> runCompactSetupDownload({
+    required String successMessage,
+    required String fallbackStatus,
+    required void Function() markActive,
+    required Future<void> Function() start,
+    required Future<void> Function() onDownloadComplete,
+  });
+
+  Future<void> runCompactSetupApply({
+    required String successMessage,
+    required String fallbackStatus,
+    required void Function() markActive,
+    required Future<void> Function() start,
+    required Future<void> Function() onApplyComplete,
+  });
+
   Future<void> runAccessCodeSetupDownload({
     required Future<void> Function() onDownloadComplete,
   });
