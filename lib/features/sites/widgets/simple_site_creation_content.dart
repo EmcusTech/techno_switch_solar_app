@@ -6,6 +6,7 @@ import 'package:Technoswitch/utils/constants/asset_constants.dart';
 import 'package:Technoswitch/utils/constants/color_constants.dart';
 import 'package:Technoswitch/utils/constants/string_constants.dart';
 import 'package:Technoswitch/utils/constants/style_constants.dart';
+import 'package:get/get.dart';
 
 class SimpleSiteCreationAppBar extends StatelessWidget {
   const SimpleSiteCreationAppBar({super.key, required this.onBack});
@@ -39,71 +40,74 @@ class SimpleSiteCreationActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: GestureDetector(
-            onTap: controller.isLoading ? null : controller.cancel,
-            child: Container(
-              height: 56,
-              decoration: BoxDecoration(
-                color:
-                    controller.isLoading
-                        ? ColorConstants.buttonSecondaryBackground.withValues(
-                          alpha: 0.5,
-                        )
-                        : ColorConstants.buttonSecondaryBackground,
-                borderRadius: BorderRadius.circular(28),
-              ),
-              child: Center(
-                child: Text(
-                  StringConstants.cancel,
-                  style: StyleConstants.labelText14w700Style.copyWith(
-                    color:
-                        controller.isLoading
-                            ? ColorConstants.labelText.withValues(alpha: 0.5)
-                            : ColorConstants.labelText,
+    return SizedBox(
+      width: context.width * 0.4,
+      child: Row(
+        children: [
+          Expanded(
+            child: GestureDetector(
+              onTap: controller.isLoading ? null : controller.cancel,
+              child: Container(
+                height: 56,
+                decoration: BoxDecoration(
+                  color:
+                      controller.isLoading
+                          ? ColorConstants.buttonSecondaryBackground.withValues(
+                            alpha: 0.5,
+                          )
+                          : ColorConstants.buttonSecondaryBackground,
+                  borderRadius: BorderRadius.circular(28),
+                ),
+                child: Center(
+                  child: Text(
+                    StringConstants.cancel,
+                    style: StyleConstants.labelText14w700Style.copyWith(
+                      color:
+                          controller.isLoading
+                              ? ColorConstants.labelText.withValues(alpha: 0.5)
+                              : ColorConstants.labelText,
+                    ),
                   ),
                 ),
               ),
             ),
           ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: GestureDetector(
-            onTap: controller.isLoading ? null : controller.submit,
-            child: Container(
-              height: 56,
-              decoration: BoxDecoration(
-                color:
-                    controller.isLoading
-                        ? ColorConstants.primary.withValues(alpha: 0.5)
-                        : ColorConstants.primary,
-                borderRadius: BorderRadius.circular(28),
-              ),
-              child: Center(
-                child:
-                    controller.isLoading
-                        ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              ColorConstants.white,
+          const SizedBox(width: 12),
+          Expanded(
+            child: GestureDetector(
+              onTap: controller.isLoading ? null : controller.submit,
+              child: Container(
+                height: 56,
+                decoration: BoxDecoration(
+                  color:
+                      controller.isLoading
+                          ? ColorConstants.primary.withValues(alpha: 0.5)
+                          : ColorConstants.primary,
+                  borderRadius: BorderRadius.circular(28),
+                ),
+                child: Center(
+                  child:
+                      controller.isLoading
+                          ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                ColorConstants.white,
+                              ),
                             ),
+                          )
+                          : Text(
+                            StringConstants.createSite,
+                            style: StyleConstants.white14w700Style,
                           ),
-                        )
-                        : Text(
-                          StringConstants.createSite,
-                          style: StyleConstants.white14w700Style,
-                        ),
+                ),
               ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -130,7 +134,10 @@ class SimpleSiteCreationContent extends StatelessWidget {
               child: SiteCreationForm(model: controller.siteCreationPageModel),
             ),
             const SizedBox(height: 20),
-            SimpleSiteCreationActions(controller: controller),
+            Align(
+              alignment: Alignment.centerRight,
+              child: SimpleSiteCreationActions(controller: controller),
+            ),
           ],
         ),
       ),

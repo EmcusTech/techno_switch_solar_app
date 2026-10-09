@@ -102,7 +102,7 @@ abstract final class WindowsDashboardTileRegistry {
       WindowsDashboardTileConfig(
         label: StringConstants.liveDataIsBeingStreamedFromTheDeviceInRealTime,
         iconPath: AssetConstants.diagnosticIcon,
-        isDisabled: !DemoBle.enabled,
+        isDisabled: true,
         onTap:
             () => ProjectDashboardTileActions.openLiveDiagnostics(controller),
       ),

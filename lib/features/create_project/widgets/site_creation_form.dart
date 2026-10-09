@@ -3,13 +3,12 @@ import 'package:Technoswitch/features/create_project/widgets/create_project_step
 import 'package:Technoswitch/features/create_project/widgets/create_project_validated_field.dart';
 import 'package:Technoswitch/models/create_project/site_creation_page_model.dart';
 import 'package:Technoswitch/utils/constants/string_constants.dart';
+import 'package:Technoswitch/widgets/common/peripheral_sheet_chrome.dart';
 
 class SiteCreationForm extends StatelessWidget {
   const SiteCreationForm({super.key, required this.model});
 
   final SiteCreationPageModel model;
-
-  static const _fieldSpacing = SizedBox(height: 20);
 
   @override
   Widget build(BuildContext context) {
@@ -17,9 +16,8 @@ class SiteCreationForm extends StatelessWidget {
 
     return CreateProjectStepFormShell(
       title: StringConstants.siteCreation,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+      child: peripheralSheetFieldGrid([
+        _field(
           CreateProjectValidatedField(
             label: StringConstants.siteName,
             controller: model.siteNameController,
@@ -28,7 +26,8 @@ class SiteCreationForm extends StatelessWidget {
             validationErrors: errors,
             isRequired: true,
           ),
-          _fieldSpacing,
+        ),
+        _field(
           CreateProjectValidatedField(
             label: StringConstants.installerName,
             controller: model.installerNameController,
@@ -36,7 +35,8 @@ class SiteCreationForm extends StatelessWidget {
             validationKey: StringConstants.installername,
             validationErrors: errors,
           ),
-          _fieldSpacing,
+        ),
+        _field(
           CreateProjectValidatedField(
             label: StringConstants.companyName,
             controller: model.companyNameController,
@@ -44,7 +44,8 @@ class SiteCreationForm extends StatelessWidget {
             validationKey: StringConstants.companyname,
             validationErrors: errors,
           ),
-          _fieldSpacing,
+        ),
+        _field(
           CreateProjectValidatedField(
             label: StringConstants.saqccRegistrationNumber,
             controller: model.saqccRegNumberController,
@@ -53,7 +54,8 @@ class SiteCreationForm extends StatelessWidget {
             validationErrors: errors,
             isRequired: true,
           ),
-          _fieldSpacing,
+        ),
+        _field(
           CreateProjectValidatedField(
             label: StringConstants.buildingName,
             controller: model.buildingNameController,
@@ -61,7 +63,8 @@ class SiteCreationForm extends StatelessWidget {
             validationKey: StringConstants.buildingname,
             validationErrors: errors,
           ),
-          _fieldSpacing,
+        ),
+        _field(
           CreateProjectValidatedField(
             label: StringConstants.installerContactNumber,
             controller: model.installerContactNumberController,
@@ -69,7 +72,8 @@ class SiteCreationForm extends StatelessWidget {
             validationKey: StringConstants.installercontactnumber,
             validationErrors: errors,
           ),
-          _fieldSpacing,
+        ),
+        _field(
           CreateProjectValidatedField(
             label: StringConstants.installerEmail,
             controller: model.installerEmailController,
@@ -77,7 +81,8 @@ class SiteCreationForm extends StatelessWidget {
             validationKey: StringConstants.installeremail,
             validationErrors: errors,
           ),
-          _fieldSpacing,
+        ),
+        _field(
           CreateProjectValidatedField(
             label: StringConstants.siteDescription,
             controller: model.siteDescriptionController,
@@ -86,8 +91,15 @@ class SiteCreationForm extends StatelessWidget {
             validationErrors: errors,
             maxLines: 5,
           ),
-        ],
-      ),
+        ),
+      ]),
+    );
+  }
+
+  Widget _field(Widget child) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 20),
+      child: child,
     );
   }
 }

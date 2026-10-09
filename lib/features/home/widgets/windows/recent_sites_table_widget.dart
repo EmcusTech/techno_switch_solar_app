@@ -101,7 +101,8 @@ class RecentSitesTableWidget extends StatelessWidget {
   Widget _siteRow(SiteWithLogCount siteWithLogCount) {
     final site = siteWithLogCount.site;
     return InkWell(
-      onTap: () => controller.openSite(siteWithLogCount),
+      // onTap: () => controller.openSite(siteWithLogCount),
+      onTap: null,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(

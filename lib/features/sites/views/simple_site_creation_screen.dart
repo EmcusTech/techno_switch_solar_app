@@ -49,10 +49,10 @@ class _SimpleSiteCreationScreenState extends State<SimpleSiteCreationScreen>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    SimpleSiteCreationAppBar(
-                      onBack: controller.handleBackNavigation,
-                    ),
-                    const SizedBox(height: 18),
+                    // SimpleSiteCreationAppBar(
+                    //   onBack: controller.handleBackNavigation,
+                    // ),
+                    // const SizedBox(height: 18),
                     Expanded(
                       child: SimpleSiteCreationContent(controller: controller),
                     ),

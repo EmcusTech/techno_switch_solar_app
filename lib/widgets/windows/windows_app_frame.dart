@@ -1,3 +1,4 @@
+import 'package:Technoswitch/ble/demo/demo_ble.dart';
 import 'package:Technoswitch/utils/constants/asset_constants.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
@@ -203,97 +204,133 @@ class _WindowsAppMenuBarState extends State<WindowsAppMenuBar>
                   ),
                 ),
                 Divider(color: ColorConstants.borderGray, height: 1),
-                MenuBar(
-                  style: const MenuStyle(
-                    backgroundColor: WidgetStatePropertyAll(
-                      ColorConstants.white,
-                    ),
-                    surfaceTintColor: WidgetStatePropertyAll(
-                      ColorConstants.transparent,
-                    ),
-                    elevation: WidgetStatePropertyAll(0),
-                    padding: WidgetStatePropertyAll(
-                      EdgeInsets.symmetric(horizontal: 1),
-                    ),
-                    visualDensity: VisualDensity.compact,
+                IgnorePointer(
+                  ignoring: true,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      MenuBar(
+                        style: const MenuStyle(
+                          backgroundColor: WidgetStatePropertyAll(
+                            ColorConstants.white,
+                          ),
+                          surfaceTintColor: WidgetStatePropertyAll(
+                            ColorConstants.transparent,
+                          ),
+                          elevation: WidgetStatePropertyAll(0),
+                          padding: WidgetStatePropertyAll(
+                            EdgeInsets.symmetric(horizontal: 1),
+                          ),
+                          visualDensity: VisualDensity.compact,
+                        ),
+                        children: [
+                          SizedBox(
+                            width: 45,
+                            child: SubmenuButton(
+                              style: itemStyle,
+                              menuStyle: popupStyle,
+                              menuChildren: [
+                                MenuItemButton(
+                                  style: itemStyle,
+                                  onPressed: WindowsAppMenu.openNewSite,
+                                  child: const Text(StringConstants.newSite),
+                                ),
+                                MenuItemButton(
+                                  style: itemStyle,
+                                  onPressed: WindowsAppMenu.exitApp,
+                                  child: const Text('Exit'),
+                                ),
+                              ],
+                              child: const Text('File', maxLines: 1),
+                            ),
+                          ),
+                          SizedBox(
+                            width: 54,
+                            child: SubmenuButton(
+                              style: itemStyle,
+                              menuStyle: popupStyle,
+                              menuChildren: [
+                                MenuItemButton(
+                                  style: itemStyle,
+                                  onPressed: WindowsAppMenu.openConnect,
+                                  child: const Text(StringConstants.connect),
+                                ),
+                                MenuItemButton(
+                                  style: itemStyle,
+                                  onPressed: WindowsAppMenu.openLiveEvents,
+                                  child: const Text(StringConstants.liveEvents),
+                                ),
+                                MenuItemButton(
+                                  style: itemStyle,
+                                  onPressed: WindowsAppMenu.openRetrieveLog,
+                                  child: const Text(
+                                    StringConstants.retrieveLog,
+                                  ),
+                                ),
+                              ],
+                              child: const Text(
+                                StringConstants.panel,
+                                maxLines: 1,
+                              ),
+                            ),
+                          ),
+                          SizedBox(
+                            width: 64,
+                            child: SubmenuButton(
+                              style: itemStyle,
+                              menuStyle: popupStyle,
+                              menuChildren: [
+                                MenuItemButton(
+                                  style: itemStyle,
+                                  onPressed: WindowsAppMenu.openSettings,
+                                  child: const Text(
+                                    StringConstants.projectSettings,
+                                  ),
+                                ),
+                              ],
+                              child: const Text(
+                                StringConstants.setting,
+                                maxLines: 1,
+                              ),
+                            ),
+                          ),
+                          SizedBox(
+                            width: 50,
+                            child: SubmenuButton(
+                              style: itemStyle,
+                              menuStyle: popupStyle,
+                              menuChildren: [
+                                MenuItemButton(
+                                  style: itemStyle,
+                                  onPressed: WindowsAppMenu.openHelp,
+                                  child: const Text(
+                                    StringConstants.helpSupport,
+                                  ),
+                                ),
+                              ],
+                              child: const Text(
+                                StringConstants.help,
+                                maxLines: 1,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      Visibility(
+                        visible: DemoBle.enabled,
+                        child: Padding(
+                          padding: const EdgeInsets.only(right: 24.0),
+                          child: Text(
+                            "Demo Mode",
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                  children: [
-                    SizedBox(
-                      width: 45,
-                      child: SubmenuButton(
-                        style: itemStyle,
-                        menuStyle: popupStyle,
-                        menuChildren: [
-                          MenuItemButton(
-                            style: itemStyle,
-                            onPressed: WindowsAppMenu.openNewSite,
-                            child: const Text(StringConstants.newSite),
-                          ),
-                          MenuItemButton(
-                            style: itemStyle,
-                            onPressed: WindowsAppMenu.exitApp,
-                            child: const Text('Exit'),
-                          ),
-                        ],
-                        child: const Text('File', maxLines: 1),
-                      ),
-                    ),
-                    SizedBox(
-                      width: 54,
-                      child: SubmenuButton(
-                        style: itemStyle,
-                        menuStyle: popupStyle,
-                        menuChildren: [
-                          MenuItemButton(
-                            style: itemStyle,
-                            onPressed: WindowsAppMenu.openConnect,
-                            child: const Text(StringConstants.connect),
-                          ),
-                          MenuItemButton(
-                            style: itemStyle,
-                            onPressed: WindowsAppMenu.openLiveEvents,
-                            child: const Text(StringConstants.liveEvents),
-                          ),
-                          MenuItemButton(
-                            style: itemStyle,
-                            onPressed: WindowsAppMenu.openRetrieveLog,
-                            child: const Text(StringConstants.retrieveLog),
-                          ),
-                        ],
-                        child: const Text(StringConstants.panel, maxLines: 1),
-                      ),
-                    ),
-                    SizedBox(
-                      width: 64,
-                      child: SubmenuButton(
-                        style: itemStyle,
-                        menuStyle: popupStyle,
-                        menuChildren: [
-                          MenuItemButton(
-                            style: itemStyle,
-                            onPressed: WindowsAppMenu.openSettings,
-                            child: const Text(StringConstants.projectSettings),
-                          ),
-                        ],
-                        child: const Text(StringConstants.setting, maxLines: 1),
-                      ),
-                    ),
-                    SizedBox(
-                      width: 50,
-                      child: SubmenuButton(
-                        style: itemStyle,
-                        menuStyle: popupStyle,
-                        menuChildren: [
-                          MenuItemButton(
-                            style: itemStyle,
-                            onPressed: WindowsAppMenu.openHelp,
-                            child: const Text(StringConstants.helpSupport),
-                          ),
-                        ],
-                        child: const Text(StringConstants.help, maxLines: 1),
-                      ),
-                    ),
-                  ],
                 ),
               ],
             ),

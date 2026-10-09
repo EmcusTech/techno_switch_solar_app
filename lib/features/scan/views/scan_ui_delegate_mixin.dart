@@ -247,94 +247,105 @@ mixin ScanUiDelegateMixin<T extends StatefulWidget> on State<T>
             ),
             child: connectFlowDialogFrame(
               child: Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: ColorConstants.white,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Column(
-                mainAxisAlignment:
-                    connectFlowDialogIsFixedSize
-                        ? MainAxisAlignment.center
-                        : MainAxisAlignment.start,
-                mainAxisSize:
-                    connectFlowDialogIsFixedSize
-                        ? MainAxisSize.max
-                        : MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 64,
-                    height: 64,
-                    decoration: const BoxDecoration(
-                      color: ColorConstants.errorIconBackground,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Center(
-                      child: Icon(
-                        Icons.domain_add,
-                        size: 32,
-                        color: ColorConstants.primary,
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: ColorConstants.white,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Column(
+                  mainAxisAlignment:
+                      connectFlowDialogIsFixedSize
+                          ? MainAxisAlignment.center
+                          : MainAxisAlignment.start,
+                  mainAxisSize:
+                      connectFlowDialogIsFixedSize
+                          ? MainAxisSize.max
+                          : MainAxisSize.min,
+                  children: [
+                    SizedBox(height: 24),
+                    Container(
+                      width: 64,
+                      height: 64,
+                      decoration: const BoxDecoration(
+                        color: ColorConstants.errorIconBackground,
+                        shape: BoxShape.circle,
                       ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    StringConstants.createASite,
-                    style: StyleConstants.textDark20w700Style,
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    UiStrings.panelNotAssociatedCreateSiteMessage,
-                    style: StyleConstants.textMuted14w400Style,
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 20),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          style: OutlinedButton.styleFrom(
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(24),
-                            ),
-                            side: const BorderSide(
-                              color: ColorConstants.primary,
-                            ),
-                          ),
-                          onPressed: () {
-                            Navigator.of(dialogContext).pop(false);
-                            _bleManager.disconnectConnectedDevice();
-                          },
-                          child: Text(
-                            StringConstants.cancel,
-                            style: StyleConstants.primary14w600Style,
-                          ),
+                      child: const Center(
+                        child: Icon(
+                          Icons.domain_add,
+                          size: 32,
+                          color: ColorConstants.primary,
                         ),
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: ColorConstants.primary,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(24),
+                    ),
+                    const SizedBox(height: 36),
+                    Text(
+                      StringConstants.createASite,
+                      style: StyleConstants.textDark20w700Style,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 18),
+                    Text(
+                      UiStrings.panelNotAssociatedCreateSiteMessage,
+                      style: StyleConstants.textMuted14w400Style,
+                      textAlign: TextAlign.center,
+                    ),
+                    Spacer(),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            style: OutlinedButton.styleFrom(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(24),
+                              ),
+                              side: const BorderSide(
+                                color: ColorConstants.primary,
+                              ),
+                            ),
+                            onPressed: () {
+                              Navigator.of(dialogContext).pop(false);
+                              _bleManager.disconnectConnectedDevice();
+                            },
+                            child: Padding(
+                              padding: EdgeInsets.all(
+                                Platform.isWindows ? 12.0 : 4.0,
+                              ),
+                              child: Text(
+                                StringConstants.cancel,
+                                style: StyleConstants.primary14w600Style,
+                              ),
                             ),
                           ),
-                          onPressed: () {
-                            Navigator.of(dialogContext).pop(true);
-                          },
-                          child: Text(
-                            UiStrings.createButton,
-                            style: StyleConstants.white14w600Style,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: ColorConstants.primary,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(24),
+                              ),
+                            ),
+                            onPressed: () {
+                              Navigator.of(dialogContext).pop(true);
+                            },
+                            child: Padding(
+                              padding: EdgeInsets.all(
+                                Platform.isWindows ? 12.0 : 4.0,
+                              ),
+                              child: Text(
+                                UiStrings.createButton,
+                                style: StyleConstants.white14w600Style,
+                              ),
+                            ),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                ],
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ),
             ),
           );
         },
@@ -370,210 +381,226 @@ mixin ScanUiDelegateMixin<T extends StatefulWidget> on State<T>
               ),
               child: connectFlowDialogFrame(
                 child: Container(
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: ColorConstants.white,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Column(
-                  mainAxisSize:
-                      connectFlowDialogIsFixedSize
-                          ? MainAxisSize.max
-                          : MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 64,
-                      height: 64,
-                      decoration: const BoxDecoration(
-                        color: ColorConstants.errorIconBackground,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Center(
-                        child: Icon(
-                          Icons.location_city,
-                          size: 32,
-                          color: ColorConstants.primary,
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: ColorConstants.white,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Column(
+                    mainAxisSize:
+                        connectFlowDialogIsFixedSize
+                            ? MainAxisSize.max
+                            : MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 64,
+                        height: 64,
+                        decoration: const BoxDecoration(
+                          color: ColorConstants.errorIconBackground,
+                          shape: BoxShape.circle,
                         ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      StringConstants.selectASite,
-                      style: StyleConstants.textDark20w700Style,
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      StringConstants
-                          .chooseTheSiteWhereThisPanelShouldBeAssigned,
-                      style: StyleConstants.textMuted14w400Style,
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 20),
-                    _connectSiteListSlot(
-                      expand: connectFlowDialogIsFixedSize,
-                      height: listHeight.toDouble(),
-                      child: ListView.separated(
-                        physics:
-                            sites.length > maxVisibleSites
-                                ? const BouncingScrollPhysics()
-                                : const NeverScrollableScrollPhysics(),
-                        itemCount: sites.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 8),
-                        itemBuilder: (_, index) {
-                          final site = sites[index];
-                          final isSelected = selected?.id == site.id;
-
-                          return GestureDetector(
-                            onTap: () => setState(() => selected = site),
-                            child: Container(
-                              height: siteRowHeight,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 14,
-                                vertical: 12,
-                              ),
-                              decoration: BoxDecoration(
-                                color:
-                                    isSelected
-                                        ? ColorConstants.primary.withOpacity(
-                                          0.08,
-                                        )
-                                        : ColorConstants.surfaceLight,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color:
-                                      isSelected
-                                          ? ColorConstants.primary
-                                          : ColorConstants.borderLight,
-                                  width: isSelected ? 2 : 1,
-                                ),
-                              ),
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        Text(
-                                          site.siteName,
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                          style:
-                                              StyleConstants
-                                                  .textDark14w600Style,
-                                        ),
-                                        if (site.companyName
-                                                .trim()
-                                                .isNotEmpty ||
-                                            site.buildingName.trim().isNotEmpty)
-                                          Padding(
-                                            padding: const EdgeInsets.only(
-                                              top: 4,
-                                            ),
-                                            child: Text(
-                                              [
-                                                    site.companyName.trim(),
-                                                    site.buildingName.trim(),
-                                                  ]
-                                                  .where((s) => s.isNotEmpty)
-                                                  .join(
-                                                    StringConstants.str6b6dfb41,
-                                                  ),
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                              style:
-                                                  StyleConstants
-                                                      .textMuted12w400Style,
-                                            ),
-                                          ),
-                                      ],
-                                    ),
-                                  ),
-                                  if (isSelected)
-                                    const Icon(
-                                      Icons.check_circle,
-                                      color: ColorConstants.primary,
-                                    ),
-                                ],
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    Column(
-                      children: [
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: ColorConstants.primary,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(24),
-                              ),
-                            ),
-                            onPressed:
-                                selected == null
-                                    ? null
-                                    : () => Navigator.of(
-                                      dialogContext,
-                                    ).pop('select'),
-                            child: Text(
-                              StringConstants.disabled,
-                              style: StyleConstants.white14w600Style,
-                            ),
+                        child: const Center(
+                          child: Icon(
+                            Icons.location_city,
+                            size: 32,
+                            color: ColorConstants.primary,
                           ),
                         ),
-                        const SizedBox(height: 12),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: TextButton(
-                                onPressed: () {
-                                  Navigator.of(dialogContext).pop('cancel');
-                                  _bleManager.disconnectConnectedDevice();
-                                },
-                                child: Text(
-                                  StringConstants.cancel,
-                                  style: StyleConstants.textMuted14w500Style,
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        StringConstants.selectASite,
+                        style: StyleConstants.textDark20w700Style,
+                        textAlign: TextAlign.center,
+                      ),
+                      // const SizedBox(height: 8),
+                      // Text(
+                      //   StringConstants
+                      //       .chooseTheSiteWhereThisPanelShouldBeAssigned,
+                      //   style: StyleConstants.textMuted14w400Style,
+                      //   textAlign: TextAlign.center,
+                      // ),
+                      const SizedBox(height: 20),
+                      _connectSiteListSlot(
+                        expand: connectFlowDialogIsFixedSize,
+                        height: listHeight.toDouble(),
+                        child: ListView.separated(
+                          physics:
+                              sites.length > maxVisibleSites
+                                  ? const BouncingScrollPhysics()
+                                  : const NeverScrollableScrollPhysics(),
+                          itemCount: sites.length,
+                          separatorBuilder:
+                              (_, __) => const SizedBox(height: 8),
+                          itemBuilder: (_, index) {
+                            final site = sites[index];
+                            final isSelected = selected?.id == site.id;
+
+                            return GestureDetector(
+                              onTap: () => setState(() => selected = site),
+                              child: Container(
+                                height: siteRowHeight,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 14,
+                                  vertical: 12,
+                                ),
+                                decoration: BoxDecoration(
+                                  color:
+                                      isSelected
+                                          ? ColorConstants.primary.withOpacity(
+                                            0.08,
+                                          )
+                                          : ColorConstants.surfaceLight,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color:
+                                        isSelected
+                                            ? ColorConstants.primary
+                                            : ColorConstants.borderLight,
+                                    width: isSelected ? 2 : 1,
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Text(
+                                            site.siteName,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style:
+                                                StyleConstants
+                                                    .textDark14w600Style,
+                                          ),
+                                          if (site.companyName
+                                                  .trim()
+                                                  .isNotEmpty ||
+                                              site.buildingName
+                                                  .trim()
+                                                  .isNotEmpty)
+                                            Padding(
+                                              padding: const EdgeInsets.only(
+                                                top: 4,
+                                              ),
+                                              child: Text(
+                                                [
+                                                      site.companyName.trim(),
+                                                      site.buildingName.trim(),
+                                                    ]
+                                                    .where((s) => s.isNotEmpty)
+                                                    .join(
+                                                      StringConstants
+                                                          .str6b6dfb41,
+                                                    ),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                                style:
+                                                    StyleConstants
+                                                        .textMuted12w400Style,
+                                              ),
+                                            ),
+                                        ],
+                                      ),
+                                    ),
+                                    if (isSelected)
+                                      const Icon(
+                                        Icons.check_circle,
+                                        color: ColorConstants.primary,
+                                      ),
+                                  ],
                                 ),
                               ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: OutlinedButton(
-                                style: OutlinedButton.styleFrom(
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(24),
-                                  ),
-                                  side: const BorderSide(
-                                    color: ColorConstants.primary,
-                                    width: 1.5,
-                                  ),
-                                  backgroundColor: ColorConstants.primary
-                                      .withOpacity(0.04),
-                                ),
-                                onPressed:
-                                    () => Navigator.of(
-                                      dialogContext,
-                                    ).pop('create'),
-                                child: Text(
-                                  UiStrings.createButton,
-                                  style: StyleConstants.primary14w600Style,
-                                ),
-                              ),
-                            ),
-                          ],
+                            );
+                          },
                         ),
-                      ],
-                    ),
-                  ],
+                      ),
+                      const SizedBox(height: 20),
+                      Column(
+                        children: [
+                          SizedBox(
+                            width: double.infinity,
+                            height: 46,
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: ColorConstants.primary,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(24),
+                                ),
+                              ),
+                              onPressed:
+                                  selected == null
+                                      ? null
+                                      : () => Navigator.of(
+                                        dialogContext,
+                                      ).pop('select'),
+                              child: Text(
+                                StringConstants.disabled,
+                                style: StyleConstants.white14w600Style,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: TextButton(
+                                  onPressed: () {
+                                    Navigator.of(dialogContext).pop('cancel');
+                                    _bleManager.disconnectConnectedDevice();
+                                  },
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 8.0,
+                                    ),
+                                    child: Text(
+                                      StringConstants.cancel,
+                                      style:
+                                          StyleConstants.textMuted14w500Style,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: OutlinedButton(
+                                  style: OutlinedButton.styleFrom(
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(24),
+                                    ),
+                                    side: const BorderSide(
+                                      color: ColorConstants.primary,
+                                      width: 1.5,
+                                    ),
+                                    backgroundColor: ColorConstants.primary
+                                        .withOpacity(0.04),
+                                  ),
+                                  onPressed:
+                                      () => Navigator.of(
+                                        dialogContext,
+                                      ).pop('create'),
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 8.0,
+                                    ),
+                                    child: Text(
+                                      UiStrings.createButton,
+                                      style: StyleConstants.primary14w600Style,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              ),
               ),
             );
           },
@@ -815,105 +842,105 @@ mixin ScanUiDelegateMixin<T extends StatefulWidget> on State<T>
               ),
               child: connectFlowDialogFrame(
                 child: Container(
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: ColorConstants.white,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Column(
-                  mainAxisAlignment:
-                      connectFlowDialogIsFixedSize
-                          ? MainAxisAlignment.center
-                          : MainAxisAlignment.start,
-                  mainAxisSize:
-                      connectFlowDialogIsFixedSize
-                          ? MainAxisSize.max
-                          : MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 64,
-                      height: 64,
-                      decoration: BoxDecoration(
-                        color:
-                            handshakeComplete && !showConnectionError
-                                ? Colors.green.withValues(alpha: 0.1)
-                                : ColorConstants.errorIconBackground,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Center(
-                        child:
-                            handshakeComplete && !showConnectionError
-                                ? const Icon(
-                                  Icons.check_circle,
-                                  size: 32,
-                                  color: Colors.green,
-                                )
-                                : showNetworkCommError
-                                ? const Icon(
-                                  Icons.error_outline,
-                                  size: 32,
-                                  color: ColorConstants.primary,
-                                )
-                                : Lottie.asset(
-                                  AssetConstants.bleConnectingJson,
-                                  animate: !showConnectionError,
-                                ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      connectionTitle,
-                      style: StyleConstants.textDark20w700Style,
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      maxRetries
-                          ? retryHint
-                          : showNetworkCommError
-                          ? networkCommMessage
-                          : handshakeComplete
-                          ? preparingMessage
-                          : isConnected
-                          ? StringConstants.encryptingAndAuthenticating
-                          : 'Please wait while we connect to ${device.name}',
-                      style: StyleConstants.textMuted14w400Style,
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 16),
-                    if (showConnectionError)
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: ColorConstants.primary,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(24.5),
-                            ),
-                          ),
-                          onPressed: () {
-                            if (showNetworkCommError) {
-                              bleController.bleProcess
-                                  .clearCommunicationFailure();
-                            }
-                            if (isScanningConnectFlow) {
-                              scanController.bleConnectPauseApplied = false;
-                              onResumeAnimations?.call();
-                            }
-                            Navigator.of(
-                              dialogContext,
-                              rootNavigator: true,
-                            ).pop();
-                          },
-                          child: Text(
-                            StringConstants.ok,
-                            style: StyleConstants.white14w600Style,
-                          ),
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: ColorConstants.white,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Column(
+                    mainAxisAlignment:
+                        connectFlowDialogIsFixedSize
+                            ? MainAxisAlignment.center
+                            : MainAxisAlignment.start,
+                    mainAxisSize:
+                        connectFlowDialogIsFixedSize
+                            ? MainAxisSize.max
+                            : MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 64,
+                        height: 64,
+                        decoration: BoxDecoration(
+                          color:
+                              handshakeComplete && !showConnectionError
+                                  ? Colors.green.withValues(alpha: 0.1)
+                                  : ColorConstants.errorIconBackground,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Center(
+                          child:
+                              handshakeComplete && !showConnectionError
+                                  ? const Icon(
+                                    Icons.check_circle,
+                                    size: 32,
+                                    color: Colors.green,
+                                  )
+                                  : showNetworkCommError
+                                  ? const Icon(
+                                    Icons.error_outline,
+                                    size: 32,
+                                    color: ColorConstants.primary,
+                                  )
+                                  : Lottie.asset(
+                                    AssetConstants.bleConnectingJson,
+                                    animate: !showConnectionError,
+                                  ),
                         ),
                       ),
-                  ],
+                      const SizedBox(height: 16),
+                      Text(
+                        connectionTitle,
+                        style: StyleConstants.textDark20w700Style,
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        maxRetries
+                            ? retryHint
+                            : showNetworkCommError
+                            ? networkCommMessage
+                            : handshakeComplete
+                            ? preparingMessage
+                            : isConnected
+                            ? StringConstants.encryptingAndAuthenticating
+                            : 'Please wait while we connect to ${device.name}',
+                        style: StyleConstants.textMuted14w400Style,
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 16),
+                      if (showConnectionError)
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: ColorConstants.primary,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(24.5),
+                              ),
+                            ),
+                            onPressed: () {
+                              if (showNetworkCommError) {
+                                bleController.bleProcess
+                                    .clearCommunicationFailure();
+                              }
+                              if (isScanningConnectFlow) {
+                                scanController.bleConnectPauseApplied = false;
+                                onResumeAnimations?.call();
+                              }
+                              Navigator.of(
+                                dialogContext,
+                                rootNavigator: true,
+                              ).pop();
+                            },
+                            child: Text(
+                              StringConstants.ok,
+                              style: StyleConstants.white14w600Style,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
-              ),
               ),
             );
           },
