@@ -101,8 +101,9 @@ class _AccessCodesBottomSheetState extends State<AccessCodesBottomSheet> {
                                 keyboardDismissBehavior:
                                     ScrollViewKeyboardDismissBehavior.onDrag,
                                 child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    _selector(),
+                                    SizedBox(width: 190, child: _selector()),
                                     const SizedBox(height: 16),
                                     _sectionContainer(
                                       child: Padding(
@@ -110,46 +111,40 @@ class _AccessCodesBottomSheetState extends State<AccessCodesBottomSheet> {
                                           horizontal: 16,
                                           vertical: 16,
                                         ),
-                                        child: Column(
-                                          children: [
-                                            _disabledField(
-                                              StringConstants.accessCodeNo2,
-                                              controller.selectedCode
-                                                  .toString(),
-                                            ),
-                                            _textField(
-                                              label:
-                                                  StringConstants.accessLevel4,
-                                              controller:
-                                                  controller
-                                                      .accessLevelController,
-                                              enabled: false,
-                                            ),
-                                            DropdownWidget(
-                                              label:
-                                                  StringConstants
-                                                      .accessLevelName2,
-                                              value: controller.accessLevelName,
-                                              items:
-                                                  controller.accessLevelNames,
-                                              onChanged:
-                                                  (v) => controller
-                                                      .setAccessLevelName(v),
-                                            ),
-                                            _textField(
-                                              label: 'Access Code',
-                                              controller:
-                                                  controller
-                                                      .accessCodeController,
-                                              isNumeric: true,
-                                              maxLength: 8,
-                                              onChanged:
-                                                  () =>
-                                                      controller
-                                                          .onAccessCodeChanged(),
-                                            ),
-                                          ],
-                                        ),
+                                        child: peripheralSheetFieldGrid([
+                                          _disabledField(
+                                            StringConstants.accessCodeNo2,
+                                            controller.selectedCode.toString(),
+                                          ),
+                                          _textField(
+                                            label: StringConstants.accessLevel4,
+                                            controller:
+                                                controller
+                                                    .accessLevelController,
+                                            enabled: false,
+                                          ),
+                                          DropdownWidget(
+                                            label:
+                                                StringConstants
+                                                    .accessLevelName2,
+                                            value: controller.accessLevelName,
+                                            items: controller.accessLevelNames,
+                                            onChanged:
+                                                (v) => controller
+                                                    .setAccessLevelName(v),
+                                          ),
+                                          _textField(
+                                            label: 'Access Code',
+                                            controller:
+                                                controller.accessCodeController,
+                                            isNumeric: true,
+                                            maxLength: 8,
+                                            onChanged:
+                                                () =>
+                                                    controller
+                                                        .onAccessCodeChanged(),
+                                          ),
+                                        ]),
                                       ),
                                     ),
                                   ],

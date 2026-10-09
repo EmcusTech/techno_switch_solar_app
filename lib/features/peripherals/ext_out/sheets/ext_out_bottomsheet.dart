@@ -246,70 +246,68 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
   }
 
   Widget _formFields() {
-    return Column(
-      children: [
-        DropdownWidget(
-          label: StringConstants.enabled,
-          value: controller.enabled,
-          items: controller.enabledOptions,
-          onChanged: (v) => controller.setEnabled(v),
-        ),
-        DropdownWidget(
-          label: StringConstants.actuatorType,
-          value: controller.actuatorType,
-          items: controller.actuatorTypeOptions,
-          onChanged: (v) => controller.setActuatorType(v),
-        ),
-        DropdownWidget(
-          label: StringConstants.function,
-          value: controller.function,
-          items: controller.functionOptions,
-          onChanged: (v) => controller.setFunction(v),
-        ),
-        _numberFieldWithValidation(
-          label: StringConstants.countdownAutoS,
-          fieldController: controller.autoCtrl,
-          errorMsg: controller.autoError,
-          focusNode: autoFocusNode,
-        ),
-        _numberFieldWithValidation(
-          label: StringConstants.countdownManS,
-          fieldController: controller.manCtrl,
-          errorMsg: controller.manError,
-          focusNode: manFocusNode,
-        ),
-        _numberFieldWithValidation(
-          label: StringConstants.releaseTimeS,
-          fieldController: controller.releaseCtrl,
-          errorMsg: controller.releaseError,
-          focusNode: releaseFocusNode,
-        ),
-        _numberFieldWithValidation(
-          label: StringConstants.resetDelayS,
-          fieldController: controller.resetDelayCtrl,
-          errorMsg: controller.resetDelayError,
-          focusNode: resetDelayFocusNode,
-        ),
-        DropdownWidget(
-          label: StringConstants.resetInCount,
-          value: controller.resetInCount,
-          items: controller.resetInCountOptions,
-          onChanged: (v) => controller.setResetInCount(v),
-        ),
-        DropdownWidget(
-          label: StringConstants.holdCount,
-          value: controller.holdCount,
-          items: controller.holdCountOptions,
-          onChanged: (v) => controller.setHoldCount(v),
-        ),
-        DropdownWidget(
-          label: StringConstants.action,
-          value: controller.action,
-          items: controller.actionOptions,
-          onChanged: (v) => controller.setAction(v),
-        ),
-      ],
-    );
+    return peripheralSheetFieldGrid([
+      DropdownWidget(
+        label: StringConstants.enabled,
+        value: controller.enabled,
+        items: controller.enabledOptions,
+        onChanged: (v) => controller.setEnabled(v),
+      ),
+      DropdownWidget(
+        label: StringConstants.actuatorType,
+        value: controller.actuatorType,
+        items: controller.actuatorTypeOptions,
+        onChanged: (v) => controller.setActuatorType(v),
+      ),
+      DropdownWidget(
+        label: StringConstants.function,
+        value: controller.function,
+        items: controller.functionOptions,
+        onChanged: (v) => controller.setFunction(v),
+      ),
+      _numberFieldWithValidation(
+        label: StringConstants.countdownAutoS,
+        fieldController: controller.autoCtrl,
+        errorMsg: controller.autoError,
+        focusNode: autoFocusNode,
+      ),
+      _numberFieldWithValidation(
+        label: StringConstants.countdownManS,
+        fieldController: controller.manCtrl,
+        errorMsg: controller.manError,
+        focusNode: manFocusNode,
+      ),
+      _numberFieldWithValidation(
+        label: StringConstants.releaseTimeS,
+        fieldController: controller.releaseCtrl,
+        errorMsg: controller.releaseError,
+        focusNode: releaseFocusNode,
+      ),
+      _numberFieldWithValidation(
+        label: StringConstants.resetDelayS,
+        fieldController: controller.resetDelayCtrl,
+        errorMsg: controller.resetDelayError,
+        focusNode: resetDelayFocusNode,
+      ),
+      DropdownWidget(
+        label: StringConstants.resetInCount,
+        value: controller.resetInCount,
+        items: controller.resetInCountOptions,
+        onChanged: (v) => controller.setResetInCount(v),
+      ),
+      DropdownWidget(
+        label: StringConstants.holdCount,
+        value: controller.holdCount,
+        items: controller.holdCountOptions,
+        onChanged: (v) => controller.setHoldCount(v),
+      ),
+      DropdownWidget(
+        label: StringConstants.action,
+        value: controller.action,
+        items: controller.actionOptions,
+        onChanged: (v) => controller.setAction(v),
+      ),
+    ]);
   }
 
   Widget _dragHandle() {

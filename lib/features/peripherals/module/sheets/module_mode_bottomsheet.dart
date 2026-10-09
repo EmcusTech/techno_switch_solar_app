@@ -99,8 +99,7 @@ class _ModuleInfoBottomSheetState extends State<ModuleInfoBottomSheet> {
                                 physics: const BouncingScrollPhysics(),
                                 child: Padding(
                                   padding: const EdgeInsets.only(top: 16),
-                                  child: Column(
-                                    children: [
+                                  child: peripheralSheetFieldGrid([
                                       ValueListenableBuilder<String>(
                                         valueListenable:
                                             manager.bleFirmwareVersion,
@@ -146,8 +145,7 @@ class _ModuleInfoBottomSheetState extends State<ModuleInfoBottomSheet> {
                                         StringConstants.protocolNo,
                                         manager.moduleProtocol,
                                       ),
-                                    ],
-                                  ),
+                                    ]),
                                 ),
                               ),
                             ),

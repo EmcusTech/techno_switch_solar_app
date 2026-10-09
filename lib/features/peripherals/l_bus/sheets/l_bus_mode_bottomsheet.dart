@@ -59,72 +59,70 @@ class LBusBottomSheetState extends State<LBusBottomSheet> {
       physics: const BouncingScrollPhysics(),
       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (widget.embedInCreateFlow)
             _title(StringConstants.lBusConfiguration),
-          _deviceSelector(),
+          SizedBox(width: 170, child: _deviceSelector()),
           const SizedBox(height: 16),
           _sectionContainer(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-              child: Column(
-                children: [
-                  _disabledField(
-                    StringConstants.lBusNo,
-                    controller.selectedBus.toString(),
-                  ),
-                  DropdownWidget(
-                    label: StringConstants.enabled,
-                    value: controller.enabled,
-                    items: controller.yesNoOptions,
-                    onChanged: (v) => controller.setEnabled(v),
-                  ),
-                  DropdownWidget(
-                    label: StringConstants.idLED,
-                    value: controller.idLed,
-                    items: controller.yesNoOptions,
-                    onChanged: (v) => controller.setIdLed(v),
-                  ),
-                  DropdownWidget(
-                    label: 'Product',
-                    value: controller.product,
-                    items: controller.productOptions,
-                    onChanged: (v) => controller.setProduct(v),
-                  ),
-                  _textField(
-                    label: StringConstants.lBusDeviceText2,
-                    fieldController: controller.deviceTextController,
-                    maxLength: 21,
-                    onChanged: () => controller.onDeviceTextChanged(),
-                  ),
-                  _numericField(
-                    label: 'ID',
-                    fieldController: controller.idController,
-                  ),
-                  _numericField(
-                    label: StringConstants.revision,
-                    fieldController: controller.revisionController,
-                  ),
-                  _textField(
-                    label: StringConstants.productRev2,
-                    fieldController: controller.productRevController,
-                  ),
-                  _readOnlyField('Hardware', controller.hardwareController),
-                  _readOnlyField(
-                    StringConstants.firmware,
-                    controller.firmwareController,
-                  ),
-                  _textField(
-                    label: StringConstants.hardware,
-                    fieldController: controller.dateController,
-                  ),
-                  _numericField(
-                    label: StringConstants.protocol,
-                    fieldController: controller.protocolController,
-                  ),
-                ],
-              ),
+              child: peripheralSheetFieldGrid([
+                _disabledField(
+                  StringConstants.lBusNo,
+                  controller.selectedBus.toString(),
+                ),
+                DropdownWidget(
+                  label: StringConstants.enabled,
+                  value: controller.enabled,
+                  items: controller.yesNoOptions,
+                  onChanged: (v) => controller.setEnabled(v),
+                ),
+                DropdownWidget(
+                  label: StringConstants.idLED,
+                  value: controller.idLed,
+                  items: controller.yesNoOptions,
+                  onChanged: (v) => controller.setIdLed(v),
+                ),
+                DropdownWidget(
+                  label: 'Product',
+                  value: controller.product,
+                  items: controller.productOptions,
+                  onChanged: (v) => controller.setProduct(v),
+                ),
+                _textField(
+                  label: StringConstants.lBusDeviceText2,
+                  fieldController: controller.deviceTextController,
+                  maxLength: 21,
+                  onChanged: () => controller.onDeviceTextChanged(),
+                ),
+                _numericField(
+                  label: 'ID',
+                  fieldController: controller.idController,
+                ),
+                _numericField(
+                  label: StringConstants.revision,
+                  fieldController: controller.revisionController,
+                ),
+                _textField(
+                  label: StringConstants.productRev2,
+                  fieldController: controller.productRevController,
+                ),
+                _readOnlyField('Hardware', controller.hardwareController),
+                _readOnlyField(
+                  StringConstants.firmware,
+                  controller.firmwareController,
+                ),
+                _textField(
+                  label: StringConstants.hardware,
+                  fieldController: controller.dateController,
+                ),
+                _numericField(
+                  label: StringConstants.protocol,
+                  fieldController: controller.protocolController,
+                ),
+              ]),
             ),
           ),
         ],

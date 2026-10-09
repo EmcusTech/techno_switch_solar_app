@@ -71,38 +71,41 @@ class GeneralModuleBottomSheetState extends State<GeneralModuleBottomSheet> {
 
   Widget _fieldsColumn() {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         if (widget.embedInCreateFlow) _title(StringConstants.generalModule),
-        _numberField(
-          StringConstants.lvlTimeOutS,
-          controller.lvlTimeoutController,
-          maxLength: 3,
-          focusNode: lvlTimeoutFocusNode,
-        ),
-        DropdownWidget(
-          label: StringConstants.silenceBuzzerLevel2,
-          value: controller.silenceBuzzerLevel,
-          items: controller.buzzerOptions,
-          onChanged: (v) => controller.setSilenceBuzzerLevel(v),
-        ),
-        DropdownWidget(
-          label: StringConstants.silenceSoundersLevel2,
-          value: controller.silenceSoundersLevel,
-          items: controller.sounderOptions,
-          onChanged: (v) => controller.setSilenceSoundersLevel(v),
-        ),
-        DropdownWidget(
-          label: StringConstants.resetLevel2,
-          value: controller.resetLevel,
-          items: controller.resetOptions,
-          onChanged: (v) => controller.setResetLevel(v),
-        ),
-        DropdownWidget(
-          label: StringConstants.faultLatching,
-          value: controller.faultLatching,
-          items: controller.yesNoOptions,
-          onChanged: (v) => controller.setFaultLatching(v),
-        ),
+        peripheralSheetFieldGrid([
+          _numberField(
+            StringConstants.lvlTimeOutS,
+            controller.lvlTimeoutController,
+            maxLength: 3,
+            focusNode: lvlTimeoutFocusNode,
+          ),
+          DropdownWidget(
+            label: StringConstants.silenceBuzzerLevel2,
+            value: controller.silenceBuzzerLevel,
+            items: controller.buzzerOptions,
+            onChanged: (v) => controller.setSilenceBuzzerLevel(v),
+          ),
+          DropdownWidget(
+            label: StringConstants.silenceSoundersLevel2,
+            value: controller.silenceSoundersLevel,
+            items: controller.sounderOptions,
+            onChanged: (v) => controller.setSilenceSoundersLevel(v),
+          ),
+          DropdownWidget(
+            label: StringConstants.resetLevel2,
+            value: controller.resetLevel,
+            items: controller.resetOptions,
+            onChanged: (v) => controller.setResetLevel(v),
+          ),
+          DropdownWidget(
+            label: StringConstants.faultLatching,
+            value: controller.faultLatching,
+            items: controller.yesNoOptions,
+            onChanged: (v) => controller.setFaultLatching(v),
+          ),
+        ]),
       ],
     );
   }

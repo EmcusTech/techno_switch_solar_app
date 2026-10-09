@@ -126,8 +126,7 @@ class _RadioModeBottomSheetState extends State<RadioModeBottomSheet> {
         border: Border.all(color: ColorConstants.borderMuted),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      child: Column(
-        children: [
+      child: peripheralSheetFieldGrid([
           _disabledField(StringConstants.enabled, StringConstants.yes),
           DropdownWidget(
             label: StringConstants.module,
@@ -178,8 +177,7 @@ class _RadioModeBottomSheetState extends State<RadioModeBottomSheet> {
             items: controller.yesNoOptions,
             onChanged: (v) => controller.setBoot(v),
           ),
-        ],
-      ),
+        ]),
     );
   }
 

@@ -255,6 +255,7 @@ class ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
 
   Widget _formColumn() {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         if (widget.embedInCreateFlow)
           Padding(
@@ -267,60 +268,62 @@ class ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
               ),
             ),
           ),
-        _numberField(
-          label: 'Year',
-          fieldController: controller.config.yearController,
-          min: 0,
-          max: 9999,
-          errorMessage: StringConstants.yearMustBeBetween2010And9999,
-          focusNode: yearFocusNode,
-        ),
-        _numberField(
-          label: 'Month',
-          fieldController: controller.config.monthController,
-          min: 1,
-          max: 12,
-          errorMessage: StringConstants.monthMustBeBetween1And12,
-          focusNode: monthFocusNode,
-        ),
-        _numberField(
-          label: 'Day',
-          fieldController: controller.config.dayController,
-          min: 1,
-          max: 31,
-          errorMessage: StringConstants.dayMustBeBetween1And31,
-          focusNode: dayFocusNode,
-        ),
-        _numberField(
-          label: 'Hour',
-          fieldController: controller.config.hourController,
-          min: 0,
-          max: 23,
-          errorMessage: StringConstants.hourMustBeBetween0And23,
-          focusNode: hourFocusNode,
-        ),
-        _numberField(
-          label: 'Minute',
-          fieldController: controller.config.minuteController,
-          min: 0,
-          max: 59,
-          errorMessage: StringConstants.minuteMustBeBetween0And59,
-          focusNode: minuteFocusNode,
-        ),
-        _textField(
-          label: 'Company',
-          fieldController: controller.config.companyController,
-        ),
-        _contactField(
-          label: StringConstants.contact,
-          fieldController: controller.config.contactController,
-        ),
-        DropdownWidget(
-          label: StringConstants.reminder,
-          value: controller.config.reminder,
-          items: controller.reminderOptions,
-          onChanged: (v) => controller.setReminder(v),
-        ),
+        peripheralSheetFieldGrid([
+          _numberField(
+            label: 'Year',
+            fieldController: controller.config.yearController,
+            min: 0,
+            max: 9999,
+            errorMessage: StringConstants.yearMustBeBetween2010And9999,
+            focusNode: yearFocusNode,
+          ),
+          _numberField(
+            label: 'Month',
+            fieldController: controller.config.monthController,
+            min: 1,
+            max: 12,
+            errorMessage: StringConstants.monthMustBeBetween1And12,
+            focusNode: monthFocusNode,
+          ),
+          _numberField(
+            label: 'Day',
+            fieldController: controller.config.dayController,
+            min: 1,
+            max: 31,
+            errorMessage: StringConstants.dayMustBeBetween1And31,
+            focusNode: dayFocusNode,
+          ),
+          _numberField(
+            label: 'Hour',
+            fieldController: controller.config.hourController,
+            min: 0,
+            max: 23,
+            errorMessage: StringConstants.hourMustBeBetween0And23,
+            focusNode: hourFocusNode,
+          ),
+          _numberField(
+            label: 'Minute',
+            fieldController: controller.config.minuteController,
+            min: 0,
+            max: 59,
+            errorMessage: StringConstants.minuteMustBeBetween0And59,
+            focusNode: minuteFocusNode,
+          ),
+          _textField(
+            label: 'Company',
+            fieldController: controller.config.companyController,
+          ),
+          _contactField(
+            label: StringConstants.contact,
+            fieldController: controller.config.contactController,
+          ),
+          DropdownWidget(
+            label: StringConstants.reminder,
+            value: controller.config.reminder,
+            items: controller.reminderOptions,
+            onChanged: (v) => controller.setReminder(v),
+          ),
+        ]),
       ],
     );
   }
