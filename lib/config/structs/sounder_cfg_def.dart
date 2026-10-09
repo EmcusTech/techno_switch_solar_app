@@ -18,7 +18,7 @@ class SounderCfgDef {
     this.sounderExtOut = 0,
     this.sounderEnable = SounderDefaults.enabledBle ? 1 : 0,
     this.sounderTest = SounderDefaults.testBle ? 1 : 0,
-    this.sounderType = SounderDefaults.normalBle ? 1 : 0,
+    this.sounderType = SounderDefaults.normalBle ? 0 : 1,
     this.delay = 0,
     this.unionFunction = 0,
     this.unionZone = 0,
@@ -148,7 +148,7 @@ class SounderCfgDef {
       sounderTest:
           ((data['test'] as bool?) ?? defaults['test'] as bool) ? 1 : 0,
       sounderType:
-          ((data['normal'] as bool?) ?? defaults['normal'] as bool) ? 1 : 0,
+          ((data['normal'] as bool?) ?? defaults['normal'] as bool) ? 0 : 1,
     );
   }
 
@@ -204,7 +204,7 @@ class SounderCfgDef {
     return {
       'enabled': sounderEnable != 0,
       'test': sounderTest != 0,
-      'normal': sounderType != 0,
+      'normal': sounderType == 0,
       'outputText': sounderText,
       'group': sounderGrp,
       'function': sounderFunc,

@@ -16,25 +16,18 @@ abstract final class SounderSetupPayloadDebug {
     return lines.join('\n');
   }
 
-  /// Builds all three apply packets without sending them (does not advance TX counter).
+  /// Builds the combined apply packet without sending it.
   static void printApplyFrames(BleManager manager) {
     if (!kDebugMode) return;
-    for (final sounderNum in [1, 2, 3]) {
-      final packet = manager.buildSounderSetupApplyPacket(
-        sounderNum,
-        previewOnly: true,
-      );
-      final hex = packet
-          .map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase())
-          .join(' ');
-      print(
-        'TX/RX: TRANSMIT: sounder-apply-S$sounderNum packet: $hex',
-      );
-      print(
-        'SETUP_SOUNDER APPLY S$sounderNum struct bytes [13..49]: '
-        '${packet.sublist(13, 50).map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}',
-      );
-    }
+    final packet = manager.buildSounderSetupApplyPacket(previewOnly: true);
+    final hex = packet
+        .map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase())
+        .join(' ');
+    print('TX/RX: TRANSMIT: sounder-apply packet: $hex');
+    print(
+      'SETUP_SOUNDER APPLY struct bytes [13..123]: '
+      '${packet.sublist(13, 124).map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}',
+    );
   }
 
   static void printFrame(

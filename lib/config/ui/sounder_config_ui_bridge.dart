@@ -65,7 +65,7 @@ abstract final class SounderConfigUiBridge {
         config.sounderFunc,
       ),
       enabled: SounderConfigOptions.yesNoLabel(config.sounderEnable != 0),
-      type: SounderConfigOptions.typeLabel(config.sounderType != 0),
+      type: SounderConfigOptions.typeLabel(config.sounderType == 0),
       outputText: config.sounderText,
       functionNo: functionNoFromStruct(config).toString(),
       test: config.sounderTest != 0,

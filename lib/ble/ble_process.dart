@@ -1257,18 +1257,18 @@ class BleProcess {
           checkForAccessKeyCmdRsp = 0;
           checkForSounderSetupFetchRes = 1;
           sounderSetupFetchRelayCommandStep = 1;
-          processDesc.value = "${StringConstants.downloadingSounder} 1/3";
+          processDesc.value = StringConstants.downloadingSounder;
           startRxTimeout();
-          await bleManager.sendSounderSetupFetchCmdPkt(sounderNum: 1);
+          await bleManager.sendSounderSetupFetchCmdPkt();
         } else if (isSounderSetupApplyCommandActive.value) {
           bleManager.otaProcessState =
               OtaProcessState.sendSounderSetupApplyCmdPkt;
           checkForAccessKeyCmdRsp = 0;
           checkForSounderSetupApplyRes = 1;
           sounderSetupApplyRelayCommandStep = 1;
-          processDesc.value = "${StringConstants.applyingSounder} 1/3";
+          processDesc.value = StringConstants.applyingSounder;
           startRxTimeout();
-          await bleManager.sendSounderSetupApplyCmdPkt(sounderNum: 1);
+          await bleManager.sendSounderSetupApplyCmdPkt();
         } else if (isServiceDueFetchCommandActive.value) {
           bleManager.otaProcessState =
               OtaProcessState.sendPanelPropertiesSetupFetchCmdPkt;
@@ -1703,44 +1703,23 @@ class BleProcess {
 
     if (checkForSounderSetupFetchRes == 1) {
       if (rx.payload[12] == BleConstants.command.newStructSounderCommand) {
-        final step = sounderSetupFetchRelayCommandStep;
-        if (step >= 1 && step <= 3) {
-          final config = SounderSetupPayload.readFromPacket(rx.payload);
-          SounderSetupPayload.applyToBleProcess(config, this, step - 1);
-        }
-        if (step >= 1 && step < 3) {
-          final next = step + 1;
-          sounderSetupFetchRelayCommandStep = next;
-          processDesc.value = "${StringConstants.downloadingSounder} $next/3";
-          startRxTimeout();
-          await bleManager.sendSounderSetupFetchCmdPkt(sounderNum: next);
-        } else {
-          bleManager.otaProcessState = OtaProcessState.notInUse;
-          cancelOperationDeadline();
-          checkForSounderSetupFetchRes = 0;
-          isSounderSetupFetchCommandActive.value = false;
-          isSounderSetupFetchDone.value = true;
-          processDesc.value = StringConstants.sounderSetupFetchCompleted;
-        }
+        SounderSetupPayload.readAllIntoBleProcess(rx.payload, this);
+        bleManager.otaProcessState = OtaProcessState.notInUse;
+        cancelOperationDeadline();
+        checkForSounderSetupFetchRes = 0;
+        isSounderSetupFetchCommandActive.value = false;
+        isSounderSetupFetchDone.value = true;
+        processDesc.value = StringConstants.sounderSetupFetchCompleted;
       }
     }
 
     if (checkForSounderSetupApplyRes == 1) {
       if (rx.payload[10] == 0x83) {
-        final step = sounderSetupApplyRelayCommandStep;
-        if (step >= 1 && step < 3) {
-          final next = step + 1;
-          sounderSetupApplyRelayCommandStep = next;
-          processDesc.value = "${StringConstants.applyingSounder} $next/3";
-          startRxTimeout();
-          await bleManager.sendSounderSetupApplyCmdPkt(sounderNum: next);
-        } else {
-          bleManager.otaProcessState = OtaProcessState.notInUse;
-          cancelOperationDeadline();
-          checkForSounderSetupApplyRes = 0;
-          isSounderSetupApplyCommandActive.value = false;
-          isSounderSetupApplyDone.value = true;
-        }
+        bleManager.otaProcessState = OtaProcessState.notInUse;
+        cancelOperationDeadline();
+        checkForSounderSetupApplyRes = 0;
+        isSounderSetupApplyCommandActive.value = false;
+        isSounderSetupApplyDone.value = true;
       }
     }
 

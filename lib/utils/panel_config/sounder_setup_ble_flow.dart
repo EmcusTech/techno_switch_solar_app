@@ -177,8 +177,8 @@ class _SounderSetupBleProgressDialogState
       return processDesc;
     }
     return widget.mode == SounderSetupBleFlowMode.download
-        ? '${StringConstants.downloadingSounder} 1/3'
-        : '${StringConstants.applyingSounder} 1/3';
+        ? StringConstants.downloadingSounder
+        : StringConstants.applyingSounder;
   }
 
   @override

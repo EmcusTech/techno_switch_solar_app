@@ -1416,11 +1416,7 @@ class BleManager extends GetxService {
       bleProcess.isSounderSetupFetchDone.value = false;
       await DemoBle.runSteppedCommand(
         process: bleProcess,
-        steps: [
-          '${StringConstants.downloadingSounder} 1/3',
-          '${StringConstants.downloadingSounder} 2/3',
-          '${StringConstants.downloadingSounder} 3/3',
-        ],
+        steps: [StringConstants.downloadingSounder],
         done: bleProcess.isSounderSetupFetchDone,
       );
       bleProcess.isSounderSetupFetchCommandActive.value = false;
@@ -1451,10 +1447,10 @@ class BleManager extends GetxService {
     bleProcess.checkForSounderSetupFetchRes = 1;
     bleProcess.sounderSetupFetchRelayCommandStep = 1;
     bleProcess.isSounderSetupFetchDone.value = false;
-    bleProcess.processDesc.value = "${StringConstants.downloadingSounder} 1/3";
+    bleProcess.processDesc.value = StringConstants.downloadingSounder;
     bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
     bleProcess.startRxTimeout();
-    await sendSounderSetupFetchCmdPkt(sounderNum: 1);
+    await sendSounderSetupFetchCmdPkt();
   }
 
   Future<void> startSounderSetupApply() async {
@@ -1463,11 +1459,7 @@ class BleManager extends GetxService {
       bleProcess.isSounderSetupApplyDone.value = false;
       await DemoBle.runSteppedCommand(
         process: bleProcess,
-        steps: [
-          '${StringConstants.applyingSounder} 1/3',
-          '${StringConstants.applyingSounder} 2/3',
-          '${StringConstants.applyingSounder} 3/3',
-        ],
+        steps: [StringConstants.applyingSounder],
         done: bleProcess.isSounderSetupApplyDone,
       );
       bleProcess.isSounderSetupApplyCommandActive.value = false;
@@ -1498,10 +1490,10 @@ class BleManager extends GetxService {
     bleProcess.checkForSounderSetupApplyRes = 1;
     bleProcess.sounderSetupApplyRelayCommandStep = 1;
     bleProcess.isSounderSetupApplyDone.value = false;
-    bleProcess.processDesc.value = "${StringConstants.applyingSounder} 1/3";
+    bleProcess.processDesc.value = StringConstants.applyingSounder;
     bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
     bleProcess.startRxTimeout();
-    await sendSounderSetupApplyCmdPkt(sounderNum: 1);
+    await sendSounderSetupApplyCmdPkt();
   }
 
   Future<void> _beginPanelPropertiesFetch({
@@ -3291,11 +3283,7 @@ class BleManager extends GetxService {
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
 
-  Future<void> sendSounderSetupFetchCmdPkt({required int sounderNum}) async {
-    if (sounderNum < 1 || sounderNum > 3) {
-      throw RangeError('sounderNum must be 1..3, got $sounderNum');
-    }
-
+  Future<void> sendSounderSetupFetchCmdPkt() async {
     final u8Pkt = Uint8List(216);
 
     u8TxPktCnt += 1;
@@ -3310,7 +3298,6 @@ class BleManager extends GetxService {
     u8Pkt[10] = BleConstants.mode.request.dbSetup;
     u8Pkt[11] = BleConstants.socket.radio;
     u8Pkt[12] = BleConstants.command.newStructSounderCommand;
-    u8Pkt[13] = sounderNum;
 
     final checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
@@ -3321,17 +3308,9 @@ class BleManager extends GetxService {
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
 
-  /// Builds a SETUP_SOUNDER apply packet for [sounderNum] (1..3). When
-  /// [previewOnly] is true, the TX counter is not incremented (for offline UI
-  /// debugging).
-  Uint8List buildSounderSetupApplyPacket(
-    int sounderNum, {
-    bool previewOnly = false,
-  }) {
-    if (sounderNum < 1 || sounderNum > 3) {
-      throw RangeError('sounderNum must be 1..3, got $sounderNum');
-    }
-
+  /// Builds one SETUP_SOUNDER apply packet with sounders 1–3 at [13].
+  /// When [previewOnly] is true, the TX counter is not incremented.
+  Uint8List buildSounderSetupApplyPacket({bool previewOnly = false}) {
     final u8Pkt = Uint8List(216);
 
     if (!previewOnly) {
@@ -3351,11 +3330,7 @@ class BleManager extends GetxService {
     u8Pkt[11] = BleConstants.socket.radio;
     u8Pkt[12] = BleConstants.command.newStructSounderCommand;
 
-    final sounderConfig = SounderSetupPayload.fromBleProcess(
-      bleProcess,
-      sounderNum - 1,
-    );
-    SounderSetupPayload.writeToPacket(u8Pkt, sounderConfig);
+    SounderSetupPayload.writeAllToPacket(u8Pkt, bleProcess);
 
     final checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 
@@ -3366,12 +3341,12 @@ class BleManager extends GetxService {
     return u8Pkt;
   }
 
-  Future<void> sendSounderSetupApplyCmdPkt({required int sounderNum}) async {
-    final u8Pkt = buildSounderSetupApplyPacket(sounderNum);
+  Future<void> sendSounderSetupApplyCmdPkt() async {
+    final u8Pkt = buildSounderSetupApplyPacket();
 
     SounderSetupPayloadDebug.printFrame(
       u8Pkt,
-      label: 'SETUP_SOUNDER APPLY S$sounderNum (TX)',
+      label: 'SETUP_SOUNDER APPLY (TX)',
     );
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);

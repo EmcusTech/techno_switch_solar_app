@@ -6,12 +6,14 @@ import 'package:Technoswitch/config/structs/sounder_cfg_def.dart';
 
 /// SETUP_SOUNDER data section inside the 216-byte BLE frame.
 ///
-/// One command carries a single `st_sounder_cfg_def` (37 bytes) at [13].
+/// One command carries three `st_sounder_cfg_def` blocks (37 bytes each) at [13].
 abstract final class SounderSetupPayload {
   static const int commandOffset = ConfigSetupPayload.commandOffset;
   static const int structOffset = ConfigSetupPayload.structOffset;
 
   static const int byteLength = SounderCfgDef.byteLength;
+  static const int sounderCount = 3;
+  static const int packedByteLength = byteLength * sounderCount;
 
   static SounderCfgDef fromBleProcess(BleProcess process, int sounderIndex) {
     switch (sounderIndex) {
@@ -103,7 +105,7 @@ abstract final class SounderSetupPayload {
       sounderExtOut: sounderExtOut,
       sounderEnable: sounderEnable ? 1 : 0,
       sounderTest: sounderTest ? 1 : 0,
-      sounderType: sounderType ? 1 : 0,
+      sounderType: sounderType ? 0 : 1,
       delay: process.sounderGeneralDelay.value,
       unionFunction: sounderFunc,
       unionZone: sounderZone,
@@ -131,7 +133,7 @@ abstract final class SounderSetupPayload {
         process.sounderOneFunctionNo.value = functionNo;
         process.isSounderOneEnabled.value = config.sounderEnable != 0;
         process.isSounderOneTest.value = config.sounderTest != 0;
-        process.isSounderOneNormal.value = config.sounderType != 0;
+        process.isSounderOneNormal.value = config.sounderType == 0;
         break;
       case 1:
         process.sounderTwoOutputText.value = config.sounderText;
@@ -140,7 +142,7 @@ abstract final class SounderSetupPayload {
         process.sounderTwoFunctionNo.value = functionNo;
         process.isSounderTwoEnabled.value = config.sounderEnable != 0;
         process.isSounderTwoTest.value = config.sounderTest != 0;
-        process.isSounderTwoNormal.value = config.sounderType != 0;
+        process.isSounderTwoNormal.value = config.sounderType == 0;
         break;
       case 2:
         process.sounderThreeOutputText.value = config.sounderText;
@@ -149,7 +151,7 @@ abstract final class SounderSetupPayload {
         process.sounderThreeFunctionNo.value = functionNo;
         process.isSounderThreeEnabled.value = config.sounderEnable != 0;
         process.isSounderThreeTest.value = config.sounderTest != 0;
-        process.isSounderThreeNormal.value = config.sounderType != 0;
+        process.isSounderThreeNormal.value = config.sounderType == 0;
         break;
       default:
         throw RangeError('sounderIndex must be 0..2, got $sounderIndex');
@@ -327,9 +329,29 @@ abstract final class SounderSetupPayload {
     ConfigSetupPayload.writeStruct(packet, config.toBytes());
   }
 
+  static void writeAllToPacket(Uint8List packet, BleProcess process) {
+    final packed = Uint8List(packedByteLength);
+    for (var index = 0; index < sounderCount; index++) {
+      final bytes = fromBleProcess(process, index).toBytes();
+      packed.setRange(index * byteLength, (index + 1) * byteLength, bytes);
+    }
+    ConfigSetupPayload.writeStruct(packet, packed);
+  }
+
   static SounderCfgDef readFromPacket(List<int> payload) {
     return SounderCfgDef.fromBytes(
       ConfigSetupPayload.readStructBytes(payload, byteLength),
     );
+  }
+
+  static void readAllIntoBleProcess(List<int> payload, BleProcess process) {
+    final packed = ConfigSetupPayload.readStructBytes(payload, packedByteLength);
+    for (var index = 0; index < sounderCount; index++) {
+      final config = SounderCfgDef.fromBytes(
+        packed,
+        offset: index * byteLength,
+      );
+      applyToBleProcess(config, process, index);
+    }
   }
 }
