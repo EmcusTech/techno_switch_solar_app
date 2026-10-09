@@ -33,14 +33,19 @@ class PanelInfoBottomSheet extends StatefulWidget {
   State<PanelInfoBottomSheet> createState() => PanelInfoBottomSheetState();
 }
 
-class PanelInfoBottomSheetState extends State<PanelInfoBottomSheet> {
+class PanelInfoBottomSheetState extends State<PanelInfoBottomSheet>
+    with SingleTickerProviderStateMixin {
   late final PanelInfoController controller;
 
   int _expandedTileCount = 0;
+  TabController? _tabController;
 
   @override
   void initState() {
     super.initState();
+    if (PeripheralSheetChrome.flat) {
+      _tabController = TabController(length: 2, vsync: this);
+    }
     controller = Get.put(
       PanelInfoController(
         deviceId: widget.deviceId,
@@ -53,6 +58,7 @@ class PanelInfoBottomSheetState extends State<PanelInfoBottomSheet> {
 
   @override
   void dispose() {
+    _tabController?.dispose();
     Get.delete<PanelInfoController>();
     super.dispose();
   }
@@ -78,7 +84,6 @@ class PanelInfoBottomSheetState extends State<PanelInfoBottomSheet> {
             if (widget.embedInCreateFlow)
               _title(StringConstants.panelInformation),
             _panelInfoTile(),
-            _dateTimeTile(),
             _eventReminderTile(),
           ],
         ),
@@ -139,7 +144,12 @@ class PanelInfoBottomSheetState extends State<PanelInfoBottomSheet> {
                             children: [
                               _dragHandle(),
                               _title(StringConstants.panelInfo),
-                              Expanded(child: _scrollContent()),
+                              Expanded(
+                                child:
+                                    PeripheralSheetChrome.flat
+                                        ? _panelInfoTabs()
+                                        : _scrollContent(),
+                              ),
                               const SizedBox(height: 12),
                               Row(
                                 children: [
@@ -165,90 +175,167 @@ class PanelInfoBottomSheetState extends State<PanelInfoBottomSheet> {
 
   // ───────── TILES ─────────
 
-  Widget _panelInfoTile() {
-    return _tileWrapper(
-      title: StringConstants.panelInfo,
+  Widget _panelInfoTabs() {
+    return Column(
       children: [
-        _textField(
-          StringConstants.panelNo,
-          controller.config.panelIdController,
-          isNumeric: true,
-          maxLength: 2,
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Container(
+            height: 48,
+            width: 480,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              color: ColorConstants.surfaceLight,
+            ),
+            child: TabBar(
+              controller: _tabController,
+              indicatorSize: TabBarIndicatorSize.tab,
+              indicator: const UnderlineTabIndicator(
+                borderSide: BorderSide(
+                  width: 2.5,
+                  color: ColorConstants.primary,
+                ),
+              ),
+              labelColor: ColorConstants.primary,
+              unselectedLabelColor: ColorConstants.textSubtle,
+              labelStyle: StyleConstants.black13w600Style,
+              unselectedLabelStyle: StyleConstants.black13w500Style,
+              tabs: const [
+                Tab(text: StringConstants.panelInfo),
+                Tab(text: StringConstants.eventReminder),
+              ],
+            ),
+          ),
         ),
-        _textField(
-          StringConstants.panelName,
-          controller.config.panelNameController,
-          maxLength: 21,
+        const SizedBox(height: 20),
+        Expanded(
+          child: TabBarView(
+            controller: _tabController,
+            children: [
+              _tabPage(_panelInfoFields()),
+              _tabPage(_eventReminderFields()),
+            ],
+          ),
         ),
       ],
     );
   }
 
+  Widget _tabPage(Widget child) {
+    return NotificationListener<UserScrollNotification>(
+      onNotification: (notification) {
+        if (notification.direction != ScrollDirection.idle) {
+          FocusScope.of(context).unfocus();
+        }
+        return false;
+      },
+      child: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
+        child: child,
+      ),
+    );
+  }
+
+  Widget _panelInfoTile() {
+    return _tileWrapper(
+      title: StringConstants.panelInfo,
+      children: [_panelInfoFields()],
+    );
+  }
+
+  Widget _panelInfoFields() {
+    return peripheralSheetFieldGrid([
+      _textField(
+        StringConstants.panelNo,
+        controller.config.panelIdController,
+        isNumeric: true,
+        maxLength: 2,
+      ),
+      _textField(
+        StringConstants.panelName,
+        controller.config.panelNameController,
+        maxLength: 21,
+      ),
+    ]);
+  }
+
   /// Clock fields are still edited and applied here; bulk Config Log compare omits
   /// them so routine time drift does not mark Panel Info as mismatched.
+  ///
+  /// Temporarily hidden from the sheet. Restore by adding this tile back to
+  /// [_scrollContent] and a matching tab in [_panelInfoTabs].
+  // ignore: unused_element
   Widget _dateTimeTile() {
     return _tileWrapper(
       title: StringConstants.dateTime,
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                StringConstants.useMobileDateTime,
-                style: StyleConstants.black16w600Style,
-              ),
-            ),
-            Switch(
-              value: controller.useMobileTime,
-              onChanged: controller.toggleMobileTime,
-            ),
-          ],
-        ),
-        _numberField(
-          StringConstants.year,
-          controller.config.yearController,
-          maxLength: 4,
-        ),
-        _numberField(
-          StringConstants.month,
-          controller.config.monthController,
-          maxLength: 2,
-        ),
-        _numberField(
-          StringConstants.day,
-          controller.config.dayController,
-          maxLength: 2,
-        ),
-        _numberField(
-          StringConstants.hour,
-          controller.config.hourController,
-          maxLength: 2,
-        ),
-        _numberField(
-          StringConstants.minute,
-          controller.config.minuteController,
-          maxLength: 2,
-        ),
-        _numberField(
-          StringConstants.second,
-          controller.config.secondController,
-          maxLength: 2,
-        ),
-      ],
+      children: [_dateTimeFields()],
     );
+  }
+
+  Widget _dateTimeFields() {
+    return peripheralSheetFieldGrid([
+      Row(
+        children: [
+          Expanded(
+            child: Text(
+              StringConstants.useMobileDateTime,
+              style: StyleConstants.black16w600Style,
+            ),
+          ),
+          Switch(
+            value: controller.useMobileTime,
+            onChanged: controller.toggleMobileTime,
+          ),
+        ],
+      ),
+      _numberField(
+        StringConstants.year,
+        controller.config.yearController,
+        maxLength: 4,
+      ),
+      _numberField(
+        StringConstants.month,
+        controller.config.monthController,
+        maxLength: 2,
+      ),
+      _numberField(
+        StringConstants.day,
+        controller.config.dayController,
+        maxLength: 2,
+      ),
+      _numberField(
+        StringConstants.hour,
+        controller.config.hourController,
+        maxLength: 2,
+      ),
+      _numberField(
+        StringConstants.minute,
+        controller.config.minuteController,
+        maxLength: 2,
+      ),
+      _numberField(
+        StringConstants.second,
+        controller.config.secondController,
+        maxLength: 2,
+      ),
+    ]);
   }
 
   Widget _eventReminderTile() {
     return _tileWrapper(
       title: StringConstants.eventReminder,
-      children: [
-        _numberField(
-          StringConstants.delayS,
-          controller.config.delayController,
-          maxLength: 3,
-        ),
-      ],
+      children: [_eventReminderFields()],
     );
+  }
+
+  Widget _eventReminderFields() {
+    return peripheralSheetFieldGrid([
+      _numberField(
+        StringConstants.delayS,
+        controller.config.delayController,
+        maxLength: 3,
+      ),
+    ]);
   }
 
   // ───────── TILE WRAPPER ─────────
