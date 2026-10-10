@@ -141,7 +141,7 @@ class SystemConfigDef {
   }
 
   /// Whole struct. The leading size is [byteLength]. [u32_stored_crc] is the
-  /// CRC-16/CCITT-FALSE of every preceding byte, stored little-endian.
+  /// reflected CRC-16 of every preceding byte, stored little-endian.
   Uint8List toBytes() {
     final buf = Uint8List(byteLength);
     var cursor = 0;
@@ -178,19 +178,23 @@ class SystemConfigDef {
     return buf;
   }
 
-  /// CRC-16/CCITT-FALSE: polynomial 0x1021, init 0xFFFF, no reflection.
+  /// Reflected CRC-16/CCITT: polynomial 0x8408, init 0xFFFF.
+  ///
+  /// Right shift, LSB first. Matches the panel `crc_calculate`.
+  /// `{1,2,3,4,5,6,7,8,9,0}` returns `0xA718`.
   static int crc16Ccitt(List<int> data) {
-    const poly = 0x1021;
+    const poly = 0x8408;
     const mask = 0xFFFF;
     var crc = mask;
     for (final byte in data) {
-      crc ^= (byte << 8) & mask;
+      crc ^= byte & mask;
       for (var i = 0; i < 8; i++) {
-        if ((crc & 0x8000) != 0) {
-          crc = ((crc << 1) ^ poly) & mask;
+        if ((crc & 0x0001) != 0) {
+          crc = (crc >> 1) ^ poly;
         } else {
-          crc = (crc << 1) & mask;
+          crc >>= 1;
         }
+        crc &= mask;
       }
     }
     return crc & mask;
