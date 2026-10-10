@@ -91,6 +91,13 @@ abstract final class StringConstants {
   static const String applyingLBus = "Applying L-Bus";
   static const String downloadingSounder = "Downloading Sounder";
   static const String applyingSounder = "Applying Sounder";
+  static const String downloadingSystemConfig = "Downloading Config";
+  static const String applyingSystemConfig = "Applying Config";
+  static const String systemConfigFetchCompleted = "Config Download Completed";
+  static const String systemConfigApplyCompleted = "Config Apply Completed";
+  static const String systemConfigSizeMismatch =
+      "Config size does not match this app";
+  static const String systemConfigCrcMismatch = "Config CRC does not match";
   static const String downloadingSounderRelays = "Downloading Sounder (Relays)";
   static const String applyingSounderRelays = "Applying Sounder (Relays)";
   static const String downloadingServiceDue = "Downloading Service Due";

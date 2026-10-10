@@ -53,7 +53,6 @@ abstract final class WindowsDashboardTileRegistry {
       WindowsDashboardTileConfig(
         label: StringConstants.extOut2,
         iconPath: AssetConstants.peripheralExtOutIcon,
-        isDisabled: !DemoBle.enabled,
         onTap: () => ProjectDashboardTileActions.openExtOut(controller),
       ),
     ];

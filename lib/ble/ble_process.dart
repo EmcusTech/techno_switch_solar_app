@@ -16,7 +16,10 @@ import 'package:Technoswitch/config/ble/panel_properties_setup_payload_debug.dar
 import 'package:Technoswitch/utils/constants/ble/ble_constants.dart';
 import 'package:Technoswitch/config/ble/relay_setup_payload.dart';
 import 'package:Technoswitch/config/ble/sounder_setup_payload.dart';
+import 'package:Technoswitch/config/ble/system_config_payload.dart';
+import 'package:Technoswitch/config/ble/system_config_payload_debug.dart';
 import 'package:Technoswitch/config/ble/zone_setup_payload.dart';
+import 'package:Technoswitch/config/structs/system_config_def.dart';
 import 'package:Technoswitch/utils/peripherals/defaults/general_module_defaults.dart';
 import 'package:Technoswitch/utils/peripherals/defaults/panel_info_defaults.dart';
 import 'package:Technoswitch/utils/peripherals/defaults/service_due_defaults.dart';
@@ -74,6 +77,18 @@ class BleProcess {
   int lBusSetupApplyCommandStep = 0;
   int checkForSounderSetupFetchRes = 0;
   int checkForSounderSetupApplyRes = 0;
+  int checkForSystemConfigFetchRes = 0;
+  int checkForSystemConfigApplyRes = 0;
+  bool systemConfigWaitingForInfo = false;
+  int systemConfigChunkCount = 0;
+  int systemConfigTotalSize = 0;
+  int systemConfigSequence = 0;
+  int systemConfigExpectedChunkSize = 0;
+  int systemConfigFilled = 0;
+  Uint8List systemConfigAssembly = Uint8List(0);
+  List<Uint8List> systemConfigPushChunks = <Uint8List>[];
+  bool systemConfigApplyEndSent = false;
+  SystemConfigDef? retainedSystemConfig;
   int sounderSetupFetchRelayCommandStep = 0;
   int sounderSetupFetchZoneCommandStep = 1;
   int sounderSetupFetchExtOutCommandStep = 1;
@@ -190,6 +205,8 @@ class BleProcess {
     isRadioSetupApplyDone.value = false;
     isLBusSetupApplyDone.value = false;
     isSounderSetupApplyDone.value = false;
+    isSystemConfigApplyDone.value = false;
+    isSystemConfigFetchDone.value = false;
     isServiceDueApplyDone.value = false;
     isAccessCodeSetupApplyDone.value = false;
     isPanelInfoSetupApplyDone.value = false;
@@ -544,6 +561,20 @@ class BleProcess {
   );
 
   final ValueNotifier<bool> isSounderSetupFetchDone = ValueNotifier<bool>(
+    false,
+  );
+
+  final ValueNotifier<bool> isSystemConfigFetchCommandActive =
+      ValueNotifier<bool>(false);
+
+  final ValueNotifier<bool> isSystemConfigApplyCommandActive =
+      ValueNotifier<bool>(false);
+
+  final ValueNotifier<bool> isSystemConfigFetchDone = ValueNotifier<bool>(
+    false,
+  );
+
+  final ValueNotifier<bool> isSystemConfigApplyDone = ValueNotifier<bool>(
     false,
   );
 
@@ -1032,6 +1063,14 @@ class BleProcess {
         checkForSounderSetupApplyRes = 1;
         break;
 
+      case OtaProcessState.sendSystemConfigFetchCmdPkt:
+        checkForSystemConfigFetchRes = 1;
+        break;
+
+      case OtaProcessState.sendSystemConfigApplyCmdPkt:
+        checkForSystemConfigApplyRes = 1;
+        break;
+
       case OtaProcessState.sendServiceDueFetchCmdPkt:
         checkForServiceDueFetchRes = 1;
         break;
@@ -1517,10 +1556,7 @@ class BleProcess {
           'panel-properties-fetch-response',
           rx.payload,
         );
-        PanelPropertiesSetupPayloadDebug.logStruct(
-          'fetch-rx',
-          rx.payload,
-        );
+        PanelPropertiesSetupPayloadDebug.logStruct('fetch-rx', rx.payload);
         final config = PanelPropertiesSetupPayload.readFromPacket(rx.payload);
         PanelPropertiesSetupPayload.applyToBleProcess(config, this);
         _finishPanelPropertiesFetch();
@@ -1720,6 +1756,20 @@ class BleProcess {
         checkForSounderSetupApplyRes = 0;
         isSounderSetupApplyCommandActive.value = false;
         isSounderSetupApplyDone.value = true;
+      }
+    }
+
+    if (checkForSystemConfigFetchRes == 1) {
+      if (rx.payload.length > SystemConfigPayload.commandOffset &&
+          rx.payload[SystemConfigPayload.commandOffset] ==
+              BleConstants.command.systemConfig) {
+        await _onSystemConfigFetchReply(rx.payload);
+      }
+    }
+
+    if (checkForSystemConfigApplyRes == 1) {
+      if (rx.payload.length > 10 && rx.payload[10] == 0x83) {
+        await _onSystemConfigApplyAck();
       }
     }
 
@@ -2279,6 +2329,177 @@ class BleProcess {
     }
   }
 
+  void prepareSystemConfigTransfer() {
+    resetProcessSounderSetupState();
+    checkForZoneSetupFetchRes = 0;
+    checkForZoneSetupApplyRes = 0;
+    checkForInputSetupApplyRes = 0;
+    checkForExtCmdFetchRes = 0;
+    checkForExtCmdApplyRes = 0;
+    checkForPanelPropertiesFetchRes = 0;
+    checkForPanelPropertiesApplyRes = 0;
+    checkForSystemConfigFetchRes = 0;
+    checkForSystemConfigApplyRes = 0;
+    systemConfigWaitingForInfo = false;
+    systemConfigChunkCount = 0;
+    systemConfigTotalSize = 0;
+    systemConfigSequence = 0;
+    systemConfigExpectedChunkSize = 0;
+    systemConfigFilled = 0;
+    systemConfigAssembly = Uint8List(0);
+    systemConfigPushChunks = <Uint8List>[];
+    systemConfigApplyEndSent = false;
+    isSystemConfigFetchDone.value = false;
+    isSystemConfigApplyDone.value = false;
+  }
+
+  Future<void> _onSystemConfigFetchReply(List<int> payload) async {
+    try {
+      if (systemConfigWaitingForInfo) {
+        final info = SystemConfigPayload.readInfo(payload);
+        systemConfigChunkCount = info.chunkCount;
+        systemConfigTotalSize = info.totalSize;
+        systemConfigWaitingForInfo = false;
+        systemConfigSequence = 0;
+        systemConfigFilled = 0;
+        systemConfigAssembly = Uint8List(info.totalSize);
+        print(
+          'SYSTEM_CONFIG info count=${info.chunkCount} size=${info.totalSize}',
+        );
+        if (info.chunkCount == 0 || info.totalSize == 0) {
+          _failSystemConfigTransfer(StringConstants.systemConfigSizeMismatch);
+          return;
+        }
+        await _requestNextSystemConfigChunk();
+        return;
+      }
+
+      final size = systemConfigExpectedChunkSize;
+      final slice = SystemConfigPayload.readPullChunk(payload, size);
+      if (systemConfigFilled + size > systemConfigAssembly.length) {
+        _failSystemConfigTransfer(StringConstants.systemConfigSizeMismatch);
+        return;
+      }
+      systemConfigAssembly.setRange(
+        systemConfigFilled,
+        systemConfigFilled + size,
+        slice,
+      );
+      systemConfigFilled += size;
+      systemConfigSequence += 1;
+
+      if (systemConfigFilled >= systemConfigTotalSize) {
+        _completeSystemConfigFetch();
+        return;
+      }
+      if (systemConfigSequence >= systemConfigChunkCount) {
+        _failSystemConfigTransfer(StringConstants.systemConfigSizeMismatch);
+        return;
+      }
+      await _requestNextSystemConfigChunk();
+    } catch (_) {
+      _failSystemConfigTransfer(StringConstants.deviceNotResponding);
+    }
+  }
+
+  Future<void> _requestNextSystemConfigChunk() async {
+    final size = SystemConfigPayload.pullChunkSizeFor(
+      systemConfigTotalSize,
+      systemConfigSequence,
+    );
+    if (size == 0) {
+      _failSystemConfigTransfer(StringConstants.systemConfigSizeMismatch);
+      return;
+    }
+    processDesc.value =
+        '${StringConstants.downloadingSystemConfig} ${systemConfigSequence + 1}/$systemConfigChunkCount';
+    startOtherPacketsRxTimeout(timeout: const Duration(seconds: 15));
+    startRxTimeout();
+    await bleManager.sendSystemConfigPullChunk();
+  }
+
+  void _completeSystemConfigFetch() {
+    if (systemConfigAssembly.length != SystemConfigDef.byteLength) {
+      print(
+        'SYSTEM_CONFIG size mismatch panel=${systemConfigAssembly.length} app=${SystemConfigDef.byteLength}',
+      );
+      _failSystemConfigTransfer(StringConstants.systemConfigSizeMismatch);
+      return;
+    }
+    try {
+      if (!SystemConfigDef.hasMatchingCrc(systemConfigAssembly)) {
+        final calculated = SystemConfigDef.crc16Ccitt(
+          Uint8List.sublistView(
+            systemConfigAssembly,
+            0,
+            SystemConfigDef.byteLength - SystemConfigDef.crcLength,
+          ),
+        );
+        final stored = SystemConfigDef.readStoredCrc(systemConfigAssembly);
+        print(
+          'SYSTEM_CONFIG crc mismatch calculated=${calculated.toRadixString(16)} stored=${stored.toRadixString(16)}',
+        );
+        _failSystemConfigTransfer(StringConstants.systemConfigCrcMismatch);
+        return;
+      }
+      final config = SystemConfigDef.fromBytes(systemConfigAssembly);
+      SystemConfigPayload.applyToBleProcess(config, this);
+    } catch (_) {
+      _failSystemConfigTransfer(StringConstants.systemConfigSizeMismatch);
+      return;
+    }
+    checkForSystemConfigFetchRes = 0;
+    isSystemConfigFetchCommandActive.value = false;
+    systemConfigWaitingForInfo = false;
+    cancelRxTimeout();
+    cancelOperationDeadline();
+    bleManager.otaProcessState = OtaProcessState.notInUse;
+    processDesc.value = StringConstants.systemConfigFetchCompleted;
+    isSystemConfigFetchDone.value = true;
+  }
+
+  Future<void> _onSystemConfigApplyAck() async {
+    final next = systemConfigSequence + 1;
+    if (next >= systemConfigChunkCount) {
+      if (!systemConfigApplyEndSent) {
+        systemConfigApplyEndSent = true;
+        SystemConfigPayloadDebug.printSentStructs(systemConfigPushChunks);
+        await bleManager.sendSystemConfigApplyEnd();
+      }
+      _completeSystemConfigApply();
+      return;
+    }
+    systemConfigSequence = next;
+    processDesc.value =
+        '${StringConstants.applyingSystemConfig} ${next + 1}/$systemConfigChunkCount';
+    startOtherPacketsRxTimeout(timeout: const Duration(seconds: 15));
+    startRxTimeout();
+    await bleManager.sendSystemConfigPushChunk(next);
+  }
+
+  void _completeSystemConfigApply() {
+    checkForSystemConfigApplyRes = 0;
+    isSystemConfigApplyCommandActive.value = false;
+    cancelRxTimeout();
+    cancelOperationDeadline();
+    bleManager.otaProcessState = OtaProcessState.notInUse;
+    processDesc.value = StringConstants.systemConfigApplyCompleted;
+    isSystemConfigApplyDone.value = true;
+  }
+
+  void _failSystemConfigTransfer(String message) {
+    isSystemConfigFetchCommandActive.value = false;
+    isSystemConfigApplyCommandActive.value = false;
+    checkForSystemConfigFetchRes = 0;
+    checkForSystemConfigApplyRes = 0;
+    systemConfigWaitingForInfo = false;
+    cancelRxTimeout();
+    cancelOperationDeadline();
+    bleManager.otaProcessState = OtaProcessState.notInUse;
+    processDesc.value = message;
+    maxOtherPacketsRetriesReached.value = true;
+  }
+
   void resetProcessState() {
     isSessionAccessCodeValidationOnly = false;
     isOtaCompleted = false;
@@ -2301,6 +2522,8 @@ class BleProcess {
     checkForLBusSetupApplyRes = 0;
     checkForSounderSetupFetchRes = 0;
     checkForSounderSetupApplyRes = 0;
+    checkForSystemConfigFetchRes = 0;
+    checkForSystemConfigApplyRes = 0;
     checkForServiceDueFetchRes = 0;
     checkForAccessCodeSetupFetchRes = 0;
     accessCodeSetupFetchCommandStep = 0;
@@ -2371,6 +2594,8 @@ class BleProcess {
     checkForLBusSetupApplyRes = 0;
     checkForSounderSetupFetchRes = 0;
     checkForSounderSetupApplyRes = 0;
+    checkForSystemConfigFetchRes = 0;
+    checkForSystemConfigApplyRes = 0;
     checkForServiceDueFetchRes = 0;
     checkForAccessCodeSetupFetchRes = 0;
     accessCodeSetupFetchCommandStep = 0;
@@ -2428,6 +2653,8 @@ class BleProcess {
     checkForLBusSetupApplyRes = 0;
     checkForSounderSetupFetchRes = 0;
     checkForSounderSetupApplyRes = 0;
+    checkForSystemConfigFetchRes = 0;
+    checkForSystemConfigApplyRes = 0;
     checkForServiceDueFetchRes = 0;
     checkForAccessCodeSetupFetchRes = 0;
     accessCodeSetupFetchCommandStep = 0;
@@ -2481,6 +2708,8 @@ class BleProcess {
     checkForLBusSetupApplyRes = 0;
     checkForSounderSetupFetchRes = 0;
     checkForSounderSetupApplyRes = 0;
+    checkForSystemConfigFetchRes = 0;
+    checkForSystemConfigApplyRes = 0;
     checkForServiceDueFetchRes = 0;
     checkForAccessCodeSetupFetchRes = 0;
     accessCodeSetupFetchCommandStep = 0;
@@ -2531,6 +2760,8 @@ class BleProcess {
     checkForLBusSetupApplyRes = 0;
     checkForSounderSetupFetchRes = 0;
     checkForSounderSetupApplyRes = 0;
+    checkForSystemConfigFetchRes = 0;
+    checkForSystemConfigApplyRes = 0;
     checkForServiceDueFetchRes = 0;
     checkForAccessCodeSetupFetchRes = 0;
     accessCodeSetupFetchCommandStep = 0;
@@ -2587,6 +2818,8 @@ class BleProcess {
     checkForLBusSetupApplyRes = 0;
     checkForSounderSetupFetchRes = 0;
     checkForSounderSetupApplyRes = 0;
+    checkForSystemConfigFetchRes = 0;
+    checkForSystemConfigApplyRes = 0;
     checkForServiceDueFetchRes = 0;
     checkForAccessCodeSetupFetchRes = 0;
     accessCodeSetupFetchCommandStep = 0;
@@ -2636,6 +2869,8 @@ class BleProcess {
     checkForLBusSetupApplyRes = 0;
     checkForSounderSetupFetchRes = 0;
     checkForSounderSetupApplyRes = 0;
+    checkForSystemConfigFetchRes = 0;
+    checkForSystemConfigApplyRes = 0;
     checkForServiceDueFetchRes = 0;
     checkForAccessCodeSetupFetchRes = 0;
     accessCodeSetupFetchCommandStep = 0;
@@ -2686,6 +2921,8 @@ class BleProcess {
     checkForLBusSetupApplyRes = 0;
     checkForSounderSetupFetchRes = 0;
     checkForSounderSetupApplyRes = 0;
+    checkForSystemConfigFetchRes = 0;
+    checkForSystemConfigApplyRes = 0;
     checkForServiceDueFetchRes = 0;
     checkForAccessCodeSetupFetchRes = 0;
     accessCodeSetupFetchCommandStep = 0;
@@ -2736,6 +2973,8 @@ class BleProcess {
     checkForLBusSetupApplyRes = 0;
     checkForSounderSetupFetchRes = 0;
     checkForSounderSetupApplyRes = 0;
+    checkForSystemConfigFetchRes = 0;
+    checkForSystemConfigApplyRes = 0;
     checkForServiceDueFetchRes = 0;
     checkForAccessCodeSetupFetchRes = 0;
     accessCodeSetupFetchCommandStep = 0;
@@ -2786,6 +3025,8 @@ class BleProcess {
     checkForLBusSetupApplyRes = 0;
     checkForSounderSetupFetchRes = 0;
     checkForSounderSetupApplyRes = 0;
+    checkForSystemConfigFetchRes = 0;
+    checkForSystemConfigApplyRes = 0;
     checkForServiceDueFetchRes = 0;
     checkForAccessCodeSetupFetchRes = 0;
     accessCodeSetupFetchCommandStep = 0;
@@ -2836,6 +3077,8 @@ class BleProcess {
     checkForLBusSetupApplyRes = 0;
     checkForSounderSetupFetchRes = 0;
     checkForSounderSetupApplyRes = 0;
+    checkForSystemConfigFetchRes = 0;
+    checkForSystemConfigApplyRes = 0;
     checkForServiceDueFetchRes = 0;
     checkForAccessCodeSetupFetchRes = 0;
     accessCodeSetupFetchCommandStep = 0;
@@ -2886,6 +3129,8 @@ class BleProcess {
     checkForLBusSetupApplyRes = 0;
     checkForSounderSetupFetchRes = 0;
     checkForSounderSetupApplyRes = 0;
+    checkForSystemConfigFetchRes = 0;
+    checkForSystemConfigApplyRes = 0;
     checkForServiceDueFetchRes = 0;
     checkForAccessCodeSetupFetchRes = 0;
     accessCodeSetupFetchCommandStep = 0;
@@ -2936,6 +3181,8 @@ class BleProcess {
     checkForLBusSetupApplyRes = 0;
     checkForSounderSetupFetchRes = 0;
     checkForSounderSetupApplyRes = 0;
+    checkForSystemConfigFetchRes = 0;
+    checkForSystemConfigApplyRes = 0;
     checkForServiceDueFetchRes = 0;
     checkForAccessCodeSetupFetchRes = 0;
     accessCodeSetupFetchCommandStep = 0;
@@ -2986,6 +3233,8 @@ class BleProcess {
     checkForLBusSetupApplyRes = 0;
     checkForSounderSetupFetchRes = 0;
     checkForSounderSetupApplyRes = 0;
+    checkForSystemConfigFetchRes = 0;
+    checkForSystemConfigApplyRes = 0;
     checkForServiceDueFetchRes = 0;
     checkForAccessCodeSetupFetchRes = 0;
     accessCodeSetupFetchCommandStep = 0;
@@ -3499,6 +3748,12 @@ class BleProcess {
       return;
     }
 
+    if (isSystemConfigFetchCommandActive.value ||
+        isSystemConfigApplyCommandActive.value) {
+      _failSystemConfigTransfer(StringConstants.deviceNotResponding);
+      return;
+    }
+
     networkFlowRestartCount++;
     processDesc.value =
         '${StringConstants.noResponseFromDevice} ($networkFlowRestartCount/$maxNetworkFlowRestarts)';
@@ -3600,6 +3855,10 @@ class BleProcess {
         case OtaProcessState.sendSounderSetupFetchCmdPkt:
           break;
         case OtaProcessState.sendSounderSetupApplyCmdPkt:
+          break;
+        case OtaProcessState.sendSystemConfigFetchCmdPkt:
+          break;
+        case OtaProcessState.sendSystemConfigApplyCmdPkt:
           break;
         case OtaProcessState.sendServiceDueFetchCmdPkt:
           break;

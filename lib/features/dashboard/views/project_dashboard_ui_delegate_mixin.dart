@@ -41,6 +41,7 @@ import 'package:Technoswitch/utils/panel_config/zone_setup_ble_flow.dart';
 import 'package:Technoswitch/utils/panel_config/ext_out_setup_ble_flow.dart';
 import 'package:Technoswitch/utils/panel_config/relay_setup_ble_flow.dart';
 import 'package:Technoswitch/utils/panel_config/sounder_setup_ble_flow.dart';
+import 'package:Technoswitch/utils/panel_config/system_config_ble_flow.dart';
 import 'package:Technoswitch/utils/panel_config/panel_properties_setup_ble_flow.dart';
 import 'package:Technoswitch/utils/panel_config/access_code_setup_ble_flow.dart';
 import 'package:Technoswitch/utils/panel_config/compact_setup_ble_flow.dart';
@@ -1007,6 +1008,46 @@ mixin ProjectDashboardUiDelegateMixin<T extends StatefulWidget> on State<T>
       bleProcess: dashboardController.bleManager.bleProcess,
       bleController: dashboardController.bleController,
       onApplyComplete: dashboardController.saveSounderCacheAndNotifyRefresh,
+      showApplySuccess: (message) {
+        showPanelApplySuccessDialog(
+          uiContext,
+          dashboardController.bleManager.bleProcess,
+          message,
+          onDismissed:
+              onAfterApplySuccess == null
+                  ? null
+                  : () {
+                    if (mounted) onAfterApplySuccess();
+                  },
+        );
+      },
+    );
+  }
+
+  @override
+  Future<void> runSystemConfigDownload({
+    required Future<void> Function() onDownloadComplete,
+  }) {
+    return runSystemConfigDownloadFlow(
+      context: uiContext,
+      isMounted: () => mounted,
+      bleProcess: dashboardController.bleManager.bleProcess,
+      bleController: dashboardController.bleController,
+      onDownloadComplete: onDownloadComplete,
+      showDownloadSuccess: showDownloadSuccessDialog,
+    );
+  }
+
+  @override
+  Future<void> runSystemConfigApply({
+    Future<void> Function()? onAfterApplySuccess,
+  }) {
+    return runSystemConfigApplyFlow(
+      context: uiContext,
+      isMounted: () => mounted,
+      bleProcess: dashboardController.bleManager.bleProcess,
+      bleController: dashboardController.bleController,
+      onApplyComplete: dashboardController.saveAllPeripheralCachesFromBle,
       showApplySuccess: (message) {
         showPanelApplySuccessDialog(
           uiContext,

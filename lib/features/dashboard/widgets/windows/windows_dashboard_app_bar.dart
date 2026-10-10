@@ -116,13 +116,40 @@ class _WindowsDashboardAppBarState extends State<WindowsDashboardAppBar>
               //     child: SvgPicture.asset(AssetConstants.shareIcon),
               //   ),
               // ),
-              Text(StringConstants.upload),
-              SizedBox(width: 12),
-              SvgPicture.asset(AssetConstants.winUploadIcon),
-              SizedBox(width: 40),
-              Text(StringConstants.download),
-              SizedBox(width: 12),
-              SvgPicture.asset(AssetConstants.winDownloadIcon),
+              InkWell(
+                onTap: () {
+                  widget.controller.guardBootloaderOr(() {
+                    widget.controller.uiDelegate?.runSystemConfigApply();
+                  });
+                },
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(StringConstants.upload),
+                    const SizedBox(width: 12),
+                    SvgPicture.asset(AssetConstants.winUploadIcon),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 40),
+              InkWell(
+                onTap: () {
+                  widget.controller.guardBootloaderOr(() {
+                    widget.controller.uiDelegate?.runSystemConfigDownload(
+                      onDownloadComplete:
+                          widget.controller.saveAllPeripheralCachesFromBle,
+                    );
+                  });
+                },
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(StringConstants.download),
+                    const SizedBox(width: 12),
+                    SvgPicture.asset(AssetConstants.winDownloadIcon),
+                  ],
+                ),
+              ),
               const SizedBox(width: 40),
               InkWell(
                 onTap: _toggleFullScreen,

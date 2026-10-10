@@ -112,6 +112,14 @@ class BleLogController extends GetxController {
     await bleManager.startSounderSetupApply();
   }
 
+  Future<void> startSystemConfigFetch() async {
+    await bleManager.startSystemConfigFetch();
+  }
+
+  Future<void> startSystemConfigApply() async {
+    await bleManager.startSystemConfigApply();
+  }
+
   Future<void> startServiceDueFetch() async {
     await bleManager.startServiceDueFetch();
   }
