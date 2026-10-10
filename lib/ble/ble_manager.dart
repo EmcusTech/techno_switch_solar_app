@@ -1,13 +1,16 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart' as fbp;
 import 'package:Technoswitch/ble/blue_plus_adapter.dart';
 import 'package:Technoswitch/ble/demo/demo_ble.dart';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:Technoswitch/ble/controller/ble_log_controller.dart';
+import 'package:Technoswitch/utils/app/navigation_service.dart';
 import 'package:Technoswitch/utils/constants/ble/ble_constants.dart';
+import 'package:Technoswitch/widgets/dialogs/ble_communication_failure_dialog.dart';
 import 'package:Technoswitch/utils/constants/string_constants.dart';
 import 'package:Technoswitch/utils/logger.dart';
 import 'ble_frame.dart';
@@ -198,6 +201,7 @@ class BleManager extends GetxService {
   QualifiedCharacteristic? writeChar;
   StreamSubscription<DiscoveredDevice>? _scanSub;
   bool _pollInFlight = false;
+  bool _pktValidationDialogOpen = false;
   int receivedPollCount = 0;
   StreamSubscription<ConnectionStateUpdate>? _connectionSub;
   bool _connectedOnce = false;
@@ -2765,7 +2769,8 @@ class BleManager extends GetxService {
       receivedPollCount++;
       bleParseAndUpdateRxFrame(data, data.length);
 
-      if (bleValidateRxFrame(bleRxFrame)) {
+      if (bleValidateRxFrame(bleRxFrame) &&
+          validateIncomingAppPacket(bleRxFrame.payload)) {
         await bleProcess.bleRxFrameProcess(bleRxFrame);
       }
     }
@@ -2778,6 +2783,85 @@ class BleManager extends GetxService {
   }
 
   OtaProcessState otaProcessState = OtaProcessState.sendNetworkPacket;
+
+  /// Same checks as the panel `ble_pkt_validation`: Fletcher over every byte
+  /// before the checksum and end marker, then start, end, destination, origin.
+  bool validateIncomingAppPacket(List<int> packet) {
+    const trailer = BleConstants.frameChkSize + BleConstants.frameEofSize;
+    if (packet.length <= trailer) {
+      _reportPacketValidationFailure(StringConstants.pktValidationFail);
+      return false;
+    }
+
+    final covered = packet.length - trailer;
+    final calculated = toolsFletcherChecksum(packet.sublist(0, covered));
+    final stored = packet[covered] | (packet[covered + 1] << 8);
+    final valid =
+        calculated == stored &&
+        packet[0] == BleConstants.sot &&
+        packet[packet.length - 1] == BleConstants.eot &&
+        packet[1] == BleConstants.des &&
+        packet[2] == BleConstants.ori;
+    if (!valid) {
+      _reportPacketValidationFailure(
+        'checksum=${stored.toRadixString(16)} '
+        'calculated=${calculated.toRadixString(16)} '
+        'sof=${packet[0].toRadixString(16)} '
+        'dest=${packet[1].toRadixString(16)} '
+        'orig=${packet[2].toRadixString(16)} '
+        'eof=${packet.last.toRadixString(16)}',
+      );
+    }
+    return valid;
+  }
+
+  void _reportPacketValidationFailure(String message) {
+    final logLine =
+        message == StringConstants.pktValidationFail
+            ? message
+            : '${StringConstants.pktValidationFail} $message';
+    Logger(logLine);
+    if (_pktValidationDialogOpen) return;
+    _pktValidationDialogOpen = true;
+    bleProcess.cancelRxTimeout();
+    bleProcess.isOtaCompleted = true;
+    bleProcess.processNextOtaFrame = false;
+    otaProcessState = OtaProcessState.notInUse;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      unawaited(_finishPacketValidationFailure(message));
+    });
+  }
+
+  Future<void> _finishPacketValidationFailure(String message) async {
+    try {
+      try {
+        await disconnectConnectedDevice();
+      } catch (e) {
+        Logger('disconnect on packet validation failure: $e');
+      }
+      await shutdown();
+      resetProtocolState();
+      bleProcess.resetProcessState();
+      bleProcess.isOtaCompleted = true;
+      bleProcess.processNextOtaFrame = false;
+
+      final context = appNavigatorKey.currentContext;
+      if (context != null && context.mounted) {
+        await BleCommunicationFailureDialog.show(
+          context: context,
+          title: StringConstants.pktValidationFail,
+          message: message,
+        );
+      }
+
+      final homeContext = appNavigatorKey.currentContext;
+      if (homeContext != null && homeContext.mounted) {
+        await NavigationService.navigateBackToHome(homeContext);
+      }
+    } finally {
+      _pktValidationDialogOpen = false;
+    }
+  }
 
   int toolsFletcherChecksum(List<int> buffer) {
     int length = buffer.length;

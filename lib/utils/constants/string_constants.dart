@@ -24,6 +24,7 @@ abstract final class StringConstants {
       "Payload length validation failed";
   static const String crcValidationFail = "CRC validation failed";
   static const String eofValidationFail = "EOF validation failed";
+  static const String pktValidationFail = "Packet validation failed";
   static const String disconnectHandshake = "Disconnected during handshake";
   static const String disconnectConn = "Disconnected during connection";
   static const String nackPacket = "The received packet is a nack packet";

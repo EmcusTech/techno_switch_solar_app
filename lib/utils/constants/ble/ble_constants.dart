@@ -21,6 +21,8 @@ abstract final class BleConstants {
   static const int des = 0x01;
   static const int ori = 0x00;
   static const int eot = 0xFD;
+  static const int frameChkSize = 2;
+  static const int frameEofSize = 1;
 
   // Sequence Numbers
   static const int txPkNoInit = 0x00;
