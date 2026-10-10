@@ -109,13 +109,23 @@ class _WindowsDashboardAppBarState extends State<WindowsDashboardAppBar>
                 style: StyleConstants.black14w400Style,
               ),
               Spacer(),
-              // GestureDetector(
-              //   onTap: widget.onExport,
-              //   child: Padding(
-              //     padding: const EdgeInsets.only(right: 12),
-              //     child: SvgPicture.asset(AssetConstants.shareIcon),
-              //   ),
-              // ),
+              ValueListenableBuilder<bool>(
+                valueListenable: widget.controller.systemConfigCrcMismatch,
+                builder: (context, mismatch, _) {
+                  if (!mismatch) return const SizedBox.shrink();
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 24),
+                    child: Text(
+                      StringConstants.panelConfigMismatch,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: StyleConstants.black14w400Style.copyWith(
+                        color: ColorConstants.primary,
+                      ),
+                    ),
+                  );
+                },
+              ),
               InkWell(
                 onTap: () {
                   widget.controller.guardBootloaderOr(() {

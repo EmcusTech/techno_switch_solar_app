@@ -19,6 +19,15 @@ class BleMsdUtils {
     return null;
   }
 
+  /// Last two manufacturer-data bytes, high byte then low byte.
+  /// `112, 79` is `0x704F`.
+  static int? advertisedConfigCrc(List<int> msd) {
+    if (isBootloader(msd) || msd.length < 6) return null;
+    final high = msd[msd.length - 2] & 0xFF;
+    final low = msd[msd.length - 1] & 0xFF;
+    return (high << 8) | low;
+  }
+
   static bool isBootloaderCorrupt(List<int> msd) {
     if (!isBootloader(msd) || msd.length < 4) return false;
     return msd[2] == 0 && msd[3] == 0;

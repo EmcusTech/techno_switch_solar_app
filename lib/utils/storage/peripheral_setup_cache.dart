@@ -27,6 +27,8 @@ class PeripheralSetupCache {
       '$_keyPrefix${deviceId}_diagnostic';
   static String _panelNetworkKey(String deviceId) =>
       '$_keyPrefix${deviceId}_panel_network';
+  static String _systemConfigCrcKey(String deviceId) =>
+      '$_keyPrefix${deviceId}_system_config_crc';
 
   static Future<void> saveSounderSetup(
     String deviceId,
@@ -311,7 +313,24 @@ class PeripheralSetupCache {
     '_general_module',
     '_diagnostic',
     '_panel_network',
+    '_system_config_crc',
   ];
+
+  static Future<void> saveSystemConfigCrc(String deviceId, int crc) async {
+    final id = deviceId.trim();
+    if (id.isEmpty) return;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_systemConfigCrcKey(id), (crc & 0xFFFF).toString());
+  }
+
+  static Future<int?> loadSystemConfigCrc(String deviceId) async {
+    final id = deviceId.trim();
+    if (id.isEmpty) return null;
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(_systemConfigCrcKey(id));
+    if (raw == null) return null;
+    return int.tryParse(raw);
+  }
 
   /// Network / identity fields from the connect handshake (for offline PDF export).
   static Future<void> savePanelNetworkSnapshot(

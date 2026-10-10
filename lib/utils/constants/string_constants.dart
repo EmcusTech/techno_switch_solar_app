@@ -341,6 +341,8 @@ abstract final class StringConstants {
   static const String disconnected2 = "Disconnected.";
   static const String doubleKnock = "Double Knock";
   static const String download = "Download";
+  static const String panelConfigMismatch =
+      "Panel config does not match. Please update.";
   static const String fullScreen = "Full Screen";
   static const String exitFullScreen = "Exit Full Screen";
   static const String downloadCompare = "Download & compare";

@@ -1033,7 +1033,10 @@ mixin ProjectDashboardUiDelegateMixin<T extends StatefulWidget> on State<T>
       isMounted: () => mounted,
       bleProcess: dashboardController.bleManager.bleProcess,
       bleController: dashboardController.bleController,
-      onDownloadComplete: onDownloadComplete,
+      onDownloadComplete: () async {
+        await onDownloadComplete();
+        dashboardController.systemConfigCrcMismatch.value = false;
+      },
       showDownloadSuccess: showDownloadSuccessDialog,
     );
   }
@@ -1047,7 +1050,10 @@ mixin ProjectDashboardUiDelegateMixin<T extends StatefulWidget> on State<T>
       isMounted: () => mounted,
       bleProcess: dashboardController.bleManager.bleProcess,
       bleController: dashboardController.bleController,
-      onApplyComplete: dashboardController.saveAllPeripheralCachesFromBle,
+      onApplyComplete: () async {
+        await dashboardController.saveAllPeripheralCachesFromBle();
+        dashboardController.systemConfigCrcMismatch.value = false;
+      },
       showApplySuccess: (message) {
         showPanelApplySuccessDialog(
           uiContext,

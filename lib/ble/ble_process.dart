@@ -16,6 +16,7 @@ import 'package:Technoswitch/config/ble/panel_properties_setup_payload_debug.dar
 import 'package:Technoswitch/utils/constants/ble/ble_constants.dart';
 import 'package:Technoswitch/config/ble/relay_setup_payload.dart';
 import 'package:Technoswitch/config/ble/sounder_setup_payload.dart';
+import 'package:Technoswitch/config/ble/system_config_crc_store.dart';
 import 'package:Technoswitch/config/ble/system_config_payload.dart';
 import 'package:Technoswitch/config/ble/system_config_payload_debug.dart';
 import 'package:Technoswitch/config/ble/zone_setup_payload.dart';
@@ -2456,6 +2457,9 @@ class BleProcess {
     bleManager.otaProcessState = OtaProcessState.notInUse;
     processDesc.value = StringConstants.systemConfigFetchCompleted;
     isSystemConfigFetchDone.value = true;
+    _rememberSystemConfigCrc(
+      SystemConfigDef.readStoredCrc(systemConfigAssembly),
+    );
   }
 
   Future<void> _onSystemConfigApplyAck() async {
@@ -2485,6 +2489,36 @@ class BleProcess {
     bleManager.otaProcessState = OtaProcessState.notInUse;
     processDesc.value = StringConstants.systemConfigApplyCompleted;
     isSystemConfigApplyDone.value = true;
+    final sentCrc = _sentSystemConfigCrc();
+    if (sentCrc != null) _rememberSystemConfigCrc(sentCrc);
+  }
+
+  int? _sentSystemConfigCrc() {
+    if (systemConfigPushChunks.isEmpty) return null;
+    final total = systemConfigPushChunks.fold<int>(
+      0,
+      (sum, chunk) => sum + chunk.length,
+    );
+    if (total < SystemConfigDef.byteLength) return null;
+    final bytes = Uint8List(total);
+    var offset = 0;
+    for (final chunk in systemConfigPushChunks) {
+      bytes.setRange(offset, offset + chunk.length, chunk);
+      offset += chunk.length;
+    }
+    return SystemConfigDef.readStoredCrc(bytes);
+  }
+
+  void _rememberSystemConfigCrc(int crc) {
+    final device = bleManager.selectedDevice;
+    if (device == null) return;
+    unawaited(
+      SystemConfigCrcStore.save(
+        crc: crc,
+        primaryDeviceId: device.id,
+        bleName: device.name,
+      ),
+    );
   }
 
   void _failSystemConfigTransfer(String message) {

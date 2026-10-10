@@ -10,6 +10,7 @@ import 'package:Technoswitch/ble/blue_plus_adapter.dart';
 import 'package:Technoswitch/ble/controller/ble_log_controller.dart';
 import 'package:Technoswitch/features/dashboard/controllers/project_dashboard_ui_delegate.dart';
 import 'package:Technoswitch/features/dashboard/models/project_dashboard_args.dart';
+import 'package:Technoswitch/config/ble/system_config_crc_store.dart';
 import 'package:Technoswitch/utils/panel_config/panel_config_bulk_sync.dart';
 import 'package:Technoswitch/utils/panel_config/panel_config_cache_sync.dart';
 import 'package:Technoswitch/utils/constants/ble/ble_name_utils.dart';
@@ -67,6 +68,7 @@ class ProjectDashboardController extends GetxController {
   final ValueNotifier<ConfigCompareResult?> configLogCompareResult =
       ValueNotifier(null);
   final ValueNotifier<bool> configLogWorking = ValueNotifier(false);
+  final ValueNotifier<bool> systemConfigCrcMismatch = ValueNotifier(false);
   final ValueNotifier<int> logHistoryRefreshTrigger = ValueNotifier(0);
   final ValueNotifier<WindowsDashboardDetail?> windowsDetail = ValueNotifier(
     null,
@@ -151,6 +153,7 @@ class ProjectDashboardController extends GetxController {
     bluetoothService.stopScanning();
     configLogCompareResult.dispose();
     configLogWorking.dispose();
+    systemConfigCrcMismatch.dispose();
     navigatingToDeviceConnecting.dispose();
     relayRefreshTrigger.dispose();
     inputRefreshTrigger.dispose();
@@ -433,6 +436,25 @@ class ProjectDashboardController extends GetxController {
         ui.showSnackBar('${StringConstants.couldNotCreatePdfPrefix}$e');
       }
     }
+  }
+
+  /// Uses the scan advertisement CRC. A missing local CRC downloads the
+  /// system config. A mismatch is shown beside Upload and Download.
+  Future<void> resolveSystemConfigCrcAfterAccess() async {
+    final result = await SystemConfigCrcStore.check(
+      manufacturerData: selectedDevice.manufacturerData,
+      primaryDeviceId: selectedDevice.id,
+      bleName: panelName,
+      panelVersionNo: panelVersionNo,
+    );
+    systemConfigCrcMismatch.value =
+        result.check == SystemConfigCrcCheck.mismatch;
+    if (result.check != SystemConfigCrcCheck.missingLocal) return;
+    final ui = _ui;
+    if (ui == null || !ui.isMounted) return;
+    await ui.runSystemConfigDownload(
+      onDownloadComplete: saveAllPeripheralCachesFromBle,
+    );
   }
 
   Future<void> saveAllPeripheralCachesFromBle() async {
