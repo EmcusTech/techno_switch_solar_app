@@ -1,5 +1,7 @@
+import 'package:Technoswitch/utils/constants/asset_constants.dart';
 import 'package:Technoswitch/utils/constants/style_constants.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:Technoswitch/features/home/controllers/home_screen_controller.dart';
@@ -101,7 +103,6 @@ class RecentSitesTableWidget extends StatelessWidget {
   Widget _siteRow(SiteWithLogCount siteWithLogCount) {
     final site = siteWithLogCount.site;
     return InkWell(
-      // onTap: () => controller.openSite(siteWithLogCount),
       onTap: null,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -154,9 +155,20 @@ class RecentSitesTableWidget extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(
+            SizedBox(
               width: 172,
-              child: Center(child: Icon(Icons.more_vert, size: 20)),
+              child: Center(
+                child: InkWell(
+                  onTap: () => controller.confirmDeleteSite(siteWithLogCount),
+                  child: SvgPicture.asset(
+                    AssetConstants.deleteIcon,
+                    colorFilter: const ColorFilter.mode(
+                      ColorConstants.errorBright,
+                      BlendMode.srcIn,
+                    ),
+                  ),
+                ),
+              ),
             ),
           ],
         ),

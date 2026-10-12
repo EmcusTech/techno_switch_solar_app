@@ -11,6 +11,7 @@ import 'package:Technoswitch/utils/constants/style_constants.dart';
 import 'package:Technoswitch/utils/peripherals/peripheral_cache_to_ble.dart';
 import 'package:Technoswitch/utils/constants/asset_constants.dart';
 import 'package:Technoswitch/utils/constants/color_constants.dart';
+import 'package:Technoswitch/widgets/common/app_notice.dart';
 import 'package:Technoswitch/utils/constants/string_constants.dart';
 
 class PanelAccessPasswordDelegates {
@@ -375,12 +376,10 @@ Future<void> showPanelAccessPasswordPopup({
                           await delegates.afterBulkApplyAccessGranted?.call();
                         } catch (e, _) {
                           if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  'Could not apply configuration: $e',
-                                ),
-                              ),
+                            showAppNotice(
+                              context,
+                              message: 'Could not apply configuration: $e',
+                              backgroundColor: ColorConstants.primary,
                             );
                           }
                         } finally {
@@ -413,12 +412,10 @@ Future<void> showPanelAccessPasswordPopup({
                           }
                         } catch (e, _) {
                           if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  'Could not download configuration: $e',
-                                ),
-                              ),
+                            showAppNotice(
+                              context,
+                              message: 'Could not download configuration: $e',
+                              backgroundColor: ColorConstants.primary,
                             );
                           }
                         } finally {

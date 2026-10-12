@@ -8,6 +8,7 @@ import 'package:Technoswitch/features/sites/models/site_args.dart';
 import 'package:Technoswitch/features/sites/views/site_screen.dart';
 import 'package:Technoswitch/models/site_model.dart';
 import 'package:Technoswitch/utils/constants/color_constants.dart';
+import 'package:Technoswitch/widgets/common/app_notice.dart';
 import 'package:Technoswitch/utils/site_service.dart';
 
 mixin SimpleSiteCreationUiDelegateMixin<T extends StatefulWidget> on State<T>
@@ -32,11 +33,10 @@ mixin SimpleSiteCreationUiDelegateMixin<T extends StatefulWidget> on State<T>
   @override
   void showSuccessSnackBar(String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: ColorConstants.success,
-      ),
+    showAppNotice(
+      context,
+      message: message,
+      backgroundColor: ColorConstants.success,
     );
   }
 

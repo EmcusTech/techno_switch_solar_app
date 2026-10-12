@@ -17,6 +17,7 @@ import 'package:Technoswitch/features/logs/views/log_retrieval_loading_screen.da
 import 'package:Technoswitch/features/scan/bindings/scan_binding.dart';
 import 'package:Technoswitch/features/scan/controllers/scan_controller.dart';
 import 'package:Technoswitch/features/scan/controllers/scan_ui_delegate.dart';
+import 'package:Technoswitch/widgets/common/app_notice.dart';
 import 'package:Technoswitch/features/scan/models/scan_flow_args.dart';
 import 'package:Technoswitch/features/scan/views/scanned_screen.dart';
 import 'package:Technoswitch/features/scan/views/scanning_screen.dart';
@@ -60,9 +61,7 @@ mixin ScanUiDelegateMixin<T extends StatefulWidget> on State<T>
   @override
   void showSnackBar(String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(
-      uiContext,
-    ).showSnackBar(SnackBar(content: Text(message)));
+    showAppNotice(uiContext, message: message);
   }
 
   @override

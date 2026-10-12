@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:Technoswitch/utils/constants/asset_constants.dart';
@@ -12,14 +14,20 @@ class SiteShell extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [ColorConstants.scaffoldGradientTop, ColorConstants.white],
-        ),
+        color: ColorConstants.backgroundSubtle,
+        // gradient: LinearGradient(
+        //   begin: Alignment.topCenter,
+        //   end: Alignment.bottomCenter,
+        //   colors: [ColorConstants.scaffoldGradientTop, ColorConstants.white],
+        // ),
       ),
       child: Stack(
-        children: [SvgPicture.asset(AssetConstants.background1), child],
+        children: [
+          Platform.isWindows
+              ? SizedBox()
+              : SvgPicture.asset(AssetConstants.background1),
+          child,
+        ],
       ),
     );
   }

@@ -4,6 +4,7 @@ import 'dart:async';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:win_ble/win_ble.dart';
+import 'package:Technoswitch/widgets/common/app_notice.dart';
 
 class DeviceInfo extends StatefulWidget {
   final BleDevice device;
@@ -27,30 +28,26 @@ class _DeviceInfoState extends State<DeviceInfo> {
 
   final _snackbarDuration = const Duration(milliseconds: 700);
 
-  void showSuccess(String value) => ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(
-      content: Text(value),
-      backgroundColor: Colors.green,
-      duration: _snackbarDuration,
-    ),
+  void showSuccess(String value) => showAppNotice(
+    context,
+    message: value,
+    backgroundColor: Colors.green,
+    duration: _snackbarDuration,
   );
 
-  void showError(String value) => ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(
-      content: Text(value),
-      backgroundColor: Colors.red,
-      duration: _snackbarDuration,
-    ),
+  void showError(String value) => showAppNotice(
+    context,
+    message: value,
+    backgroundColor: Colors.red,
+    duration: _snackbarDuration,
   );
 
-  void showNotification(String value) =>
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(value),
-          backgroundColor: Colors.blue,
-          duration: _snackbarDuration,
-        ),
-      );
+  void showNotification(String value) => showAppNotice(
+    context,
+    message: value,
+    backgroundColor: Colors.blue,
+    duration: _snackbarDuration,
+  );
 
   connect(String address) async {
     try {

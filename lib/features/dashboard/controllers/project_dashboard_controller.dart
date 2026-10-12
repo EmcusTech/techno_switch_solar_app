@@ -72,6 +72,9 @@ class ProjectDashboardController extends GetxController {
     null,
   );
   final ValueNotifier<String?> selectedWindowsTile = ValueNotifier(null);
+
+  /// Demo sidebar selection. Panel 1 is the connected panel.
+  final ValueNotifier<String> selectedDemoPanelName = ValueNotifier('Panel 1');
   String? pendingWindowsTileLabel;
 
   late final PanelConfigRefreshNotifiers panelRefreshNotifiers;
@@ -164,6 +167,7 @@ class ProjectDashboardController extends GetxController {
     logHistoryRefreshTrigger.dispose();
     windowsDetail.dispose();
     selectedWindowsTile.dispose();
+    selectedDemoPanelName.dispose();
     super.onClose();
   }
 
@@ -306,9 +310,7 @@ class ProjectDashboardController extends GetxController {
 
         final deviceFoundCompleter = Completer<DiscoveredDevice?>();
 
-        scanSubscription = bluetoothService.scanResultsStream.listen((
-          results,
-        ) {
+        scanSubscription = bluetoothService.scanResultsStream.listen((results) {
           for (final result in results) {
             if (result.name == panelName) {
               if (!deviceFoundCompleter.isCompleted) {

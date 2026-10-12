@@ -116,13 +116,25 @@ class _WindowsDashboardAppBarState extends State<WindowsDashboardAppBar>
               //     child: SvgPicture.asset(AssetConstants.shareIcon),
               //   ),
               // ),
-              Text(StringConstants.upload),
+              Text(
+                StringConstants.upload,
+                style: TextStyle(color: Colors.grey),
+              ),
               SizedBox(width: 12),
-              SvgPicture.asset(AssetConstants.winUploadIcon),
+              SvgPicture.asset(
+                AssetConstants.winUploadIcon,
+                color: Colors.grey,
+              ),
               SizedBox(width: 40),
-              Text(StringConstants.download),
+              Text(
+                StringConstants.download,
+                style: TextStyle(color: Colors.grey),
+              ),
               SizedBox(width: 12),
-              SvgPicture.asset(AssetConstants.winDownloadIcon),
+              SvgPicture.asset(
+                AssetConstants.winDownloadIcon,
+                color: Colors.grey,
+              ),
               const SizedBox(width: 40),
               InkWell(
                 onTap: _toggleFullScreen,

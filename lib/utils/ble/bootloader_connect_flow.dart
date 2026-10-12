@@ -10,6 +10,7 @@ import 'package:Technoswitch/features/peripherals/firmware/controllers/firmware_
 import 'package:Technoswitch/utils/constants/ble/ble_msd_utils.dart';
 import 'package:Technoswitch/utils/constants/ble/ble_name_utils.dart';
 import 'package:Technoswitch/utils/constants/ble/bluetooth_service.dart';
+import 'package:Technoswitch/widgets/common/app_notice.dart';
 import 'package:Technoswitch/widgets/dialogs/app_styled_dialogs.dart';
 import 'package:Technoswitch/widgets/dialogs/ble_connecting_dialog.dart';
 import 'package:Technoswitch/utils/constants/color_constants.dart';
@@ -262,10 +263,9 @@ Future<DiscoveredDevice?> resolveBootloaderModeOnConnect({
     await bleController.bleManager.disconnectConnectedDevice();
     onAbort?.call();
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(UiStrings.deviceNotFoundAfterFirmwareUpgradeMessage),
-        ),
+      showAppNotice(
+        context,
+        message: UiStrings.deviceNotFoundAfterFirmwareUpgradeMessage,
       );
     }
     return null;

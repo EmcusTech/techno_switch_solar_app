@@ -25,11 +25,22 @@ class WindowsDashboardPanelHeader extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                BleNameUtils.getDisplayPrefixFromBleName(controller.panelName),
-                style: StyleConstants.black16w700Style,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+              ValueListenableBuilder<String>(
+                valueListenable: controller.selectedDemoPanelName,
+                builder: (context, selectedName, _) {
+                  final title =
+                      selectedName == 'Panel 1'
+                          ? BleNameUtils.getDisplayPrefixFromBleName(
+                            controller.panelName,
+                          )
+                          : selectedName;
+                  return Text(
+                    title,
+                    style: StyleConstants.black16w700Style,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  );
+                },
               ),
               Text(
                 BleNameUtils.getDisplayIdFromBleName(controller.panelName),

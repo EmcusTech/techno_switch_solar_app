@@ -14,7 +14,7 @@ class WindowsSplashContent extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Image.asset(AssetConstants.fullLogo, scale: 2.5),
+          Image.asset(AssetConstants.fullLogo, scale: 3.5),
           Text(
             StringConstants.panelConfigurationTool,
             style: StyleConstants.textDark22w700Style,

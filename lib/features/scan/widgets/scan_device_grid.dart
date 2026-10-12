@@ -17,7 +17,7 @@ class ScanDeviceGrid extends StatelessWidget {
 
   static const int _columns = 3;
   static const double _spacing = 12;
-  static const double _cardWidth = 100;
+  static const double _cardWidth = 120;
   static const double _cardHeight = 130;
 
   @override

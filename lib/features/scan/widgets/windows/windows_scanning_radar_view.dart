@@ -40,21 +40,27 @@ class WindowsScanningRadarView extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              GestureDetector(
-                onTap: () => controller.stopScanning(true),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: ColorConstants.primary,
-                    borderRadius: BorderRadius.circular(28.5),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 20,
-                      horizontal: 40,
-                    ),
-                    child: Text(
-                      StringConstants.stopScanning,
-                      style: StyleConstants.white14w700Style,
+              Align(
+                alignment: Alignment.centerRight,
+                child: Padding(
+                  padding: const EdgeInsets.only(right: 40),
+                  child: InkWell(
+                    onTap: () => controller.stopScanning(true),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: ColorConstants.primary,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 10,
+                          horizontal: 20,
+                        ),
+                        child: Text(
+                          StringConstants.stopScanning,
+                          style: StyleConstants.white14w700Style,
+                        ),
+                      ),
                     ),
                   ),
                 ),

@@ -20,7 +20,7 @@ void main() async {
 
     const windowOptions = WindowOptions(
       center: true,
-      title: 'TechnoSwitch',
+      title: 'Solar',
       size: Size(1280, 720),
       minimumSize: Size(1280, 720),
       titleBarStyle: TitleBarStyle.hidden,

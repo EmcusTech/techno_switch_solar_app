@@ -12,6 +12,7 @@ import 'package:Technoswitch/features/sites/views/site_detail_screen.dart';
 import 'package:Technoswitch/features/sites/widgets/site_confirm_delete_dialog.dart';
 import 'package:Technoswitch/models/panel_model.dart';
 import 'package:Technoswitch/utils/constants/color_constants.dart';
+import 'package:Technoswitch/widgets/common/app_notice.dart';
 import 'package:Technoswitch/utils/constants/string_constants.dart';
 import 'package:Technoswitch/utils/site_service.dart';
 
@@ -46,11 +47,10 @@ mixin SiteUiDelegateMixin<T extends StatefulWidget> on State<T>
   @override
   void showSnackBar(String message, {Color? backgroundColor}) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: backgroundColor ?? ColorConstants.primary,
-      ),
+    showAppNotice(
+      context,
+      message: message,
+      backgroundColor: backgroundColor ?? ColorConstants.primary,
     );
   }
 

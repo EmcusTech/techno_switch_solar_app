@@ -37,6 +37,10 @@ class BleNameUtils {
   static String getDisplayIdFromBleName(String bleName) {
     final trimmed = bleName.trim();
     if (trimmed.isEmpty) return '';
+    final underscoreIndex = trimmed.indexOf('_');
+    if (underscoreIndex != -1 && underscoreIndex < trimmed.length - 1) {
+      return trimmed.substring(underscoreIndex + 1);
+    }
     if (trimmed.length <= 8) return trimmed;
     return trimmed.substring(trimmed.length - 8);
   }

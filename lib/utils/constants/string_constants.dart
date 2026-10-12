@@ -8,7 +8,7 @@ import 'strings/panel_values.dart';
 import 'strings/ui_strings.dart';
 
 abstract final class StringConstants {
-  static const String appTitle = "Technoswitch";
+  static const String appTitle = "Solar";
 
   //Errors and Validation
   static const String convError =
@@ -222,6 +222,7 @@ abstract final class StringConstants {
   static const String boot = "Boot";
   static const String bt = "BT_";
   static const String buildingName = "Building Name";
+  static const String byConnectingBluetooth = "By Connecting Bluetooth";
   static const String bulkApplyTimedOut = "Bulk apply timed out";
   static const String callSupport = "Call Support";
   static const String cancel = UiStrings.cancelButton;
@@ -607,6 +608,7 @@ abstract final class StringConstants {
   static const String number = "Number";
   static const String numberCannotBeEmpty = "Number cannot be empty";
   static const String off = "Off";
+  static const String offline = "Offline";
   static const String offlineprovisioned = "panelId";
   static const String ok = "OK";
   static const String ok2 = "Ok";
@@ -925,7 +927,7 @@ abstract final class StringConstants {
   static const String useMobileDateTime = "Use Mobile Date & Time";
   static const String usemobiletime = "useMobileTime";
   static const String userManual = "User Manual";
-  static const String testingVersion = "v0.0.52 -- testing version";
+  static const String testingVersion = "v1.0.0 -- testing version";
   static const String validating = "Validating";
   static const String validating2 = "Validating...";
   static const String verifyingAccess = "Verifying access";

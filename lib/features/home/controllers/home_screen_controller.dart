@@ -3,8 +3,12 @@ import 'package:Technoswitch/ble/ble_manager.dart';
 import 'package:Technoswitch/ble/controller/ble_log_controller.dart';
 import 'package:Technoswitch/features/home/controllers/home_screen_ui_delegate.dart';
 import 'package:Technoswitch/features/scan/models/scan_flow_args.dart';
+import 'package:Technoswitch/features/sites/widgets/site_confirm_delete_dialog.dart';
 import 'package:Technoswitch/utils/app/app_services.dart';
 import 'package:Technoswitch/utils/app/app_state.dart';
+import 'package:Technoswitch/utils/constants/color_constants.dart';
+import 'package:Technoswitch/widgets/common/app_notice.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
 import 'package:Technoswitch/utils/log_retrieval_service.dart';
 import 'package:Technoswitch/utils/site_service.dart';
 
@@ -148,5 +152,44 @@ class HomeScreenController extends GetxController {
     if (deleted == true) {
       await refreshSites();
     }
+  }
+
+  Future<void> confirmDeleteSite(SiteWithLogCount siteWithLogCount) async {
+    final ui = _ui;
+    final site = siteWithLogCount.site;
+    if (ui == null || !ui.isMounted || site.id == null) return;
+
+    final shouldDelete = await SiteConfirmDeleteDialog.show(
+      ui.uiContext,
+      title: StringConstants.deleteSite,
+      message: UiStrings.deleteSiteConfirmMessage(site.siteName),
+      confirmLabel: StringConstants.delete,
+    );
+    if (shouldDelete != true || _ui == null || !_ui!.isMounted) return;
+
+    try {
+      final deleted = await _siteService.deleteSite(site.id!);
+      if (_ui == null || !_ui!.isMounted) return;
+      if (deleted) {
+        _showSnackBar(StringConstants.siteDeletedMessage(site.siteName));
+        await refreshSites();
+      } else {
+        _showSnackBar(StringConstants.unableToDeleteSite);
+      }
+    } catch (error) {
+      if (_ui?.isMounted == true) {
+        _showSnackBar('${StringConstants.errorDeletingSitePrefix}$error');
+      }
+    }
+  }
+
+  void _showSnackBar(String message) {
+    final ui = _ui;
+    if (ui == null || !ui.isMounted) return;
+    showAppNotice(
+      ui.uiContext,
+      message: message,
+      backgroundColor: ColorConstants.primary,
+    );
   }
 }

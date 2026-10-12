@@ -17,6 +17,7 @@ abstract final class DashboardTileRegistry {
       ),
       DashboardTileConfig(
         label: StringConstants.inputs,
+        isDisabled: !DemoBle.enabled,
         iconPath: AssetConstants.peripheralInputIcon,
         onTap: () => ProjectDashboardTileActions.openInputs(controller),
       ),
@@ -79,6 +80,7 @@ abstract final class DashboardTileRegistry {
       ),
       DashboardTileConfig(
         label: StringConstants.serviceDue,
+        isDisabled: !DemoBle.enabled,
         iconPath: AssetConstants.panelActionServiceDueIcon,
         onTap: () => ProjectDashboardTileActions.openServiceDue(controller),
       ),
@@ -90,12 +92,14 @@ abstract final class DashboardTileRegistry {
       ),
       DashboardTileConfig(
         label: StringConstants.panelInfo,
+        isDisabled: !DemoBle.enabled,
         iconPath: AssetConstants.panelActionPanelInfoIcon,
         onTap: () => ProjectDashboardTileActions.openPanelInfo(controller),
       ),
       DashboardTileConfig(
         label: 'General',
         iconPath: AssetConstants.panelActionGeneralModuleIcon,
+        isDisabled: !DemoBle.enabled,
         iconHeight: 36,
         iconWidth: 36,
         onTap: () => ProjectDashboardTileActions.openGeneralModule(controller),

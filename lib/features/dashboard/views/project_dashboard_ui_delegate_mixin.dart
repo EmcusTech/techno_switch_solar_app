@@ -34,6 +34,7 @@ import 'package:Technoswitch/features/peripherals/test_mode/sheets/test_mode_sou
 import 'package:Technoswitch/features/peripherals/walk_test/sheets/walk_test_zone_bottomsheet.dart';
 import 'package:Technoswitch/features/peripherals/zones/sheets/zone_mode_bottomsheet.dart';
 import 'package:Technoswitch/features/scan/models/scan_type.dart';
+import 'package:Technoswitch/widgets/common/app_notice.dart';
 import 'package:Technoswitch/utils/panel_config/panel_access_password_popup.dart';
 import 'package:Technoswitch/utils/panel_config/panel_config_bulk_sync.dart';
 import 'package:Technoswitch/utils/panel_config/input_setup_ble_flow.dart';
@@ -92,8 +93,10 @@ mixin ProjectDashboardUiDelegateMixin<T extends StatefulWidget> on State<T>
   @override
   void showSnackBar(String message, {Color? backgroundColor}) {
     if (!mounted) return;
-    ScaffoldMessenger.of(uiContext).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: backgroundColor),
+    showAppNotice(
+      uiContext,
+      message: message,
+      backgroundColor: backgroundColor,
     );
   }
 
@@ -154,67 +157,67 @@ mixin ProjectDashboardUiDelegateMixin<T extends StatefulWidget> on State<T>
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 420),
               child: Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: ColorConstants.white,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 64,
-                    height: 64,
-                    decoration: const BoxDecoration(
-                      color: ColorConstants.errorIconBackground,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Center(
-                      child: Icon(
-                        Icons.bluetooth_disabled,
-                        color: ColorConstants.primary,
-                        size: 32,
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: ColorConstants.white,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 64,
+                      height: 64,
+                      decoration: const BoxDecoration(
+                        color: ColorConstants.errorIconBackground,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Center(
+                        child: Icon(
+                          Icons.bluetooth_disabled,
+                          color: ColorConstants.primary,
+                          size: 32,
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    StringConstants.bluetoothDisconnected,
-                    style: StyleConstants.textDark18w700Style,
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    UiStrings.connectionLostUseConnectMessage,
-                    style: StyleConstants.textGray14w400Style,
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 20),
-                  SizedBox(
-                    width: double.infinity,
-                    child: GestureDetector(
-                      onTap: () {
-                        dashboardController
-                            .markUnexpectedDisconnectDialogClosed();
-                        Navigator.of(dialogContext).pop();
-                      },
-                      child: Container(
-                        height: 48,
-                        decoration: BoxDecoration(
-                          color: ColorConstants.primary,
-                          borderRadius: BorderRadius.circular(24),
-                        ),
-                        child: Center(
-                          child: Text(
-                            StringConstants.ok,
-                            style: StyleConstants.white16w600Style,
+                    const SizedBox(height: 16),
+                    Text(
+                      StringConstants.bluetoothDisconnected,
+                      style: StyleConstants.textDark18w700Style,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      UiStrings.connectionLostUseConnectMessage,
+                      style: StyleConstants.textGray14w400Style,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 20),
+                    SizedBox(
+                      width: double.infinity,
+                      child: GestureDetector(
+                        onTap: () {
+                          dashboardController
+                              .markUnexpectedDisconnectDialogClosed();
+                          Navigator.of(dialogContext).pop();
+                        },
+                        child: Container(
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: ColorConstants.primary,
+                            borderRadius: BorderRadius.circular(24),
+                          ),
+                          child: Center(
+                            child: Text(
+                              StringConstants.ok,
+                              style: StyleConstants.white16w600Style,
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                ],
-              ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -417,93 +420,95 @@ mixin ProjectDashboardUiDelegateMixin<T extends StatefulWidget> on State<T>
               ),
               child: connectFlowDialogFrame(
                 child: Container(
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: ColorConstants.white,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Column(
-                  mainAxisAlignment:
-                      connectFlowDialogIsFixedSize
-                          ? MainAxisAlignment.center
-                          : MainAxisAlignment.start,
-                  mainAxisSize:
-                      connectFlowDialogIsFixedSize
-                          ? MainAxisSize.max
-                          : MainAxisSize.min,
-                  children: [
-                    // Icon
-                    Container(
-                      width: 64,
-                      height: 64,
-                      decoration: BoxDecoration(
-                        color:
-                            handshakeComplete && !maxBleConnectionRetriesReached
-                                ? Colors.green.withValues(alpha: 0.1)
-                                : ColorConstants.errorIconBackground,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Center(
-                        child:
-                            handshakeComplete && !maxBleConnectionRetriesReached
-                                ? Icon(
-                                  Icons.check_circle,
-                                  size: 32,
-                                  color: Colors.green,
-                                )
-                                : Lottie.asset(
-                                  AssetConstants.bleConnectingJson,
-                                  animate: !maxBleConnectionRetriesReached,
-                                ),
-                      ),
-                    ),
-                    SizedBox(height: 16),
-                    Text(
-                      maxBleConnectionRetriesReached
-                          ? StringConstants.maxConnectionRetriesReached
-                          : handshakeComplete
-                          ? 'Device Connected!'
-                          : isConnected
-                          ? 'Establishing secure connection...'
-                          : StringConstants.establishingSecureConnection,
-                      style: StyleConstants.textDark20w700Style,
-                      textAlign: TextAlign.center,
-                    ),
-                    SizedBox(height: 8),
-                    // Subtitle
-                    Text(
-                      handshakeComplete && !maxBleConnectionRetriesReached
-                          ? StringConstants.ready
-                          : maxBleConnectionRetriesReached
-                          ? StringConstants.pleaseTryConnectingAgain
-                          : isConnected
-                          ? StringConstants.encryptingAndAuthenticating
-                          : 'Please wait while we connect to ${device.name}',
-                      style: StyleConstants.textMuted14w400Style,
-                      textAlign: TextAlign.center,
-                    ),
-                    SizedBox(height: 16),
-                    if (maxBleConnectionRetriesReached)
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: ColorConstants.primary,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(24.5),
-                            ),
-                          ),
-                          onPressed: () {
-                            Navigator.of(dialogContext).pop();
-                          },
-                          child: Text(
-                            StringConstants.ok,
-                            style: StyleConstants.white14w600Style,
-                          ),
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: ColorConstants.white,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Column(
+                    mainAxisAlignment:
+                        connectFlowDialogIsFixedSize
+                            ? MainAxisAlignment.center
+                            : MainAxisAlignment.start,
+                    mainAxisSize:
+                        connectFlowDialogIsFixedSize
+                            ? MainAxisSize.max
+                            : MainAxisSize.min,
+                    children: [
+                      // Icon
+                      Container(
+                        width: 64,
+                        height: 64,
+                        decoration: BoxDecoration(
+                          color:
+                              handshakeComplete &&
+                                      !maxBleConnectionRetriesReached
+                                  ? Colors.green.withValues(alpha: 0.1)
+                                  : ColorConstants.errorIconBackground,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Center(
+                          child:
+                              handshakeComplete &&
+                                      !maxBleConnectionRetriesReached
+                                  ? Icon(
+                                    Icons.check_circle,
+                                    size: 32,
+                                    color: Colors.green,
+                                  )
+                                  : Lottie.asset(
+                                    AssetConstants.bleConnectingJson,
+                                    animate: !maxBleConnectionRetriesReached,
+                                  ),
                         ),
                       ),
-                  ],
-                ),
+                      SizedBox(height: 16),
+                      Text(
+                        maxBleConnectionRetriesReached
+                            ? StringConstants.maxConnectionRetriesReached
+                            : handshakeComplete
+                            ? 'Device Connected!'
+                            : isConnected
+                            ? 'Establishing secure connection...'
+                            : StringConstants.establishingSecureConnection,
+                        style: StyleConstants.textDark20w700Style,
+                        textAlign: TextAlign.center,
+                      ),
+                      SizedBox(height: 8),
+                      // Subtitle
+                      Text(
+                        handshakeComplete && !maxBleConnectionRetriesReached
+                            ? StringConstants.ready
+                            : maxBleConnectionRetriesReached
+                            ? StringConstants.pleaseTryConnectingAgain
+                            : isConnected
+                            ? StringConstants.encryptingAndAuthenticating
+                            : 'Please wait while we connect to ${device.name}',
+                        style: StyleConstants.textMuted14w400Style,
+                        textAlign: TextAlign.center,
+                      ),
+                      SizedBox(height: 16),
+                      if (maxBleConnectionRetriesReached)
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: ColorConstants.primary,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(24.5),
+                              ),
+                            ),
+                            onPressed: () {
+                              Navigator.of(dialogContext).pop();
+                            },
+                            child: Text(
+                              StringConstants.ok,
+                              style: StyleConstants.white14w600Style,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
               ),
             );
@@ -600,12 +605,9 @@ mixin ProjectDashboardUiDelegateMixin<T extends StatefulWidget> on State<T>
     );
     if (refreshed == null || !mounted) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              UiStrings.deviceNotFoundAfterFirmwareUpgradeReconnectMessage,
-            ),
-          ),
+        showAppNotice(
+          context,
+          message: UiStrings.deviceNotFoundAfterFirmwareUpgradeReconnectMessage,
         );
       }
       return;
@@ -639,103 +641,105 @@ mixin ProjectDashboardUiDelegateMixin<T extends StatefulWidget> on State<T>
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 420),
             child: Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: ColorConstants.white,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 64,
-                  height: 64,
-                  decoration: BoxDecoration(
-                    color: ColorConstants.errorIconBackground,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Center(
-                    child: Icon(
-                      Icons.bluetooth_disabled,
-                      color: ColorConstants.primary,
-                      size: 32,
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: ColorConstants.white,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 64,
+                    height: 64,
+                    decoration: BoxDecoration(
+                      color: ColorConstants.errorIconBackground,
+                      shape: BoxShape.circle,
                     ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  StringConstants.deviceNotConnected,
-                  style: StyleConstants.textDark18w700Style,
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  StringConstants
-                      .bleDeviceIsNotConnectedTapOnConnectToConnectAgain,
-                  style: StyleConstants.textGray14w400Style,
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 20),
-                Row(
-                  children: [
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () {
-                          Navigator.of(context).pop();
-                        },
-                        child: Container(
-                          height: 48,
-                          decoration: BoxDecoration(
-                            color: ColorConstants.buttonSecondaryBackground,
-                            borderRadius: BorderRadius.circular(24),
-                            border: Border.all(
-                              color: ColorConstants.borderLight,
-                              width: 1,
-                            ),
-                          ),
-                          child: Center(
-                            child: Text(
-                              'Close',
-                              style: StyleConstants.textGray16w600Style,
-                            ),
-                          ),
-                        ),
+                    child: const Center(
+                      child: Icon(
+                        Icons.bluetooth_disabled,
+                        color: ColorConstants.primary,
+                        size: 32,
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () async {
-                          final navigator = Navigator.of(context);
-                          navigator.pop(); // close dialog
-                          await dashboardController.connectToDeviceByName();
-                        },
-                        child: Container(
-                          height: 48,
-                          decoration: BoxDecoration(
-                            color: ColorConstants.primary,
-                            borderRadius: BorderRadius.circular(24),
-                            boxShadow: [
-                              BoxShadow(
-                                color: ColorConstants.primary.withOpacity(0.3),
-                                blurRadius: 8,
-                                offset: const Offset(0, 4),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    StringConstants.deviceNotConnected,
+                    style: StyleConstants.textDark18w700Style,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    StringConstants
+                        .bleDeviceIsNotConnectedTapOnConnectToConnectAgain,
+                    style: StyleConstants.textGray14w400Style,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () {
+                            Navigator.of(context).pop();
+                          },
+                          child: Container(
+                            height: 48,
+                            decoration: BoxDecoration(
+                              color: ColorConstants.buttonSecondaryBackground,
+                              borderRadius: BorderRadius.circular(24),
+                              border: Border.all(
+                                color: ColorConstants.borderLight,
+                                width: 1,
                               ),
-                            ],
-                          ),
-                          child: Center(
-                            child: Text(
-                              'Connect',
-                              style: StyleConstants.white16w600Style,
+                            ),
+                            child: Center(
+                              child: Text(
+                                'Close',
+                                style: StyleConstants.textGray16w600Style,
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () async {
+                            final navigator = Navigator.of(context);
+                            navigator.pop(); // close dialog
+                            await dashboardController.connectToDeviceByName();
+                          },
+                          child: Container(
+                            height: 48,
+                            decoration: BoxDecoration(
+                              color: ColorConstants.primary,
+                              borderRadius: BorderRadius.circular(24),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: ColorConstants.primary.withOpacity(
+                                    0.3,
+                                  ),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Center(
+                              child: Text(
+                                'Connect',
+                                style: StyleConstants.white16w600Style,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         );
@@ -775,87 +779,87 @@ mixin ProjectDashboardUiDelegateMixin<T extends StatefulWidget> on State<T>
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 420),
             child: Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: ColorConstants.white,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 64,
-                  height: 64,
-                  decoration: BoxDecoration(
-                    color: ColorConstants.successBackgroundLight,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Center(
-                    child: SvgPicture.asset(
-                      AssetConstants.checkCircleIcon,
-                      height: 40,
-                      width: 40,
-                      fit: BoxFit.contain,
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: ColorConstants.white,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 64,
+                    height: 64,
+                    decoration: BoxDecoration(
+                      color: ColorConstants.successBackgroundLight,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(
+                      child: SvgPicture.asset(
+                        AssetConstants.checkCircleIcon,
+                        height: 40,
+                        width: 40,
+                        fit: BoxFit.contain,
+                      ),
                     ),
                   ),
-                ),
-                SizedBox(height: 16),
-                Text(
-                  message ==
-                          StringConstants
-                              .liveDataIsBeingStreamedFromTheDeviceInRealTime
-                      ? "Live Diagnostics Active"
-                      : "$message Downloaded",
-                  style: StyleConstants.textDark20w700Style,
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: 8),
-                Visibility(
-                  visible:
-                      !dashboardController
-                          .ble
-                          .bleProcess
-                          .isLbusFetchHasErrors
-                          .value,
-                  child: Text(
+                  SizedBox(height: 16),
+                  Text(
                     message ==
                             StringConstants
                                 .liveDataIsBeingStreamedFromTheDeviceInRealTime
-                        ? StringConstants
-                            .theMessageHasBeenSuccessfullyDownloadedFromTheDevice
-                        : 'The $message has been successfully downloaded from the device.',
-                    style: StyleConstants.textMuted14w400Style,
+                        ? "Live Diagnostics Active"
+                        : "$message Downloaded",
+                    style: StyleConstants.textDark20w700Style,
                     textAlign: TextAlign.center,
                   ),
-                ),
-                Visibility(
-                  visible:
-                      dashboardController
-                          .ble
-                          .bleProcess
-                          .isLbusFetchHasErrors
-                          .value,
-                  child: Text(
-                    StringConstants.thereWasAnErrorDownloading,
-                    style: StyleConstants.textMuted14w400Style,
-                    textAlign: TextAlign.center,
+                  SizedBox(height: 8),
+                  Visibility(
+                    visible:
+                        !dashboardController
+                            .ble
+                            .bleProcess
+                            .isLbusFetchHasErrors
+                            .value,
+                    child: Text(
+                      message ==
+                              StringConstants
+                                  .liveDataIsBeingStreamedFromTheDeviceInRealTime
+                          ? StringConstants
+                              .theMessageHasBeenSuccessfullyDownloadedFromTheDevice
+                          : 'The $message has been successfully downloaded from the device.',
+                      style: StyleConstants.textMuted14w400Style,
+                      textAlign: TextAlign.center,
+                    ),
                   ),
-                ),
-                Visibility(
-                  visible:
-                      dashboardController
-                          .ble
-                          .bleProcess
-                          .isLbusFetchHasErrors
-                          .value,
-                  child: Text(
-                    'L-Bus ${dashboardController.ble.bleProcess.lbusFetchErrors.value.join(", ")} - Comms Fault',
-                    style: StyleConstants.primary14w400Style,
-                    textAlign: TextAlign.center,
+                  Visibility(
+                    visible:
+                        dashboardController
+                            .ble
+                            .bleProcess
+                            .isLbusFetchHasErrors
+                            .value,
+                    child: Text(
+                      StringConstants.thereWasAnErrorDownloading,
+                      style: StyleConstants.textMuted14w400Style,
+                      textAlign: TextAlign.center,
+                    ),
                   ),
-                ),
-              ],
-            ),
+                  Visibility(
+                    visible:
+                        dashboardController
+                            .ble
+                            .bleProcess
+                            .isLbusFetchHasErrors
+                            .value,
+                    child: Text(
+                      'L-Bus ${dashboardController.ble.bleProcess.lbusFetchErrors.value.join(", ")} - Comms Fault',
+                      style: StyleConstants.primary14w400Style,
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         );
@@ -1158,44 +1162,45 @@ mixin ProjectDashboardUiDelegateMixin<T extends StatefulWidget> on State<T>
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 420),
             child: Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: ColorConstants.white,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 64,
-                  height: 64,
-                  decoration: BoxDecoration(
-                    color: ColorConstants.successBackgroundLight,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Center(
-                    child: SvgPicture.asset(
-                      AssetConstants.checkCircleIcon,
-                      height: 40,
-                      width: 40,
-                      fit: BoxFit.contain,
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: ColorConstants.white,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 64,
+                    height: 64,
+                    decoration: BoxDecoration(
+                      color: ColorConstants.successBackgroundLight,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(
+                      child: SvgPicture.asset(
+                        AssetConstants.checkCircleIcon,
+                        height: 40,
+                        width: 40,
+                        fit: BoxFit.contain,
+                      ),
                     ),
                   ),
-                ),
-                SizedBox(height: 16),
-                Text(
-                  StringConstants.liveDiagnosticsStopped,
-                  style: StyleConstants.textDark20w700Style,
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: 8),
-                Text(
-                  StringConstants.liveDataStreamingFromTheDeviceHasBeenStopped,
-                  style: StyleConstants.textMuted14w400Style,
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
+                  SizedBox(height: 16),
+                  Text(
+                    StringConstants.liveDiagnosticsStopped,
+                    style: StyleConstants.textDark20w700Style,
+                    textAlign: TextAlign.center,
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    StringConstants
+                        .liveDataStreamingFromTheDeviceHasBeenStopped,
+                    style: StyleConstants.textMuted14w400Style,
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
             ),
           ),
         );

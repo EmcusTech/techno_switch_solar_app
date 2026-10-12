@@ -13,6 +13,7 @@ import 'package:Technoswitch/features/sites/models/site_args.dart';
 import 'package:Technoswitch/features/sites/views/simple_site_creation_screen.dart';
 import 'package:Technoswitch/models/log_model.dart';
 import 'package:Technoswitch/utils/app/navigation_service.dart';
+import 'package:Technoswitch/widgets/common/app_notice.dart';
 import 'package:Technoswitch/utils/constants/color_constants.dart';
 import 'package:Technoswitch/utils/constants/string_constants.dart';
 import 'package:Technoswitch/widgets/dialogs/site_creation_dialog.dart'
@@ -50,9 +51,7 @@ mixin LogUiDelegateMixin<T extends StatefulWidget> on State<T>
   @override
   void showSnackBar(String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(
-      uiContext,
-    ).showSnackBar(SnackBar(content: Text(message)));
+    showAppNotice(uiContext, message: message);
   }
 
   @override

@@ -5,6 +5,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:Technoswitch/utils/constants/color_constants.dart';
 import 'package:Technoswitch/utils/constants/string_constants.dart';
+import 'package:Technoswitch/widgets/common/app_notice.dart';
 import 'package:Technoswitch/widgets/windows/windows_app_menu.dart';
 import 'package:window_manager/window_manager.dart';
 
@@ -39,7 +40,26 @@ class _WindowsAppFrameState extends State<WindowsAppFrame> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             if (!fullScreen) const WindowsAppMenuBar(),
-            Expanded(child: widget.child),
+            Expanded(
+              child: ValueListenableBuilder<int>(
+                valueListenable: windowsNoticeRevision,
+                builder: (context, _, child) {
+                  return Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      child!,
+                      if (hasWindowsNotices)
+                        const Positioned(
+                          top: 16,
+                          right: 16,
+                          child: WindowsNoticeLayer(),
+                        ),
+                    ],
+                  );
+                },
+                child: widget.child,
+              ),
+            ),
           ],
         );
       },

@@ -6,100 +6,118 @@ import 'package:Technoswitch/utils/constants/string_constants.dart';
 import 'package:Technoswitch/widgets/common/peripheral_sheet_chrome.dart';
 
 class SiteCreationForm extends StatelessWidget {
-  const SiteCreationForm({super.key, required this.model});
+  const SiteCreationForm({
+    super.key,
+    required this.model,
+    this.title = StringConstants.siteCreation,
+    this.fullWidthDescription = false,
+  });
 
   final SiteCreationPageModel model;
+  final String title;
+
+  /// Places the description under the grid at the full pane width.
+  final bool fullWidthDescription;
 
   @override
   Widget build(BuildContext context) {
     final errors = model.validationErrors;
+    final description = _descriptionField(errors);
+    final fields = <Widget>[
+      _field(
+        CreateProjectValidatedField(
+          label: StringConstants.siteName,
+          controller: model.siteNameController,
+          hintText: UiStrings.enterSiteNameHint,
+          validationKey: StringConstants.sitename,
+          validationErrors: errors,
+          isRequired: true,
+        ),
+      ),
+      _field(
+        CreateProjectValidatedField(
+          label: StringConstants.installerName,
+          controller: model.installerNameController,
+          hintText: UiStrings.enterInstallerNameHint,
+          validationKey: StringConstants.installername,
+          validationErrors: errors,
+        ),
+      ),
+      _field(
+        CreateProjectValidatedField(
+          label: StringConstants.companyName,
+          controller: model.companyNameController,
+          hintText: UiStrings.enterCompanyNameHint,
+          validationKey: StringConstants.companyname,
+          validationErrors: errors,
+        ),
+      ),
+      _field(
+        CreateProjectValidatedField(
+          label: StringConstants.saqccRegistrationNumber,
+          controller: model.saqccRegNumberController,
+          hintText: UiStrings.enterSaqccRegistrationNumberHint,
+          validationKey: StringConstants.saqccregnumber,
+          validationErrors: errors,
+          isRequired: true,
+        ),
+      ),
+      _field(
+        CreateProjectValidatedField(
+          label: StringConstants.buildingName,
+          controller: model.buildingNameController,
+          hintText: UiStrings.enterBuildingNameHint,
+          validationKey: StringConstants.buildingname,
+          validationErrors: errors,
+        ),
+      ),
+      _field(
+        CreateProjectValidatedField(
+          label: StringConstants.installerContactNumber,
+          controller: model.installerContactNumberController,
+          hintText: UiStrings.enterInstallerContactNumberHint,
+          validationKey: StringConstants.installercontactnumber,
+          validationErrors: errors,
+        ),
+      ),
+      _field(
+        CreateProjectValidatedField(
+          label: StringConstants.installerEmail,
+          controller: model.installerEmailController,
+          hintText: UiStrings.enterInstallerEmailHint,
+          validationKey: StringConstants.installeremail,
+          validationErrors: errors,
+        ),
+      ),
+      if (!fullWidthDescription) description,
+    ];
 
     return CreateProjectStepFormShell(
-      title: StringConstants.siteCreation,
-      child: peripheralSheetFieldGrid([
-        _field(
-          CreateProjectValidatedField(
-            label: StringConstants.siteName,
-            controller: model.siteNameController,
-            hintText: UiStrings.enterSiteNameHint,
-            validationKey: StringConstants.sitename,
-            validationErrors: errors,
-            isRequired: true,
-          ),
-        ),
-        _field(
-          CreateProjectValidatedField(
-            label: StringConstants.installerName,
-            controller: model.installerNameController,
-            hintText: UiStrings.enterInstallerNameHint,
-            validationKey: StringConstants.installername,
-            validationErrors: errors,
-          ),
-        ),
-        _field(
-          CreateProjectValidatedField(
-            label: StringConstants.companyName,
-            controller: model.companyNameController,
-            hintText: UiStrings.enterCompanyNameHint,
-            validationKey: StringConstants.companyname,
-            validationErrors: errors,
-          ),
-        ),
-        _field(
-          CreateProjectValidatedField(
-            label: StringConstants.saqccRegistrationNumber,
-            controller: model.saqccRegNumberController,
-            hintText: UiStrings.enterSaqccRegistrationNumberHint,
-            validationKey: StringConstants.saqccregnumber,
-            validationErrors: errors,
-            isRequired: true,
-          ),
-        ),
-        _field(
-          CreateProjectValidatedField(
-            label: StringConstants.buildingName,
-            controller: model.buildingNameController,
-            hintText: UiStrings.enterBuildingNameHint,
-            validationKey: StringConstants.buildingname,
-            validationErrors: errors,
-          ),
-        ),
-        _field(
-          CreateProjectValidatedField(
-            label: StringConstants.installerContactNumber,
-            controller: model.installerContactNumberController,
-            hintText: UiStrings.enterInstallerContactNumberHint,
-            validationKey: StringConstants.installercontactnumber,
-            validationErrors: errors,
-          ),
-        ),
-        _field(
-          CreateProjectValidatedField(
-            label: StringConstants.installerEmail,
-            controller: model.installerEmailController,
-            hintText: UiStrings.enterInstallerEmailHint,
-            validationKey: StringConstants.installeremail,
-            validationErrors: errors,
-          ),
-        ),
-        _field(
-          CreateProjectValidatedField(
-            label: StringConstants.siteDescription,
-            controller: model.siteDescriptionController,
-            hintText: UiStrings.enterSiteDescriptionHint,
-            validationKey: StringConstants.sitedescription,
-            validationErrors: errors,
-            maxLines: 5,
-          ),
-        ),
-      ]),
+      title: title,
+      child:
+          fullWidthDescription
+              ? Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [peripheralSheetFieldGrid(fields), description],
+              )
+              : peripheralSheetFieldGrid(fields),
+    );
+  }
+
+  Widget _descriptionField(Map<String, String>? errors) {
+    return _field(
+      CreateProjectValidatedField(
+        label: StringConstants.siteDescription,
+        controller: model.siteDescriptionController,
+        hintText: UiStrings.enterSiteDescriptionHint,
+        validationKey: StringConstants.sitedescription,
+        validationErrors: errors,
+        maxLines: 5,
+      ),
     );
   }
 
   Widget _field(Widget child) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 20),
-      child: child,
-    );
+    return Padding(padding: const EdgeInsets.only(bottom: 20), child: child);
   }
 }

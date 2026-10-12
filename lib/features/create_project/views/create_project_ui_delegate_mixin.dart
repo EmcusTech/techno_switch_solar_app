@@ -20,6 +20,7 @@ import 'package:Technoswitch/utils/constants/ble/ble_name_utils.dart';
 import 'package:Technoswitch/utils/constants/color_constants.dart';
 import 'package:Technoswitch/utils/constants/string_constants.dart';
 import 'package:Technoswitch/utils/site_service.dart';
+import 'package:Technoswitch/widgets/common/app_notice.dart';
 import 'package:Technoswitch/widgets/dialogs/app_styled_dialogs.dart';
 
 mixin CreateProjectUiDelegateMixin<T extends StatefulWidget> on State<T>
@@ -57,13 +58,12 @@ mixin CreateProjectUiDelegateMixin<T extends StatefulWidget> on State<T>
   @override
   void showSnackBar(String message, {required bool isError}) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor:
-            isError ? ColorConstants.primary : ColorConstants.success,
-        duration: const Duration(seconds: 2),
-      ),
+    showAppNotice(
+      context,
+      message: message,
+      backgroundColor:
+          isError ? ColorConstants.primary : ColorConstants.success,
+      duration: const Duration(seconds: 2),
     );
   }
 
