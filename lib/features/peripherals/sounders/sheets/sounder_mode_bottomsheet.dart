@@ -31,10 +31,11 @@ class SounderModeBottomSheet extends StatefulWidget {
 }
 
 class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late final SounderModeController controller;
 
   late TabController _tabController;
+  TabController? _sounderTabController;
   final ScrollController sounderBottomSheetController = ScrollController();
   late final List<GlobalKey> _tileKeys;
 
@@ -57,6 +58,10 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
     });
 
     _tabController = TabController(length: 4, vsync: this);
+    if (PeripheralSheetChrome.flat && !widget.embedInCreateFlow) {
+      _sounderTabController = TabController(length: 3, vsync: this);
+      _sounderTabController!.addListener(_onSounderTabChanged);
+    }
 
     controller = Get.put(
       SounderModeController(
@@ -66,8 +71,19 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
     );
   }
 
+  void _onSounderTabChanged() {
+    final tabs = _sounderTabController;
+    if (tabs == null || tabs.indexIsChanging) return;
+    if (sounderBottomSheetController.hasClients) {
+      sounderBottomSheetController.jumpTo(0);
+    }
+    setState(() {});
+  }
+
   @override
   void dispose() {
+    _sounderTabController?.removeListener(_onSounderTabChanged);
+    _sounderTabController?.dispose();
     _tabController.dispose();
     sounderBottomSheetController.dispose();
     delayFocusNode.dispose();
@@ -156,7 +172,12 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
                               _dragHandle(),
                               _title('Sounder Mode'),
                               const SizedBox(height: 12),
-                              Expanded(child: _mainScrollBody()),
+                              Expanded(
+                                child:
+                                    PeripheralSheetChrome.flat
+                                        ? _windowsSounderBody()
+                                        : _mainScrollBody(),
+                              ),
                               const SizedBox(height: 12),
                               Row(
                                 children: [
@@ -182,9 +203,125 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
 
   // ───────────────── SOUNDERS ─────────────────
 
-  Widget _sounderTile(int index) {
-    final sounder = controller.sounders[index];
+  Widget _windowsSounderBody() {
+    final index = _sounderTabController?.index ?? 0;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Container(
+            width: 420,
+            height: 48,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              color: ColorConstants.surfaceLight,
+            ),
+            child: TabBar(
+              controller: _sounderTabController,
+              indicatorSize: TabBarIndicatorSize.tab,
+              indicator: const UnderlineTabIndicator(
+                borderSide: BorderSide(
+                  width: 2.5,
+                  color: ColorConstants.primary,
+                ),
+              ),
+              labelColor: ColorConstants.primary,
+              unselectedLabelColor: ColorConstants.textSubtle,
+              labelStyle: StyleConstants.black13w600Style,
+              unselectedLabelStyle: StyleConstants.black13w500Style,
+              tabs: const [
+                Tab(text: 'Sounder 1'),
+                Tab(text: 'Sounder 2'),
+                Tab(text: 'Sounder 3'),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 20),
+        Expanded(
+          child: NotificationListener<UserScrollNotification>(
+            onNotification: (notification) {
+              if (notification.direction != ScrollDirection.idle) {
+                FocusScope.of(context).unfocus();
+              }
+              return false;
+            },
+            child: SingleChildScrollView(
+              controller: sounderBottomSheetController,
+              physics: const BouncingScrollPhysics(),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _sounderFields(index),
+                  const SizedBox(height: 8),
+                  _advancedHeader(),
+                  _advancedSection(),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 
+  Widget _sounderFields(int index) {
+    final sounder = controller.sounders[index];
+    return peripheralSheetFieldGrid([
+      _disabledField('Output', 'SNDR ${index + 1}'),
+      _textField(
+        label: StringConstants.outputText,
+        fieldController: sounder.outputController,
+        maxLength: 21,
+      ),
+      if (!sounder.groupLocked)
+        DropdownWidget(
+          label: StringConstants.group,
+          value: sounder.group,
+          items: controller.groupOptions,
+          onChanged: (v) => controller.setSounderGroup(index, v),
+        ),
+      if (!sounder.functionLocked)
+        DropdownWidget(
+          label: 'Function',
+          value: sounder.function,
+          items: controller.functionOptionsMap[sounder.group]!,
+          onChanged: (v) => controller.setSounderFunction(index, v),
+        ),
+      if (sounder.group == StringConstants.zone)
+        _textField(
+          label: StringConstants.zone,
+          fieldController: sounder.dynamicController,
+          keyboardType: TextInputType.number,
+          inputFormatters: [
+            FilteringTextInputFormatter.digitsOnly,
+            LengthLimitingTextInputFormatter(1),
+          ],
+        ),
+      if (sounder.group == StringConstants.extOut)
+        _textField(
+          label: StringConstants.extOut,
+          fieldController: sounder.dynamicController,
+          enabled: false,
+        ),
+      if (sounder.group != StringConstants.extOut)
+        DropdownWidget(
+          label: StringConstants.enabled,
+          value: sounder.enabled,
+          items: controller.yesNoOptions,
+          onChanged: (v) => controller.setSounderEnabled(index, v),
+        ),
+      DropdownWidget(
+        label: StringConstants.type,
+        value: sounder.type,
+        items: controller.typeOptions,
+        onChanged: (v) => controller.setSounderType(index, v),
+      ),
+    ]);
+  }
+
+  Widget _sounderTile(int index) {
     return Container(
       key: _tileKeys[index],
       child: Padding(
@@ -213,58 +350,7 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
               'Sounder ${index + 1}',
               style: StyleConstants.textDark15w600Style,
             ),
-            children: [
-              _disabledField('Output', 'SNDR ${index + 1}'),
-              _textField(
-                label: StringConstants.outputText,
-                fieldController: sounder.outputController,
-                maxLength: 21,
-              ),
-              if (!sounder.groupLocked)
-                DropdownWidget(
-                  label: StringConstants.group,
-                  value: sounder.group,
-                  items: controller.groupOptions,
-                  onChanged: (v) => controller.setSounderGroup(index, v),
-                ),
-              if (!sounder.functionLocked)
-                DropdownWidget(
-                  label: 'Function',
-                  value: sounder.function,
-                  items: controller.functionOptionsMap[sounder.group]!,
-                  onChanged: (v) => controller.setSounderFunction(index, v),
-                ),
-              if (sounder.group == StringConstants.zone)
-                _textField(
-                  label: StringConstants.zone,
-                  fieldController: sounder.dynamicController,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [
-                    FilteringTextInputFormatter.digitsOnly,
-                    LengthLimitingTextInputFormatter(1),
-                  ],
-                ),
-              if (sounder.group == StringConstants.extOut)
-                _textField(
-                  label: StringConstants.extOut,
-                  fieldController: sounder.dynamicController,
-                  enabled: false,
-                ),
-              if (sounder.group != StringConstants.extOut)
-                DropdownWidget(
-                  label: StringConstants.enabled,
-                  value: sounder.enabled,
-                  items: controller.yesNoOptions,
-                  onChanged: (v) => controller.setSounderEnabled(index, v),
-                ),
-              DropdownWidget(
-                label: StringConstants.type,
-                value: sounder.type,
-                items: controller.typeOptions,
-                onChanged: (v) => controller.setSounderType(index, v),
-              ),
-              const SizedBox(height: 14),
-            ],
+            children: [_sounderFields(index), const SizedBox(height: 14)],
           ),
         ),
       ),
