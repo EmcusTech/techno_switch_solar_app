@@ -624,6 +624,28 @@ class SounderModeController extends PeripheralModeController {
     refreshUi();
   }
 
+  void setGeneralEnabled(String v) {
+    final m = manager;
+    if (m == null) return;
+    m.isSounderGeneralEnabled.value = v == StringConstants.yes;
+    refreshUi();
+  }
+
+  void setGeneralTest(String v) {
+    final m = manager;
+    if (m == null) return;
+    m.isSounderGeneralTest.value = v == StringConstants.yes;
+    refreshUi();
+  }
+
+  void setGeneralAction(String v) {
+    final m = manager;
+    if (m == null) return;
+    final index = returnIndex(v, actionOptions);
+    m.sounderGeneralAction.value = index < 0 ? 0 : index;
+    refreshUi();
+  }
+
   void setZoneEnabled(int index, String v) {
     zones[index].enabled = v;
     refreshUi();

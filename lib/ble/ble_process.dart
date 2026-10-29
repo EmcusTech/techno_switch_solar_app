@@ -16,6 +16,7 @@ import 'package:Technoswitch/config/ble/panel_properties_setup_payload_debug.dar
 import 'package:Technoswitch/utils/constants/ble/ble_constants.dart';
 import 'package:Technoswitch/config/ble/relay_setup_payload.dart';
 import 'package:Technoswitch/config/ble/sounder_setup_payload.dart';
+import 'package:Technoswitch/config/ble/sounder_setup_payload_debug.dart';
 import 'package:Technoswitch/config/ble/zone_setup_payload.dart';
 import 'package:Technoswitch/utils/peripherals/defaults/general_module_defaults.dart';
 import 'package:Technoswitch/utils/peripherals/defaults/panel_info_defaults.dart';
@@ -1703,6 +1704,10 @@ class BleProcess {
 
     if (checkForSounderSetupFetchRes == 1) {
       if (rx.payload[12] == BleConstants.command.newStructSounderCommand) {
+        SounderSetupPayloadDebug.printStructs(
+          rx.payload,
+          label: 'SETUP_SOUNDER DOWNLOAD',
+        );
         SounderSetupPayload.readAllIntoBleProcess(rx.payload, this);
         bleManager.otaProcessState = OtaProcessState.notInUse;
         cancelOperationDeadline();

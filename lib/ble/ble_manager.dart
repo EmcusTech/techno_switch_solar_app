@@ -3331,6 +3331,7 @@ class BleManager extends GetxService {
     u8Pkt[12] = BleConstants.command.newStructSounderCommand;
 
     SounderSetupPayload.writeAllToPacket(u8Pkt, bleProcess);
+    SounderSetupPayloadDebug.printStructs(u8Pkt, label: 'SETUP_SOUNDER APPLY');
 
     final checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
 

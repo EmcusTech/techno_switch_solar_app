@@ -346,7 +346,7 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
                   ? 1
                   : 0],
           items: controller.yesNoOptions,
-          onChanged: (_) {},
+          onChanged: controller.setGeneralEnabled,
         ),
         DropdownWidget(
           label: StringConstants.test,
@@ -355,13 +355,13 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
                   ? 1
                   : 0],
           items: controller.yesNoOptions,
-          onChanged: (_) {},
+          onChanged: controller.setGeneralTest,
         ),
         DropdownWidget(
           label: StringConstants.action,
           value: controller.actionOptions[manager.sounderGeneralAction.value],
           items: controller.actionOptions,
-          onChanged: (_) {},
+          onChanged: controller.setGeneralAction,
         ),
       ],
     );
