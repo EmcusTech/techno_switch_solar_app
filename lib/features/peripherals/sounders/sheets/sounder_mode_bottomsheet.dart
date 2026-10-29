@@ -3,6 +3,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:Technoswitch/features/peripherals/sounders/controllers/sounder_mode_controller.dart';
+import 'package:Technoswitch/utils/peripherals/defaults/sounder_defaults.dart';
 import 'package:Technoswitch/widgets/common/dropdown.dart';
 import 'package:Technoswitch/utils/constants/color_constants.dart';
 import 'package:Technoswitch/utils/constants/string_constants.dart';
@@ -58,6 +59,7 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
     });
 
     _tabController = TabController(length: 4, vsync: this);
+    _tabController.addListener(_onAdvancedTabChanged);
     if (PeripheralSheetChrome.flat && !widget.embedInCreateFlow) {
       _sounderTabController = TabController(length: 3, vsync: this);
       _sounderTabController!.addListener(_onSounderTabChanged);
@@ -71,19 +73,41 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
     );
   }
 
+  void _onAdvancedTabChanged() {
+    if (_tabController.indexIsChanging) return;
+    setState(() {});
+  }
+
   void _onSounderTabChanged() {
     final tabs = _sounderTabController;
     if (tabs == null || tabs.indexIsChanging) return;
     if (sounderBottomSheetController.hasClients) {
       sounderBottomSheetController.jumpTo(0);
     }
+    _focusAdvancedForGroup(controller.sounders[tabs.index].group);
     setState(() {});
+  }
+
+  int _advancedTabForGroup(String group) {
+    if (group == StringConstants.zone) return 1;
+    if (group == StringConstants.extOut) return 2;
+    return 0;
+  }
+
+  void _focusAdvancedForGroup(String group) {
+    _focusAdvancedTab(_advancedTabForGroup(group));
+  }
+
+  void _focusAdvancedTab(int index) {
+    if (_tabController.index == index) return;
+    _tabController.animateTo(index);
   }
 
   @override
   void dispose() {
     _sounderTabController?.removeListener(_onSounderTabChanged);
     _sounderTabController?.dispose();
+    _tabController.removeListener(_onAdvancedTabChanged);
     _tabController.dispose();
     sounderBottomSheetController.dispose();
     delayFocusNode.dispose();
@@ -113,7 +137,7 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
             ...List.generate(3, (i) => _sounderTile(i)),
             const SizedBox(height: 24),
             _advancedHeader(),
-            _advancedSection(),
+            _advancedTabs(),
           ],
         ),
       ),
@@ -256,7 +280,7 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
                   _sounderFields(index),
                   const SizedBox(height: 8),
                   _advancedHeader(),
-                  _advancedSection(),
+                  _advancedTabs(),
                 ],
               ),
             ),
@@ -280,24 +304,39 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
           label: StringConstants.group,
           value: sounder.group,
           items: controller.groupOptions,
-          onChanged: (v) => controller.setSounderGroup(index, v),
+          onChanged: (v) {
+            _focusAdvancedForGroup(v);
+            controller.setSounderGroup(index, v);
+          },
         ),
       if (!sounder.functionLocked)
         DropdownWidget(
           label: 'Function',
           value: sounder.function,
           items: controller.functionOptionsMap[sounder.group]!,
-          onChanged: (v) => controller.setSounderFunction(index, v),
+          onChanged: (v) {
+            if (sounder.group == StringConstants.extOut) {
+              _focusAdvancedTab(2);
+            }
+            controller.setSounderFunction(index, v);
+          },
         ),
       if (sounder.group == StringConstants.zone)
-        _textField(
+        DropdownWidget(
           label: StringConstants.zone,
-          fieldController: sounder.dynamicController,
-          keyboardType: TextInputType.number,
-          inputFormatters: [
-            FilteringTextInputFormatter.digitsOnly,
-            LengthLimitingTextInputFormatter(1),
-          ],
+          value:
+              const [
+                    '1',
+                    '2',
+                    '3',
+                  ].contains(sounder.dynamicController.text.trim())
+                  ? sounder.dynamicController.text.trim()
+                  : '1',
+          items: const ['1', '2', '3'],
+          onChanged: (v) {
+            _focusAdvancedTab(1);
+            sounder.dynamicController.text = v;
+          },
         ),
       if (sounder.group == StringConstants.extOut)
         _textField(
@@ -305,13 +344,18 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
           fieldController: sounder.dynamicController,
           enabled: false,
         ),
-      if (sounder.group != StringConstants.extOut)
-        DropdownWidget(
-          label: StringConstants.enabled,
-          value: sounder.enabled,
-          items: controller.yesNoOptions,
-          onChanged: (v) => controller.setSounderEnabled(index, v),
-        ),
+      DropdownWidget(
+        label: StringConstants.enabled,
+        value: controller.enabledLabelFor(index),
+        items: controller.yesNoOptions,
+        onChanged: (v) => controller.setSounderEnabled(index, v),
+      ),
+      DropdownWidget(
+        label: StringConstants.test,
+        value: controller.testLabelFor(index),
+        items: controller.yesNoOptions,
+        onChanged: (v) => controller.setSounderTest(index, v),
+      ),
       DropdownWidget(
         label: StringConstants.type,
         value: sounder.type,
@@ -374,196 +418,167 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
     );
   }
 
-  Widget _advancedSection() {
+  Widget _advancedTabs() {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          height: 48,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            color: ColorConstants.surfaceLight,
-          ),
-          child: TabBar(
-            controller: _tabController,
-            indicatorSize: TabBarIndicatorSize.tab,
-            indicator: const UnderlineTabIndicator(
-              borderSide: BorderSide(width: 2.5, color: ColorConstants.primary),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Container(
+            width: 480,
+            height: 48,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              color: ColorConstants.surfaceLight,
             ),
-            labelColor: ColorConstants.primary,
-            unselectedLabelColor: ColorConstants.textSubtle,
-            labelStyle: StyleConstants.black13w600Style,
-            unselectedLabelStyle: StyleConstants.black13w500Style,
-            tabs: const [
-              Tab(text: 'General'),
-              Tab(text: StringConstants.zone),
-              Tab(text: StringConstants.extOut2),
-              Tab(text: 'Delay'),
-            ],
-            onTap: (_) {
-              sounderBottomSheetController.animateTo(
-                sounderBottomSheetController.position.maxScrollExtent,
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeInOut,
-              );
-            },
+            child: TabBar(
+              controller: _tabController,
+              indicatorSize: TabBarIndicatorSize.tab,
+              indicator: const UnderlineTabIndicator(
+                borderSide: BorderSide(
+                  width: 2.5,
+                  color: ColorConstants.primary,
+                ),
+              ),
+              labelColor: ColorConstants.primary,
+              unselectedLabelColor: ColorConstants.textSubtle,
+              labelStyle: StyleConstants.black13w600Style,
+              unselectedLabelStyle: StyleConstants.black13w500Style,
+              tabs: const [
+                Tab(text: 'General'),
+                Tab(text: StringConstants.zone),
+                Tab(text: StringConstants.extOut2),
+                Tab(text: 'Delay'),
+              ],
+            ),
           ),
         ),
         const SizedBox(height: 20),
-        SizedBox(
-          height: 360,
-          child: TabBarView(
-            controller: _tabController,
-            children: [_generalTab(), _zoneTab(), _extOutTab(), _delayTab()],
-          ),
-        ),
+        switch (_tabController.index) {
+          1 => _zoneAdvancedFields(),
+          2 => _extOutAdvancedFields(),
+          3 => _delayFields(),
+          _ => _generalAdvancedFields(),
+        },
       ],
     );
   }
 
-  Widget _generalTab() {
-    final manager = controller.manager!;
+  Widget _generalAdvancedFields() {
+    final actionIndex =
+        controller.manager?.sounderGeneralAction.value ??
+        SounderDefaults.generalActionBle;
+    final safeIndex = actionIndex.clamp(0, controller.actionOptions.length - 1);
+    return peripheralSheetFieldGrid([
+      DropdownWidget(
+        label: StringConstants.action,
+        value: controller.actionOptions[safeIndex],
+        items: controller.actionOptions,
+        onChanged: controller.setGeneralAction,
+      ),
+    ]);
+  }
+
+  Widget _zoneAdvancedFields() {
+    final numbers = <int>[];
+    var invalid = false;
+    for (final sounder in controller.sounders) {
+      if (sounder.group != StringConstants.zone) continue;
+      final number = controller.selectionNumber(sounder);
+      if (number == null) {
+        invalid = true;
+      } else if (!numbers.contains(number)) {
+        numbers.add(number);
+      }
+    }
+    if (numbers.isEmpty && !invalid) {
+      return Text(
+        StringConstants.noZoneSelected,
+        style: StyleConstants.textGray14w400Style,
+      );
+    }
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _disabledField('Function', StringConstants.fireSnd),
-        DropdownWidget(
-          label: StringConstants.enabled,
-          value:
-              controller.yesNoOptions[manager.isSounderGeneralEnabled.value
-                  ? 1
-                  : 0],
-          items: controller.yesNoOptions,
-          onChanged: controller.setGeneralEnabled,
-        ),
-        DropdownWidget(
-          label: StringConstants.test,
-          value:
-              controller.yesNoOptions[manager.isSounderGeneralTest.value
-                  ? 1
-                  : 0],
-          items: controller.yesNoOptions,
-          onChanged: controller.setGeneralTest,
-        ),
-        DropdownWidget(
-          label: StringConstants.action,
-          value: controller.actionOptions[manager.sounderGeneralAction.value],
-          items: controller.actionOptions,
-          onChanged: controller.setGeneralAction,
-        ),
-      ],
-    );
-  }
-
-  Widget _zoneTile(int index) {
-    final zone = controller.zones[index];
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: _sectionContainer(
-        child: ExpansionTile(
-          tilePadding: const EdgeInsets.symmetric(horizontal: 16),
-          childrenPadding: const EdgeInsets.symmetric(horizontal: 16),
-          title: Text(
-            'Zone ${index + 1}',
-            style: StyleConstants.textDark14w600Style,
+        if (invalid)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Text(
+              StringConstants.enterZoneNumberFrom1To3,
+              style: StyleConstants.textGray14w400Style,
+            ),
           ),
-          children: [
-            _disabledField('Function', StringConstants.fireSnd),
-            _disabledField(StringConstants.zone, '${index + 1}'),
-            DropdownWidget(
-              label: StringConstants.enabled,
-              value: zone.enabled,
-              items: controller.yesNoOptions,
-              onChanged: (v) => controller.setZoneEnabled(index, v),
-            ),
-            DropdownWidget(
-              label: StringConstants.test,
-              value: zone.test,
-              items: controller.yesNoOptions,
-              onChanged: (v) => controller.setZoneTest(index, v),
-            ),
+        for (final number in numbers)
+          peripheralSheetFieldGrid([
             DropdownWidget(
               label: StringConstants.action,
-              value: zone.action,
+              value: controller.zones[number - 1].action,
               items: controller.actionOptions,
-              onChanged: (v) => controller.setZoneAction(index, v),
+              onChanged: (v) => controller.setZoneAction(number - 1, v),
             ),
-          ],
-        ),
-      ),
+          ]),
+      ],
     );
   }
 
-  Widget _zoneTab() {
-    return ListView.builder(
-      itemCount: 3,
-      itemBuilder: (_, i) {
-        return _zoneTile(i);
-      },
-    );
-  }
-
-  Widget _extOutTile(int index) {
-    final extOut = controller.extOuts[index];
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: _sectionContainer(
-        child: ExpansionTile(
-          tilePadding: const EdgeInsets.symmetric(horizontal: 16),
-          childrenPadding: const EdgeInsets.symmetric(horizontal: 16),
-          title: Text(
-            controller.functions[index],
-            style: StyleConstants.textDark14w600Style,
+  Widget _extOutAdvancedFields() {
+    final numbers = <int>[];
+    var invalid = false;
+    for (final sounder in controller.sounders) {
+      if (sounder.group != StringConstants.extOut) continue;
+      final number = controller.selectionNumber(sounder);
+      if (number == null) {
+        invalid = true;
+      } else if (!numbers.contains(number)) {
+        numbers.add(number);
+      }
+    }
+    if (numbers.isEmpty && !invalid) {
+      return Text(
+        StringConstants.noExtOutSelected,
+        style: StyleConstants.textGray14w400Style,
+      );
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (invalid)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Text(
+              StringConstants.enterExtOutNumberFrom1To3,
+              style: StyleConstants.textGray14w400Style,
+            ),
           ),
-          children: [
-            _disabledField('Function', controller.functions[index]),
-            DropdownWidget(
-              label: StringConstants.enabled,
-              value: extOut.enabled,
-              items: controller.yesNoOptions,
-              onChanged: (v) => controller.setExtEnabled(index, v),
-            ),
-            DropdownWidget(
-              label: StringConstants.test,
-              value: extOut.test,
-              items: controller.yesNoOptions,
-              onChanged: (v) => controller.setExtTest(index, v),
-            ),
+        for (final number in numbers)
+          peripheralSheetFieldGrid([
             DropdownWidget(
               label: 'Countdown',
-              value: extOut.countdownAction,
+              value: controller.extOuts[number - 1].countdownAction,
               items: controller.extOutActionOptions,
-              onChanged: (v) => controller.setExtCountdown(index, v),
+              onChanged: (v) => controller.setExtCountdown(number - 1, v),
             ),
             DropdownWidget(
               label: 'Hold',
-              value: extOut.holdAction,
+              value: controller.extOuts[number - 1].holdAction,
               items: controller.extOutActionOptions,
-              onChanged: (v) => controller.setExtHold(index, v),
+              onChanged: (v) => controller.setExtHold(number - 1, v),
             ),
             DropdownWidget(
               label: 'Release',
-              value: extOut.releaseAction,
+              value: controller.extOuts[number - 1].releaseAction,
               items: controller.extOutActionOptions,
-              onChanged: (v) => controller.setExtRelease(index, v),
+              onChanged: (v) => controller.setExtRelease(number - 1, v),
             ),
-          ],
-        ),
-      ),
+          ]),
+      ],
     );
   }
 
-  Widget _extOutTab() {
-    return ListView.builder(
-      itemCount: controller.functions.length,
-      itemBuilder: (_, i) {
-        return _extOutTile(i);
-      },
-    );
-  }
-
-  Widget _delayTab() {
-    final manager = controller.manager!;
+  Widget _delayFields() {
+    final delayedOn =
+        controller.manager?.isSounderGeneralDelay.value ??
+        controller.delayed == SounderDefaults.delayedLabel;
     return Column(
       children: [
         _textField(
@@ -590,10 +605,7 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
         const SizedBox(height: 14),
         DropdownWidget(
           label: StringConstants.delayed,
-          value:
-              controller.yesNoOptions[manager.isSounderGeneralDelay.value
-                  ? 1
-                  : 0],
+          value: controller.yesNoOptions[delayedOn ? 1 : 0],
           items: controller.yesNoOptions,
           onChanged: (_) {},
         ),

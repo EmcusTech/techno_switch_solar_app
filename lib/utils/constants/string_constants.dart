@@ -375,6 +375,12 @@ abstract final class StringConstants {
   static const String enterSiteDescription = "siteDescription";
   static const String enterSiteName = "siteName";
   static const String enterSounderText = "Enter Sounder Text";
+  static const String enterExtOutNumberFrom1To3 =
+      "Enter an ext out number from 1 to 3";
+  static const String enterZoneNumberFrom1To3 =
+      "Enter a zone number from 1 to 3";
+  static const String noExtOutSelected = "No ext out is selected";
+  static const String noZoneSelected = "No zone is selected";
   static const String enterZoneText = "Enter Zone Text";
   static const String establishingSecureConnection = "Connecting...";
   static const String evacuation = "Evacuation";
