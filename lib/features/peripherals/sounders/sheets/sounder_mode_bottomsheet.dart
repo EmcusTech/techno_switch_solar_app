@@ -552,38 +552,37 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
     final delayedOn =
         controller.manager?.isSounderGeneralDelay.value ??
         controller.delayed == SounderDefaults.delayedLabel;
-    return Column(
-      children: [
-        _textField(
-          label: StringConstants.delayS,
-          fieldController: controller.delayController,
-          keyboardType: TextInputType.number,
-          inputFormatters: [
-            FilteringTextInputFormatter.digitsOnly,
-            LengthLimitingTextInputFormatter(3),
-          ],
-          decoration: _inputDecoration(),
-          focusNode: delayFocusNode,
-        ),
-        if (delayFocusNode.hasFocus)
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Text(
+    return peripheralSheetFieldGrid([
+      Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _textField(
+            label: StringConstants.delayS,
+            fieldController: controller.delayController,
+            keyboardType: TextInputType.number,
+            inputFormatters: [
+              FilteringTextInputFormatter.digitsOnly,
+              LengthLimitingTextInputFormatter(3),
+            ],
+            decoration: _inputDecoration(),
+            focusNode: delayFocusNode,
+          ),
+          if (delayFocusNode.hasFocus)
+            Text(
               _delayError,
               style: StyleConstants.black12w400Style.copyWith(
                 color: Colors.orange,
               ),
             ),
-          ),
-        const SizedBox(height: 14),
-        DropdownWidget(
-          label: StringConstants.delayed,
-          value: controller.yesNoOptions[delayedOn ? 1 : 0],
-          items: controller.yesNoOptions,
-          onChanged: (_) {},
-        ),
-      ],
-    );
+        ],
+      ),
+      DropdownWidget(
+        label: StringConstants.delayed,
+        value: controller.yesNoOptions[delayedOn ? 1 : 0],
+        items: controller.yesNoOptions,
+        onChanged: (_) {},
+      ),
+    ]);
   }
 
   // ───────────────── UI HELPERS ─────────────────

@@ -12,10 +12,12 @@ class WindowsScanDeviceCard extends StatelessWidget {
     super.key,
     required this.controller,
     required this.device,
+    this.closest = false,
   });
 
   final ScanController controller;
   final DiscoveredDevice device;
+  final bool closest;
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +31,11 @@ class WindowsScanDeviceCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: ColorConstants.primary.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: ColorConstants.primary, width: 2),
+          border: Border.all(
+            color:
+                closest ? ColorConstants.primary : ColorConstants.borderLight,
+            width: 2,
+          ),
           boxShadow: [
             BoxShadow(
               color: ColorConstants.blackMaterial.withValues(alpha: 0.05),
