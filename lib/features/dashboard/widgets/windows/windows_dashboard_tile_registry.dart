@@ -17,7 +17,6 @@ abstract final class WindowsDashboardTileRegistry {
       ),
       WindowsDashboardTileConfig(
         label: StringConstants.inputs,
-        isDisabled: !DemoBle.enabled,
         iconPath: AssetConstants.peripheralInputIcon,
         onTap: () => ProjectDashboardTileActions.openInputs(controller),
       ),
@@ -28,7 +27,6 @@ abstract final class WindowsDashboardTileRegistry {
       ),
       WindowsDashboardTileConfig(
         label: StringConstants.sounders,
-        isDisabled: !DemoBle.enabled,
         iconPath: AssetConstants.peripheralSounderIcon,
         onTap: () => ProjectDashboardTileActions.openSounders(controller),
       ),
@@ -55,7 +53,6 @@ abstract final class WindowsDashboardTileRegistry {
       WindowsDashboardTileConfig(
         label: StringConstants.extOut2,
         iconPath: AssetConstants.peripheralExtOutIcon,
-        isDisabled: !DemoBle.enabled,
         onTap: () => ProjectDashboardTileActions.openExtOut(controller),
       ),
     ];
@@ -81,25 +78,21 @@ abstract final class WindowsDashboardTileRegistry {
       WindowsDashboardTileConfig(
         label: StringConstants.serviceDue,
         iconPath: AssetConstants.panelActionServiceDueIcon,
-        isDisabled: !DemoBle.enabled,
         onTap: () => ProjectDashboardTileActions.openServiceDue(controller),
       ),
       WindowsDashboardTileConfig(
         label: StringConstants.accessCode,
         iconPath: AssetConstants.panelActionAccessCodeIcon,
-        isDisabled: !DemoBle.enabled,
         onTap: () => ProjectDashboardTileActions.openAccessCode(controller),
       ),
       WindowsDashboardTileConfig(
         label: StringConstants.panelInfo,
         iconPath: AssetConstants.panelActionPanelInfoIcon,
-        isDisabled: !DemoBle.enabled,
         onTap: () => ProjectDashboardTileActions.openPanelInfo(controller),
       ),
       WindowsDashboardTileConfig(
         label: 'General',
         iconPath: AssetConstants.panelActionGeneralModuleIcon,
-        isDisabled: !DemoBle.enabled,
         iconHeight: 36,
         iconWidth: 36,
         onTap: () => ProjectDashboardTileActions.openGeneralModule(controller),

@@ -41,6 +41,7 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
   late final List<GlobalKey> _tileKeys;
 
   final FocusNode delayFocusNode = FocusNode();
+  bool _scrollAfterAdvancedTap = false;
 
   final String _delayError = StringConstants.delayMustBeBetween0And600Seconds;
 
@@ -75,7 +76,30 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
 
   void _onAdvancedTabChanged() {
     if (_tabController.indexIsChanging) return;
+    final scrollDown = _scrollAfterAdvancedTap;
+    _scrollAfterAdvancedTap = false;
     setState(() {});
+    if (scrollDown) _scrollSounderSheetToEnd();
+  }
+
+  void _onAdvancedTabTapped(int _) {
+    if (_tabController.indexIsChanging) {
+      _scrollAfterAdvancedTap = true;
+      return;
+    }
+    _scrollSounderSheetToEnd();
+  }
+
+  void _scrollSounderSheetToEnd() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final scroll = sounderBottomSheetController;
+      if (!mounted || !scroll.hasClients) return;
+      scroll.animateTo(
+        scroll.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOut,
+      );
+    });
   }
 
   void _onSounderTabChanged() {
@@ -427,6 +451,7 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
             ),
             child: TabBar(
               controller: _tabController,
+              onTap: _onAdvancedTabTapped,
               indicatorSize: TabBarIndicatorSize.tab,
               indicator: const UnderlineTabIndicator(
                 borderSide: BorderSide(
