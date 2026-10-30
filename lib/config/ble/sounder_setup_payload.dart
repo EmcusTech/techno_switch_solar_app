@@ -6,7 +6,7 @@ import 'package:Technoswitch/config/structs/sounder_cfg_def.dart';
 
 /// SETUP_SOUNDER data section inside the 216-byte BLE frame.
 ///
-/// One command carries three `st_sounder_cfg_def` blocks (37 bytes each) at [13].
+/// One command carries three `st_sounder_cfg_def` blocks (34 bytes each) at [13].
 abstract final class SounderSetupPayload {
   static const int commandOffset = ConfigSetupPayload.commandOffset;
   static const int structOffset = ConfigSetupPayload.structOffset;
@@ -70,30 +70,20 @@ abstract final class SounderSetupPayload {
     required bool sounderType,
   }) {
     var sounderZone = 0;
-    var sounderExtOut = 0;
-    var unionEnabled = sounderEnable ? 1 : 0;
-    var unionTest = sounderTest ? 1 : 0;
-    var unionAction = 0;
-    var unionCountdown = 0;
-    var unionHold = 0;
-    var unionRelease = 0;
+    var advAction = 0;
+    var advCountdown = 0;
+    var advHold = 0;
+    var advRelease = 0;
 
     if (sounderGrp == SounderCfgDef.sounderGroupZone) {
       sounderZone = functionNo;
-      unionEnabled = _zoneEnabled(process, sounderZone);
-      unionTest = _zoneTest(process, sounderZone);
-      unionAction = _zoneAction(process, sounderZone);
+      advAction = _zoneAction(process, sounderZone);
     } else if (sounderGrp == SounderCfgDef.sounderGroupExtOut) {
-      sounderExtOut = functionNo;
-      unionEnabled = _extEnabled(process, sounderExtOut);
-      unionTest = _extTest(process, sounderExtOut);
-      unionCountdown = _extCountdown(process, sounderExtOut);
-      unionHold = _extHold(process, sounderExtOut);
-      unionRelease = _extRelease(process, sounderExtOut);
+      advCountdown = process.extoutOneCountdownAction.value;
+      advHold = process.extoutOneHoldAction.value;
+      advRelease = process.extoutOneReleaseAction.value;
     } else {
-      unionEnabled = process.isSounderGeneralEnabled.value ? 1 : 0;
-      unionTest = process.isSounderGeneralTest.value ? 1 : 0;
-      unionAction = process.sounderGeneralAction.value;
+      advAction = process.sounderGeneralAction.value;
     }
 
     return SounderCfgDef(
@@ -102,19 +92,14 @@ abstract final class SounderSetupPayload {
       sounderGrp: sounderGrp,
       sounderFunc: sounderFunc,
       sounderZone: sounderZone,
-      sounderExtOut: sounderExtOut,
       sounderEnable: sounderEnable ? 1 : 0,
       sounderTest: sounderTest ? 1 : 0,
       sounderType: sounderType ? 0 : 1,
       delay: process.sounderGeneralDelay.value,
-      unionFunction: sounderFunc,
-      unionZone: sounderZone,
-      unionEnabled: unionEnabled,
-      unionTest: unionTest,
-      unionAction: unionAction,
-      unionCountdown: unionCountdown,
-      unionHold: unionHold,
-      unionRelease: unionRelease,
+      advAction: advAction,
+      advCountdown: advCountdown,
+      advHold: advHold,
+      advRelease: advRelease,
     );
   }
 
@@ -158,53 +143,33 @@ abstract final class SounderSetupPayload {
     }
 
     process.sounderGeneralDelay.value = config.delay;
-    _applyUnion(config, process);
+    _applyAdvanced(config, process);
   }
 
-  static void _applyUnion(SounderCfgDef config, BleProcess process) {
+  static void _applyAdvanced(SounderCfgDef config, BleProcess process) {
+    final enabled = config.sounderEnable != 0;
+    final test = config.sounderTest != 0;
     if (config.sounderGrp == SounderCfgDef.sounderGroupZone) {
       _setZone(
         process,
-        config.unionZone,
-        enabled: config.unionEnabled != 0,
-        test: config.unionTest != 0,
-        action: config.unionAction,
+        config.sounderZone,
+        enabled: enabled,
+        test: test,
+        action: config.advAction,
       );
       return;
     }
     if (config.sounderGrp == SounderCfgDef.sounderGroupExtOut) {
-      _setExt(
-        process,
-        config.sounderExtOut,
-        enabled: config.unionEnabled != 0,
-        test: config.unionTest != 0,
-        countdown: config.unionCountdown,
-        hold: config.unionHold,
-        release: config.unionRelease,
-      );
+      process.isExtOutOneEnabled.value = enabled;
+      process.isExtOutOneTest.value = test;
+      process.extoutOneCountdownAction.value = config.advCountdown;
+      process.extoutOneHoldAction.value = config.advHold;
+      process.extoutOneReleaseAction.value = config.advRelease;
       return;
     }
-    process.isSounderGeneralEnabled.value = config.unionEnabled != 0;
-    process.isSounderGeneralTest.value = config.unionTest != 0;
-    process.sounderGeneralAction.value = config.unionAction;
-  }
-
-  static int _zoneEnabled(BleProcess process, int zone) {
-    return switch (zone) {
-      1 => process.isZoneOneEnabled.value ? 1 : 0,
-      2 => process.isZoneTwoEnabled.value ? 1 : 0,
-      3 => process.isZoneThreeEnabled.value ? 1 : 0,
-      _ => 0,
-    };
-  }
-
-  static int _zoneTest(BleProcess process, int zone) {
-    return switch (zone) {
-      1 => process.isZoneOneTest.value ? 1 : 0,
-      2 => process.isZoneTwoTest.value ? 1 : 0,
-      3 => process.isZoneThreeTest.value ? 1 : 0,
-      _ => 0,
-    };
+    process.isSounderGeneralEnabled.value = enabled;
+    process.isSounderGeneralTest.value = test;
+    process.sounderGeneralAction.value = config.advAction;
   }
 
   static int _zoneAction(BleProcess process, int zone) {
@@ -239,88 +204,9 @@ abstract final class SounderSetupPayload {
     }
   }
 
-  static int _extEnabled(BleProcess process, int ext) {
-    return switch (ext) {
-      1 => process.isExtOutOneEnabled.value ? 1 : 0,
-      2 => process.isExtOutTwoEnabled.value ? 1 : 0,
-      3 => process.isExtOutThreeEnabled.value ? 1 : 0,
-      _ => 0,
-    };
-  }
-
-  static int _extTest(BleProcess process, int ext) {
-    return switch (ext) {
-      1 => process.isExtOutOneTest.value ? 1 : 0,
-      2 => process.isExtOutTwoTest.value ? 1 : 0,
-      3 => process.isExtOutThreeTest.value ? 1 : 0,
-      _ => 0,
-    };
-  }
-
-  static int _extCountdown(BleProcess process, int ext) {
-    return switch (ext) {
-      1 => process.extoutOneCountdownAction.value,
-      2 => process.extoutTwoCountdownAction.value,
-      3 => process.extoutThreeCountdownAction.value,
-      _ => 0,
-    };
-  }
-
-  static int _extHold(BleProcess process, int ext) {
-    return switch (ext) {
-      1 => process.extoutOneHoldAction.value,
-      2 => process.extoutTwoHoldAction.value,
-      3 => process.extoutThreeHoldAction.value,
-      _ => 0,
-    };
-  }
-
-  static int _extRelease(BleProcess process, int ext) {
-    return switch (ext) {
-      1 => process.extoutOneReleaseAction.value,
-      2 => process.extoutTwoReleaseAction.value,
-      3 => process.extoutThreeReleaseAction.value,
-      _ => 0,
-    };
-  }
-
-  static void _setExt(
-    BleProcess process,
-    int ext, {
-    required bool enabled,
-    required bool test,
-    required int countdown,
-    required int hold,
-    required int release,
-  }) {
-    switch (ext) {
-      case 1:
-        process.isExtOutOneEnabled.value = enabled;
-        process.isExtOutOneTest.value = test;
-        process.extoutOneCountdownAction.value = countdown;
-        process.extoutOneHoldAction.value = hold;
-        process.extoutOneReleaseAction.value = release;
-      case 2:
-        process.isExtOutTwoEnabled.value = enabled;
-        process.isExtOutTwoTest.value = test;
-        process.extoutTwoCountdownAction.value = countdown;
-        process.extoutTwoHoldAction.value = hold;
-        process.extoutTwoReleaseAction.value = release;
-      case 3:
-        process.isExtOutThreeEnabled.value = enabled;
-        process.isExtOutThreeTest.value = test;
-        process.extoutThreeCountdownAction.value = countdown;
-        process.extoutThreeHoldAction.value = hold;
-        process.extoutThreeReleaseAction.value = release;
-    }
-  }
-
   static int _functionNoFromStruct(SounderCfgDef config) {
     if (config.sounderGrp == SounderCfgDef.sounderGroupZone) {
       return config.sounderZone;
-    }
-    if (config.sounderGrp == SounderCfgDef.sounderGroupExtOut) {
-      return config.sounderExtOut;
     }
     return 0;
   }
@@ -345,7 +231,10 @@ abstract final class SounderSetupPayload {
   }
 
   static void readAllIntoBleProcess(List<int> payload, BleProcess process) {
-    final packed = ConfigSetupPayload.readStructBytes(payload, packedByteLength);
+    final packed = ConfigSetupPayload.readStructBytes(
+      payload,
+      packedByteLength,
+    );
     for (var index = 0; index < sounderCount; index++) {
       final config = SounderCfgDef.fromBytes(
         packed,

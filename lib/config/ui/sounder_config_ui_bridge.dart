@@ -50,9 +50,6 @@ abstract final class SounderConfigUiBridge {
     if (config.sounderGrp == SounderCfgDef.sounderGroupZone) {
       return config.sounderZone;
     }
-    if (config.sounderGrp == SounderCfgDef.sounderGroupExtOut) {
-      return config.sounderExtOut;
-    }
     return 0;
   }
 
@@ -79,21 +76,13 @@ abstract final class SounderConfigUiBridge {
         int.tryParse(ui.functionNo.trim(), radix: 16) ??
         0;
 
-    var sounderZone = 0;
-    var sounderExtOut = 0;
-    if (groupIndex == SounderCfgDef.sounderGroupZone) {
-      sounderZone = functionNo;
-    } else if (groupIndex == SounderCfgDef.sounderGroupExtOut) {
-      sounderExtOut = functionNo;
-    }
-
     return SounderCfgDef(
       sounderNum: ui.sounderNumber,
       sounderText: ui.outputText,
       sounderGrp: groupIndex,
       sounderFunc: SounderConfigOptions.functionIndex(ui.group, ui.function),
-      sounderZone: sounderZone,
-      sounderExtOut: sounderExtOut,
+      sounderZone:
+          groupIndex == SounderCfgDef.sounderGroupZone ? functionNo : 0,
       sounderEnable: SounderConfigOptions.yesNoValue(ui.enabled) ? 1 : 0,
       sounderTest: (test ?? ui.test) ? 1 : 0,
       sounderType: SounderConfigOptions.typeIsNormal(ui.type) ? 1 : 0,

@@ -4,10 +4,10 @@ import 'package:Technoswitch/config/system_config_limits.dart';
 import 'package:Technoswitch/config/structs/struct_bytes.dart';
 import 'package:Technoswitch/utils/peripherals/defaults/sounder_defaults.dart';
 
-/// Mirrors firmware `st_sounder_cfg_def` (37 bytes, packed).
+/// Mirrors firmware `st_sounder_cfg_def` (34 bytes, packed).
 ///
-/// The last 6 bytes are `un_sounder_group_def`. Only the member selected by
-/// [sounderGrp] is live: general (4), zone (5), or ext-out (6).
+/// `st_adv` is always action, countdown, hold, release. The sounder's group
+/// decides which of those bytes are live. There is no ext-out number.
 class SounderCfgDef {
   const SounderCfgDef({
     this.sounderNum = 1,
@@ -15,45 +15,34 @@ class SounderCfgDef {
     this.sounderGrp = SounderDefaults.groupGeneralBle,
     this.sounderFunc = SounderDefaults.functionFireSndBle,
     this.sounderZone = 0,
-    this.sounderExtOut = 0,
     this.sounderEnable = SounderDefaults.enabledBle ? 1 : 0,
     this.sounderTest = SounderDefaults.testBle ? 1 : 0,
     this.sounderType = SounderDefaults.normalBle ? 0 : 1,
     this.delay = 0,
-    this.unionFunction = 0,
-    this.unionZone = 0,
-    this.unionEnabled = 0,
-    this.unionTest = 0,
-    this.unionAction = 0,
-    this.unionCountdown = 0,
-    this.unionHold = 0,
-    this.unionRelease = 0,
+    this.advAction = 0,
+    this.advCountdown = 0,
+    this.advHold = 0,
+    this.advRelease = 0,
   });
 
-  static const int byteLength = 37;
+  static const int byteLength = 34;
   static const int sounderGroupGeneral = 1;
   static const int sounderGroupZone = 2;
   static const int sounderGroupExtOut = 3;
-  static const int unionLength = 6;
 
   final int sounderNum;
   final String sounderText;
   final int sounderGrp;
   final int sounderFunc;
   final int sounderZone;
-  final int sounderExtOut;
   final int sounderEnable;
   final int sounderTest;
   final int sounderType;
   final int delay;
-  final int unionFunction;
-  final int unionZone;
-  final int unionEnabled;
-  final int unionTest;
-  final int unionAction;
-  final int unionCountdown;
-  final int unionHold;
-  final int unionRelease;
+  final int advAction;
+  final int advCountdown;
+  final int advHold;
+  final int advRelease;
 
   factory SounderCfgDef.fromBytes(Uint8List bytes, {int offset = 0}) {
     if (offset < 0 || offset + byteLength > bytes.length) {
@@ -61,8 +50,6 @@ class SounderCfgDef {
         'SounderCfgDef requires $byteLength bytes at offset $offset',
       );
     }
-    final group = bytes[offset + 22];
-    final union = _readUnion(bytes, offset + 31, group);
     return SounderCfgDef(
       sounderNum: bytes[offset],
       sounderText: StructBytes.readFixedText(
@@ -70,50 +57,17 @@ class SounderCfgDef {
         offset + 1,
         SystemConfigLimits.sounderTextLength,
       ),
-      sounderGrp: group,
+      sounderGrp: bytes[offset + 22],
       sounderFunc: bytes[offset + 23],
       sounderZone: bytes[offset + 24],
-      sounderExtOut: bytes[offset + 25],
-      sounderEnable: bytes[offset + 26],
-      sounderTest: bytes[offset + 27],
-      sounderType: bytes[offset + 28],
-      delay: StructBytes.readUint16Le(bytes, offset + 29),
-      unionFunction: union.function,
-      unionZone: union.zone,
-      unionEnabled: union.enabled,
-      unionTest: union.test,
-      unionAction: union.action,
-      unionCountdown: union.countdown,
-      unionHold: union.hold,
-      unionRelease: union.release,
-    );
-  }
-
-  static _SounderUnion _readUnion(Uint8List bytes, int base, int group) {
-    if (group == sounderGroupZone) {
-      return _SounderUnion(
-        function: bytes[base],
-        zone: bytes[base + 1],
-        enabled: bytes[base + 2],
-        test: bytes[base + 3],
-        action: bytes[base + 4],
-      );
-    }
-    if (group == sounderGroupExtOut) {
-      return _SounderUnion(
-        function: bytes[base],
-        enabled: bytes[base + 1],
-        test: bytes[base + 2],
-        countdown: bytes[base + 3],
-        hold: bytes[base + 4],
-        release: bytes[base + 5],
-      );
-    }
-    return _SounderUnion(
-      function: bytes[base],
-      enabled: bytes[base + 1],
-      test: bytes[base + 2],
-      action: bytes[base + 3],
+      sounderEnable: bytes[offset + 25],
+      sounderTest: bytes[offset + 26],
+      sounderType: bytes[offset + 27],
+      delay: StructBytes.readUint16Le(bytes, offset + 28),
+      advAction: bytes[offset + 30],
+      advCountdown: bytes[offset + 31],
+      advHold: bytes[offset + 32],
+      advRelease: bytes[offset + 33],
     );
   }
 
@@ -126,14 +80,6 @@ class SounderCfgDef {
     final functionNo =
         (data['functionNo'] as num?)?.toInt() ?? defaults['functionNo'] as int;
 
-    var sounderZone = 0;
-    var sounderExtOut = 0;
-    if (group == sounderGroupZone) {
-      sounderZone = functionNo;
-    } else if (group == sounderGroupExtOut) {
-      sounderExtOut = functionNo;
-    }
-
     return SounderCfgDef(
       sounderNum: sounderNum,
       sounderText:
@@ -141,8 +87,7 @@ class SounderCfgDef {
       sounderGrp: group,
       sounderFunc:
           (data['function'] as num?)?.toInt() ?? defaults['function'] as int,
-      sounderZone: sounderZone,
-      sounderExtOut: sounderExtOut,
+      sounderZone: group == sounderGroupZone ? functionNo : 0,
       sounderEnable:
           ((data['enabled'] as bool?) ?? defaults['enabled'] as bool) ? 1 : 0,
       sounderTest:
@@ -164,43 +109,18 @@ class SounderCfgDef {
     buf[22] = sounderGrp & 0xFF;
     buf[23] = sounderFunc & 0xFF;
     buf[24] = sounderZone & 0xFF;
-    buf[25] = sounderExtOut & 0xFF;
-    buf[26] = sounderEnable & 0xFF;
-    buf[27] = sounderTest & 0xFF;
-    buf[28] = sounderType & 0xFF;
-    StructBytes.writeUint16Le(buf, 29, delay);
-    final union = Uint8List(unionLength);
-    if (sounderGrp == sounderGroupZone) {
-      union[0] = unionFunction & 0xFF;
-      union[1] = unionZone & 0xFF;
-      union[2] = unionEnabled & 0xFF;
-      union[3] = unionTest & 0xFF;
-      union[4] = unionAction & 0xFF;
-    } else if (sounderGrp == sounderGroupExtOut) {
-      union[0] = unionFunction & 0xFF;
-      union[1] = unionEnabled & 0xFF;
-      union[2] = unionTest & 0xFF;
-      union[3] = unionCountdown & 0xFF;
-      union[4] = unionHold & 0xFF;
-      union[5] = unionRelease & 0xFF;
-    } else {
-      union[0] = unionFunction & 0xFF;
-      union[1] = unionEnabled & 0xFF;
-      union[2] = unionTest & 0xFF;
-      union[3] = unionAction & 0xFF;
-    }
-    buf.setRange(31, 37, union);
+    buf[25] = sounderEnable & 0xFF;
+    buf[26] = sounderTest & 0xFF;
+    buf[27] = sounderType & 0xFF;
+    StructBytes.writeUint16Le(buf, 28, delay);
+    buf[30] = advAction & 0xFF;
+    buf[31] = advCountdown & 0xFF;
+    buf[32] = advHold & 0xFF;
+    buf[33] = advRelease & 0xFF;
     return buf;
   }
 
   Map<String, dynamic> toCacheMap() {
-    final functionNo =
-        sounderGrp == sounderGroupZone
-            ? sounderZone
-            : sounderGrp == sounderGroupExtOut
-            ? sounderExtOut
-            : 0;
-
     return {
       'enabled': sounderEnable != 0,
       'test': sounderTest != 0,
@@ -208,29 +128,7 @@ class SounderCfgDef {
       'outputText': sounderText,
       'group': sounderGrp,
       'function': sounderFunc,
-      'functionNo': functionNo,
+      'functionNo': sounderGrp == sounderGroupZone ? sounderZone : 0,
     };
   }
-}
-
-class _SounderUnion {
-  const _SounderUnion({
-    this.function = 0,
-    this.zone = 0,
-    this.enabled = 0,
-    this.test = 0,
-    this.action = 0,
-    this.countdown = 0,
-    this.hold = 0,
-    this.release = 0,
-  });
-
-  final int function;
-  final int zone;
-  final int enabled;
-  final int test;
-  final int action;
-  final int countdown;
-  final int hold;
-  final int release;
 }

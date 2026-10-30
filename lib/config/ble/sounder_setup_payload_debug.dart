@@ -27,9 +27,11 @@ abstract final class SounderSetupPayloadDebug {
         .map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase())
         .join(' ');
     print('TX/RX: TRANSMIT: sounder-apply packet: $hex');
+    final structStart = ConfigSetupPayload.structOffset;
+    final structEnd = structStart + (SounderCfgDef.byteLength * 3);
     print(
-      'SETUP_SOUNDER APPLY struct bytes [13..123]: '
-      '${packet.sublist(13, 124).map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}',
+      'SETUP_SOUNDER APPLY struct bytes [$structStart..${structEnd - 1}]: '
+      '${packet.sublist(structStart, structEnd).map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}',
     );
   }
 
@@ -41,7 +43,7 @@ abstract final class SounderSetupPayloadDebug {
     debugPrint('$label 216-byte frame:\n${formatHexDump(packet)}');
   }
 
-  /// Key-value dump of the three 37-byte sounder structs at frame byte 13.
+  /// Key-value dump of the three 34-byte sounder structs at frame byte 13.
   static void printStructs(List<int> frame, {required String label}) {
     if (!kDebugMode) return;
     const count = 3;
@@ -52,7 +54,8 @@ abstract final class SounderSetupPayloadDebug {
     for (var i = 0; i < count; i++) {
       final config = SounderCfgDef.fromBytes(
         bytes,
-        offset: ConfigSetupPayload.structOffset + (i * SounderCfgDef.byteLength),
+        offset:
+            ConfigSetupPayload.structOffset + (i * SounderCfgDef.byteLength),
       );
       debugPrint(_formatSounder(label, i + 1, config));
     }
@@ -75,41 +78,15 @@ abstract final class SounderSetupPayloadDebug {
       '  group: ${config.sounderGrp} $groupName',
       '  function: ${config.sounderFunc} $functionName',
       '  zone: ${config.sounderZone}',
-      '  extOut: ${config.sounderExtOut}',
       '  enable: ${config.sounderEnable}',
       '  test: ${config.sounderTest}',
       '  type: ${config.sounderType} $typeName',
       '  delay: ${config.delay}',
-      ..._unionLines(config),
+      '  adv.action: ${config.advAction}',
+      '  adv.countdown: ${config.advCountdown}',
+      '  adv.hold: ${config.advHold}',
+      '  adv.release: ${config.advRelease}',
     ];
     return lines.join('\n');
-  }
-
-  static List<String> _unionLines(SounderCfgDef config) {
-    if (config.sounderGrp == SounderCfgDef.sounderGroupZone) {
-      return [
-        '  union.function: ${config.unionFunction}',
-        '  union.zone: ${config.unionZone}',
-        '  union.enable: ${config.unionEnabled}',
-        '  union.test: ${config.unionTest}',
-        '  union.action: ${config.unionAction}',
-      ];
-    }
-    if (config.sounderGrp == SounderCfgDef.sounderGroupExtOut) {
-      return [
-        '  union.function: ${config.unionFunction}',
-        '  union.enable: ${config.unionEnabled}',
-        '  union.test: ${config.unionTest}',
-        '  union.countdown: ${config.unionCountdown}',
-        '  union.hold: ${config.unionHold}',
-        '  union.release: ${config.unionRelease}',
-      ];
-    }
-    return [
-      '  union.function: ${config.unionFunction}',
-      '  union.enable: ${config.unionEnabled}',
-      '  union.test: ${config.unionTest}',
-      '  union.action: ${config.unionAction}',
-    ];
   }
 }

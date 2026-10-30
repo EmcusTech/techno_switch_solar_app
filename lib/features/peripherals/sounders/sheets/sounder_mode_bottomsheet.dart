@@ -338,12 +338,6 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
             sounder.dynamicController.text = v;
           },
         ),
-      if (sounder.group == StringConstants.extOut)
-        _textField(
-          label: StringConstants.extOut,
-          fieldController: sounder.dynamicController,
-          enabled: false,
-        ),
       DropdownWidget(
         label: StringConstants.enabled,
         value: controller.enabledLabelFor(index),
@@ -522,57 +516,36 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
   }
 
   Widget _extOutAdvancedFields() {
-    final numbers = <int>[];
-    var invalid = false;
-    for (final sounder in controller.sounders) {
-      if (sounder.group != StringConstants.extOut) continue;
-      final number = controller.selectionNumber(sounder);
-      if (number == null) {
-        invalid = true;
-      } else if (!numbers.contains(number)) {
-        numbers.add(number);
-      }
-    }
-    if (numbers.isEmpty && !invalid) {
+    final selected = controller.sounders.any(
+      (sounder) => sounder.group == StringConstants.extOut,
+    );
+    if (!selected) {
       return Text(
         StringConstants.noExtOutSelected,
         style: StyleConstants.textGray14w400Style,
       );
     }
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (invalid)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: Text(
-              StringConstants.enterExtOutNumberFrom1To3,
-              style: StyleConstants.textGray14w400Style,
-            ),
-          ),
-        for (final number in numbers)
-          peripheralSheetFieldGrid([
-            DropdownWidget(
-              label: 'Countdown',
-              value: controller.extOuts[number - 1].countdownAction,
-              items: controller.extOutActionOptions,
-              onChanged: (v) => controller.setExtCountdown(number - 1, v),
-            ),
-            DropdownWidget(
-              label: 'Hold',
-              value: controller.extOuts[number - 1].holdAction,
-              items: controller.extOutActionOptions,
-              onChanged: (v) => controller.setExtHold(number - 1, v),
-            ),
-            DropdownWidget(
-              label: 'Release',
-              value: controller.extOuts[number - 1].releaseAction,
-              items: controller.extOutActionOptions,
-              onChanged: (v) => controller.setExtRelease(number - 1, v),
-            ),
-          ]),
-      ],
-    );
+    final extOut = controller.extOuts[0];
+    return peripheralSheetFieldGrid([
+      DropdownWidget(
+        label: 'Countdown',
+        value: extOut.countdownAction,
+        items: controller.extOutActionOptions,
+        onChanged: (v) => controller.setExtCountdown(0, v),
+      ),
+      DropdownWidget(
+        label: 'Hold',
+        value: extOut.holdAction,
+        items: controller.extOutActionOptions,
+        onChanged: (v) => controller.setExtHold(0, v),
+      ),
+      DropdownWidget(
+        label: 'Release',
+        value: extOut.releaseAction,
+        items: controller.extOutActionOptions,
+        onChanged: (v) => controller.setExtRelease(0, v),
+      ),
+    ]);
   }
 
   Widget _delayFields() {

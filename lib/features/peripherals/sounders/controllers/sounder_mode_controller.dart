@@ -451,8 +451,7 @@ class SounderModeController extends PeripheralModeController {
       final number = selectionNumber(sounder);
       if (number != null) return zones[number - 1].enabled;
     } else if (sounder.group == StringConstants.extOut) {
-      final number = selectionNumber(sounder);
-      if (number != null) return extOuts[number - 1].enabled;
+      return extOuts[0].enabled;
     } else {
       return _generalEnabled ? StringConstants.yes : 'No';
     }
@@ -464,8 +463,7 @@ class SounderModeController extends PeripheralModeController {
       final number = selectionNumber(sounder);
       if (number != null) return zones[number - 1].test;
     } else if (sounder.group == StringConstants.extOut) {
-      final number = selectionNumber(sounder);
-      if (number != null) return extOuts[number - 1].test;
+      return extOuts[0].test;
     } else {
       return _generalTest ? StringConstants.yes : 'No';
     }
@@ -480,8 +478,7 @@ class SounderModeController extends PeripheralModeController {
       return;
     }
     if (sounder.group == StringConstants.extOut) {
-      final number = selectionNumber(sounder);
-      if (number != null) extOuts[number - 1].enabled = value;
+      extOuts[0].enabled = value;
       return;
     }
     _generalEnabled = enabled;
@@ -496,8 +493,7 @@ class SounderModeController extends PeripheralModeController {
       return;
     }
     if (sounder.group == StringConstants.extOut) {
-      final number = selectionNumber(sounder);
-      if (number != null) extOuts[number - 1].test = value;
+      extOuts[0].test = value;
       return;
     }
     _generalTest = test;
@@ -510,13 +506,6 @@ class SounderModeController extends PeripheralModeController {
     sounders[0].test = m.isSounderOneTest.value ? StringConstants.yes : 'No';
     sounders[1].test = m.isSounderTwoTest.value ? StringConstants.yes : 'No';
     sounders[2].test = m.isSounderThreeTest.value ? StringConstants.yes : 'No';
-  }
-
-  void _setExtOutNumber(SounderConfig sounder) {
-    final options = functionOptionsMap[StringConstants.extOut]!;
-    final functionIndex = options.indexOf(sounder.function);
-    if (functionIndex < 0) return;
-    sounder.dynamicController.text = '${functionIndex + 1}';
   }
 
   @override
@@ -533,7 +522,10 @@ class SounderModeController extends PeripheralModeController {
       bool isTest = testLabel == StringConstants.yes;
       bool isNormal = sounder.type == PanelValues.sounderTypeNormal;
       String outputText = sounder.outputController.text;
-      int functionNo = int.tryParse(sounder.dynamicController.text) ?? 0;
+      final functionNo =
+          sounder.group == StringConstants.zone
+              ? (int.tryParse(sounder.dynamicController.text) ?? 0)
+              : 0;
       int groupIndex = returnIndex(sounder.group, groupOptions);
       int functionIndex = returnIndex(
         sounder.function,
@@ -701,18 +693,11 @@ class SounderModeController extends PeripheralModeController {
     final sounder = sounders[index];
     sounder.group = v;
     sounder.function = functionOptionsMap[v]!.first;
-    if (v == StringConstants.extOut) {
-      _setExtOutNumber(sounder);
-    }
     refreshUi();
   }
 
   void setSounderFunction(int index, String v) {
-    final sounder = sounders[index];
-    sounder.function = v;
-    if (sounder.group == StringConstants.extOut) {
-      _setExtOutNumber(sounder);
-    }
+    sounders[index].function = v;
     refreshUi();
   }
 
