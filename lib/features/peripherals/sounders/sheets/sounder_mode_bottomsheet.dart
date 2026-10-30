@@ -252,7 +252,6 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
   // ───────────────── SOUNDERS ─────────────────
 
   Widget _windowsSounderBody() {
-    final index = _sounderTabController?.index ?? 0;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -301,7 +300,16 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  _sounderFields(index),
+                  SizedBox(
+                    height: 380,
+                    child: TabBarView(
+                      controller: _sounderTabController,
+                      children: List.generate(
+                        3,
+                        (i) => SingleChildScrollView(child: _sounderFields(i)),
+                      ),
+                    ),
+                  ),
                   const SizedBox(height: 8),
                   _advancedHeader(),
                   _advancedTabs(),
@@ -473,13 +481,24 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
           ),
         ),
         const SizedBox(height: 20),
-        switch (_tabController.index) {
-          1 => _zoneAdvancedFields(),
-          2 => _extOutAdvancedFields(),
-          3 => _delayFields(),
-          _ => _generalAdvancedFields(),
-        },
+        _advancedTabBody(),
       ],
+    );
+  }
+
+  Widget _advancedTabBody() {
+    final pages = <Widget>[
+      _generalAdvancedFields(),
+      _zoneAdvancedFields(),
+      _extOutAdvancedFields(),
+      _delayFields(),
+    ];
+    if (!PeripheralSheetChrome.flat) {
+      return pages[_tabController.index];
+    }
+    return SizedBox(
+      height: 320,
+      child: TabBarView(controller: _tabController, children: pages),
     );
   }
 
