@@ -243,8 +243,9 @@ class GeneralModuleBottomSheetState extends State<GeneralModuleBottomSheet> {
   InputDecoration _inputDecoration() {
     return InputDecoration(
       filled: true,
+      isDense: true,
       fillColor: ColorConstants.surfaceLight,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: const BorderSide(color: ColorConstants.borderLight),

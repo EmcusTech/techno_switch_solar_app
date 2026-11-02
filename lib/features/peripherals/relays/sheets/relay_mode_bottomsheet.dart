@@ -100,7 +100,7 @@ class RelayModeBottomSheetState extends State<RelayModeBottomSheet>
                   },
                   child: SingleChildScrollView(
                     controller: _scrollController,
-                    physics: const BouncingScrollPhysics(),
+                    physics: const ClampingScrollPhysics(),
                     padding: const EdgeInsets.only(top: 8),
                     child: Column(
                       children: List.generate(3, (i) => _relayTile(i)),
@@ -165,7 +165,7 @@ class RelayModeBottomSheetState extends State<RelayModeBottomSheet>
                                           child: SingleChildScrollView(
                                             controller: _scrollController,
                                             physics:
-                                                const BouncingScrollPhysics(),
+                                                const ClampingScrollPhysics(),
                                             padding: const EdgeInsets.only(
                                               top: 16,
                                             ),
@@ -299,7 +299,7 @@ class RelayModeBottomSheetState extends State<RelayModeBottomSheet>
                   return false;
                 },
                 child: SingleChildScrollView(
-                  physics: const BouncingScrollPhysics(),
+                  physics: const ClampingScrollPhysics(),
                   child: _relayFields(i),
                 ),
               );
@@ -473,8 +473,9 @@ class RelayModeBottomSheetState extends State<RelayModeBottomSheet>
 
     return InputDecoration(
       filled: true,
+      isDense: true,
       fillColor: ColorConstants.surfaceLight,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide(color: borderColor),

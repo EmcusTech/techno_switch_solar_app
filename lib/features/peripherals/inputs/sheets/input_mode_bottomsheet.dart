@@ -130,7 +130,7 @@ class InputModeBottomSheetState extends State<InputModeBottomSheet> {
             return false;
           },
           child: SingleChildScrollView(
-            physics: const BouncingScrollPhysics(),
+            physics: const ClampingScrollPhysics(),
             padding: EdgeInsets.only(top: widget.embedInCreateFlow ? 0 : 16),
             child: _formColumn(),
           ),
@@ -219,7 +219,7 @@ class InputModeBottomSheetState extends State<InputModeBottomSheet> {
           _label(label),
           const SizedBox(height: 6),
           Container(
-            height: 48,
+            height: 42,
             alignment: Alignment.centerLeft,
             padding: const EdgeInsets.symmetric(horizontal: 14),
             decoration: BoxDecoration(
@@ -290,8 +290,9 @@ class InputModeBottomSheetState extends State<InputModeBottomSheet> {
 
     return InputDecoration(
       filled: true,
+      isDense: true,
       fillColor: ColorConstants.surfaceLight,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide(color: borderColor),

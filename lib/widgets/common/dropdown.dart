@@ -12,6 +12,7 @@ class DropdownWidget extends StatefulWidget {
   final Set<String> disabledItems;
   final double? dropdownListHeight;
   final bool enableSearch;
+  final bool enabled;
   final ValueChanged<String> onChanged;
 
   const DropdownWidget({
@@ -23,6 +24,7 @@ class DropdownWidget extends StatefulWidget {
     this.disabledItems = const {},
     this.dropdownListHeight,
     this.enableSearch = false,
+    this.enabled = true,
   });
 
   @override
@@ -58,6 +60,14 @@ class _DropdownWidgetState extends State<DropdownWidget> {
     List<String> items,
     ValueChanged<String> onChanged,
   ) {
+    final locked = !widget.enabled;
+    final valueStyle =
+        locked
+            ? StyleConstants.textDark14w500Style.copyWith(
+              color: ColorConstants.textDisabled,
+            )
+            : StyleConstants.textDark14w500Style;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
       child: Column(
@@ -65,9 +75,8 @@ class _DropdownWidgetState extends State<DropdownWidget> {
         children: [
           _label(label),
           const SizedBox(height: 6),
-
           SizedBox(
-            height: 48,
+            height: 42,
             child: DropdownButtonFormField2<String>(
               isExpanded: true,
 
@@ -83,19 +92,24 @@ class _DropdownWidgetState extends State<DropdownWidget> {
                         e,
                         overflow: TextOverflow.ellipsis,
                         style:
-                            disabled
-                                ? StyleConstants.textDark14w500Style.copyWith(
+                            disabled || locked
+                                ? valueStyle.copyWith(
                                   color: ColorConstants.textDisabled,
                                 )
-                                : StyleConstants.textDark14w500Style,
+                                : valueStyle,
                       ),
                     );
                   }).toList(),
 
-              onChanged: (v) {
-                if (v == null || widget.disabledItems.contains(v)) return;
-                onChanged(v);
-              },
+              onChanged:
+                  locked
+                      ? null
+                      : (v) {
+                        if (v == null || widget.disabledItems.contains(v)) {
+                          return;
+                        }
+                        onChanged(v);
+                      },
 
               buttonStyleData: ButtonStyleData(
                 height: 48,
@@ -106,12 +120,15 @@ class _DropdownWidgetState extends State<DropdownWidget> {
                 ),
               ),
 
-              iconStyleData: const IconStyleData(
+              iconStyleData: IconStyleData(
                 icon: Padding(
-                  padding: EdgeInsets.only(right: 8.0),
+                  padding: const EdgeInsets.only(right: 8.0),
                   child: Icon(
                     Icons.keyboard_arrow_down_rounded,
-                    color: ColorConstants.textDark,
+                    color:
+                        locked
+                            ? ColorConstants.textDisabled
+                            : ColorConstants.textDark,
                   ),
                 ),
                 iconSize: 22,
@@ -205,6 +222,14 @@ class _DropdownWidgetState extends State<DropdownWidget> {
                 ),
 
                 enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(
+                    color: ColorConstants.borderLight,
+                    width: 1,
+                  ),
+                ),
+
+                disabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: const BorderSide(
                     color: ColorConstants.borderLight,

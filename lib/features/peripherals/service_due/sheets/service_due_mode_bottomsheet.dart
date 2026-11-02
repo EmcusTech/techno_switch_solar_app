@@ -102,7 +102,7 @@ class ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
       init: controller,
       builder: (c) {
         final scroll = SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
+          physics: const ClampingScrollPhysics(),
           padding: EdgeInsets.only(
             top: widget.embedInCreateFlow ? 0 : 16,
             bottom: 16,
@@ -371,8 +371,9 @@ class ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
   InputDecoration _inputDecoration() {
     return InputDecoration(
       filled: true,
+      isDense: true,
       fillColor: ColorConstants.surfaceLight,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: const BorderSide(color: ColorConstants.borderLight),

@@ -92,7 +92,7 @@ class _RadioModeBottomSheetState extends State<RadioModeBottomSheet> {
                           return false;
                         },
                         child: SingleChildScrollView(
-                          physics: const BouncingScrollPhysics(),
+                          physics: const ClampingScrollPhysics(),
                           padding: const EdgeInsets.only(top: 16),
                           child: _radioFields(),
                         ),
@@ -127,57 +127,57 @@ class _RadioModeBottomSheetState extends State<RadioModeBottomSheet> {
       ),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       child: peripheralSheetFieldGrid([
-          _disabledField(StringConstants.enabled, StringConstants.yes),
-          DropdownWidget(
-            label: StringConstants.module,
-            value: radio.module,
-            items: controller.moduleOptions,
-            onChanged: (v) => controller.setModule(v),
-          ),
-          _textField(
-            label: StringConstants.name,
-            fieldController: radio.nameController,
-            error: controller.nameError,
-            maxLength: 21,
-          ),
-          _textField(
-            label: 'Number',
-            fieldController: radio.numberController,
-            error: controller.numberError,
-            keyboardType: TextInputType.number,
-            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-          ),
-          DropdownWidget(
-            label: StringConstants.advertise,
-            value: radio.advertise,
-            items: controller.yesNoOptions,
-            onChanged: (v) => controller.setAdvertise(v),
-          ),
-          DropdownWidget(
-            label: StringConstants.connection,
-            value: radio.connection,
-            items: controller.yesNoOptions,
-            onChanged: (v) => controller.setConnection(v),
-          ),
-          DropdownWidget(
-            label: StringConstants.service,
-            value: radio.service,
-            items: controller.yesNoOptions,
-            onChanged: (v) => controller.setService(v),
-          ),
-          DropdownWidget(
-            label: StringConstants.programming,
-            value: radio.programming,
-            items: controller.yesNoOptions,
-            onChanged: (v) => controller.setProgramming(v),
-          ),
-          DropdownWidget(
-            label: StringConstants.boot,
-            value: radio.boot,
-            items: controller.yesNoOptions,
-            onChanged: (v) => controller.setBoot(v),
-          ),
-        ]),
+        _disabledField(StringConstants.enabled, StringConstants.yes),
+        DropdownWidget(
+          label: StringConstants.module,
+          value: radio.module,
+          items: controller.moduleOptions,
+          onChanged: (v) => controller.setModule(v),
+        ),
+        _textField(
+          label: StringConstants.name,
+          fieldController: radio.nameController,
+          error: controller.nameError,
+          maxLength: 21,
+        ),
+        _textField(
+          label: 'Number',
+          fieldController: radio.numberController,
+          error: controller.numberError,
+          keyboardType: TextInputType.number,
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+        ),
+        DropdownWidget(
+          label: StringConstants.advertise,
+          value: radio.advertise,
+          items: controller.yesNoOptions,
+          onChanged: (v) => controller.setAdvertise(v),
+        ),
+        DropdownWidget(
+          label: StringConstants.connection,
+          value: radio.connection,
+          items: controller.yesNoOptions,
+          onChanged: (v) => controller.setConnection(v),
+        ),
+        DropdownWidget(
+          label: StringConstants.service,
+          value: radio.service,
+          items: controller.yesNoOptions,
+          onChanged: (v) => controller.setService(v),
+        ),
+        DropdownWidget(
+          label: StringConstants.programming,
+          value: radio.programming,
+          items: controller.yesNoOptions,
+          onChanged: (v) => controller.setProgramming(v),
+        ),
+        DropdownWidget(
+          label: StringConstants.boot,
+          value: radio.boot,
+          items: controller.yesNoOptions,
+          onChanged: (v) => controller.setBoot(v),
+        ),
+      ]),
     );
   }
 
@@ -283,8 +283,8 @@ class _RadioModeBottomSheetState extends State<RadioModeBottomSheet> {
           _label(label),
           const SizedBox(height: 6),
           Container(
-            height: 48,
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+            height: 42,
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 0),
             decoration: BoxDecoration(
               color: ColorConstants.surfaceLight,
               borderRadius: BorderRadius.circular(12),
@@ -308,8 +308,9 @@ class _RadioModeBottomSheetState extends State<RadioModeBottomSheet> {
 
     return InputDecoration(
       filled: true,
+      isDense: true,
       fillColor: ColorConstants.surfaceLight,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide(color: borderColor),

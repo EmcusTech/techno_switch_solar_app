@@ -97,7 +97,7 @@ class _AccessCodesBottomSheetState extends State<AccessCodesBottomSheet> {
                             _title(StringConstants.accessMode),
                             Expanded(
                               child: SingleChildScrollView(
-                                physics: const BouncingScrollPhysics(),
+                                physics: const ClampingScrollPhysics(),
                                 keyboardDismissBehavior:
                                     ScrollViewKeyboardDismissBehavior.onDrag,
                                 child: Column(
@@ -289,8 +289,9 @@ class _AccessCodesBottomSheetState extends State<AccessCodesBottomSheet> {
   InputDecoration _inputDecoration() {
     return InputDecoration(
       filled: true,
+      isDense: true,
       fillColor: ColorConstants.surfaceLight,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: const BorderSide(color: ColorConstants.borderLight),

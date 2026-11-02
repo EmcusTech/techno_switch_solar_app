@@ -100,52 +100,52 @@ class _ModuleInfoBottomSheetState extends State<ModuleInfoBottomSheet> {
                                 child: Padding(
                                   padding: const EdgeInsets.only(top: 16),
                                   child: peripheralSheetFieldGrid([
-                                      ValueListenableBuilder<String>(
-                                        valueListenable:
-                                            manager.bleFirmwareVersion,
-                                        builder:
-                                            (_, version, __) => _disabledField(
-                                              'BLE Firmware Version',
-                                              version.isEmpty ? '-' : version,
-                                            ),
-                                      ),
-                                      _reactiveTile(
-                                        StringConstants.moduleNo,
-                                        manager.moduleNo,
-                                      ),
-                                      _reactiveTileBool(
-                                        StringConstants.enabled,
-                                        manager.moduleEnabled,
-                                      ),
-                                      _reactiveTile(
-                                        StringConstants.product,
-                                        manager.moduleProduct,
-                                      ),
-                                      _reactiveTile(
-                                        StringConstants.id,
-                                        manager.moduleId,
-                                      ),
-                                      _reactiveTile(
-                                        StringConstants.revision,
-                                        manager.moduleRevision,
-                                      ),
-                                      _reactiveTile(
-                                        StringConstants.hardwareVersion,
-                                        manager.moduleHardware,
-                                      ),
-                                      _reactiveTile(
-                                        StringConstants.firmwareVersion,
-                                        manager.moduleFirmware,
-                                      ),
-                                      _reactiveTile(
-                                        StringConstants.manufacturingDate,
-                                        manager.moduleDate,
-                                      ),
-                                      _reactiveTile(
-                                        StringConstants.protocolNo,
-                                        manager.moduleProtocol,
-                                      ),
-                                    ]),
+                                    ValueListenableBuilder<String>(
+                                      valueListenable:
+                                          manager.bleFirmwareVersion,
+                                      builder:
+                                          (_, version, __) => _disabledField(
+                                            'BLE Firmware Version',
+                                            version.isEmpty ? '-' : version,
+                                          ),
+                                    ),
+                                    _reactiveTile(
+                                      StringConstants.moduleNo,
+                                      manager.moduleNo,
+                                    ),
+                                    _reactiveTileBool(
+                                      StringConstants.enabled,
+                                      manager.moduleEnabled,
+                                    ),
+                                    _reactiveTile(
+                                      StringConstants.product,
+                                      manager.moduleProduct,
+                                    ),
+                                    _reactiveTile(
+                                      StringConstants.id,
+                                      manager.moduleId,
+                                    ),
+                                    _reactiveTile(
+                                      StringConstants.revision,
+                                      manager.moduleRevision,
+                                    ),
+                                    _reactiveTile(
+                                      StringConstants.hardwareVersion,
+                                      manager.moduleHardware,
+                                    ),
+                                    _reactiveTile(
+                                      StringConstants.firmwareVersion,
+                                      manager.moduleFirmware,
+                                    ),
+                                    _reactiveTile(
+                                      StringConstants.manufacturingDate,
+                                      manager.moduleDate,
+                                    ),
+                                    _reactiveTile(
+                                      StringConstants.protocolNo,
+                                      manager.moduleProtocol,
+                                    ),
+                                  ]),
                                 ),
                               ),
                             ),
@@ -197,8 +197,8 @@ class _ModuleInfoBottomSheetState extends State<ModuleInfoBottomSheet> {
           _label(label),
           const SizedBox(height: 6),
           Container(
-            height: 48,
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+            height: 42,
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 0),
             decoration: BoxDecoration(
               color: ColorConstants.surfaceLight,
               borderRadius: BorderRadius.circular(12),
@@ -243,7 +243,7 @@ class _ModuleInfoBottomSheetState extends State<ModuleInfoBottomSheet> {
           const SizedBox(height: 6),
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             decoration: BoxDecoration(
               color: ColorConstants.surfaceLight,
               borderRadius: BorderRadius.circular(12),

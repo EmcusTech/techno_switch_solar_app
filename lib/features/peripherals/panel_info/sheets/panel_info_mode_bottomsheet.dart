@@ -76,7 +76,7 @@ class PanelInfoBottomSheetState extends State<PanelInfoBottomSheet>
         return false;
       },
       child: SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
+        physics: const ClampingScrollPhysics(),
         padding: const EdgeInsets.only(top: 16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -459,8 +459,9 @@ class PanelInfoBottomSheetState extends State<PanelInfoBottomSheet>
   InputDecoration _inputDecoration() {
     return InputDecoration(
       filled: true,
+      isDense: true,
       fillColor: ColorConstants.surfaceLight,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: const BorderSide(color: ColorConstants.borderLight),

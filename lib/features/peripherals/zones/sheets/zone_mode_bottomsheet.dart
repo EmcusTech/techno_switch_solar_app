@@ -511,9 +511,10 @@ class ZoneBottomSheetState extends State<ZoneBottomSheet>
         hasError ? ColorConstants.primary : ColorConstants.borderLight;
 
     return InputDecoration(
+      isDense: true,
       filled: true,
       fillColor: ColorConstants.surfaceLight,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide(color: borderColor),

@@ -109,7 +109,7 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
             return false;
           },
           child: SingleChildScrollView(
-            physics: const BouncingScrollPhysics(),
+            physics: const ClampingScrollPhysics(),
             padding: const EdgeInsets.only(top: 16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -365,8 +365,9 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
         hasError ? ColorConstants.primary : ColorConstants.borderLight;
     return InputDecoration(
       filled: true,
+      isDense: true,
       fillColor: ColorConstants.surfaceLight,
-      contentPadding: const EdgeInsets.all(14),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide(color: borderColor),
