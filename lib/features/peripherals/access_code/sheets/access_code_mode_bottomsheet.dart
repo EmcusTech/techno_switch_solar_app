@@ -100,6 +100,7 @@ class _AccessCodesBottomSheetState extends State<AccessCodesBottomSheet> {
                                 physics: const ClampingScrollPhysics(),
                                 keyboardDismissBehavior:
                                     ScrollViewKeyboardDismissBehavior.onDrag,
+                                padding: peripheralSheetScrollPadding(),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [

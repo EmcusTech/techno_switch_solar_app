@@ -103,7 +103,7 @@ class ServiceDueBottomSheetState extends State<ServiceDueBottomSheet> {
       builder: (c) {
         final scroll = SingleChildScrollView(
           physics: const ClampingScrollPhysics(),
-          padding: EdgeInsets.only(
+          padding: peripheralSheetScrollPadding(
             top: widget.embedInCreateFlow ? 0 : 16,
             bottom: 16,
           ),

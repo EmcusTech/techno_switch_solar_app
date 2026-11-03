@@ -303,6 +303,7 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
             child: SingleChildScrollView(
               controller: sounderBottomSheetController,
               physics: const ClampingScrollPhysics(),
+              padding: peripheralSheetScrollPadding(),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [

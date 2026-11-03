@@ -93,7 +93,7 @@ class _RadioModeBottomSheetState extends State<RadioModeBottomSheet> {
                         },
                         child: SingleChildScrollView(
                           physics: const ClampingScrollPhysics(),
-                          padding: const EdgeInsets.only(top: 16),
+                          padding: peripheralSheetScrollPadding(top: 16),
                           child: _radioFields(),
                         ),
                       ),

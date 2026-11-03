@@ -124,7 +124,7 @@ class GeneralModuleBottomSheetState extends State<GeneralModuleBottomSheet> {
           },
           child: SingleChildScrollView(
             physics: const BouncingScrollPhysics(),
-            padding: EdgeInsets.only(
+            padding: peripheralSheetScrollPadding(
               top: widget.embedInCreateFlow ? 0 : 16,
               bottom: 16,
             ),

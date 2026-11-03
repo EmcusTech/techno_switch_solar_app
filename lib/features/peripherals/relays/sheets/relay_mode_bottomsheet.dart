@@ -300,6 +300,7 @@ class RelayModeBottomSheetState extends State<RelayModeBottomSheet>
                 },
                 child: SingleChildScrollView(
                   physics: const ClampingScrollPhysics(),
+                  padding: peripheralSheetScrollPadding(),
                   child: _relayFields(i),
                 ),
               );

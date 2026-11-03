@@ -693,6 +693,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet> {
                       (s) => SingleChildScrollView(
                         controller: _resultController,
                         physics: const BouncingScrollPhysics(),
+                        padding: peripheralSheetScrollPadding(),
                         child: _diffDetailCard(c, result, s),
                       ),
                     )
@@ -1008,6 +1009,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet> {
           child: SingleChildScrollView(
             controller: _cardController,
             physics: const BouncingScrollPhysics(),
+            padding: peripheralSheetScrollPadding(),
             child: _resultBlock(c, result),
           ),
         )
@@ -1029,6 +1031,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet> {
                             fit: FlexFit.loose,
                             child: SingleChildScrollView(
                               physics: const BouncingScrollPhysics(),
+                              padding: peripheralSheetScrollPadding(),
                               child: _tileShell(
                                 title: StringConstants.compareWithSavedSetup,
                                 children: [
@@ -1066,6 +1069,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet> {
                   )
                   : SingleChildScrollView(
                     physics: const BouncingScrollPhysics(),
+                    padding: peripheralSheetScrollPadding(),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [

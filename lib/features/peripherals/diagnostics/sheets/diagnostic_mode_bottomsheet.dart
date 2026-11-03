@@ -223,6 +223,7 @@ class _DiagnosticInfoBottomSheetState extends State<DiagnosticInfoBottomSheet> {
                           Expanded(
                             child: ListView(
                               controller: scrollController,
+                              padding: peripheralSheetScrollPadding(),
                               physics: const BouncingScrollPhysics(
                                 parent: AlwaysScrollableScrollPhysics(),
                               ),

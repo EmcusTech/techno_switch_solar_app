@@ -107,7 +107,9 @@ class _TestModeRelayBottomSheetState extends State<TestModeRelayBottomSheet> {
                                 },
                                 child: SingleChildScrollView(
                                   physics: const BouncingScrollPhysics(),
-                                  padding: const EdgeInsets.only(top: 16),
+                                  padding: peripheralSheetScrollPadding(
+                                    top: 16,
+                                  ),
                                   child:
                                       manager == null
                                           ? const SizedBox.shrink()

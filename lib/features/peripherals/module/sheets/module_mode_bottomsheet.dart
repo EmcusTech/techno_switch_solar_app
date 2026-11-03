@@ -97,9 +97,8 @@ class _ModuleInfoBottomSheetState extends State<ModuleInfoBottomSheet> {
                             Expanded(
                               child: SingleChildScrollView(
                                 physics: const BouncingScrollPhysics(),
-                                child: Padding(
-                                  padding: const EdgeInsets.only(top: 16),
-                                  child: peripheralSheetFieldGrid([
+                                padding: peripheralSheetScrollPadding(top: 16),
+                                child: peripheralSheetFieldGrid([
                                     ValueListenableBuilder<String>(
                                       valueListenable:
                                           manager.bleFirmwareVersion,
@@ -146,7 +145,6 @@ class _ModuleInfoBottomSheetState extends State<ModuleInfoBottomSheet> {
                                       manager.moduleProtocol,
                                     ),
                                   ]),
-                                ),
                               ),
                             ),
                             const SizedBox(height: 12),

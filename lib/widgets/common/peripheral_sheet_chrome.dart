@@ -20,6 +20,16 @@ class PeripheralSheetChrome {
   }
 }
 
+/// Same right inset as the dashboard tile list, so the Windows scrollbar
+/// sits beside the fields.
+EdgeInsets peripheralSheetScrollPadding({double top = 0, double bottom = 0}) {
+  return EdgeInsets.only(
+    top: top,
+    bottom: bottom,
+    right: PeripheralSheetChrome.flat ? 20 : 0,
+  );
+}
+
 /// Windows panes place fields two across. Phone sheets stay one per row.
 Widget peripheralSheetFieldGrid(List<Widget> fields) {
   if (!PeripheralSheetChrome.flat) {

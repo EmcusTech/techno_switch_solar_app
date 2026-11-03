@@ -309,6 +309,7 @@ class ZoneBottomSheetState extends State<ZoneBottomSheet>
                 },
                 child: SingleChildScrollView(
                   physics: const BouncingScrollPhysics(),
+                  padding: peripheralSheetScrollPadding(),
                   child: _zoneFields(i),
                 ),
               );

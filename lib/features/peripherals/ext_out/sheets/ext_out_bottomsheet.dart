@@ -110,7 +110,7 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
           },
           child: SingleChildScrollView(
             physics: const ClampingScrollPhysics(),
-            padding: const EdgeInsets.only(top: 16),
+            padding: peripheralSheetScrollPadding(top: 16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [

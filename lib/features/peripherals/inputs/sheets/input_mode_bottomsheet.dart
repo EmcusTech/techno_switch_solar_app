@@ -131,7 +131,9 @@ class InputModeBottomSheetState extends State<InputModeBottomSheet> {
           },
           child: SingleChildScrollView(
             physics: const ClampingScrollPhysics(),
-            padding: EdgeInsets.only(top: widget.embedInCreateFlow ? 0 : 16),
+            padding: peripheralSheetScrollPadding(
+              top: widget.embedInCreateFlow ? 0 : 16,
+            ),
             child: _formColumn(),
           ),
         );

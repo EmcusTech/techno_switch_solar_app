@@ -231,6 +231,7 @@ class PanelInfoBottomSheetState extends State<PanelInfoBottomSheet>
       },
       child: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
+        padding: peripheralSheetScrollPadding(),
         child: child,
       ),
     );
