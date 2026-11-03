@@ -4,6 +4,7 @@ import 'package:Technoswitch/utils/constants/color_constants.dart';
 import 'package:Technoswitch/utils/constants/string_constants.dart';
 
 import 'package:Technoswitch/utils/constants/style_constants.dart';
+import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 
 class DropdownWidget extends StatefulWidget {
   final String label;
@@ -135,7 +136,7 @@ class _DropdownWidgetState extends State<DropdownWidget> {
               ),
 
               dropdownStyleData: DropdownStyleData(
-                maxHeight: widget.dropdownListHeight ?? 120,
+                maxHeight: widget.dropdownListHeight ?? 140.h,
                 decoration: BoxDecoration(
                   color: ColorConstants.white,
                   borderRadius: BorderRadius.circular(12),

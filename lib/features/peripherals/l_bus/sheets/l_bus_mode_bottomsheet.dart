@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 import 'package:get/get.dart';
 import 'package:Technoswitch/features/peripherals/l_bus/controllers/l_bus_controller.dart';
 import 'package:Technoswitch/widgets/common/dropdown.dart';
@@ -206,7 +207,7 @@ class LBusBottomSheetState extends State<LBusBottomSheet> {
         LBusDefaults.busCount,
         (i) => 'L-Bus ${i + LBusDefaults.firstBusNumber}',
       ),
-      dropdownListHeight: MediaQuery.sizeOf(context).height * 0.2,
+      dropdownListHeight: 170.h,
       enableSearch: true,
       onChanged: (v) {
         final number = int.parse(v.split(' ').last);

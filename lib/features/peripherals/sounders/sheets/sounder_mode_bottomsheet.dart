@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 import 'package:get/get.dart';
 import 'package:Technoswitch/features/peripherals/sounders/controllers/sounder_mode_controller.dart';
 import 'package:Technoswitch/utils/peripherals/defaults/sounder_defaults.dart';
@@ -599,18 +600,21 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
         label: 'Countdown',
         value: extOut.countdownAction,
         items: controller.extOutActionOptions,
+        dropdownListHeight: 130.h,
         onChanged: (v) => controller.setExtCountdown(0, v),
       ),
       DropdownWidget(
         label: 'Hold',
         value: extOut.holdAction,
         items: controller.extOutActionOptions,
+        dropdownListHeight: 130.h,
         onChanged: (v) => controller.setExtHold(0, v),
       ),
       DropdownWidget(
         label: 'Release',
         value: extOut.releaseAction,
         items: controller.extOutActionOptions,
+        dropdownListHeight: 80.h,
         onChanged: (v) => controller.setExtRelease(0, v),
       ),
     ]);
