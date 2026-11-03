@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 import 'package:get/get.dart';
 import 'package:Technoswitch/features/peripherals/ext_out/controllers/ext_out_controller.dart';
 import 'package:Technoswitch/widgets/common/dropdown.dart';
@@ -299,12 +300,14 @@ class ExtOutBottomSheetState extends State<ExtOutBottomSheet> {
         label: StringConstants.holdCount,
         value: controller.holdCount,
         items: controller.holdCountOptions,
+        dropdownListHeight: 100.h,
         onChanged: (v) => controller.setHoldCount(v),
       ),
       DropdownWidget(
         label: StringConstants.action,
         value: controller.action,
         items: controller.actionOptions,
+        dropdownListHeight: 100.h,
         onChanged: (v) => controller.setAction(v),
       ),
     ]);

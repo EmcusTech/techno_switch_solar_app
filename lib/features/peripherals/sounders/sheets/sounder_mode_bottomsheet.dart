@@ -512,6 +512,7 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
     return _SounderTabSlot(
       controller: _tabController,
       count: 4,
+      fitCurrentPage: true,
       pageBuilder: (index, forMeasure) {
         switch (index) {
           case 1:
@@ -537,6 +538,7 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
         label: StringConstants.action,
         value: controller.actionOptions[safeIndex],
         items: controller.actionOptions,
+        dropdownListHeight: 80.h,
         onChanged: controller.setGeneralAction,
       ),
     ]);
@@ -577,6 +579,7 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
               label: StringConstants.action,
               value: controller.zones[number - 1].action,
               items: controller.actionOptions,
+              dropdownListHeight: 80.h,
               onChanged: (v) => controller.setZoneAction(number - 1, v),
             ),
           ]),
@@ -652,6 +655,7 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
         label: StringConstants.delayed,
         value: controller.yesNoOptions[delayedOn ? 1 : 0],
         items: controller.yesNoOptions,
+        dropdownListHeight: 80.h,
         onChanged: (_) {},
       ),
     ]);

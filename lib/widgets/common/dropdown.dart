@@ -136,13 +136,14 @@ class _DropdownWidgetState extends State<DropdownWidget> {
               ),
 
               dropdownStyleData: DropdownStyleData(
-                maxHeight: widget.dropdownListHeight ?? 140.h,
+                maxHeight: widget.dropdownListHeight ?? 135.h,
                 decoration: BoxDecoration(
                   color: ColorConstants.white,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 elevation: 4,
                 isOverButton: false,
+                useSafeArea: true,
               ),
 
               menuItemStyleData: const MenuItemStyleData(
