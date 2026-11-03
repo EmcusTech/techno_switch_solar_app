@@ -169,25 +169,29 @@ abstract final class ProjectDashboardTileActions {
 
   static void openEventLog(ProjectDashboardController c) {
     c.guardBootloaderOr(() {
-      unawaited(_openEventLogAfterConfirm(c));
+      final ui = _ui(c);
+      if (ui == null) return;
+      if (!c.ble.isConnected) {
+        ui.showSnackBar(StringConstants.deviceNotConnected);
+        return;
+      }
+
+      final process = c.ble.bleProcess;
+      process.onNewEventLogsReady = (logs) {
+        process.onNewEventLogsReady = null;
+        if (!ui.isMounted) return;
+        ui.openParsedEventLogScreen(logs);
+      };
+      unawaited(() async {
+        final started = await process.beginNewEventLogRetrieval();
+        if (!started) {
+          process.onNewEventLogsReady = null;
+          if (ui.isMounted) {
+            ui.showSnackBar(StringConstants.deviceNotConnected);
+          }
+        }
+      }());
     });
-  }
-
-  static Future<void> _openEventLogAfterConfirm(
-    ProjectDashboardController c,
-  ) async {
-    final ui = _ui(c);
-    if (ui == null) return;
-
-    final proceed = await ui.showEventLogRetrievalConfirmDialog();
-    if (proceed != true) return;
-
-    ui.showPasswordPopup(
-      onCall: () {
-        c.ble.bleProcess.isEventLogRetrievalFetchCommandActive.value = true;
-        c.bleController.startLogRetrieval();
-      },
-    );
   }
 
   static void openFirmwareUpgrade(ProjectDashboardController c) {

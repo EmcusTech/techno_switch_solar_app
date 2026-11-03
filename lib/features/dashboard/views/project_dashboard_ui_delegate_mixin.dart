@@ -12,6 +12,7 @@ import 'package:Technoswitch/features/dashboard/controllers/project_dashboard_ui
 import 'package:Technoswitch/features/dashboard/widgets/show_dashboard_peripheral_sheet.dart';
 import 'package:Technoswitch/features/logs/bindings/log_binding.dart';
 import 'package:Technoswitch/features/logs/models/log_flow_args.dart';
+import 'package:Technoswitch/features/logs/views/event_log_screen.dart';
 import 'package:Technoswitch/features/logs/views/log_retrieval_loading_screen.dart';
 import 'package:Technoswitch/features/peripherals/access_code/sheets/access_code_mode_bottomsheet.dart';
 import 'package:Technoswitch/features/peripherals/config_log/sheets/config_log_bottomsheet.dart';
@@ -59,6 +60,7 @@ import 'package:Technoswitch/widgets/export_tile.dart';
 import 'package:Technoswitch/utils/constants/asset_constants.dart';
 import 'package:Technoswitch/utils/constants/ble/ble_msd_utils.dart';
 import 'package:Technoswitch/utils/constants/color_constants.dart';
+import 'package:Technoswitch/models/log_model.dart';
 import 'package:Technoswitch/utils/constants/string_constants.dart';
 import 'package:Technoswitch/utils/constants/style_constants.dart';
 
@@ -121,6 +123,24 @@ mixin ProjectDashboardUiDelegateMixin<T extends StatefulWidget> on State<T>
       trailingValue: true,
       maxWidth: 420,
     );
+  }
+
+  @override
+  void openParsedEventLogScreen(List<LogModel> logs) {
+    if (!mounted) return;
+    LogBinding(
+      args: LogFlowArgs.eventLog(
+        logDataList: logs,
+        panelVersionNo: dashboardController.selectedDevice.id,
+        panelName: dashboardController.panelName,
+        connectedDevice: dashboardController.selectedDevice,
+        siteId: dashboardController.siteId,
+        fromProjectDashboard: true,
+      ),
+    ).dependencies();
+    Navigator.of(
+      uiContext,
+    ).push(MaterialPageRoute(builder: (_) => const EventLogScreen()));
   }
 
   @override

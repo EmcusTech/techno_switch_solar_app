@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:Technoswitch/ble/ble_manager.dart';
+import 'package:Technoswitch/ble/ts_frame.dart';
 import 'package:Technoswitch/config/ble/config_setup_payload.dart';
 import 'package:Technoswitch/config/structs/sounder_cfg_def.dart';
 import 'package:Technoswitch/config/ui/sounder_config_options.dart';
@@ -27,11 +28,10 @@ abstract final class SounderSetupPayloadDebug {
         .map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase())
         .join(' ');
     print('TX/RX: TRANSMIT: sounder-apply packet: $hex');
-    final structStart = ConfigSetupPayload.structOffset;
-    final structEnd = structStart + (SounderCfgDef.byteLength * 3);
+    final body = _commandData(packet);
     print(
-      'SETUP_SOUNDER APPLY struct bytes [$structStart..${structEnd - 1}]: '
-      '${packet.sublist(structStart, structEnd).map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}',
+      'SETUP_SOUNDER APPLY struct bytes (${body.length}): '
+      '${body.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}',
     );
   }
 
@@ -47,18 +47,24 @@ abstract final class SounderSetupPayloadDebug {
   static void printStructs(List<int> frame, {required String label}) {
     if (!kDebugMode) return;
     const count = 3;
-    final end =
-        ConfigSetupPayload.structOffset + (SounderCfgDef.byteLength * count);
-    if (frame.length < end) return;
-    final bytes = Uint8List.fromList(frame);
+    final bytes = Uint8List.fromList(_commandData(frame));
+    if (bytes.length < SounderCfgDef.byteLength * count) return;
     for (var i = 0; i < count; i++) {
       final config = SounderCfgDef.fromBytes(
         bytes,
-        offset:
-            ConfigSetupPayload.structOffset + (i * SounderCfgDef.byteLength),
+        offset: i * SounderCfgDef.byteLength,
       );
       debugPrint(_formatSounder(label, i + 1, config));
     }
+  }
+
+  static List<int> _commandData(List<int> frame) {
+    final parsed = TsFrame.parse(frame);
+    if (parsed.lengthMatches) return parsed.data;
+    if (frame.length > ConfigSetupPayload.structOffset) {
+      return frame.sublist(ConfigSetupPayload.structOffset);
+    }
+    return frame;
   }
 
   static String _formatSounder(String label, int index, SounderCfgDef config) {

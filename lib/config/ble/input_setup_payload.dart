@@ -1,15 +1,15 @@
-import 'dart:typed_data';
-
 import 'package:Technoswitch/ble/ble_process.dart';
+import 'package:Technoswitch/ble/ts_frame.dart';
 import 'package:Technoswitch/config/ble/config_setup_payload.dart';
 import 'package:Technoswitch/config/structs/input_cfg_def.dart';
 
-/// SETUP_INPUT data section inside the 216-byte BLE frame.
+/// SETUP_INPUT command data inside the variable-length TS frame.
 ///
-/// One command carries a single `st_input_1_cfg_def` (prog input) at [13].
+/// One command carries a single `st_input_1_cfg_def` (prog input) at byte 15.
+/// Bytes 6–7 count network through command plus this struct.
 abstract final class InputSetupPayload {
   static const int commandOffset = ConfigSetupPayload.commandOffset;
-  static const int structOffset = ConfigSetupPayload.structOffset;
+  static const int structOffset = TsFrame.dataOffset;
 
   static const int byteLength = InputCfgDef.byteLength;
 
@@ -33,13 +33,17 @@ abstract final class InputSetupPayload {
     process.isInputSetupInverted.value = config.inputInvert != 0;
   }
 
-  static void writeToPacket(Uint8List packet, InputCfgDef config) {
-    ConfigSetupPayload.writeStruct(packet, config.toBytes());
-  }
-
   static InputCfgDef readFromPacket(List<int> payload) {
-    return InputCfgDef.fromBytes(
-      ConfigSetupPayload.readStructBytes(payload, byteLength),
-    );
+    final parsed = TsFrame.parse(payload);
+    if (!parsed.isValid || parsed.dataLength != byteLength) {
+      throw FormatException(
+        'SETUP_INPUT frame invalid: size=${payload.length} '
+        'dataLength=${parsed.dataLength} '
+        'lengthOk=${parsed.lengthMatches} '
+        'checksumOk=${parsed.checksumMatches} '
+        'eotOk=${parsed.eotMatches}',
+      );
+    }
+    return InputCfgDef.fromBytes(parsed.data);
   }
 }

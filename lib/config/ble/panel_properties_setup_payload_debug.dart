@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:Technoswitch/ble/ble_manager.dart';
+import 'package:Technoswitch/ble/ts_frame.dart';
 import 'package:Technoswitch/config/ble/panel_properties_setup_payload.dart';
 
 /// Debug helpers for inspecting SETUP_PANEL_PROPERTIES 216-byte apply frames.
@@ -27,9 +28,11 @@ abstract final class PanelPropertiesSetupPayloadDebug {
       'SETUP_PANEL_PROPERTIES APPLY 216-byte frame (preview):\n'
       '${formatHexDump(packet)}',
     );
+    final parsed = TsFrame.parse(packet);
+    final body = parsed.lengthMatches ? parsed.data : packet.sublist(13);
     debugPrint(
-      'SETUP_PANEL_PROPERTIES APPLY struct bytes [13..82]: '
-      '${packet.sublist(13, 83).map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}',
+      'SETUP_PANEL_PROPERTIES APPLY struct bytes (${body.length}): '
+      '${body.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}',
     );
   }
 
@@ -50,7 +53,12 @@ abstract final class PanelPropertiesSetupPayloadDebug {
 
   static void logStruct(String label, List<int> frame) {
     try {
-      final config = PanelPropertiesSetupPayload.readFromPacket(frame);
+      final parsed = TsFrame.parse(frame);
+      final source =
+          parsed.lengthMatches
+              ? TsFrame.legacyCommandDataPayload(frame, parsed)
+              : frame;
+      final config = PanelPropertiesSetupPayload.readFromPacket(source);
       print(
         'PANEL_PROPERTIES $label st_panel_properties_def: '
         'panelNum=${config.panelNum} '

@@ -215,13 +215,17 @@ abstract final class SounderSetupPayload {
     ConfigSetupPayload.writeStruct(packet, config.toBytes());
   }
 
-  static void writeAllToPacket(Uint8List packet, BleProcess process) {
+  static Uint8List packedBytes(BleProcess process) {
     final packed = Uint8List(packedByteLength);
     for (var index = 0; index < sounderCount; index++) {
       final bytes = fromBleProcess(process, index).toBytes();
       packed.setRange(index * byteLength, (index + 1) * byteLength, bytes);
     }
-    ConfigSetupPayload.writeStruct(packet, packed);
+    return packed;
+  }
+
+  static void writeAllToPacket(Uint8List packet, BleProcess process) {
+    ConfigSetupPayload.writeStruct(packet, packedBytes(process));
   }
 
   static SounderCfgDef readFromPacket(List<int> payload) {

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:Technoswitch/ble/controller/ble_log_controller.dart';
+import 'package:Technoswitch/ble/ts_frame.dart';
 import 'package:Technoswitch/models/access_code_mode_model.dart';
 import 'package:Technoswitch/models/adc_domain_values_model.dart';
 import 'package:Technoswitch/utils/constants/string_constants.dart';
@@ -31,11 +32,14 @@ import 'package:Technoswitch/utils/constants/ble/ble_name_utils.dart';
 import 'package:Technoswitch/utils/storage/peripheral_setup_cache.dart';
 import 'ble_manager.dart';
 import 'ble_frame.dart';
+import 'event_log_record.dart';
 import '../models/log_model.dart';
 import '../models/l_bus_setup_data_model.dart';
 import '../utils/constants/event_constants.dart';
 import '../utils/adc_parser.dart';
 import '../utils/timestamp_converter.dart';
+
+enum NewEventLogPhase { idle, waitStart, waitFetch }
 
 class BleProcess {
   final BleManager bleManager;
@@ -101,6 +105,10 @@ class BleProcess {
   int validEventLogNum = 0;
   int read1000Logs = 0;
   bool logRetreivalEnded = false;
+
+  NewEventLogPhase newEventLogPhase = NewEventLogPhase.idle;
+  void Function(List<LogModel> logs)? onNewEventLogsReady;
+  Timer? _newEventLogTimer;
 
   DateTime? logStartingTime;
   DateTime? logEndTime;
@@ -888,6 +896,11 @@ class BleProcess {
   }
 
   Future<void> bleRxFrameProcess(BleRxFrame rx) async {
+    if (newEventLogPhase != NewEventLogPhase.idle) {
+      await _handleNewEventLogFrame(rx);
+      return;
+    }
+
     rxTimeoutRetryCount = 0;
     pollWaitRspTimeoutCnt = 0;
     nackRetryCount = 0;
@@ -910,10 +923,16 @@ class BleProcess {
       return;
     }
 
-    if (rx.payload[10] == 0x83 &&
-        rx.payload[12] == 0x02 &&
-        rx.payload[13] == 0x0A &&
-        !isNetworkPacketProcess.value) {
+    final bool wrongPassword =
+        (rx.payload.length > 13 &&
+            rx.payload[10] == 0x83 &&
+            rx.payload[12] == 0x02 &&
+            rx.payload[13] == 0x0A) ||
+        (rx.payload.length > TsFrame.dataOffset &&
+            rx.payload[TsFrame.modeOffset] == 0x83 &&
+            rx.payload[TsFrame.commandOffset] == 0x02 &&
+            rx.payload[TsFrame.dataOffset] == 0x0A);
+    if (wrongPassword && !isNetworkPacketProcess.value) {
       clearSessionAccessCode();
       resetProcessState();
       processDesc.value = StringConstants.wrongPassword;
@@ -1087,12 +1106,35 @@ class BleProcess {
     }
 
     if (checkForNetworkPacketRsp == 1) {
+      final List<int> networkPayload;
+      if (isSessionAccessCodeValidationOnly) {
+        InputSetupPayloadDebug.logBleFrame(
+          'RECEIVE',
+          'module-id-response',
+          rx.payload,
+        );
+        final parsed = TsFrame.parse(rx.payload);
+        if (!parsed.isValid) {
+          print(
+            'TX/RX: RECEIVE: module-id-response rejected '
+            'packet (${rx.payload.length} bytes) '
+            'dataLength=${parsed.dataLength} '
+            'lengthOk=${parsed.lengthMatches} '
+            'checksumOk=${parsed.checksumMatches} '
+            'eotOk=${parsed.eotMatches}',
+          );
+          return;
+        }
+        networkPayload = _legacyCommandDataPayload(rx.payload, parsed);
+      } else {
+        networkPayload = rx.payload;
+      }
       if (receivedPanelName.value.isEmpty) {
         receivedPanelName.value = extractStringFromPayload(
-          rx.payload,
+          networkPayload,
           startIndex: 16,
         );
-        _applyNetworkPacketVersionFields(rx.payload);
+        _applyNetworkPacketVersionFields(networkPayload);
         _persistPanelNetworkSnapshotIfConnected();
       }
 
@@ -1101,8 +1143,7 @@ class BleProcess {
       _otherPacketsRxTimeoutTimer?.cancel();
       _otherPacketsRxTimeoutTimer = null;
       if (isInputSetupFetchCommandActive.value ||
-          isInputSetupApplyActive.value ||
-          isSessionAccessCodeValidationOnly) {
+          isInputSetupApplyActive.value) {
         InputSetupPayloadDebug.logBleFrame(
           'RECEIVE',
           'network-response',
@@ -1111,7 +1152,7 @@ class BleProcess {
       }
 
       if (isSessionAccessCodeValidationOnly) {
-        ModuleIdPayload.logResponse(rx.payload);
+        ModuleIdPayload.logResponse(networkPayload);
         isSessionAccessCodeValidationOnly = false;
         bleManager.otaProcessState = OtaProcessState.notInUse;
         cancelOperationDeadline();
@@ -1152,20 +1193,57 @@ class BleProcess {
     }
 
     if (checkForAccessKeyCmdRsp == 1) {
-      print(
-        "TX/RX: Access code response sdcsc packet: ${rx.payload.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
-      );
-      print("acces code validation : ${rx.payload[13]}");
+      final int accessResult;
+      final bool echoedKeyMatches;
+      if (isSessionAccessCodeValidationOnly) {
+        final parsed = TsFrame.parse(rx.payload);
+        InputSetupPayloadDebug.logBleFrame(
+          'RECEIVE',
+          'access-key-response',
+          rx.payload,
+        );
+        if (!parsed.isValid || parsed.data.isEmpty) {
+          print(
+            'TX/RX: RECEIVE: access-key-response rejected '
+            'packet (${rx.payload.length} bytes) '
+            'dataLength=${parsed.dataLength} '
+            'lengthOk=${parsed.lengthMatches} '
+            'checksumOk=${parsed.checksumMatches} '
+            'eotOk=${parsed.eotMatches}',
+          );
+          accessResult = -1;
+          echoedKeyMatches = false;
+        } else {
+          accessResult = parsed.data[0];
+          final int keyLen = accessKeyLength.value;
+          echoedKeyMatches =
+              parsed.data.length >= 1 + keyLen &&
+              String.fromCharCodes(parsed.data.sublist(1, 1 + keyLen)) ==
+                  accessKey.value;
+        }
+        print("acces code validation : $accessResult");
+      } else {
+        print(
+          "TX/RX: Access code response sdcsc packet: ${rx.payload.map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase()).join(' ')}",
+        );
+        accessResult = rx.payload.length > 13 ? rx.payload[13] : -1;
+        print("acces code validation : $accessResult");
+        final int keyLen = accessKeyLength.value;
+        echoedKeyMatches =
+            rx.payload.length >= 14 + keyLen &&
+            String.fromCharCodes(rx.payload.sublist(14, 14 + keyLen)) ==
+                accessKey.value;
+      }
       // if (rx.payload[13] != 0x0a &&
       //     String.fromCharCodes(
       //           rx.payload.sublist(14, 14 + accessKeyLength.value),
       //         ) ==
       //         accessKey.value) {
-      if (rx.payload[13] == 0x02) {
+      if (accessResult == 0x02) {
         cancelAccessKeyPollDeadline();
-        if (isSessionAccessCodeValidationOnly ||
-            isInputSetupFetchCommandActive.value ||
-            isInputSetupApplyActive.value) {
+        if (!isSessionAccessCodeValidationOnly &&
+            (isInputSetupFetchCommandActive.value ||
+                isInputSetupApplyActive.value)) {
           InputSetupPayloadDebug.logBleFrame(
             'RECEIVE',
             'access-key-response',
@@ -1358,11 +1436,7 @@ class BleProcess {
           checkForAccessKeyCmdRsp = 0;
           isAccessKeyValid.value = true;
         }
-      } else if (rx.payload[13] == 0x0a &&
-          String.fromCharCodes(
-                rx.payload.sublist(14, 14 + accessKeyLength.value),
-              ) ==
-              accessKey.value) {
+      } else if (accessResult == 0x0a && echoedKeyMatches) {
         cancelAccessKeyPollDeadline();
         clearSessionAccessCode();
         resetProcessState();
@@ -1512,29 +1586,25 @@ class BleProcess {
     }
 
     if (checkForPanelPropertiesFetchRes == 1) {
-      if (rx.payload[12] == BleConstants.command.panelPropertiesSetup) {
-        PanelPropertiesSetupPayloadDebug.logPacket(
-          'RECEIVE',
-          'panel-properties-fetch-response',
-          rx.payload,
-        );
-        PanelPropertiesSetupPayloadDebug.logStruct(
-          'fetch-rx',
-          rx.payload,
-        );
-        final config = PanelPropertiesSetupPayload.readFromPacket(rx.payload);
+      final view = _acceptedSetupPayload(
+        rx.payload,
+        'panel-properties-fetch-response',
+      );
+      if (view != null &&
+          view[12] == BleConstants.command.panelPropertiesSetup) {
+        PanelPropertiesSetupPayloadDebug.logStruct('fetch-rx', view);
+        final config = PanelPropertiesSetupPayload.readFromPacket(view);
         PanelPropertiesSetupPayload.applyToBleProcess(config, this);
         _finishPanelPropertiesFetch();
       }
     }
 
     if (checkForPanelPropertiesApplyRes == 1) {
-      if (rx.payload[10] == 0x83) {
-        PanelPropertiesSetupPayloadDebug.logPacket(
-          'RECEIVE',
-          'panel-properties-apply-response',
-          rx.payload,
-        );
+      final view = _acceptedSetupPayload(
+        rx.payload,
+        'panel-properties-apply-response',
+      );
+      if (view != null && view[10] == 0x83) {
         _finishPanelPropertiesApply();
       }
     }
@@ -1602,11 +1672,15 @@ class BleProcess {
     }
 
     if (checkForAccessCodeSetupFetchRes == 1) {
-      if (rx.payload[12] == BleConstants.command.accessCodeSetup) {
+      final view = _acceptedSetupPayload(
+        rx.payload,
+        'access-code-setup-fetch-response',
+      );
+      if (view != null && view[12] == BleConstants.command.accessCodeSetup) {
         final accessCodeIndex = accessCodeSetupFetchCommandStep - 1;
         if (accessCodeIndex >= 0 && accessCodeIndex < 8) {
           final parsed = PanelAccessLvlSetupPayload.readSetupDataFromPacket(
-            rx.payload,
+            view,
           );
           final updated = List<AccessCodeSetupData>.from(
             accessCodeSetupDataList.value,
@@ -1637,7 +1711,11 @@ class BleProcess {
     }
 
     if (checkForAccessCodeSetupApplyRes == 1) {
-      if (rx.payload[10] == 0x83) {
+      final view = _acceptedSetupPayload(
+        rx.payload,
+        'access-code-setup-apply-response',
+      );
+      if (view != null && view[10] == 0x83) {
         if (accessCodeSetupApplyCommandStep >= 1 &&
             accessCodeSetupApplyCommandStep < 8) {
           final nextAccessCodeNo = accessCodeSetupApplyCommandStep + 1;
@@ -1703,12 +1781,17 @@ class BleProcess {
     }
 
     if (checkForSounderSetupFetchRes == 1) {
-      if (rx.payload[12] == BleConstants.command.newStructSounderCommand) {
+      final view = _acceptedSetupPayload(
+        rx.payload,
+        'sounder-setup-fetch-response',
+      );
+      if (view != null &&
+          view[12] == BleConstants.command.newStructSounderCommand) {
         SounderSetupPayloadDebug.printStructs(
-          rx.payload,
+          view,
           label: 'SETUP_SOUNDER DOWNLOAD',
         );
-        SounderSetupPayload.readAllIntoBleProcess(rx.payload, this);
+        SounderSetupPayload.readAllIntoBleProcess(view, this);
         bleManager.otaProcessState = OtaProcessState.notInUse;
         cancelOperationDeadline();
         checkForSounderSetupFetchRes = 0;
@@ -1719,7 +1802,11 @@ class BleProcess {
     }
 
     if (checkForSounderSetupApplyRes == 1) {
-      if (rx.payload[10] == 0x83) {
+      final view = _acceptedSetupPayload(
+        rx.payload,
+        'sounder-setup-apply-response',
+      );
+      if (view != null && view[10] == 0x83) {
         bleManager.otaProcessState = OtaProcessState.notInUse;
         cancelOperationDeadline();
         checkForSounderSetupApplyRes = 0;
@@ -1916,7 +2003,8 @@ class BleProcess {
     }
 
     if (checkForExtCmdApplyRes == 1) {
-      if (rx.payload[10] == 0x83) {
+      final view = _acceptedSetupPayload(rx.payload, 'ext-out-apply-response');
+      if (view != null && view[10] == 0x83) {
         bleManager.otaProcessState = OtaProcessState.notInUse;
         cancelOperationDeadline();
         checkForExtCmdApplyRes = 0;
@@ -1926,24 +2014,39 @@ class BleProcess {
     }
 
     if (checkForInputSetupFetchRes == 1) {
-      if (rx.payload[12] == 0x06) {
+      if (rx.payload.length > TsFrame.commandOffset &&
+          rx.payload[TsFrame.commandOffset] == 0x06) {
         InputSetupPayloadDebug.logBleFrame(
           'RECEIVE',
           'input-setup-fetch-response',
           rx.payload,
         );
-        bleManager.otaProcessState = OtaProcessState.notInUse;
-        cancelOperationDeadline();
-        checkForInputSetupFetchRes = 0;
-        isInputSetupFetchCommandActive.value = false;
-        isInputSetupFetchDone.value = true;
-        final config = InputSetupPayload.readFromPacket(rx.payload);
-        InputSetupPayload.applyToBleProcess(config, this);
+        final parsed = TsFrame.parse(rx.payload);
+        if (parsed.isValid &&
+            parsed.dataLength == InputSetupPayload.byteLength) {
+          bleManager.otaProcessState = OtaProcessState.notInUse;
+          cancelOperationDeadline();
+          checkForInputSetupFetchRes = 0;
+          isInputSetupFetchCommandActive.value = false;
+          isInputSetupFetchDone.value = true;
+          final config = InputSetupPayload.readFromPacket(rx.payload);
+          InputSetupPayload.applyToBleProcess(config, this);
+        } else {
+          print(
+            'TX/RX: RECEIVE: input-setup-fetch-response rejected '
+            'packet (${rx.payload.length} bytes) '
+            'dataLength=${parsed.dataLength} '
+            'lengthOk=${parsed.lengthMatches} '
+            'checksumOk=${parsed.checksumMatches} '
+            'eotOk=${parsed.eotMatches}',
+          );
+        }
       }
     }
 
     if (checkForInputSetupApplyRes == 1) {
-      if (rx.payload[10] == 0x83) {
+      if (rx.payload.length > TsFrame.modeOffset &&
+          rx.payload[TsFrame.modeOffset] == 0x83) {
         InputSetupPayloadDebug.logBleFrame(
           'RECEIVE',
           'input-setup-apply-response',
@@ -1958,7 +2061,11 @@ class BleProcess {
     }
 
     if (checkForRelaySetupApplyRes == 1) {
-      if (rx.payload[10] == 0x83) {
+      final view = _acceptedSetupPayload(
+        rx.payload,
+        'relay-setup-apply-response',
+      );
+      if (view != null && view[10] == 0x83) {
         if (relaySetupApplyCommandStep == 1) {
           processDesc.value = "${StringConstants.applyingRelay} 2/3";
           relaySetupApplyCommandStep = 2;
@@ -1980,23 +2087,28 @@ class BleProcess {
     }
 
     if (checkForExtCmdFetchRes == 1) {
-      if (rx.payload[12] == 0x15) {
+      final view = _acceptedSetupPayload(rx.payload, 'ext-out-fetch-response');
+      if (view != null && view[12] == 0x15) {
         bleManager.otaProcessState = OtaProcessState.notInUse;
         cancelOperationDeadline();
         checkForExtCmdFetchRes = 0;
         isExtOutCommandFetchActive.value = false;
         isExtOutFetchDone.value = true;
-        final config = ExtOutSetupPayload.readFromPacket(rx.payload);
+        final config = ExtOutSetupPayload.readFromPacket(view);
         ExtOutSetupPayload.applyToBleProcess(config, this);
       }
     }
 
     if (checkForRelaySetupFetchRes == 1) {
-      if (rx.payload[12] == 0x07) {
+      final view = _acceptedSetupPayload(
+        rx.payload,
+        'relay-setup-fetch-response',
+      );
+      if (view != null && view[12] == 0x07) {
         if (relaySetupFetchCommandStep == 1) {
           processDesc.value = "${StringConstants.downloadingRelay} 2/3";
 
-          final config = RelaySetupPayload.readFromPacket(rx.payload);
+          final config = RelaySetupPayload.readFromPacket(view);
           RelaySetupPayload.applyToBleProcess(config, this, 0);
 
           relaySetupFetchCommandStep = 2;
@@ -2005,14 +2117,14 @@ class BleProcess {
         } else if (relaySetupFetchCommandStep == 2) {
           processDesc.value = "${StringConstants.downloadingRelay} 3/3";
 
-          final config = RelaySetupPayload.readFromPacket(rx.payload);
+          final config = RelaySetupPayload.readFromPacket(view);
           RelaySetupPayload.applyToBleProcess(config, this, 1);
 
           relaySetupFetchCommandStep = 3;
           startRxTimeout();
           await bleManager.sendRelaySetupFetchThirdCmdPkt();
         } else if (relaySetupFetchCommandStep == 3) {
-          final config = RelaySetupPayload.readFromPacket(rx.payload);
+          final config = RelaySetupPayload.readFromPacket(view);
           RelaySetupPayload.applyToBleProcess(config, this, 2);
 
           bleManager.otaProcessState = OtaProcessState.notInUse;
@@ -2025,7 +2137,8 @@ class BleProcess {
     }
 
     if (checkForZoneSetupApplyRes == 1) {
-      if (rx.payload[10] == 0x83) {
+      final view = _acceptedSetupPayload(rx.payload, 'zone-setup-apply-response');
+      if (view != null && view[10] == 0x83) {
         if (zoneSetupApplyCommandStep == 1) {
           processDesc.value = "${StringConstants.applyingZone} 2/3";
           zoneSetupApplyCommandStep = 2;
@@ -2047,23 +2160,24 @@ class BleProcess {
     }
 
     if (checkForZoneSetupFetchRes == 1) {
-      if (rx.payload[12] == 0x04) {
+      final view = _acceptedSetupPayload(rx.payload, 'zone-setup-fetch-response');
+      if (view != null && view[12] == 0x04) {
         if (zoneSetupFetchCommandStep == 1) {
           processDesc.value = "${StringConstants.downloadingZone} 2/3";
-          final config = ZoneSetupPayload.readFromPacket(rx.payload);
+          final config = ZoneSetupPayload.readFromPacket(view);
           ZoneSetupPayload.applyToBleProcess(config, this, 0);
           zoneSetupFetchCommandStep = 2;
           startRxTimeout();
           await bleManager.sendZoneSetupFetchSecondCmdPkt();
         } else if (zoneSetupFetchCommandStep == 2) {
           processDesc.value = "${StringConstants.downloadingZone} 3/3";
-          final config = ZoneSetupPayload.readFromPacket(rx.payload);
+          final config = ZoneSetupPayload.readFromPacket(view);
           ZoneSetupPayload.applyToBleProcess(config, this, 1);
           zoneSetupFetchCommandStep = 3;
           startRxTimeout();
           await bleManager.sendZoneSetupFetchThirdCmdPkt();
         } else if (zoneSetupFetchCommandStep == 3) {
-          final config = ZoneSetupPayload.readFromPacket(rx.payload);
+          final config = ZoneSetupPayload.readFromPacket(view);
           ZoneSetupPayload.applyToBleProcess(config, this, 2);
           bleManager.otaProcessState = OtaProcessState.notInUse;
           cancelOperationDeadline();
@@ -2209,6 +2323,30 @@ class BleProcess {
     cancelOperationDeadline();
     cancelRxTimeout();
     processDesc.value = "";
+  }
+
+  /// Rebuilds the pre-length-field layout so readers still see network at
+  /// byte 6 and command data at byte 13.
+  List<int> _legacyCommandDataPayload(List<int> payload, TsFrameView parsed) {
+    return TsFrame.legacyCommandDataPayload(payload, parsed);
+  }
+
+  /// Accepts a variable-length setup reply and returns the old field layout.
+  List<int>? _acceptedSetupPayload(List<int> payload, String name) {
+    final parsed = TsFrame.parse(payload);
+    InputSetupPayloadDebug.logBleFrame('RECEIVE', name, payload);
+    if (!parsed.isValid) {
+      print(
+        'TX/RX: RECEIVE: $name rejected '
+        'packet (${payload.length} bytes) '
+        'dataLength=${parsed.dataLength} '
+        'lengthOk=${parsed.lengthMatches} '
+        'checksumOk=${parsed.checksumMatches} '
+        'eotOk=${parsed.eotMatches}',
+      );
+      return null;
+    }
+    return _legacyCommandDataPayload(payload, parsed);
   }
 
   String extractStringFromPayload(List<int> payload, {int startIndex = 25}) {
@@ -3259,7 +3397,50 @@ class BleProcess {
     }
   }
 
+  Future<bool> beginNewEventLogRetrieval() async {
+    if (!bleManager.isConnected) return false;
+
+    _newEventLogTimer?.cancel();
+    newEventLogPhase = NewEventLogPhase.waitStart;
+    validEventLogs.value = [];
+    _armNewEventLogTimeout();
+    await bleManager.newEventLogStartCmd();
+    return true;
+  }
+
+  void _armNewEventLogTimeout() {
+    _newEventLogTimer?.cancel();
+    _newEventLogTimer = Timer(const Duration(seconds: 8), () {
+      newEventLogPhase = NewEventLogPhase.idle;
+      onNewEventLogsReady = null;
+    });
+  }
+
+  Future<void> _handleNewEventLogFrame(BleRxFrame rx) async {
+    if (newEventLogPhase == NewEventLogPhase.waitStart) {
+      newEventLogPhase = NewEventLogPhase.waitFetch;
+      _armNewEventLogTimeout();
+      await bleManager.newEventLogFetchCmd();
+      return;
+    }
+
+    if (newEventLogPhase != NewEventLogPhase.waitFetch) return;
+
+    newEventLogPhase = NewEventLogPhase.idle;
+    _newEventLogTimer?.cancel();
+    _newEventLogTimer = null;
+
+    final List<LogModel> logs = EventLogRecordParser.parsePayload(rx.payload);
+    validEventLogs.value = logs;
+    await bleManager.newEventLogEndCmd();
+
+    final ready = onNewEventLogsReady;
+    onNewEventLogsReady = null;
+    ready?.call(logs);
+  }
+
   void dispose() {
+    _newEventLogTimer?.cancel();
     _rxTimeoutTimer?.cancel();
     cancelOperationDeadline();
     cancelAccessKeyPollDeadline();

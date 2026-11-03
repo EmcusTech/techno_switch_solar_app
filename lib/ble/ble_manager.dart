@@ -11,6 +11,7 @@ import 'package:Technoswitch/utils/constants/ble/ble_constants.dart';
 import 'package:Technoswitch/utils/constants/string_constants.dart';
 import 'package:Technoswitch/utils/logger.dart';
 import 'ble_frame.dart';
+import 'ts_frame.dart';
 import 'aes_key.dart' as aes;
 import 'ble_crypto.dart';
 import 'ble_encryption_config.dart';
@@ -2654,21 +2655,7 @@ class BleManager extends GetxService {
   OtaProcessState otaProcessState = OtaProcessState.sendNetworkPacket;
 
   int toolsFletcherChecksum(List<int> buffer) {
-    int length = buffer.length;
-    if (length == 0) return 0;
-
-    int sum1 = 0;
-    int sum2 = 0;
-
-    for (var b in buffer) {
-      sum1 = (sum1 + b) % 255;
-      sum2 = (sum2 + sum1) % 255;
-    }
-
-    int chk1 = (255 - ((sum1 + sum2) % 255)) & BleConstants.base;
-    int chk2 = (255 - ((sum1 + chk1) % 255)) & BleConstants.base;
-
-    return (chk1 << 8) | chk2;
+    return TsFrame.fletcherChecksum(buffer);
   }
 
   List<int> convertToBytes(dynamic data) {
@@ -2837,30 +2824,22 @@ class BleManager extends GetxService {
     bleProcess.isNetworkPacketProcess.value = true;
     u8TxPktCnt = 0;
 
-    List<int> u8Pkt = List.filled(216, 0);
-    u8Pkt[0] = BleConstants.sot;
-    u8Pkt[1] = BleConstants.des;
-    u8Pkt[2] = BleConstants.ori;
-    u8Pkt[3] = BleConstants.type.nrm;
-    u8Pkt[4] = BleConstants.txPkNoInit;
-    u8Pkt[5] = BleConstants.rxPkNoInit;
-    u8Pkt[6] = BleConstants.network.modules;
-    u8Pkt[11] = BleConstants.socket.radio;
-    u8Pkt[12] = BleConstants.command.moduleId;
+    final header = Uint8List(TsFrame.headerLength);
+    header[0] = BleConstants.sot;
+    header[1] = BleConstants.des;
+    header[2] = BleConstants.ori;
+    header[3] = BleConstants.type.nrm;
+    header[4] = BleConstants.txPkNoInit;
+    header[5] = BleConstants.rxPkNoInit;
+    header[6] = BleConstants.network.modules;
+    header[11] = BleConstants.socket.radio;
+    header[12] = BleConstants.command.moduleId;
 
-    int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
+    final u8Pkt = TsFrame.build(header, const <int>[]);
 
-    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
-    u8Pkt[214] = checksum & BleConstants.base;
-    u8Pkt[215] = BleConstants.eot;
+    InputSetupPayloadDebug.logBleFrame('TRANSMIT', 'module-id', u8Pkt);
 
-    if (currentOperationMode == BleOperationMode.inputSetupFetch ||
-        currentOperationMode == BleOperationMode.inputSetupApply ||
-        bleProcess.isSessionAccessCodeValidationOnly) {
-      InputSetupPayloadDebug.logBleFrame('TRANSMIT', 'network', u8Pkt);
-    }
-
-    await sendSmallDataFrame(0x1000, 216, u8Pkt);
+    await sendSmallDataFrame(0x1000, u8Pkt.length, u8Pkt);
   }
 
   Future<void> sendPollPacket() async {
@@ -2900,19 +2879,40 @@ class BleManager extends GetxService {
   Future<void> sendAccessKeyPkt() async {
     u8TxPktCnt += 1;
 
-    List<int> pkt = List.filled(216, 0);
-
-    String accessKeyString = accessKey.value;
+    final String accessKeyString = accessKey.value;
     print("Access Key String: $accessKeyString");
-    List<int> accessKeyBytes = accessKeyString.codeUnits;
+    final List<int> accessKeyBytes = accessKeyString.codeUnits;
     accessKeyLength.value = accessKeyBytes.length;
 
     print('Access Key Length: ${accessKeyLength.value}');
 
+    if (bleProcess.isSessionAccessCodeValidationOnly) {
+      final header = Uint8List(TsFrame.headerLength);
+      header[0] = BleConstants.sot;
+      header[1] = BleConstants.des;
+      header[2] = BleConstants.ori;
+      header[3] = BleConstants.type.nrm;
+      header[4] = u8TxPktCnt & BleConstants.base;
+      header[5] = u8RxPktCnt & BleConstants.base;
+      header[6] = BleConstants.network.radio;
+      header[10] = BleConstants.mode.instruction.ctrl;
+      header[11] = BleConstants.socket.radio;
+      header[12] = BleConstants.command.ctrlAcces;
+
+      final body = Uint8List(1 + accessKeyBytes.length);
+      body[0] = accessKeyLength.value & BleConstants.base;
+      body.setRange(1, body.length, accessKeyBytes);
+
+      final pkt = TsFrame.build(header, body);
+      InputSetupPayloadDebug.logBleFrame('TRANSMIT', 'access-key', pkt);
+      await sendSmallDataFrame(0x1000, pkt.length, pkt);
+      return;
+    }
+
+    final List<int> pkt = List.filled(216, 0);
+
     for (int i = 0; i < accessKeyLength.value; i++) {
-      if (i < accessKeyLength.value) {
-        pkt[14 + i] = accessKeyBytes[i];
-      }
+      pkt[14 + i] = accessKeyBytes[i];
     }
 
     pkt[0] = BleConstants.sot;
@@ -2927,7 +2927,7 @@ class BleManager extends GetxService {
     pkt[12] = BleConstants.command.ctrlAcces;
     pkt[13] = accessKeyLength.value & BleConstants.base;
 
-    int checksum = toolsFletcherChecksum(pkt.sublist(0, 216 - 3));
+    final int checksum = toolsFletcherChecksum(pkt.sublist(0, 216 - 3));
 
     pkt[213] = (checksum >> 8) & BleConstants.base;
     pkt[214] = checksum & BleConstants.base;
@@ -2988,6 +2988,63 @@ class BleManager extends GetxService {
     u8Pkt[215] = BleConstants.eot;
 
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
+  }
+
+  Future<void> newEventLogStartCmd() async {
+    u8TxPktCnt += 1;
+
+    final header = Uint8List(TsFrame.headerLength);
+    header[0] = BleConstants.sot;
+    header[1] = BleConstants.des;
+    header[2] = BleConstants.ori;
+    header[3] = BleConstants.type.nrm;
+    header[4] = u8TxPktCnt & BleConstants.base;
+    header[5] = u8RxPktCnt & BleConstants.base;
+    header[6] = BleConstants.network.radio;
+    header[10] = BleConstants.mode.instruction.ctrl;
+    header[11] = BleConstants.socket.radio;
+    header[12] = BleConstants.command.newEventLogStart;
+
+    final pkt = TsFrame.build(header, const <int>[]);
+    await sendSmallDataFrame(0x1000, pkt.length, pkt);
+  }
+
+  Future<void> newEventLogFetchCmd() async {
+    u8TxPktCnt += 1;
+
+    final header = Uint8List(TsFrame.headerLength);
+    header[0] = BleConstants.sot;
+    header[1] = BleConstants.des;
+    header[2] = BleConstants.ori;
+    header[3] = BleConstants.type.nrm;
+    header[4] = u8TxPktCnt & BleConstants.base;
+    header[5] = u8RxPktCnt & BleConstants.base;
+    header[6] = BleConstants.network.radio;
+    header[10] = BleConstants.mode.instruction.ctrl;
+    header[11] = BleConstants.socket.radio;
+    header[12] = BleConstants.command.newEventLogFetch;
+
+    final pkt = TsFrame.build(header, const <int>[]);
+    await sendSmallDataFrame(0x1000, pkt.length, pkt);
+  }
+
+  Future<void> newEventLogEndCmd() async {
+    u8TxPktCnt += 1;
+
+    final header = Uint8List(TsFrame.headerLength);
+    header[0] = BleConstants.sot;
+    header[1] = BleConstants.des;
+    header[2] = BleConstants.ori;
+    header[3] = BleConstants.type.nrm;
+    header[4] = u8TxPktCnt & BleConstants.base;
+    header[5] = u8RxPktCnt & BleConstants.base;
+    header[6] = BleConstants.network.radio;
+    header[10] = BleConstants.mode.instruction.ctrl;
+    header[11] = BleConstants.socket.radio;
+    header[12] = BleConstants.command.newEventLogEnd;
+
+    final pkt = TsFrame.build(header, const <int>[]);
+    await sendSmallDataFrame(0x1000, pkt.length, pkt);
   }
 
   Future<void> sendJumpFirmwarePacket({bool withoutResponse = true}) async {
@@ -3119,63 +3176,24 @@ class BleManager extends GetxService {
   }
 
   Future<void> sendExtOutSetupFetchCmdPkt() async {
-    Uint8List u8Pkt = Uint8List(216);
-
-    u8TxPktCnt += 1;
-
-    u8Pkt[0] = BleConstants.sot;
-    u8Pkt[1] = BleConstants.des;
-    u8Pkt[2] = BleConstants.ori;
-    u8Pkt[3] = BleConstants.type.nrm;
-    u8Pkt[4] = u8TxPktCnt & BleConstants.base;
-    u8Pkt[5] = u8RxPktCnt & BleConstants.base;
-    u8Pkt[6] = BleConstants.network.radio;
-    u8Pkt[10] = BleConstants.mode.request.dbSetup;
-    u8Pkt[11] = BleConstants.socket.radio;
-    u8Pkt[12] = BleConstants.command.extOutStatus;
-    u8Pkt[13] = BleConstants.extZoneNo;
-
-    int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
-
-    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
-    u8Pkt[214] = checksum & BleConstants.base;
-    u8Pkt[215] = BleConstants.eot;
-
-    await sendSmallDataFrame(0x1000, 216, u8Pkt);
+    await _sendTsSetup(
+      mode: BleConstants.mode.request.dbSetup,
+      command: BleConstants.command.extOutStatus,
+      body: const <int>[BleConstants.extZoneNo],
+      logName: 'ext-out-fetch',
+    );
   }
 
   /// Builds the SETUP_EXT_OUT apply packet. When [previewOnly] is true, the TX
   /// counter is not incremented (for offline UI debugging).
   Uint8List buildExtOutSetupApplyPacket({bool previewOnly = false}) {
-    final u8Pkt = Uint8List(216);
-
-    if (!previewOnly) {
-      u8TxPktCnt += 1;
-    }
-
-    final txCount = previewOnly ? (u8TxPktCnt + 1) : u8TxPktCnt;
-
-    u8Pkt[0] = BleConstants.sot;
-    u8Pkt[1] = BleConstants.des;
-    u8Pkt[2] = BleConstants.ori;
-    u8Pkt[3] = BleConstants.type.nrm;
-    u8Pkt[4] = txCount & BleConstants.base;
-    u8Pkt[5] = u8RxPktCnt & BleConstants.base;
-    u8Pkt[6] = BleConstants.network.radio;
-    u8Pkt[10] = BleConstants.mode.instruction.dbSetup;
-    u8Pkt[11] = BleConstants.socket.radio;
-    u8Pkt[12] = BleConstants.command.extOutSetup;
-
     final extOutConfig = ExtOutSetupPayload.fromBleProcess(bleProcess);
-    ExtOutSetupPayload.writeToPacket(u8Pkt, extOutConfig);
-
-    final checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
-
-    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
-    u8Pkt[214] = checksum & BleConstants.base;
-    u8Pkt[215] = BleConstants.eot;
-
-    return u8Pkt;
+    return _buildTsSetup(
+      mode: BleConstants.mode.instruction.dbSetup,
+      command: BleConstants.command.extOutSetup,
+      body: extOutConfig.toBytes(),
+      advanceTx: !previewOnly,
+    );
   }
 
   Future<void> sendExtOutSetupApplyCmdPkt() async {
@@ -3185,8 +3203,9 @@ class BleManager extends GetxService {
       u8Pkt,
       label: 'SETUP_EXT_OUT APPLY (TX)',
     );
+    InputSetupPayloadDebug.logBleFrame('TRANSMIT', 'ext-out-apply', u8Pkt);
 
-    await sendSmallDataFrame(0x1000, 216, u8Pkt);
+    await sendSmallDataFrame(0x1000, u8Pkt.length, u8Pkt);
   }
 
   Future<void> sendFetchDipSettingPkt() async {
@@ -3215,64 +3234,89 @@ class BleManager extends GetxService {
   }
 
   Future<void> sendInputSetupFetchCmdPkt() async {
-    Uint8List u8Pkt = Uint8List(216);
-
     u8TxPktCnt += 1;
 
-    u8Pkt[0] = BleConstants.sot;
-    u8Pkt[1] = BleConstants.des;
-    u8Pkt[2] = BleConstants.ori;
-    u8Pkt[3] = BleConstants.type.nrm;
-    u8Pkt[4] = u8TxPktCnt & BleConstants.base;
-    u8Pkt[5] = u8RxPktCnt & BleConstants.base;
-    u8Pkt[6] = BleConstants.network.radio;
-    u8Pkt[10] = BleConstants.mode.request.dbSetup;
-    u8Pkt[11] = BleConstants.socket.radio;
-    u8Pkt[12] = BleConstants.command.inputStatus;
-
-    int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
-
-    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
-    u8Pkt[214] = checksum & BleConstants.base;
-    u8Pkt[215] = BleConstants.eot;
+    final u8Pkt = TsFrame.build(
+      _tsHeader(
+        txCount: u8TxPktCnt,
+        mode: BleConstants.mode.request.dbSetup,
+        command: BleConstants.command.inputStatus,
+      ),
+      const <int>[],
+    );
 
     InputSetupPayloadDebug.logBleFrame('TRANSMIT', 'input-setup-fetch', u8Pkt);
 
-    await sendSmallDataFrame(0x1000, 216, u8Pkt);
+    await sendSmallDataFrame(0x1000, u8Pkt.length, u8Pkt);
   }
 
   /// Builds the SETUP_INPUT apply packet. When [previewOnly] is true, the TX
   /// counter is not incremented (for offline UI debugging).
   Uint8List buildInputSetupApplyPacket({bool previewOnly = false}) {
-    final u8Pkt = Uint8List(216);
-
     if (!previewOnly) {
       u8TxPktCnt += 1;
     }
 
     final txCount = previewOnly ? (u8TxPktCnt + 1) : u8TxPktCnt;
-
-    u8Pkt[0] = BleConstants.sot;
-    u8Pkt[1] = BleConstants.des;
-    u8Pkt[2] = BleConstants.ori;
-    u8Pkt[3] = BleConstants.type.nrm;
-    u8Pkt[4] = txCount & BleConstants.base;
-    u8Pkt[5] = u8RxPktCnt & BleConstants.base;
-    u8Pkt[6] = BleConstants.network.radio;
-    u8Pkt[10] = BleConstants.mode.instruction.dbSetup;
-    u8Pkt[11] = BleConstants.socket.radio;
-    u8Pkt[12] = BleConstants.command.inputSetup;
-
     final inputConfig = InputSetupPayload.fromBleProcess(bleProcess);
-    InputSetupPayload.writeToPacket(u8Pkt, inputConfig);
 
-    final checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
+    return TsFrame.build(
+      _tsHeader(
+        txCount: txCount,
+        mode: BleConstants.mode.instruction.dbSetup,
+        command: BleConstants.command.inputSetup,
+      ),
+      inputConfig.toBytes(),
+    );
+  }
 
-    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
-    u8Pkt[214] = checksum & BleConstants.base;
-    u8Pkt[215] = BleConstants.eot;
+  Uint8List _tsHeader({
+    required int txCount,
+    required int mode,
+    required int command,
+  }) {
+    final header = Uint8List(TsFrame.headerLength);
+    header[0] = BleConstants.sot;
+    header[1] = BleConstants.des;
+    header[2] = BleConstants.ori;
+    header[3] = BleConstants.type.nrm;
+    header[4] = txCount & BleConstants.base;
+    header[5] = u8RxPktCnt & BleConstants.base;
+    header[6] = BleConstants.network.radio;
+    header[10] = mode;
+    header[11] = BleConstants.socket.radio;
+    header[12] = command;
+    return header;
+  }
 
-    return u8Pkt;
+  Uint8List _buildTsSetup({
+    required int mode,
+    required int command,
+    List<int> body = const <int>[],
+    bool advanceTx = true,
+  }) {
+    final int txCount;
+    if (advanceTx) {
+      u8TxPktCnt += 1;
+      txCount = u8TxPktCnt;
+    } else {
+      txCount = u8TxPktCnt + 1;
+    }
+    return TsFrame.build(
+      _tsHeader(txCount: txCount, mode: mode, command: command),
+      body,
+    );
+  }
+
+  Future<void> _sendTsSetup({
+    required int mode,
+    required int command,
+    List<int> body = const <int>[],
+    required String logName,
+  }) async {
+    final pkt = _buildTsSetup(mode: mode, command: command, body: body);
+    InputSetupPayloadDebug.logBleFrame('TRANSMIT', logName, pkt);
+    await sendSmallDataFrame(0x1000, pkt.length, pkt);
   }
 
   Future<void> sendInputSetupApplyCmdPkt() async {
@@ -3280,66 +3324,28 @@ class BleManager extends GetxService {
 
     InputSetupPayloadDebug.logBleFrame('TRANSMIT', 'input-setup-apply', u8Pkt);
 
-    await sendSmallDataFrame(0x1000, 216, u8Pkt);
+    await sendSmallDataFrame(0x1000, u8Pkt.length, u8Pkt);
   }
 
   Future<void> sendSounderSetupFetchCmdPkt() async {
-    final u8Pkt = Uint8List(216);
-
-    u8TxPktCnt += 1;
-
-    u8Pkt[0] = BleConstants.sot;
-    u8Pkt[1] = BleConstants.des;
-    u8Pkt[2] = BleConstants.ori;
-    u8Pkt[3] = BleConstants.type.nrm;
-    u8Pkt[4] = u8TxPktCnt & BleConstants.base;
-    u8Pkt[5] = u8RxPktCnt & BleConstants.base;
-    u8Pkt[6] = BleConstants.network.radio;
-    u8Pkt[10] = BleConstants.mode.request.dbSetup;
-    u8Pkt[11] = BleConstants.socket.radio;
-    u8Pkt[12] = BleConstants.command.newStructSounderCommand;
-
-    final checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
-
-    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
-    u8Pkt[214] = checksum & BleConstants.base;
-    u8Pkt[215] = BleConstants.eot;
-
-    await sendSmallDataFrame(0x1000, 216, u8Pkt);
+    await _sendTsSetup(
+      mode: BleConstants.mode.request.dbSetup,
+      command: BleConstants.command.newStructSounderCommand,
+      logName: 'sounder-setup-fetch',
+    );
   }
 
   /// Builds one SETUP_SOUNDER apply packet with sounders 1–3 at [13].
   /// When [previewOnly] is true, the TX counter is not incremented.
   Uint8List buildSounderSetupApplyPacket({bool previewOnly = false}) {
-    final u8Pkt = Uint8List(216);
-
-    if (!previewOnly) {
-      u8TxPktCnt += 1;
-    }
-
-    final txCount = previewOnly ? (u8TxPktCnt + 1) : u8TxPktCnt;
-
-    u8Pkt[0] = BleConstants.sot;
-    u8Pkt[1] = BleConstants.des;
-    u8Pkt[2] = BleConstants.ori;
-    u8Pkt[3] = BleConstants.type.nrm;
-    u8Pkt[4] = txCount & BleConstants.base;
-    u8Pkt[5] = u8RxPktCnt & BleConstants.base;
-    u8Pkt[6] = BleConstants.network.radio;
-    u8Pkt[10] = BleConstants.mode.instruction.dbSetup;
-    u8Pkt[11] = BleConstants.socket.radio;
-    u8Pkt[12] = BleConstants.command.newStructSounderCommand;
-
-    SounderSetupPayload.writeAllToPacket(u8Pkt, bleProcess);
-    SounderSetupPayloadDebug.printStructs(u8Pkt, label: 'SETUP_SOUNDER APPLY');
-
-    final checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
-
-    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
-    u8Pkt[214] = checksum & BleConstants.base;
-    u8Pkt[215] = BleConstants.eot;
-
-    return u8Pkt;
+    final packet = _buildTsSetup(
+      mode: BleConstants.mode.instruction.dbSetup,
+      command: BleConstants.command.newStructSounderCommand,
+      body: SounderSetupPayload.packedBytes(bleProcess),
+      advanceTx: !previewOnly,
+    );
+    SounderSetupPayloadDebug.printStructs(packet, label: 'SETUP_SOUNDER APPLY');
+    return packet;
   }
 
   Future<void> sendSounderSetupApplyCmdPkt() async {
@@ -3349,86 +3355,36 @@ class BleManager extends GetxService {
       u8Pkt,
       label: 'SETUP_SOUNDER APPLY (TX)',
     );
+    InputSetupPayloadDebug.logBleFrame('TRANSMIT', 'sounder-setup-apply', u8Pkt);
 
-    await sendSmallDataFrame(0x1000, 216, u8Pkt);
+    await sendSmallDataFrame(0x1000, u8Pkt.length, u8Pkt);
   }
 
   Future<void> sendRelaySetupFetchFirstCmdPkt() async {
-    Uint8List u8Pkt = Uint8List(216);
-
-    u8TxPktCnt += 1;
-
-    u8Pkt[0] = BleConstants.sot;
-    u8Pkt[1] = BleConstants.des;
-    u8Pkt[2] = BleConstants.ori;
-    u8Pkt[3] = BleConstants.type.nrm;
-    u8Pkt[4] = u8TxPktCnt & BleConstants.base;
-    u8Pkt[5] = u8RxPktCnt & BleConstants.base;
-    u8Pkt[6] = BleConstants.network.radio;
-    u8Pkt[10] = BleConstants.mode.request.dbSetup;
-    u8Pkt[11] = BleConstants.socket.radio;
-    u8Pkt[12] = BleConstants.command.relaySetup;
-    u8Pkt[13] = BleConstants.firstRelaySetupNo;
-
-    int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
-
-    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
-    u8Pkt[214] = checksum & BleConstants.base;
-    u8Pkt[215] = BleConstants.eot;
-
-    await sendSmallDataFrame(0x1000, 216, u8Pkt);
+    await _sendTsSetup(
+      mode: BleConstants.mode.request.dbSetup,
+      command: BleConstants.command.relaySetup,
+      body: const <int>[BleConstants.firstRelaySetupNo],
+      logName: 'relay-setup-fetch-1',
+    );
   }
 
   Future<void> sendRelaySetupFetchSecondCmdPkt() async {
-    Uint8List u8Pkt = Uint8List(216);
-
-    u8TxPktCnt += 1;
-
-    u8Pkt[0] = BleConstants.sot;
-    u8Pkt[1] = BleConstants.des;
-    u8Pkt[2] = BleConstants.ori;
-    u8Pkt[3] = BleConstants.type.nrm;
-    u8Pkt[4] = u8TxPktCnt & BleConstants.base;
-    u8Pkt[5] = u8RxPktCnt & BleConstants.base;
-    u8Pkt[6] = BleConstants.network.radio;
-    u8Pkt[10] = BleConstants.mode.request.dbSetup;
-    u8Pkt[11] = BleConstants.socket.radio;
-    u8Pkt[12] = BleConstants.command.relaySetup;
-    u8Pkt[13] = BleConstants.secondRelaySetupNo;
-
-    int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
-
-    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
-    u8Pkt[214] = checksum & BleConstants.base;
-    u8Pkt[215] = BleConstants.eot;
-
-    await sendSmallDataFrame(0x1000, 216, u8Pkt);
+    await _sendTsSetup(
+      mode: BleConstants.mode.request.dbSetup,
+      command: BleConstants.command.relaySetup,
+      body: const <int>[BleConstants.secondRelaySetupNo],
+      logName: 'relay-setup-fetch-2',
+    );
   }
 
   Future<void> sendRelaySetupFetchThirdCmdPkt() async {
-    Uint8List u8Pkt = Uint8List(216);
-
-    u8TxPktCnt += 1;
-
-    u8Pkt[0] = BleConstants.sot;
-    u8Pkt[1] = BleConstants.des;
-    u8Pkt[2] = BleConstants.ori;
-    u8Pkt[3] = BleConstants.type.nrm;
-    u8Pkt[4] = u8TxPktCnt & BleConstants.base;
-    u8Pkt[5] = u8RxPktCnt & BleConstants.base;
-    u8Pkt[6] = BleConstants.network.radio;
-    u8Pkt[10] = BleConstants.mode.request.dbSetup;
-    u8Pkt[11] = BleConstants.socket.radio;
-    u8Pkt[12] = BleConstants.command.relaySetup;
-    u8Pkt[13] = BleConstants.thirdRelaySetupNo;
-
-    int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
-
-    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
-    u8Pkt[214] = checksum & BleConstants.base;
-    u8Pkt[215] = BleConstants.eot;
-
-    await sendSmallDataFrame(0x1000, 216, u8Pkt);
+    await _sendTsSetup(
+      mode: BleConstants.mode.request.dbSetup,
+      command: BleConstants.command.relaySetup,
+      body: const <int>[BleConstants.thirdRelaySetupNo],
+      logName: 'relay-setup-fetch-3',
+    );
   }
 
   int _relayOutputModeByteForApply({
@@ -3591,38 +3547,16 @@ class BleManager extends GetxService {
       throw RangeError('relayNum must be 1..3, got $relayNum');
     }
 
-    final u8Pkt = Uint8List(216);
-
-    if (!previewOnly) {
-      u8TxPktCnt += 1;
-    }
-
-    final txCount = previewOnly ? (u8TxPktCnt + 1) : u8TxPktCnt;
-
-    u8Pkt[0] = BleConstants.sot;
-    u8Pkt[1] = BleConstants.des;
-    u8Pkt[2] = BleConstants.ori;
-    u8Pkt[3] = BleConstants.type.nrm;
-    u8Pkt[4] = txCount & BleConstants.base;
-    u8Pkt[5] = u8RxPktCnt & BleConstants.base;
-    u8Pkt[6] = BleConstants.network.radio;
-    u8Pkt[10] = BleConstants.mode.instruction.dbSetup;
-    u8Pkt[11] = BleConstants.socket.radio;
-    u8Pkt[12] = BleConstants.command.relaySetup;
-
     final relayConfig = RelaySetupPayload.fromBleProcess(
       bleProcess,
       relayNum - 1,
     );
-    RelaySetupPayload.writeToPacket(u8Pkt, relayConfig);
-
-    final checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
-
-    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
-    u8Pkt[214] = checksum & BleConstants.base;
-    u8Pkt[215] = BleConstants.eot;
-
-    return u8Pkt;
+    return _buildTsSetup(
+      mode: BleConstants.mode.instruction.dbSetup,
+      command: BleConstants.command.relaySetup,
+      body: relayConfig.toBytes(),
+      advanceTx: !previewOnly,
+    );
   }
 
   Future<void> sendRelaySetupApplyFirstCmdPkt() async {
@@ -3632,8 +3566,9 @@ class BleManager extends GetxService {
       u8Pkt,
       label: 'SETUP_RELAY APPLY R1 (TX)',
     );
+    InputSetupPayloadDebug.logBleFrame('TRANSMIT', 'relay-setup-apply-1', u8Pkt);
 
-    await sendSmallDataFrame(0x1000, 216, u8Pkt);
+    await sendSmallDataFrame(0x1000, u8Pkt.length, u8Pkt);
   }
 
   Future<void> sendRelaySetupApplySecondCmdPkt() async {
@@ -3643,8 +3578,9 @@ class BleManager extends GetxService {
       u8Pkt,
       label: 'SETUP_RELAY APPLY R2 (TX)',
     );
+    InputSetupPayloadDebug.logBleFrame('TRANSMIT', 'relay-setup-apply-2', u8Pkt);
 
-    await sendSmallDataFrame(0x1000, 216, u8Pkt);
+    await sendSmallDataFrame(0x1000, u8Pkt.length, u8Pkt);
   }
 
   Future<void> sendRelaySetupApplyThirdCmdPkt() async {
@@ -3654,86 +3590,36 @@ class BleManager extends GetxService {
       u8Pkt,
       label: 'SETUP_RELAY APPLY R3 (TX)',
     );
+    InputSetupPayloadDebug.logBleFrame('TRANSMIT', 'relay-setup-apply-3', u8Pkt);
 
-    await sendSmallDataFrame(0x1000, 216, u8Pkt);
+    await sendSmallDataFrame(0x1000, u8Pkt.length, u8Pkt);
   }
 
   Future<void> sendZoneSetupFetchFirstCmdPkt() async {
-    Uint8List u8Pkt = Uint8List(216);
-
-    u8TxPktCnt += 1;
-
-    u8Pkt[0] = BleConstants.sot;
-    u8Pkt[1] = BleConstants.des;
-    u8Pkt[2] = BleConstants.ori;
-    u8Pkt[3] = BleConstants.type.nrm;
-    u8Pkt[4] = u8TxPktCnt & BleConstants.base;
-    u8Pkt[5] = u8RxPktCnt & BleConstants.base;
-    u8Pkt[6] = BleConstants.network.radio;
-    u8Pkt[10] = BleConstants.mode.request.dbSetup;
-    u8Pkt[11] = BleConstants.socket.radio;
-    u8Pkt[12] = BleConstants.command.zoneSetup;
-    u8Pkt[13] = BleConstants.firstZoneSetupNo;
-
-    int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
-
-    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
-    u8Pkt[214] = checksum & BleConstants.base;
-    u8Pkt[215] = BleConstants.eot;
-
-    await sendSmallDataFrame(0x1000, 216, u8Pkt);
+    await _sendTsSetup(
+      mode: BleConstants.mode.request.dbSetup,
+      command: BleConstants.command.zoneSetup,
+      body: const <int>[BleConstants.firstZoneSetupNo],
+      logName: 'zone-setup-fetch-1',
+    );
   }
 
   Future<void> sendZoneSetupFetchSecondCmdPkt() async {
-    Uint8List u8Pkt = Uint8List(216);
-
-    u8TxPktCnt += 1;
-
-    u8Pkt[0] = BleConstants.sot;
-    u8Pkt[1] = BleConstants.des;
-    u8Pkt[2] = BleConstants.ori;
-    u8Pkt[3] = BleConstants.type.nrm;
-    u8Pkt[4] = u8TxPktCnt & BleConstants.base;
-    u8Pkt[5] = u8RxPktCnt & BleConstants.base;
-    u8Pkt[6] = BleConstants.network.radio;
-    u8Pkt[10] = BleConstants.mode.request.dbSetup;
-    u8Pkt[11] = BleConstants.socket.radio;
-    u8Pkt[12] = BleConstants.command.zoneSetup;
-    u8Pkt[13] = BleConstants.secondZoneSetupNo;
-
-    int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
-
-    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
-    u8Pkt[214] = checksum & BleConstants.base;
-    u8Pkt[215] = BleConstants.eot;
-
-    await sendSmallDataFrame(0x1000, 216, u8Pkt);
+    await _sendTsSetup(
+      mode: BleConstants.mode.request.dbSetup,
+      command: BleConstants.command.zoneSetup,
+      body: const <int>[BleConstants.secondZoneSetupNo],
+      logName: 'zone-setup-fetch-2',
+    );
   }
 
   Future<void> sendZoneSetupFetchThirdCmdPkt() async {
-    Uint8List u8Pkt = Uint8List(216);
-
-    u8TxPktCnt += 1;
-
-    u8Pkt[0] = BleConstants.sot;
-    u8Pkt[1] = BleConstants.des;
-    u8Pkt[2] = BleConstants.ori;
-    u8Pkt[3] = BleConstants.type.nrm;
-    u8Pkt[4] = u8TxPktCnt & BleConstants.base;
-    u8Pkt[5] = u8RxPktCnt & BleConstants.base;
-    u8Pkt[6] = BleConstants.network.radio;
-    u8Pkt[10] = BleConstants.mode.request.dbSetup;
-    u8Pkt[11] = BleConstants.socket.radio;
-    u8Pkt[12] = BleConstants.command.zoneSetup;
-    u8Pkt[13] = BleConstants.thirdZoneSetupNo;
-
-    int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
-
-    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
-    u8Pkt[214] = checksum & BleConstants.base;
-    u8Pkt[215] = BleConstants.eot;
-
-    await sendSmallDataFrame(0x1000, 216, u8Pkt);
+    await _sendTsSetup(
+      mode: BleConstants.mode.request.dbSetup,
+      command: BleConstants.command.zoneSetup,
+      body: const <int>[BleConstants.thirdZoneSetupNo],
+      logName: 'zone-setup-fetch-3',
+    );
   }
 
   /// Builds a SETUP_ZONE apply packet for [zoneNum] (1..3). When [previewOnly]
@@ -3743,59 +3629,40 @@ class BleManager extends GetxService {
       throw RangeError('zoneNum must be 1..3, got $zoneNum');
     }
 
-    final u8Pkt = Uint8List(216);
-
-    if (!previewOnly) {
-      u8TxPktCnt += 1;
-    }
-
-    final txCount = previewOnly ? (u8TxPktCnt + 1) : u8TxPktCnt;
-
-    u8Pkt[0] = BleConstants.sot;
-    u8Pkt[1] = BleConstants.des;
-    u8Pkt[2] = BleConstants.ori;
-    u8Pkt[3] = BleConstants.type.nrm;
-    u8Pkt[4] = txCount & BleConstants.base;
-    u8Pkt[5] = u8RxPktCnt & BleConstants.base;
-    u8Pkt[6] = BleConstants.network.radio;
-    u8Pkt[10] = BleConstants.mode.instruction.dbSetup;
-    u8Pkt[11] = BleConstants.socket.radio;
-    u8Pkt[12] = BleConstants.command.zoneSetup;
-
     final zoneConfig = ZoneSetupPayload.fromBleProcess(bleProcess, zoneNum - 1);
-    ZoneSetupPayload.writeToPacket(u8Pkt, zoneConfig);
-
-    final checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
-
-    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
-    u8Pkt[214] = checksum & BleConstants.base;
-    u8Pkt[215] = BleConstants.eot;
-
-    return u8Pkt;
+    return _buildTsSetup(
+      mode: BleConstants.mode.instruction.dbSetup,
+      command: BleConstants.command.zoneSetup,
+      body: zoneConfig.toBytes(),
+      advanceTx: !previewOnly,
+    );
   }
 
   Future<void> sendZoneSetupApplyFirstCmdPkt() async {
     final u8Pkt = buildZoneSetupApplyPacket(1);
 
     ZoneSetupPayloadDebug.printFrame(u8Pkt, label: 'SETUP_ZONE APPLY Z1 (TX)');
+    InputSetupPayloadDebug.logBleFrame('TRANSMIT', 'zone-setup-apply-1', u8Pkt);
 
-    await sendSmallDataFrame(0x1000, 216, u8Pkt);
+    await sendSmallDataFrame(0x1000, u8Pkt.length, u8Pkt);
   }
 
   Future<void> sendZoneSetupApplySecondCmdPkt() async {
     final u8Pkt = buildZoneSetupApplyPacket(2);
 
     ZoneSetupPayloadDebug.printFrame(u8Pkt, label: 'SETUP_ZONE APPLY Z2 (TX)');
+    InputSetupPayloadDebug.logBleFrame('TRANSMIT', 'zone-setup-apply-2', u8Pkt);
 
-    await sendSmallDataFrame(0x1000, 216, u8Pkt);
+    await sendSmallDataFrame(0x1000, u8Pkt.length, u8Pkt);
   }
 
   Future<void> sendZoneSetupApplyThirdCmdPkt() async {
     final u8Pkt = buildZoneSetupApplyPacket(3);
 
     ZoneSetupPayloadDebug.printFrame(u8Pkt, label: 'SETUP_ZONE APPLY Z3 (TX)');
+    InputSetupPayloadDebug.logBleFrame('TRANSMIT', 'zone-setup-apply-3', u8Pkt);
 
-    await sendSmallDataFrame(0x1000, 216, u8Pkt);
+    await sendSmallDataFrame(0x1000, u8Pkt.length, u8Pkt);
   }
 
   Future<void> sendRadioSetupFetchCmdPkt() async {
@@ -4422,68 +4289,23 @@ class BleManager extends GetxService {
   }
 
   Future<void> sendPanelPropertiesSetupFetchCmdPkt() async {
-    final u8Pkt = Uint8List(216);
-
-    u8TxPktCnt += 1;
-
-    u8Pkt[0] = BleConstants.sot;
-    u8Pkt[1] = BleConstants.des;
-    u8Pkt[2] = BleConstants.ori;
-    u8Pkt[3] = BleConstants.type.nrm;
-    u8Pkt[4] = u8TxPktCnt & BleConstants.base;
-    u8Pkt[5] = u8RxPktCnt & BleConstants.base;
-    u8Pkt[6] = BleConstants.network.radio;
-    u8Pkt[10] = BleConstants.mode.request.dbSetup;
-    u8Pkt[11] = BleConstants.socket.radio;
-    u8Pkt[12] = BleConstants.command.panelPropertiesSetup;
-
-    final checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
-
-    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
-    u8Pkt[214] = checksum & BleConstants.base;
-    u8Pkt[215] = BleConstants.eot;
-
-    PanelPropertiesSetupPayloadDebug.logPacket(
-      'TRANSMIT',
-      'panel-properties-fetch',
-      u8Pkt,
+    await _sendTsSetup(
+      mode: BleConstants.mode.request.dbSetup,
+      command: BleConstants.command.panelPropertiesSetup,
+      logName: 'panel-properties-fetch',
     );
-
-    await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
 
   /// Builds the SETUP_PANEL_PROPERTIES apply packet. When [previewOnly] is true,
   /// the TX counter is not incremented (for offline UI debugging).
   Uint8List buildPanelPropertiesSetupApplyPacket({bool previewOnly = false}) {
-    final u8Pkt = Uint8List(216);
-
-    if (!previewOnly) {
-      u8TxPktCnt += 1;
-    }
-
-    final txCount = previewOnly ? (u8TxPktCnt + 1) : u8TxPktCnt;
-
-    u8Pkt[0] = BleConstants.sot;
-    u8Pkt[1] = BleConstants.des;
-    u8Pkt[2] = BleConstants.ori;
-    u8Pkt[3] = BleConstants.type.nrm;
-    u8Pkt[4] = txCount & BleConstants.base;
-    u8Pkt[5] = u8RxPktCnt & BleConstants.base;
-    u8Pkt[6] = BleConstants.network.radio;
-    u8Pkt[10] = BleConstants.mode.instruction.dbSetup;
-    u8Pkt[11] = BleConstants.socket.radio;
-    u8Pkt[12] = BleConstants.command.panelPropertiesSetup;
-
     final config = PanelPropertiesSetupPayload.fromBleProcess(bleProcess);
-    PanelPropertiesSetupPayload.writeToPacket(u8Pkt, config);
-
-    final checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
-
-    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
-    u8Pkt[214] = checksum & BleConstants.base;
-    u8Pkt[215] = BleConstants.eot;
-
-    return u8Pkt;
+    return _buildTsSetup(
+      mode: BleConstants.mode.instruction.dbSetup,
+      command: BleConstants.command.panelPropertiesSetup,
+      body: config.toBytes(),
+      advanceTx: !previewOnly,
+    );
   }
 
   Future<void> sendPanelPropertiesSetupApplyCmdPkt() async {
@@ -4499,42 +4321,24 @@ class BleManager extends GetxService {
       u8Pkt,
     );
     PanelPropertiesSetupPayloadDebug.logStruct('apply-tx', u8Pkt);
+    InputSetupPayloadDebug.logBleFrame(
+      'TRANSMIT',
+      'panel-properties-apply',
+      u8Pkt,
+    );
 
-    await sendSmallDataFrame(0x1000, 216, u8Pkt);
+    await sendSmallDataFrame(0x1000, u8Pkt.length, u8Pkt);
   }
 
   Future<void> sendAccessCodeSetupFetchCmdPkt({
     required int accessCodeNo,
   }) async {
-    Uint8List u8Pkt = Uint8List(216);
-
-    u8TxPktCnt += 1;
-
-    u8Pkt[0] = BleConstants.sot;
-    u8Pkt[1] = BleConstants.des;
-    u8Pkt[2] = BleConstants.ori;
-    u8Pkt[3] = BleConstants.type.nrm;
-    u8Pkt[4] = u8TxPktCnt & BleConstants.base;
-    u8Pkt[5] = u8RxPktCnt & BleConstants.base;
-    u8Pkt[6] = BleConstants.network.radio;
-    u8Pkt[10] = BleConstants.mode.request.dbSetup;
-    u8Pkt[11] = BleConstants.socket.radio;
-    u8Pkt[12] = BleConstants.command.accessCodeSetup;
-    u8Pkt[13] = accessCodeNo;
-
-    int checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
-
-    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
-    u8Pkt[214] = checksum & BleConstants.base;
-    u8Pkt[215] = BleConstants.eot;
-
-    print(
-      u8Pkt
-          .map((b) => b.toRadixString(16).padLeft(2, '0').toUpperCase())
-          .join(' '),
+    await _sendTsSetup(
+      mode: BleConstants.mode.request.dbSetup,
+      command: BleConstants.command.accessCodeSetup,
+      body: <int>[accessCodeNo & BleConstants.base],
+      logName: 'access-code-setup-fetch',
     );
-
-    await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
 
   /// Builds a SETUP_ACCESS_CODE apply packet for [accessCodeNo] (1..8). When
@@ -4548,38 +4352,16 @@ class BleManager extends GetxService {
       throw RangeError('accessCodeNo must be 1..8, got $accessCodeNo');
     }
 
-    final u8Pkt = Uint8List(216);
-
-    if (!previewOnly) {
-      u8TxPktCnt += 1;
-    }
-
-    final txCount = previewOnly ? (u8TxPktCnt + 1) : u8TxPktCnt;
-
-    u8Pkt[0] = BleConstants.sot;
-    u8Pkt[1] = BleConstants.des;
-    u8Pkt[2] = BleConstants.ori;
-    u8Pkt[3] = BleConstants.type.nrm;
-    u8Pkt[4] = txCount & BleConstants.base;
-    u8Pkt[5] = u8RxPktCnt & BleConstants.base;
-    u8Pkt[6] = BleConstants.network.radio;
-    u8Pkt[10] = BleConstants.mode.instruction.dbSetup;
-    u8Pkt[11] = BleConstants.socket.radio;
-    u8Pkt[12] = BleConstants.command.accessCodeSetup;
-
     final config = PanelAccessLvlSetupPayload.fromBleManager(
       this,
       accessCodeNo - 1,
     );
-    PanelAccessLvlSetupPayload.writeToPacket(u8Pkt, config);
-
-    final checksum = toolsFletcherChecksum(u8Pkt.sublist(0, 213));
-
-    u8Pkt[213] = (checksum >> 8) & BleConstants.base;
-    u8Pkt[214] = checksum & BleConstants.base;
-    u8Pkt[215] = BleConstants.eot;
-
-    return u8Pkt;
+    return _buildTsSetup(
+      mode: BleConstants.mode.instruction.dbSetup,
+      command: BleConstants.command.accessCodeSetup,
+      body: config.toBytes(),
+      advanceTx: !previewOnly,
+    );
   }
 
   Future<void> sendAccessCodeSetupApplyCmdPkt({
@@ -4591,8 +4373,13 @@ class BleManager extends GetxService {
       u8Pkt,
       label: 'SETUP_ACCESS APPLY #$accessCodeNo (TX)',
     );
+    InputSetupPayloadDebug.logBleFrame(
+      'TRANSMIT',
+      'access-code-setup-apply',
+      u8Pkt,
+    );
 
-    await sendSmallDataFrame(0x1000, 216, u8Pkt);
+    await sendSmallDataFrame(0x1000, u8Pkt.length, u8Pkt);
   }
 
   Future<void> sendPanelInfoPanelIdFetchCmdPkt() async {
