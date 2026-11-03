@@ -270,7 +270,7 @@ class InputModeBottomSheetState extends State<InputModeBottomSheet> {
             decoration: _inputDecoration(
               hasError: controller.inputTextError != null,
             ),
-            style: StyleConstants.textDark14w500Style,
+            // style: StyleConstants.textDark14w500Style,
           ),
           if (controller.inputTextError != null) ...[
             const SizedBox(height: 4),

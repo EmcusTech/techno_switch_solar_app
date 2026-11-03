@@ -25,8 +25,6 @@ class WindowsScanningRadarView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final gridTopOffset = MediaQuery.sizeOf(context).height * 0.2;
-
     return Stack(
       alignment: Alignment.center,
       children: [
@@ -100,11 +98,7 @@ class WindowsScanningRadarView extends StatelessWidget {
             ),
           ),
         ),
-        WindowsScanDeviceGrid(
-          controller: controller,
-          topOffset: gridTopOffset,
-          radarSize: radarSize,
-        ),
+        WindowsScanDeviceGrid(controller: controller),
       ],
     );
   }

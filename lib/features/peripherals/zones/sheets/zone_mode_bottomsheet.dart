@@ -393,7 +393,7 @@ class ZoneBottomSheetState extends State<ZoneBottomSheet>
             },
             inputFormatters: [LengthLimitingTextInputFormatter(21)],
             decoration: _inputDecoration(hasError: errorMsg != null),
-            style: StyleConstants.textDark14w500Style,
+            // style: StyleConstants.textDark14w500Style,
           ),
           if (errorMsg != null) ...[
             const SizedBox(height: 4),

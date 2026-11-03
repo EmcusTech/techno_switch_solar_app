@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:Technoswitch/ble/blue_plus_adapter.dart';
 import 'package:Technoswitch/features/scan/widgets/windows/windows_scan_device_card.dart';
@@ -7,26 +8,24 @@ import 'package:Technoswitch/features/scan/controllers/scan_controller.dart';
 import 'package:Technoswitch/features/scan/widgets/scan_animated_grid_card.dart';
 
 class WindowsScanDeviceGrid extends StatefulWidget {
-  const WindowsScanDeviceGrid({
-    super.key,
-    required this.controller,
-    required this.topOffset,
-    required this.radarSize,
-  });
+  const WindowsScanDeviceGrid({super.key, required this.controller});
 
   final ScanController controller;
-  final double topOffset;
-  final double radarSize;
 
   @override
   State<WindowsScanDeviceGrid> createState() => _WindowsScanDeviceGridState();
 }
 
 class _WindowsScanDeviceGridState extends State<WindowsScanDeviceGrid> {
-  static const int _columns = 3;
-  static const double _spacing = 12;
   static const double _cardWidth = 120;
   static const double _cardHeight = 140;
+
+  /// Outermost green ring sits inside the 340 radar. Cards stay past this.
+  static const double _ringRadius = 150;
+  static const double _edgeInset = 20;
+  static const double _bottomInset = 120;
+
+  final Map<String, Offset> _positions = {};
 
   /// A new leader must stay ahead this long before the highlight moves.
   static const Duration _switchAfter = Duration(seconds: 5);
@@ -48,32 +47,24 @@ class _WindowsScanDeviceGridState extends State<WindowsScanDeviceGrid> {
   Widget build(BuildContext context) {
     final entries = _entriesBySlot();
     _syncHighlight(entries);
+    final size = MediaQuery.sizeOf(context);
+    _syncPositions(entries, size);
 
-    return Positioned(
-      top: widget.topOffset,
-      left: 120,
-      width: widget.radarSize,
-      height: widget.radarSize,
-      child: Stack(children: _buildSlotWidgets(entries)),
-    );
+    return Positioned.fill(child: Stack(children: _buildSlotWidgets(entries)));
   }
 
   List<Widget> _buildSlotWidgets(List<_ScanGridEntry> entries) {
     final widgets = <Widget>[];
 
-    for (int i = 0; i < entries.length; i++) {
-      final entry = entries[i];
-      final row = i ~/ _columns;
-      final col = i % _columns;
-
-      final left = col * (_cardWidth + _spacing);
-      final top = row * (_cardHeight + _spacing);
+    for (final entry in entries) {
+      final spot = _positions[entry.key];
+      if (spot == null) continue;
 
       widgets.add(
         AnimatedPositioned(
           key: ValueKey(entry.key),
-          left: left,
-          top: top,
+          left: spot.dx,
+          top: spot.dy,
           width: _cardWidth,
           height: _cardHeight,
           duration: const Duration(milliseconds: 420),
@@ -91,6 +82,62 @@ class _WindowsScanDeviceGridState extends State<WindowsScanDeviceGrid> {
     }
 
     return widgets;
+  }
+
+  /// Each device keeps the spot it was given. RSSI updates do not move it.
+  void _syncPositions(List<_ScanGridEntry> entries, Size size) {
+    final live = entries.map((entry) => entry.key).toSet();
+    _positions.removeWhere((key, _) => !live.contains(key));
+    final center = Offset(size.width / 2, size.height / 2);
+    for (final entry in entries) {
+      _positions.putIfAbsent(entry.key, () => _pickSpot(entry.key, center, size));
+    }
+  }
+
+  Offset _pickSpot(String key, Offset center, Size size) {
+    final random = math.Random(key.hashCode);
+    final clearRadius =
+        _ringRadius +
+        math.sqrt(_cardWidth * _cardWidth + _cardHeight * _cardHeight) / 2 +
+        12;
+
+    for (var attempt = 0; attempt < 36; attempt++) {
+      final angle = random.nextDouble() * math.pi * 2;
+      final radius = clearRadius + random.nextDouble() * 70 + attempt * 26;
+      final spot = _spotAt(center, angle, radius);
+      if (_fits(spot, center, size)) return spot;
+    }
+
+    final fallbackAngle = (key.hashCode.abs() % 360) * math.pi / 180;
+    return _spotAt(center, fallbackAngle, clearRadius + _positions.length * 24);
+  }
+
+  Offset _spotAt(Offset center, double angle, double radius) {
+    return Offset(
+      center.dx + math.cos(angle) * radius - _cardWidth / 2,
+      center.dy + math.sin(angle) * radius - _cardHeight / 2,
+    );
+  }
+
+  bool _fits(Offset spot, Offset center, Size size) {
+    if (spot.dx < _edgeInset || spot.dy < _edgeInset) return false;
+    if (spot.dx + _cardWidth > size.width - _edgeInset) return false;
+    if (spot.dy + _cardHeight > size.height - _bottomInset) return false;
+    final rect = Rect.fromLTWH(spot.dx, spot.dy, _cardWidth, _cardHeight);
+    if (_hitsRing(rect, center)) return false;
+    for (final taken in _positions.values) {
+      final other = Rect.fromLTWH(taken.dx, taken.dy, _cardWidth, _cardHeight);
+      if (rect.inflate(8).overlaps(other)) return false;
+    }
+    return true;
+  }
+
+  bool _hitsRing(Rect rect, Offset center) {
+    final closestX = center.dx.clamp(rect.left, rect.right);
+    final closestY = center.dy.clamp(rect.top, rect.bottom);
+    final dx = center.dx - closestX;
+    final dy = center.dy - closestY;
+    return dx * dx + dy * dy < _ringRadius * _ringRadius;
   }
 
   /// Discovery order. RSSI updates do not move a card to another cell.
