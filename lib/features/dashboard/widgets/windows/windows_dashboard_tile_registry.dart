@@ -65,7 +65,6 @@ abstract final class WindowsDashboardTileRegistry {
       WindowsDashboardTileConfig(
         label: StringConstants.eventLog,
         iconPath: AssetConstants.panelActionEventLogIcon,
-        isDisabled: true,
         onTap: () => ProjectDashboardTileActions.openEventLog(controller),
       ),
       WindowsDashboardTileConfig(

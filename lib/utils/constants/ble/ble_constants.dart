@@ -197,9 +197,9 @@ class _BleCommand {
   final int generalModuleResetLvl = 0x15;
   final int generalModuleFaultLatching = 0x15;
   final int diagnosticsSetupFetch = 0x09;
-  final int newEventLogStart = 0x01;
-  final int newEventLogFetch = 0x02;
-  final int newEventLogEnd = 0x03;
+  final int newEventLogStart = 0x0C;
+  final int newEventLogFetch = 0x0D;
+  final int newEventLogEnd = 0x0E;
 }
 
 class _BleFirmware {

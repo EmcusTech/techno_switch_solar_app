@@ -176,21 +176,7 @@ abstract final class ProjectDashboardTileActions {
         return;
       }
 
-      final process = c.ble.bleProcess;
-      process.onNewEventLogsReady = (logs) {
-        process.onNewEventLogsReady = null;
-        if (!ui.isMounted) return;
-        ui.openParsedEventLogScreen(logs);
-      };
-      unawaited(() async {
-        final started = await process.beginNewEventLogRetrieval();
-        if (!started) {
-          process.onNewEventLogsReady = null;
-          if (ui.isMounted) {
-            ui.showSnackBar(StringConstants.deviceNotConnected);
-          }
-        }
-      }());
+      unawaited(c.ble.bleProcess.beginNewEventLogRetrieval());
     });
   }
 

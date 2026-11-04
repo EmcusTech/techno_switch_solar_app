@@ -58,6 +58,10 @@ const int enBLE_DATA_POS = 7;
 
 const int BLE_FRAME_FILED_SIZE = 11;
 
+/// ATT opcode plus attribute handle. One write or notification value is the
+/// negotiated ATT MTU minus this header.
+const int BLE_ATT_HEADER_SIZE = 3;
+
 enum BleStates {
   REQ_ENCY_KEY,
   SEND_AUTHN_MSG,
@@ -172,6 +176,9 @@ const String BLE_AUTHN_MSG = StringConstants.bleAuthMsg;
 class BleManager extends GetxService {
   int u8TxPktCnt = 0;
   int u8RxPktCnt = 0;
+
+  /// ATT MTU reported for the current connection.
+  int negotiatedAttMtu = 0;
 
   BleStates bleCurrentState = BleStates.REQ_ENCY_KEY;
   BleStates bleStateMachineState = BleStates.REQ_ENCY_KEY;
@@ -2112,10 +2119,12 @@ class BleManager extends GetxService {
                 deviceId: device.id,
               );
 
-              await flutterReactiveBle.requestMtu(
+              negotiatedAttMtu = await flutterReactiveBle.requestMtu(
                 deviceId: device.id,
                 mtu: 256,
               );
+
+              print('negotiatedAttMtu: $negotiatedAttMtu');
 
               bleProcess.deviceConnectState =
                   DeviceConnectState.registerNotifyHandler;
@@ -3001,15 +3010,19 @@ class BleManager extends GetxService {
     header[4] = u8TxPktCnt & BleConstants.base;
     header[5] = u8RxPktCnt & BleConstants.base;
     header[6] = BleConstants.network.radio;
-    header[10] = BleConstants.mode.instruction.ctrl;
+    header[10] = BleConstants.mode.request.ctrl;
     header[11] = BleConstants.socket.radio;
     header[12] = BleConstants.command.newEventLogStart;
 
-    final pkt = TsFrame.build(header, const <int>[]);
+    final pkt = TsFrame.build(header, const <int>[0x02]);
+    InputSetupPayloadDebug.logBleFrame('TRANSMIT', 'event-log-start', pkt);
     await sendSmallDataFrame(0x1000, pkt.length, pkt);
   }
 
-  Future<void> newEventLogFetchCmd() async {
+  Future<void> newEventLogFetchCmd({
+    required int sequence,
+    required int logCount,
+  }) async {
     u8TxPktCnt += 1;
 
     final header = Uint8List(TsFrame.headerLength);
@@ -3020,15 +3033,30 @@ class BleManager extends GetxService {
     header[4] = u8TxPktCnt & BleConstants.base;
     header[5] = u8RxPktCnt & BleConstants.base;
     header[6] = BleConstants.network.radio;
-    header[10] = BleConstants.mode.instruction.ctrl;
+    header[10] = BleConstants.mode.request.ctrl;
     header[11] = BleConstants.socket.radio;
     header[12] = BleConstants.command.newEventLogFetch;
 
-    final pkt = TsFrame.build(header, const <int>[]);
+    const int fieldBytes = 2;
+    final Uint8List commandData = Uint8List(fieldBytes * 2);
+    _writeUint16Le(commandData, 0, sequence);
+    _writeUint16Le(commandData, fieldBytes, logCount);
+
+    final pkt = TsFrame.build(header, commandData);
+    InputSetupPayloadDebug.logBleFrame(
+      'TRANSMIT',
+      'event-log-fetch seq=$sequence logs=$logCount',
+      pkt,
+    );
     await sendSmallDataFrame(0x1000, pkt.length, pkt);
   }
 
-  Future<void> newEventLogEndCmd() async {
+  void _writeUint16Le(Uint8List target, int offset, int value) {
+    target[offset] = value & BleConstants.base;
+    target[offset + 1] = (value >> 8) & BleConstants.base;
+  }
+
+  Future<void> newEventLogEndCmd(int receivedCount) async {
     u8TxPktCnt += 1;
 
     final header = Uint8List(TsFrame.headerLength);
@@ -3043,7 +3071,16 @@ class BleManager extends GetxService {
     header[11] = BleConstants.socket.radio;
     header[12] = BleConstants.command.newEventLogEnd;
 
-    final pkt = TsFrame.build(header, const <int>[]);
+    const int fieldBytes = 2;
+    final Uint8List commandData = Uint8List(fieldBytes);
+    _writeUint16Le(commandData, 0, receivedCount);
+
+    final pkt = TsFrame.build(header, commandData);
+    InputSetupPayloadDebug.logBleFrame(
+      'TRANSMIT',
+      'event-log-end logs=$receivedCount',
+      pkt,
+    );
     await sendSmallDataFrame(0x1000, pkt.length, pkt);
   }
 
@@ -3355,7 +3392,11 @@ class BleManager extends GetxService {
       u8Pkt,
       label: 'SETUP_SOUNDER APPLY (TX)',
     );
-    InputSetupPayloadDebug.logBleFrame('TRANSMIT', 'sounder-setup-apply', u8Pkt);
+    InputSetupPayloadDebug.logBleFrame(
+      'TRANSMIT',
+      'sounder-setup-apply',
+      u8Pkt,
+    );
 
     await sendSmallDataFrame(0x1000, u8Pkt.length, u8Pkt);
   }
@@ -3566,7 +3607,11 @@ class BleManager extends GetxService {
       u8Pkt,
       label: 'SETUP_RELAY APPLY R1 (TX)',
     );
-    InputSetupPayloadDebug.logBleFrame('TRANSMIT', 'relay-setup-apply-1', u8Pkt);
+    InputSetupPayloadDebug.logBleFrame(
+      'TRANSMIT',
+      'relay-setup-apply-1',
+      u8Pkt,
+    );
 
     await sendSmallDataFrame(0x1000, u8Pkt.length, u8Pkt);
   }
@@ -3578,7 +3623,11 @@ class BleManager extends GetxService {
       u8Pkt,
       label: 'SETUP_RELAY APPLY R2 (TX)',
     );
-    InputSetupPayloadDebug.logBleFrame('TRANSMIT', 'relay-setup-apply-2', u8Pkt);
+    InputSetupPayloadDebug.logBleFrame(
+      'TRANSMIT',
+      'relay-setup-apply-2',
+      u8Pkt,
+    );
 
     await sendSmallDataFrame(0x1000, u8Pkt.length, u8Pkt);
   }
@@ -3590,7 +3639,11 @@ class BleManager extends GetxService {
       u8Pkt,
       label: 'SETUP_RELAY APPLY R3 (TX)',
     );
-    InputSetupPayloadDebug.logBleFrame('TRANSMIT', 'relay-setup-apply-3', u8Pkt);
+    InputSetupPayloadDebug.logBleFrame(
+      'TRANSMIT',
+      'relay-setup-apply-3',
+      u8Pkt,
+    );
 
     await sendSmallDataFrame(0x1000, u8Pkt.length, u8Pkt);
   }

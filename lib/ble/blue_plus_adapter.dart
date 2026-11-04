@@ -492,7 +492,10 @@ class FlutterReactiveBle {
   Future<int> _requestMtuWindows(String deviceId, int mtu) async {
     try {
       final size = await WinBle.getMaxMtuSize(deviceId);
-      if (size is int && size > 0) return size;
+      if (size is int && size > 0) {
+        print('WinBle getMaxMtuSize: $size');
+        return size;
+      }
       final parsed = int.tryParse(size.toString());
       if (parsed != null && parsed > 0) return parsed;
     } catch (e) {
@@ -552,7 +555,9 @@ class FlutterReactiveBle {
     };
     controller.onCancel = () async {
       if (!ready.isCompleted) {
-        ready.completeError(StateError('Windows notify subscription cancelled'));
+        ready.completeError(
+          StateError('Windows notify subscription cancelled'),
+        );
       }
       await valueSub?.cancel();
       await _releaseWindowsSubscription(characteristic);

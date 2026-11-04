@@ -107,8 +107,15 @@ class BleProcess {
   bool logRetreivalEnded = false;
 
   NewEventLogPhase newEventLogPhase = NewEventLogPhase.idle;
+  int newEventLogCount = 0;
   void Function(List<LogModel> logs)? onNewEventLogsReady;
   Timer? _newEventLogTimer;
+  int _newEventLogSequence = 1;
+  int _newEventLogRemaining = 0;
+  int _newEventLogPacketCapacity = 0;
+  int _newEventLogFetchCount = 0;
+  bool _newEventLogFetchOutstanding = false;
+  final List<LogModel> newEventLogsReceived = <LogModel>[];
 
   DateTime? logStartingTime;
   DateTime? logEndTime;
@@ -3402,6 +3409,13 @@ class BleProcess {
 
     _newEventLogTimer?.cancel();
     newEventLogPhase = NewEventLogPhase.waitStart;
+    newEventLogCount = 0;
+    _newEventLogSequence = 1;
+    _newEventLogRemaining = 0;
+    _newEventLogPacketCapacity = 0;
+    _newEventLogFetchCount = 0;
+    _newEventLogFetchOutstanding = false;
+    newEventLogsReceived.clear();
     validEventLogs.value = [];
     _armNewEventLogTimeout();
     await bleManager.newEventLogStartCmd();
@@ -3412,31 +3426,117 @@ class BleProcess {
     _newEventLogTimer?.cancel();
     _newEventLogTimer = Timer(const Duration(seconds: 8), () {
       newEventLogPhase = NewEventLogPhase.idle;
+      _newEventLogFetchOutstanding = false;
       onNewEventLogsReady = null;
     });
   }
 
+  int _maxNewEventLogsPerResponse() {
+    final int attMtu = bleManager.negotiatedAttMtu;
+    final int recordSize = EventLogRecordParser.recordSize;
+    if (attMtu <= BLE_ATT_HEADER_SIZE || recordSize <= 0) return 0;
+
+    final int writeBudget = attMtu - BLE_ATT_HEADER_SIZE;
+    if (writeBudget <= BLE_FRAME_FILED_SIZE) return 0;
+
+    final int tsBudget = writeBudget - BLE_FRAME_FILED_SIZE;
+    if (tsBudget <= TsFrame.overhead) return 0;
+
+    final int commandDataBudget = tsBudget - TsFrame.overhead;
+    if (commandDataBudget < recordSize) return 0;
+    return commandDataBudget ~/ recordSize;
+  }
+
   Future<void> _handleNewEventLogFrame(BleRxFrame rx) async {
-    if (newEventLogPhase == NewEventLogPhase.waitStart) {
-      newEventLogPhase = NewEventLogPhase.waitFetch;
-      _armNewEventLogTimeout();
-      await bleManager.newEventLogFetchCmd();
+    switch (newEventLogPhase) {
+      case NewEventLogPhase.waitStart:
+        await _handleNewEventLogStart(rx);
+      case NewEventLogPhase.waitFetch:
+        await _handleNewEventLogFetch(rx);
+      case NewEventLogPhase.idle:
+        return;
+    }
+  }
+
+  Future<void> _handleNewEventLogStart(BleRxFrame rx) async {
+    final parsed = TsFrame.parse(rx.payload);
+    if (!parsed.isValid || parsed.data.length < 2) return;
+
+    newEventLogCount = parsed.data[0] | (parsed.data[1] << 8);
+    _newEventLogPacketCapacity = _maxNewEventLogsPerResponse();
+    InputSetupPayloadDebug.logBleFrame(
+      'RECEIVE',
+      'event-log-start count=$newEventLogCount '
+          'mtu=${bleManager.negotiatedAttMtu} '
+          'record=${EventLogRecordParser.recordSize} '
+          'perPacket=$_newEventLogPacketCapacity',
+      rx.payload,
+    );
+
+    if (newEventLogCount <= 0 || _newEventLogPacketCapacity <= 0) {
+      newEventLogPhase = NewEventLogPhase.idle;
+      _newEventLogTimer?.cancel();
+      _newEventLogTimer = null;
       return;
     }
 
-    if (newEventLogPhase != NewEventLogPhase.waitFetch) return;
+    _newEventLogRemaining = newEventLogCount;
+    _newEventLogSequence = 1;
+    await _sendNextNewEventLogFetch();
+  }
 
+  Future<void> _sendNextNewEventLogFetch() async {
+    if (newEventLogPhase == NewEventLogPhase.idle) return;
+    if (_newEventLogRemaining <= 0 || _newEventLogPacketCapacity <= 0) {
+      _finishNewEventLogFetch();
+      return;
+    }
+
+    _newEventLogFetchCount =
+        _newEventLogRemaining < _newEventLogPacketCapacity
+            ? _newEventLogRemaining
+            : _newEventLogPacketCapacity;
+    _newEventLogFetchOutstanding = true;
+    newEventLogPhase = NewEventLogPhase.waitFetch;
+    _armNewEventLogTimeout();
+    await bleManager.newEventLogFetchCmd(
+      sequence: _newEventLogSequence,
+      logCount: _newEventLogFetchCount,
+    );
+  }
+
+  Future<void> _handleNewEventLogFetch(BleRxFrame rx) async {
+    if (!_newEventLogFetchOutstanding) return;
+
+    final parsed = TsFrame.parse(rx.payload);
+    if (!parsed.isValid) return;
+
+    _newEventLogFetchOutstanding = false;
+    final List<LogModel> logs = EventLogRecordParser.parsePayload(parsed.data);
+    newEventLogsReceived.addAll(logs);
+    InputSetupPayloadDebug.logBleFrame(
+      'RECEIVE',
+      'event-log-fetch seq=$_newEventLogSequence '
+          'asked=$_newEventLogFetchCount parsed=${logs.length} '
+          'received=${newEventLogsReceived.length}',
+      rx.payload,
+    );
+
+    _newEventLogRemaining -= _newEventLogFetchCount;
+    _newEventLogSequence += 1;
+    if (_newEventLogRemaining <= 0) {
+      await bleManager.newEventLogEndCmd(newEventLogsReceived.length);
+      _finishNewEventLogFetch();
+      return;
+    }
+    await _sendNextNewEventLogFetch();
+  }
+
+  void _finishNewEventLogFetch() {
     newEventLogPhase = NewEventLogPhase.idle;
+    _newEventLogFetchOutstanding = false;
     _newEventLogTimer?.cancel();
     _newEventLogTimer = null;
-
-    final List<LogModel> logs = EventLogRecordParser.parsePayload(rx.payload);
-    validEventLogs.value = logs;
-    await bleManager.newEventLogEndCmd();
-
-    final ready = onNewEventLogsReady;
-    onNewEventLogsReady = null;
-    ready?.call(logs);
   }
 
   void dispose() {
