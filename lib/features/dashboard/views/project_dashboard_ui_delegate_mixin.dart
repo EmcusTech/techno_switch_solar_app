@@ -13,6 +13,7 @@ import 'package:Technoswitch/features/dashboard/widgets/show_dashboard_periphera
 import 'package:Technoswitch/features/logs/bindings/log_binding.dart';
 import 'package:Technoswitch/features/logs/models/log_flow_args.dart';
 import 'package:Technoswitch/features/logs/views/event_log_screen.dart';
+import 'package:Technoswitch/features/logs/views/new_event_log_values_screen.dart';
 import 'package:Technoswitch/features/logs/views/log_retrieval_loading_screen.dart';
 import 'package:Technoswitch/features/peripherals/access_code/sheets/access_code_mode_bottomsheet.dart';
 import 'package:Technoswitch/features/peripherals/config_log/sheets/config_log_bottomsheet.dart';
@@ -61,6 +62,7 @@ import 'package:Technoswitch/utils/constants/asset_constants.dart';
 import 'package:Technoswitch/utils/constants/ble/ble_msd_utils.dart';
 import 'package:Technoswitch/utils/constants/color_constants.dart';
 import 'package:Technoswitch/models/log_model.dart';
+import 'package:Technoswitch/models/new_event_log_progress.dart';
 import 'package:Technoswitch/utils/constants/string_constants.dart';
 import 'package:Technoswitch/utils/constants/style_constants.dart';
 
@@ -141,6 +143,16 @@ mixin ProjectDashboardUiDelegateMixin<T extends StatefulWidget> on State<T>
     Navigator.of(
       uiContext,
     ).push(MaterialPageRoute(builder: (_) => const EventLogScreen()));
+  }
+
+  @override
+  void openNewEventLogValuesScreen(ValueNotifier<NewEventLogProgress> progress) {
+    if (!mounted) return;
+    Navigator.of(uiContext).push(
+      MaterialPageRoute(
+        builder: (_) => NewEventLogValuesScreen(progress: progress),
+      ),
+    );
   }
 
   @override

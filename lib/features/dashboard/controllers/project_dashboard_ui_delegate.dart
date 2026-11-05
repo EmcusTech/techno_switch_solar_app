@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:Technoswitch/ble/blue_plus_adapter.dart';
 import 'package:Technoswitch/models/log_model.dart';
+import 'package:Technoswitch/models/new_event_log_progress.dart';
 
 abstract class ProjectDashboardUiDelegate {
   bool get isMounted;
@@ -14,6 +15,8 @@ abstract class ProjectDashboardUiDelegate {
   Future<bool?> showEventLogRetrievalConfirmDialog();
 
   void openParsedEventLogScreen(List<LogModel> logs);
+
+  void openNewEventLogValuesScreen(ValueNotifier<NewEventLogProgress> progress);
 
   void popScreen();
 

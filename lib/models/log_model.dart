@@ -15,6 +15,9 @@ class LogModel {
   final String? eventSubType;
   final String? identifier;
   final String? text;
+  final String? configText;
+  final int? par0;
+  final int? par1;
   final DateTime? retrievedAt;
   final bool? isValid;
 
@@ -35,6 +38,9 @@ class LogModel {
     this.eventSubType,
     this.identifier,
     this.text,
+    this.configText,
+    this.par0,
+    this.par1,
     this.retrievedAt,
     this.isValid,
   });
@@ -110,6 +116,9 @@ class LogModel {
     String? eventSubType,
     String? identifier,
     String? text,
+    String? configText,
+    int? par0,
+    int? par1,
     DateTime? retrievedAt,
     bool? isValid,
   }) {
@@ -130,6 +139,9 @@ class LogModel {
       eventSubType: eventSubType ?? this.eventSubType,
       identifier: identifier ?? this.identifier,
       text: text ?? this.text,
+      configText: configText ?? this.configText,
+      par0: par0 ?? this.par0,
+      par1: par1 ?? this.par1,
       retrievedAt: retrievedAt ?? this.retrievedAt,
       isValid: isValid ?? this.isValid,
     );

@@ -177,6 +177,7 @@ abstract final class ProjectDashboardTileActions {
       }
 
       unawaited(c.ble.bleProcess.beginNewEventLogRetrieval());
+      ui.openNewEventLogValuesScreen(c.ble.bleProcess.newEventLogProgress);
     });
   }
 

@@ -34,6 +34,7 @@ import 'ble_manager.dart';
 import 'ble_frame.dart';
 import 'event_log_record.dart';
 import '../models/log_model.dart';
+import '../models/new_event_log_progress.dart';
 import '../models/l_bus_setup_data_model.dart';
 import '../utils/constants/event_constants.dart';
 import '../utils/adc_parser.dart';
@@ -115,7 +116,13 @@ class BleProcess {
   int _newEventLogPacketCapacity = 0;
   int _newEventLogFetchCount = 0;
   bool _newEventLogFetchOutstanding = false;
+  DateTime? _newEventLogFetchSentAt;
+  int _newEventLogNoticeId = 0;
+  String? _newEventLogNotice;
+  DateTime? _newEventLogStartedAt;
   final List<LogModel> newEventLogsReceived = <LogModel>[];
+  final ValueNotifier<NewEventLogProgress> newEventLogProgress =
+      ValueNotifier<NewEventLogProgress>(NewEventLogProgress.initial);
 
   DateTime? logStartingTime;
   DateTime? logEndTime;
@@ -2144,7 +2151,10 @@ class BleProcess {
     }
 
     if (checkForZoneSetupApplyRes == 1) {
-      final view = _acceptedSetupPayload(rx.payload, 'zone-setup-apply-response');
+      final view = _acceptedSetupPayload(
+        rx.payload,
+        'zone-setup-apply-response',
+      );
       if (view != null && view[10] == 0x83) {
         if (zoneSetupApplyCommandStep == 1) {
           processDesc.value = "${StringConstants.applyingZone} 2/3";
@@ -2167,7 +2177,10 @@ class BleProcess {
     }
 
     if (checkForZoneSetupFetchRes == 1) {
-      final view = _acceptedSetupPayload(rx.payload, 'zone-setup-fetch-response');
+      final view = _acceptedSetupPayload(
+        rx.payload,
+        'zone-setup-fetch-response',
+      );
       if (view != null && view[12] == 0x04) {
         if (zoneSetupFetchCommandStep == 1) {
           processDesc.value = "${StringConstants.downloadingZone} 2/3";
@@ -3415,8 +3428,13 @@ class BleProcess {
     _newEventLogPacketCapacity = 0;
     _newEventLogFetchCount = 0;
     _newEventLogFetchOutstanding = false;
+    _newEventLogFetchSentAt = null;
+    _newEventLogNoticeId = 0;
+    _newEventLogNotice = null;
     newEventLogsReceived.clear();
     validEventLogs.value = [];
+    _newEventLogStartedAt = DateTime.now();
+    _publishNewEventLogProgress(done: false);
     _armNewEventLogTimeout();
     await bleManager.newEventLogStartCmd();
     return true;
@@ -3425,13 +3443,12 @@ class BleProcess {
   void _armNewEventLogTimeout() {
     _newEventLogTimer?.cancel();
     _newEventLogTimer = Timer(const Duration(seconds: 8), () {
-      newEventLogPhase = NewEventLogPhase.idle;
-      _newEventLogFetchOutstanding = false;
-      onNewEventLogsReady = null;
+      _finishNewEventLogFetch();
     });
   }
 
   int _maxNewEventLogsPerResponse() {
+    // return 3;
     final int attMtu = bleManager.negotiatedAttMtu;
     final int recordSize = EventLogRecordParser.recordSize;
     if (attMtu <= BLE_ATT_HEADER_SIZE || recordSize <= 0) return 0;
@@ -3463,6 +3480,15 @@ class BleProcess {
     if (!parsed.isValid || parsed.data.length < 2) return;
 
     newEventLogCount = parsed.data[0] | (parsed.data[1] << 8);
+    if (bleManager.negotiatedAttMtu <= BLE_ATT_HEADER_SIZE) {
+      final String deviceId =
+          bleManager.selectedDevice?.id ?? bleManager.connectedDeviceId.value;
+      if (deviceId.isNotEmpty) {
+        bleManager.negotiatedAttMtu = await bleManager.flutterReactiveBle
+            .requestMtu(deviceId: deviceId, mtu: 256);
+      }
+      if (newEventLogPhase != NewEventLogPhase.waitStart) return;
+    }
     _newEventLogPacketCapacity = _maxNewEventLogsPerResponse();
     InputSetupPayloadDebug.logBleFrame(
       'RECEIVE',
@@ -3473,12 +3499,11 @@ class BleProcess {
       rx.payload,
     );
 
-    if (newEventLogCount <= 0 || _newEventLogPacketCapacity <= 0) {
-      newEventLogPhase = NewEventLogPhase.idle;
-      _newEventLogTimer?.cancel();
-      _newEventLogTimer = null;
+    if (newEventLogCount <= 0) {
+      _finishNewEventLogFetch();
       return;
     }
+    if (_newEventLogPacketCapacity <= 0) return;
 
     _newEventLogRemaining = newEventLogCount;
     _newEventLogSequence = 1;
@@ -3499,6 +3524,7 @@ class BleProcess {
     _newEventLogFetchOutstanding = true;
     newEventLogPhase = NewEventLogPhase.waitFetch;
     _armNewEventLogTimeout();
+    _newEventLogFetchSentAt = DateTime.now();
     await bleManager.newEventLogFetchCmd(
       sequence: _newEventLogSequence,
       logCount: _newEventLogFetchCount,
@@ -3512,18 +3538,37 @@ class BleProcess {
     if (!parsed.isValid) return;
 
     _newEventLogFetchOutstanding = false;
-    final List<LogModel> logs = EventLogRecordParser.parsePayload(parsed.data);
+    final int? elapsedMs =
+        _newEventLogFetchSentAt == null
+            ? null
+            : DateTime.now()
+                .difference(_newEventLogFetchSentAt!)
+                .inMilliseconds;
+    _newEventLogFetchSentAt = null;
+    final bool recordsFit =
+        parsed.data.isNotEmpty &&
+        parsed.data.length % EventLogRecordParser.recordSize == 0;
+    if (!recordsFit) {
+      _newEventLogNoticeId += 1;
+      _newEventLogNotice = 'Something went wrong, Check Falsh';
+    }
+    final List<LogModel> logs =
+        recordsFit
+            ? EventLogRecordParser.parsePayload(parsed.data)
+            : <LogModel>[];
     newEventLogsReceived.addAll(logs);
     InputSetupPayloadDebug.logBleFrame(
       'RECEIVE',
       'event-log-fetch seq=$_newEventLogSequence '
           'asked=$_newEventLogFetchCount parsed=${logs.length} '
-          'received=${newEventLogsReceived.length}',
+          'received=${newEventLogsReceived.length}'
+          '${elapsedMs == null ? '' : ' elapsed=${elapsedMs}ms'}',
       rx.payload,
     );
 
     _newEventLogRemaining -= _newEventLogFetchCount;
     _newEventLogSequence += 1;
+    _publishNewEventLogProgress(done: false);
     if (_newEventLogRemaining <= 0) {
       await bleManager.newEventLogEndCmd(newEventLogsReceived.length);
       _finishNewEventLogFetch();
@@ -3533,10 +3578,46 @@ class BleProcess {
   }
 
   void _finishNewEventLogFetch() {
+    if (newEventLogPhase == NewEventLogPhase.idle &&
+        onNewEventLogsReady == null) {
+      return;
+    }
+    final List<LogModel> logs = List<LogModel>.from(newEventLogsReceived);
     newEventLogPhase = NewEventLogPhase.idle;
     _newEventLogFetchOutstanding = false;
     _newEventLogTimer?.cancel();
     _newEventLogTimer = null;
+    final DateTime? started = _newEventLogStartedAt;
+    _newEventLogStartedAt = null;
+    if (started != null) {
+      final double seconds =
+          DateTime.now().difference(started).inMilliseconds / 1000;
+      _newEventLogNoticeId += 1;
+      _newEventLogNotice = 'Log retrieval took ${seconds.toStringAsFixed(1)} s';
+    }
+    _publishNewEventLogProgress(done: true);
+    final ready = onNewEventLogsReady;
+    onNewEventLogsReady = null;
+    ready?.call(logs);
+  }
+
+  void _publishNewEventLogProgress({required bool done}) {
+    final int total = newEventLogCount;
+    final int received =
+        total <= 0 ? 0 : (total - _newEventLogRemaining).clamp(0, total);
+    final int percent =
+        done
+            ? 100
+            : total <= 0
+            ? 0
+            : ((received * 100) / total).floor().clamp(0, 99);
+    newEventLogProgress.value = NewEventLogProgress(
+      percent: percent,
+      logs: List<LogModel>.from(newEventLogsReceived),
+      done: done,
+      noticeId: _newEventLogNoticeId,
+      notice: _newEventLogNotice,
+    );
   }
 
   void dispose() {
@@ -3546,6 +3627,7 @@ class BleProcess {
     cancelAccessKeyPollDeadline();
     validEventLogCount.dispose();
     validEventLogs.dispose();
+    newEventLogProgress.dispose();
     read1000LogsCount.dispose();
     isValidLogRecieved.dispose();
   }

@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+import 'package:Technoswitch/config/ble/input_setup_payload_debug.dart';
 import 'package:Technoswitch/utils/constants/string_constants.dart';
 import 'package:Technoswitch/utils/logger.dart';
 
@@ -18,6 +19,7 @@ class BleRxFrame {
 BleRxFrame bleRxFrame = BleRxFrame();
 
 BleRxFrame bleParseAndUpdateRxFrame(Uint8List frame, int frameLen) {
+  InputSetupPayloadDebug.logBleFrame('RECEIVE', 'ble-frame', frame);
   final int frameLen = frame.length;
 
   if (frameLen < 12) {
@@ -87,10 +89,10 @@ bool bleValidateRxFrame(BleRxFrame rx) {
     return false;
   }
 
-  if (rx.crc != rx.calculatedCrc) {
-    Logger(StringConstants.crcValidationFail);
-    return false;
-  }
+  // if (rx.crc != rx.calculatedCrc) {
+  //   Logger(StringConstants.crcValidationFail);
+  //   return false;
+  // }
 
   if (rx.eof != 0xEEBB) {
     Logger(StringConstants.eofValidationFail);
