@@ -2390,11 +2390,11 @@ class BleManager extends GetxService {
     _pollInFlight = false;
 
     if (_shouldDecryptIncomingFrame()) {
-      InputSetupPayloadDebug.logBleFrame(
-        'RECEIVE',
-        'ble-frame-encrypted',
-        data,
-      );
+      // InputSetupPayloadDebug.logBleFrame(
+      //   'RECEIVE',
+      //   'ble-frame-encrypted',
+      //   data,
+      // );
       data = _decryptIncomingFrame(data);
     }
 
