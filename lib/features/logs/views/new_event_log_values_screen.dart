@@ -8,12 +8,18 @@ import 'package:Technoswitch/utils/timestamp_converter.dart';
 import 'package:Technoswitch/widgets/common/app_notice.dart';
 
 class NewEventLogValuesScreen extends StatefulWidget {
-  const NewEventLogValuesScreen({super.key, required this.progress});
+  const NewEventLogValuesScreen({
+    super.key,
+    required this.progress,
+    this.embedded = false,
+  });
 
   final ValueNotifier<NewEventLogProgress> progress;
+  final bool embedded;
 
   @override
-  State<NewEventLogValuesScreen> createState() => _NewEventLogValuesScreenState();
+  State<NewEventLogValuesScreen> createState() =>
+      _NewEventLogValuesScreenState();
 }
 
 class _NewEventLogValuesScreenState extends State<NewEventLogValuesScreen> {
@@ -30,8 +36,45 @@ class _NewEventLogValuesScreenState extends State<NewEventLogValuesScreen> {
     });
   }
 
+  Widget _progressBody() {
+    return ValueListenableBuilder<NewEventLogProgress>(
+      valueListenable: widget.progress,
+      builder: (context, value, _) {
+        _showNotice(value);
+        if (!value.done) return _RetrievalProgress(percent: value.percent);
+        if (value.logs.isEmpty) {
+          return Center(
+            child: Text(
+              'No event logs',
+              style: StyleConstants.textDark14w500Style,
+            ),
+          );
+        }
+        return _EventLogGrid(logs: value.logs);
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (widget.embedded) {
+      return ColoredBox(
+        color: ColorConstants.white,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+              child: Text(
+                StringConstants.eventLog,
+                style: StyleConstants.black16w700Style,
+              ),
+            ),
+            Expanded(child: _progressBody()),
+          ],
+        ),
+      );
+    }
     return Scaffold(
       backgroundColor: ColorConstants.backgroundGray,
       appBar: AppBar(
@@ -43,22 +86,7 @@ class _NewEventLogValuesScreenState extends State<NewEventLogValuesScreen> {
         foregroundColor: ColorConstants.black,
         elevation: 0,
       ),
-      body: ValueListenableBuilder<NewEventLogProgress>(
-        valueListenable: widget.progress,
-        builder: (context, value, _) {
-          _showNotice(value);
-          if (!value.done) return _RetrievalProgress(percent: value.percent);
-          if (value.logs.isEmpty) {
-            return Center(
-              child: Text(
-                'No event logs',
-                style: StyleConstants.textDark14w500Style,
-              ),
-            );
-          }
-          return _EventLogGrid(logs: value.logs);
-        },
-      ),
+      body: _progressBody(),
     );
   }
 }
@@ -76,10 +104,7 @@ class _RetrievalProgress extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              '$percent%',
-              style: StyleConstants.textDark16w700Style,
-            ),
+            Text('$percent%', style: StyleConstants.textDark16w700Style),
             const SizedBox(height: 16),
             LinearProgressIndicator(
               value: percent / 100,
@@ -110,10 +135,10 @@ class _EventLogGrid extends StatelessWidget {
   static const List<String> _columns = <String>[
     'Log',
     'Event id',
-    'Display text',
+    'Event text',
     'Timestamp',
     'Configuration text',
-    'Source',
+    'Event Type',
   ];
 
   @override
@@ -153,7 +178,10 @@ class _EventLogGrid extends StatelessWidget {
                       for (var index = 0; index < logs.length; index++)
                         DataRow(
                           cells: [
-                            for (final String cell in _cells(index, logs[index]))
+                            for (final String cell in _cells(
+                              index,
+                              logs[index],
+                            ))
                               DataCell(Text(cell)),
                           ],
                         ),
@@ -197,6 +225,7 @@ class _EventLogGrid extends StatelessWidget {
     final int? number = log.par1;
     if (type == null || number == null) return '—';
     final String name = _sourceNames[type] ?? type.toString();
-    return '$name $number';
+    if (type == 4) return name;
+    return '$name ${number + 1}';
   }
 }
