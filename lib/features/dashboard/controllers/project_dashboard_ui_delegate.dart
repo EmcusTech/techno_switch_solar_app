@@ -84,6 +84,14 @@ abstract class ProjectDashboardUiDelegate {
     Future<void> Function()? onAfterApplySuccess,
   });
 
+  Future<void> runSystemConfigDownload({
+    required Future<void> Function() onDownloadComplete,
+  });
+
+  Future<void> runSystemConfigApply({
+    Future<void> Function()? onAfterApplySuccess,
+  });
+
   Future<void> runPanelPropertiesDownload({
     required String successMessage,
     required String progressLabel,

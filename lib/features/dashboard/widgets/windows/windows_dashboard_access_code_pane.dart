@@ -19,6 +19,8 @@ class WindowsDashboardAccessCodePane extends StatelessWidget {
         controller.selectedDevice.id,
         controller.panelRefreshNotifiers,
       );
+      if (!context.mounted) return;
+      await controller.resolveSystemConfigCrcAfterAccess();
     } finally {
       bleProcess.setSessionAccessCode(code);
     }

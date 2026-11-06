@@ -5,7 +5,9 @@ import 'package:Technoswitch/ble/blue_plus_adapter.dart';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:Technoswitch/ble/ble_manager.dart';
+import 'package:Technoswitch/config/ble/system_config_crc_store.dart';
 import 'package:Technoswitch/utils/constants/ble/ble_constants.dart';
+import 'package:Technoswitch/utils/constants/ble/ble_msd_utils.dart';
 import 'package:Technoswitch/utils/logger.dart';
 import 'package:Technoswitch/utils/constants/string_constants.dart';
 
@@ -19,6 +21,7 @@ class BluetoothService {
 
   StreamSubscription<ConnectionStateUpdate>? _connectionSub;
   DiscoveredDevice? connectedDevice;
+  final Set<String> _loggedScanCrc = <String>{};
 
   QualifiedCharacteristic? _readCharacteristic;
   QualifiedCharacteristic? _writeCharacteristic;
@@ -71,6 +74,7 @@ class BluetoothService {
 
             if (index == -1) {
               _scanResults.add(device);
+              _logAdvertisedConfigCrc(device);
               _resultsController.add(List.unmodifiable(_scanResults));
               return;
             }
@@ -86,6 +90,7 @@ class BluetoothService {
 
             if (manufacturerChanged || nameChanged || rssiChanged) {
               _scanResults[index] = device;
+              if (manufacturerChanged) _logAdvertisedConfigCrc(device);
               _resultsController.add(List.unmodifiable(_scanResults));
             }
           },
@@ -93,6 +98,19 @@ class BluetoothService {
             debugPrint('Scan error: $e');
           },
         );
+  }
+
+  void _logAdvertisedConfigCrc(DiscoveredDevice device) {
+    final advertised = BleMsdUtils.advertisedConfigCrc(device.manufacturerData);
+    if (advertised == null) return;
+    if (!_loggedScanCrc.add('${device.id}:$advertised')) return;
+    unawaited(
+      SystemConfigCrcStore.logScan(
+        name: device.name,
+        deviceId: device.id,
+        manufacturerData: device.manufacturerData,
+      ),
+    );
   }
 
   bool _listEquals(List<int> a, List<int> b) {

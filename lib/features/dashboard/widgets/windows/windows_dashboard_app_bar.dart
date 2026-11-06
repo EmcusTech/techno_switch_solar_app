@@ -109,31 +109,56 @@ class _WindowsDashboardAppBarState extends State<WindowsDashboardAppBar>
                 style: StyleConstants.black14w400Style,
               ),
               Spacer(),
-              // GestureDetector(
-              //   onTap: widget.onExport,
-              //   child: Padding(
-              //     padding: const EdgeInsets.only(right: 12),
-              //     child: SvgPicture.asset(AssetConstants.shareIcon),
-              //   ),
-              // ),
-              Text(
-                StringConstants.upload,
-                style: TextStyle(color: Colors.grey),
+              ValueListenableBuilder<bool>(
+                valueListenable: widget.controller.systemConfigCrcMismatch,
+                builder: (context, mismatch, _) {
+                  if (!mismatch) return const SizedBox.shrink();
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 24),
+                    child: Text(
+                      StringConstants.panelConfigMismatch,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: StyleConstants.black14w400Style.copyWith(
+                        color: ColorConstants.primary,
+                      ),
+                    ),
+                  );
+                },
               ),
-              SizedBox(width: 12),
-              SvgPicture.asset(
-                AssetConstants.winUploadIcon,
-                color: Colors.grey,
+              InkWell(
+                onTap: () {
+                  widget.controller.guardBootloaderOr(() {
+                    widget.controller.uiDelegate?.runSystemConfigApply();
+                  });
+                },
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(StringConstants.upload),
+                    const SizedBox(width: 12),
+                    SvgPicture.asset(AssetConstants.winUploadIcon),
+                  ],
+                ),
               ),
-              SizedBox(width: 40),
-              Text(
-                StringConstants.download,
-                style: TextStyle(color: Colors.grey),
-              ),
-              SizedBox(width: 12),
-              SvgPicture.asset(
-                AssetConstants.winDownloadIcon,
-                color: Colors.grey,
+              const SizedBox(width: 40),
+              InkWell(
+                onTap: () {
+                  widget.controller.guardBootloaderOr(() {
+                    widget.controller.uiDelegate?.runSystemConfigDownload(
+                      onDownloadComplete:
+                          widget.controller.saveAllPeripheralCachesFromBle,
+                    );
+                  });
+                },
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(StringConstants.download),
+                    const SizedBox(width: 12),
+                    SvgPicture.asset(AssetConstants.winDownloadIcon),
+                  ],
+                ),
               ),
               const SizedBox(width: 40),
               InkWell(

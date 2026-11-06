@@ -180,6 +180,9 @@ class _BleCommand {
   /// Single sounder struct command. Replaces the old relay/general/zone/ext-out
   /// sounder commands.
   final int newStructSounderCommand = 0x1E;
+
+  /// Whole `st_system_config_def` pull and push.
+  final int systemConfig = 0x1F;
   final int sounderSetup = 0x07;
   final int sounderSetupGeneral = 0x14;
   final int sounderSetupRelay = 0x07;

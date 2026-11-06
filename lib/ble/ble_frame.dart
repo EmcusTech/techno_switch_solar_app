@@ -19,7 +19,7 @@ class BleRxFrame {
 BleRxFrame bleRxFrame = BleRxFrame();
 
 BleRxFrame bleParseAndUpdateRxFrame(Uint8List frame, int frameLen) {
-  InputSetupPayloadDebug.logBleFrame('RECEIVE', 'ble-frame', frame);
+  // InputSetupPayloadDebug.logBleFrame('RECEIVE', 'ble-frame', frame);
   final int frameLen = frame.length;
 
   if (frameLen < 12) {
