@@ -17,7 +17,14 @@ abstract final class SystemConfigPayloadDebug {
   static void printPushFrames(BleManager manager) {
     final config = SystemConfigPayload.fromBleProcess(manager.bleProcess);
     final bytes = config.toBytes();
-    final chunks = SystemConfigPayload.pushChunks(bytes);
+    final chunkBytes =
+        manager.systemConfigPushChunkBytes() > 0
+            ? manager.systemConfigPushChunkBytes()
+            : BleManager.pushChunkBytesForMtu(512);
+    final chunks = SystemConfigPayload.pushChunks(
+      bytes,
+      chunkBytes: chunkBytes,
+    );
     print(
       'TX/RX: TRANSMIT: system-config-apply size ${SystemConfigDef.byteLength} in ${chunks.length} chunks',
     );

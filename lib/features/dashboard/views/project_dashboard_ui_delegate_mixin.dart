@@ -29,6 +29,7 @@ import 'package:Technoswitch/features/peripherals/panel_info/sheets/panel_info_m
 import 'package:Technoswitch/features/peripherals/radio/sheets/radio_mode_bottomsheet.dart';
 import 'package:Technoswitch/features/peripherals/relays/sheets/relay_mode_bottomsheet.dart';
 import 'package:Technoswitch/features/peripherals/service_due/sheets/service_due_mode_bottomsheet.dart';
+import 'package:Technoswitch/features/peripherals/shared/controllers/peripheral_mode_controller.dart';
 import 'package:Technoswitch/features/peripherals/sounders/sheets/sounder_mode_bottomsheet.dart';
 import 'package:Technoswitch/features/peripherals/test_mode/sheets/test_mode_choice_bottomsheet.dart';
 import 'package:Technoswitch/features/peripherals/test_mode/sheets/test_mode_relay_bottomsheet.dart';
@@ -1087,6 +1088,10 @@ mixin ProjectDashboardUiDelegateMixin<T extends StatefulWidget> on State<T>
   Future<void> runSystemConfigApply({
     Future<void> Function()? onAfterApplySuccess,
   }) {
+    if (!PeripheralModeController.persistOpenEditors()) {
+      showSnackBar(StringConstants.fixOpenSheetBeforeUpload);
+      return Future<void>.value();
+    }
     return runSystemConfigApplyFlow(
       context: uiContext,
       isMounted: () => mounted,

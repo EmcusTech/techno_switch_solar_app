@@ -89,10 +89,10 @@ bool bleValidateRxFrame(BleRxFrame rx) {
     return false;
   }
 
-  // if (rx.crc != rx.calculatedCrc) {
-  //   Logger(StringConstants.crcValidationFail);
-  //   return false;
-  // }
+  if (rx.crc != rx.calculatedCrc) {
+    Logger(StringConstants.crcValidationFail);
+    return false;
+  }
 
   if (rx.eof != 0xEEBB) {
     Logger(StringConstants.eofValidationFail);

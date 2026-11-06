@@ -79,19 +79,23 @@ class PanelInfoController extends PeripheralModeController {
       manager = Get.find<BleLogController>().bleManager;
     }
     final cached = await loadCache();
+    if (loadAbandoned) return;
     if (cached != null) {
       applyCachedData(cached);
       refreshUi();
+      markReadyToPersist();
       return;
     }
     if (preferFactoryDefaults) {
       applyFactoryDefaults();
       pushToManager();
       refreshUi();
+      markReadyToPersist();
       return;
     }
     loadFromManager();
     refreshUi();
+    markReadyToPersist();
   }
 
   @override

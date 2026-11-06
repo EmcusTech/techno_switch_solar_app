@@ -8,6 +8,7 @@ import 'package:Technoswitch/config/ui/access_config_ui_bridge.dart';
 import 'package:Technoswitch/features/peripherals/shared/controllers/peripheral_mode_controller.dart';
 import 'package:Technoswitch/models/access_code_mode_model.dart';
 import 'package:Technoswitch/utils/constants/string_constants.dart';
+import 'package:Technoswitch/utils/panel_config/panel_config_cache_sync.dart';
 import 'package:Technoswitch/utils/storage/peripheral_setup_cache.dart';
 
 /// Controller for the Access Codes bottom sheet.
@@ -53,6 +54,7 @@ class AccessCodeController extends PeripheralModeController {
       manager?.accessCodeSetupDataList.addListener(_onListChanged);
     }
     final cached = await PeripheralSetupCache.loadAccessCodeSetup(deviceId);
+    if (loadAbandoned) return;
     if (cached != null && cached.isNotEmpty) {
       final list =
           cached.map((e) => AccessConfigUiBridge.fromCacheMap(e)).toList();
@@ -62,6 +64,7 @@ class AccessCodeController extends PeripheralModeController {
       manager?.accessCodeSetupDataList.value = list;
     }
     loadFromManager();
+    markReadyToPersist();
   }
 
   @override
@@ -124,7 +127,11 @@ class AccessCodeController extends PeripheralModeController {
   }
 
   @override
-  Future<void> save() async {}
+  Future<void> save() => PanelConfigCacheSync.saveAccessCode(
+    manager!,
+    deviceId,
+    refreshTrigger,
+  );
 
   @override
   bool computeIsValid() {

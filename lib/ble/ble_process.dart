@@ -91,6 +91,7 @@ class BleProcess {
   int systemConfigTotalSize = 0;
   int systemConfigSequence = 0;
   int systemConfigExpectedChunkSize = 0;
+  int systemConfigChunkBytes = 0;
   int systemConfigFilled = 0;
   Uint8List systemConfigAssembly = Uint8List(0);
   List<Uint8List> systemConfigPushChunks = <Uint8List>[];
@@ -124,6 +125,7 @@ class BleProcess {
   bool logRetreivalEnded = false;
 
   NewEventLogPhase newEventLogPhase = NewEventLogPhase.idle;
+  int _bulkTransferKind = 2;
   int newEventLogCount = 0;
   void Function(List<LogModel> logs)? onNewEventLogsReady;
   Timer? _newEventLogTimer;
@@ -942,6 +944,20 @@ class BleProcess {
   }
 
   Future<void> bleRxFrameProcess(BleRxFrame rx) async {
+    final String? ctrlMessage = _ctrlStatusError(rx.payload);
+    if (ctrlMessage != null) {
+      InputSetupPayloadDebug.logBleFrame(
+        'RECEIVE',
+        'ctrl-status $ctrlMessage',
+        rx.payload,
+      );
+      _rejectCtrlMessage(
+        ctrlMessage,
+        invalidKey: ctrlMessage == StringConstants.ctrlInvalidKey,
+      );
+      return;
+    }
+
     if (newEventLogPhase != NewEventLogPhase.idle) {
       await _handleNewEventLogFrame(rx);
       return;
@@ -2521,6 +2537,7 @@ class BleProcess {
     systemConfigTotalSize = 0;
     systemConfigSequence = 0;
     systemConfigExpectedChunkSize = 0;
+    systemConfigChunkBytes = 0;
     systemConfigFilled = 0;
     systemConfigAssembly = Uint8List(0);
     systemConfigPushChunks = <Uint8List>[];
@@ -2544,6 +2561,16 @@ class BleProcess {
         );
         if (info.totalSize == 0) {
           _failSystemConfigTransfer(StringConstants.systemConfigSizeMismatch);
+          return;
+        }
+        await bleManager.ensureSystemConfigMtu();
+        systemConfigChunkBytes = bleManager.systemConfigPullChunkBytes();
+        print(
+          'SYSTEM_CONFIG pull chunk=$systemConfigChunkBytes '
+          'mtu=${bleManager.negotiatedAttMtu}',
+        );
+        if (systemConfigChunkBytes <= 0) {
+          _failSystemConfigTransfer(StringConstants.deviceNotResponding);
           return;
         }
         await _requestNextSystemConfigChunk();
@@ -2578,12 +2605,16 @@ class BleProcess {
     final size = SystemConfigPayload.pullChunkSizeFor(
       systemConfigTotalSize,
       systemConfigSequence,
+      chunkBytes: systemConfigChunkBytes,
     );
     if (size == 0) {
       _failSystemConfigTransfer(StringConstants.systemConfigSizeMismatch);
       return;
     }
-    final steps = SystemConfigPayload.pullStepCount(systemConfigTotalSize);
+    final steps = SystemConfigPayload.pullStepCount(
+      systemConfigTotalSize,
+      chunkBytes: systemConfigChunkBytes,
+    );
     processDesc.value =
         '${StringConstants.downloadingSystemConfig} ${systemConfigSequence + 1}/$steps';
     startOtherPacketsRxTimeout(timeout: const Duration(seconds: 15));
@@ -2693,12 +2724,73 @@ class BleProcess {
     );
   }
 
+  /// First payload byte of a control reply (`mode` `0x83`). Ack and any other
+  /// value stay on the normal path. The three reject codes stop the command.
+  String? _ctrlStatusError(List<int> payload) {
+    final int? status;
+    final parsed = TsFrame.parse(payload);
+    if (parsed.isValid &&
+        payload.length > TsFrame.modeOffset &&
+        payload[TsFrame.modeOffset] == BleConstants.mode.instruction.ctrl &&
+        parsed.data.isNotEmpty) {
+      status = parsed.data[0];
+    } else if (payload.length > 13 &&
+        payload[10] == BleConstants.mode.instruction.ctrl) {
+      status = payload[13];
+    } else {
+      return null;
+    }
+
+    if (status == BleConstants.ctrlStatus.ack) return null;
+    if (status == BleConstants.ctrlStatus.invalidKey) {
+      return StringConstants.ctrlInvalidKey;
+    }
+    if (status == BleConstants.ctrlStatus.invalidCmd) {
+      return StringConstants.ctrlInvalidCommand;
+    }
+    if (status == BleConstants.ctrlStatus.invalidPacket) {
+      return StringConstants.ctrlInvalidPacket;
+    }
+    return null;
+  }
+
+  void _rejectCtrlMessage(String message, {required bool invalidKey}) {
+    final bool configTransfer =
+        isSystemConfigFetchCommandActive.value ||
+        isSystemConfigApplyCommandActive.value ||
+        (newEventLogPhase != NewEventLogPhase.idle &&
+            (_bulkTransferKind ==
+                    BleConstants.command.transferSystemConfigDownload ||
+                _bulkTransferKind ==
+                    BleConstants.command.transferSystemConfigUpload));
+    if (configTransfer) {
+      _failSystemConfigTransfer(message);
+    } else {
+      resetProcessState();
+      bleManager.otaProcessState = OtaProcessState.notInUse;
+      isNetworkPacketProcess.value = false;
+      processDesc.value = message;
+      maxOtherPacketsRetriesReached.value = true;
+    }
+    if (invalidKey) {
+      clearSessionAccessCode();
+      isSessionAccessCodeValidationOnly = false;
+      processDesc.value = message;
+      isAccessKeyValid.value = false;
+      maxOtherPacketsRetriesReached.value = true;
+    }
+  }
+
   void _failSystemConfigTransfer(String message) {
     isSystemConfigFetchCommandActive.value = false;
     isSystemConfigApplyCommandActive.value = false;
     checkForSystemConfigFetchRes = 0;
     checkForSystemConfigApplyRes = 0;
     systemConfigWaitingForInfo = false;
+    newEventLogPhase = NewEventLogPhase.idle;
+    _newEventLogFetchOutstanding = false;
+    _newEventLogTimer?.cancel();
+    _newEventLogTimer = null;
     cancelRxTimeout();
     cancelOperationDeadline();
     bleManager.otaProcessState = OtaProcessState.notInUse;
@@ -3709,9 +3801,219 @@ class BleProcess {
     }
   }
 
+  Future<void> beginSystemConfigDownload() async {
+    _bulkTransferKind = BleConstants.command.transferSystemConfigDownload;
+    _newEventLogTimer?.cancel();
+    prepareSystemConfigTransfer();
+    isSystemConfigFetchCommandActive.value = true;
+    isSystemConfigFetchDone.value = false;
+    processDesc.value = StringConstants.downloadingSystemConfig;
+    newEventLogPhase = NewEventLogPhase.waitStart;
+    _newEventLogFetchOutstanding = false;
+    systemConfigSequence = 1;
+    _armNewEventLogTimeout();
+    await bleManager.newEventLogStartCmd(kind: _bulkTransferKind);
+  }
+
+  Future<void> beginSystemConfigUpload() async {
+    _bulkTransferKind = BleConstants.command.transferSystemConfigUpload;
+    _newEventLogTimer?.cancel();
+    prepareSystemConfigTransfer();
+    isSystemConfigApplyCommandActive.value = true;
+    isSystemConfigApplyDone.value = false;
+    processDesc.value = StringConstants.applyingSystemConfig;
+    newEventLogPhase = NewEventLogPhase.waitStart;
+    _newEventLogFetchOutstanding = false;
+    systemConfigSequence = 1;
+    _armNewEventLogTimeout();
+    await bleManager.newEventLogStartCmd(kind: _bulkTransferKind);
+  }
+
+  Future<void> _handleSystemConfigDownloadStart(BleRxFrame rx) async {
+    final parsed = TsFrame.parse(rx.payload);
+    if (!parsed.isValid || parsed.data.length < 2) return;
+
+    // Four-byte replies are the old info layout: chunk count, then byte size.
+    // The fetch length is that byte size. A two-byte reply is the size alone.
+    final int chunkCount = parsed.data[0] | (parsed.data[1] << 8);
+    final bool hasByteSize = parsed.data.length >= 4;
+    final int total =
+        hasByteSize ? parsed.data[2] | (parsed.data[3] << 8) : chunkCount;
+    InputSetupPayloadDebug.logBleFrame(
+      'RECEIVE',
+      hasByteSize
+          ? 'system-config-download-start size=$total chunkCount=$chunkCount'
+          : 'system-config-download-start size=$total',
+      rx.payload,
+    );
+    if (total <= 0) {
+      _failSystemConfigTransfer(StringConstants.systemConfigSizeMismatch);
+      return;
+    }
+    await bleManager.ensureSystemConfigMtu();
+    systemConfigChunkBytes = bleManager.systemConfigPullChunkBytes();
+    if (systemConfigChunkBytes <= 0) {
+      _failSystemConfigTransfer(StringConstants.deviceNotResponding);
+      return;
+    }
+    systemConfigTotalSize = total;
+    systemConfigFilled = 0;
+    systemConfigSequence = 1;
+    systemConfigAssembly = Uint8List(total);
+    systemConfigChunkCount = SystemConfigPayload.pullStepCount(
+      total,
+      chunkBytes: systemConfigChunkBytes,
+    );
+    print(
+      'SYSTEM_CONFIG download size=$total chunk=$systemConfigChunkBytes '
+      'steps=$systemConfigChunkCount mtu=${bleManager.negotiatedAttMtu}',
+    );
+    await _sendNextSystemConfigDownload();
+  }
+
+  Future<void> _sendNextSystemConfigDownload() async {
+    if (newEventLogPhase == NewEventLogPhase.idle) return;
+    final int size = SystemConfigPayload.pullChunkSizeFor(
+      systemConfigTotalSize,
+      systemConfigSequence - 1,
+      chunkBytes: systemConfigChunkBytes,
+    );
+    if (size <= 0) {
+      _failSystemConfigTransfer(StringConstants.systemConfigSizeMismatch);
+      return;
+    }
+    systemConfigExpectedChunkSize = size;
+    _newEventLogFetchOutstanding = true;
+    newEventLogPhase = NewEventLogPhase.waitFetch;
+    processDesc.value =
+        '${StringConstants.downloadingSystemConfig} '
+        '$systemConfigSequence/$systemConfigChunkCount';
+    _armNewEventLogTimeout();
+    await bleManager.newEventLogFetchCmd(
+      sequence: systemConfigSequence,
+      logCount: size,
+      label: 'system-config-download',
+    );
+  }
+
+  Future<void> _handleSystemConfigDownloadFetch(BleRxFrame rx) async {
+    if (!_newEventLogFetchOutstanding) return;
+    final parsed = TsFrame.parse(rx.payload);
+    if (!parsed.isValid) return;
+    _newEventLogFetchOutstanding = false;
+    InputSetupPayloadDebug.logBleFrame(
+      'RECEIVE',
+      'system-config-download seq=$systemConfigSequence '
+          'asked=$systemConfigExpectedChunkSize got=${parsed.data.length}',
+      rx.payload,
+    );
+    final int size = systemConfigExpectedChunkSize;
+    if (parsed.data.length != size ||
+        systemConfigFilled + size > systemConfigAssembly.length) {
+      _failSystemConfigTransfer(StringConstants.systemConfigSizeMismatch);
+      return;
+    }
+    systemConfigAssembly.setRange(
+      systemConfigFilled,
+      systemConfigFilled + size,
+      parsed.data,
+    );
+    systemConfigFilled += size;
+    systemConfigSequence += 1;
+    if (systemConfigFilled < systemConfigTotalSize) {
+      await _sendNextSystemConfigDownload();
+      return;
+    }
+    _newEventLogTimer?.cancel();
+    _newEventLogTimer = null;
+    newEventLogPhase = NewEventLogPhase.idle;
+    await bleManager.newEventLogEndCmd(systemConfigFilled);
+    _completeSystemConfigFetch();
+  }
+
+  Future<void> _handleSystemConfigUploadStart(BleRxFrame rx) async {
+    final parsed = TsFrame.parse(rx.payload);
+    if (!parsed.isValid) return;
+    InputSetupPayloadDebug.logBleFrame(
+      'RECEIVE',
+      'system-config-upload-start',
+      rx.payload,
+    );
+    await bleManager.ensureSystemConfigMtu();
+    final int chunkBytes = bleManager.systemConfigPushChunkBytes();
+    if (chunkBytes <= 0) {
+      _failSystemConfigTransfer(StringConstants.deviceNotResponding);
+      return;
+    }
+    final Uint8List configBytes =
+        SystemConfigPayload.fromBleProcess(this).toBytes();
+    systemConfigChunkBytes = chunkBytes;
+    systemConfigPushChunks = SystemConfigPayload.pushChunks(
+      configBytes,
+      chunkBytes: chunkBytes,
+    );
+    systemConfigChunkCount = systemConfigPushChunks.length;
+    systemConfigTotalSize = configBytes.length;
+    systemConfigSequence = 1;
+    if (systemConfigChunkCount == 0) {
+      _failSystemConfigTransfer(StringConstants.deviceNotResponding);
+      return;
+    }
+    print(
+      'SYSTEM_CONFIG upload size=$systemConfigTotalSize chunk=$chunkBytes '
+      'steps=$systemConfigChunkCount mtu=${bleManager.negotiatedAttMtu}',
+    );
+    await _sendNextSystemConfigUpload();
+  }
+
+  Future<void> _sendNextSystemConfigUpload() async {
+    if (newEventLogPhase == NewEventLogPhase.idle) return;
+    final int index = systemConfigSequence - 1;
+    if (index < 0 || index >= systemConfigPushChunks.length) {
+      _failSystemConfigTransfer(StringConstants.systemConfigSizeMismatch);
+      return;
+    }
+    final Uint8List chunk = systemConfigPushChunks[index];
+    _newEventLogFetchOutstanding = true;
+    newEventLogPhase = NewEventLogPhase.waitFetch;
+    processDesc.value =
+        '${StringConstants.applyingSystemConfig} '
+        '$systemConfigSequence/$systemConfigChunkCount';
+    _armNewEventLogTimeout();
+    await bleManager.newEventLogFetchCmd(
+      sequence: systemConfigSequence,
+      logCount: chunk.length,
+      payload: chunk,
+      label: 'system-config-upload',
+    );
+  }
+
+  Future<void> _handleSystemConfigUploadFetch(BleRxFrame rx) async {
+    if (!_newEventLogFetchOutstanding) return;
+    final parsed = TsFrame.parse(rx.payload);
+    if (!parsed.isValid) return;
+    _newEventLogFetchOutstanding = false;
+    InputSetupPayloadDebug.logBleFrame(
+      'RECEIVE',
+      'system-config-upload seq=$systemConfigSequence',
+      rx.payload,
+    );
+    systemConfigSequence += 1;
+    if (systemConfigSequence - 1 < systemConfigChunkCount) {
+      await _sendNextSystemConfigUpload();
+      return;
+    }
+    _newEventLogTimer?.cancel();
+    _newEventLogTimer = null;
+    newEventLogPhase = NewEventLogPhase.idle;
+    await bleManager.newEventLogEndCmd(systemConfigTotalSize);
+    _completeSystemConfigApply();
+  }
+
   Future<bool> beginNewEventLogRetrieval() async {
     if (!bleManager.isConnected) return false;
 
+    _bulkTransferKind = BleConstants.command.transferEventLog;
     _newEventLogTimer?.cancel();
     newEventLogPhase = NewEventLogPhase.waitStart;
     newEventLogCount = 0;
@@ -3734,7 +4036,14 @@ class BleProcess {
 
   void _armNewEventLogTimeout() {
     _newEventLogTimer?.cancel();
-    _newEventLogTimer = Timer(const Duration(seconds: 8), () {
+    _newEventLogTimer = Timer(const Duration(minutes: 2), () {
+      if (_bulkTransferKind ==
+              BleConstants.command.transferSystemConfigDownload ||
+          _bulkTransferKind ==
+              BleConstants.command.transferSystemConfigUpload) {
+        _failSystemConfigTransfer(StringConstants.deviceNotResponding);
+        return;
+      }
       _finishNewEventLogFetch();
     });
   }
@@ -3768,6 +4077,15 @@ class BleProcess {
   }
 
   Future<void> _handleNewEventLogStart(BleRxFrame rx) async {
+    if (_bulkTransferKind ==
+        BleConstants.command.transferSystemConfigDownload) {
+      await _handleSystemConfigDownloadStart(rx);
+      return;
+    }
+    if (_bulkTransferKind == BleConstants.command.transferSystemConfigUpload) {
+      await _handleSystemConfigUploadStart(rx);
+      return;
+    }
     final parsed = TsFrame.parse(rx.payload);
     if (!parsed.isValid || parsed.data.length < 2) return;
 
@@ -3824,6 +4142,15 @@ class BleProcess {
   }
 
   Future<void> _handleNewEventLogFetch(BleRxFrame rx) async {
+    if (_bulkTransferKind ==
+        BleConstants.command.transferSystemConfigDownload) {
+      await _handleSystemConfigDownloadFetch(rx);
+      return;
+    }
+    if (_bulkTransferKind == BleConstants.command.transferSystemConfigUpload) {
+      await _handleSystemConfigUploadFetch(rx);
+      return;
+    }
     if (!_newEventLogFetchOutstanding) return;
 
     final parsed = TsFrame.parse(rx.payload);

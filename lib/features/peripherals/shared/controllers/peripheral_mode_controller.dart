@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:Technoswitch/ble/ble_manager.dart';
@@ -23,13 +25,52 @@ abstract class PeripheralModeController extends GetxController {
   final String deviceId;
   final ValueNotifier<int> refreshTrigger;
 
+  static final Set<PeripheralModeController> _openEditors =
+      <PeripheralModeController>{};
+
   /// Resolved live BLE manager. Null until [loadData] runs (or when the
   /// `BleLogController` is not registered, e.g. in the create-project flow).
   BleManager? manager;
 
+  bool _readyToPersist = false;
+  bool _closed = false;
+
+  @protected
+  bool get loadAbandoned => _closed;
+
+  @protected
+  void markReadyToPersist() {
+    if (_closed) return;
+    _readyToPersist = true;
+  }
+
+  /// Writes every open sheet into the panel state. Returns false when an open
+  /// sheet is invalid, so upload does not send a partial edit.
+  static bool persistOpenEditors() {
+    var allValid = true;
+    for (final editor in List<PeripheralModeController>.of(_openEditors)) {
+      if (!editor.persistEditedState()) allValid = false;
+    }
+    return allValid;
+  }
+
+  /// Copies this sheet into the panel state and the local cache. No BLE packet.
+  bool persistEditedState({bool notify = true}) {
+    if (!_readyToPersist || manager == null) return true;
+    updateValidationErrors();
+    if (!computeIsValid()) {
+      if (notify) refreshUi();
+      return false;
+    }
+    pushToManager();
+    unawaited(save());
+    return true;
+  }
+
   @override
   void onInit() {
     super.onInit();
+    _openEditors.add(this);
     initModel();
     loadData();
     refreshTrigger.addListener(onRefreshTriggered);
@@ -37,7 +78,10 @@ abstract class PeripheralModeController extends GetxController {
 
   @override
   void onClose() {
+    _openEditors.remove(this);
     refreshTrigger.removeListener(onRefreshTriggered);
+    persistEditedState(notify: false);
+    _closed = true;
     disposeModel();
     super.onClose();
   }
@@ -49,12 +93,15 @@ abstract class PeripheralModeController extends GetxController {
       manager = Get.find<BleLogController>().bleManager;
     }
     final cached = await loadCache();
+    if (_closed) return;
     if (cached != null) {
       applyCachedData(cached);
       refreshUi();
+      markReadyToPersist();
       return;
     }
     loadFromManager();
+    markReadyToPersist();
   }
 
   /// Validate, push the edited values into the BLE manager and persist them.

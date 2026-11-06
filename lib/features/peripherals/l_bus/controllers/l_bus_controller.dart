@@ -71,9 +71,11 @@ class LBusController extends PeripheralModeController {
     }
     if (manager?.isConnected == true) {
       loadFromManager();
+      markReadyToPersist();
       return;
     }
     final cached = await PeripheralSetupCache.loadLBusSetup(deviceId);
+    if (loadAbandoned) return;
     if (cached != null && cached.isNotEmpty) {
       final list = cached.map((e) => LBusSetupData.fromJson(e)).toList();
       while (list.length < LBusDefaults.busCount) {
@@ -82,6 +84,7 @@ class LBusController extends PeripheralModeController {
       manager?.lBusSetupDataList.value = list;
     }
     loadFromManager();
+    markReadyToPersist();
   }
 
   // Unused for L-Bus (see [loadData] override), required by the base class.

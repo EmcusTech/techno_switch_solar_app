@@ -19,11 +19,11 @@ import 'package:Technoswitch/config/system_config_limits.dart';
 /// Pull (panel → app): info request has marker 1 at [13]. Each chunk request
 /// has marker 0 at [13], sequence at [14–15], and size at [16–17]. The reply
 /// carries raw config bytes at [13] with no sequence or size. A full reply
-/// chunk is 200 bytes.
+/// chunk is however many config bytes fit in the negotiated MTU.
 ///
 /// Push (app → panel): sequence at [13–14], size at [15–16], config bytes at
-/// [17]. A full push chunk is 196 bytes. The last chunk of either direction
-/// is only the remainder.
+/// [17]. A full push chunk is the MTU room minus those 4 bytes. The last
+/// chunk of either direction is only the remainder.
 abstract final class SystemConfigPayload {
   static const int commandOffset = 12;
 
@@ -42,11 +42,8 @@ abstract final class SystemConfigPayload {
   static const int pushSizeOffset = 15;
   static const int pushDataOffset = 17;
 
-  /// Room from [13] through [212] when the reply has no sequence or size.
-  static const int pullChunkDataBytes = 200;
-
-  /// Room from [17] through [212] after the 4-byte sequence and size.
-  static const int pushChunkDataBytes = 196;
+  /// Sequence and size that sit in front of an upload slice.
+  static const int pushChunkHeaderBytes = 4;
 
   static SystemConfigDef fromBleProcess(BleProcess process) {
     final retained = process.retainedSystemConfig;
@@ -183,21 +180,29 @@ abstract final class SystemConfigPayload {
     return Uint8List.sublistView(bytes, pullDataOffset, end);
   }
 
-  static int pullChunkSizeFor(int totalSize, int sequence) {
-    return _chunkSize(totalSize, sequence, pullChunkDataBytes);
+  static int pullChunkSizeFor(
+    int totalSize,
+    int sequence, {
+    required int chunkBytes,
+  }) {
+    return _chunkSize(totalSize, sequence, chunkBytes);
   }
 
-  /// How many 200-byte pulls this app will make for [totalSize].
-  static int pullStepCount(int totalSize) {
-    if (totalSize <= 0) return 0;
-    return (totalSize + pullChunkDataBytes - 1) ~/ pullChunkDataBytes;
+  /// How many pulls of [chunkBytes] this app will make for [totalSize].
+  static int pullStepCount(int totalSize, {required int chunkBytes}) {
+    if (totalSize <= 0 || chunkBytes <= 0) return 0;
+    return (totalSize + chunkBytes - 1) ~/ chunkBytes;
   }
 
-  static List<Uint8List> pushChunks(Uint8List config) {
+  static List<Uint8List> pushChunks(
+    Uint8List config, {
+    required int chunkBytes,
+  }) {
     final chunks = <Uint8List>[];
+    if (chunkBytes <= 0) return chunks;
     var offset = 0;
     while (offset < config.length) {
-      final size = _chunkSize(config.length, chunks.length, pushChunkDataBytes);
+      final size = _chunkSize(config.length, chunks.length, chunkBytes);
       chunks.add(Uint8List.sublistView(config, offset, offset + size));
       offset += size;
     }

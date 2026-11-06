@@ -32,6 +32,7 @@ abstract final class BleConstants {
   static const mode = _BleMode();
   static const socket = _BleSocket();
   static const command = _BleCommand();
+  static const ctrlStatus = _CtrlMsgStatus();
   static const firmware = _BleFirmware();
 
   // CONTROL_RES_EVENT_REPORT
@@ -203,6 +204,21 @@ class _BleCommand {
   final int newEventLogStart = 0x0C;
   final int newEventLogFetch = 0x0D;
   final int newEventLogEnd = 0x0E;
+
+  /// Byte in the shared start command. Firmware selects the transfer from it.
+  final int transferFirmwareUpgrade = 1;
+  final int transferEventLog = 2;
+  final int transferSystemConfigDownload = 3;
+  final int transferSystemConfigUpload = 4;
+}
+
+class _CtrlMsgStatus {
+  const _CtrlMsgStatus();
+
+  final int ack = 0x02;
+  final int invalidKey = 0x04;
+  final int invalidCmd = 0x05;
+  final int invalidPacket = 0x06;
 }
 
 class _BleFirmware {

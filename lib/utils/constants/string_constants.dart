@@ -28,6 +28,9 @@ abstract final class StringConstants {
   static const String disconnectConn = "Disconnected during connection";
   static const String nackPacket = "The received packet is a nack packet";
   static const String wrongPassword = "Wrong password. Try again.";
+  static const String ctrlInvalidKey = "Invalid key";
+  static const String ctrlInvalidCommand = "Invalid command";
+  static const String ctrlInvalidPacket = "Invalid packet";
   static const String adcSetupFetchCompleted = "Adc Setup Fetch Completed";
   static const String downloadingGeneralModuleSilenceBuzzerLvl =
       "Downloading General Module Silence Buzzer LVL";
@@ -92,6 +95,8 @@ abstract final class StringConstants {
   static const String downloadingSounder = "Downloading Sounder";
   static const String applyingSounder = "Applying Sounder";
   static const String downloadingSystemConfig = "Downloading Config";
+  static const String fixOpenSheetBeforeUpload =
+      "Fix the open sheet before uploading";
   static const String applyingSystemConfig = "Applying Config";
   static const String systemConfigFetchCompleted = "Config Download Completed";
   static const String systemConfigApplyCompleted = "Config Apply Completed";

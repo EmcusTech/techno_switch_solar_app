@@ -82,18 +82,23 @@ class ExtOutController extends PeripheralModeController {
     if (manager?.isConnected == true) {
       loadFromManager();
       final cached = await loadCache();
+      if (loadAbandoned) return;
       if (cached != null) {
         _applyCachedSolarMode(cached);
       }
+      markReadyToPersist();
       return;
     }
     final cached = await loadCache();
+    if (loadAbandoned) return;
     if (cached != null) {
       applyCachedData(cached);
       refreshUi();
+      markReadyToPersist();
       return;
     }
     loadFromManager();
+    markReadyToPersist();
   }
 
   @override

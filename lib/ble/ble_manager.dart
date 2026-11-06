@@ -1520,6 +1520,43 @@ class BleManager extends GetxService {
     await sendSounderSetupApplyCmdPkt();
   }
 
+  Future<void> ensureSystemConfigMtu() async {
+    if (negotiatedAttMtu >= 512) return;
+    final deviceId =
+        selectedDevice?.id ??
+        (connectedDeviceId.value.isNotEmpty ? connectedDeviceId.value : null);
+    if (deviceId == null || deviceId.isEmpty) return;
+    negotiatedAttMtu = await flutterReactiveBle.requestMtu(
+      deviceId: deviceId,
+      mtu: 512,
+    );
+  }
+
+  /// Config bytes that fit in one reply at [attMtu].
+  static int pullChunkBytesForMtu(int attMtu) {
+    return _commandDataBudgetForMtu(attMtu);
+  }
+
+  /// Config bytes that fit in one upload after the 4-byte sequence and size.
+  static int pushChunkBytesForMtu(int attMtu) {
+    final budget = _commandDataBudgetForMtu(attMtu);
+    if (budget <= SystemConfigPayload.pushChunkHeaderBytes) return 0;
+    return budget - SystemConfigPayload.pushChunkHeaderBytes;
+  }
+
+  int systemConfigPullChunkBytes() => pullChunkBytesForMtu(negotiatedAttMtu);
+
+  int systemConfigPushChunkBytes() => pushChunkBytesForMtu(negotiatedAttMtu);
+
+  static int _commandDataBudgetForMtu(int attMtu) {
+    if (attMtu <= BLE_ATT_HEADER_SIZE) return 0;
+    final writeBudget = attMtu - BLE_ATT_HEADER_SIZE;
+    if (writeBudget <= BLE_FRAME_FILED_SIZE) return 0;
+    final tsBudget = writeBudget - BLE_FRAME_FILED_SIZE;
+    if (tsBudget <= TsFrame.overhead) return 0;
+    return tsBudget - TsFrame.overhead;
+  }
+
   Future<void> startSystemConfigFetch() async {
     if (DemoBle.enabled) {
       final infoFrame = buildSystemConfigInfoFrame(previewOnly: true);
@@ -1550,19 +1587,7 @@ class BleManager extends GetxService {
       throw Exception(StringConstants.bleHandshakeIncomplete);
     }
 
-    bleCurrentState = BleStates.SEND_SYSTEM_CONFIG_FETCH_PACKET;
-    bleStateMachineState = BleStates.SEND_SYSTEM_CONFIG_FETCH_PACKET;
-    currentOperationMode = BleOperationMode.systemConfigFetch;
-    otaProcessState = OtaProcessState.sendSystemConfigFetchCmdPkt;
-    bleProcess.isNetworkPacketProcess.value = false;
-    bleProcess.checkForSystemConfigFetchRes = 1;
-    bleProcess.systemConfigWaitingForInfo = true;
-    bleProcess.isSystemConfigFetchCommandActive.value = true;
-    bleProcess.isSystemConfigFetchDone.value = false;
-    bleProcess.processDesc.value = StringConstants.downloadingSystemConfig;
-    bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 15));
-    bleProcess.startRxTimeout();
-    await sendSystemConfigInfoRequest();
+    await bleProcess.beginSystemConfigDownload();
   }
 
   Future<void> startSystemConfigApply() async {
@@ -1570,9 +1595,14 @@ class BleManager extends GetxService {
       SystemConfigPayloadDebug.printPushFrames(this);
       bleProcess.isSystemConfigApplyDone.value = false;
       bleProcess.isSystemConfigApplyCommandActive.value = true;
+      final chunkBytes =
+          systemConfigPushChunkBytes() > 0
+              ? systemConfigPushChunkBytes()
+              : BleManager.pushChunkBytesForMtu(512);
       final chunkCount =
           SystemConfigPayload.pushChunks(
             SystemConfigPayload.fromBleProcess(bleProcess).toBytes(),
+            chunkBytes: chunkBytes,
           ).length;
       await DemoBle.runSteppedCommand(
         process: bleProcess,
@@ -1601,28 +1631,7 @@ class BleManager extends GetxService {
       throw Exception(StringConstants.bleHandshakeIncomplete);
     }
 
-    final configBytes =
-        SystemConfigPayload.fromBleProcess(bleProcess).toBytes();
-    bleProcess.systemConfigPushChunks = SystemConfigPayload.pushChunks(
-      configBytes,
-    );
-    bleProcess.systemConfigChunkCount =
-        bleProcess.systemConfigPushChunks.length;
-    bleProcess.systemConfigSequence = 0;
-
-    bleCurrentState = BleStates.SEND_SYSTEM_CONFIG_APPLY_PACKET;
-    bleStateMachineState = BleStates.SEND_SYSTEM_CONFIG_APPLY_PACKET;
-    currentOperationMode = BleOperationMode.systemConfigApply;
-    otaProcessState = OtaProcessState.sendSystemConfigApplyCmdPkt;
-    bleProcess.isNetworkPacketProcess.value = false;
-    bleProcess.checkForSystemConfigApplyRes = 1;
-    bleProcess.isSystemConfigApplyCommandActive.value = true;
-    bleProcess.isSystemConfigApplyDone.value = false;
-    bleProcess.processDesc.value =
-        '${StringConstants.applyingSystemConfig} 1/${bleProcess.systemConfigChunkCount}';
-    bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 15));
-    bleProcess.startRxTimeout();
-    await sendSystemConfigPushChunk(0);
+    await bleProcess.beginSystemConfigUpload();
   }
 
   Future<void> _beginPanelPropertiesFetch({
@@ -3130,7 +3139,9 @@ class BleManager extends GetxService {
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
 
-  Future<void> newEventLogStartCmd() async {
+  Future<void> newEventLogStartCmd({
+    int kind = 2,
+  }) async {
     u8TxPktCnt += 1;
 
     final header = Uint8List(TsFrame.headerLength);
@@ -3145,14 +3156,22 @@ class BleManager extends GetxService {
     header[11] = BleConstants.socket.radio;
     header[12] = BleConstants.command.newEventLogStart;
 
-    final pkt = TsFrame.build(header, const <int>[0x02]);
-    InputSetupPayloadDebug.logBleFrame('TRANSMIT', 'event-log-start', pkt);
+    final pkt = TsFrame.build(header, <int>[kind & BleConstants.base]);
+    final String name =
+        kind == BleConstants.command.transferSystemConfigDownload
+            ? 'system-config-download-start'
+            : kind == BleConstants.command.transferSystemConfigUpload
+            ? 'system-config-upload-start'
+            : 'event-log-start';
+    InputSetupPayloadDebug.logBleFrame('TRANSMIT', name, pkt);
     await sendSmallDataFrame(0x1000, pkt.length, pkt);
   }
 
   Future<void> newEventLogFetchCmd({
     required int sequence,
     required int logCount,
+    List<int> payload = const <int>[],
+    String label = 'event-log-fetch',
   }) async {
     u8TxPktCnt += 1;
 
@@ -3168,15 +3187,17 @@ class BleManager extends GetxService {
     header[11] = BleConstants.socket.radio;
     header[12] = BleConstants.command.newEventLogFetch;
 
-    const int fieldBytes = 2;
-    final Uint8List commandData = Uint8List(fieldBytes * 2);
+    final Uint8List commandData = Uint8List(4 + payload.length);
     _writeUint16Le(commandData, 0, sequence);
-    _writeUint16Le(commandData, fieldBytes, logCount);
+    _writeUint16Le(commandData, 2, logCount);
+    if (payload.isNotEmpty) {
+      commandData.setRange(4, commandData.length, payload);
+    }
 
     final pkt = TsFrame.build(header, commandData);
     InputSetupPayloadDebug.logBleFrame(
       'TRANSMIT',
-      'event-log-fetch seq=$sequence logs=$logCount',
+      '$label seq=$sequence count=$logCount',
       pkt,
     );
     await sendSmallDataFrame(0x1000, pkt.length, pkt);
@@ -3542,6 +3563,7 @@ class BleManager extends GetxService {
     final size = SystemConfigPayload.pullChunkSizeFor(
       bleProcess.systemConfigTotalSize,
       bleProcess.systemConfigSequence,
+      chunkBytes: bleProcess.systemConfigChunkBytes,
     );
     bleProcess.systemConfigExpectedChunkSize = size;
     final u8Pkt = buildSystemConfigPullFrame(
