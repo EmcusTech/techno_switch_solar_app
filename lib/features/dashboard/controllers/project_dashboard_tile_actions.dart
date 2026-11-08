@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:Technoswitch/ble/demo/demo_ble.dart';
 import 'package:Technoswitch/features/dashboard/controllers/project_dashboard_controller.dart';
 import 'package:Technoswitch/features/dashboard/controllers/project_dashboard_ui_delegate.dart';
 import 'package:Technoswitch/utils/constants/string_constants.dart';
@@ -176,7 +177,13 @@ abstract final class ProjectDashboardTileActions {
         return;
       }
 
-      unawaited(c.ble.bleProcess.beginNewEventLogRetrieval());
+      if (DemoBle.enabled) {
+        unawaited(
+          c.ble.bleProcess.playDemoEventLogs(DemoBle.sampleEventLogs),
+        );
+      } else {
+        unawaited(c.ble.bleProcess.beginNewEventLogRetrieval());
+      }
       ui.openNewEventLogValuesScreen(c.ble.bleProcess.newEventLogProgress);
     });
   }

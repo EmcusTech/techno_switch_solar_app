@@ -4010,6 +4010,34 @@ class BleProcess {
     _completeSystemConfigApply();
   }
 
+  /// Fills [newEventLogProgress] with [logs] and does not send a panel command.
+  Future<void> playDemoEventLogs(List<LogModel> logs) async {
+    _newEventLogTimer?.cancel();
+    _newEventLogTimer = null;
+    newEventLogPhase = NewEventLogPhase.idle;
+    _newEventLogFetchOutstanding = false;
+    _bulkTransferKind = BleConstants.command.transferEventLog;
+    newEventLogsReceived.clear();
+    validEventLogs.value = [];
+    newEventLogCount = logs.length;
+    _newEventLogRemaining = logs.length;
+    _newEventLogNoticeId = 0;
+    _newEventLogNotice = null;
+    _newEventLogStartedAt = DateTime.now();
+    _publishNewEventLogProgress(done: false);
+    for (final LogModel log in logs) {
+      await Future.delayed(const Duration(milliseconds: 200));
+      if (newEventLogCount != logs.length) return;
+      newEventLogsReceived.add(log);
+      validEventLogs.value = List<LogModel>.from(newEventLogsReceived);
+      _newEventLogRemaining -= 1;
+      _publishNewEventLogProgress(done: false);
+    }
+    _newEventLogNoticeId += 1;
+    _newEventLogNotice = 'Log retrieval took 0.8 s';
+    _publishNewEventLogProgress(done: true);
+  }
+
   Future<bool> beginNewEventLogRetrieval() async {
     if (!bleManager.isConnected) return false;
 
