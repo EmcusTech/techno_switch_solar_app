@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:Technoswitch/ble/demo/demo_ble.dart';
+import 'package:Technoswitch/ble/demo/demo_constants.dart';
 import 'package:Technoswitch/features/dashboard/controllers/project_dashboard_controller.dart';
 import 'package:Technoswitch/features/dashboard/controllers/project_dashboard_ui_delegate.dart';
 import 'package:Technoswitch/utils/constants/string_constants.dart';
@@ -179,7 +180,7 @@ abstract final class ProjectDashboardTileActions {
 
       if (DemoBle.enabled) {
         unawaited(
-          c.ble.bleProcess.playDemoEventLogs(DemoBle.sampleEventLogs),
+          c.ble.bleProcess.playDemoEventLogs(DemoConstants.sampleEventLogs),
         );
       } else {
         unawaited(c.ble.bleProcess.beginNewEventLogRetrieval());

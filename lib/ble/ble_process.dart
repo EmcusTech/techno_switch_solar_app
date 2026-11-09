@@ -4025,16 +4025,24 @@ class BleProcess {
     _newEventLogNotice = null;
     _newEventLogStartedAt = DateTime.now();
     _publishNewEventLogProgress(done: false);
-    for (final LogModel log in logs) {
-      await Future.delayed(const Duration(milliseconds: 200));
+    const int chunkSize = 40;
+    for (var start = 0; start < logs.length; start += chunkSize) {
+      await Future.delayed(const Duration(milliseconds: 40));
       if (newEventLogCount != logs.length) return;
-      newEventLogsReceived.add(log);
+      final int end =
+          start + chunkSize < logs.length ? start + chunkSize : logs.length;
+      newEventLogsReceived.addAll(logs.sublist(start, end));
       validEventLogs.value = List<LogModel>.from(newEventLogsReceived);
-      _newEventLogRemaining -= 1;
+      _newEventLogRemaining = logs.length - newEventLogsReceived.length;
       _publishNewEventLogProgress(done: false);
     }
+    final DateTime? started = _newEventLogStartedAt;
+    final double seconds =
+        started == null
+            ? 0
+            : DateTime.now().difference(started).inMilliseconds / 1000;
     _newEventLogNoticeId += 1;
-    _newEventLogNotice = 'Log retrieval took 0.8 s';
+    _newEventLogNotice = 'Log retrieval took ${seconds.toStringAsFixed(1)} s';
     _publishNewEventLogProgress(done: true);
   }
 
