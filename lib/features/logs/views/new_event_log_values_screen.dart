@@ -2,7 +2,6 @@ import 'dart:math' as math;
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:Technoswitch/ble/demo/demo_ble.dart';
 import 'package:Technoswitch/utils/constants/asset_constants.dart';
@@ -49,14 +48,6 @@ class _NewEventLogValuesScreenState extends State<NewEventLogValuesScreen> {
       builder: (context, value, _) {
         _showNotice(value);
         if (!value.done) return _RetrievalProgress(percent: value.percent);
-        if (value.logs.isEmpty) {
-          return Center(
-            child: Text(
-              'No event logs',
-              style: StyleConstants.textDark14w500Style,
-            ),
-          );
-        }
         return _EventLogGrid(logs: value.logs);
       },
     );
@@ -127,15 +118,16 @@ class _RetrievalProgress extends StatelessWidget {
 }
 
 class _EventLogGrid extends StatefulWidget {
-  const _EventLogGrid({required this.logs});
+  const _EventLogGrid({required this.logs, this.showClassFilters = true});
 
   final List<LogModel> logs;
+  final bool showClassFilters;
 
   @override
   State<_EventLogGrid> createState() => _EventLogGridState();
 }
 
-enum _LogSortColumn { eventNo, timestamp, eventType, eventText }
+enum _LogSortColumn { eventNo, timestamp, eventType, configText, eventText }
 
 class _EventLogGridState extends State<_EventLogGrid> {
   final TextEditingController _search = TextEditingController();
@@ -173,11 +165,9 @@ class _EventLogGridState extends State<_EventLogGrid> {
     final List<({LogModel log, int eventNo})> byClass =
         eventClass == null
             ? entries
-            : entries
-                .where((({LogModel log, int eventNo}) entry) {
-                  return entry.log.eventClass == eventClass;
-                })
-                .toList();
+            : entries.where((({LogModel log, int eventNo}) entry) {
+              return entry.log.eventClass == eventClass;
+            }).toList();
     final String query = _search.text.trim().toLowerCase();
     final List<({LogModel log, int eventNo})> filtered =
         query.isEmpty
@@ -233,11 +223,17 @@ class _EventLogGridState extends State<_EventLogGrid> {
         if (bTime == null) return 1;
         return aTime.compareTo(bTime);
       case _LogSortColumn.eventType:
-        return _source(a.log).toLowerCase().compareTo(_source(b.log).toLowerCase());
+        return _source(
+          a.log,
+        ).toLowerCase().compareTo(_source(b.log).toLowerCase());
       case _LogSortColumn.eventText:
-        return _orDash(a.log.text).toLowerCase().compareTo(
-          _orDash(b.log.text).toLowerCase(),
-        );
+        return _orDash(
+          a.log.text,
+        ).toLowerCase().compareTo(_orDash(b.log.text).toLowerCase());
+      case _LogSortColumn.configText:
+        return _orDash(
+          a.log.configText,
+        ).toLowerCase().compareTo(_orDash(b.log.configText).toLowerCase());
     }
   }
 
@@ -357,6 +353,7 @@ class _EventLogGridState extends State<_EventLogGrid> {
     DemoBle.devMode ? 'Event id' : 'Event no',
     'Timestamp',
     'Event type',
+    'Configuration text',
     'Event text',
   ];
 
@@ -379,7 +376,7 @@ class _EventLogGridState extends State<_EventLogGrid> {
                     style: StyleConstants.textDark14w500Style,
                     decoration: InputDecoration(
                       hintText:
-                          'Search for Event Text, Time stamp, Event Type or Event No',
+                          'Search for Event Text, Configuration text, Time stamp, Event Type or Event No',
                       hintStyle: StyleConstants.textDisabled14w500Style,
                       isDense: true,
                       contentPadding: const EdgeInsets.fromLTRB(12, 10, 0, 10),
@@ -439,109 +436,113 @@ class _EventLogGridState extends State<_EventLogGrid> {
               ],
             ),
           ),
-          const SizedBox(height: 12),
-          _classFilterRow(),
-          const SizedBox(height: 12),
-          Expanded(
-            child:
-                logs.isEmpty
-                    ? Center(
-                      child: Text(
-                        'No matching logs',
-                        style: StyleConstants.textDark14w500Style.copyWith(
-                          fontSize: 14.sp,
-                        ),
-                      ),
-                    )
-                    : LayoutBuilder(
-                      builder: (context, constraints) {
-                        final double tableWidth =
-                            constraints.maxWidth < 960
-                                ? 960
-                                : constraints.maxWidth;
-                        return ScrollConfiguration(
-                          behavior: ScrollConfiguration.of(context).copyWith(
-                            dragDevices: const <PointerDeviceKind>{
-                              PointerDeviceKind.touch,
-                              PointerDeviceKind.mouse,
-                              PointerDeviceKind.trackpad,
-                              PointerDeviceKind.stylus,
-                            },
-                          ),
-                          child: Scrollbar(
-                            controller: _tableScroll,
-                            thumbVisibility: true,
-                            child: SingleChildScrollView(
-                              controller: _tableScroll,
-                              padding: const EdgeInsets.only(right: 16),
-                              child: SingleChildScrollView(
-                                scrollDirection: Axis.horizontal,
-                                physics: const ClampingScrollPhysics(),
-                                child: SizedBox(
-                                width: tableWidth,
-                                child: DataTable(
-                                  headingRowHeight: 36,
-                                  dataRowMinHeight: 32,
-                                  dataRowMaxHeight: 32,
-                                  columnSpacing: 24,
-                                  horizontalMargin: 16,
-                                  headingRowColor:
-                                      const WidgetStatePropertyAll<Color>(
-                                        ColorConstants.primary,
-                                      ),
-                                  headingTextStyle:
-                                      StyleConstants.white14w500Style,
-                                  dataTextStyle:
-                                      StyleConstants.textDark14w500Style,
-                                  dividerThickness: 0,
-                                  border: const TableBorder(),
-                                  columns: [
-                                    for (var index = 0; index < _columns.length; index++)
-                                      DataColumn(
-                                        label: _sortHeader(
-                                          _columns[index],
-                                          _LogSortColumn.values[index],
-                                        ),
-                                      ),
-                                  ],
-                                  rows: [
-                                    for (
-                                      var index = 0;
-                                      index < logs.length;
-                                      index++
-                                    )
-                                      DataRow(
-                                        color: WidgetStatePropertyAll<Color>(
-                                          index.isEven
-                                              ? _oddRowColor
-                                              : ColorConstants.white,
-                                        ),
-                                        cells: [
-                                          for (final String cell in _cells(
-                                            logs[index].log,
-                                            logs[index].eventNo,
-                                          ))
-                                            DataCell(
-                                              Text(
-                                                cell,
-                                                maxLines: 1,
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                            ),
-                                        ],
-                                      ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      );
-                      },
-                    ),
-          ),
+          if (widget.showClassFilters) ...[
+            const SizedBox(height: 12),
+            _classFilterRow(),
+            const SizedBox(height: 12),
+          ] else
+            const SizedBox(height: 12),
+          Expanded(child: _table(logs)),
         ],
       ),
+    );
+  }
+
+  Widget _table(List<({LogModel log, int eventNo})> logs) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final double tableWidth =
+            constraints.maxWidth < 960 ? 960 : constraints.maxWidth;
+        final Widget table = SizedBox(
+          width: tableWidth,
+          child: _dataTable(logs),
+        );
+        if (logs.isEmpty) {
+          final String message =
+              widget.logs.isEmpty ? 'No event logs' : 'No matching logs';
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                physics: const ClampingScrollPhysics(),
+                child: table,
+              ),
+              Expanded(
+                child: Center(
+                  child: Text(
+                    message,
+                    style: StyleConstants.textDark14w500Style,
+                  ),
+                ),
+              ),
+            ],
+          );
+        }
+        return ScrollConfiguration(
+          behavior: ScrollConfiguration.of(context).copyWith(
+            dragDevices: const <PointerDeviceKind>{
+              PointerDeviceKind.touch,
+              PointerDeviceKind.mouse,
+              PointerDeviceKind.trackpad,
+              PointerDeviceKind.stylus,
+            },
+          ),
+          child: Scrollbar(
+            controller: _tableScroll,
+            thumbVisibility: true,
+            child: SingleChildScrollView(
+              controller: _tableScroll,
+              padding: const EdgeInsets.only(right: 16),
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                physics: const ClampingScrollPhysics(),
+                child: table,
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  DataTable _dataTable(List<({LogModel log, int eventNo})> logs) {
+    return DataTable(
+      headingRowHeight: 36,
+      dataRowMinHeight: 32,
+      dataRowMaxHeight: 32,
+      columnSpacing: 24,
+      horizontalMargin: 16,
+      headingRowColor: const WidgetStatePropertyAll<Color>(
+        ColorConstants.primary,
+      ),
+      headingTextStyle: StyleConstants.white14w500Style,
+      dataTextStyle: StyleConstants.textDark14w500Style,
+      dividerThickness: 0,
+      border: const TableBorder(),
+      columns: [
+        for (var index = 0; index < _columns.length; index++)
+          DataColumn(
+            label: _sortHeader(_columns[index], _LogSortColumn.values[index]),
+          ),
+      ],
+      rows: [
+        for (var index = 0; index < logs.length; index++)
+          DataRow(
+            color: WidgetStatePropertyAll<Color>(
+              index.isEven ? _oddRowColor : ColorConstants.white,
+            ),
+            cells: [
+              for (final String cell in _cells(
+                logs[index].log,
+                logs[index].eventNo,
+              ))
+                DataCell(
+                  Text(cell, maxLines: 1, overflow: TextOverflow.ellipsis),
+                ),
+            ],
+          ),
+      ],
     );
   }
 
@@ -552,6 +553,7 @@ class _EventLogGridState extends State<_EventLogGrid> {
           ? '0'
           : TimestampConverter.formatTimestamp(log.eventDateTime!),
       _source(log),
+      _orDash(log.configText),
       _orDash(log.text),
     ];
   }
@@ -650,25 +652,10 @@ class _LiveEventValuesScreenState extends State<LiveEventValuesScreen> {
             ),
           ),
           Expanded(
-            child: ValueListenableBuilder<bool>(
-              valueListenable: widget.sessionOpen,
-              builder: (context, open, _) {
-                return ValueListenableBuilder<List<LogModel>>(
-                  valueListenable: widget.logs,
-                  builder: (context, logs, _) {
-                    if (logs.isEmpty) {
-                      return Center(
-                        child: Text(
-                          open
-                              ? 'Waiting for live events'
-                              : 'Press Start to listen for live events',
-                          style: StyleConstants.textDark14w500Style,
-                        ),
-                      );
-                    }
-                    return _EventLogGrid(logs: logs.reversed.toList());
-                  },
-                );
+            child: ValueListenableBuilder<List<LogModel>>(
+              valueListenable: widget.logs,
+              builder: (context, logs, _) {
+                return _EventLogGrid(logs: logs.reversed.toList());
               },
             ),
           ),
@@ -717,6 +704,322 @@ class _LiveEventActionButton extends StatelessWidget {
               enabled
                   ? (filled ? ColorConstants.white : ColorConstants.primary)
                   : ColorConstants.textGray,
+        ),
+      ),
+    );
+  }
+}
+
+/// Large live-log window. Listening starts when the window opens.
+/// Closing it sends the end command.
+class LiveEventLogsDialog extends StatefulWidget {
+  const LiveEventLogsDialog({
+    super.key,
+    required this.logs,
+    required this.sessionOpen,
+    required this.onStart,
+    required this.onPause,
+    required this.onResume,
+    required this.onRefresh,
+    required this.onClosed,
+  });
+
+  final ValueNotifier<List<LogModel>> logs;
+  final ValueNotifier<bool> sessionOpen;
+  final VoidCallback onStart;
+  final Future<void> Function() onPause;
+  final Future<bool> Function() onResume;
+  final VoidCallback onRefresh;
+  final VoidCallback onClosed;
+
+  @override
+  State<LiveEventLogsDialog> createState() => _LiveEventLogsDialogState();
+}
+
+class _LiveEventLogsDialogState extends State<LiveEventLogsDialog> {
+  bool _started = false;
+  bool _busy = false;
+  bool _closed = false;
+  int _classFilter = 0;
+  int _componentFilter = 0;
+
+  static const List<String> _classFilters = <String>[
+    'All',
+    'EXT. Release',
+    'Fire',
+    'Fault',
+    'Disablement',
+    'Condition',
+    'Action',
+  ];
+
+  static const List<({String label, String icon})> _components =
+      <({String label, String icon})>[
+        (label: 'Relay(1/2)', icon: AssetConstants.peripheralRelayIcon),
+        (label: 'Input(2/2)', icon: AssetConstants.peripheralInputIcon),
+        (label: 'Zones(3/3)', icon: AssetConstants.peripheralZonesIcon),
+        (label: 'Sounder(3/3)', icon: AssetConstants.peripheralSounderIcon),
+        (label: 'Prog/Hold(2/2)', icon: AssetConstants.peripheralProgHoldIcon),
+        (label: 'Aux(2/2)', icon: AssetConstants.peripheralAuxIcon),
+        (label: 'L-Bus(2/2)', icon: AssetConstants.peripheralLBusIcon),
+        (label: 'Ext Out(1/1)', icon: AssetConstants.peripheralExtOutIcon),
+      ];
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _closed) return;
+      setState(() => _started = true);
+      widget.onStart();
+    });
+  }
+
+  Future<void> _togglePause() async {
+    if (_busy || _closed || !_started) return;
+    setState(() => _busy = true);
+    if (widget.sessionOpen.value) {
+      await widget.onPause();
+    } else {
+      await widget.onResume();
+    }
+    if (!mounted) return;
+    setState(() => _busy = false);
+  }
+
+  void _close() {
+    if (_closed) return;
+    _closed = true;
+    widget.onClosed();
+    Navigator.of(context).pop();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final Size size = MediaQuery.sizeOf(context);
+    return Dialog(
+      insetPadding: const EdgeInsets.symmetric(horizontal: 36, vertical: 28),
+      backgroundColor: ColorConstants.white,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      child: SizedBox(
+        width: size.width * 0.86,
+        height: size.height * 0.82,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _header(),
+            const Divider(height: 1, color: ColorConstants.surfaceBorder),
+            Expanded(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  SizedBox(width: size.width * 0.86 * 0.4, child: _leftPane()),
+                  const VerticalDivider(
+                    width: 1,
+                    color: ColorConstants.surfaceBorder,
+                  ),
+                  Expanded(child: _rightPane()),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _header() {
+    return Container(
+      height: 48,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: const BoxDecoration(
+        color: ColorConstants.primary,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(8)),
+      ),
+      child: Row(
+        children: [
+          Text('Live Logs', style: StyleConstants.white16w600Style),
+          const Spacer(),
+          IconButton(
+            onPressed: _close,
+            icon: const Icon(Icons.close, color: ColorConstants.white),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _leftPane() {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+      children: [
+        Text('Action Buttons', style: StyleConstants.black16w700Style),
+        const SizedBox(height: 12),
+        ValueListenableBuilder<bool>(
+          valueListenable: widget.sessionOpen,
+          builder: (context, running, _) {
+            final bool showResume = _started && !running;
+            return Row(
+              children: [
+                Expanded(
+                  child: _actionButton(
+                    label: showResume ? 'Resume' : 'Pause',
+                    color:
+                        showResume
+                            ? ColorConstants.success
+                            : ColorConstants.warningAmber,
+                    icon: showResume ? Icons.play_arrow : Icons.pause,
+                    onPressed: _busy || !_started ? null : _togglePause,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _actionButton(
+                    label: 'Refresh',
+                    color: ColorConstants.primaryBlue,
+                    icon: Icons.refresh,
+                    onPressed: widget.onRefresh,
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+        const SizedBox(height: 20),
+        Text('Filter by', style: StyleConstants.black16w700Style),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (var index = 0; index < _classFilters.length; index++)
+              _chip(
+                label: _classFilters[index],
+                selected: index == _classFilter,
+                onTap: () => setState(() => _classFilter = index),
+              ),
+          ],
+        ),
+        const SizedBox(height: 20),
+        Text('Component Filter', style: StyleConstants.black16w700Style),
+        const SizedBox(height: 12),
+        GridView.count(
+          crossAxisCount: 4,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          mainAxisSpacing: 10,
+          crossAxisSpacing: 10,
+          childAspectRatio: 0.95,
+          children: [
+            for (var index = 0; index < _components.length; index++)
+              _componentTile(index),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _rightPane() {
+    return ValueListenableBuilder<List<LogModel>>(
+      valueListenable: widget.logs,
+      builder: (context, logs, _) {
+        return _EventLogGrid(
+          logs: logs.reversed.toList(),
+          showClassFilters: false,
+        );
+      },
+    );
+  }
+
+  Widget _actionButton({
+    required String label,
+    required Color color,
+    required IconData icon,
+    required VoidCallback? onPressed,
+  }) {
+    return ElevatedButton.icon(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: color,
+        foregroundColor: ColorConstants.white,
+        elevation: 0,
+        minimumSize: const Size(0, 40),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+      onPressed: onPressed,
+      icon: Icon(icon, size: 18),
+      label: Text(label, style: StyleConstants.white14w600Style),
+    );
+  }
+
+  Widget _chip({
+    required String label,
+    required bool selected,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: selected ? ColorConstants.primary : ColorConstants.white,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: selected ? ColorConstants.primary : const Color(0xFF3D3D3D),
+          ),
+        ),
+        child: Text(
+          label,
+          style:
+              selected
+                  ? StyleConstants.white14w500Style
+                  : StyleConstants.textDark14w500Style,
+        ),
+      ),
+    );
+  }
+
+  Widget _componentTile(int index) {
+    final bool selected = index == _componentFilter;
+    final ({String label, String icon}) item = _components[index];
+    final Color foreground =
+        selected ? ColorConstants.white : ColorConstants.primary;
+    return InkWell(
+      onTap: () => setState(() => _componentFilter = index),
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        decoration: BoxDecoration(
+          color: selected ? ColorConstants.primary : const Color(0xFFF4F4F4),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color:
+                selected
+                    ? ColorConstants.primary
+                    : ColorConstants.surfaceBorder,
+          ),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SvgPicture.asset(
+              item.icon,
+              width: 28,
+              height: 28,
+              colorFilter: ColorFilter.mode(foreground, BlendMode.srcIn),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              item.label,
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: StyleConstants.textDark14w500Style.copyWith(
+                fontSize: 11,
+                color: foreground,
+              ),
+            ),
+          ],
         ),
       ),
     );

@@ -7,6 +7,8 @@ import 'package:get/get.dart';
 import 'package:lottie/lottie.dart';
 import 'package:Technoswitch/bindings/firmware_binding.dart';
 import 'package:Technoswitch/ble/blue_plus_adapter.dart';
+import 'package:Technoswitch/ble/demo/demo_ble.dart';
+import 'package:Technoswitch/ble/demo/demo_constants.dart';
 import 'package:Technoswitch/features/create_project/widgets/disconnect_device_dialog.dart';
 import 'package:Technoswitch/features/dashboard/controllers/project_dashboard_controller.dart';
 import 'package:Technoswitch/features/dashboard/controllers/project_dashboard_ui_delegate.dart';
@@ -164,27 +166,46 @@ mixin ProjectDashboardUiDelegateMixin<T extends StatefulWidget> on State<T>
     );
   }
 
+  void _stopLiveEventsFor(int paneToken) {
+    final process = dashboardController.ble.bleProcess;
+    if (process.liveEventPaneToken != paneToken) return;
+    unawaited(process.stopLiveEvents());
+  }
+
   @override
   void openLiveEventLogPane(int paneToken) {
     if (!mounted) return;
     final process = dashboardController.ble.bleProcess;
-    dashboardController.showWindowsDetail(
-      LiveEventValuesScreen(
-        logs: process.validEventLogs,
-        sessionOpen: process.liveEventRunning,
-        paneToken: paneToken,
-        onStart: () {
-          unawaited(process.beginLiveEvents());
-        },
-        onEnd: () {
-          unawaited(process.stopLiveEvents());
-        },
-        onPaneClosed: (int token) {
-          if (process.liveEventPaneToken != token) return;
-          unawaited(process.stopLiveEvents());
-        },
-      ),
-    );
+    showDialog<void>(
+      context: uiContext,
+      barrierDismissible: false,
+      builder:
+          (_) => LiveEventLogsDialog(
+            logs: process.validEventLogs,
+            sessionOpen: process.liveEventRunning,
+            onStart: () {
+              if (DemoBle.enabled) {
+                unawaited(
+                  process.beginDemoLiveEvents(DemoConstants.sampleEventLogs),
+                );
+                return;
+              }
+              unawaited(process.beginLiveEvents());
+            },
+            onPause: () => process.stopLiveEvents(),
+            onResume: () {
+              if (DemoBle.enabled) {
+                return process.beginDemoLiveEvents(
+                  DemoConstants.sampleEventLogs,
+                  keepLogs: true,
+                );
+              }
+              return process.beginLiveEvents(keepLogs: true);
+            },
+            onRefresh: process.clearLiveEventLogs,
+            onClosed: () => _stopLiveEventsFor(paneToken),
+          ),
+    ).whenComplete(() => _stopLiveEventsFor(paneToken));
   }
 
   @override

@@ -127,6 +127,9 @@ class BleProcess {
   bool get liveEventSessionOpen => liveEventPhase != LiveEventPhase.idle;
   final ValueNotifier<bool> liveEventRunning = ValueNotifier<bool>(false);
   Timer? _liveEventStartTimer;
+  Timer? _liveEventDemoTimer;
+  bool _liveEventDemo = false;
+  int _liveEventDemoIndex = 0;
   Future<void>? _liveEventStopInFlight;
   int _liveEventGeneration = 0;
   Future<void> _liveEventWrites = Future<void>.value();
@@ -2433,7 +2436,8 @@ class BleProcess {
 
   /// Sends command `0x0F` with payload 1 in request setup mode, then listens
   /// for command `0x10` until [stopLiveEvents] sends payload 2.
-  Future<bool> beginLiveEvents() async {
+  /// [keepLogs] leaves the rows already shown, so a resume appends to them.
+  Future<bool> beginLiveEvents({bool keepLogs = false}) async {
     if (!bleManager.isConnected) return false;
 
     _newEventLogTimer?.cancel();
@@ -2447,10 +2451,12 @@ class BleProcess {
     bleManager.bleCurrentState = BleStates.PROCESS_PANEL_LIVE_EVENTS_READ;
     bleManager.bleStateMachineState = BleStates.PROCESS_PANEL_LIVE_EVENTS_READ;
     checkForLiveEventsRetrievalRes = 0;
-    validEventLogNum = 0;
-    validEventLogCount.value = 0;
-    validEventLogs.value = <LogModel>[];
-    isValidLogRecieved.value = false;
+    if (!keepLogs) {
+      validEventLogNum = 0;
+      validEventLogCount.value = 0;
+      validEventLogs.value = <LogModel>[];
+      isValidLogRecieved.value = false;
+    }
     processDesc.value = '';
     final int generation = ++_liveEventGeneration;
     liveEventPhase = LiveEventPhase.waitStartAck;
@@ -2492,10 +2498,14 @@ class BleProcess {
     liveEventRunning.value = false;
     _liveEventStartTimer?.cancel();
     _liveEventStartTimer = null;
+    _liveEventDemoTimer?.cancel();
+    _liveEventDemoTimer = null;
+    final bool demo = _liveEventDemo;
+    _liveEventDemo = false;
     cancelRxTimeout();
     BleSessionIdlePolicy.suppressIdleDisconnect.value = false;
     bleManager.otaProcessState = OtaProcessState.notInUse;
-    if (!bleManager.isConnected) return;
+    if (demo || !bleManager.isConnected) return;
     try {
       await _sendLiveEventAction(BleConstants.command.liveEventActionEnd);
     } catch (_) {}
@@ -4209,6 +4219,65 @@ class BleProcess {
     _completeSystemConfigApply();
   }
 
+  /// Drops the rows on screen. The live session keeps running.
+  void clearLiveEventLogs() {
+    validEventLogs.value = <LogModel>[];
+    validEventLogNum = 0;
+    validEventLogCount.value = 0;
+    isValidLogRecieved.value = false;
+  }
+
+  /// Streams [logs] into the live-event table and does not send a panel command.
+  /// [keepLogs] continues from the sample index where the last pause stopped.
+  Future<bool> beginDemoLiveEvents(
+    List<LogModel> logs, {
+    bool keepLogs = false,
+  }) async {
+    _liveEventStartTimer?.cancel();
+    _liveEventStartTimer = null;
+    _liveEventDemoTimer?.cancel();
+    _liveEventDemoTimer = null;
+    _liveEventDemo = true;
+    final int generation = ++_liveEventGeneration;
+    liveEventPhase = LiveEventPhase.listening;
+    liveEventRunning.value = true;
+    if (!keepLogs) {
+      _liveEventDemoIndex = 0;
+      validEventLogNum = 0;
+      validEventLogCount.value = 0;
+      validEventLogs.value = <LogModel>[];
+      isValidLogRecieved.value = false;
+    }
+    processDesc.value = '';
+    const int chunkSize = 10;
+    _liveEventDemoTimer = Timer.periodic(const Duration(milliseconds: 80), (
+      timer,
+    ) {
+      if (generation != _liveEventGeneration ||
+          liveEventPhase != LiveEventPhase.listening) {
+        timer.cancel();
+        return;
+      }
+      if (_liveEventDemoIndex >= logs.length) {
+        timer.cancel();
+        _liveEventDemoTimer = null;
+        return;
+      }
+      final int end =
+          _liveEventDemoIndex + chunkSize < logs.length
+              ? _liveEventDemoIndex + chunkSize
+              : logs.length;
+      final List<LogModel> next = List<LogModel>.from(validEventLogs.value)
+        ..addAll(logs.sublist(_liveEventDemoIndex, end));
+      validEventLogs.value = next;
+      validEventLogNum = next.length;
+      validEventLogCount.value = next.length;
+      isValidLogRecieved.value = true;
+      _liveEventDemoIndex = end;
+    });
+    return true;
+  }
+
   /// Fills [newEventLogProgress] with [logs] and does not send a panel command.
   Future<void> playDemoEventLogs(List<LogModel> logs) async {
     _newEventLogTimer?.cancel();
@@ -4476,6 +4545,7 @@ class BleProcess {
 
   void dispose() {
     _liveEventStartTimer?.cancel();
+    _liveEventDemoTimer?.cancel();
     _newEventLogTimer?.cancel();
     _rxTimeoutTimer?.cancel();
     cancelOperationDeadline();

@@ -31,9 +31,12 @@ abstract final class DemoConstants {
     (int index) {
       final int source = index % 5;
       final int number = index % 8;
-      final DateTime time = DateTime(2026, 11, 1, 8).add(
-        Duration(minutes: index),
-      );
+      final DateTime time = DateTime(
+        2026,
+        11,
+        1,
+        8,
+      ).add(Duration(minutes: index));
       return LogModel(
         eventId: '${0x1000 + (index % 240)}',
         text: _eventTexts[index % _eventTexts.length],

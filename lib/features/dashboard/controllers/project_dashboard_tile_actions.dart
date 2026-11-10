@@ -197,7 +197,7 @@ abstract final class ProjectDashboardTileActions {
     c.guardBootloaderOr(() {
       final ui = _ui(c);
       if (ui == null) return;
-      if (!c.ble.isConnected) {
+      if (!c.ble.isConnected && !DemoBle.enabled) {
         ui.showSnackBar(StringConstants.deviceNotConnected);
         return;
       }
