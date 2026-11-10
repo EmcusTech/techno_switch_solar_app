@@ -55,6 +55,11 @@ abstract final class WindowsDashboardTileRegistry {
         iconPath: AssetConstants.peripheralExtOutIcon,
         onTap: () => ProjectDashboardTileActions.openExtOut(controller),
       ),
+      WindowsDashboardTileConfig(
+        label: StringConstants.liveEvents,
+        iconPath: AssetConstants.panelActionEventLogIcon,
+        onTap: () => ProjectDashboardTileActions.openLiveEvents(controller),
+      ),
     ];
   }
 

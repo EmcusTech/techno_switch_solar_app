@@ -84,7 +84,6 @@ class WindowsDashboardContent extends StatelessWidget {
                                       WindowsDashboardTileRegistry.overviewTiles(
                                         controller,
                                       ),
-                                  heightFactor: 0.1,
                                 ),
                                 const SizedBox(height: 16),
                                 Text(

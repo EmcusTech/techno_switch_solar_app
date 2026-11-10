@@ -107,31 +107,34 @@ class WindowsDashboardTileGrid extends StatelessWidget {
     super.key,
     required this.controller,
     required this.tiles,
-    required this.heightFactor,
+    this.heightFactor,
   });
 
   final ProjectDashboardController controller;
   final List<WindowsDashboardTileConfig> tiles;
-  final double heightFactor;
+  final double? heightFactor;
 
   @override
   Widget build(BuildContext context) {
+    final grid = GridView.count(
+      crossAxisCount: 4,
+      crossAxisSpacing: 12,
+      mainAxisSpacing: 12,
+      childAspectRatio: 1,
+      physics: const NeverScrollableScrollPhysics(),
+      shrinkWrap: true,
+      children: [
+        for (final tile in tiles)
+          PeripheralTile(controller: controller, config: tile),
+      ],
+    );
+    final double? factor = heightFactor;
+    if (factor == null) return grid;
     final size = MediaQuery.sizeOf(context);
     return SizedBox(
-      height: (size.height + size.width) * heightFactor,
+      height: (size.height + size.width) * factor,
       width: double.infinity,
-      child: GridView.count(
-        crossAxisCount: 4,
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 12,
-        childAspectRatio: 1,
-        physics: const NeverScrollableScrollPhysics(),
-        shrinkWrap: true,
-        children: [
-          for (final tile in tiles)
-            PeripheralTile(controller: controller, config: tile),
-        ],
-      ),
+      child: grid,
     );
   }
 }

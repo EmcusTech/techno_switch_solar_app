@@ -34,6 +34,7 @@ import 'package:Technoswitch/utils/peripherals/defaults/ext_out_defaults.dart';
 import 'package:Technoswitch/utils/peripherals/defaults/l_bus_defaults.dart';
 import 'package:Technoswitch/utils/constants/ble/ble_name_utils.dart';
 import 'package:Technoswitch/utils/storage/peripheral_setup_cache.dart';
+import 'package:Technoswitch/ble/ble_session_idle_policy.dart';
 import 'ble_manager.dart';
 import 'ble_frame.dart';
 import 'event_log_record.dart';
@@ -45,6 +46,8 @@ import '../utils/adc_parser.dart';
 import '../utils/timestamp_converter.dart';
 
 enum NewEventLogPhase { idle, waitStart, waitFetch }
+
+enum LiveEventPhase { idle, waitStartAck, listening }
 
 class BleProcess {
   final BleManager bleManager;
@@ -119,6 +122,14 @@ class BleProcess {
   int checkForPanelPropertiesApplyRes = 0;
   int generalModuleSetupApplyCommandStep = 0;
   int checkForLiveEventsRetrievalRes = 0;
+  LiveEventPhase liveEventPhase = LiveEventPhase.idle;
+  int liveEventPaneToken = 0;
+  bool get liveEventSessionOpen => liveEventPhase != LiveEventPhase.idle;
+  final ValueNotifier<bool> liveEventRunning = ValueNotifier<bool>(false);
+  Timer? _liveEventStartTimer;
+  Future<void>? _liveEventStopInFlight;
+  int _liveEventGeneration = 0;
+  Future<void> _liveEventWrites = Future<void>.value();
   int checkForAdcSetupFetchRes = 0;
   int validEventLogNum = 0;
   int read1000Logs = 0;
@@ -944,6 +955,11 @@ class BleProcess {
   }
 
   Future<void> bleRxFrameProcess(BleRxFrame rx) async {
+    if (liveEventPhase != LiveEventPhase.idle) {
+      await _handleLiveEventFrame(rx);
+      return;
+    }
+
     final String? ctrlMessage = _ctrlStatusError(rx.payload);
     if (ctrlMessage != null) {
       InputSetupPayloadDebug.logBleFrame(
@@ -2415,13 +2431,196 @@ class BleProcess {
     });
   }
 
-  void stopLiveEventSetup() {
-    isOtaCompleted = true;
-    processNextOtaFrame = false;
-    bleManager.otaProcessState = OtaProcessState.notInUse;
-    cancelOperationDeadline();
+  /// Sends command `0x0F` with payload 1 in request setup mode, then listens
+  /// for command `0x10` until [stopLiveEvents] sends payload 2.
+  Future<bool> beginLiveEvents() async {
+    if (!bleManager.isConnected) return false;
+
+    _newEventLogTimer?.cancel();
+    _newEventLogTimer = null;
+    newEventLogPhase = NewEventLogPhase.idle;
+    _newEventLogFetchOutstanding = false;
+    _liveEventStartTimer?.cancel();
     cancelRxTimeout();
-    processDesc.value = "";
+    bleManager.currentOperationMode = BleOperationMode.liveEventsRetrieval;
+    bleManager.otaProcessState = OtaProcessState.notInUse;
+    bleManager.bleCurrentState = BleStates.PROCESS_PANEL_LIVE_EVENTS_READ;
+    bleManager.bleStateMachineState = BleStates.PROCESS_PANEL_LIVE_EVENTS_READ;
+    checkForLiveEventsRetrievalRes = 0;
+    validEventLogNum = 0;
+    validEventLogCount.value = 0;
+    validEventLogs.value = <LogModel>[];
+    isValidLogRecieved.value = false;
+    processDesc.value = '';
+    final int generation = ++_liveEventGeneration;
+    liveEventPhase = LiveEventPhase.waitStartAck;
+    liveEventRunning.value = true;
+    BleSessionIdlePolicy.suppressIdleDisconnect.value = true;
+    _armLiveEventStartTimeout();
+    try {
+      await _sendLiveEventAction(BleConstants.command.liveEventActionStart);
+    } catch (_) {
+      if (generation == _liveEventGeneration &&
+          liveEventPhase == LiveEventPhase.waitStartAck) {
+        await _failLiveEventStart(StringConstants.deviceNotResponding);
+      }
+      return false;
+    }
+    if (generation != _liveEventGeneration) return false;
+    return liveEventPhase != LiveEventPhase.idle;
+  }
+
+  Future<void> stopLiveEvents() {
+    final Future<void>? inFlight = _liveEventStopInFlight;
+    if (inFlight != null) return inFlight;
+    if (liveEventPhase == LiveEventPhase.idle) {
+      BleSessionIdlePolicy.suppressIdleDisconnect.value = false;
+      return Future<void>.value();
+    }
+    final Future<void> stop = _stopLiveEventsBody();
+    _liveEventStopInFlight = stop;
+    return stop.whenComplete(() {
+      if (identical(_liveEventStopInFlight, stop)) {
+        _liveEventStopInFlight = null;
+      }
+    });
+  }
+
+  Future<void> _stopLiveEventsBody() async {
+    _liveEventGeneration++;
+    liveEventPhase = LiveEventPhase.idle;
+    liveEventRunning.value = false;
+    _liveEventStartTimer?.cancel();
+    _liveEventStartTimer = null;
+    cancelRxTimeout();
+    BleSessionIdlePolicy.suppressIdleDisconnect.value = false;
+    bleManager.otaProcessState = OtaProcessState.notInUse;
+    if (!bleManager.isConnected) return;
+    try {
+      await _sendLiveEventAction(BleConstants.command.liveEventActionEnd);
+    } catch (_) {}
+  }
+
+  Future<void> _sendLiveEventAction(int action) {
+    final Future<void> write = _liveEventWrites.then((_) {
+      return bleManager.sendLiveEventBoundaryCmd(action);
+    });
+    _liveEventWrites = write.then<void>(
+      (void _) {},
+      onError: (Object _) => Future<void>.value(),
+    );
+    return write;
+  }
+
+  void _armLiveEventStartTimeout() {
+    _liveEventStartTimer?.cancel();
+    _liveEventStartTimer = Timer(const Duration(seconds: 15), () {
+      if (liveEventPhase != LiveEventPhase.waitStartAck) return;
+      unawaited(_failLiveEventStart(StringConstants.deviceNotResponding));
+    });
+  }
+
+  Future<void> _failLiveEventStart(String message) async {
+    await stopLiveEvents();
+    processDesc.value = message;
+  }
+
+  void _enterLiveEventListen() {
+    if (liveEventPhase == LiveEventPhase.listening) return;
+    liveEventPhase = LiveEventPhase.listening;
+    _liveEventStartTimer?.cancel();
+    _liveEventStartTimer = null;
+    cancelRxTimeout();
+    processDesc.value = '';
+  }
+
+  Future<void> _handleLiveEventFrame(BleRxFrame rx) async {
+    final TsFrameView parsed = TsFrame.parse(rx.payload);
+    if (!parsed.isValid || rx.payload.length <= TsFrame.commandOffset) return;
+
+    final int mode = rx.payload[TsFrame.modeOffset];
+    final int command = rx.payload[TsFrame.commandOffset];
+
+    if (liveEventPhase == LiveEventPhase.waitStartAck) {
+      if (command == BleConstants.command.liveEventData) {
+        _enterLiveEventListen();
+        _appendLiveEventRecords(parsed);
+        return;
+      }
+      final String? reject = _liveEventRejectMessage(parsed, mode, command);
+      if (reject != null) {
+        InputSetupPayloadDebug.logBleFrame(
+          'RECEIVE',
+          'live-event-start rejected $reject',
+          rx.payload,
+        );
+        await _failLiveEventStart(reject);
+        return;
+      }
+      if (_isLiveEventStartAck(mode, command)) {
+        InputSetupPayloadDebug.logBleFrame(
+          'RECEIVE',
+          'live-event-start-ack',
+          rx.payload,
+        );
+        _enterLiveEventListen();
+      }
+      return;
+    }
+
+    if (command != BleConstants.command.liveEventData) return;
+    InputSetupPayloadDebug.logBleFrame(
+      'RECEIVE',
+      'live-event-data bytes=${parsed.data.length}',
+      rx.payload,
+    );
+    _appendLiveEventRecords(parsed);
+  }
+
+  String? _liveEventRejectMessage(
+    TsFrameView parsed,
+    int mode,
+    int command,
+  ) {
+    if (parsed.data.isEmpty) return null;
+    final bool statusMode =
+        mode == BleConstants.mode.instruction.dbStatus ||
+        mode == BleConstants.mode.request.dbStatus;
+    final bool boundary =
+        command == BleConstants.command.liveEvent &&
+        (statusMode || mode == BleConstants.mode.instruction.ctrl);
+    final bool genericCtrl = mode == BleConstants.mode.instruction.ctrl;
+    if (!boundary && !genericCtrl) return null;
+    final int status = parsed.data[0];
+    if (status == BleConstants.ctrlStatus.invalidKey) {
+      return StringConstants.ctrlInvalidKey;
+    }
+    if (status == BleConstants.ctrlStatus.invalidCmd) {
+      return StringConstants.ctrlInvalidCommand;
+    }
+    if (status == BleConstants.ctrlStatus.invalidPacket) {
+      return StringConstants.ctrlInvalidPacket;
+    }
+    return null;
+  }
+
+  bool _isLiveEventStartAck(int mode, int command) {
+    if (mode == BleConstants.mode.instruction.ctrl) return true;
+    final bool statusMode =
+        mode == BleConstants.mode.instruction.dbStatus ||
+        mode == BleConstants.mode.request.dbStatus;
+    return statusMode && command == BleConstants.command.liveEvent;
+  }
+
+  void _appendLiveEventRecords(TsFrameView parsed) {
+    final List<LogModel> logs = EventLogRecordParser.parsePayload(parsed.data);
+    if (logs.isEmpty) return;
+    final List<LogModel> next = List<LogModel>.from(validEventLogs.value)
+      ..addAll(logs);
+    validEventLogs.value = next;
+    validEventLogNum = next.length;
+    validEventLogCount.value = next.length;
+    isValidLogRecieved.value = true;
   }
 
   /// Rebuilds the pre-length-field layout so readers still see network at
@@ -4276,12 +4475,14 @@ class BleProcess {
   }
 
   void dispose() {
+    _liveEventStartTimer?.cancel();
     _newEventLogTimer?.cancel();
     _rxTimeoutTimer?.cancel();
     cancelOperationDeadline();
     cancelAccessKeyPollDeadline();
     validEventLogCount.dispose();
     validEventLogs.dispose();
+    liveEventRunning.dispose();
     newEventLogProgress.dispose();
     read1000LogsCount.dispose();
     isValidLogRecieved.dispose();

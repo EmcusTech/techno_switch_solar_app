@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -159,6 +160,29 @@ mixin ProjectDashboardUiDelegateMixin<T extends StatefulWidget> on State<T>
     Navigator.of(uiContext).push(
       MaterialPageRoute(
         builder: (_) => NewEventLogValuesScreen(progress: progress),
+      ),
+    );
+  }
+
+  @override
+  void openLiveEventLogPane(int paneToken) {
+    if (!mounted) return;
+    final process = dashboardController.ble.bleProcess;
+    dashboardController.showWindowsDetail(
+      LiveEventValuesScreen(
+        logs: process.validEventLogs,
+        sessionOpen: process.liveEventRunning,
+        paneToken: paneToken,
+        onStart: () {
+          unawaited(process.beginLiveEvents());
+        },
+        onEnd: () {
+          unawaited(process.stopLiveEvents());
+        },
+        onPaneClosed: (int token) {
+          if (process.liveEventPaneToken != token) return;
+          unawaited(process.stopLiveEvents());
+        },
       ),
     );
   }

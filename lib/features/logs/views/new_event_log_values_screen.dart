@@ -576,3 +576,149 @@ class _EventLogGridState extends State<_EventLogGrid> {
     return '$name ${number + 1}';
   }
 }
+
+/// Right-hand pane for a live session. The table is the event-log grid;
+/// rows appear as the panel pushes them, newest first.
+class LiveEventValuesScreen extends StatefulWidget {
+  const LiveEventValuesScreen({
+    super.key,
+    required this.logs,
+    required this.sessionOpen,
+    required this.paneToken,
+    required this.onStart,
+    required this.onEnd,
+    required this.onPaneClosed,
+  });
+
+  final ValueNotifier<List<LogModel>> logs;
+  final ValueNotifier<bool> sessionOpen;
+  final int paneToken;
+  final VoidCallback onStart;
+  final VoidCallback onEnd;
+  final void Function(int token) onPaneClosed;
+
+  @override
+  State<LiveEventValuesScreen> createState() => _LiveEventValuesScreenState();
+}
+
+class _LiveEventValuesScreenState extends State<LiveEventValuesScreen> {
+  @override
+  void dispose() {
+    widget.onPaneClosed(widget.paneToken);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ColoredBox(
+      color: ColorConstants.white,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+            child: Row(
+              children: [
+                Text(
+                  StringConstants.liveEvents,
+                  style: StyleConstants.black16w700Style,
+                ),
+                const Spacer(),
+                ValueListenableBuilder<bool>(
+                  valueListenable: widget.sessionOpen,
+                  builder: (context, open, _) {
+                    return Row(
+                      children: [
+                        _LiveEventActionButton(
+                          label: StringConstants.start,
+                          enabled: !open,
+                          filled: true,
+                          onPressed: widget.onStart,
+                        ),
+                        const SizedBox(width: 8),
+                        _LiveEventActionButton(
+                          label: 'End',
+                          enabled: open,
+                          filled: false,
+                          onPressed: widget.onEnd,
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: ValueListenableBuilder<bool>(
+              valueListenable: widget.sessionOpen,
+              builder: (context, open, _) {
+                return ValueListenableBuilder<List<LogModel>>(
+                  valueListenable: widget.logs,
+                  builder: (context, logs, _) {
+                    if (logs.isEmpty) {
+                      return Center(
+                        child: Text(
+                          open
+                              ? 'Waiting for live events'
+                              : 'Press Start to listen for live events',
+                          style: StyleConstants.textDark14w500Style,
+                        ),
+                      );
+                    }
+                    return _EventLogGrid(logs: logs.reversed.toList());
+                  },
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _LiveEventActionButton extends StatelessWidget {
+  const _LiveEventActionButton({
+    required this.label,
+    required this.enabled,
+    required this.filled,
+    required this.onPressed,
+  });
+
+  final String label;
+  final bool enabled;
+  final bool filled;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final ButtonStyle style = ElevatedButton.styleFrom(
+      backgroundColor: filled ? ColorConstants.primary : ColorConstants.white,
+      foregroundColor: filled ? ColorConstants.white : ColorConstants.primary,
+      disabledBackgroundColor: ColorConstants.surfaceBorder,
+      disabledForegroundColor: ColorConstants.textGray,
+      elevation: 0,
+      minimumSize: const Size(88, 36),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+        side: BorderSide(
+          color: filled ? ColorConstants.primary : ColorConstants.primary,
+        ),
+      ),
+    );
+    return ElevatedButton(
+      style: style,
+      onPressed: enabled ? onPressed : null,
+      child: Text(
+        label,
+        style: StyleConstants.white14w600Style.copyWith(
+          color:
+              enabled
+                  ? (filled ? ColorConstants.white : ColorConstants.primary)
+                  : ColorConstants.textGray,
+        ),
+      ),
+    );
+  }
+}

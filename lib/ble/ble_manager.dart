@@ -877,25 +877,15 @@ class BleManager extends GetxService {
       throw Exception(StringConstants.bleCharNotInit);
     }
 
-    currentOperationMode = BleOperationMode.liveEventsRetrieval;
-
-    resetLiveEventsRetrievalState();
-    resetProtocolState();
-    bleProcess.resetProcessState();
-
     if (_notifySub == null) {
       throw Exception(StringConstants.bleHandshakeIncomplete);
     }
 
-    otaProcessState = OtaProcessState.sendLiveEventsRetrievalFetchCmdPkt;
-    bleCurrentState = BleStates.PROCESS_PANEL_LIVE_EVENTS_READ;
-    bleStateMachineState = BleStates.PROCESS_PANEL_LIVE_EVENTS_READ;
-    bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
-    Get.find<BleLogController>().sendNetworkPacket();
+    await bleProcess.beginLiveEvents();
   }
 
   Future<void> stopLiveEventsRetrieval() async {
-    bleProcess.stopLiveEventSetup();
+    await bleProcess.stopLiveEvents();
   }
 
   Future<void> startExtOutFetch() async {
@@ -2378,6 +2368,9 @@ class BleManager extends GetxService {
 
   Future<void> disconnectConnectedDevice() async {
     receivedPanelName.value = "";
+    if (bleProcess.liveEventPhase != LiveEventPhase.idle) {
+      await bleProcess.stopLiveEvents();
+    }
     if (!isConnected) {
       return;
     }
@@ -3139,9 +3132,7 @@ class BleManager extends GetxService {
     await sendSmallDataFrame(0x1000, 216, u8Pkt);
   }
 
-  Future<void> newEventLogStartCmd({
-    int kind = 2,
-  }) async {
+  Future<void> newEventLogStartCmd({int kind = 2}) async {
     u8TxPktCnt += 1;
 
     final header = Uint8List(TsFrame.headerLength);
@@ -3206,6 +3197,16 @@ class BleManager extends GetxService {
   void _writeUint16Le(Uint8List target, int offset, int value) {
     target[offset] = value & BleConstants.base;
     target[offset + 1] = (value >> 8) & BleConstants.base;
+  }
+
+  Future<void> sendLiveEventBoundaryCmd(int action) async {
+    final bool start = action == BleConstants.command.liveEventActionStart;
+    await _sendTsSetup(
+      mode: BleConstants.mode.request.dbStatus,
+      command: BleConstants.command.liveEvent,
+      body: <int>[action & BleConstants.base],
+      logName: start ? 'live-event-start' : 'live-event-end',
+    );
   }
 
   Future<void> newEventLogEndCmd(int receivedCount) async {

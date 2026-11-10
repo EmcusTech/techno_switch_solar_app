@@ -18,6 +18,8 @@ abstract class ProjectDashboardUiDelegate {
 
   void openNewEventLogValuesScreen(ValueNotifier<NewEventLogProgress> progress);
 
+  void openLiveEventLogPane(int paneToken);
+
   void popScreen();
 
   void closeModalOverlaysAboveDashboard();

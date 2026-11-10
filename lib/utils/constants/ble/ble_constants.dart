@@ -205,6 +205,16 @@ class _BleCommand {
   final int newEventLogFetch = 0x0D;
   final int newEventLogEnd = 0x0E;
 
+  /// Live session boundary. Payload byte 1 starts, 2 ends.
+  /// Same number as [panelPropertiesSetup]; only a live session treats it as this.
+  final int liveEvent = 0x0F;
+
+  /// Pushed live event records, one or more packed event logs.
+  /// Same number as [lBusSetup]; only a live session treats it as this.
+  final int liveEventData = 0x10;
+  final int liveEventActionStart = 1;
+  final int liveEventActionEnd = 2;
+
   /// Byte in the shared start command. Firmware selects the transfer from it.
   final int transferFirmwareUpgrade = 1;
   final int transferEventLog = 2;

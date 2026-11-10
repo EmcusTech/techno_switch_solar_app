@@ -178,14 +178,31 @@ abstract final class ProjectDashboardTileActions {
         return;
       }
 
-      if (DemoBle.enabled) {
-        unawaited(
-          c.ble.bleProcess.playDemoEventLogs(DemoConstants.sampleEventLogs),
-        );
-      } else {
-        unawaited(c.ble.bleProcess.beginNewEventLogRetrieval());
+      final process = c.ble.bleProcess;
+      unawaited(() async {
+        if (process.liveEventSessionOpen) {
+          await process.stopLiveEvents();
+        }
+        if (DemoBle.enabled) {
+          await process.playDemoEventLogs(DemoConstants.sampleEventLogs);
+        } else {
+          await process.beginNewEventLogRetrieval();
+        }
+      }());
+      ui.openNewEventLogValuesScreen(process.newEventLogProgress);
+    });
+  }
+
+  static void openLiveEvents(ProjectDashboardController c) {
+    c.guardBootloaderOr(() {
+      final ui = _ui(c);
+      if (ui == null) return;
+      if (!c.ble.isConnected) {
+        ui.showSnackBar(StringConstants.deviceNotConnected);
+        return;
       }
-      ui.openNewEventLogValuesScreen(c.ble.bleProcess.newEventLogProgress);
+      c.ble.bleProcess.liveEventPaneToken++;
+      ui.openLiveEventLogPane(c.ble.bleProcess.liveEventPaneToken);
     });
   }
 

@@ -155,7 +155,10 @@ class _EventLogPageHostState extends State<_EventLogPageHost>
                               ),
                               const SizedBox(width: 8),
                               Text(
-                                StringConstants.eventLog,
+                                controller.eventLogArgs?.isLiveEventLogs ==
+                                        true
+                                    ? StringConstants.liveEvents
+                                    : StringConstants.eventLog,
                                 style: StyleConstants.black20w700Style,
                               ),
                               const Spacer(),
