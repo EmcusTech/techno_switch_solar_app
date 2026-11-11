@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:Technoswitch/features/dashboard/controllers/project_dashboard_controller.dart';
+import 'package:Technoswitch/features/dashboard/widgets/windows/windows_dashboard_side_bar.dart';
 import 'package:Technoswitch/utils/constants/color_constants.dart';
 import 'package:Technoswitch/utils/constants/style_constants.dart';
 
@@ -103,6 +104,19 @@ class PeripheralTile extends StatelessWidget {
 }
 
 class WindowsDashboardTileGrid extends StatelessWidget {
+  /// Width of one overview tile cell, matching the 4-column square grid.
+  static double overviewCellSize(double screenWidth) {
+    const double pagePadding = 36;
+    const double dividers = 2;
+    const double gridPadding = 40;
+    const double gridGaps = 12 * 3;
+    final double contentWidth = screenWidth - pagePadding;
+    final double columnWidth =
+        (contentWidth - WindowsDashboardSideBar.collapsedWidth - dividers) / 3;
+    final double gridWidth = columnWidth - gridPadding;
+    return (gridWidth - gridGaps) / 4;
+  }
+
   const WindowsDashboardTileGrid({
     super.key,
     required this.controller,

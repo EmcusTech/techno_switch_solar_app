@@ -17,6 +17,8 @@ class AssetConstants {
   static const String background2 = '$_svgDir/background_2.svg';
   static const String background3 = '$_svgDir/background_3.svg';
   static const String tsSortIcon = '$_svgDir/ts_sort_icon.svg';
+  static const String tsSortUpArrow = '$_svgDir/sort_up_arrow_icon.svg';
+  static const String tsSortUpDown = '$_svgDir/sort_down_arrow_icon';
   static const String tsFilterIcon = '$_svgDir/ts_filter_icon.svg';
   static const String splashscreenBackground1 =
       '$_svgDir/splashscreen_background_1.svg';

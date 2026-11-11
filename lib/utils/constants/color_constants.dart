@@ -61,6 +61,7 @@ abstract final class ColorConstants {
   static const Color primary = Color(0xFFEC1D24);
   static const Color primaryBlue = Color(0xFF098AE6);
   static const Color warningAmber = Color(0xFFEDA145);
+  static const Color highAmber = Color(0xFFEC9807);
   static const Color buttonSecondaryBackground = Color(0xFFEFEEEE);
   static const Color colorFff0F0F0 = Color(0xFFF0F0F0);
   static const Color backgroundSubtle = Color(0xFFF4F4F4);

@@ -103,6 +103,11 @@ abstract final class StyleConstants {
     fontWeight: FontWeight.w600,
     color: ColorConstants.white,
   );
+  static TextStyle get white18w400Style => GoogleFonts.inter(
+    fontSize: 18.r,
+    fontWeight: FontWeight.w400,
+    color: ColorConstants.white,
+  );
 
   static TextStyle get black12boldStyle => GoogleFonts.inter(
     fontSize: 12.r,
@@ -584,6 +589,21 @@ abstract final class StyleConstants {
     fontSize: 20.r,
     fontWeight: FontWeight.w700,
     color: ColorConstants.black,
+  );
+  static TextStyle get white20w400Style => GoogleFonts.inter(
+    fontSize: 20.r,
+    fontWeight: FontWeight.w400,
+    color: ColorConstants.white,
+  );
+  static TextStyle get white20w500Style => GoogleFonts.inter(
+    fontSize: 20.r,
+    fontWeight: FontWeight.w500,
+    color: ColorConstants.white,
+  );
+  static TextStyle get white20w700Style => GoogleFonts.inter(
+    fontSize: 20.r,
+    fontWeight: FontWeight.w700,
+    color: ColorConstants.white,
   );
   static TextStyle get textDark20w700Style => GoogleFonts.inter(
     fontSize: 20.r,

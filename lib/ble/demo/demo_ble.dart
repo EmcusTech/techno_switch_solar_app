@@ -3,7 +3,7 @@ import 'package:Technoswitch/ble/ble_process.dart';
 
 /// Demo stand-in for the radio. Set [enabled] to false to use a real panel.
 abstract final class DemoBle {
-  static const bool enabled = false;
+  static const bool enabled = true;
 
   /// When true, the event log table shows the hex event id instead of the read order.
   static const bool devMode = false;

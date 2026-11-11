@@ -2,8 +2,10 @@ import 'dart:math' as math;
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:Technoswitch/ble/demo/demo_ble.dart';
+import 'package:Technoswitch/features/dashboard/widgets/windows/windows_peripheral_tile.dart';
 import 'package:Technoswitch/utils/constants/asset_constants.dart';
 import 'package:Technoswitch/models/log_model.dart';
 import 'package:Technoswitch/models/new_event_log_progress.dart';
@@ -449,100 +451,128 @@ class _EventLogGridState extends State<_EventLogGrid> {
   }
 
   Widget _table(List<({LogModel log, int eventNo})> logs) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final double tableWidth =
-            constraints.maxWidth < 960 ? 960 : constraints.maxWidth;
-        final Widget table = SizedBox(
-          width: tableWidth,
-          child: _dataTable(logs),
-        );
-        if (logs.isEmpty) {
-          final String message =
-              widget.logs.isEmpty ? 'No event logs' : 'No matching logs';
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                physics: const ClampingScrollPhysics(),
-                child: table,
-              ),
-              Expanded(
-                child: Center(
-                  child: Text(
-                    message,
-                    style: StyleConstants.textDark14w500Style,
-                  ),
-                ),
-              ),
-            ],
-          );
-        }
-        return ScrollConfiguration(
-          behavior: ScrollConfiguration.of(context).copyWith(
-            dragDevices: const <PointerDeviceKind>{
-              PointerDeviceKind.touch,
-              PointerDeviceKind.mouse,
-              PointerDeviceKind.trackpad,
-              PointerDeviceKind.stylus,
-            },
+    final String emptyMessage =
+        widget.logs.isEmpty ? 'No event logs' : 'No matching logs';
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(color: ColorConstants.surfaceBorder),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _headerTable(),
+          Expanded(
+            child:
+                logs.isEmpty
+                    ? Center(
+                      child: Text(
+                        emptyMessage,
+                        style: StyleConstants.textDark14w500Style,
+                      ),
+                    )
+                    : _bodyTable(logs),
           ),
-          child: Scrollbar(
-            controller: _tableScroll,
-            thumbVisibility: true,
-            child: SingleChildScrollView(
-              controller: _tableScroll,
-              padding: const EdgeInsets.only(right: 16),
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                physics: const ClampingScrollPhysics(),
-                child: table,
-              ),
-            ),
-          ),
-        );
-      },
+        ],
+      ),
     );
   }
 
-  DataTable _dataTable(List<({LogModel log, int eventNo})> logs) {
-    return DataTable(
-      headingRowHeight: 36,
-      dataRowMinHeight: 32,
-      dataRowMaxHeight: 32,
-      columnSpacing: 24,
-      horizontalMargin: 16,
-      headingRowColor: const WidgetStatePropertyAll<Color>(
-        ColorConstants.primary,
-      ),
-      headingTextStyle: StyleConstants.white14w500Style,
-      dataTextStyle: StyleConstants.textDark14w500Style,
-      dividerThickness: 0,
-      border: const TableBorder(),
-      columns: [
-        for (var index = 0; index < _columns.length; index++)
-          DataColumn(
-            label: _sortHeader(_columns[index], _LogSortColumn.values[index]),
-          ),
-      ],
-      rows: [
-        for (var index = 0; index < logs.length; index++)
-          DataRow(
-            color: WidgetStatePropertyAll<Color>(
-              index.isEven ? _oddRowColor : ColorConstants.white,
+  static const Map<int, TableColumnWidth> _tableColumnWidths =
+      <int, TableColumnWidth>{
+        0: FlexColumnWidth(1),
+        1: FlexColumnWidth(2),
+        2: FlexColumnWidth(1),
+        3: FlexColumnWidth(2),
+        4: FlexColumnWidth(2),
+      };
+
+  Widget _headerTable() {
+    return ColoredBox(
+      color: ColorConstants.primary,
+      child: DefaultTextStyle(
+        style: StyleConstants.white14w500Style,
+        child: Table(
+          columnWidths: _tableColumnWidths,
+          children: [
+            TableRow(
+              children: [
+                for (var index = 0; index < _columns.length; index++)
+                  _tableCell(
+                    index: index,
+                    height: 36,
+                    child: _sortHeader(
+                      _columns[index],
+                      _LogSortColumn.values[index],
+                    ),
+                  ),
+              ],
             ),
-            cells: [
-              for (final String cell in _cells(
-                logs[index].log,
-                logs[index].eventNo,
-              ))
-                DataCell(
-                  Text(cell, maxLines: 1, overflow: TextOverflow.ellipsis),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _bodyTable(List<({LogModel log, int eventNo})> logs) {
+    return ScrollConfiguration(
+      behavior: ScrollConfiguration.of(context).copyWith(
+        dragDevices: const <PointerDeviceKind>{
+          PointerDeviceKind.touch,
+          PointerDeviceKind.mouse,
+          PointerDeviceKind.trackpad,
+          PointerDeviceKind.stylus,
+        },
+      ),
+      child: Scrollbar(
+        controller: _tableScroll,
+        thumbVisibility: true,
+        child: SingleChildScrollView(
+          controller: _tableScroll,
+          child: Table(
+            columnWidths: _tableColumnWidths,
+            children: [
+              for (var row = 0; row < logs.length; row++)
+                TableRow(
+                  decoration: BoxDecoration(
+                    color: row.isEven ? _oddRowColor : ColorConstants.white,
+                  ),
+                  children: [
+                    for (var index = 0; index < _columns.length; index++)
+                      _tableCell(
+                        index: index,
+                        height: 32,
+                        child: Text(
+                          _cells(logs[row].log, logs[row].eventNo)[index],
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: StyleConstants.textDark14w500Style,
+                        ),
+                      ),
+                  ],
                 ),
             ],
           ),
-      ],
+        ),
+      ),
+    );
+  }
+
+  Widget _tableCell({
+    required int index,
+    required double height,
+    required Widget child,
+  }) {
+    return SizedBox(
+      height: height,
+      child: Padding(
+        padding: EdgeInsets.only(
+          left: index == 0 ? 8 : 0,
+          right: index == _columns.length - 1 ? 8 : 0,
+        ),
+        child: Align(alignment: Alignment.centerLeft, child: child),
+      ),
     );
   }
 
@@ -797,6 +827,10 @@ class _LiveEventLogsDialogState extends State<LiveEventLogsDialog> {
   @override
   Widget build(BuildContext context) {
     final Size size = MediaQuery.sizeOf(context);
+    final double cell = WindowsDashboardTileGrid.overviewCellSize(size.width);
+    const double tileGap = 12;
+    const double panePadding = 16;
+    final double leftWidth = cell * 4 + tileGap * 3 + panePadding * 2;
     return Dialog(
       insetPadding: const EdgeInsets.symmetric(horizontal: 36, vertical: 28),
       backgroundColor: ColorConstants.white,
@@ -813,7 +847,7 @@ class _LiveEventLogsDialogState extends State<LiveEventLogsDialog> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  SizedBox(width: size.width * 0.86 * 0.4, child: _leftPane()),
+                  SizedBox(width: leftWidth, child: _leftPane()),
                   const VerticalDivider(
                     width: 1,
                     color: ColorConstants.surfaceBorder,
@@ -850,72 +884,87 @@ class _LiveEventLogsDialogState extends State<LiveEventLogsDialog> {
   }
 
   Widget _leftPane() {
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
-      children: [
-        Text('Action Buttons', style: StyleConstants.black16w700Style),
-        const SizedBox(height: 12),
-        ValueListenableBuilder<bool>(
-          valueListenable: widget.sessionOpen,
-          builder: (context, running, _) {
-            final bool showResume = _started && !running;
-            return Row(
-              children: [
-                Expanded(
-                  child: _actionButton(
-                    label: showResume ? 'Resume' : 'Pause',
-                    color:
-                        showResume
-                            ? ColorConstants.success
-                            : ColorConstants.warningAmber,
-                    icon: showResume ? Icons.play_arrow : Icons.pause,
-                    onPressed: _busy || !_started ? null : _togglePause,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _actionButton(
-                    label: 'Refresh',
-                    color: ColorConstants.primaryBlue,
-                    icon: Icons.refresh,
-                    onPressed: widget.onRefresh,
-                  ),
-                ),
-              ],
-            );
-          },
-        ),
-        const SizedBox(height: 20),
-        Text('Filter by', style: StyleConstants.black16w700Style),
-        const SizedBox(height: 12),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            for (var index = 0; index < _classFilters.length; index++)
-              _chip(
-                label: _classFilters[index],
-                selected: index == _classFilter,
-                onTap: () => setState(() => _classFilter = index),
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Action Buttons', style: StyleConstants.black16w500Style),
+              const SizedBox(height: 12),
+              ValueListenableBuilder<bool>(
+                valueListenable: widget.sessionOpen,
+                builder: (context, running, _) {
+                  final bool showResume = _started && !running;
+                  return Row(
+                    children: [
+                      _actionButton(
+                        label: showResume ? 'Resume' : 'Pause',
+                        color:
+                            showResume
+                                ? ColorConstants.success
+                                : ColorConstants.highAmber,
+                        icon: showResume ? Icons.play_arrow : Icons.pause,
+                        onPressed: _busy || !_started ? null : _togglePause,
+                      ),
+                      const SizedBox(width: 12),
+                      _actionButton(
+                        label: 'Refresh',
+                        color: ColorConstants.accentBlue,
+                        icon: Icons.refresh,
+                        onPressed: widget.onRefresh,
+                      ),
+                    ],
+                  );
+                },
               ),
-          ],
-        ),
-        const SizedBox(height: 20),
-        Text('Component Filter', style: StyleConstants.black16w700Style),
-        const SizedBox(height: 12),
-        GridView.count(
-          crossAxisCount: 4,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          mainAxisSpacing: 10,
-          crossAxisSpacing: 10,
-          childAspectRatio: 0.95,
-          children: [
-            for (var index = 0; index < _components.length; index++)
-              _componentTile(index),
-          ],
-        ),
-      ],
+            ],
+          ),
+          SizedBox(height: 24),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Filter by', style: StyleConstants.black16w500Style),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  for (var index = 0; index < _classFilters.length; index++)
+                    _chip(
+                      label: _classFilters[index],
+                      selected: index == _classFilter,
+                      onTap: () => setState(() => _classFilter = index),
+                    ),
+                ],
+              ),
+            ],
+          ),
+          SizedBox(height: 24),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Component Filter', style: StyleConstants.black16w500Style),
+              const SizedBox(height: 12),
+              GridView.count(
+                crossAxisCount: 4,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                mainAxisSpacing: 12,
+                crossAxisSpacing: 12,
+                childAspectRatio: 1,
+                children: [
+                  for (var index = 0; index < _components.length; index++)
+                    _componentTile(index),
+                ],
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -937,6 +986,27 @@ class _LiveEventLogsDialogState extends State<LiveEventLogsDialog> {
     required IconData icon,
     required VoidCallback? onPressed,
   }) {
+    return InkWell(
+      onTap: onPressed,
+      child: Container(
+        width: 40.w,
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 24.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, color: ColorConstants.white, size: 22),
+              SizedBox(width: 8),
+              Text(label, style: StyleConstants.white18w400Style),
+            ],
+          ),
+        ),
+      ),
+    );
     return ElevatedButton.icon(
       style: ElevatedButton.styleFrom(
         backgroundColor: color,
@@ -986,41 +1056,41 @@ class _LiveEventLogsDialogState extends State<LiveEventLogsDialog> {
         selected ? ColorConstants.white : ColorConstants.primary;
     return InkWell(
       onTap: () => setState(() => _componentFilter = index),
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        decoration: BoxDecoration(
-          color: selected ? ColorConstants.primary : const Color(0xFFF4F4F4),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color:
-                selected
-                    ? ColorConstants.primary
-                    : ColorConstants.surfaceBorder,
-          ),
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            SvgPicture.asset(
-              item.icon,
-              width: 28,
-              height: 28,
-              colorFilter: ColorFilter.mode(foreground, BlendMode.srcIn),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              item.label,
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: StyleConstants.textDark14w500Style.copyWith(
-                fontSize: 11,
-                color: foreground,
+      child: Column(
+        children: [
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(
+                color:
+                    selected
+                        ? ColorConstants.primary
+                        : ColorConstants.backgroundSubtle,
+                border: Border.all(
+                  color:
+                      selected
+                          ? ColorConstants.primary
+                          : ColorConstants.borderMedium,
+                  width: selected ? 2 : 1,
+                ),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Center(
+                child: SvgPicture.asset(
+                  item.icon,
+                  colorFilter: ColorFilter.mode(foreground, BlendMode.srcIn),
+                ),
               ),
             ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            item.label,
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: StyleConstants.textSecondary10w500Style,
+          ),
+        ],
       ),
     );
   }
