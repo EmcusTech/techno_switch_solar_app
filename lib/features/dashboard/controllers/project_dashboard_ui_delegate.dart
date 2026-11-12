@@ -204,6 +204,11 @@ abstract class ProjectDashboardUiDelegate {
     required ValueNotifier<int> refreshTrigger,
   });
 
+  void showPanelDateTimeBottomSheet({
+    required VoidCallback onApply,
+    required ValueNotifier<int> refreshTrigger,
+  });
+
   void showPanelInfoSetupBottomSheet({
     required VoidCallback onDownload,
     required VoidCallback onApply,

@@ -23,6 +23,7 @@ import 'package:Technoswitch/config/ble/ext_out_setup_payload_debug.dart';
 import 'package:Technoswitch/config/ble/input_setup_payload.dart';
 import 'package:Technoswitch/config/ble/input_setup_payload_debug.dart';
 import 'package:Technoswitch/config/ble/panel_access_lvl_setup_payload.dart';
+import 'package:Technoswitch/config/ble/panel_date_time_payload.dart';
 import 'package:Technoswitch/config/ble/panel_access_lvl_setup_payload_debug.dart';
 import 'package:Technoswitch/config/ble/panel_properties_setup_payload.dart';
 import 'package:Technoswitch/config/ble/panel_properties_setup_payload_debug.dart';
@@ -90,6 +91,7 @@ enum BleStates {
   SEND_L_BUS_SETUP_CMD_APPLY_PACKET,
   SEND_SOUNDER_SETUP_CMD_FETCH_PACKET,
   SEND_SOUNDER_SETUP_CMD_APPLY_PACKET,
+  SEND_PANEL_DATE_TIME_CMD_APPLY_PACKET,
   SEND_SYSTEM_CONFIG_FETCH_PACKET,
   SEND_SYSTEM_CONFIG_APPLY_PACKET,
   SEND_SERVICE_DUE_SETUP_CMD_FETCH_PACKET,
@@ -130,6 +132,7 @@ enum OtaProcessState {
   sendLBusSetupApplyCmdPkt,
   sendSounderSetupFetchCmdPkt,
   sendSounderSetupApplyCmdPkt,
+  sendPanelDateTimeApplyCmdPkt,
   sendSystemConfigFetchCmdPkt,
   sendSystemConfigApplyCmdPkt,
   sendServiceDueFetchCmdPkt,
@@ -166,6 +169,7 @@ enum BleOperationMode {
   lBusSetupApply,
   sounderSetupFetch,
   sounderSetupApply,
+  panelDateTimeApply,
   systemConfigFetch,
   systemConfigApply,
   serviceDueFetch,
@@ -535,6 +539,13 @@ class BleManager extends GetxService {
   ValueNotifier<int> get panelInfoHour => bleProcess.panelInfoHour;
   ValueNotifier<int> get panelInfoMinute => bleProcess.panelInfoMinute;
   ValueNotifier<int> get panelInfoSecond => bleProcess.panelInfoSecond;
+
+  ValueNotifier<int> get panelDateTimeHour => bleProcess.panelDateTimeHour;
+  ValueNotifier<int> get panelDateTimeMinute => bleProcess.panelDateTimeMinute;
+  ValueNotifier<int> get panelDateTimeSecond => bleProcess.panelDateTimeSecond;
+  ValueNotifier<int> get panelDateTimeDay => bleProcess.panelDateTimeDay;
+  ValueNotifier<int> get panelDateTimeMonth => bleProcess.panelDateTimeMonth;
+  ValueNotifier<int> get panelDateTimeYear => bleProcess.panelDateTimeYear;
   ValueNotifier<int> get panelInfoEventReminderDelay =>
       bleProcess.panelInfoEventReminderDelay;
 
@@ -616,6 +627,14 @@ class BleManager extends GetxService {
   }
 
   void resetProtocolSounderSetupState() {
+    u8TxPktCnt = 0;
+    u8RxPktCnt = 0;
+    receivedPollCount = 0;
+    _pollInFlight = false;
+    otaProcessState = OtaProcessState.sendNetworkPacket;
+  }
+
+  void resetProtocolPanelDateTimeState() {
     u8TxPktCnt = 0;
     u8RxPktCnt = 0;
     receivedPollCount = 0;
@@ -761,6 +780,14 @@ class BleManager extends GetxService {
     _pollInFlight = false;
     receivedPollCount = 0;
     currentOperationMode = BleOperationMode.sounderSetupFetch;
+  }
+
+  void resetPanelDateTimeState() {
+    bleCurrentState = BleStates.REQ_ENCY_KEY;
+    bleStateMachineState = BleStates.REQ_ENCY_KEY;
+    _pollInFlight = false;
+    receivedPollCount = 0;
+    currentOperationMode = BleOperationMode.panelDateTimeApply;
   }
 
   void resetServiceDueState() {
@@ -1508,6 +1535,49 @@ class BleManager extends GetxService {
     bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
     bleProcess.startRxTimeout();
     await sendSounderSetupApplyCmdPkt();
+  }
+
+  Future<void> startPanelDateTimeApply() async {
+    if (DemoBle.enabled) {
+      await DemoBle.runPasswordCommand(
+        process: bleProcess,
+        steps: [StringConstants.applyingDateTime],
+        finish: () {
+          bleProcess.isPanelDateTimeApplyCommandActive.value = false;
+          bleProcess.isPanelDateTimeApplyDone.value = true;
+          bleProcess.isAccessKeyValid.value = true;
+        },
+      );
+      return;
+    }
+
+    if (!isConnected) {
+      throw Exception(StringConstants.deviceNotConnected);
+    }
+
+    if (notifyChar == null || writeChar == null) {
+      throw Exception(StringConstants.bleCharNotInit);
+    }
+
+    resetPanelDateTimeState();
+    resetProtocolPanelDateTimeState();
+    bleProcess.resetProcessPanelDateTimeState();
+
+    if (_notifySub == null) {
+      throw Exception(StringConstants.bleHandshakeIncomplete);
+    }
+
+    bleCurrentState = BleStates.SEND_PANEL_DATE_TIME_CMD_APPLY_PACKET;
+    bleStateMachineState = BleStates.SEND_PANEL_DATE_TIME_CMD_APPLY_PACKET;
+    currentOperationMode = BleOperationMode.panelDateTimeApply;
+    otaProcessState = OtaProcessState.sendPanelDateTimeApplyCmdPkt;
+    bleProcess.isNetworkPacketProcess.value = false;
+    bleProcess.checkForPanelDateTimeApplyRes = 1;
+    bleProcess.isPanelDateTimeApplyDone.value = false;
+    bleProcess.processDesc.value = StringConstants.applyingDateTime;
+    bleProcess.startOtherPacketsRxTimeout(timeout: const Duration(seconds: 5));
+    bleProcess.startRxTimeout();
+    await sendPanelDateTimeApplyCmdPkt();
   }
 
   Future<void> ensureSystemConfigMtu() async {
@@ -2684,6 +2754,15 @@ class BleManager extends GetxService {
             timeout: const Duration(seconds: 5),
           );
           Get.find<BleLogController>().sendNetworkPacket();
+        } else if (currentOperationMode ==
+            BleOperationMode.panelDateTimeApply) {
+          bleCurrentState = BleStates.SEND_PANEL_DATE_TIME_CMD_APPLY_PACKET;
+          bleStateMachineState =
+              BleStates.SEND_PANEL_DATE_TIME_CMD_APPLY_PACKET;
+          bleProcess.startOtherPacketsRxTimeout(
+            timeout: const Duration(seconds: 5),
+          );
+          Get.find<BleLogController>().sendNetworkPacket();
         } else if (currentOperationMode == BleOperationMode.systemConfigFetch ||
             currentOperationMode == BleOperationMode.systemConfigApply) {
           bleProcess.startOtherPacketsRxTimeout(
@@ -3552,6 +3631,22 @@ class BleManager extends GetxService {
     );
 
     await sendSmallDataFrame(0x1000, u8Pkt.length, u8Pkt);
+  }
+
+  Future<void> sendPanelDateTimeApplyCmdPkt() async {
+    await _sendTsSetup(
+      mode: BleConstants.mode.instruction.dbSetup,
+      command: BleConstants.command.panelDateTime,
+      body: PanelDateTimePayload.toBytes(
+        hour: panelDateTimeHour.value,
+        minute: panelDateTimeMinute.value,
+        second: panelDateTimeSecond.value,
+        day: panelDateTimeDay.value,
+        month: panelDateTimeMonth.value,
+        year: panelDateTimeYear.value,
+      ),
+      logName: 'panel-date-time-apply',
+    );
   }
 
   Future<void> sendSystemConfigInfoRequest() async {

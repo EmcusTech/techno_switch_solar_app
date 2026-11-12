@@ -257,6 +257,27 @@ abstract final class ProjectDashboardTileActions {
     });
   }
 
+  static void openDateTime(ProjectDashboardController c) {
+    c.guardBootloaderOr(() {
+      final ui = _ui(c);
+      if (ui == null) return;
+      ui.showPanelDateTimeBottomSheet(
+        onApply:
+            () => ui.runCompactSetupApply(
+              successMessage: StringConstants.dateTime,
+              fallbackStatus: StringConstants.applyingDateTime,
+              markActive:
+                  () =>
+                      c.ble.bleProcess.isPanelDateTimeApplyCommandActive.value =
+                          true,
+              start: c.bleController.startPanelDateTimeApply,
+              onApplyComplete: () async {},
+            ),
+        refreshTrigger: c.dateTimeRefreshTrigger,
+      );
+    });
+  }
+
   static void openPanelInfo(ProjectDashboardController c) {
     final ui = _ui(c);
     if (ui == null) return;

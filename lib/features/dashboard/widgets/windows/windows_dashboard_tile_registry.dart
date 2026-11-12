@@ -95,6 +95,11 @@ abstract final class WindowsDashboardTileRegistry {
         onTap: () => ProjectDashboardTileActions.openPanelInfo(controller),
       ),
       WindowsDashboardTileConfig(
+        label: StringConstants.dateTime,
+        iconPath: AssetConstants.panelActionPanelInfoIcon,
+        onTap: () => ProjectDashboardTileActions.openDateTime(controller),
+      ),
+      WindowsDashboardTileConfig(
         label: 'General',
         iconPath: AssetConstants.panelActionGeneralModuleIcon,
         iconHeight: 36,

@@ -64,6 +64,7 @@ class ProjectDashboardController extends GetxController {
   final ValueNotifier<int> serviceDueRefreshTrigger = ValueNotifier(0);
   final ValueNotifier<int> accessCodeRefreshTrigger = ValueNotifier(0);
   final ValueNotifier<int> panelInfoRefreshTrigger = ValueNotifier(0);
+  final ValueNotifier<int> dateTimeRefreshTrigger = ValueNotifier(0);
   final ValueNotifier<int> generalModuleRefreshTrigger = ValueNotifier(0);
   final ValueNotifier<ConfigCompareResult?> configLogCompareResult =
       ValueNotifier(null);
@@ -166,6 +167,7 @@ class ProjectDashboardController extends GetxController {
     serviceDueRefreshTrigger.dispose();
     accessCodeRefreshTrigger.dispose();
     panelInfoRefreshTrigger.dispose();
+    dateTimeRefreshTrigger.dispose();
     generalModuleRefreshTrigger.dispose();
     logHistoryRefreshTrigger.dispose();
     windowsDetail.dispose();

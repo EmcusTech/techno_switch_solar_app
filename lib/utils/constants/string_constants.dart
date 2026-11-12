@@ -111,6 +111,8 @@ abstract final class StringConstants {
   static const String applyingAccessCodeOne = "Applying Access Code";
   static const String downloadingPanelInfo = "Downloading Panel Info";
   static const String applyingPanelInfo = "Applying Panel Info";
+  static const String applyingDateTime = "Applying Date & Time";
+  static const String dateTimeApplyCompleted = "Date & Time Apply Completed";
   static const String downloadingGeneralModule = "Downloading General Module";
   static const String applyingGeneralModuleTimeOut =
       "Applying General Module Level Time-out";
@@ -307,6 +309,7 @@ abstract final class StringConstants {
   static const String dashboard = "Dashboard";
   static const String date = "Protocol";
   static const String dateTime = "Date & Time";
+  static const String dateField = "Date";
   static const String datetime = "dateTime";
   static const String datetimeNow =
       "----------------------setUpLogs: Setting up logs..-----------------";
@@ -945,6 +948,7 @@ abstract final class StringConstants {
   static const String usbSerialDevices = "Scan for connected USB solar devices";
   static const String usbSolarDevice = "USB Solar Device";
   static const String useMobileDateTime = "Use Mobile Date & Time";
+  static const String useSystemTime = "Use system time settings";
   static const String usemobiletime = "useMobileTime";
   static const String userManual = "User Manual";
   static const String testingVersion = "v1.0.0 -- testing version";

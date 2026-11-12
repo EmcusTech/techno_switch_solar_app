@@ -87,6 +87,7 @@ class BleProcess {
   int lBusSetupApplyCommandStep = 0;
   int checkForSounderSetupFetchRes = 0;
   int checkForSounderSetupApplyRes = 0;
+  int checkForPanelDateTimeApplyRes = 0;
   int checkForSystemConfigFetchRes = 0;
   int checkForSystemConfigApplyRes = 0;
   bool systemConfigWaitingForInfo = false;
@@ -875,6 +876,18 @@ class BleProcess {
   final ValueNotifier<int> panelInfoHour = ValueNotifier<int>(0);
   final ValueNotifier<int> panelInfoMinute = ValueNotifier<int>(0);
   final ValueNotifier<int> panelInfoSecond = ValueNotifier<int>(0);
+
+  final ValueNotifier<bool> isPanelDateTimeApplyCommandActive =
+      ValueNotifier<bool>(false);
+  final ValueNotifier<bool> isPanelDateTimeApplyDone = ValueNotifier<bool>(
+    false,
+  );
+  final ValueNotifier<int> panelDateTimeHour = ValueNotifier<int>(0);
+  final ValueNotifier<int> panelDateTimeMinute = ValueNotifier<int>(0);
+  final ValueNotifier<int> panelDateTimeSecond = ValueNotifier<int>(0);
+  final ValueNotifier<int> panelDateTimeDay = ValueNotifier<int>(1);
+  final ValueNotifier<int> panelDateTimeMonth = ValueNotifier<int>(1);
+  final ValueNotifier<int> panelDateTimeYear = ValueNotifier<int>(2010);
   final ValueNotifier<int> panelInfoEventReminderDelay = ValueNotifier<int>(
     PanelInfoDefaults.delayBle,
   );
@@ -955,6 +968,12 @@ class BleProcess {
     panelInfoHour.value = now.hour;
     panelInfoMinute.value = now.minute;
     panelInfoSecond.value = now.second;
+    panelDateTimeHour.value = now.hour;
+    panelDateTimeMinute.value = now.minute;
+    panelDateTimeSecond.value = now.second;
+    panelDateTimeDay.value = now.day;
+    panelDateTimeMonth.value = now.month;
+    panelDateTimeYear.value = now.year;
   }
 
   Future<void> bleRxFrameProcess(BleRxFrame rx) async {
@@ -1131,6 +1150,10 @@ class BleProcess {
 
       case OtaProcessState.sendSounderSetupApplyCmdPkt:
         checkForSounderSetupApplyRes = 1;
+        break;
+
+      case OtaProcessState.sendPanelDateTimeApplyCmdPkt:
+        checkForPanelDateTimeApplyRes = 1;
         break;
 
       case OtaProcessState.sendSystemConfigFetchCmdPkt:
@@ -1437,6 +1460,14 @@ class BleProcess {
           processDesc.value = StringConstants.applyingSounder;
           startRxTimeout();
           await bleManager.sendSounderSetupApplyCmdPkt();
+        } else if (isPanelDateTimeApplyCommandActive.value) {
+          bleManager.otaProcessState =
+              OtaProcessState.sendPanelDateTimeApplyCmdPkt;
+          checkForAccessKeyCmdRsp = 0;
+          checkForPanelDateTimeApplyRes = 1;
+          processDesc.value = StringConstants.applyingDateTime;
+          startRxTimeout();
+          await bleManager.sendPanelDateTimeApplyCmdPkt();
         } else if (isServiceDueFetchCommandActive.value) {
           bleManager.otaProcessState =
               OtaProcessState.sendPanelPropertiesSetupFetchCmdPkt;
@@ -1901,6 +1932,25 @@ class BleProcess {
         checkForSounderSetupApplyRes = 0;
         isSounderSetupApplyCommandActive.value = false;
         isSounderSetupApplyDone.value = true;
+      }
+    }
+
+    if (checkForPanelDateTimeApplyRes == 1) {
+      final view = _acceptedSetupPayload(
+        rx.payload,
+        'panel-date-time-apply-response',
+      );
+      if (view != null &&
+          (view[10] == BleConstants.mode.instruction.ctrl ||
+              (view.length > 12 &&
+                  view[12] == BleConstants.command.panelDateTime))) {
+        bleManager.otaProcessState = OtaProcessState.notInUse;
+        cancelOperationDeadline();
+        checkForPanelDateTimeApplyRes = 0;
+        isPanelDateTimeApplyCommandActive.value = false;
+        isPanelDateTimeApplyDone.value = true;
+        isAccessKeyValid.value = true;
+        processDesc.value = StringConstants.dateTimeApplyCompleted;
       }
     }
 
@@ -2587,11 +2637,7 @@ class BleProcess {
     _appendLiveEventRecords(parsed);
   }
 
-  String? _liveEventRejectMessage(
-    TsFrameView parsed,
-    int mode,
-    int command,
-  ) {
+  String? _liveEventRejectMessage(TsFrameView parsed, int mode, int command) {
     if (parsed.data.isEmpty) return null;
     final bool statusMode =
         mode == BleConstants.mode.instruction.dbStatus ||
@@ -3029,6 +3075,7 @@ class BleProcess {
     checkForLBusSetupApplyRes = 0;
     checkForSounderSetupFetchRes = 0;
     checkForSounderSetupApplyRes = 0;
+    checkForPanelDateTimeApplyRes = 0;
     checkForSystemConfigFetchRes = 0;
     checkForSystemConfigApplyRes = 0;
     checkForServiceDueFetchRes = 0;
@@ -3101,6 +3148,7 @@ class BleProcess {
     checkForLBusSetupApplyRes = 0;
     checkForSounderSetupFetchRes = 0;
     checkForSounderSetupApplyRes = 0;
+    checkForPanelDateTimeApplyRes = 0;
     checkForSystemConfigFetchRes = 0;
     checkForSystemConfigApplyRes = 0;
     checkForServiceDueFetchRes = 0;
@@ -3160,6 +3208,7 @@ class BleProcess {
     checkForLBusSetupApplyRes = 0;
     checkForSounderSetupFetchRes = 0;
     checkForSounderSetupApplyRes = 0;
+    checkForPanelDateTimeApplyRes = 0;
     checkForSystemConfigFetchRes = 0;
     checkForSystemConfigApplyRes = 0;
     checkForServiceDueFetchRes = 0;
@@ -3215,6 +3264,7 @@ class BleProcess {
     checkForLBusSetupApplyRes = 0;
     checkForSounderSetupFetchRes = 0;
     checkForSounderSetupApplyRes = 0;
+    checkForPanelDateTimeApplyRes = 0;
     checkForSystemConfigFetchRes = 0;
     checkForSystemConfigApplyRes = 0;
     checkForServiceDueFetchRes = 0;
@@ -3244,6 +3294,19 @@ class BleProcess {
     cancelOperationDeadline();
   }
 
+  void resetProcessPanelDateTimeState() {
+    checkForPanelDateTimeApplyRes = 0;
+    isPanelDateTimeApplyDone.value = false;
+    processDesc.value = "";
+    bleManager.otaProcessState = OtaProcessState.sendNetworkPacket;
+    isNetworkPacketProcess.value = true;
+    _rxTimeoutTimer?.cancel();
+    _rxTimeoutTimer = null;
+    _otherPacketsRxTimeoutTimer?.cancel();
+    _otherPacketsRxTimeoutTimer = null;
+    cancelOperationDeadline();
+  }
+
   void resetProcessZoneSetupState() {
     isOtaCompleted = false;
     processNextOtaFrame = true;
@@ -3267,6 +3330,7 @@ class BleProcess {
     checkForLBusSetupApplyRes = 0;
     checkForSounderSetupFetchRes = 0;
     checkForSounderSetupApplyRes = 0;
+    checkForPanelDateTimeApplyRes = 0;
     checkForSystemConfigFetchRes = 0;
     checkForSystemConfigApplyRes = 0;
     checkForServiceDueFetchRes = 0;
@@ -3325,6 +3389,7 @@ class BleProcess {
     checkForLBusSetupApplyRes = 0;
     checkForSounderSetupFetchRes = 0;
     checkForSounderSetupApplyRes = 0;
+    checkForPanelDateTimeApplyRes = 0;
     checkForSystemConfigFetchRes = 0;
     checkForSystemConfigApplyRes = 0;
     checkForServiceDueFetchRes = 0;
@@ -3376,6 +3441,7 @@ class BleProcess {
     checkForLBusSetupApplyRes = 0;
     checkForSounderSetupFetchRes = 0;
     checkForSounderSetupApplyRes = 0;
+    checkForPanelDateTimeApplyRes = 0;
     checkForSystemConfigFetchRes = 0;
     checkForSystemConfigApplyRes = 0;
     checkForServiceDueFetchRes = 0;
@@ -3428,6 +3494,7 @@ class BleProcess {
     checkForLBusSetupApplyRes = 0;
     checkForSounderSetupFetchRes = 0;
     checkForSounderSetupApplyRes = 0;
+    checkForPanelDateTimeApplyRes = 0;
     checkForSystemConfigFetchRes = 0;
     checkForSystemConfigApplyRes = 0;
     checkForServiceDueFetchRes = 0;
@@ -3480,6 +3547,7 @@ class BleProcess {
     checkForLBusSetupApplyRes = 0;
     checkForSounderSetupFetchRes = 0;
     checkForSounderSetupApplyRes = 0;
+    checkForPanelDateTimeApplyRes = 0;
     checkForSystemConfigFetchRes = 0;
     checkForSystemConfigApplyRes = 0;
     checkForServiceDueFetchRes = 0;
@@ -3532,6 +3600,7 @@ class BleProcess {
     checkForLBusSetupApplyRes = 0;
     checkForSounderSetupFetchRes = 0;
     checkForSounderSetupApplyRes = 0;
+    checkForPanelDateTimeApplyRes = 0;
     checkForSystemConfigFetchRes = 0;
     checkForSystemConfigApplyRes = 0;
     checkForServiceDueFetchRes = 0;
@@ -3584,6 +3653,7 @@ class BleProcess {
     checkForLBusSetupApplyRes = 0;
     checkForSounderSetupFetchRes = 0;
     checkForSounderSetupApplyRes = 0;
+    checkForPanelDateTimeApplyRes = 0;
     checkForSystemConfigFetchRes = 0;
     checkForSystemConfigApplyRes = 0;
     checkForServiceDueFetchRes = 0;
@@ -3636,6 +3706,7 @@ class BleProcess {
     checkForLBusSetupApplyRes = 0;
     checkForSounderSetupFetchRes = 0;
     checkForSounderSetupApplyRes = 0;
+    checkForPanelDateTimeApplyRes = 0;
     checkForSystemConfigFetchRes = 0;
     checkForSystemConfigApplyRes = 0;
     checkForServiceDueFetchRes = 0;
@@ -3688,6 +3759,7 @@ class BleProcess {
     checkForLBusSetupApplyRes = 0;
     checkForSounderSetupFetchRes = 0;
     checkForSounderSetupApplyRes = 0;
+    checkForPanelDateTimeApplyRes = 0;
     checkForSystemConfigFetchRes = 0;
     checkForSystemConfigApplyRes = 0;
     checkForServiceDueFetchRes = 0;
@@ -3740,6 +3812,7 @@ class BleProcess {
     checkForLBusSetupApplyRes = 0;
     checkForSounderSetupFetchRes = 0;
     checkForSounderSetupApplyRes = 0;
+    checkForPanelDateTimeApplyRes = 0;
     checkForSystemConfigFetchRes = 0;
     checkForSystemConfigApplyRes = 0;
     checkForServiceDueFetchRes = 0;
@@ -4767,6 +4840,17 @@ class BleProcess {
       return;
     }
 
+    if (isPanelDateTimeApplyCommandActive.value) {
+      isPanelDateTimeApplyCommandActive.value = false;
+      checkForPanelDateTimeApplyRes = 0;
+      cancelRxTimeout();
+      cancelOperationDeadline();
+      bleManager.otaProcessState = OtaProcessState.notInUse;
+      processDesc.value = StringConstants.deviceNotResponding;
+      maxOtherPacketsRetriesReached.value = true;
+      return;
+    }
+
     if (isSystemConfigFetchCommandActive.value ||
         isSystemConfigApplyCommandActive.value) {
       _failSystemConfigTransfer(StringConstants.deviceNotResponding);
@@ -4900,6 +4984,8 @@ class BleProcess {
         case OtaProcessState.sendSounderSetupFetchCmdPkt:
           break;
         case OtaProcessState.sendSounderSetupApplyCmdPkt:
+          break;
+        case OtaProcessState.sendPanelDateTimeApplyCmdPkt:
           break;
         case OtaProcessState.sendSystemConfigFetchCmdPkt:
           break;

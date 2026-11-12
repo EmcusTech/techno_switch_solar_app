@@ -28,6 +28,7 @@ import 'package:Technoswitch/features/peripherals/general/sheets/general_mode_bo
 import 'package:Technoswitch/features/peripherals/inputs/sheets/input_mode_bottomsheet.dart';
 import 'package:Technoswitch/features/peripherals/l_bus/sheets/l_bus_mode_bottomsheet.dart';
 import 'package:Technoswitch/features/peripherals/module/sheets/module_mode_bottomsheet.dart';
+import 'package:Technoswitch/features/peripherals/date_time/sheets/panel_date_time_bottomsheet.dart';
 import 'package:Technoswitch/features/peripherals/panel_info/sheets/panel_info_mode_bottomsheet.dart';
 import 'package:Technoswitch/features/peripherals/radio/sheets/radio_mode_bottomsheet.dart';
 import 'package:Technoswitch/features/peripherals/relays/sheets/relay_mode_bottomsheet.dart';
@@ -151,7 +152,9 @@ mixin ProjectDashboardUiDelegateMixin<T extends StatefulWidget> on State<T>
   }
 
   @override
-  void openNewEventLogValuesScreen(ValueNotifier<NewEventLogProgress> progress) {
+  void openNewEventLogValuesScreen(
+    ValueNotifier<NewEventLogProgress> progress,
+  ) {
     if (!mounted) return;
     if (Platform.isWindows) {
       dashboardController.showWindowsDetail(
@@ -1549,6 +1552,21 @@ mixin ProjectDashboardUiDelegateMixin<T extends StatefulWidget> on State<T>
           (_) => AccessCodesBottomSheet(
             deviceId: dashboardController.selectedDevice.id,
             onDownload: onDownload,
+            onApply: onApply,
+            refreshTrigger: refreshTrigger,
+          ),
+    );
+  }
+
+  @override
+  void showPanelDateTimeBottomSheet({
+    required VoidCallback onApply,
+    required ValueNotifier<int> refreshTrigger,
+  }) {
+    _presentPeripheralSheet(
+      builder:
+          (_) => PanelDateTimeBottomSheet(
+            deviceId: dashboardController.selectedDevice.id,
             onApply: onApply,
             refreshTrigger: refreshTrigger,
           ),

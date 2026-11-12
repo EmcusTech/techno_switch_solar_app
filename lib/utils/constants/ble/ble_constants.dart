@@ -184,6 +184,10 @@ class _BleCommand {
 
   /// Whole `st_system_config_def` pull and push.
   final int systemConfig = 0x1F;
+
+  /// Packed `st_panel_date_time_def`. Firmware uses the same command number as
+  /// [systemConfig]; the active session decides which handler runs.
+  final int panelDateTime = 0x1F;
   final int sounderSetup = 0x07;
   final int sounderSetupGeneral = 0x14;
   final int sounderSetupRelay = 0x07;

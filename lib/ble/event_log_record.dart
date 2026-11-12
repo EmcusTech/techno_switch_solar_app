@@ -85,13 +85,14 @@ class EventLogRecordParser {
         hour > 23 ||
         day < 1 ||
         day > 31 ||
-        month > 11) {
+        month < 1 ||
+        month > 12) {
       return null;
     }
-    final int year = 1900 + yearSince1900;
-    final DateTime time = DateTime(year, month + 1, day, hour, minute, second);
+    final int year = 2000 + yearSince1900;
+    final DateTime time = DateTime(year, month, day, hour, minute, second);
     if (time.year != year ||
-        time.month != month + 1 ||
+        time.month != month ||
         time.day != day ||
         time.hour != hour ||
         time.minute != minute ||

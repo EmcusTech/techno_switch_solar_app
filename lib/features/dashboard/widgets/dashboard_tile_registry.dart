@@ -97,6 +97,11 @@ abstract final class DashboardTileRegistry {
         onTap: () => ProjectDashboardTileActions.openPanelInfo(controller),
       ),
       DashboardTileConfig(
+        label: StringConstants.dateTime,
+        iconPath: AssetConstants.panelActionPanelInfoIcon,
+        onTap: () => ProjectDashboardTileActions.openDateTime(controller),
+      ),
+      DashboardTileConfig(
         label: 'General',
         iconPath: AssetConstants.panelActionGeneralModuleIcon,
         isDisabled: !DemoBle.enabled,

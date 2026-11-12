@@ -3,6 +3,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:Technoswitch/features/dashboard/controllers/project_dashboard_controller.dart';
 import 'package:Technoswitch/features/dashboard/widgets/windows/windows_dashboard_side_bar.dart';
 import 'package:Technoswitch/utils/constants/color_constants.dart';
+import 'package:Technoswitch/utils/constants/string_constants.dart';
 import 'package:Technoswitch/utils/constants/style_constants.dart';
 
 class WindowsDashboardTileConfig {
@@ -35,11 +36,24 @@ class PeripheralTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<bool>(
-      valueListenable: controller.bleController.bleProcess.sessionAccessCodeReady,
-      builder: (context, sessionReady, _) {
-        final locked = !sessionReady;
-        final inactive = config.isDisabled || locked;
+    final process = controller.bleController.bleProcess;
+    return ListenableBuilder(
+      listenable: Listenable.merge([
+        process.sessionAccessCodeReady,
+        process.newEventLogProgress,
+        controller.selectedWindowsTile,
+      ]),
+      builder: (context, _) {
+        final locked = !process.sessionAccessCodeReady.value;
+        final downloading =
+            controller.selectedWindowsTile.value == StringConstants.eventLog &&
+            !process.newEventLogProgress.value.done;
+        final inactive =
+            config.isDisabled ||
+            locked ||
+            (downloading && config.label != StringConstants.eventLog);
+        final isSelected =
+            controller.selectedWindowsTile.value == config.label && !locked;
         return GestureDetector(
           onTap: () async {
             if (inactive) return;
@@ -49,40 +63,34 @@ class PeripheralTile extends StatelessWidget {
           child: Column(
             children: [
               Expanded(
-                child: ValueListenableBuilder<String?>(
-                  valueListenable: controller.selectedWindowsTile,
-                  builder: (context, selectedLabel, _) {
-                    final isSelected = selectedLabel == config.label && !locked;
-                    return Container(
-                      decoration: BoxDecoration(
-                        color:
-                            isSelected
-                                ? ColorConstants.primary.withValues(alpha: 0.1)
-                                : ColorConstants.backgroundSubtle,
-                        border: Border.all(
-                          color:
-                              isSelected
-                                  ? ColorConstants.primary
-                                  : ColorConstants.borderMedium,
-                          width: isSelected ? 2 : 1,
-                        ),
-                        borderRadius: BorderRadius.circular(10),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color:
+                        isSelected
+                            ? ColorConstants.primary.withValues(alpha: 0.1)
+                            : ColorConstants.backgroundSubtle,
+                    border: Border.all(
+                      color:
+                          isSelected
+                              ? ColorConstants.primary
+                              : ColorConstants.borderMedium,
+                      width: isSelected ? 2 : 1,
+                    ),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Center(
+                    child: SvgPicture.asset(
+                      config.iconPath,
+                      colorFilter: ColorFilter.mode(
+                        inactive
+                            ? ColorConstants.textGray.withValues(alpha: 0.2)
+                            : ColorConstants.primary,
+                        BlendMode.srcIn,
                       ),
-                      child: Center(
-                        child: SvgPicture.asset(
-                          config.iconPath,
-                          colorFilter: ColorFilter.mode(
-                            inactive
-                                ? ColorConstants.textGray.withValues(alpha: 0.2)
-                                : ColorConstants.primary,
-                            BlendMode.srcIn,
-                          ),
-                          height: config.iconHeight,
-                          width: config.iconWidth,
-                        ),
-                      ),
-                    );
-                  },
+                      height: config.iconHeight,
+                      width: config.iconWidth,
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(height: 8),

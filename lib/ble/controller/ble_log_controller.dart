@@ -112,6 +112,10 @@ class BleLogController extends GetxController {
     await bleManager.startSounderSetupApply();
   }
 
+  Future<void> startPanelDateTimeApply() async {
+    await bleManager.startPanelDateTimeApply();
+  }
+
   Future<void> startSystemConfigFetch() async {
     await bleManager.startSystemConfigFetch();
   }
