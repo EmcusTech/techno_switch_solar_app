@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -119,11 +117,40 @@ class _RetrievalProgress extends StatelessWidget {
   }
 }
 
+class _EventIdFilter {
+  const _EventIdFilter(this.label, [this.start]);
+
+  final String label;
+  final int? start;
+
+  bool matches(LogModel log) {
+    final int? block = start;
+    if (block == null) return true;
+    final int? eventId = int.tryParse(log.eventId ?? '');
+    if (eventId == null) return false;
+    return eventId >= block && eventId < block + 0x1000;
+  }
+}
+
+const List<_EventIdFilter> _eventIdFilters = <_EventIdFilter>[
+  _EventIdFilter('All'),
+  _EventIdFilter('General', 0x1000),
+  _EventIdFilter('Disablement', 0x2000),
+  _EventIdFilter('Fire', 0x3000),
+  _EventIdFilter('Fault', 0x4000),
+  _EventIdFilter('Gas/EXT OUT', 0x5000),
+];
+
 class _EventLogGrid extends StatefulWidget {
-  const _EventLogGrid({required this.logs, this.showClassFilters = true});
+  const _EventLogGrid({
+    required this.logs,
+    this.showClassFilters = true,
+    this.eventFilterIndex = 0,
+  });
 
   final List<LogModel> logs;
   final bool showClassFilters;
+  final int eventFilterIndex;
 
   @override
   State<_EventLogGrid> createState() => _EventLogGridState();
@@ -139,16 +166,10 @@ class _EventLogGridState extends State<_EventLogGrid> {
   bool _sortAscending = true;
   int _selectedFilter = 0;
 
-  static const List<({String label, String? eventClass})> _classFilters =
-      <({String label, String? eventClass})>[
-        (label: 'All', eventClass: null),
-        (label: 'EXT. Release', eventClass: 'Release'),
-        (label: 'Fire', eventClass: 'Alarm'),
-        (label: 'Fault', eventClass: 'Fault'),
-        (label: 'Disablement', eventClass: 'Disablement'),
-        (label: 'Condition', eventClass: 'Condition'),
-        (label: 'Action', eventClass: 'Action'),
-      ];
+  int get _activeFilter {
+    if (!widget.showClassFilters) return widget.eventFilterIndex;
+    return _selectedFilter;
+  }
 
   @override
   void dispose() {
@@ -163,13 +184,11 @@ class _EventLogGridState extends State<_EventLogGrid> {
       for (var index = 0; index < widget.logs.length; index++)
         (log: widget.logs[index], eventNo: index + 1),
     ];
-    final String? eventClass = _classFilters[_selectedFilter].eventClass;
+    final _EventIdFilter eventFilter = _eventIdFilters[_activeFilter];
     final List<({LogModel log, int eventNo})> byClass =
-        eventClass == null
-            ? entries
-            : entries.where((({LogModel log, int eventNo}) entry) {
-              return entry.log.eventClass == eventClass;
-            }).toList();
+        entries.where((({LogModel log, int eventNo}) entry) {
+          return eventFilter.matches(entry.log);
+        }).toList();
     final String query = _search.text.trim().toLowerCase();
     final List<({LogModel log, int eventNo})> filtered =
         query.isEmpty
@@ -195,11 +214,16 @@ class _EventLogGridState extends State<_EventLogGrid> {
 
   void _toggleSort(_LogSortColumn column) {
     setState(() {
-      if (_sortColumn == column) {
-        _sortAscending = !_sortAscending;
+      if (_sortColumn != column) {
+        _sortColumn = column;
+        _sortAscending = true;
         return;
       }
-      _sortColumn = column;
+      if (_sortAscending) {
+        _sortAscending = false;
+        return;
+      }
+      _sortColumn = null;
       _sortAscending = true;
     });
   }
@@ -270,7 +294,7 @@ class _EventLogGridState extends State<_EventLogGrid> {
             child: ListView.separated(
               controller: _filterScroll,
               scrollDirection: Axis.horizontal,
-              itemCount: _classFilters.length,
+              itemCount: _eventIdFilters.length,
               separatorBuilder: (_, _) => const SizedBox(width: 8),
               itemBuilder: (context, index) {
                 final bool selected = index == _selectedFilter;
@@ -294,7 +318,7 @@ class _EventLogGridState extends State<_EventLogGrid> {
                       ),
                     ),
                     child: Text(
-                      _classFilters[index].label,
+                      _eventIdFilters[index].label,
                       style:
                           selected
                               ? StyleConstants.white14w500Style
@@ -325,14 +349,18 @@ class _EventLogGridState extends State<_EventLogGrid> {
         children: [
           Text(title),
           const SizedBox(width: 6),
-          Opacity(
-            opacity: active ? 1 : 0.55,
-            child: Transform.rotate(
-              angle: active && !_sortAscending ? math.pi : 0,
+          SizedBox(
+            width: 16,
+            height: 16,
+            child: Center(
               child: SvgPicture.asset(
-                AssetConstants.tsSortIcon,
-                width: 14,
-                height: 14,
+                !active
+                    ? AssetConstants.tsSortIcon
+                    : _sortAscending
+                    ? AssetConstants.tsSortUpArrow
+                    : AssetConstants.tsSortUpDown,
+                width: active ? 8 : 16,
+                height: active ? 6 : 16,
               ),
             ),
           ),
@@ -344,9 +372,10 @@ class _EventLogGridState extends State<_EventLogGrid> {
   static const Map<int, String> _sourceNames = <int, String>{
     0: 'Zone',
     1: 'Input',
-    2: 'Relay',
-    3: 'Sounder',
-    4: 'Panel',
+    2: 'Hold',
+    3: 'Relay',
+    4: 'Sounder',
+    5: 'Panel',
   };
 
   static const Color _oddRowColor = Color(0xFFF4F4F4);
@@ -604,7 +633,7 @@ class _EventLogGridState extends State<_EventLogGrid> {
     final int? number = log.par1;
     if (type == null || number == null) return '—';
     final String name = _sourceNames[type] ?? type.toString();
-    if (type == 4) return name;
+    if (type == 5) return name;
     return '$name ${number + 1}';
   }
 }
@@ -773,16 +802,6 @@ class _LiveEventLogsDialogState extends State<LiveEventLogsDialog> {
   int _classFilter = 0;
   int _componentFilter = 0;
 
-  static const List<String> _classFilters = <String>[
-    'All',
-    'EXT. Release',
-    'Fire',
-    'Fault',
-    'Disablement',
-    'Condition',
-    'Action',
-  ];
-
   static const List<({String label, String icon})> _components =
       <({String label, String icon})>[
         (label: 'Relay(1/2)', icon: AssetConstants.peripheralRelayIcon),
@@ -933,9 +952,9 @@ class _LiveEventLogsDialogState extends State<LiveEventLogsDialog> {
                 spacing: 8,
                 runSpacing: 8,
                 children: [
-                  for (var index = 0; index < _classFilters.length; index++)
+                  for (var index = 0; index < _eventIdFilters.length; index++)
                     _chip(
-                      label: _classFilters[index],
+                      label: _eventIdFilters[index].label,
                       selected: index == _classFilter,
                       onTap: () => setState(() => _classFilter = index),
                     ),
@@ -975,6 +994,7 @@ class _LiveEventLogsDialogState extends State<LiveEventLogsDialog> {
         return _EventLogGrid(
           logs: logs.reversed.toList(),
           showClassFilters: false,
+          eventFilterIndex: _classFilter,
         );
       },
     );
