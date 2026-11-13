@@ -38,11 +38,14 @@ import 'package:Technoswitch/ble/ble_session_idle_policy.dart';
 import 'ble_manager.dart';
 import 'ble_frame.dart';
 import 'event_log_record.dart';
+import '../models/ble/firmware/firmware_packet_model.dart';
+import '../utils/ble/firmware_packet_service.dart';
 import '../models/log_model.dart';
 import '../models/new_event_log_progress.dart';
 import '../models/l_bus_setup_data_model.dart';
 import '../utils/constants/event_constants.dart';
 import '../utils/adc_parser.dart';
+import '../utils/logger.dart' as logger;
 import '../utils/timestamp_converter.dart';
 
 enum NewEventLogPhase { idle, waitStart, waitFetch }
@@ -156,6 +159,13 @@ class BleProcess {
   final List<LogModel> newEventLogsReceived = <LogModel>[];
   final ValueNotifier<NewEventLogProgress> newEventLogProgress =
       ValueNotifier<NewEventLogProgress>(NewEventLogProgress.initial);
+  List<FirmwarePacket> _firmwarePackets = const <FirmwarePacket>[];
+  Uint8List? _firmwareImageBytes;
+  int _firmwarePacketIndex = 0;
+  DateTime? _firmwareChunkWrittenAt;
+  DateTime? _firmwareChunkGapStartedAt;
+  Completer<void>? _firmwareUpgradeCompleter;
+  void Function(int sent, int total)? _firmwareProgress;
 
   DateTime? logStartingTime;
   DateTime? logEndTime;
@@ -3010,6 +3020,9 @@ class BleProcess {
   }
 
   void _rejectCtrlMessage(String message, {required bool invalidKey}) {
+    final bool firmwareTransfer =
+        newEventLogPhase != NewEventLogPhase.idle &&
+        _bulkTransferKind == BleConstants.command.transferFirmwareUpgrade;
     final bool configTransfer =
         isSystemConfigFetchCommandActive.value ||
         isSystemConfigApplyCommandActive.value ||
@@ -3018,7 +3031,9 @@ class BleProcess {
                     BleConstants.command.transferSystemConfigDownload ||
                 _bulkTransferKind ==
                     BleConstants.command.transferSystemConfigUpload));
-    if (configTransfer) {
+    if (firmwareTransfer) {
+      _failFirmwareUpgrade(message);
+    } else if (configTransfer) {
       _failSystemConfigTransfer(message);
     } else {
       resetProcessState();
@@ -4083,6 +4098,224 @@ class BleProcess {
     }
   }
 
+  /// Pushes a firmware image with the shared bulk-transfer commands.
+  ///
+  /// Start uses differentiator [BleConstants.command.transferFirmwareUpgrade].
+  /// Pages are cut from [image] after the start ack, using the same MTU budget
+  /// as an event-log fetch, minus the 4-byte sequence and length. The end
+  /// packet follows the last ack.
+  Future<void> beginFirmwareUpgrade(
+    Uint8List image, {
+    void Function(int sent, int total)? onProgress,
+  }) {
+    if (!bleManager.isConnected) {
+      throw Exception(StringConstants.deviceNotConnected);
+    }
+    if (!bleManager.handshakeCompleteNotifier.value) {
+      throw Exception(
+        StringConstants.bleHandshakeNotCompleteCannotStartFirmwareUpgrade,
+      );
+    }
+    if (image.isEmpty) {
+      throw Exception(StringConstants.noPacketsPrepared);
+    }
+    if (_firmwareUpgradeCompleter != null) {
+      _failFirmwareUpgrade(StringConstants.firmwareTransferFailed);
+    }
+
+    bleManager.bleCurrentState = BleStates.IDLE;
+    bleManager.bleStateMachineState = BleStates.IDLE;
+    _bulkTransferKind = BleConstants.command.transferFirmwareUpgrade;
+    _newEventLogTimer?.cancel();
+    _firmwareImageBytes = Uint8List.fromList(image);
+    _firmwarePackets = const <FirmwarePacket>[];
+    _firmwarePacketIndex = 0;
+    _firmwareChunkWrittenAt = null;
+    _firmwareChunkGapStartedAt = null;
+    _firmwareProgress = onProgress;
+    newEventLogPhase = NewEventLogPhase.waitStart;
+    _newEventLogFetchOutstanding = false;
+    final Completer<void> completer = Completer<void>();
+    _firmwareUpgradeCompleter = completer;
+    _armNewEventLogTimeout();
+    unawaited(_sendFirmwareUpgradeStart());
+    return completer.future;
+  }
+
+  Future<void> _sendFirmwareUpgradeStart() async {
+    try {
+      await bleManager.newEventLogStartCmd(
+        kind: BleConstants.command.transferFirmwareUpgrade,
+      );
+    } catch (error) {
+      _failFirmwareUpgrade('$error');
+    }
+  }
+
+  List<int> _firmwareImage(FirmwarePacket packet) {
+    final bytes = packet.bytes;
+    if (bytes.length < 2) return bytes;
+    return Uint8List.sublistView(bytes, 2);
+  }
+
+  Future<void> _handleFirmwareUpgradeStart(BleRxFrame rx) async {
+    final parsed = TsFrame.parse(rx.payload);
+    if (!parsed.isValid) return;
+    InputSetupPayloadDebug.logBleFrame(
+      'RECEIVE',
+      'firmware-upgrade-start',
+      rx.payload,
+    );
+    _firmwareChunkGapStartedAt = DateTime.now();
+    await bleManager.ensureSystemConfigMtu();
+    if (newEventLogPhase != NewEventLogPhase.waitStart) return;
+    final int pageBytes = BleManager.pushChunkBytesForMtu(
+      bleManager.negotiatedAttMtu,
+    );
+    final Uint8List? image = _firmwareImageBytes;
+    if (pageBytes <= 0 || image == null || image.isEmpty) {
+      _failFirmwareUpgrade(StringConstants.deviceNotResponding);
+      return;
+    }
+    final FirmwarePacketResult built = FirmwarePacketService().buildPackets(
+      image,
+      payloadSize: pageBytes,
+    );
+    if (built.packets.isEmpty) {
+      _failFirmwareUpgrade(StringConstants.noPacketsPrepared);
+      return;
+    }
+    _firmwarePackets = List<FirmwarePacket>.from(built.packets);
+    _firmwarePacketIndex = 0;
+    logger.Logger(
+      'Firmware upgrade page=$pageBytes packets=${_firmwarePackets.length} '
+      'mtu=${bleManager.negotiatedAttMtu}',
+    );
+    _firmwareProgress?.call(0, _firmwarePackets.length);
+    await _sendNextFirmwareChunk();
+  }
+
+  Future<void> _sendNextFirmwareChunk() async {
+    if (newEventLogPhase == NewEventLogPhase.idle) return;
+    if (_firmwarePacketIndex < 0 ||
+        _firmwarePacketIndex >= _firmwarePackets.length) {
+      await _finishFirmwareUpgrade();
+      return;
+    }
+    final FirmwarePacket packet = _firmwarePackets[_firmwarePacketIndex];
+    final List<int> image = _firmwareImage(packet);
+    _newEventLogFetchOutstanding = true;
+    newEventLogPhase = NewEventLogPhase.waitFetch;
+    processDesc.value =
+        '${StringConstants.pleaseWaitWhileFirmwareUpgraded} '
+        '${_firmwarePacketIndex + 1}/${_firmwarePackets.length}';
+    _armNewEventLogTimeout();
+    final DateTime sendStarted = DateTime.now();
+    final int? gapMs =
+        _firmwareChunkGapStartedAt == null
+            ? null
+            : sendStarted
+                .difference(_firmwareChunkGapStartedAt!)
+                .inMilliseconds;
+    await bleManager.newEventLogFetchCmd(
+      sequence: packet.sequence,
+      logCount: image.length,
+      payload: image,
+      label: 'firmware-upgrade',
+    );
+    final int sendMs = DateTime.now().difference(sendStarted).inMilliseconds;
+    logger.Logger(
+      'Firmware upgrade seq=${packet.sequence} '
+      '${_firmwarePacketIndex + 1}/${_firmwarePackets.length} '
+      'gap=${gapMs ?? '-'}ms send=${sendMs}ms',
+    );
+    _firmwareChunkWrittenAt = DateTime.now();
+  }
+
+  Future<void> _handleFirmwareUpgradeFetch(BleRxFrame rx) async {
+    if (!_newEventLogFetchOutstanding) return;
+    final parsed = TsFrame.parse(rx.payload);
+    if (!parsed.isValid) return;
+    _newEventLogFetchOutstanding = false;
+    final int sequence =
+        _firmwarePacketIndex >= 0 &&
+                _firmwarePacketIndex < _firmwarePackets.length
+            ? _firmwarePackets[_firmwarePacketIndex].sequence
+            : 0;
+    final DateTime ackAt = DateTime.now();
+    final int? ackMs =
+        _firmwareChunkWrittenAt == null
+            ? null
+            : ackAt.difference(_firmwareChunkWrittenAt!).inMilliseconds;
+    _firmwareChunkWrittenAt = null;
+    _firmwareChunkGapStartedAt = ackAt;
+    logger.Logger(
+      'Firmware upgrade seq=$sequence '
+      '${_firmwarePacketIndex + 1}/${_firmwarePackets.length} '
+      'ack=${ackMs ?? '-'}ms',
+    );
+    InputSetupPayloadDebug.logBleFrame(
+      'RECEIVE',
+      'firmware-upgrade seq=$sequence '
+          '${_firmwarePacketIndex + 1}/${_firmwarePackets.length}',
+      rx.payload,
+    );
+    _firmwarePacketIndex += 1;
+    _firmwareProgress?.call(_firmwarePacketIndex, _firmwarePackets.length);
+    if (_firmwarePacketIndex < _firmwarePackets.length) {
+      await _sendNextFirmwareChunk();
+      return;
+    }
+    await _finishFirmwareUpgrade();
+  }
+
+  Future<void> _finishFirmwareUpgrade() async {
+    final int sent = _firmwarePackets.length;
+    _newEventLogTimer?.cancel();
+    _newEventLogTimer = null;
+    _newEventLogFetchOutstanding = false;
+    try {
+      await bleManager.newEventLogEndCmd(
+        sent,
+        logLabel: 'firmware-upgrade-end',
+      );
+    } catch (error) {
+      _failFirmwareUpgrade('$error');
+      return;
+    }
+    newEventLogPhase = NewEventLogPhase.idle;
+    _firmwareImageBytes = null;
+    _firmwareChunkWrittenAt = null;
+    _firmwareChunkGapStartedAt = null;
+    final Completer<void>? pending = _firmwareUpgradeCompleter;
+    _firmwareUpgradeCompleter = null;
+    _firmwareProgress = null;
+    if (pending != null && !pending.isCompleted) {
+      pending.complete();
+    }
+  }
+
+  void _failFirmwareUpgrade(String message) {
+    if (_bulkTransferKind != BleConstants.command.transferFirmwareUpgrade &&
+        _firmwareUpgradeCompleter == null) {
+      return;
+    }
+    newEventLogPhase = NewEventLogPhase.idle;
+    _newEventLogFetchOutstanding = false;
+    _newEventLogTimer?.cancel();
+    _newEventLogTimer = null;
+    _firmwareImageBytes = null;
+    _firmwareChunkWrittenAt = null;
+    _firmwareChunkGapStartedAt = null;
+    final Completer<void>? pending = _firmwareUpgradeCompleter;
+    _firmwareUpgradeCompleter = null;
+    _firmwareProgress = null;
+    processDesc.value = message;
+    if (pending != null && !pending.isCompleted) {
+      pending.completeError(Exception(message));
+    }
+  }
+
   Future<void> beginSystemConfigDownload() async {
     _bulkTransferKind = BleConstants.command.transferSystemConfigDownload;
     _newEventLogTimer?.cancel();
@@ -4421,6 +4654,10 @@ class BleProcess {
         _failSystemConfigTransfer(StringConstants.deviceNotResponding);
         return;
       }
+      if (_bulkTransferKind == BleConstants.command.transferFirmwareUpgrade) {
+        _failFirmwareUpgrade(StringConstants.deviceNotResponding);
+        return;
+      }
       _finishNewEventLogFetch();
     });
   }
@@ -4454,6 +4691,10 @@ class BleProcess {
   }
 
   Future<void> _handleNewEventLogStart(BleRxFrame rx) async {
+    if (_bulkTransferKind == BleConstants.command.transferFirmwareUpgrade) {
+      await _handleFirmwareUpgradeStart(rx);
+      return;
+    }
     if (_bulkTransferKind ==
         BleConstants.command.transferSystemConfigDownload) {
       await _handleSystemConfigDownloadStart(rx);
@@ -4519,6 +4760,10 @@ class BleProcess {
   }
 
   Future<void> _handleNewEventLogFetch(BleRxFrame rx) async {
+    if (_bulkTransferKind == BleConstants.command.transferFirmwareUpgrade) {
+      await _handleFirmwareUpgradeFetch(rx);
+      return;
+    }
     if (_bulkTransferKind ==
         BleConstants.command.transferSystemConfigDownload) {
       await _handleSystemConfigDownloadFetch(rx);
@@ -4617,6 +4862,7 @@ class BleProcess {
   }
 
   void dispose() {
+    _failFirmwareUpgrade(StringConstants.firmwareTransferFailed);
     _liveEventStartTimer?.cancel();
     _liveEventDemoTimer?.cancel();
     _newEventLogTimer?.cancel();

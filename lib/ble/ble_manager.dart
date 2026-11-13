@@ -3228,7 +3228,9 @@ class BleManager extends GetxService {
 
     final pkt = TsFrame.build(header, <int>[kind & BleConstants.base]);
     final String name =
-        kind == BleConstants.command.transferSystemConfigDownload
+        kind == BleConstants.command.transferFirmwareUpgrade
+            ? 'firmware-upgrade-start'
+            : kind == BleConstants.command.transferSystemConfigDownload
             ? 'system-config-download-start'
             : kind == BleConstants.command.transferSystemConfigUpload
             ? 'system-config-upload-start'
@@ -3288,7 +3290,7 @@ class BleManager extends GetxService {
     );
   }
 
-  Future<void> newEventLogEndCmd(int receivedCount) async {
+  Future<void> newEventLogEndCmd(int receivedCount, {String? logLabel}) async {
     u8TxPktCnt += 1;
 
     final header = Uint8List(TsFrame.headerLength);
@@ -3310,7 +3312,7 @@ class BleManager extends GetxService {
     final pkt = TsFrame.build(header, commandData);
     InputSetupPayloadDebug.logBleFrame(
       'TRANSMIT',
-      'event-log-end logs=$receivedCount',
+      logLabel ?? 'event-log-end logs=$receivedCount',
       pkt,
     );
     await sendSmallDataFrame(0x1000, pkt.length, pkt);

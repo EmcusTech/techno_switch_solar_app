@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:get/get.dart';
@@ -19,6 +20,7 @@ class FirmwareController extends GetxController {
   PlatformFile? selectedFirmwareFile;
   FirmwareValidationResult? validationResult;
   FirmwarePacketResult? packetResult;
+  Uint8List? firmwareImage;
   String? validationError;
 
   void resetState() {
@@ -29,6 +31,7 @@ class FirmwareController extends GetxController {
     totalPacketLength.value = 0;
     validationResult = null;
     packetResult = null;
+    firmwareImage = null;
     validationError = null;
   }
 
@@ -37,12 +40,16 @@ class FirmwareController extends GetxController {
     selectedFirmwareFile = file;
   }
 
-  FirmwareValidationResult? validateSelectedFile({String? requiredProductId}) {
+  FirmwareValidationResult? validateSelectedFile({
+    String? requiredProductId,
+    bool crcOnly = false,
+  }) {
     if (selectedFirmwareFile == null) return null;
 
     final result = _firmwareService.validateFirmwareFile(
       selectedFirmwareFile!,
       requiredProductId: requiredProductId,
+      crcOnly: crcOnly,
     );
 
     validationResult = result;
@@ -51,7 +58,7 @@ class FirmwareController extends GetxController {
     return result;
   }
 
-  Future<bool> preparePackets() async {
+  Future<bool> preparePackets({bool verifyCrc = true}) async {
     if (selectedFirmwareFile == null ||
         validationResult == null ||
         !validationResult!.isValid) {
@@ -61,10 +68,13 @@ class FirmwareController extends GetxController {
     try {
       final file = File(selectedFirmwareFile!.path!);
 
-      packetResult = await _packetService.processBinFile(file);
-
-      totalPacketLength.value = packetResult!.totalLogicalPackets;
-      return packetResult!.packets.isNotEmpty;
+      firmwareImage = await _packetService.readVerifiedImage(
+        file,
+        verifyCrc: verifyCrc,
+      );
+      packetResult = null;
+      totalPacketLength.value = 0;
+      return firmwareImage!.isNotEmpty;
     } catch (e) {
       validationError = e.toString();
       return false;

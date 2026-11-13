@@ -3,7 +3,6 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:get/get.dart';
 import 'package:lottie/lottie.dart';
 import 'package:Technoswitch/bindings/firmware_binding.dart';
 import 'package:Technoswitch/ble/blue_plus_adapter.dart';
@@ -22,7 +21,6 @@ import 'package:Technoswitch/features/peripherals/access_code/sheets/access_code
 import 'package:Technoswitch/features/peripherals/config_log/sheets/config_log_bottomsheet.dart';
 import 'package:Technoswitch/features/peripherals/diagnostics/sheets/diagnostic_mode_bottomsheet.dart';
 import 'package:Technoswitch/features/peripherals/ext_out/sheets/ext_out_bottomsheet.dart';
-import 'package:Technoswitch/features/peripherals/firmware/controllers/firmware_controller.dart';
 import 'package:Technoswitch/features/peripherals/firmware/sheets/firmware_upgrade_bottom_sheet.dart';
 import 'package:Technoswitch/features/peripherals/general/sheets/general_mode_bottomsheet.dart';
 import 'package:Technoswitch/features/peripherals/inputs/sheets/input_mode_bottomsheet.dart';
@@ -446,18 +444,21 @@ mixin ProjectDashboardUiDelegateMixin<T extends StatefulWidget> on State<T>
   @override
   Future<void> showFirmwareUpgradeBottomSheet() async {
     FirmwareBinding().dependencies();
+    final Widget sheet = FirmwareUpgradeBottomSheet(
+      connectedDevice: dashboardController.selectedDevice,
+    );
+    if (Platform.isWindows) {
+      dashboardController.showWindowsDetail(sheet);
+      return;
+    }
     await showModalBottomSheet(
       context: uiContext,
       isScrollControlled: true,
       backgroundColor: ColorConstants.transparent,
       isDismissible: false,
       enableDrag: false,
-      builder:
-          (context) => FirmwareUpgradeBottomSheet(
-            connectedDevice: dashboardController.selectedDevice,
-          ),
+      builder: (_) => sheet,
     );
-    Get.delete<FirmwareController>();
   }
 
   @override

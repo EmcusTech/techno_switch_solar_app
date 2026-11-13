@@ -75,7 +75,7 @@ abstract final class WindowsDashboardTileRegistry {
       WindowsDashboardTileConfig(
         label: StringConstants.fwUpgrade,
         iconPath: AssetConstants.firmwareIcon,
-        isDisabled: true,
+        // isDisabled: true,
         onTap:
             () => ProjectDashboardTileActions.openFirmwareUpgrade(controller),
       ),

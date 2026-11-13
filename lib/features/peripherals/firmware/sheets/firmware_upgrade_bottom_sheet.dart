@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -11,20 +10,18 @@ import 'package:get/get.dart';
 import 'package:lottie/lottie.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 import 'package:Technoswitch/ble/ble_session_idle_policy.dart';
-import 'package:Technoswitch/models/ble/firmware/firmware_packet_model.dart';
 import 'package:Technoswitch/utils/constants/asset_constants.dart';
 import 'package:Technoswitch/utils/constants/string_constants.dart';
 import 'package:Technoswitch/widgets/common/common_cta_button.dart';
+import 'package:Technoswitch/bindings/firmware_binding.dart';
 import '../../../../ble/ble_manager.dart';
 import '../../../../ble/controller/ble_log_controller.dart';
 import '../controllers/firmware_controller.dart';
 import 'package:Technoswitch/utils/ble/firmware_upgrade_service.dart' as fw;
-import 'package:Technoswitch/utils/constants/ble/bluetooth_service.dart'
-    as app_bluetooth;
-import 'package:Technoswitch/utils/constants/ble/ble_name_utils.dart';
-import 'package:Technoswitch/utils/constants/ble/ble_msd_utils.dart';
 import 'package:Technoswitch/utils/logger.dart' as logger;
 import 'package:Technoswitch/utils/constants/color_constants.dart';
+import 'package:Technoswitch/widgets/common/app_notice.dart';
+import 'package:Technoswitch/widgets/common/peripheral_sheet_chrome.dart';
 
 import 'package:Technoswitch/utils/constants/style_constants.dart';
 
@@ -52,7 +49,8 @@ class FirmwareUpgradeBottomSheet extends StatefulWidget {
 
 class _FirmwareUpgradeBottomSheetState
     extends State<FirmwareUpgradeBottomSheet> {
-  final FirmwareController _controller = Get.find<FirmwareController>();
+  late final FirmwareController _controller;
+  StreamSubscription<fw.DownloadStatus>? _statusSub;
   final BleManager ble = Get.find<BleManager>();
   FirmwareUpgradeStep _currentStep = FirmwareUpgradeStep.essentialSteps;
   FirmwareType? _selectedFirmwareType;
@@ -63,33 +61,6 @@ class _FirmwareUpgradeBottomSheetState
   String? _errorMessage;
   String? _currentBleStateMessage;
   fw.FirmwareValidationResult? _validationResult;
-
-  // BLE connection state
-  DiscoveredDevice? _selectedDevice;
-
-  // Internal reconnect state for firmware upgrade
-  bool _isWaitingForJumpReconnect = false;
-  bool _isWaitingForEndReconnect = false;
-  String? _originalDeviceName; // Store device name for reconnection
-  String?
-  _originalStableDeviceId; // Last 8 chars - stable across name changes (P_87654321 vs TECHNOSWITCH_87654321)
-  int? _originalManufacturerData; // Store manufacturer data before jump command
-  StreamSubscription<ConnectionStateUpdate>? _internalReconnectSub;
-  bool _bootloaderNotifyReady = false;
-
-  // Bluetooth service for internal reconnect (only used for reconnecting after jump/end commands)
-  final app_bluetooth.BluetoothService _bluetoothService =
-      app_bluetooth.BluetoothService();
-  StreamSubscription? _bleResultsSub;
-
-  // Tuning knobs to reduce reconnect latency while keeping BLE stable.
-  static const Duration _bleShortDelay = Duration(milliseconds: 800);
-  static const Duration _bleConnectSettleDelay = Duration(milliseconds: 600);
-  static const Duration _jumpReconnectInitialDelay = Duration(seconds: 2);
-  static const Duration _endReconnectInitialDelay = Duration(seconds: 1);
-  static const Duration _jumpScanGlobalTimeout = Duration(seconds: 6);
-  static const Duration _endScanGlobalTimeout = Duration(seconds: 10);
-  static const Duration _scanRetryDelay = Duration(milliseconds: 800);
 
   void _beginFirmwareSession() {
     BleSessionIdlePolicy.suppressFirmwareDisconnectUi.value = true;
@@ -104,22 +75,10 @@ class _FirmwareUpgradeBottomSheetState
   @override
   void initState() {
     super.initState();
+    FirmwareBinding().dependencies();
+    _controller = Get.find<FirmwareController>();
 
-    if (widget.connectedDevice != null) {
-      _selectedDevice = widget.connectedDevice;
-    } else {
-      try {
-        final bleController = Get.find<BleLogController>();
-        final bleManager = bleController.bleManager;
-        if (bleManager.isConnected && bleManager.selectedDevice != null) {
-          _selectedDevice = bleManager.selectedDevice;
-        }
-      } catch (e) {
-        logger.Logger('Error getting connected device: $e');
-      }
-    }
-
-    _controller.downloadingStatus.listen((status) {
+    _statusSub = _controller.downloadingStatus.listen((status) {
       if (mounted) {
         if (status == fw.DownloadStatus.upgrading) {
           setState(() {
@@ -147,625 +106,140 @@ class _FirmwareUpgradeBottomSheetState
     });
   }
 
-  Future<void> _sendPacketsOverBle({bool? isChipInBootLoader = false}) async {
-    if (_controller.packetResult == null ||
-        _controller.packetResult!.packets.isEmpty) {
+  Future<void> _sendPacketsOverBle() async {
+    if (_controller.firmwareImage == null ||
+        _controller.firmwareImage!.isEmpty) {
       throw Exception(StringConstants.noPacketsPrepared);
     }
 
     _beginFirmwareSession();
     try {
-      await _sendPacketsOverBleImpl(isChipInBootLoader: isChipInBootLoader);
+      await _sendPacketsOverBleImpl();
     } finally {
       _endFirmwareSession();
     }
   }
 
-  Future<void> _sendPacketsOverBleImpl({
-    bool? isChipInBootLoader = false,
-  }) async {
-    // Try to get BleManager via BleLogController if registered
-    BleManager? manager;
-    if (Get.isRegistered<BleLogController>()) {
-      manager = Get.find<BleLogController>().bleManager;
-    }
-
-    final packets = _controller.packetResult!.packets;
-    final logicalTotal = _controller.packetResult!.totalLogicalPackets;
-
-    int logicalIndex = 0;
-
-    if (manager != null) {
-      manager.resetFirmwareState();
-      _bootloaderNotifyReady = false;
-
-      if (isChipInBootLoader != true && _selectedDevice != null) {
-        _originalDeviceName = _selectedDevice!.name;
-        _originalStableDeviceId = BleNameUtils.getDisplayIdFromBleName(
-          _selectedDevice!.name,
-        );
-        final md = _selectedDevice!.manufacturerData;
-        _originalManufacturerData = BleMsdUtils.statusByte(md);
-        logger.Logger(
-          'Stored device info before jump - name: $_originalDeviceName, manufacturer data array: $md, status byte: $_originalManufacturerData',
-        );
-      }
-
-      if (isChipInBootLoader != true) {
-        if (!manager.isConnected) {
-          throw Exception(
-            StringConstants.deviceNotConnectedCannotSendJumpCommand,
-          );
-        }
-        if (!manager.handshakeCompleteNotifier.value) {
-          throw Exception(
-            StringConstants.bleHandshakeNotCompleteCannotStartFirmwareUpgrade,
-          );
-        }
-
-        // Jump uses plaintext framing on the existing session; no enc-key re-request.
-        manager.setFirmwareState(BleStates.SEND_JUMP_FIRMWARE_PACKET);
-
-        try {
-          await manager.sendJumpFirmwarePacket(withoutResponse: true);
-        } catch (e) {
-          // Expected: device disconnects after jump packet, causing write to fail
-          logger.Logger('Jump packet sent, device disconnected (expected): $e');
-        }
-
-        await Future.delayed(const Duration(milliseconds: 300));
-
-        // Start internal reconnect after jump command
-        setState(() {
-          _isWaitingForJumpReconnect = true;
-          _currentBleStateMessage = StringConstants.checkingDeviceStatus;
-        });
-        await _reconnectAndCheckStatus(isJumpCommand: true);
-
-        // After reconnect, wait a bit before continuing
-        // Device needs time to stabilize in bootloader mode
-        await Future.delayed(_bleShortDelay);
-      }
-
-      await Future.delayed(const Duration(milliseconds: 300));
-      if (!_bootloaderNotifyReady) {
-        await manager.registerNotifyHandlerForFirmwareUpgrade(
-          isChipInBootLoader: true,
-        );
-        await Future.delayed(_bleShortDelay);
-      }
-      manager.setFirmwareState(BleStates.SEND_START_FIRMWARE_PACKET);
-
-      // Send start firmware packet - might fail if device disconnects
-      try {
-        await manager.sendStartFirmwarePacket();
-      } catch (e) {
-        // If device disconnects, wait and reconnect again
-        logger.Logger(
-          'Start firmware packet failed, device may have disconnected: $e',
-        );
-        // Wait for device to reconnect
-        await Future.delayed(const Duration(seconds: 2));
-        // Try to reconnect if needed
-        if (!manager.isConnected && _originalDeviceName != null) {
-          setState(() {
-            _isWaitingForJumpReconnect = true;
-            _currentBleStateMessage = StringConstants.checkingDeviceStatus;
-          });
-          await _reconnectAndCheckStatus(isJumpCommand: true);
-          await Future.delayed(const Duration(seconds: 2));
-          // Retry start packet after reconnect
-          try {
-            await manager.sendStartFirmwarePacket();
-          } catch (e2) {
-            logger.Logger('Start firmware packet retry failed: $e2');
-            throw Exception(
-              'Failed to send start firmware packet after reconnect: $e2',
-            );
-          }
-        } else {
-          throw Exception('Failed to send start firmware packet: $e');
-        }
-      }
-
-      await Future.delayed(const Duration(milliseconds: 300));
-      manager.setFirmwareState(BleStates.SEND_FIRMWARE_PACKET);
-      int seqFromField = 0;
-
-      for (FirmwarePacket packet in packets) {
-        final int currentSeqFromField = packet.sequence;
-        await manager.sendFirmwarePacket(
-          Uint8List.fromList(packet.bytes),
-          isFirstPacketAfterSkip: currentSeqFromField != (seqFromField + 1),
-        );
-        await Future.delayed(const Duration(milliseconds: 8));
-        seqFromField = currentSeqFromField;
-        logicalIndex++;
-        _controller.progressbarIndex.value = logicalIndex;
-        _controller.progressbarCount.value =
-            logicalTotal == 0 ? 0 : logicalIndex / logicalTotal;
-      }
-
-      await Future.delayed(const Duration(milliseconds: 300));
-      manager.setFirmwareState(BleStates.SEND_END_FIRMWARE_PACKET);
-
-      // Store device name before sending end packet (device will disconnect)
-      if (_selectedDevice != null) {
-        _originalDeviceName = _selectedDevice!.name;
-      }
-
-      setState(() {
-        _isWaitingForEndReconnect = true;
-        _currentBleStateMessage = StringConstants.fetchingFirmwareUpgradeStatus;
-      });
-
-      // Send end packet - expect it to fail when device disconnects
-      try {
-        await manager.sendEndFirmwarePacket();
-      } catch (e) {
-        // Expected: device disconnects after end packet, causing write to fail
-        logger.Logger('End packet sent, device disconnected (expected): $e');
-      }
-
-      // Start internal reconnect after end command
-
-      // Short grace period to allow disconnect/reboot to begin before scanning
-      await Future.delayed(_bleShortDelay);
-      await _reconnectAndCheckStatus(isJumpCommand: false);
-    } else {
-      // Fallback: just simulate progress if manager unavailable
-      // for (final _ in packets) {
-      //   logicalIndex++;
-      //   _controller.progressbarIndex.value = logicalIndex;
-      //   _controller.progressbarCount.value =
-      //       logicalTotal == 0 ? 0 : logicalIndex / logicalTotal;
-      //   await Future.delayed(const Duration(milliseconds: 20));
-      // }
-      throw Exception(StringConstants.bleManagerNotFound);
-    }
-
+  Future<void> _sendPacketsOverBleImpl() async {
+    final manager =
+        Get.isRegistered<BleLogController>()
+            ? Get.find<BleLogController>().bleManager
+            : ble;
+    final image = _controller.firmwareImage!;
+    final DiscoveredDevice? device =
+        widget.connectedDevice ?? manager.selectedDevice;
+    logger.Logger(
+      'Firmware upgrade start ${device?.name ?? ''} bytes=${image.length}',
+    );
+    final DateTime started = DateTime.now();
+    await manager.bleProcess.beginFirmwareUpgrade(
+      image,
+      onProgress: (sent, total) {
+        _controller.progressbarIndex.value = sent;
+        _controller.totalPacketLength.value = total;
+        _controller.progressbarCount.value = total == 0 ? 0 : sent / total;
+      },
+    );
+    final double seconds =
+        DateTime.now().difference(started).inMilliseconds / 1000;
     _controller.downloadingStatus.value = fw.DownloadStatus.completed;
-  }
-
-  /// Internal method to reconnect and check firmware upgrade status
-  Future<void> _reconnectAndCheckStatus({required bool isJumpCommand}) async {
-    if (_originalDeviceName == null || _originalDeviceName!.isEmpty) {
-      logger.Logger(StringConstants.noDeviceNameStoredForReconnection);
-      setState(() {
-        _isWaitingForJumpReconnect = false;
-        _isWaitingForEndReconnect = false;
-        _errorMessage = StringConstants.unableToReconnectDeviceNameNotFound;
-      });
-      return;
-    }
-
-    try {
-      // Wait longer for device to disconnect and restart (especially for jump command)
-      // Jump command causes device reboot, so it needs more time
-      await Future.delayed(
-        isJumpCommand ? _jumpReconnectInitialDelay : _endReconnectInitialDelay,
-      );
-
-      // Start scanning internally
-      await _bluetoothService.requestPermissions();
-      final poweredOn = await _bluetoothService.ensurePoweredOn();
-
-      if (!poweredOn) {
-        setState(() {
-          _isWaitingForJumpReconnect = false;
-          _isWaitingForEndReconnect = false;
-          _errorMessage = StringConstants.bluetoothIsNotEnabled;
-        });
-        return;
-      }
-
-      // Single continuous scan with a global timeout (faster than attempt loops)
-      DiscoveredDevice? device;
-      int? scanLastByte;
-      int? manufacturerDataFromScan;
-      final Completer<void> scanDoneCompleter = Completer<void>();
-      StreamSubscription? internalScanSub;
-      Timer? scanTimeoutTimer;
-
-      logger.Logger(
-        'Starting reconnect scan (${isJumpCommand ? "jump" : "end"} command) with global timeout',
-      );
-
-      internalScanSub = _bluetoothService.scanResultsStream.listen((results) {
-        for (var result in results) {
-          final manufacturerData = result.manufacturerData;
-          final statusByte = BleMsdUtils.statusByte(manufacturerData);
-          final stableId = BleNameUtils.getDisplayIdFromBleName(result.name);
-
-          if (isJumpCommand) {
-            final matchesStableId =
-                _originalStableDeviceId != null &&
-                stableId.isNotEmpty &&
-                stableId == _originalStableDeviceId;
-            final isBootloader = BleMsdUtils.isBootloader(manufacturerData);
-
-            if (matchesStableId && isBootloader) {
-              device = result;
-              scanLastByte = statusByte;
-              manufacturerDataFromScan = statusByte;
-              logger.Logger(
-                'Found bootloader device ${result.name} (stable ID match) with manufacturer data: $manufacturerData',
-              );
-              if (!scanDoneCompleter.isCompleted) {
-                scanDoneCompleter.complete();
-              }
-              return;
-            }
-            // Fallback: exact name match with bootloader (old firmware where name doesn't change)
-            if (result.name == _originalDeviceName && isBootloader) {
-              device = result;
-              scanLastByte = statusByte;
-              manufacturerDataFromScan = statusByte;
-              logger.Logger(
-                'Found bootloader device ${result.name} (name match) with manufacturer data: $manufacturerData',
-              );
-              if (!scanDoneCompleter.isCompleted) {
-                scanDoneCompleter.complete();
-              }
-              return;
-            }
-          } else {
-            // End command: match by name as before
-            if (result.name == _originalDeviceName) {
-              device = result;
-              if (manufacturerData.isNotEmpty) {
-                manufacturerDataFromScan = statusByte;
-                scanLastByte = manufacturerDataFromScan;
-              }
-              logger.Logger(
-                'Found device ${result.name} with manufacturer data array: $manufacturerData (status byte: $scanLastByte)',
-              );
-              if (scanLastByte == BleMsdUtils.statusUpgradeSuccess) {
-                if (!scanDoneCompleter.isCompleted) {
-                  scanDoneCompleter.complete();
-                }
-              }
-            }
-          }
-        }
-      });
-
-      // Start scanning
-      await _bluetoothService.startScanning(
-        disconnectIfConnected: true,
-        postDisconnectDelay: _scanRetryDelay,
-      );
-
-      // Global timeout for scan
-      scanTimeoutTimer = Timer(
-        isJumpCommand ? _jumpScanGlobalTimeout : _endScanGlobalTimeout,
-        () {
-          if (!scanDoneCompleter.isCompleted) {
-            scanDoneCompleter.complete();
-          }
-        },
-      );
-
-      await scanDoneCompleter.future;
-
-      await internalScanSub.cancel();
-      await _bluetoothService.stopScanning();
-      scanTimeoutTimer.cancel();
-
-      if (device == null) {
-        setState(() {
-          _isWaitingForJumpReconnect = false;
-          _isWaitingForEndReconnect = false;
-          _errorMessage =
-              'Device not found. Please ensure device is powered on.';
-        });
-        return;
-      }
-
-      final scanManufacturerData = device!.manufacturerData;
-      if (scanLastByte == null && scanManufacturerData.isNotEmpty) {
-        scanLastByte = BleMsdUtils.statusByte(scanManufacturerData);
-      }
-      logger.Logger(
-        'Device found: ${device!.name}, Manufacturer data from scan (full array): $scanManufacturerData (status byte: $scanLastByte)',
-      );
-
-      if (scanLastByte != null) {
-        if (isJumpCommand) {
-          if (scanLastByte == BleMsdUtils.statusBootloader) {
-            setState(() {
-              _isWaitingForJumpReconnect = false;
-              _selectedDevice = device;
-              _currentBleStateMessage =
-                  StringConstants.deviceReadyContinuingUpgrade;
-            });
-          } else {
-            logger.Logger(
-              'Unexpected manufacturer data for jump command: $scanLastByte (expected 1)',
-            );
-          }
-        } else {
-          setState(() {
-            _currentBleStateMessage =
-                StringConstants.validatingFirmwareUpgradeSuccess;
-          });
-
-          if (scanLastByte == BleMsdUtils.statusUpgradeSuccess) {
-            setState(() {
-              _isWaitingForEndReconnect = false;
-              _selectedDevice = device;
-              _currentBleStateMessage =
-                  StringConstants.firmwareUpgradeCompletedSuccessfully;
-            });
-            _controller.downloadingStatus.value = fw.DownloadStatus.completed;
-            logger.Logger('Firmware upgrade SUCCESS confirmed from MSD [0,2]');
-            return;
-          } else if (scanLastByte == BleMsdUtils.statusBootloader) {
-            setState(() {
-              _isWaitingForEndReconnect = false;
-              _errorMessage = StringConstants.firmwareUpgradeFailed;
-            });
-            _controller.downloadingStatus.value = fw.DownloadStatus.failed;
-            logger.Logger('Firmware upgrade FAILED confirmed from MSD [0,1]');
-            return;
-          } else {
-            logger.Logger(
-              'Unknown manufacturer data for end command: $scanLastByte (expected 1 or 2). Device may still be processing, will check after connection.',
-            );
-          }
-        }
-      }
-
-      final bleController = Get.find<BleLogController>();
-      final bleManager = bleController.bleManager;
-
-      // Check if already connected to avoid duplicate connections
-      if (bleManager.isConnected &&
-          bleManager.connectedDeviceId.value == device!.id) {
-        logger.Logger('Device already connected, skipping reconnect');
-      } else {
-        // Disconnect first if connected to a different device
-        if (bleManager.isConnected) {
-          logger.Logger('Disconnecting from current device before reconnect');
-          await bleManager.shutdown();
-          await Future.delayed(const Duration(seconds: 1));
-        }
-
-        // Use BleLogController's connectToDevice which handles initialization properly
-        // IMPORTANT: Use scan value (current device state) instead of old stored value
-        // For jump command: device is now in bootloader mode with MSD [0,1]
-        // For end command: device shows upgrade status with MSD [0,2] or [0,1]
-        final manufacturerDataToUse = scanLastByte ?? _originalManufacturerData;
-
-        // Update selectedDevice in bleManager with the new device that has correct MSD
-        // This ensures subsequent connection attempts use the correct manufacturer data
-        bleManager.selectedDevice = device;
-
-        try {
-          await bleController.connectToDevice(
-            device: device!,
-            manufacturerDataOverride: manufacturerDataToUse,
-            fastReconnect: true,
-            skipConnectionHandshake:
-                true, // Bootloader reconnect - auth done via registerNotifyHandlerForFirmwareUpgrade
-          );
-
-          // Wait for connection to be fully established
-          int waitCount = 0;
-          const int maxWaitCycles = 15;
-          const Duration waitStep = Duration(milliseconds: 150);
-          while (!bleManager.isConnected && waitCount < maxWaitCycles) {
-            await Future.delayed(waitStep);
-            waitCount++;
-          }
-
-          if (!bleManager.isConnected) {
-            throw Exception(
-              StringConstants.connectionNotEstablishedAfterReconnect,
-            );
-          }
-
-          if (scanLastByte != null) {
-            bleManager.bleManufacturerData.value = scanLastByte!;
-            logger.Logger(
-              'Using scan manufacturer data after reconnect: $scanLastByte (from MSD: $scanManufacturerData)',
-            );
-          } else if (_originalManufacturerData != null) {
-            bleManager.bleManufacturerData.value = _originalManufacturerData!;
-            logger.Logger(
-              'Using stored manufacturer data after reconnect (fallback): $_originalManufacturerData',
-            );
-          }
-        } catch (e) {
-          logger.Logger('Error connecting during reconnect: $e');
-          setState(() {
-            _isWaitingForJumpReconnect = false;
-            _isWaitingForEndReconnect = false;
-            _errorMessage =
-                '${StringConstants.failedToReconnectToDevicePrefix}$e';
-          });
-          return;
-        }
-      }
-
-      await Future.delayed(_bleConnectSettleDelay);
-
-      if (isJumpCommand) {
-        await bleManager.registerNotifyHandlerForFirmwareUpgrade(
-          isChipInBootLoader: true,
-        );
-        _bootloaderNotifyReady = true;
-        await Future.delayed(_bleConnectSettleDelay);
-      }
-
-      await Future.delayed(_bleConnectSettleDelay);
-
-      final manufacturerDataValue = bleManager.bleManufacturerData.value;
-
-      setState(() {
-        _isWaitingForJumpReconnect = false;
-        _isWaitingForEndReconnect = false;
-      });
-
-      if (isJumpCommand) {
-        // For jump command: expect [0,1] - device should be in bootloader mode
-        if (manufacturerDataValue == BleMsdUtils.statusBootloader) {
-          setState(() {
-            _selectedDevice = device;
-            _currentBleStateMessage =
-                StringConstants.deviceReadyContinuingUpgrade;
-          });
-        } else {
-          logger.Logger(
-            'Unexpected manufacturer data for jump command: $manufacturerDataValue (expected 1)',
-          );
-          setState(() {
-            _selectedDevice = device;
-            _currentBleStateMessage =
-                StringConstants.deviceReconnectedContinuingUpgrade;
-          });
-        }
-      } else {
-        // For end command, check upgrade status
-        // manufacturerDataValue is the MSD status byte (index 1)
-        // [0,2] = success, [0,1] = failed
-
-        // Update message to show we're validating
-        setState(() {
-          _currentBleStateMessage =
-              StringConstants.validatingFirmwareUpgradeSuccess;
-        });
-
-        if (manufacturerDataValue == BleMsdUtils.statusUpgradeSuccess) {
-          // Success
-          setState(() {
-            _selectedDevice = device;
-            _currentBleStateMessage =
-                StringConstants.firmwareUpgradeCompletedSuccessfully;
-          });
-          _controller.downloadingStatus.value = fw.DownloadStatus.completed;
-        } else if (manufacturerDataValue == BleMsdUtils.statusBootloader) {
-          // Failed
-          setState(() {
-            _errorMessage = StringConstants.firmwareUpgradeFailed;
-          });
-          _controller.downloadingStatus.value = fw.DownloadStatus.failed;
-        } else {
-          // Unknown status - fallback to scan data if available
-          if (scanLastByte == BleMsdUtils.statusUpgradeSuccess) {
-            // Success (from scan data)
-            setState(() {
-              _selectedDevice = device;
-              _currentBleStateMessage =
-                  StringConstants.firmwareUpgradeCompletedSuccessfully;
-            });
-            _controller.downloadingStatus.value = fw.DownloadStatus.completed;
-          } else if (scanLastByte == BleMsdUtils.statusBootloader) {
-            // Failed (from scan data)
-            setState(() {
-              _errorMessage = StringConstants.firmwareUpgradeFailed;
-            });
-            _controller.downloadingStatus.value = fw.DownloadStatus.failed;
-          } else {
-            // Unknown status
-            logger.Logger(
-              'Unknown manufacturer data value: $manufacturerDataValue, scan: $scanLastByte',
-            );
-            setState(() {
-              _errorMessage = StringConstants.unableToDetermineUpgradeStatus;
-            });
-            _controller.downloadingStatus.value = fw.DownloadStatus.failed;
-          }
-        }
-      }
-    } catch (e) {
-      logger.Logger('Error during reconnect: $e');
-      setState(() {
-        _isWaitingForJumpReconnect = false;
-        _isWaitingForEndReconnect = false;
-        _errorMessage = '${StringConstants.reconnectionErrorPrefix}$e';
-      });
-      _controller.downloadingStatus.value = fw.DownloadStatus.failed;
-    }
+    if (!mounted) return;
+    showAppNotice(
+      context,
+      message: 'Firmware upgrade took ${seconds.toStringAsFixed(1)} s',
+    );
   }
 
   @override
   void dispose() {
+    _statusSub?.cancel();
     _endFirmwareSession();
-    _bleResultsSub?.cancel();
-    _internalReconnectSub?.cancel();
-    _bluetoothService.dispose();
+    if (Get.isRegistered<FirmwareController>()) {
+      Get.delete<FirmwareController>();
+    }
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async {
-        // Block back navigation while firmware upgrade is in progress
-        if (_currentStep == FirmwareUpgradeStep.progress ||
-            _isUpgrading ||
-            _isWaitingForEndReconnect ||
-            _isWaitingForJumpReconnect) {
-          return false;
-        }
-
-        // Allow back in all other cases
-        return true;
-      },
-      child: Container(
-        decoration: const BoxDecoration(
-          color: ColorConstants.primaryVariant,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(50)),
+    final bool upgradeInProgress =
+        _currentStep == FirmwareUpgradeStep.progress || _isUpgrading;
+    final bool showPhoneChrome =
+        !PeripheralSheetChrome.flat && !upgradeInProgress;
+    final content = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const PeripheralSheetDragHandle(),
+        _buildHeader(showClose: !upgradeInProgress),
+        const SizedBox(height: 16),
+        Expanded(
+          child: SingleChildScrollView(
+            padding: peripheralSheetScrollPadding(bottom: 24),
+            child: _buildStepContent(),
+          ),
         ),
-        child: Padding(
-          padding: const EdgeInsets.only(top: 8.0),
-          child: Container(
-            clipBehavior: Clip.hardEdge,
-            decoration: const BoxDecoration(
-              color: ColorConstants.white,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(50)),
-            ),
-            child: SingleChildScrollView(
-              // controller: scrollController,
-              child: Padding(
-                padding: EdgeInsets.all(24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _buildHeader(),
-                    SizedBox(height: 24),
-                    _buildStepContent(),
-                  ],
+      ],
+    );
+    final sheet = Container(
+      decoration: BoxDecoration(
+        color: PeripheralSheetChrome.lipColor,
+        borderRadius: PeripheralSheetChrome.topRadius(),
+      ),
+      child: Padding(
+        padding: EdgeInsets.only(top: PeripheralSheetChrome.lipPadding),
+        child: Container(
+          clipBehavior: Clip.hardEdge,
+          decoration: BoxDecoration(
+            color: ColorConstants.white,
+            borderRadius: PeripheralSheetChrome.topRadius(),
+          ),
+          child: Stack(
+            children: [
+              if (showPhoneChrome) const PeripheralSheetHeaderRow(),
+              Padding(
+                padding: EdgeInsets.fromLTRB(
+                  24,
+                  showPhoneChrome ? 52 : 16,
+                  24,
+                  0,
                 ),
+                child: content,
               ),
-            ),
+            ],
           ),
         ),
       ),
     );
+
+    return WillPopScope(
+      onWillPop: () async => !upgradeInProgress,
+      child:
+          PeripheralSheetChrome.flat
+              ? sheet
+              : SafeArea(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxHeight: MediaQuery.sizeOf(context).height * 0.92,
+                  ),
+                  child: sheet,
+                ),
+              ),
+    );
   }
 
-  Widget _buildHeader() {
-    return Column(
+  Widget _buildHeader({required bool showClose}) {
+    return Row(
       children: [
-        Row(
-          children: [
-            Text(
-              StringConstants.firmwareUpgrade,
-              style: StyleConstants.black20w700Style,
-            ),
-            Spacer(),
-            Visibility(
-              visible: _currentStep != FirmwareUpgradeStep.progress,
-              child: IconButton(
-                icon: Icon(Icons.close),
-                onPressed: () => Navigator.of(context).pop(false),
-              ),
-            ),
-          ],
+        Text(
+          StringConstants.firmwareUpgrade,
+          style: StyleConstants.textDark20w700Style,
         ),
+        const Spacer(),
+        if (showClose && PeripheralSheetChrome.flat)
+          IconButton(
+            icon: const Icon(Icons.close),
+            onPressed: () => Navigator.of(context).pop(false),
+          ),
       ],
     );
   }
@@ -1415,9 +889,7 @@ class _FirmwareUpgradeBottomSheetState
           // SizedBox(height: 32),
           Center(
             child:
-                _isWaitingForEndReconnect
-                    ? Lottie.asset(AssetConstants.bleConnectingJson)
-                    : (progress * 100).toStringAsFixed(1) == '0.0'
+                (progress * 100).toStringAsFixed(1) == '0.0'
                     ? Lottie.asset(AssetConstants.bleConnectingJson)
                     : CircularPercentIndicator(
                       radius: 80,
@@ -1431,9 +903,7 @@ class _FirmwareUpgradeBottomSheetState
           ),
           SizedBox(height: 12),
           Visibility(
-            visible:
-                !((progress * 100).toStringAsFixed(1) == '0.0') &&
-                !_isWaitingForEndReconnect,
+            visible: !((progress * 100).toStringAsFixed(1) == '0.0'),
             child: Center(
               child: Text(
                 '${(progress * 100).toStringAsFixed(1)}%',
@@ -1590,8 +1060,11 @@ class _FirmwareUpgradeBottomSheetState
       _errorMessage = null;
     });
 
+    final bool bleFile = _selectedFirmwareType == FirmwareType.bleChip;
     final result = _controller.validateSelectedFile(
-      requiredProductId: fw.FirmwareUpgradeService.expectedProductId,
+      requiredProductId:
+          bleFile ? null : fw.FirmwareUpgradeService.expectedProductId,
+      crcOnly: bleFile,
     );
 
     setState(() {
@@ -1613,8 +1086,10 @@ class _FirmwareUpgradeBottomSheetState
       _isVersionMissing(ble.bleFirmwareVersion.value);
 
   Future<void> _onValidationContinuePressed() async {
-    final md = _selectedDevice?.manufacturerData;
-    final inBootloader = md != null && BleMsdUtils.isBootloader(md);
+    if (_selectedFirmwareType == FirmwareType.bleChip) {
+      await _startUpgrade();
+      return;
+    }
 
     if (_bleVersionsNotRecovered()) {
       final shouldProceed = await _confirmAndUpgrade(
@@ -1622,24 +1097,15 @@ class _FirmwareUpgradeBottomSheetState
       );
       if (shouldProceed) {
         await _startUpgrade(
-          isChipInBootLoader: inBootloader,
           firmwareVersion: _validationResult?.firmwareVersion,
         );
       }
       return;
     }
 
-    // await _startUpgrade(
-    //   isChipInBootLoader: inBootloader,
-    //   firmwareVersion: _validationResult?.firmwareVersion,
-    // );
-
     if ((_validationResult?.hardwareVersion == ble.bleHardwareVersion.value) &&
         (_validationResult?.firmwareVersion != ble.bleFirmwareVersion.value)) {
-      await _startUpgrade(
-        isChipInBootLoader: inBootloader,
-        firmwareVersion: _validationResult?.firmwareVersion,
-      );
+      await _startUpgrade(firmwareVersion: _validationResult?.firmwareVersion);
     } else if (_validationResult?.hardwareVersion !=
         ble.bleHardwareVersion.value) {
       await _showHardwareVersionMismatch();
@@ -1956,10 +1422,7 @@ class _FirmwareUpgradeBottomSheetState
     }
   }
 
-  Future<void> _startUpgrade({
-    bool? isChipInBootLoader = false,
-    String? firmwareVersion = '',
-  }) async {
+  Future<void> _startUpgrade({String? firmwareVersion = ''}) async {
     if (firmwareVersion != null &&
         firmwareVersion.isNotEmpty &&
         !_isVersionMissing(ble.bleFirmwareVersion.value)) {
@@ -1991,7 +1454,9 @@ class _FirmwareUpgradeBottomSheetState
     });
 
     final prepared = await _controller.preparePackets();
-    if (!prepared || _controller.totalPacketLength.value == 0) {
+    if (!prepared ||
+        _controller.firmwareImage == null ||
+        _controller.firmwareImage!.isEmpty) {
       setState(() {
         _isUpgrading = false;
         _currentStep = FirmwareUpgradeStep.result;
@@ -2005,7 +1470,7 @@ class _FirmwareUpgradeBottomSheetState
 
     // Real BLE path: send packets
     try {
-      await _sendPacketsOverBle(isChipInBootLoader: isChipInBootLoader);
+      await _sendPacketsOverBle();
       final bool isSuccess =
           _controller.downloadingStatus.value == fw.DownloadStatus.completed;
       setState(() {

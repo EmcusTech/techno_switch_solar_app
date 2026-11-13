@@ -5,46 +5,53 @@ import 'package:Technoswitch/models/ble/firmware/firmware_packet_model.dart';
 import 'package:Technoswitch/utils/constants/string_constants.dart';
 
 class FirmwarePacketService {
-  static const int payloadSize = 240;
   static const int polynomial = 0x04C11DB7;
-  Future<FirmwarePacketResult> processBinFile(
+
+  /// Reads the whole file and checks the trailing CRC. Pages are cut later,
+  /// once the negotiated MTU is known.
+  Future<Uint8List> readVerifiedImage(
     File binFile, {
-    void Function(int current, int total)? onProgress,
+    bool verifyCrc = true,
   }) async {
     final bytes = await binFile.readAsBytes();
-
-    if (bytes.length < FirmwareBinFormat.minFileLength) {
-      throw Exception(
-        'BIN file too small (need at least ${FirmwareBinFormat.minFileLength} bytes)',
-      );
-    }
-    final crcInput = bytes.sublist(
-      0,
-      bytes.length - FirmwareBinFormat.crcLength,
-    );
-    final crcFromFile = bytes.sublist(
-      bytes.length - FirmwareBinFormat.crcLength,
-      bytes.length,
-    );
-    final imageForDevice = FirmwareBinFormat.applicationImageFromFile(bytes);
-
-    final expectedCrc = _bytesToUint32BE(crcFromFile);
-    final calculatedCrc = _calculateCrc32(crcInput);
-
-    if (expectedCrc != calculatedCrc) {
-      throw Exception(
-        'CRC mismatch. Expected=0x${expectedCrc.toRadixString(16)}, '
-        'Calculated=0x${calculatedCrc.toRadixString(16)}',
-      );
+    if (bytes.isEmpty) {
+      throw Exception('BIN file is empty');
     }
 
-    return _buildPackets(imageForDevice, onProgress: onProgress);
+    if (verifyCrc) {
+      if (bytes.length < FirmwareBinFormat.crcLength) {
+        throw Exception('BIN file is too small for a CRC');
+      }
+      final crcInput = bytes.sublist(
+        0,
+        bytes.length - FirmwareBinFormat.crcLength,
+      );
+      final crcFromFile = bytes.sublist(
+        bytes.length - FirmwareBinFormat.crcLength,
+        bytes.length,
+      );
+      final expectedCrc = _bytesToUint32BE(crcFromFile);
+      final calculatedCrc = _calculateCrc32(crcInput);
+      if (expectedCrc != calculatedCrc) {
+        throw Exception(
+          'CRC mismatch. Expected=0x${expectedCrc.toRadixString(16)}, '
+          'Calculated=0x${calculatedCrc.toRadixString(16)}',
+        );
+      }
+    }
+
+    return bytes;
   }
 
-  FirmwarePacketResult _buildPackets(
+  /// Cuts [data] into pages of [payloadSize] bytes. The last page is shorter.
+  /// An all-0xFF page is omitted, and its sequence number is still consumed.
+  FirmwarePacketResult buildPackets(
     Uint8List data, {
-    void Function(int current, int total)? onProgress,
+    required int payloadSize,
   }) {
+    if (payloadSize <= 0) {
+      throw ArgumentError('Firmware page size must be positive');
+    }
     final List<FirmwarePacket> packets = [];
     final List<int> skippedSequences = [];
 
@@ -74,7 +81,6 @@ class FirmwarePacketService {
         skippedSequences.add(sequence);
       }
 
-      onProgress?.call(logicalPacketCount, logicalPacketCount);
       sequence++;
     }
 

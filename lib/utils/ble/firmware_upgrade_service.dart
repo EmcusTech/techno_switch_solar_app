@@ -46,12 +46,23 @@ class FirmwareUpgradeService {
   FirmwareValidationResult validateFirmwareFile(
     PlatformFile file, {
     String? requiredProductId,
+    bool crcOnly = false,
   }) {
     final Uint8List? bytes =
         file.bytes ??
         (file.path != null ? File(file.path!).readAsBytesSync() : null);
 
-    if (bytes == null || bytes.length < FirmwareBinFormat.minFileLength) {
+    if (bytes == null || bytes.length < FirmwareBinFormat.crcLength) {
+      return FirmwareValidationResult(
+        isValid: false,
+        expectedCrc: 0,
+        calculatedCrc: 0,
+        firmwareData: Uint8List(0),
+        error: 'Invalid BIN file (unreadable or too small for a CRC)',
+      );
+    }
+
+    if (!crcOnly && bytes.length < FirmwareBinFormat.minFileLength) {
       return FirmwareValidationResult(
         isValid: false,
         expectedCrc: 0,
@@ -63,10 +74,13 @@ class FirmwareUpgradeService {
       );
     }
 
-    final Uint8List trailer = bytes.sublist(
-      bytes.length - FirmwareBinFormat.trailerLength,
-    );
-    final fields = FirmwareBinTrailer.fromLast40Bytes(trailer);
+    final bool hasTrailer = bytes.length >= FirmwareBinFormat.trailerLength;
+    final FirmwareBinTrailer? fields =
+        hasTrailer
+            ? FirmwareBinTrailer.fromLast40Bytes(
+              bytes.sublist(bytes.length - FirmwareBinFormat.trailerLength),
+            )
+            : null;
 
     final Uint8List crcInput = bytes.sublist(
       0,
@@ -82,9 +96,10 @@ class FirmwareUpgradeService {
 
     final bool crcOk = expectedCrc == calculatedCrc;
 
-    final Uint8List firmwareData = FirmwareBinFormat.applicationImageFromFile(
-      bytes,
-    );
+    final Uint8List firmwareData =
+        crcOnly || bytes.length < FirmwareBinFormat.minFileLength
+            ? bytes
+            : FirmwareBinFormat.applicationImageFromFile(bytes);
 
     if (!crcOk) {
       return FirmwareValidationResult(
@@ -92,26 +107,26 @@ class FirmwareUpgradeService {
         expectedCrc: expectedCrc,
         calculatedCrc: calculatedCrc,
         firmwareData: firmwareData,
-        firmwareVersion: fields.firmwareVersion,
-        hardwareVersion: fields.hardwareVersion,
-        date: fields.date,
-        productId: fields.productId,
+        firmwareVersion: fields?.firmwareVersion ?? '',
+        hardwareVersion: fields?.hardwareVersion ?? '',
+        date: fields?.date ?? '',
+        productId: fields?.productId ?? '',
         error: 'CRC mismatch. BIN file may be corrupted.',
       );
     }
 
-    if (requiredProductId != null) {
-      final String fileProductId = fields.productId.trim();
+    if (!crcOnly && requiredProductId != null) {
+      final String fileProductId = (fields?.productId ?? '').trim();
       if (fileProductId != requiredProductId) {
         return FirmwareValidationResult(
           isValid: false,
           expectedCrc: expectedCrc,
           calculatedCrc: calculatedCrc,
           firmwareData: firmwareData,
-          firmwareVersion: fields.firmwareVersion,
-          hardwareVersion: fields.hardwareVersion,
-          date: fields.date,
-          productId: fields.productId,
+          firmwareVersion: fields?.firmwareVersion ?? '',
+          hardwareVersion: fields?.hardwareVersion ?? '',
+          date: fields?.date ?? '',
+          productId: fields?.productId ?? '',
           error:
               'This firmware is not for this product. '
               'Expected product ID $requiredProductId, '
@@ -125,10 +140,10 @@ class FirmwareUpgradeService {
       expectedCrc: expectedCrc,
       calculatedCrc: calculatedCrc,
       firmwareData: firmwareData,
-      firmwareVersion: fields.firmwareVersion,
-      hardwareVersion: fields.hardwareVersion,
-      date: fields.date,
-      productId: fields.productId,
+      firmwareVersion: fields?.firmwareVersion ?? '',
+      hardwareVersion: fields?.hardwareVersion ?? '',
+      date: fields?.date ?? '',
+      productId: fields?.productId ?? '',
       error: null,
     );
   }
