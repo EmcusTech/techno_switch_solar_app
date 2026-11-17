@@ -26,6 +26,7 @@ class _WindowsScanDeviceGridState extends State<WindowsScanDeviceGrid> {
   static const double _bottomInset = 120;
 
   final Map<String, Offset> _positions = {};
+  Size? _layoutSize;
 
   /// A new leader must stay ahead this long before the highlight moves.
   static const Duration _switchAfter = Duration(seconds: 5);
@@ -47,10 +48,18 @@ class _WindowsScanDeviceGridState extends State<WindowsScanDeviceGrid> {
   Widget build(BuildContext context) {
     final entries = _entriesBySlot();
     _syncHighlight(entries);
-    final size = MediaQuery.sizeOf(context);
-    _syncPositions(entries, size);
 
-    return Positioned.fill(child: Stack(children: _buildSlotWidgets(entries)));
+    return Positioned.fill(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final size = Size(constraints.maxWidth, constraints.maxHeight);
+          if (size.width > 0 && size.height > 0) {
+            _syncPositions(entries, size);
+          }
+          return Stack(children: _buildSlotWidgets(entries));
+        },
+      ),
+    );
   }
 
   List<Widget> _buildSlotWidgets(List<_ScanGridEntry> entries) {
@@ -84,32 +93,80 @@ class _WindowsScanDeviceGridState extends State<WindowsScanDeviceGrid> {
     return widgets;
   }
 
-  /// Each device keeps the spot it was given. RSSI updates do not move it.
+  /// Each device keeps its place around the radar. RSSI updates do not move
+  /// it. A window resize slides that place with the new center, then pulls
+  /// any card that would leave the view back inside.
   void _syncPositions(List<_ScanGridEntry> entries, Size size) {
     final live = entries.map((entry) => entry.key).toSet();
     _positions.removeWhere((key, _) => !live.contains(key));
     final center = Offset(size.width / 2, size.height / 2);
+    final previous = _layoutSize;
+    if (previous != null && previous != size) {
+      final oldCenter = Offset(previous.width / 2, previous.height / 2);
+      final delta = center - oldCenter;
+      for (final key in _positions.keys.toList()) {
+        _positions[key] = _keepOnScreen(
+          _positions[key]! + delta,
+          center,
+          size,
+        );
+      }
+    }
+    _layoutSize = size;
     for (final entry in entries) {
-      _positions.putIfAbsent(entry.key, () => _pickSpot(entry.key, center, size));
+      _positions.putIfAbsent(
+        entry.key,
+        () => _pickSpot(entry.key, center, size),
+      );
     }
   }
 
+  double get _clearRadius =>
+      _ringRadius +
+      math.sqrt(_cardWidth * _cardWidth + _cardHeight * _cardHeight) / 2 +
+      12;
+
   Offset _pickSpot(String key, Offset center, Size size) {
     final random = math.Random(key.hashCode);
-    final clearRadius =
-        _ringRadius +
-        math.sqrt(_cardWidth * _cardWidth + _cardHeight * _cardHeight) / 2 +
-        12;
 
     for (var attempt = 0; attempt < 36; attempt++) {
       final angle = random.nextDouble() * math.pi * 2;
-      final radius = clearRadius + random.nextDouble() * 70 + attempt * 26;
+      final radius = _clearRadius + random.nextDouble() * 70 + attempt * 26;
       final spot = _spotAt(center, angle, radius);
       if (_fits(spot, center, size)) return spot;
     }
 
     final fallbackAngle = (key.hashCode.abs() % 360) * math.pi / 180;
-    return _spotAt(center, fallbackAngle, clearRadius + _positions.length * 24);
+    return _keepOnScreen(
+      _spotAt(center, fallbackAngle, _clearRadius + _positions.length * 24),
+      center,
+      size,
+    );
+  }
+
+  /// Pulls a card inside the view and back out of the radar ring.
+  Offset _keepOnScreen(Offset spot, Offset center, Size size) {
+    final maxX = math.max(_edgeInset, size.width - _edgeInset - _cardWidth);
+    final maxY = math.max(
+      _edgeInset,
+      size.height - _bottomInset - _cardHeight,
+    );
+    var kept = Offset(
+      spot.dx.clamp(_edgeInset, maxX),
+      spot.dy.clamp(_edgeInset, maxY),
+    );
+    final rect = Rect.fromLTWH(kept.dx, kept.dy, _cardWidth, _cardHeight);
+    if (!_hitsRing(rect, center)) return kept;
+
+    var away =
+        Offset(kept.dx + _cardWidth / 2, kept.dy + _cardHeight / 2) - center;
+    if (away.distance < 1) away = const Offset(1, 0);
+    final pushed = center + away / away.distance * _clearRadius;
+    kept = Offset(pushed.dx - _cardWidth / 2, pushed.dy - _cardHeight / 2);
+    return Offset(
+      kept.dx.clamp(_edgeInset, maxX),
+      kept.dy.clamp(_edgeInset, maxY),
+    );
   }
 
   Offset _spotAt(Offset center, double angle, double radius) {
