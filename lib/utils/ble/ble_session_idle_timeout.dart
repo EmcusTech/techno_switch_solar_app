@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:Technoswitch/ble/demo/demo_ble.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:Technoswitch/ble/ble_session_idle_policy.dart';
@@ -13,7 +14,9 @@ class BleSessionIdleTimeout extends StatefulWidget {
 
   final Widget child;
 
-  static const Duration idleDuration = Duration(minutes: 5);
+  static const Duration idleDuration = Duration(
+    minutes: DemoBle.enabled ? 30 : 5,
+  );
 
   @override
   State<BleSessionIdleTimeout> createState() => _BleSessionIdleTimeoutState();
