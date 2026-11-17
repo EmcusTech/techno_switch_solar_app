@@ -360,14 +360,7 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
         zoneGroup
             ? DropdownWidget(
               label: StringConstants.zone,
-              value:
-                  const [
-                        '1',
-                        '2',
-                        '3',
-                      ].contains(sounder.dynamicController.text.trim())
-                      ? sounder.dynamicController.text.trim()
-                      : '1',
+              value: sounder.dynamicController.text.trim(),
               items: const ['1', '2', '3'],
               onChanged: (v) {
                 _focusAdvancedTab(1);

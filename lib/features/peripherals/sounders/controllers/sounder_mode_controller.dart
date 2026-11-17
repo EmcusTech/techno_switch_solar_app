@@ -170,12 +170,35 @@ class SounderModeController extends PeripheralModeController {
             defaults['function'] as int)
         .clamp(0, fnOpts.length - 1);
     sounder.function = fnOpts[fnIdx];
-    if (index > 0) {
-      sounder.dynamicController.text =
-          ((data[StringConstants.functionno] as num?)?.toInt() ??
-                  defaults['functionNo'] as int)
-              .toString();
+    _setFunctionNo(
+      sounder,
+      (data[StringConstants.functionno] as num?)?.toInt() ??
+          defaults['functionNo'] as int,
+    );
+  }
+
+  /// Zone group uses this field as the zone number. A missing number is 1,
+  /// matching the value the tile sends.
+  void _setFunctionNo(SounderConfig sounder, int functionNo) {
+    final text = _functionNoText(sounder, functionNo);
+    if (sounder.dynamicController.text == text) return;
+    sounder.dynamicController.text = text;
+  }
+
+  void _normalizeZoneNumber(SounderConfig sounder) {
+    if (sounder.group != StringConstants.zone) return;
+    final number = int.tryParse(sounder.dynamicController.text.trim());
+    if (number != null && number >= 1 && number <= 3) return;
+    if (sounder.dynamicController.text == '1') return;
+    sounder.dynamicController.text = '1';
+  }
+
+  String _functionNoText(SounderConfig sounder, int functionNo) {
+    if (sounder.group == StringConstants.zone &&
+        (functionNo < 1 || functionNo > 3)) {
+      return '1';
     }
+    return functionNo.toString();
   }
 
   void _applyZoneFromMap(
@@ -366,10 +389,9 @@ class SounderModeController extends PeripheralModeController {
             .sounderThreeRelayFunction
             .value];
 
-    sounderTwo.dynamicController.text =
-        manager!.sounderTwoFunctionNo.value.toString();
-    sounderThree.dynamicController.text =
-        manager!.sounderThreeFunctionNo.value.toString();
+    _setFunctionNo(sounderOne, manager!.sounderOneFunctionNo.value);
+    _setFunctionNo(sounderTwo, manager!.sounderTwoFunctionNo.value);
+    _setFunctionNo(sounderThree, manager!.sounderThreeFunctionNo.value);
 
     delayController.text = manager!.sounderGeneralDelay.value.toString();
     delayed =
@@ -693,6 +715,7 @@ class SounderModeController extends PeripheralModeController {
     final sounder = sounders[index];
     sounder.group = v;
     sounder.function = functionOptionsMap[v]!.first;
+    _normalizeZoneNumber(sounder);
     refreshUi();
   }
 
