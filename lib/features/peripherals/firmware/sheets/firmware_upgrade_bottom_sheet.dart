@@ -10,6 +10,7 @@ import 'package:get/get.dart';
 import 'package:lottie/lottie.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 import 'package:Technoswitch/ble/ble_session_idle_policy.dart';
+import 'package:Technoswitch/ble/demo/demo_ble.dart';
 import 'package:Technoswitch/utils/constants/asset_constants.dart';
 import 'package:Technoswitch/utils/constants/string_constants.dart';
 import 'package:Technoswitch/widgets/common/common_cta_button.dart';
@@ -132,14 +133,31 @@ class _FirmwareUpgradeBottomSheetState
       'Firmware upgrade start ${device?.name ?? ''} bytes=${image.length}',
     );
     final DateTime started = DateTime.now();
-    await manager.bleProcess.beginFirmwareUpgrade(
-      image,
-      onProgress: (sent, total) {
-        _controller.progressbarIndex.value = sent;
-        _controller.totalPacketLength.value = total;
-        _controller.progressbarCount.value = total == 0 ? 0 : sent / total;
-      },
-    );
+    void onProgress(int sent, int total) {
+      _controller.progressbarIndex.value = sent;
+      _controller.totalPacketLength.value = total;
+      _controller.progressbarCount.value = total == 0 ? 0 : sent / total;
+    }
+    if (DemoBle.enabled) {
+      await DemoBle.runFirmwareUpgrade(
+        process: manager.bleProcess,
+        onProgress: onProgress,
+      );
+      final String upgradedVersion = _validationResult?.firmwareVersion ?? '';
+      if (upgradedVersion.isNotEmpty) {
+        ble.bleFirmwareVersion.value = upgradedVersion;
+      }
+      final String upgradedHardware = _validationResult?.hardwareVersion ?? '';
+      if (_selectedFirmwareType != FirmwareType.bleChip &&
+          upgradedHardware.isNotEmpty) {
+        ble.bleHardwareVersion.value = upgradedHardware;
+      }
+    } else {
+      await manager.bleProcess.beginFirmwareUpgrade(
+        image,
+        onProgress: onProgress,
+      );
+    }
     final double seconds =
         DateTime.now().difference(started).inMilliseconds / 1000;
     _controller.downloadingStatus.value = fw.DownloadStatus.completed;
@@ -1018,6 +1036,7 @@ class _FirmwareUpgradeBottomSheetState
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['bin'],
+        lockParentWindow: true,
       );
 
       if (result != null && result.files.single.path != null) {
@@ -1086,6 +1105,17 @@ class _FirmwareUpgradeBottomSheetState
       _isVersionMissing(ble.bleFirmwareVersion.value);
 
   Future<void> _onValidationContinuePressed() async {
+    if (DemoBle.enabled && _selectedFirmwareType != FirmwareType.bleChip) {
+      final String fileHardware = _validationResult?.hardwareVersion ?? '';
+      if (_isVersionMissing(ble.bleHardwareVersion.value) &&
+          fileHardware.isNotEmpty) {
+        ble.bleHardwareVersion.value = fileHardware;
+      }
+      if (_isVersionMissing(ble.bleFirmwareVersion.value)) {
+        ble.bleFirmwareVersion.value = DemoBle.firmwareVersion;
+      }
+    }
+
     if (_selectedFirmwareType == FirmwareType.bleChip) {
       await _startUpgrade();
       return;
