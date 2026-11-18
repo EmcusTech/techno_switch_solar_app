@@ -62,6 +62,8 @@ class BleProcess {
 
   static const Duration bleOperationDeadlineDuration = Duration(seconds: 10);
 
+  static const Duration firmwareUpgradeResponseTimeout = Duration(minutes: 10);
+
   static const Duration accessKeyPollTimeoutDuration = Duration(seconds: 15);
 
   int checkForNetworkPacketRsp = 0;
@@ -4137,7 +4139,7 @@ class BleProcess {
     _newEventLogFetchOutstanding = false;
     final Completer<void> completer = Completer<void>();
     _firmwareUpgradeCompleter = completer;
-    _armNewEventLogTimeout();
+    _armNewEventLogTimeout(timeout: firmwareUpgradeResponseTimeout);
     unawaited(_sendFirmwareUpgradeStart());
     return completer.future;
   }
@@ -4209,7 +4211,7 @@ class BleProcess {
     processDesc.value =
         '${StringConstants.pleaseWaitWhileFirmwareUpgraded} '
         '${_firmwarePacketIndex + 1}/${_firmwarePackets.length}';
-    _armNewEventLogTimeout();
+    _armNewEventLogTimeout(timeout: firmwareUpgradeResponseTimeout);
     final DateTime sendStarted = DateTime.now();
     final int? gapMs =
         _firmwareChunkGapStartedAt == null
@@ -4644,9 +4646,11 @@ class BleProcess {
     return true;
   }
 
-  void _armNewEventLogTimeout() {
+  void _armNewEventLogTimeout({
+    Duration timeout = const Duration(minutes: 2),
+  }) {
     _newEventLogTimer?.cancel();
-    _newEventLogTimer = Timer(const Duration(minutes: 2), () {
+    _newEventLogTimer = Timer(timeout, () {
       if (_bulkTransferKind ==
               BleConstants.command.transferSystemConfigDownload ||
           _bulkTransferKind ==

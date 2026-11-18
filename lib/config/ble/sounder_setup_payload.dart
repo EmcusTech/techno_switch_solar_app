@@ -147,28 +147,16 @@ abstract final class SounderSetupPayload {
   }
 
   static void _applyAdvanced(SounderCfgDef config, BleProcess process) {
-    final enabled = config.sounderEnable != 0;
-    final test = config.sounderTest != 0;
     if (config.sounderGrp == SounderCfgDef.sounderGroupZone) {
-      _setZone(
-        process,
-        config.sounderZone,
-        enabled: enabled,
-        test: test,
-        action: config.advAction,
-      );
+      _setZone(process, config.sounderZone, action: config.advAction);
       return;
     }
     if (config.sounderGrp == SounderCfgDef.sounderGroupExtOut) {
-      process.isExtOutOneEnabled.value = enabled;
-      process.isExtOutOneTest.value = test;
       process.extoutOneCountdownAction.value = config.advCountdown;
       process.extoutOneHoldAction.value = config.advHold;
       process.extoutOneReleaseAction.value = config.advRelease;
       return;
     }
-    process.isSounderGeneralEnabled.value = enabled;
-    process.isSounderGeneralTest.value = test;
     process.sounderGeneralAction.value = config.advAction;
   }
 
@@ -181,25 +169,13 @@ abstract final class SounderSetupPayload {
     };
   }
 
-  static void _setZone(
-    BleProcess process,
-    int zone, {
-    required bool enabled,
-    required bool test,
-    required int action,
-  }) {
+  static void _setZone(BleProcess process, int zone, {required int action}) {
     switch (zone) {
       case 1:
-        process.isZoneOneEnabled.value = enabled;
-        process.isZoneOneTest.value = test;
         process.zoneOneAction.value = action;
       case 2:
-        process.isZoneTwoEnabled.value = enabled;
-        process.isZoneTwoTest.value = test;
         process.zoneTwoAction.value = action;
       case 3:
-        process.isZoneThreeEnabled.value = enabled;
-        process.isZoneThreeTest.value = test;
         process.zoneThreeAction.value = action;
     }
   }

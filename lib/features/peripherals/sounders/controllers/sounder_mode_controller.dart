@@ -116,9 +116,6 @@ class SounderModeController extends PeripheralModeController {
 
   String delayed = SounderDefaults.delayedLabel;
 
-  bool _generalEnabled = SounderDefaults.generalEnabledBle;
-  bool _generalTest = SounderDefaults.generalTestBle;
-
   @override
   void initModel() {
     sounders = List.generate(3, (i) {
@@ -243,8 +240,6 @@ class SounderModeController extends PeripheralModeController {
     final test = (data['test'] as bool?) ?? SounderDefaults.generalTestBle;
     final delayedFlag =
         (data['delayed'] as bool?) ?? SounderDefaults.delayedBle;
-    _generalEnabled = enabled;
-    _generalTest = test;
     final m = manager;
     if (m == null) return;
     m.sounderGeneralAction.value =
@@ -343,8 +338,6 @@ class SounderModeController extends PeripheralModeController {
     final sounderTwo = sounders[1];
     final sounderThree = sounders[2];
 
-    _generalEnabled = manager!.isSounderGeneralEnabled.value;
-    _generalTest = manager!.isSounderGeneralTest.value;
     sounderOne.enabled =
         manager!.isSounderOneEnabled.value ? StringConstants.yes : 'No';
     sounderOne.test =
@@ -464,63 +457,9 @@ class SounderModeController extends PeripheralModeController {
     return number;
   }
 
-  String enabledLabelFor(int index) => _enabledLabel(sounders[index]);
+  String enabledLabelFor(int index) => sounders[index].enabled;
 
-  String testLabelFor(int index) => _testLabel(sounders[index]);
-
-  String _enabledLabel(SounderConfig sounder) {
-    if (sounder.group == StringConstants.zone) {
-      final number = selectionNumber(sounder);
-      if (number != null) return zones[number - 1].enabled;
-    } else if (sounder.group == StringConstants.extOut) {
-      return extOuts[0].enabled;
-    } else {
-      return _generalEnabled ? StringConstants.yes : 'No';
-    }
-    return sounder.enabled;
-  }
-
-  String _testLabel(SounderConfig sounder) {
-    if (sounder.group == StringConstants.zone) {
-      final number = selectionNumber(sounder);
-      if (number != null) return zones[number - 1].test;
-    } else if (sounder.group == StringConstants.extOut) {
-      return extOuts[0].test;
-    } else {
-      return _generalTest ? StringConstants.yes : 'No';
-    }
-    return sounder.test;
-  }
-
-  void _writeUnionEnabled(SounderConfig sounder, String value) {
-    final enabled = value == StringConstants.yes;
-    if (sounder.group == StringConstants.zone) {
-      final number = selectionNumber(sounder);
-      if (number != null) zones[number - 1].enabled = value;
-      return;
-    }
-    if (sounder.group == StringConstants.extOut) {
-      extOuts[0].enabled = value;
-      return;
-    }
-    _generalEnabled = enabled;
-    manager?.isSounderGeneralEnabled.value = enabled;
-  }
-
-  void _writeUnionTest(SounderConfig sounder, String value) {
-    final test = value == StringConstants.yes;
-    if (sounder.group == StringConstants.zone) {
-      final number = selectionNumber(sounder);
-      if (number != null) zones[number - 1].test = value;
-      return;
-    }
-    if (sounder.group == StringConstants.extOut) {
-      extOuts[0].test = value;
-      return;
-    }
-    _generalTest = test;
-    manager?.isSounderGeneralTest.value = test;
-  }
+  String testLabelFor(int index) => sounders[index].test;
 
   void _copyMainTestFromManager() {
     final m = manager;
@@ -536,10 +475,8 @@ class SounderModeController extends PeripheralModeController {
     for (int i = 0; i < 3; i++) {
       final sounder = sounders[i];
 
-      final enabledLabel = _enabledLabel(sounder);
-      final testLabel = _testLabel(sounder);
-      sounder.enabled = enabledLabel;
-      sounder.test = testLabel;
+      final enabledLabel = sounder.enabled;
+      final testLabel = sounder.test;
       bool isEnabled = enabledLabel == StringConstants.yes;
       bool isTest = testLabel == StringConstants.yes;
       bool isNormal = sounder.type == PanelValues.sounderTypeNormal;
@@ -727,10 +664,8 @@ class SounderModeController extends PeripheralModeController {
   void setSounderEnabled(int index, String v) {
     final sounder = sounders[index];
     sounder.enabled = v;
-    _writeUnionEnabled(sounder, v);
     if (v == 'No') {
       sounder.test = 'No';
-      _writeUnionTest(sounder, 'No');
       if (manager != null) {
         clearSounderMainTestOnManager(manager!, sounder.index);
       }
@@ -739,9 +674,7 @@ class SounderModeController extends PeripheralModeController {
   }
 
   void setSounderTest(int index, String v) {
-    final sounder = sounders[index];
-    sounder.test = v;
-    _writeUnionTest(sounder, v);
+    sounders[index].test = v;
     refreshUi();
   }
 

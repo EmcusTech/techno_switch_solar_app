@@ -15,7 +15,7 @@ class BleSessionIdleTimeout extends StatefulWidget {
   final Widget child;
 
   static const Duration idleDuration = Duration(
-    minutes: DemoBle.enabled ? 30 : 5,
+    minutes: DemoBle.enabled ? 30 : 30,
   );
 
   @override
