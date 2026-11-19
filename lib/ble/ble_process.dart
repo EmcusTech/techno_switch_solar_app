@@ -153,6 +153,7 @@ class BleProcess {
   int _newEventLogRemaining = 0;
   int _newEventLogPacketCapacity = 0;
   int _newEventLogFetchCount = 0;
+  int _newEventLogEmptyReplies = 0;
   bool _newEventLogFetchOutstanding = false;
   DateTime? _newEventLogFetchSentAt;
   int _newEventLogNoticeId = 0;
@@ -4620,6 +4621,7 @@ class BleProcess {
     _newEventLogNoticeId += 1;
     _newEventLogNotice = 'Log retrieval took ${seconds.toStringAsFixed(1)} s';
     _publishNewEventLogProgress(done: true);
+    _deliverSavedEventLogs();
   }
 
   Future<bool> beginNewEventLogRetrieval() async {
@@ -4633,6 +4635,7 @@ class BleProcess {
     _newEventLogRemaining = 0;
     _newEventLogPacketCapacity = 0;
     _newEventLogFetchCount = 0;
+    _newEventLogEmptyReplies = 0;
     _newEventLogFetchOutstanding = false;
     _newEventLogFetchSentAt = null;
     _newEventLogNoticeId = 0;
@@ -4732,6 +4735,7 @@ class BleProcess {
     );
 
     if (newEventLogCount <= 0) {
+      _deliverSavedEventLogs();
       _finishNewEventLogFetch();
       return;
     }
@@ -4745,6 +4749,7 @@ class BleProcess {
   Future<void> _sendNextNewEventLogFetch() async {
     if (newEventLogPhase == NewEventLogPhase.idle) return;
     if (_newEventLogRemaining <= 0 || _newEventLogPacketCapacity <= 0) {
+      if (_newEventLogRemaining <= 0) _deliverSavedEventLogs();
       _finishNewEventLogFetch();
       return;
     }
@@ -4753,6 +4758,12 @@ class BleProcess {
         _newEventLogRemaining < _newEventLogPacketCapacity
             ? _newEventLogRemaining
             : _newEventLogPacketCapacity;
+    _newEventLogEmptyReplies = 0;
+    await _repeatNewEventLogFetch();
+  }
+
+  Future<void> _repeatNewEventLogFetch() async {
+    if (newEventLogPhase == NewEventLogPhase.idle) return;
     _newEventLogFetchOutstanding = true;
     newEventLogPhase = NewEventLogPhase.waitFetch;
     _armNewEventLogTimeout();
@@ -4794,13 +4805,24 @@ class BleProcess {
         parsed.data.isNotEmpty &&
         parsed.data.length % EventLogRecordParser.recordSize == 0;
     if (!recordsFit) {
-      _newEventLogNoticeId += 1;
-      _newEventLogNotice = 'Something went wrong, Check Falsh';
+      _newEventLogEmptyReplies += 1;
+      InputSetupPayloadDebug.logBleFrame(
+        'RECEIVE',
+        'event-log-fetch seq=$_newEventLogSequence '
+            'asked=$_newEventLogFetchCount parsed=0 '
+            'emptyReply=$_newEventLogEmptyReplies'
+            '${elapsedMs == null ? '' : ' elapsed=${elapsedMs}ms'}',
+        rx.payload,
+      );
+      if (_newEventLogEmptyReplies <= 3) {
+        await _repeatNewEventLogFetch();
+        return;
+      }
+      _abortNewEventLogFetch();
+      return;
     }
-    final List<LogModel> logs =
-        recordsFit
-            ? EventLogRecordParser.parsePayload(parsed.data)
-            : <LogModel>[];
+    _newEventLogEmptyReplies = 0;
+    final List<LogModel> logs = EventLogRecordParser.parsePayload(parsed.data);
     newEventLogsReceived.addAll(logs);
     InputSetupPayloadDebug.logBleFrame(
       'RECEIVE',
@@ -4816,6 +4838,7 @@ class BleProcess {
     _publishNewEventLogProgress(done: false);
     if (_newEventLogRemaining <= 0) {
       await bleManager.newEventLogEndCmd(newEventLogsReceived.length);
+      _deliverSavedEventLogs();
       _finishNewEventLogFetch();
       return;
     }
@@ -4827,7 +4850,6 @@ class BleProcess {
         onNewEventLogsReady == null) {
       return;
     }
-    final List<LogModel> logs = List<LogModel>.from(newEventLogsReceived);
     newEventLogPhase = NewEventLogPhase.idle;
     _newEventLogFetchOutstanding = false;
     _newEventLogTimer?.cancel();
@@ -4841,9 +4863,29 @@ class BleProcess {
       _newEventLogNotice = 'Log retrieval took ${seconds.toStringAsFixed(1)} s';
     }
     _publishNewEventLogProgress(done: true);
-    final ready = onNewEventLogsReady;
     onNewEventLogsReady = null;
-    ready?.call(logs);
+  }
+
+  void _abortNewEventLogFetch() {
+    newEventLogPhase = NewEventLogPhase.idle;
+    _newEventLogFetchOutstanding = false;
+    _newEventLogTimer?.cancel();
+    _newEventLogTimer = null;
+    _newEventLogStartedAt = null;
+    onNewEventLogsReady = null;
+    final int percent = newEventLogProgress.value.percent;
+    newEventLogProgress.value = NewEventLogProgress(
+      percent: percent,
+      logs: List<LogModel>.from(newEventLogsReceived),
+      done: false,
+      failed: true,
+    );
+  }
+
+  void _deliverSavedEventLogs() {
+    final void Function(List<LogModel> logs)? ready = onNewEventLogsReady;
+    onNewEventLogsReady = null;
+    ready?.call(List<LogModel>.from(newEventLogsReceived));
   }
 
   void _publishNewEventLogProgress({required bool done}) {

@@ -4,7 +4,11 @@ import 'package:Technoswitch/ble/demo/demo_ble.dart';
 import 'package:Technoswitch/ble/demo/demo_constants.dart';
 import 'package:Technoswitch/features/dashboard/controllers/project_dashboard_controller.dart';
 import 'package:Technoswitch/features/dashboard/controllers/project_dashboard_ui_delegate.dart';
+import 'package:Technoswitch/models/log_model.dart';
+import 'package:Technoswitch/models/new_event_log_progress.dart';
 import 'package:Technoswitch/utils/constants/string_constants.dart';
+import 'package:Technoswitch/utils/saved_event_log_store.dart';
+import 'package:flutter/foundation.dart';
 
 abstract final class ProjectDashboardTileActions {
   static ProjectDashboardUiDelegate? _ui(ProjectDashboardController c) =>
@@ -179,6 +183,20 @@ abstract final class ProjectDashboardTileActions {
       }
 
       final process = c.ble.bleProcess;
+      process.onNewEventLogsReady = (List<LogModel> logs) {
+        final String bleName =
+            c.selectedDevice.name.trim().isNotEmpty
+                ? c.selectedDevice.name
+                : c.panelName;
+        unawaited(
+          SavedEventLogStore.replaceForDevice(
+            bleName: bleName,
+            deviceId: c.selectedDevice.id,
+            siteId: c.siteId,
+            logs: logs,
+          ),
+        );
+      };
       unawaited(() async {
         if (process.liveEventSessionOpen) {
           await process.stopLiveEvents();
@@ -186,11 +204,35 @@ abstract final class ProjectDashboardTileActions {
         if (DemoBle.enabled) {
           await process.playDemoEventLogs(DemoConstants.sampleEventLogs);
         } else {
-          await process.beginNewEventLogRetrieval();
+          final bool started = await process.beginNewEventLogRetrieval();
+          if (!started) process.onNewEventLogsReady = null;
         }
       }());
       ui.openNewEventLogValuesScreen(process.newEventLogProgress);
     });
+  }
+
+  static void openSavedEventLogs(ProjectDashboardController c) {
+    final ui = _ui(c);
+    if (ui == null) return;
+    final String bleName =
+        c.selectedDevice.name.trim().isNotEmpty
+            ? c.selectedDevice.name
+            : c.panelName;
+    final String deviceId = c.selectedDevice.id;
+    unawaited(() async {
+      final List<LogModel> logs = await SavedEventLogStore.loadForDevice(
+        bleName: bleName,
+        deviceId: deviceId,
+      );
+      if (c.uiDelegate?.isMounted != true) return;
+      c.uiDelegate?.openNewEventLogValuesScreen(
+        ValueNotifier<NewEventLogProgress>(
+          NewEventLogProgress(percent: 100, logs: logs, done: true),
+        ),
+        title: StringConstants.logHistory,
+      );
+    }());
   }
 
   static void openLiveEvents(ProjectDashboardController c) {

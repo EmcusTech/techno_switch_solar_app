@@ -24,7 +24,7 @@ class DatabaseHelper {
     String path = join(await getDatabasesPath(), DbSql.dbName);
     return await openDatabase(
       path,
-      version: 5,
+      version: 6,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
       onConfigure: (db) async {
@@ -39,6 +39,7 @@ class DatabaseHelper {
     await db.execute(DbSql.createLogsTable);
     await db.execute(DbSql.createPanelsTable);
     await db.execute(DbSql.createIndexLogsSiteId);
+    await db.execute(DbSql.createIndexLogsPanelId);
     await db.execute(DbSql.createIndexLogsEventDate);
     await db.execute(DbSql.createIndexLogsRetrievalId);
     await db.execute(DbSql.createIndexSitesCreatedAt);
@@ -70,6 +71,14 @@ class DatabaseHelper {
         StringConstants.alterTABLELogsADDCOLUMNRetrievalIdINTEGER,
       );
       await db.execute(DbSql.createIndexLogsRetrievalId);
+    }
+
+    if (oldVersion < 6) {
+      await db.execute(StringConstants.alterTABLELogsADDCOLUMNConfigTextTEXT);
+      await db.execute(StringConstants.alterTABLELogsADDCOLUMNPar0INTEGER);
+      await db.execute(StringConstants.alterTABLELogsADDCOLUMNPar1INTEGER);
+      await db.execute(StringConstants.alterTABLELogsADDCOLUMNPanelIdTEXT);
+      await db.execute(DbSql.createIndexLogsPanelId);
     }
   }
 
@@ -118,6 +127,21 @@ class DatabaseHelper {
     final db = await database;
 
     return await db.transaction((txn) async {
+      final List<Map<String, Object?>> panelRows = await txn.query(
+        'panels',
+        columns: <String>['panel_id'],
+        where: 'site_id = ?',
+        whereArgs: [id],
+      );
+      for (final Map<String, Object?> row in panelRows) {
+        final String panelId = row['panel_id'] as String? ?? '';
+        if (panelId.isEmpty) continue;
+        await txn.delete(
+          'logs',
+          where: 'panel_id = ?',
+          whereArgs: <Object>[panelId],
+        );
+      }
       await txn.delete('logs', where: 'site_id = ?', whereArgs: [id]);
       await txn.delete(
         StringConstants.id2,
@@ -410,11 +434,58 @@ class DatabaseHelper {
 
   Future<int> deletePanel(String panelId) async {
     final db = await database;
-    return await db.delete(
-      'panels',
-      where: StringConstants.panelId,
-      whereArgs: [panelId],
+    return await db.transaction((txn) async {
+      await txn.delete(
+        'logs',
+        where: 'panel_id = ?',
+        whereArgs: <Object>[panelId],
+      );
+      return txn.delete(
+        'panels',
+        where: StringConstants.panelId,
+        whereArgs: [panelId],
+      );
+    });
+  }
+
+  Future<List<LogModel>> getLogsByPanelId(String panelId) async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.query(
+      'logs',
+      where: 'panel_id = ?',
+      whereArgs: <Object>[panelId],
+      orderBy: 'id ASC',
     );
+    return List<LogModel>.generate(maps.length, (int i) {
+      return LogModel.fromMap(maps[i]);
+    });
+  }
+
+  Future<void> replaceLogsForPanel({
+    required String panelId,
+    required int? siteId,
+    required List<LogModel> logs,
+  }) async {
+    final db = await database;
+    final int retrievedAt = DateTime.now().millisecondsSinceEpoch;
+    await db.transaction((txn) async {
+      await txn.delete(
+        'logs',
+        where: 'panel_id = ?',
+        whereArgs: <Object>[panelId],
+      );
+      final Batch batch = txn.batch();
+      for (final LogModel log in logs) {
+        final Map<String, dynamic> row = log.toMap();
+        row['id'] = null;
+        row['panel_id'] = panelId;
+        row['site_id'] = siteId;
+        row['retrieval_id'] = null;
+        row['retrieved_at'] = retrievedAt;
+        batch.insert('logs', row);
+      }
+      await batch.commit(noResult: true);
+    });
   }
 
   Future<int> insertLogRetrieval(LogRetrievalModel logRetrieval) async {

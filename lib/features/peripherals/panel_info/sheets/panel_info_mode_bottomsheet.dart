@@ -39,6 +39,8 @@ class PanelInfoBottomSheetState extends State<PanelInfoBottomSheet>
 
   int _expandedTileCount = 0;
   TabController? _tabController;
+  final FocusNode _panelNameFocusNode = FocusNode();
+  final FocusNode _reminderFocusNode = FocusNode();
 
   @override
   void initState() {
@@ -46,6 +48,12 @@ class PanelInfoBottomSheetState extends State<PanelInfoBottomSheet>
     if (PeripheralSheetChrome.flat) {
       _tabController = TabController(length: 2, vsync: this);
     }
+    _panelNameFocusNode.addListener(() {
+      if (mounted) setState(() {});
+    });
+    _reminderFocusNode.addListener(() {
+      if (mounted) setState(() {});
+    });
     controller = Get.put(
       PanelInfoController(
         deviceId: widget.deviceId,
@@ -59,6 +67,8 @@ class PanelInfoBottomSheetState extends State<PanelInfoBottomSheet>
   @override
   void dispose() {
     _tabController?.dispose();
+    _panelNameFocusNode.dispose();
+    _reminderFocusNode.dispose();
     Get.delete<PanelInfoController>();
     super.dispose();
   }
@@ -251,11 +261,20 @@ class PanelInfoBottomSheetState extends State<PanelInfoBottomSheet>
         controller.config.panelIdController,
         isNumeric: true,
         maxLength: 2,
+        errorText:
+            _panelNoOutOfRange
+                ? StringConstants.panelNoRequired
+                : null,
       ),
       _textField(
         StringConstants.panelName,
         controller.config.panelNameController,
         maxLength: 21,
+        focusNode: _panelNameFocusNode,
+        errorText:
+            controller.config.panelNameController.text.trim().isEmpty
+                ? StringConstants.panelNameRequired
+                : null,
       ),
     ]);
   }
@@ -335,6 +354,11 @@ class PanelInfoBottomSheetState extends State<PanelInfoBottomSheet>
         StringConstants.delayS,
         controller.config.delayController,
         maxLength: 3,
+        focusNode: _reminderFocusNode,
+        errorText:
+            _reminderOutOfRange
+                ? StringConstants.eventReminderDelayMustBeBetween10And600Seconds
+                : null,
       ),
     ]);
   }
@@ -376,6 +400,8 @@ class PanelInfoBottomSheetState extends State<PanelInfoBottomSheet>
     TextEditingController fieldController, {
     bool isNumeric = false,
     int? maxLength,
+    FocusNode? focusNode,
+    String? errorText,
   }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
@@ -386,6 +412,7 @@ class PanelInfoBottomSheetState extends State<PanelInfoBottomSheet>
           const SizedBox(height: 6),
           TextField(
             controller: fieldController,
+            focusNode: focusNode,
             keyboardType: isNumeric ? TextInputType.number : TextInputType.text,
             maxLength: maxLength,
             buildCounter:
@@ -418,17 +445,29 @@ class PanelInfoBottomSheetState extends State<PanelInfoBottomSheet>
                 LengthLimitingTextInputFormatter(maxLength),
             ],
             onChanged: (_) => controller.onFieldChanged(),
-            decoration: _inputDecoration(),
+            decoration: _inputDecoration(errorText: errorText),
           ),
         ],
       ),
     );
   }
 
+  bool get _panelNoOutOfRange {
+    final panelNo = int.tryParse(controller.config.panelIdController.text);
+    return panelNo == null || panelNo < 1 || panelNo > 31;
+  }
+
+  bool get _reminderOutOfRange {
+    final delay = int.tryParse(controller.config.delayController.text);
+    return delay == null || delay < 10 || delay > 600;
+  }
+
   Widget _numberField(
     String label,
     TextEditingController fieldController, {
     int? maxLength,
+    FocusNode? focusNode,
+    String? errorText,
   }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
@@ -439,6 +478,7 @@ class PanelInfoBottomSheetState extends State<PanelInfoBottomSheet>
           const SizedBox(height: 6),
           TextField(
             controller: fieldController,
+            focusNode: focusNode,
             keyboardType: TextInputType.number,
             inputFormatters: [
               FilteringTextInputFormatter.digitsOnly,
@@ -448,6 +488,16 @@ class PanelInfoBottomSheetState extends State<PanelInfoBottomSheet>
             onChanged: (_) => controller.onFieldChanged(),
             decoration: _inputDecoration(),
           ),
+          if (errorText != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text(
+                errorText,
+                style: StyleConstants.black12w500Style.copyWith(
+                  color: Colors.orange,
+                ),
+              ),
+            ),
         ],
       ),
     );
@@ -457,24 +507,30 @@ class PanelInfoBottomSheetState extends State<PanelInfoBottomSheet>
     return Text(text, style: StyleConstants.black13w600Style);
   }
 
-  InputDecoration _inputDecoration() {
+  InputDecoration _inputDecoration({String? errorText}) {
+    const border = OutlineInputBorder(
+      borderRadius: BorderRadius.all(Radius.circular(12)),
+      borderSide: BorderSide(color: ColorConstants.borderLight),
+    );
+    const focusedBorder = OutlineInputBorder(
+      borderRadius: BorderRadius.all(Radius.circular(12)),
+      borderSide: BorderSide(color: ColorConstants.primary, width: 2),
+    );
     return InputDecoration(
       filled: true,
       isDense: true,
       fillColor: ColorConstants.surfaceLight,
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: ColorConstants.borderLight),
+      errorText: errorText,
+      errorMaxLines: 2,
+      errorStyle: StyleConstants.black12w500Style.copyWith(
+        color: Colors.orange,
       ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: ColorConstants.borderLight),
-      ),
-      focusedBorder: const OutlineInputBorder(
-        borderRadius: BorderRadius.all(Radius.circular(12)),
-        borderSide: BorderSide(color: ColorConstants.primary, width: 2),
-      ),
+      border: border,
+      enabledBorder: border,
+      focusedBorder: focusedBorder,
+      errorBorder: border,
+      focusedErrorBorder: focusedBorder,
     );
   }
 

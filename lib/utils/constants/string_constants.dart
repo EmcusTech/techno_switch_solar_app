@@ -205,6 +205,14 @@ abstract final class StringConstants {
       "ALTER TABLE logs ADD COLUMN is_valid INTEGER";
   static const String alterTABLELogsADDCOLUMNRetrievalIdINTEGER =
       "ALTER TABLE logs ADD COLUMN retrieval_id INTEGER";
+  static const String alterTABLELogsADDCOLUMNConfigTextTEXT =
+      "ALTER TABLE logs ADD COLUMN config_text TEXT";
+  static const String alterTABLELogsADDCOLUMNPar0INTEGER =
+      "ALTER TABLE logs ADD COLUMN par0 INTEGER";
+  static const String alterTABLELogsADDCOLUMNPar1INTEGER =
+      "ALTER TABLE logs ADD COLUMN par1 INTEGER";
+  static const String alterTABLELogsADDCOLUMNPanelIdTEXT =
+      "ALTER TABLE logs ADD COLUMN panel_id TEXT";
   static const String app = "App";
   static const String apply = "Apply";
   static const String applyNow = "Apply Now";
@@ -323,6 +331,8 @@ abstract final class StringConstants {
   static const String delayFieldLostFocus = "Delay field lost focus";
   static const String delayMustBeBetween0And600Seconds =
       "Delay must be between 0 and 600 seconds";
+  static const String eventReminderDelayMustBeBetween10And600Seconds =
+      "Delay must be between 10 and 600 seconds";
   static const String delayS = "Delay (s)";
   static const String delayed = "Delayed";
   static const String delete = "Delete";
@@ -670,6 +680,7 @@ abstract final class StringConstants {
   static const String panelName = "Panel Name";
   static const String panelName2 = "panel_name = ?";
   static const String panelNo = "Panel No";
+  static const String panelNoRequired = "Panel No is required";
   static const String panelSelection = "Panel Selection";
   static const String panelType = "Panel Type";
   static const String panelid = "panelName";

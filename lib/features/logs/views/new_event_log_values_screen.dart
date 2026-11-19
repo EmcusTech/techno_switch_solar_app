@@ -18,10 +18,12 @@ class NewEventLogValuesScreen extends StatefulWidget {
     super.key,
     required this.progress,
     this.embedded = false,
+    this.title,
   });
 
   final ValueNotifier<NewEventLogProgress> progress;
   final bool embedded;
+  final String? title;
 
   @override
   State<NewEventLogValuesScreen> createState() =>
@@ -47,11 +49,14 @@ class _NewEventLogValuesScreenState extends State<NewEventLogValuesScreen> {
       valueListenable: widget.progress,
       builder: (context, value, _) {
         _showNotice(value);
+        if (value.failed) return const _RetrievalFailure();
         if (!value.done) return _RetrievalProgress(percent: value.percent);
         return _EventLogGrid(logs: value.logs);
       },
     );
   }
+
+  String get _title => widget.title ?? StringConstants.eventLog;
 
   @override
   Widget build(BuildContext context) {
@@ -63,10 +68,7 @@ class _NewEventLogValuesScreenState extends State<NewEventLogValuesScreen> {
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-              child: Text(
-                StringConstants.eventLog,
-                style: StyleConstants.black16w700Style,
-              ),
+              child: Text(_title, style: StyleConstants.black16w700Style),
             ),
             Expanded(child: _progressBody()),
           ],
@@ -76,15 +78,30 @@ class _NewEventLogValuesScreenState extends State<NewEventLogValuesScreen> {
     return Scaffold(
       backgroundColor: ColorConstants.backgroundGray,
       appBar: AppBar(
-        title: Text(
-          StringConstants.eventLog,
-          style: StyleConstants.textDark16w700Style,
-        ),
+        title: Text(_title, style: StyleConstants.textDark16w700Style),
         backgroundColor: ColorConstants.surfaceOffWhite,
         foregroundColor: ColorConstants.black,
         elevation: 0,
       ),
       body: _progressBody(),
+    );
+  }
+}
+
+class _RetrievalFailure extends StatelessWidget {
+  const _RetrievalFailure();
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 40),
+        child: Text(
+          'Something went wrong, check or restart the panel.',
+          textAlign: TextAlign.center,
+          style: StyleConstants.textDark16w700Style,
+        ),
+      ),
     );
   }
 }
@@ -146,11 +163,13 @@ class _EventLogGrid extends StatefulWidget {
     required this.logs,
     this.showClassFilters = true,
     this.eventFilterIndex = 0,
+    this.componentEventIds,
   });
 
   final List<LogModel> logs;
   final bool showClassFilters;
   final int eventFilterIndex;
+  final Set<int>? componentEventIds;
 
   @override
   State<_EventLogGrid> createState() => _EventLogGridState();
@@ -185,9 +204,14 @@ class _EventLogGridState extends State<_EventLogGrid> {
         (log: widget.logs[index], eventNo: index + 1),
     ];
     final _EventIdFilter eventFilter = _eventIdFilters[_activeFilter];
+    final Set<int>? componentEventIds = widget.componentEventIds;
     final List<({LogModel log, int eventNo})> byClass =
         entries.where((({LogModel log, int eventNo}) entry) {
-          return eventFilter.matches(entry.log);
+          if (!eventFilter.matches(entry.log)) return false;
+          if (componentEventIds == null) return true;
+          final int? eventId = int.tryParse(entry.log.eventId ?? '');
+          if (eventId == null) return false;
+          return componentEventIds.contains(eventId);
         }).toList();
     final String query = _search.text.trim().toLowerCase();
     final List<({LogModel log, int eventNo})> filtered =
@@ -800,7 +824,7 @@ class _LiveEventLogsDialogState extends State<LiveEventLogsDialog> {
   bool _busy = false;
   bool _closed = false;
   int _classFilter = 0;
-  int _componentFilter = 0;
+  final Set<int> _componentFilters = <int>{};
 
   static const List<({String label, String icon})> _components =
       <({String label, String icon})>[
@@ -813,6 +837,73 @@ class _LiveEventLogsDialogState extends State<LiveEventLogsDialog> {
         (label: 'L-Bus(2/2)', icon: AssetConstants.peripheralLBusIcon),
         (label: 'Ext Out(1/1)', icon: AssetConstants.peripheralExtOutIcon),
       ];
+
+  static const List<Set<int>> _componentEventIds = <Set<int>>[
+    <int>{0x2010, 0x2011},
+    <int>{0x101D, 0x101E, 0x2003, 0x2004, 0x4003, 0x4024, 0x4025, 0x4026, 0x4027},
+    <int>{
+      0x101B,
+      0x101C,
+      0x1021,
+      0x1022,
+      0x1023,
+      0x1024,
+      0x1028,
+      0x2005,
+      0x2006,
+      0x200A,
+      0x200B,
+      0x3002,
+      0x3003,
+      0x4009,
+      0x401C,
+      0x401D,
+      0x401E,
+      0x401F,
+    },
+    <int>{
+      0x101F,
+      0x1020,
+      0x2002,
+      0x2007,
+      0x2008,
+      0x2009,
+      0x2012,
+      0x400A,
+      0x4020,
+      0x4021,
+      0x4022,
+      0x4023,
+    },
+    <int>{0x200C, 0x200D, 0x4002, 0x4028, 0x4029, 0x402A, 0x402B},
+    <int>{0x4005},
+    <int>{},
+    <int>{
+      0x200E,
+      0x200F,
+      0x5000,
+      0x5001,
+      0x5002,
+      0x5003,
+      0x5004,
+      0x5005,
+      0x5006,
+      0x5007,
+      0x5008,
+      0x5009,
+      0x500A,
+      0x500B,
+      0x500C,
+      0x500D,
+      0x500E,
+      0x500F,
+      0x5010,
+      0x5011,
+      0x5012,
+      0x5013,
+      0x5014,
+    },
+  ];
 
   @override
   void initState() {
@@ -995,6 +1086,13 @@ class _LiveEventLogsDialogState extends State<LiveEventLogsDialog> {
           logs: logs.reversed.toList(),
           showClassFilters: false,
           eventFilterIndex: _classFilter,
+          componentEventIds:
+              _componentFilters.isEmpty
+                  ? null
+                  : <int>{
+                    for (final int index in _componentFilters)
+                      ..._componentEventIds[index],
+                  },
         );
       },
     );
@@ -1070,12 +1168,15 @@ class _LiveEventLogsDialogState extends State<LiveEventLogsDialog> {
   }
 
   Widget _componentTile(int index) {
-    final bool selected = index == _componentFilter;
+    final bool selected = _componentFilters.contains(index);
     final ({String label, String icon}) item = _components[index];
     final Color foreground =
         selected ? ColorConstants.white : ColorConstants.primary;
     return InkWell(
-      onTap: () => setState(() => _componentFilter = index),
+      onTap:
+          () => setState(() {
+            if (!_componentFilters.add(index)) _componentFilters.remove(index);
+          }),
       child: Column(
         children: [
           Expanded(

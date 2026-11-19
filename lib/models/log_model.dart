@@ -1,6 +1,7 @@
 class LogModel {
   final int? id;
   final int? siteId;
+  final String? panelId;
   final int? retrievalId;
   final String? panelText;
   final String? eventId;
@@ -24,6 +25,7 @@ class LogModel {
   LogModel({
     this.id,
     this.siteId,
+    this.panelId,
     this.retrievalId,
     this.panelText,
     this.eventId,
@@ -49,6 +51,7 @@ class LogModel {
     return {
       'id': id,
       'site_id': siteId,
+      'panel_id': panelId,
       'retrieval_id': retrievalId,
       'panel_text': panelText,
       'event_id': eventId,
@@ -63,6 +66,9 @@ class LogModel {
       'event_sub_type': eventSubType,
       'identifier': identifier,
       'text': text,
+      'config_text': configText,
+      'par0': par0,
+      'par1': par1,
       'retrieved_at':
           retrievedAt?.millisecondsSinceEpoch ??
           DateTime.now().millisecondsSinceEpoch,
@@ -74,6 +80,7 @@ class LogModel {
     return LogModel(
       id: map['id']?.toInt(),
       siteId: map['site_id']?.toInt(),
+      panelId: map['panel_id'] as String?,
       retrievalId: map['retrieval_id']?.toInt(),
       panelText: map['panel_text'],
       eventId: map['event_id'],
@@ -91,6 +98,9 @@ class LogModel {
       eventSubType: map['event_sub_type'],
       identifier: map['identifier'],
       text: map['text'],
+      configText: map['config_text'] as String?,
+      par0: map['par0'] as int?,
+      par1: map['par1'] as int?,
       retrievedAt:
           map['retrieved_at'] != null
               ? DateTime.fromMillisecondsSinceEpoch(map['retrieved_at'])
@@ -102,6 +112,7 @@ class LogModel {
   LogModel copyWith({
     int? id,
     int? siteId,
+    String? panelId,
     int? retrievalId,
     String? panelText,
     String? eventId,
@@ -125,6 +136,7 @@ class LogModel {
     return LogModel(
       id: id ?? this.id,
       siteId: siteId ?? this.siteId,
+      panelId: panelId ?? this.panelId,
       retrievalId: retrievalId ?? this.retrievalId,
       panelText: panelText ?? this.panelText,
       eventId: eventId ?? this.eventId,

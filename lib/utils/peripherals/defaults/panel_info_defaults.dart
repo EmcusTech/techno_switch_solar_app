@@ -3,7 +3,7 @@ import 'package:Technoswitch/utils/constants/string_constants.dart';
 /// Factory defaults for Panel Info configuration.
 abstract final class PanelInfoDefaults {
   static const int panelNo = 1;
-  static const String fallbackPanelName = 'TS Panel';
+  static const String fallbackPanelName = '';
   static const int eventReminderDelay = 600;
   static const bool useMobileTime = true;
 
@@ -12,8 +12,7 @@ abstract final class PanelInfoDefaults {
   static const int delayBle = 600;
 
   static String resolvePanelName({String? projectPanelName}) {
-    final trimmed = projectPanelName?.trim() ?? '';
-    return trimmed.isNotEmpty ? trimmed : fallbackPanelName;
+    return fallbackPanelName;
   }
 
   static Map<String, dynamic> toCacheMap({String? projectPanelName}) => {

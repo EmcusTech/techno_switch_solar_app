@@ -151,18 +151,24 @@ mixin ProjectDashboardUiDelegateMixin<T extends StatefulWidget> on State<T>
 
   @override
   void openNewEventLogValuesScreen(
-    ValueNotifier<NewEventLogProgress> progress,
-  ) {
+    ValueNotifier<NewEventLogProgress> progress, {
+    String? title,
+  }) {
     if (!mounted) return;
     if (Platform.isWindows) {
       dashboardController.showWindowsDetail(
-        NewEventLogValuesScreen(progress: progress, embedded: true),
+        NewEventLogValuesScreen(
+          progress: progress,
+          embedded: true,
+          title: title,
+        ),
       );
       return;
     }
     Navigator.of(uiContext).push(
       MaterialPageRoute(
-        builder: (_) => NewEventLogValuesScreen(progress: progress),
+        builder:
+            (_) => NewEventLogValuesScreen(progress: progress, title: title),
       ),
     );
   }

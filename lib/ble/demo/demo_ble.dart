@@ -4,10 +4,10 @@ import 'package:Technoswitch/utils/constants/string_constants.dart';
 
 /// Demo stand-in for the radio. Set [enabled] to false to use a real panel.
 abstract final class DemoBle {
-  static const bool enabled = true;
+  static const bool enabled = false;
 
   /// When true, the event log table shows the hex event id instead of the read order.
-  static const bool devMode = false;
+  static const bool devMode = true;
 
   /// When true, relay, input, and zone dropdowns keep only the demo choices selectable.
   static const bool restrictPeripheralOptions = false;

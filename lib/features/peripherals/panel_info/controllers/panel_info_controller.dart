@@ -233,8 +233,10 @@ class PanelInfoController extends PeripheralModeController {
         int.tryParse(config.minuteController.text) ?? DateTime.now().minute;
     manager!.panelInfoSecond.value =
         int.tryParse(config.secondController.text) ?? DateTime.now().second;
-    manager!.panelInfoEventReminderDelay.value =
-        int.tryParse(config.delayController.text) ?? PanelInfoDefaults.delayBle;
+    final delay = int.tryParse(config.delayController.text);
+    if (delay != null && delay >= 10 && delay <= 600) {
+      manager!.panelInfoEventReminderDelay.value = delay;
+    }
 
     if (kDebugMode) {
       PanelPropertiesSetupPayloadDebug.printApplyFrame(manager!);
@@ -251,10 +253,7 @@ class PanelInfoController extends PeripheralModeController {
     final panelNo = int.tryParse(config.panelIdController.text);
     if (panelNo == null || panelNo < 1 || panelNo > 31) return false;
 
-    // Panel Name: max 21 chars, non-empty
-    final panelName = config.panelNameController.text.trim();
-    if (panelName.isEmpty) return false;
-    if (panelName.length > 21) return false;
+    if (config.panelNameController.text.trim().isEmpty) return false;
 
     if (config.yearController.text.isEmpty ||
         config.monthController.text.isEmpty ||
@@ -286,7 +285,6 @@ class PanelInfoController extends PeripheralModeController {
       return false;
     }
 
-    // Event Reminder Delay: 10–600
     final delay = int.tryParse(config.delayController.text);
     if (delay == null || delay < 10 || delay > 600) return false;
 

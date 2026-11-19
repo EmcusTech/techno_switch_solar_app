@@ -15,6 +15,8 @@ abstract final class DbSql {
       'CREATE INDEX idx_logs_retrieval_id ON logs (retrieval_id)';
   static const String createIndexLogsSiteId =
       'CREATE INDEX idx_logs_site_id ON logs (site_id)';
+  static const String createIndexLogsPanelId =
+      'CREATE INDEX idx_logs_panel_id ON logs (panel_id)';
   static const String createIndexPanelsSiteId =
       'CREATE INDEX idx_panels_site_id ON panels (site_id)';
   static const String createIndexSitesCreatedAt =
@@ -86,6 +88,10 @@ abstract final class DbSql {
         event_sub_type TEXT,
         identifier TEXT,
         text TEXT,
+        config_text TEXT,
+        par0 INTEGER,
+        par1 INTEGER,
+        panel_id TEXT,
         retrieved_at INTEGER NOT NULL,
         is_valid INTEGER,
         FOREIGN KEY (site_id) REFERENCES sites (id) ON DELETE CASCADE,

@@ -16,7 +16,10 @@ abstract class ProjectDashboardUiDelegate {
 
   void openParsedEventLogScreen(List<LogModel> logs);
 
-  void openNewEventLogValuesScreen(ValueNotifier<NewEventLogProgress> progress);
+  void openNewEventLogValuesScreen(
+    ValueNotifier<NewEventLogProgress> progress, {
+    String? title,
+  });
 
   void openLiveEventLogPane(int paneToken);
 

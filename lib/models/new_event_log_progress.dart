@@ -5,6 +5,7 @@ class NewEventLogProgress {
     required this.percent,
     required this.logs,
     required this.done,
+    this.failed = false,
     this.noticeId = 0,
     this.notice,
   });
@@ -12,6 +13,7 @@ class NewEventLogProgress {
   final int percent;
   final List<LogModel> logs;
   final bool done;
+  final bool failed;
   final int noticeId;
   final String? notice;
 
