@@ -151,6 +151,11 @@ class _SavedEventLogHistoryScreenState
   }
 
   Future<void> _delete(SavedEventLogSession session) async {
+    final bool? confirmed = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext dialogContext) => const _DeleteLogHistoryDialog(),
+    );
+    if (confirmed != true || !mounted) return;
     await SavedEventLogStore.deleteSession(session.id);
     if (!mounted) return;
     setState(() {
@@ -576,6 +581,83 @@ class _SavedEventLogHistoryScreenState
           right: index == 3 ? 8 : 0,
         ),
         child: Align(alignment: Alignment.centerLeft, child: child),
+      ),
+    );
+  }
+}
+
+class _DeleteLogHistoryDialog extends StatelessWidget {
+  const _DeleteLogHistoryDialog();
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: ColorConstants.white,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      clipBehavior: Clip.antiAlias,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 450),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ColoredBox(
+              color: ColorConstants.primary,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 8, 12),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        StringConstants.confirmation,
+                        style: StyleConstants.white16w600Style,
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.of(context).pop(false),
+                      icon: const Icon(
+                        Icons.close,
+                        color: ColorConstants.white,
+                      ),
+                      visualDensity: VisualDensity.compact,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 20, 24, 20),
+              child: Column(
+                children: [
+                  SvgPicture.asset(AssetConstants.confirmDeleteIcon),
+                  const SizedBox(height: 16),
+                  Text(
+                    StringConstants.deleteLogHistoryMessage,
+                    style: StyleConstants.textGray14w400Style,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 20),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 40,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: ColorConstants.primary,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      onPressed: () => Navigator.of(context).pop(true),
+                      child: Text(
+                        StringConstants.confirm,
+                        style: StyleConstants.white14w600Style,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

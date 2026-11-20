@@ -560,6 +560,10 @@ abstract final class StringConstants {
   static const String logENTRIES = "LOG ENTRIES";
   static const String logHistory = "Log History";
   static const String retrieveLogs = "Retrieve Logs";
+  static const String confirmation = "Confirmation";
+  static const String confirm = "Confirm";
+  static const String deleteLogHistoryMessage =
+      "You're about to delete the log history.\nOnce deleted, these records cannot be recovered.";
   static const String logRetrievalFailed = "Log Retrieval Failed";
   static const String logRetrievalHistory = "Log Retrieval History";
   static const String logRetrievalReport = "Log Retrieval Report";
