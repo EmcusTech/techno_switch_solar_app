@@ -3579,6 +3579,18 @@ class BleManager extends GetxService {
     );
   }
 
+  /// Command `0x0F`, instruction control mode (`0x83`), payload `[1]`.
+  /// The panel sends a response for this command. [previewOnly] builds the
+  /// frame without advancing the TX counter.
+  Uint8List buildFirmwareUpgradeCompletePacket({bool previewOnly = false}) {
+    return _buildTsSetup(
+      mode: BleConstants.mode.instruction.ctrl,
+      command: BleConstants.command.firmwareUpgradeComplete,
+      body: const <int>[1],
+      advanceTx: !previewOnly,
+    );
+  }
+
   Future<void> _sendTsSetup({
     required int mode,
     required int command,

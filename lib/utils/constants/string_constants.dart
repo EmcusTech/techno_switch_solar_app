@@ -714,8 +714,7 @@ abstract final class StringConstants {
   static const String power = "Power";
   static const String pragmaForeignKeysON = "PRAGMA foreign_keys = ON";
   static const String preparingDashboard = "Preparing dashboard...";
-  static const String preparingFirmwareUpgrade =
-      "Preparing Firmware Upgrade...";
+  static const String preparingFirmwareUpgrade = "Preparing Firmware Upload...";
   static const String preparingToNavigate = "Preparing to navigate...";
   static const String processing = "Fetching...";
   static const String product = "Product";

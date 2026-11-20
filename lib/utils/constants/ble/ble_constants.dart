@@ -213,6 +213,10 @@ class _BleCommand {
   /// Same number as [panelPropertiesSetup]; only a live session treats it as this.
   final int liveEvent = 0x0F;
 
+  /// Firmware upgrade finished. Instruction control mode, payload byte 0 = 1.
+  /// Same number as [liveEvent]; the panel replies on this command.
+  final int firmwareUpgradeComplete = 0x0F;
+
   /// Pushed live event records, one or more packed event logs.
   /// Same number as [lBusSetup]; only a live session treats it as this.
   final int liveEventData = 0x10;

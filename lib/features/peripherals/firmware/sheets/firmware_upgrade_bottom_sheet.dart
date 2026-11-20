@@ -23,6 +23,7 @@ import 'package:Technoswitch/utils/ble/firmware_upgrade_service.dart' as fw;
 import 'package:Technoswitch/utils/logger.dart' as logger;
 import 'package:Technoswitch/utils/constants/color_constants.dart';
 import 'package:Technoswitch/widgets/common/app_notice.dart';
+import 'package:Technoswitch/widgets/dialogs/app_styled_dialogs.dart';
 import 'package:Technoswitch/widgets/common/peripheral_sheet_chrome.dart';
 
 import 'package:Technoswitch/utils/constants/style_constants.dart';
@@ -59,6 +60,7 @@ class _FirmwareUpgradeBottomSheetState
   bool _isUploading = false;
   bool _isUpgrading = false;
   bool _isValidating = false;
+  bool _isConfirmingComplete = false;
   String? _errorMessage;
   String? _currentBleStateMessage;
   fw.FirmwareValidationResult? _validationResult;
@@ -182,7 +184,9 @@ class _FirmwareUpgradeBottomSheetState
   @override
   Widget build(BuildContext context) {
     final bool upgradeInProgress =
-        _currentStep == FirmwareUpgradeStep.progress || _isUpgrading;
+        _currentStep == FirmwareUpgradeStep.progress ||
+        _isUpgrading ||
+        _isConfirmingComplete;
     final bool showPhoneChrome =
         !PeripheralSheetChrome.flat && !upgradeInProgress;
     final content = Column(
@@ -953,6 +957,58 @@ class _FirmwareUpgradeBottomSheetState
     });
   }
 
+  Future<void> _onResultDone(bool isSuccess) async {
+    if (isSuccess) {
+      final bool? startUpgrade = await showAppStyledTwoActionDialog<bool>(
+        context: context,
+        title: StringConstants.firmwareUpgrade,
+        message: StringConstants.doYouWantToUpdateTheFirmware,
+        leadingActionLabel: StringConstants.cancel,
+        trailingActionLabel: StringConstants.update,
+        leadingValue: false,
+        trailingValue: true,
+        icon: Icons.system_update_alt,
+        maxWidth: 420,
+      );
+      if (startUpgrade != true || !mounted) return;
+
+      if (!DemoBle.enabled) {
+        setState(() => _isConfirmingComplete = true);
+        final manager =
+            Get.isRegistered<BleLogController>()
+                ? Get.find<BleLogController>().bleManager
+                : ble;
+        try {
+          await manager.bleProcess.confirmFirmwareUpgradeComplete();
+        } catch (error) {
+          if (!mounted) return;
+          setState(() => _isConfirmingComplete = false);
+          showAppNotice(context, message: '$error');
+          return;
+        }
+        if (!mounted) return;
+      }
+    }
+    _resetFirmwareFlow();
+  }
+
+  void _resetFirmwareFlow() {
+    _controller.resetState();
+    _controller.selectedFirmwareFile = null;
+    setState(() {
+      _currentStep = FirmwareUpgradeStep.essentialSteps;
+      _selectedFirmwareType = null;
+      _selectedFile = null;
+      _isUploading = false;
+      _isUpgrading = false;
+      _isValidating = false;
+      _isConfirmingComplete = false;
+      _errorMessage = null;
+      _currentBleStateMessage = null;
+      _validationResult = null;
+    });
+  }
+
   Widget _buildResult() {
     final isSuccess =
         _controller.downloadingStatus.value == fw.DownloadStatus.completed;
@@ -964,21 +1020,9 @@ class _FirmwareUpgradeBottomSheetState
           child: SizedBox(
             height: 48.h,
             child: CommonCtaButton(
-              onTap: () {
-                _controller.resetState();
-                _controller.selectedFirmwareFile = null;
-                setState(() {
-                  _currentStep = FirmwareUpgradeStep.essentialSteps;
-                  _selectedFirmwareType = null;
-                  _selectedFile = null;
-                  _isUploading = false;
-                  _isUpgrading = false;
-                  _isValidating = false;
-                  _errorMessage = null;
-                  _currentBleStateMessage = null;
-                  _validationResult = null;
-                });
-              },
+              onTap:
+                  _isConfirmingComplete ? null : () => _onResultDone(isSuccess),
+              isDisabled: _isConfirmingComplete,
               child: Text(
                 StringConstants.doneLabel,
                 style: StyleConstants.white16w600Style,
@@ -1012,7 +1056,7 @@ class _FirmwareUpgradeBottomSheetState
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 82),
               child: Text(
-                "Your firmware has been successfully upgraded. The device is now running\nthe latest firmware version and is ready for operation.",
+                "Your firmware has been successfully uploaded.\nPlease click Done for upgrade to initiate in panel.",
                 style: StyleConstants.textDisabled14w400Style,
                 textAlign: TextAlign.center,
               ),

@@ -130,7 +130,7 @@ abstract final class UiStrings {
   static const String validatingFirmwareUpgradeSuccessMessage =
       'Validating firmware upgrade success...';
   static const String firmwareUpgradeCompletedSuccessfullyMessage =
-      'Firmware Upgrade Successful!';
+      'Firmware Upload Successful!';
   static const String invalidBinHardwareMismatchMessage =
       "Invalid bin file, hardware versions don't match";
   static const String firmwareAlreadyUpToDateMessage =

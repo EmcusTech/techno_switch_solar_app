@@ -169,6 +169,8 @@ class BleProcess {
   DateTime? _firmwareChunkGapStartedAt;
   Completer<void>? _firmwareUpgradeCompleter;
   void Function(int sent, int total)? _firmwareProgress;
+  Completer<void>? _firmwareCompleteCompleter;
+  Timer? _firmwareCompleteTimer;
 
   DateTime? logStartingTime;
   DateTime? logEndTime;
@@ -990,6 +992,8 @@ class BleProcess {
   }
 
   Future<void> bleRxFrameProcess(BleRxFrame rx) async {
+    if (_takeFirmwareCompleteResponse(rx)) return;
+
     if (liveEventPhase != LiveEventPhase.idle) {
       await _handleLiveEventFrame(rx);
       return;
@@ -4295,6 +4299,105 @@ class BleProcess {
     _firmwareProgress = null;
     if (pending != null && !pending.isCompleted) {
       pending.complete();
+    }
+  }
+
+  /// Sends command `0x0F` in instruction control mode with payload `[1]`,
+  /// then waits for the panel's reply on that command.
+  Future<void> confirmFirmwareUpgradeComplete() {
+    if (_firmwareCompleteCompleter != null) {
+      _finishFirmwareComplete(error: StringConstants.firmwareTransferFailed);
+    }
+    final Completer<void> completer = Completer<void>();
+    _firmwareCompleteCompleter = completer;
+    _firmwareCompleteTimer?.cancel();
+    _firmwareCompleteTimer = Timer(const Duration(seconds: 15), () {
+      _finishFirmwareComplete(error: StringConstants.deviceNotResponding);
+    });
+    unawaited(_sendFirmwareUpgradeComplete(completer));
+    return completer.future;
+  }
+
+  Future<void> _sendFirmwareUpgradeComplete(Completer<void> completer) async {
+    try {
+      final Uint8List pkt = bleManager.buildFirmwareUpgradeCompletePacket();
+      InputSetupPayloadDebug.logBleFrame(
+        'TRANSMIT',
+        'firmware-upgrade-complete',
+        pkt,
+      );
+      await bleManager.sendSmallDataFrame(0x1000, pkt.length, pkt);
+    } catch (error) {
+      if (identical(_firmwareCompleteCompleter, completer)) {
+        _finishFirmwareComplete(error: '$error');
+      }
+    }
+  }
+
+  bool _takeFirmwareCompleteResponse(BleRxFrame rx) {
+    final Completer<void>? pending = _firmwareCompleteCompleter;
+    if (pending == null || !_isFirmwareCompleteResponse(rx.payload)) {
+      return false;
+    }
+    InputSetupPayloadDebug.logBleFrame(
+      'RECEIVE',
+      'firmware-upgrade-complete',
+      rx.payload,
+    );
+    if (rx.payload.length > 4) {
+      bleManager.u8RxPktCnt = rx.payload[4];
+    }
+    _finishFirmwareComplete(error: _firmwareCompleteStatusError(rx.payload));
+    return true;
+  }
+
+  bool _isFirmwareCompleteResponse(List<int> payload) {
+    final int mode = BleConstants.mode.instruction.ctrl;
+    final int command = BleConstants.command.firmwareUpgradeComplete;
+    if (payload.length > TsFrame.commandOffset &&
+        payload[TsFrame.modeOffset] == mode &&
+        payload[TsFrame.commandOffset] == command) {
+      return true;
+    }
+    return payload.length > 12 &&
+        payload[10] == mode &&
+        payload[12] == command;
+  }
+
+  String? _firmwareCompleteStatusError(List<int> payload) {
+    final TsFrameView parsed = TsFrame.parse(payload);
+    final int? status;
+    if (parsed.isValid && parsed.data.isNotEmpty) {
+      status = parsed.data[0];
+    } else if (payload.length > 13 &&
+        payload[10] == BleConstants.mode.instruction.ctrl) {
+      status = payload[13];
+    } else {
+      return parsed.isValid ? null : StringConstants.ctrlInvalidPacket;
+    }
+    if (status == BleConstants.ctrlStatus.ack) return null;
+    if (status == BleConstants.ctrlStatus.invalidKey) {
+      return StringConstants.ctrlInvalidKey;
+    }
+    if (status == BleConstants.ctrlStatus.invalidCmd) {
+      return StringConstants.ctrlInvalidCommand;
+    }
+    if (status == BleConstants.ctrlStatus.invalidPacket) {
+      return StringConstants.ctrlInvalidPacket;
+    }
+    return null;
+  }
+
+  void _finishFirmwareComplete({String? error}) {
+    _firmwareCompleteTimer?.cancel();
+    _firmwareCompleteTimer = null;
+    final Completer<void>? pending = _firmwareCompleteCompleter;
+    _firmwareCompleteCompleter = null;
+    if (pending == null || pending.isCompleted) return;
+    if (error == null) {
+      pending.complete();
+    } else {
+      pending.completeError(error);
     }
   }
 
