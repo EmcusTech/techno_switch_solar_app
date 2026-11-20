@@ -331,12 +331,17 @@ class RelayModeBottomSheetState extends State<RelayModeBottomSheet>
         label: StringConstants.function,
         value: relay.function,
         items: controller.functionOptionsMap[relay.group]!,
-        disabledItems:
-            DemoBle.restrictPeripheralOptions
-                ? controller.functionOptionsMap[relay.group]!
-                    .where((item) => item != 'Fault' && item != 'Fire')
-                    .toSet()
-                : const <String>{},
+        disabledItems: {
+          if (relay.group == StringConstants.extOut) ...{
+            StringConstants.extSnd1,
+            'Ext. Snd 2',
+            StringConstants.manReleaseSnd,
+          },
+          if (DemoBle.restrictPeripheralOptions)
+            ...controller.functionOptionsMap[relay.group]!.where(
+              (item) => item != 'Fault' && item != 'Fire',
+            ),
+        },
         onChanged: (v) => controller.setFunction(index, v),
       ),
       if (relay.group == 'Zone')

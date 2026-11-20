@@ -338,6 +338,7 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
       label: StringConstants.group,
       value: sounder.group,
       items: controller.groupOptions,
+      disabledItems: {StringConstants.extOut},
       enabled: !sounder.groupLocked,
       onChanged: (v) {
         _focusAdvancedForGroup(v);
