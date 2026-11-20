@@ -301,12 +301,21 @@ class _SavedEventLogHistoryScreenState
   }
 
   Widget _empty() {
-    return Center(
-      child: Image.asset(
-        AssetConstants.noLogsImage,
-        width: 220,
-        fit: BoxFit.contain,
-      ),
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Image.asset(
+          AssetConstants.noLogsImage,
+          width: 220,
+          fit: BoxFit.contain,
+        ),
+        const SizedBox(height: 16),
+        Text(
+          "No event logs found currently.\nClick Retrieve Logs to fetch the latest logs.",
+          style: StyleConstants.textDisabled14w500Style,
+          textAlign: TextAlign.center,
+        ),
+      ],
     );
   }
 

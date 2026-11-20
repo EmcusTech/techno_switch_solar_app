@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:Technoswitch/ble/ble_process.dart';
 import 'package:Technoswitch/features/dashboard/controllers/project_dashboard_controller.dart';
 import 'package:Technoswitch/features/dashboard/widgets/windows/windows_dashboard_side_bar.dart';
 import 'package:Technoswitch/utils/constants/color_constants.dart';
@@ -46,8 +47,7 @@ class PeripheralTile extends StatelessWidget {
       builder: (context, _) {
         final locked = !process.sessionAccessCodeReady.value;
         final downloading =
-            controller.selectedWindowsTile.value == StringConstants.eventLog &&
-            !process.newEventLogProgress.value.done;
+            process.newEventLogPhase != NewEventLogPhase.idle;
         final inactive =
             config.isDisabled ||
             locked ||
