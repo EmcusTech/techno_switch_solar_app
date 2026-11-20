@@ -35,10 +35,13 @@ class WindowsDashboardContent extends StatelessWidget {
                   constraints.maxWidth -
                   WindowsDashboardSideBar.collapsedWidth -
                   dividerWidth * 2;
-              // Keep the cell size of the previous 4-column grid, then fit 5.
+              // Keep the cell size of the previous 4-column grid.
+              // A window under 1440 shows four tiles; 1440 and wider shows five.
+              final columns = MediaQuery.sizeOf(context).width >= 1580 ? 5 : 4;
               final oldColumn = available / 3;
               final cell = (oldColumn - gridPadding - gap * 3) / 4;
-              final leftWidth = cell * 5 + gap * 4 + gridPadding;
+              final leftWidth =
+                  cell * columns + gap * (columns - 1) + gridPadding;
               return Row(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -85,6 +88,7 @@ class WindowsDashboardContent extends StatelessWidget {
                                 const SizedBox(height: 8),
                                 WindowsDashboardTileGrid(
                                   controller: controller,
+                                  crossAxisCount: columns,
                                   tiles:
                                       WindowsDashboardTileRegistry.overviewTiles(
                                         controller,
@@ -98,6 +102,7 @@ class WindowsDashboardContent extends StatelessWidget {
                                 const SizedBox(height: 8),
                                 WindowsDashboardTileGrid(
                                   controller: controller,
+                                  crossAxisCount: columns,
                                   tiles:
                                       WindowsDashboardTileRegistry.panelActionTiles(
                                         controller,

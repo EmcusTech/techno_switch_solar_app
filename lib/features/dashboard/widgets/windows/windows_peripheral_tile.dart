@@ -129,17 +129,19 @@ class WindowsDashboardTileGrid extends StatelessWidget {
     super.key,
     required this.controller,
     required this.tiles,
+    this.crossAxisCount = 5,
     this.heightFactor,
   });
 
   final ProjectDashboardController controller;
   final List<WindowsDashboardTileConfig> tiles;
+  final int crossAxisCount;
   final double? heightFactor;
 
   @override
   Widget build(BuildContext context) {
     final grid = GridView.count(
-      crossAxisCount: 5,
+      crossAxisCount: crossAxisCount,
       crossAxisSpacing: 12,
       mainAxisSpacing: 12,
       childAspectRatio: 1,
