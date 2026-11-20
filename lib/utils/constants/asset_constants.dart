@@ -31,6 +31,9 @@ class AssetConstants {
       '$_svgDir/firmware_details_icon.png';
   static const String validBinFileIcon = '$_svgDir/valid_bin_file_icon.svg';
   static const String invalidBinFileIcon = '$_svgDir/invalid_bin_file_icon.svg';
+  static const String deleteLogIcon = '$_svgDir/delete_log_icon.svg';
+  static const String viewLogIcon = '$_svgDir/view_log_icon.svg';
+  static const String noLogsImage = '$_svgDir/no_logs_image.png';
   static const String splashscreenBackground1 =
       '$_svgDir/splashscreen_background_1.svg';
   static const String splashscreenBackground2 =
