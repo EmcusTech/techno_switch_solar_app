@@ -4,6 +4,7 @@ import 'package:dotted_border/dotted_border.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:Technoswitch/ble/blue_plus_adapter.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
 // import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:get/get.dart';
@@ -138,6 +139,7 @@ class _FirmwareUpgradeBottomSheetState
       _controller.totalPacketLength.value = total;
       _controller.progressbarCount.value = total == 0 ? 0 : sent / total;
     }
+
     if (DemoBle.enabled) {
       await DemoBle.runFirmwareUpgrade(
         process: manager.bleProcess,
@@ -188,14 +190,10 @@ class _FirmwareUpgradeBottomSheetState
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const PeripheralSheetDragHandle(),
-        _buildHeader(showClose: !upgradeInProgress),
-        const SizedBox(height: 16),
-        Expanded(
-          child: SingleChildScrollView(
-            padding: peripheralSheetScrollPadding(bottom: 24),
-            child: _buildStepContent(),
-          ),
-        ),
+        // _buildHeader(showClose: !upgradeInProgress),
+        // Spacer(),
+        Expanded(child: _buildStepContent()),
+        SizedBox(height: 12),
       ],
     );
     final sheet = Container(
@@ -246,19 +244,9 @@ class _FirmwareUpgradeBottomSheetState
   }
 
   Widget _buildHeader({required bool showClose}) {
-    return Row(
-      children: [
-        Text(
-          StringConstants.firmwareUpgrade,
-          style: StyleConstants.textDark20w700Style,
-        ),
-        const Spacer(),
-        if (showClose && PeripheralSheetChrome.flat)
-          IconButton(
-            icon: const Icon(Icons.close),
-            onPressed: () => Navigator.of(context).pop(false),
-          ),
-      ],
+    return Text(
+      StringConstants.firmwareUpgrade,
+      style: StyleConstants.textDark20w700Style,
     );
   }
 
@@ -294,47 +282,72 @@ class _FirmwareUpgradeBottomSheetState
       future: _checkBleConnection(),
       builder: (context, snapshot) {
         return Column(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
-              StringConstants.essentialStepsBeforeFirmwareUpgrade,
-              style: StyleConstants.black18w700Style,
-            ),
-            SizedBox(height: 24),
-
-            ...steps.map(
-              (step) => Padding(
-                padding: EdgeInsets.only(bottom: 16),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      width: 24,
-                      height: 24,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: ColorConstants.primary.withOpacity(0.1),
-                      ),
-                      child: Center(
-                        child: Icon(
-                          Icons.check_circle,
-                          size: 16,
-                          color: ColorConstants.primary,
-                        ),
-                      ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: 250.w,
+              height: 250.h,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Image.asset(AssetConstants.firmwareUpgradeIcon),
+                  Align(
+                    alignment: Alignment.bottomCenter,
+                    child: Text(
+                      StringConstants.firmwareUpgrade,
+                      style: StyleConstants.primary20w700Style,
                     ),
-                    SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        step,
-                        style: StyleConstants.textHeading14w400Style,
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
-            SizedBox(height: 32),
+            Divider(),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  StringConstants.essentialStepsBeforeFirmwareUpgrade,
+                  style: StyleConstants.black18w700Style,
+                ),
+                SizedBox(height: 24),
+
+                ...steps.map(
+                  (step) => Padding(
+                    padding: EdgeInsets.only(bottom: 16),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          width: 24,
+                          height: 24,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: ColorConstants.primary.withOpacity(0.1),
+                          ),
+                          child: Center(
+                            child: Icon(
+                              Icons.check_circle,
+                              size: 16,
+                              color: ColorConstants.primary,
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            step,
+                            style: StyleConstants.textHeading14w400Style,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            // SizedBox(height: 32),
             CommonCtaButton(
               onTap: () {
                 setState(() {
@@ -344,7 +357,7 @@ class _FirmwareUpgradeBottomSheetState
               },
               child: Text(
                 StringConstants.disabled,
-                style: StyleConstants.white16w600Style,
+                style: StyleConstants.white22w600Style,
               ),
             ),
             // ElevatedButton(
@@ -391,6 +404,10 @@ class _FirmwareUpgradeBottomSheetState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        Text(
+          StringConstants.firmwareUpgrade,
+          style: StyleConstants.primary18w700Style,
+        ),
         Text(
           StringConstants.chooseFirmwareType,
           style: StyleConstants.black18w700Style,

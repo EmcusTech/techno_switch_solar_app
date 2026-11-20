@@ -1,0 +1,5 @@
+<svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M20 60C20 41.145 20 31.715 25.86 25.86C31.72 20.005 41.145 20 60 20C78.855 20 88.285 20 94.14 25.86C99.995 31.72 100 41.145 100 60C100 78.855 100 88.285 94.14 94.14C88.28 99.995 78.855 100 60 100C41.145 100 31.715 100 25.86 94.14C20.005 88.28 20 78.855 20 60Z" stroke-width="4" stroke-linejoin="round" stroke="#EC1D24"/>
+<path d="M40 10V20M80 10V20M60 10V20M40 100V110M60 100V110M80 100V110M110 80H100M20 40H10M20 80H10M20 60H10M110 40H100M110 60H100" stroke-width="4" stroke-linejoin="round" stroke="#EC1D24"/>
+<path d="M47 50L71 70L59 80V40L71 50L47 70" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" stroke="#EC1D24"/>
+</svg>

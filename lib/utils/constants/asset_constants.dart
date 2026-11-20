@@ -20,6 +20,12 @@ class AssetConstants {
   static const String tsSortUpArrow = '$_svgDir/sort_up_arrow_icon.svg';
   static const String tsSortUpDown = '$_svgDir/sort_down_arrow_icon.svg';
   static const String tsFilterIcon = '$_svgDir/ts_filter_icon.svg';
+  static const String firmwareUpgradeIcon =
+      '$_svgDir/firmware_upgrade_icon.png';
+  static const String mainPanelFirmwareIcon =
+      '$_svgDir/main_panel_firmware_icon.svg';
+  static const String bleChipFirmwareIcon =
+      '$_svgDir/ble_chip_firmware_icon.svg';
   static const String splashscreenBackground1 =
       '$_svgDir/splashscreen_background_1.svg';
   static const String splashscreenBackground2 =

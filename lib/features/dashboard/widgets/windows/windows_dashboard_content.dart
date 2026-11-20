@@ -29,11 +29,16 @@ class WindowsDashboardContent extends StatelessWidget {
           child: LayoutBuilder(
             builder: (context, constraints) {
               const dividerWidth = 1.0;
-              final tileWidth =
-                  (constraints.maxWidth -
-                      WindowsDashboardSideBar.collapsedWidth -
-                      dividerWidth * 2) /
-                  3;
+              const gap = 12.0;
+              const gridPadding = 40.0;
+              final available =
+                  constraints.maxWidth -
+                  WindowsDashboardSideBar.collapsedWidth -
+                  dividerWidth * 2;
+              // Keep the cell size of the previous 4-column grid, then fit 5.
+              final oldColumn = available / 3;
+              final cell = (oldColumn - gridPadding - gap * 3) / 4;
+              final leftWidth = cell * 5 + gap * 4 + gridPadding;
               return Row(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -47,7 +52,7 @@ class WindowsDashboardContent extends StatelessWidget {
                     ),
                   ),
                   SizedBox(
-                    width: tileWidth,
+                    width: leftWidth,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [

@@ -21,8 +21,8 @@ void main() async {
     const windowOptions = WindowOptions(
       center: true,
       title: 'Solar',
-      size: Size(1280, 720),
-      minimumSize: Size(1280, 720),
+      size: Size(1280, 820),
+      minimumSize: Size(1280, 820),
       titleBarStyle: TitleBarStyle.hidden,
     );
 

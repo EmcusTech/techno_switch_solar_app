@@ -25,10 +25,10 @@ class CommonCtaButton extends StatelessWidget {
         child: Container(
           width: width ?? double.infinity,
           // height: 55,
-          padding: const EdgeInsets.symmetric(vertical: 16),
+          padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
             color: color ?? ColorConstants.primary,
-            borderRadius: BorderRadius.circular(28.5),
+            borderRadius: BorderRadius.circular(8),
             boxShadow: [
               BoxShadow(
                 color: color ?? ColorConstants.primary.withOpacity(0.3),

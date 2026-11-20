@@ -139,7 +139,7 @@ class WindowsDashboardTileGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final grid = GridView.count(
-      crossAxisCount: 4,
+      crossAxisCount: 5,
       crossAxisSpacing: 12,
       mainAxisSpacing: 12,
       childAspectRatio: 1,
