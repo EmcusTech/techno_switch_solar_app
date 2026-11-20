@@ -26,6 +26,11 @@ class AssetConstants {
       '$_svgDir/main_panel_firmware_icon.svg';
   static const String bleChipFirmwareIcon =
       '$_svgDir/ble_chip_firmware_icon.svg';
+  static const String binFolderIcon = '$_svgDir/bin_folder_icon.svg';
+  static const String firmwareDetailsIcon =
+      '$_svgDir/firmware_details_icon.png';
+  static const String validBinFileIcon = '$_svgDir/valid_bin_file_icon.svg';
+  static const String invalidBinFileIcon = '$_svgDir/invalid_bin_file_icon.svg';
   static const String splashscreenBackground1 =
       '$_svgDir/splashscreen_background_1.svg';
   static const String splashscreenBackground2 =

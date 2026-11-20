@@ -905,7 +905,8 @@ abstract final class StringConstants {
   static const String str99914b93 = "device_info";
   static const String strb411bc68 = " *";
   static const String strca4d661a = "••••••••";
-  static const String strf910c9ffFailed = UiStrings.firmwareUpgradeSuccessTitle;
+  static const String strf910c9ffFailed =
+      UiStrings.firmwareUpgradeCompletedSuccessfullyMessage;
   static const String subtype = "subType";
   static const String success = "Success";
   static const String supervisory = "Supervisory";
@@ -1237,12 +1238,13 @@ abstract final class StringConstants {
   static const String mainPanelFirmware = "Main Panel Firmware";
   static const String bleChipFirmware = "BLE Chip Firmware";
   static const String upgradeMainPanelFirmwareDescription =
-      "Upgrade the main panel firmware";
+      "Upgrade main panel firmware";
   static const String upgradeBleChipFirmwareDescription =
-      "Upgrade the Bluetooth chip firmware";
+      "Upgrade Bluetooth chip firmware";
   static const String uploadFirmwareFile = "Upload Firmware File";
   static const String tapToSelectFirmwareFile = "Tap to select firmware file";
   static const String fileDetails = "File Details";
+  static const String firmwareDetails = "Firmware Details";
   static const String fileName = "File Name";
   static const String fileSize = "File Size";
   static const String firmwareTypeLabel = "Firmware Type";

@@ -104,9 +104,9 @@ abstract final class UiStrings {
   static const String mainPanelFirmwareLabel = 'Main Panel Firmware';
   static const String bleChipFirmwareLabel = 'BLE Chip Firmware';
   static const String upgradeMainPanelFirmwareDescription =
-      'Upgrade the main panel firmware';
+      'Upgrade main panel firmware';
   static const String upgradeBleChipFirmwareDescription =
-      'Upgrade the Bluetooth chip firmware';
+      'Upgrade Bluetooth chip firmware';
   static const String uploadFirmwareFileTitle = 'Upload Firmware File';
   static const String tapToSelectFirmwareFileHint =
       'Tap to select firmware file';
@@ -130,7 +130,7 @@ abstract final class UiStrings {
   static const String validatingFirmwareUpgradeSuccessMessage =
       'Validating firmware upgrade success...';
   static const String firmwareUpgradeCompletedSuccessfullyMessage =
-      'Firmware upgrade completed successfully!';
+      'Firmware Upgrade Successful!';
   static const String invalidBinHardwareMismatchMessage =
       "Invalid bin file, hardware versions don't match";
   static const String firmwareAlreadyUpToDateMessage =
