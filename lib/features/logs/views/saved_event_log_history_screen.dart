@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:intl/intl.dart';
 import 'package:Technoswitch/features/logs/views/new_event_log_values_screen.dart';
+import 'package:Technoswitch/models/event_log_retrieval_handle.dart';
 import 'package:Technoswitch/models/log_model.dart';
 import 'package:Technoswitch/models/new_event_log_progress.dart';
 import 'package:Technoswitch/models/saved_event_log_session.dart';
@@ -17,11 +18,13 @@ class SavedEventLogHistoryScreen extends StatefulWidget {
     super.key,
     required this.bleName,
     required this.deviceId,
+    required this.onRetrieve,
     this.embedded = false,
   });
 
   final String bleName;
   final String deviceId;
+  final Future<EventLogRetrievalHandle?> Function() onRetrieve;
   final bool embedded;
 
   @override
@@ -40,6 +43,10 @@ class _SavedEventLogHistoryScreenState
   _SessionSort _sortColumn = _SessionSort.date;
   bool _sortAscending = false;
   ValueNotifier<NewEventLogProgress>? _viewing;
+  bool _ownsViewing = false;
+  Future<void>? _saved;
+  bool _busy = false;
+  bool _closing = false;
 
   @override
   void initState() {
@@ -51,7 +58,7 @@ class _SavedEventLogHistoryScreenState
   void dispose() {
     _search.dispose();
     _tableScroll.dispose();
-    _viewing?.dispose();
+    if (_ownsViewing) _viewing?.dispose();
     super.dispose();
   }
 
@@ -73,7 +80,9 @@ class _SavedEventLogHistoryScreenState
       session.id,
     );
     if (!mounted) return;
-    _viewing?.dispose();
+    if (_ownsViewing) _viewing?.dispose();
+    _ownsViewing = true;
+    _saved = null;
     setState(() {
       _viewing = ValueNotifier<NewEventLogProgress>(
         NewEventLogProgress(percent: 100, logs: logs, done: true),
@@ -81,9 +90,64 @@ class _SavedEventLogHistoryScreenState
     });
   }
 
-  void _closeView() {
-    _viewing?.dispose();
-    setState(() => _viewing = null);
+  Future<void> _retrieve() async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    final EventLogRetrievalHandle? handle = await widget.onRetrieve();
+    if (!mounted) return;
+    if (handle == null) {
+      setState(() => _busy = false);
+      return;
+    }
+    _ownsViewing = false;
+    _saved = handle.saved;
+    setState(() {
+      _viewing = handle.progress;
+      _busy = false;
+    });
+  }
+
+  Future<void> _closeView() async {
+    if (_closing) return;
+    _closing = true;
+    final bool owned = _ownsViewing;
+    final ValueNotifier<NewEventLogProgress>? notifier = _viewing;
+    final Future<void>? saved = _saved;
+    final bool stillRunning =
+        notifier != null &&
+        !owned &&
+        !notifier.value.done &&
+        !notifier.value.failed;
+    _ownsViewing = false;
+    _saved = null;
+    if (!stillRunning && saved != null) await saved;
+    final List<SavedEventLogSession> sessions =
+        await SavedEventLogStore.sessionsForDevice(
+          bleName: widget.bleName,
+          deviceId: widget.deviceId,
+        );
+    if (owned) notifier?.dispose();
+    if (!mounted) return;
+    setState(() {
+      _sessions = sessions;
+      _viewing = null;
+      _loading = false;
+      _busy = stillRunning;
+    });
+    _closing = false;
+    if (!stillRunning || saved == null) return;
+    await saved;
+    if (!mounted || _viewing != null) return;
+    final List<SavedEventLogSession> refreshed =
+        await SavedEventLogStore.sessionsForDevice(
+          bleName: widget.bleName,
+          deviceId: widget.deviceId,
+        );
+    if (!mounted || _viewing != null) return;
+    setState(() {
+      _sessions = refreshed;
+      _busy = false;
+    });
   }
 
   Future<void> _delete(SavedEventLogSession session) async {
@@ -212,15 +276,20 @@ class _SavedEventLogHistoryScreenState
         child: CircularProgressIndicator(color: ColorConstants.primary),
       );
     }
-    if (_sessions.isEmpty) return _empty();
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _searchField(),
+          if (_sessions.isEmpty)
+            Expanded(child: _empty())
+          else ...[
+            _searchField(),
+            const SizedBox(height: 12),
+            Expanded(child: _table(_visible)),
+          ],
           const SizedBox(height: 12),
-          Expanded(child: _table(_visible)),
+          _retrieveButton(),
         ],
       ),
     );
@@ -232,6 +301,26 @@ class _SavedEventLogHistoryScreenState
         AssetConstants.noLogsImage,
         width: 220,
         fit: BoxFit.contain,
+      ),
+    );
+  }
+
+  Widget _retrieveButton() {
+    return SizedBox(
+      height: 44,
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: ColorConstants.primary,
+          disabledBackgroundColor: ColorConstants.primary.withValues(
+            alpha: 0.5,
+          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        ),
+        onPressed: _busy ? null : _retrieve,
+        child: Text(
+          StringConstants.retrieveLogs,
+          style: StyleConstants.white14w600Style,
+        ),
       ),
     );
   }

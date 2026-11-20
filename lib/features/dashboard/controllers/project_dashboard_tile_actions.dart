@@ -4,7 +4,9 @@ import 'package:Technoswitch/ble/demo/demo_ble.dart';
 import 'package:Technoswitch/ble/demo/demo_constants.dart';
 import 'package:Technoswitch/features/dashboard/controllers/project_dashboard_controller.dart';
 import 'package:Technoswitch/features/dashboard/controllers/project_dashboard_ui_delegate.dart';
+import 'package:Technoswitch/models/event_log_retrieval_handle.dart';
 import 'package:Technoswitch/models/log_model.dart';
+import 'package:Technoswitch/models/new_event_log_progress.dart';
 import 'package:Technoswitch/utils/constants/string_constants.dart';
 import 'package:Technoswitch/utils/saved_event_log_store.dart';
 
@@ -220,6 +222,95 @@ abstract final class ProjectDashboardTileActions {
     ui.openSavedEventLogHistory(
       bleName: bleName,
       deviceId: c.selectedDevice.id,
+      onRetrieve: () => startEventLogRetrieval(c),
+    );
+  }
+
+  static Future<EventLogRetrievalHandle?> startEventLogRetrieval(
+    ProjectDashboardController c,
+  ) async {
+    final ui = _ui(c);
+    if (ui == null) return null;
+    if (c.isInBootloaderMode) {
+      await ui.showBootloaderModeDialog();
+      return null;
+    }
+    if (!c.ble.isConnected && !DemoBle.enabled) {
+      ui.showSnackBar(StringConstants.deviceNotConnected);
+      return null;
+    }
+
+    final process = c.ble.bleProcess;
+    if (process.liveEventSessionOpen) {
+      await process.stopLiveEvents();
+    }
+    if (!c.ble.isConnected && !DemoBle.enabled) {
+      ui.showSnackBar(StringConstants.deviceNotConnected);
+      return null;
+    }
+
+    final Completer<void> saved = Completer<void>();
+    var delivered = false;
+    void finish() {
+      if (!saved.isCompleted) saved.complete();
+    }
+
+    process.onNewEventLogsReady = (List<LogModel> logs) {
+      delivered = true;
+      final String bleName =
+          c.selectedDevice.name.trim().isNotEmpty
+              ? c.selectedDevice.name
+              : c.panelName;
+      unawaited(() async {
+        try {
+          await SavedEventLogStore.appendForDevice(
+            bleName: bleName,
+            deviceId: c.selectedDevice.id,
+            siteId: c.siteId,
+            logs: logs,
+          );
+        } finally {
+          finish();
+        }
+      }());
+    };
+
+    void onProgress() {
+      final NewEventLogProgress value = process.newEventLogProgress.value;
+      if (!value.done && !value.failed) return;
+      process.newEventLogProgress.removeListener(onProgress);
+      if (value.failed) {
+        finish();
+        return;
+      }
+      Future<void>.microtask(() {
+        if (!delivered) finish();
+      });
+    }
+
+    process.newEventLogProgress.addListener(onProgress);
+
+    if (DemoBle.enabled) {
+      unawaited(
+        process.playDemoEventLogs(DemoConstants.sampleEventLogs).whenComplete(
+          () {
+            if (!delivered) finish();
+          },
+        ),
+      );
+    } else {
+      final bool started = await process.beginNewEventLogRetrieval();
+      if (!started) {
+        process.newEventLogProgress.removeListener(onProgress);
+        process.onNewEventLogsReady = null;
+        finish();
+        return null;
+      }
+    }
+
+    return EventLogRetrievalHandle(
+      progress: process.newEventLogProgress,
+      saved: saved.future,
     );
   }
 

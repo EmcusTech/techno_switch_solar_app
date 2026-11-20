@@ -17,6 +17,7 @@ import 'package:Technoswitch/features/logs/models/log_flow_args.dart';
 import 'package:Technoswitch/features/logs/views/event_log_screen.dart';
 import 'package:Technoswitch/features/logs/views/new_event_log_values_screen.dart';
 import 'package:Technoswitch/features/logs/views/saved_event_log_history_screen.dart';
+import 'package:Technoswitch/models/event_log_retrieval_handle.dart';
 import 'package:Technoswitch/features/logs/views/log_retrieval_loading_screen.dart';
 import 'package:Technoswitch/features/peripherals/access_code/sheets/access_code_mode_bottomsheet.dart';
 import 'package:Technoswitch/features/peripherals/config_log/sheets/config_log_bottomsheet.dart';
@@ -178,12 +179,14 @@ mixin ProjectDashboardUiDelegateMixin<T extends StatefulWidget> on State<T>
   void openSavedEventLogHistory({
     required String bleName,
     required String deviceId,
+    required Future<EventLogRetrievalHandle?> Function() onRetrieve,
   }) {
     if (!mounted) return;
     final Widget screen = SavedEventLogHistoryScreen(
       bleName: bleName,
       deviceId: deviceId,
       embedded: Platform.isWindows,
+      onRetrieve: onRetrieve,
     );
     if (Platform.isWindows) {
       dashboardController.showWindowsDetail(screen);

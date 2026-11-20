@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:Technoswitch/ble/blue_plus_adapter.dart';
+import 'package:Technoswitch/models/event_log_retrieval_handle.dart';
 import 'package:Technoswitch/models/log_model.dart';
 import 'package:Technoswitch/models/new_event_log_progress.dart';
 
@@ -24,6 +25,7 @@ abstract class ProjectDashboardUiDelegate {
   void openSavedEventLogHistory({
     required String bleName,
     required String deviceId,
+    required Future<EventLogRetrievalHandle?> Function() onRetrieve,
   });
 
   void openLiveEventLogPane(int paneToken);

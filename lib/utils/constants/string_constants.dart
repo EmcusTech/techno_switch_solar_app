@@ -559,6 +559,7 @@ abstract final class StringConstants {
   static const String liveEvents = "Live Events";
   static const String logENTRIES = "LOG ENTRIES";
   static const String logHistory = "Log History";
+  static const String retrieveLogs = "Retrieve Logs";
   static const String logRetrievalFailed = "Log Retrieval Failed";
   static const String logRetrievalHistory = "Log Retrieval History";
   static const String logRetrievalReport = "Log Retrieval Report";
