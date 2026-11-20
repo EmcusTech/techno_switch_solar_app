@@ -5,6 +5,7 @@ import '../../models/site_model.dart';
 import '../../models/log_model.dart';
 import '../../models/panel_model.dart';
 import '../../models/log_retrieval_model.dart';
+import '../../models/saved_event_log_session.dart';
 import 'package:Technoswitch/utils/constants/string_constants.dart';
 
 class DatabaseHelper {
@@ -24,7 +25,7 @@ class DatabaseHelper {
     String path = join(await getDatabasesPath(), DbSql.dbName);
     return await openDatabase(
       path,
-      version: 6,
+      version: 7,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
       onConfigure: (db) async {
@@ -37,9 +38,12 @@ class DatabaseHelper {
     await db.execute(DbSql.createSitesTable);
     await db.execute(DbSql.createLogRetrievalsTable);
     await db.execute(DbSql.createLogsTable);
+    await db.execute(DbSql.createSavedEventLogSessionsTable);
     await db.execute(DbSql.createPanelsTable);
     await db.execute(DbSql.createIndexLogsSiteId);
     await db.execute(DbSql.createIndexLogsPanelId);
+    await db.execute(DbSql.createIndexLogsSavedSessionId);
+    await db.execute(DbSql.createIndexSavedEventLogSessionsPanelId);
     await db.execute(DbSql.createIndexLogsEventDate);
     await db.execute(DbSql.createIndexLogsRetrievalId);
     await db.execute(DbSql.createIndexSitesCreatedAt);
@@ -79,6 +83,48 @@ class DatabaseHelper {
       await db.execute(StringConstants.alterTABLELogsADDCOLUMNPar1INTEGER);
       await db.execute(StringConstants.alterTABLELogsADDCOLUMNPanelIdTEXT);
       await db.execute(DbSql.createIndexLogsPanelId);
+    }
+
+    if (oldVersion < 7) {
+      await db.execute(DbSql.createSavedEventLogSessionsTable);
+      await db.execute(DbSql.createIndexSavedEventLogSessionsPanelId);
+      await db.execute(
+        StringConstants.alterTABLELogsADDCOLUMNSavedSessionIdINTEGER,
+      );
+      await db.execute(DbSql.createIndexLogsSavedSessionId);
+      await _adoptExistingPanelLogs(db);
+    }
+  }
+
+  Future<void> _adoptExistingPanelLogs(Database db) async {
+    final List<Map<String, Object?>> groups = await db.rawQuery('''
+      SELECT panel_id, retrieved_at, MAX(site_id) AS site_id, COUNT(*) AS log_count
+      FROM logs
+      WHERE panel_id IS NOT NULL AND panel_id != ''
+      GROUP BY panel_id, retrieved_at
+    ''');
+    for (final Map<String, Object?> group in groups) {
+      final String panelId = group['panel_id'] as String? ?? '';
+      if (panelId.isEmpty) continue;
+      final Object? retrievedAt = group['retrieved_at'];
+      final int sessionId = await db.insert('saved_event_log_sessions', {
+        'panel_id': panelId,
+        'site_id': group['site_id'],
+        'retrieved_at': retrievedAt is int ? retrievedAt : 0,
+        'log_count': group['log_count'],
+      });
+      await db.update(
+        'logs',
+        <String, Object?>{'saved_session_id': sessionId},
+        where:
+            retrievedAt == null
+                ? 'panel_id = ? AND retrieved_at IS NULL'
+                : 'panel_id = ? AND retrieved_at = ?',
+        whereArgs:
+            retrievedAt == null
+                ? <Object>[panelId]
+                : <Object>[panelId, retrievedAt],
+      );
     }
   }
 
@@ -141,8 +187,18 @@ class DatabaseHelper {
           where: 'panel_id = ?',
           whereArgs: <Object>[panelId],
         );
+        await txn.delete(
+          'saved_event_log_sessions',
+          where: 'panel_id = ?',
+          whereArgs: <Object>[panelId],
+        );
       }
       await txn.delete('logs', where: 'site_id = ?', whereArgs: [id]);
+      await txn.delete(
+        'saved_event_log_sessions',
+        where: 'site_id = ?',
+        whereArgs: [id],
+      );
       await txn.delete(
         StringConstants.id2,
         where: 'site_id = ?',
@@ -440,6 +496,11 @@ class DatabaseHelper {
         where: 'panel_id = ?',
         whereArgs: <Object>[panelId],
       );
+      await txn.delete(
+        'saved_event_log_sessions',
+        where: 'panel_id = ?',
+        whereArgs: <Object>[panelId],
+      );
       return txn.delete(
         'panels',
         where: StringConstants.panelId,
@@ -461,19 +522,20 @@ class DatabaseHelper {
     });
   }
 
-  Future<void> replaceLogsForPanel({
+  Future<int> insertEventLogSession({
     required String panelId,
     required int? siteId,
     required List<LogModel> logs,
   }) async {
     final db = await database;
     final int retrievedAt = DateTime.now().millisecondsSinceEpoch;
-    await db.transaction((txn) async {
-      await txn.delete(
-        'logs',
-        where: 'panel_id = ?',
-        whereArgs: <Object>[panelId],
-      );
+    return db.transaction((txn) async {
+      final int sessionId = await txn.insert('saved_event_log_sessions', {
+        'panel_id': panelId,
+        'site_id': siteId,
+        'retrieved_at': retrievedAt,
+        'log_count': logs.length,
+      });
       final Batch batch = txn.batch();
       for (final LogModel log in logs) {
         final Map<String, dynamic> row = log.toMap();
@@ -481,10 +543,54 @@ class DatabaseHelper {
         row['panel_id'] = panelId;
         row['site_id'] = siteId;
         row['retrieval_id'] = null;
+        row['saved_session_id'] = sessionId;
         row['retrieved_at'] = retrievedAt;
         batch.insert('logs', row);
       }
       await batch.commit(noResult: true);
+      return sessionId;
+    });
+  }
+
+  Future<List<SavedEventLogSession>> getEventLogSessions(String panelId) async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.query(
+      'saved_event_log_sessions',
+      where: 'panel_id = ?',
+      whereArgs: <Object>[panelId],
+      orderBy: 'retrieved_at DESC',
+    );
+    return List<SavedEventLogSession>.generate(maps.length, (int i) {
+      return SavedEventLogSession.fromMap(maps[i]);
+    });
+  }
+
+  Future<List<LogModel>> getLogsBySessionId(int sessionId) async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.query(
+      'logs',
+      where: 'saved_session_id = ?',
+      whereArgs: <Object>[sessionId],
+      orderBy: 'id ASC',
+    );
+    return List<LogModel>.generate(maps.length, (int i) {
+      return LogModel.fromMap(maps[i]);
+    });
+  }
+
+  Future<void> deleteEventLogSession(int sessionId) async {
+    final db = await database;
+    await db.transaction((txn) async {
+      await txn.delete(
+        'logs',
+        where: 'saved_session_id = ?',
+        whereArgs: <Object>[sessionId],
+      );
+      await txn.delete(
+        'saved_event_log_sessions',
+        where: 'id = ?',
+        whereArgs: <Object>[sessionId],
+      );
     });
   }
 

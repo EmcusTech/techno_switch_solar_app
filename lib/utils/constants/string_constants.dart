@@ -213,6 +213,8 @@ abstract final class StringConstants {
       "ALTER TABLE logs ADD COLUMN par1 INTEGER";
   static const String alterTABLELogsADDCOLUMNPanelIdTEXT =
       "ALTER TABLE logs ADD COLUMN panel_id TEXT";
+  static const String alterTABLELogsADDCOLUMNSavedSessionIdINTEGER =
+      "ALTER TABLE logs ADD COLUMN saved_session_id INTEGER";
   static const String app = "App";
   static const String apply = "Apply";
   static const String applyNow = "Apply Now";

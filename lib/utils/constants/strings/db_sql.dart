@@ -17,6 +17,10 @@ abstract final class DbSql {
       'CREATE INDEX idx_logs_site_id ON logs (site_id)';
   static const String createIndexLogsPanelId =
       'CREATE INDEX idx_logs_panel_id ON logs (panel_id)';
+  static const String createIndexLogsSavedSessionId =
+      'CREATE INDEX idx_logs_saved_session_id ON logs (saved_session_id)';
+  static const String createIndexSavedEventLogSessionsPanelId =
+      'CREATE INDEX idx_saved_event_log_sessions_panel_id ON saved_event_log_sessions (panel_id)';
   static const String createIndexPanelsSiteId =
       'CREATE INDEX idx_panels_site_id ON panels (site_id)';
   static const String createIndexSitesCreatedAt =
@@ -92,6 +96,7 @@ abstract final class DbSql {
         par0 INTEGER,
         par1 INTEGER,
         panel_id TEXT,
+        saved_session_id INTEGER,
         retrieved_at INTEGER NOT NULL,
         is_valid INTEGER,
         FOREIGN KEY (site_id) REFERENCES sites (id) ON DELETE CASCADE,
@@ -135,4 +140,14 @@ abstract final class DbSql {
       'ALTER TABLE logs ADD COLUMN is_valid INTEGER';
   static const String alterTableLogsAddRetrievalId =
       'ALTER TABLE logs ADD COLUMN retrieval_id INTEGER';
+
+  static const String createSavedEventLogSessionsTable = '''
+      CREATE TABLE saved_event_log_sessions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        panel_id TEXT NOT NULL,
+        site_id INTEGER,
+        retrieved_at INTEGER NOT NULL,
+        log_count INTEGER NOT NULL
+      )
+    ''';
 }

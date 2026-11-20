@@ -21,6 +21,11 @@ abstract class ProjectDashboardUiDelegate {
     String? title,
   });
 
+  void openSavedEventLogHistory({
+    required String bleName,
+    required String deviceId,
+  });
+
   void openLiveEventLogPane(int paneToken);
 
   void popScreen();

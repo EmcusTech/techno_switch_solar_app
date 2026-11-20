@@ -18,11 +18,13 @@ class NewEventLogValuesScreen extends StatefulWidget {
     super.key,
     required this.progress,
     this.embedded = false,
+    this.showTitle = true,
     this.title,
   });
 
   final ValueNotifier<NewEventLogProgress> progress;
   final bool embedded;
+  final bool showTitle;
   final String? title;
 
   @override
@@ -66,10 +68,11 @@ class _NewEventLogValuesScreenState extends State<NewEventLogValuesScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-              child: Text(_title, style: StyleConstants.black16w700Style),
-            ),
+            if (widget.showTitle)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+                child: Text(_title, style: StyleConstants.black16w700Style),
+              ),
             Expanded(child: _progressBody()),
           ],
         ),
