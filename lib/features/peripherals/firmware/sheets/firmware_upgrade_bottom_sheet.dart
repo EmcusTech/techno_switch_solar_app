@@ -61,6 +61,7 @@ class _FirmwareUpgradeBottomSheetState
   bool _isUpgrading = false;
   bool _isValidating = false;
   bool _isConfirmingComplete = false;
+  bool _upgradePromptShown = false;
   String? _errorMessage;
   String? _currentBleStateMessage;
   fw.FirmwareValidationResult? _validationResult;
@@ -97,6 +98,13 @@ class _FirmwareUpgradeBottomSheetState
             _isUpgrading = false;
             _errorMessage = null;
           });
+          if (!_upgradePromptShown) {
+            _upgradePromptShown = true;
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (!mounted) return;
+              _onResultDone(true);
+            });
+          }
         } else if (status == fw.DownloadStatus.failed) {
           setState(() {
             _currentStep = FirmwareUpgradeStep.result;
@@ -1003,6 +1011,7 @@ class _FirmwareUpgradeBottomSheetState
       _isUpgrading = false;
       _isValidating = false;
       _isConfirmingComplete = false;
+      _upgradePromptShown = false;
       _errorMessage = null;
       _currentBleStateMessage = null;
       _validationResult = null;
@@ -1020,8 +1029,7 @@ class _FirmwareUpgradeBottomSheetState
           child: SizedBox(
             height: 48.h,
             child: CommonCtaButton(
-              onTap:
-                  _isConfirmingComplete ? null : () => _onResultDone(isSuccess),
+              onTap: _isConfirmingComplete ? null : _resetFirmwareFlow,
               isDisabled: _isConfirmingComplete,
               child: Text(
                 StringConstants.doneLabel,

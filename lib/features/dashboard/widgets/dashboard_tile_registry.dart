@@ -58,11 +58,6 @@ abstract final class DashboardTileRegistry {
         isDisabled: !DemoBle.enabled,
         onTap: () => ProjectDashboardTileActions.openExtOut(controller),
       ),
-      DashboardTileConfig(
-        label: StringConstants.logHistory,
-        iconPath: AssetConstants.logHistoryIcon,
-        onTap: () => ProjectDashboardTileActions.openSavedEventLogs(controller),
-      ),
     ];
   }
 
@@ -73,7 +68,6 @@ abstract final class DashboardTileRegistry {
       DashboardTileConfig(
         label: StringConstants.eventLog,
         iconPath: AssetConstants.panelActionEventLogIcon,
-        isDisabled: true,
         onTap: () => ProjectDashboardTileActions.openEventLog(controller),
       ),
       DashboardTileConfig(

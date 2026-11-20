@@ -60,11 +60,6 @@ abstract final class WindowsDashboardTileRegistry {
         iconPath: AssetConstants.panelActionEventLogIcon,
         onTap: () => ProjectDashboardTileActions.openLiveEvents(controller),
       ),
-      WindowsDashboardTileConfig(
-        label: StringConstants.logHistory,
-        iconPath: AssetConstants.logHistoryIcon,
-        onTap: () => ProjectDashboardTileActions.openSavedEventLogs(controller),
-      ),
     ];
   }
 

@@ -174,45 +174,6 @@ abstract final class ProjectDashboardTileActions {
   }
 
   static void openEventLog(ProjectDashboardController c) {
-    c.guardBootloaderOr(() {
-      final ui = _ui(c);
-      if (ui == null) return;
-      if (!c.ble.isConnected) {
-        ui.showSnackBar(StringConstants.deviceNotConnected);
-        return;
-      }
-
-      final process = c.ble.bleProcess;
-      process.onNewEventLogsReady = (List<LogModel> logs) {
-        final String bleName =
-            c.selectedDevice.name.trim().isNotEmpty
-                ? c.selectedDevice.name
-                : c.panelName;
-        unawaited(
-          SavedEventLogStore.appendForDevice(
-            bleName: bleName,
-            deviceId: c.selectedDevice.id,
-            siteId: c.siteId,
-            logs: logs,
-          ),
-        );
-      };
-      unawaited(() async {
-        if (process.liveEventSessionOpen) {
-          await process.stopLiveEvents();
-        }
-        if (DemoBle.enabled) {
-          await process.playDemoEventLogs(DemoConstants.sampleEventLogs);
-        } else {
-          final bool started = await process.beginNewEventLogRetrieval();
-          if (!started) process.onNewEventLogsReady = null;
-        }
-      }());
-      ui.openNewEventLogValuesScreen(process.newEventLogProgress);
-    });
-  }
-
-  static void openSavedEventLogs(ProjectDashboardController c) {
     final ui = _ui(c);
     if (ui == null) return;
     final String bleName =
