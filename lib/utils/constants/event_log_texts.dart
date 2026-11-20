@@ -52,6 +52,7 @@ class EventLogTexts {
     0x1029: 'GAS ABORT ON',
     0x102A: 'SERVICE DUE',
     0x102B: 'BATTERY CONNECTED',
+    0x102C: 'LAMP TEST STARTED',
 
     //Disablement Events
     0x2000: 'CONTROLS ENABLED',
