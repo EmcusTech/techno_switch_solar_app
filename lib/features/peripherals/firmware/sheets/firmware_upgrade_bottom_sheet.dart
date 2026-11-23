@@ -4,7 +4,6 @@ import 'package:dotted_border/dotted_border.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:Technoswitch/ble/blue_plus_adapter.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
 // import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:get/get.dart';
@@ -65,6 +64,14 @@ class _FirmwareUpgradeBottomSheetState
   String? _errorMessage;
   String? _currentBleStateMessage;
   fw.FirmwareValidationResult? _validationResult;
+
+  static const double _firmwareDesignHeight = 700;
+
+  double _firmwareHeightScale(BoxConstraints constraints) {
+    final double height = constraints.maxHeight;
+    if (!height.isFinite || height <= 0) return 1;
+    return (height / _firmwareDesignHeight).clamp(0.7, 1.2);
+  }
 
   void _beginFirmwareSession() {
     BleSessionIdlePolicy.suppressFirmwareDisconnectUi.value = true;
@@ -290,107 +297,98 @@ class _FirmwareUpgradeBottomSheetState
     return FutureBuilder<bool>(
       future: _checkBleConnection(),
       builder: (context, snapshot) {
-        return Column(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const SizedBox(height: 16),
-            SizedBox(
-              width: 250.w,
-              height: 250.h,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  Image.asset(AssetConstants.firmwareUpgradeIcon),
-                  Align(
-                    alignment: Alignment.bottomCenter,
-                    child: Text(
-                      StringConstants.firmwareUpgrade,
-                      style: StyleConstants.primary20w700Style,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Divider(),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final double scale = _firmwareHeightScale(constraints);
+            return Column(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text(
-                  StringConstants.essentialStepsBeforeFirmwareUpgrade,
-                  style: StyleConstants.black18w700Style,
-                ),
-                SizedBox(height: 24),
-
-                ...steps.map(
-                  (step) => Padding(
-                    padding: EdgeInsets.only(bottom: 16),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          width: 24,
-                          height: 24,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: ColorConstants.primary.withOpacity(0.1),
+                SizedBox(height: 16 * scale),
+                Align(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxWidth: 250 * scale,
+                      maxHeight: 250 * scale,
+                    ),
+                    child: AspectRatio(
+                      aspectRatio: 1,
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          Image.asset(
+                            AssetConstants.firmwareUpgradeIcon,
+                            fit: BoxFit.contain,
                           ),
-                          child: Center(
-                            child: Icon(
-                              Icons.check_circle,
-                              size: 16,
-                              color: ColorConstants.primary,
+                          Align(
+                            alignment: Alignment.bottomCenter,
+                            child: Text(
+                              StringConstants.firmwareUpgrade,
+                              style: StyleConstants.primary20w700Style,
                             ),
                           ),
-                        ),
-                        SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            step,
-                            style: StyleConstants.textHeading14w400Style,
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
+                  ),
+                ),
+                Divider(),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      StringConstants.essentialStepsBeforeFirmwareUpgrade,
+                      style: StyleConstants.black18w700Style,
+                    ),
+                    SizedBox(height: 24 * scale),
+                    ...steps.map(
+                      (step) => Padding(
+                        padding: EdgeInsets.only(bottom: 16 * scale),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              width: 24,
+                              height: 24,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: ColorConstants.primary.withOpacity(0.1),
+                              ),
+                              child: Center(
+                                child: Icon(
+                                  Icons.check_circle,
+                                  size: 16,
+                                  color: ColorConstants.primary,
+                                ),
+                              ),
+                            ),
+                            SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                step,
+                                style: StyleConstants.textHeading14w400Style,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                CommonCtaButton(
+                  onTap: () {
+                    setState(() {
+                      _currentStep = FirmwareUpgradeStep.chooseType;
+                    });
+                  },
+                  child: Text(
+                    StringConstants.disabled,
+                    style: StyleConstants.white22w600Style,
                   ),
                 ),
               ],
-            ),
-            // SizedBox(height: 32),
-            CommonCtaButton(
-              onTap: () {
-                setState(() {
-                  // Skip connectDevice step - device is already connected
-                  _currentStep = FirmwareUpgradeStep.chooseType;
-                });
-              },
-              child: Text(
-                StringConstants.disabled,
-                style: StyleConstants.white22w600Style,
-              ),
-            ),
-            // ElevatedButton(
-            //   onPressed: () {
-            // setState(() {
-            //   _currentStep =
-            //       _testMode
-            //           ? FirmwareUpgradeStep.chooseType
-            //           : FirmwareUpgradeStep.connectDevice;
-            // });
-            //   },
-            //   style: ElevatedButton.styleFrom(
-            //     backgroundColor: ColorConstants.primary,
-            //     padding: EdgeInsets.symmetric(vertical: 16),
-            //     shape: RoundedRectangleBorder(
-            //       borderRadius: BorderRadius.circular(8),
-            //     ),
-            //   ),
-            //   child: Text(
-            //     StringConstants.disabled,
-            //     style: StyleConstants.white16w600Style,
-            //   ),
-            // ),
-          ],
+            );
+          },
         );
       },
     );
@@ -411,159 +409,169 @@ class _FirmwareUpgradeBottomSheetState
 
   Widget _buildChooseType() {
     final bool canUpload = _selectedFirmwareType != null;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text(
-          StringConstants.firmwareUpgrade,
-          style: StyleConstants.primary18w700Style,
-        ),
-        Text(
-          StringConstants.chooseFirmwareType,
-          style: StyleConstants.black18w700Style,
-        ),
-        SizedBox(height: 24),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final double scale = _firmwareHeightScale(constraints);
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Expanded(
-              child: _buildFirmwareTypeOption(
-                title: StringConstants.mainPanelFirmware,
-                description:
-                    StringConstants.upgradeMainPanelFirmwareDescription,
-                iconAsset: AssetConstants.mainPanelFirmwareIcon,
-                type: FirmwareType.mainPanel,
-                enabled: false,
-              ),
+            Text(
+              StringConstants.firmwareUpgrade,
+              style: StyleConstants.primary18w700Style,
             ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: _buildFirmwareTypeOption(
-                title: StringConstants.bleChipFirmware,
-                description: StringConstants.upgradeBleChipFirmwareDescription,
-                iconAsset: AssetConstants.bleChipFirmwareIcon,
-                type: FirmwareType.bleChip,
-              ),
+            Text(
+              StringConstants.chooseFirmwareType,
+              style: StyleConstants.black18w700Style,
             ),
-          ],
-        ),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              SizedBox(height: 18),
-              Text(
-                StringConstants.uploadFirmwareFile,
-                style: StyleConstants.black18w700Style,
-              ),
-              SizedBox(height: 12),
-              Expanded(
-                child: GestureDetector(
-                  onTap: canUpload && !_isUploading ? _pickFile : null,
-                  child: Opacity(
-                    opacity: canUpload ? 1 : 0.45,
-                    child: DottedBorder(
-                      options: RoundedRectDottedBorderOptions(
-                        color:
-                            canUpload
-                                ? ColorConstants.primary.withOpacity(0.3)
-                                : ColorConstants.iconDisabled,
-                        radius: Radius.circular(12),
-                        dashPattern: [5, 5],
-                        strokeWidth: 2,
-                        padding: EdgeInsets.all(0),
-                        stackFit: StackFit.expand,
-                      ),
-                      child: Container(
-                        width: double.infinity,
-                        height: double.infinity,
-                        padding: EdgeInsets.all(32),
-                        decoration: BoxDecoration(
-                          color: ColorConstants.scaffoldGradientTop,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            SvgPicture.asset(
-                              AssetConstants.binFolderIcon,
-                              width: 48.w,
-                              height: 48.h,
+            SizedBox(height: 24 * scale),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: _buildFirmwareTypeOption(
+                    title: StringConstants.mainPanelFirmware,
+                    description:
+                        StringConstants.upgradeMainPanelFirmwareDescription,
+                    iconAsset: AssetConstants.mainPanelFirmwareIcon,
+                    type: FirmwareType.mainPanel,
+                    enabled: false,
+                    scale: scale,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: _buildFirmwareTypeOption(
+                    title: StringConstants.bleChipFirmware,
+                    description:
+                        StringConstants.upgradeBleChipFirmwareDescription,
+                    iconAsset: AssetConstants.bleChipFirmwareIcon,
+                    type: FirmwareType.bleChip,
+                    scale: scale,
+                  ),
+                ),
+              ],
+            ),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  SizedBox(height: 18 * scale),
+                  Text(
+                    StringConstants.uploadFirmwareFile,
+                    style: StyleConstants.black18w700Style,
+                  ),
+                  SizedBox(height: 12 * scale),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: canUpload && !_isUploading ? _pickFile : null,
+                      child: Opacity(
+                        opacity: canUpload ? 1 : 0.45,
+                        child: DottedBorder(
+                          options: RoundedRectDottedBorderOptions(
+                            color:
+                                canUpload
+                                    ? ColorConstants.primary.withOpacity(0.3)
+                                    : ColorConstants.iconDisabled,
+                            radius: Radius.circular(12),
+                            dashPattern: [5, 5],
+                            strokeWidth: 2,
+                            padding: EdgeInsets.all(0),
+                            stackFit: StackFit.expand,
+                          ),
+                          child: Container(
+                            width: double.infinity,
+                            height: double.infinity,
+                            padding: EdgeInsets.all(32 * scale),
+                            decoration: BoxDecoration(
+                              color: ColorConstants.scaffoldGradientTop,
+                              borderRadius: BorderRadius.circular(12),
                             ),
-                            SizedBox(height: 16),
-                            Text(
-                              _selectedFile == null
-                                  ? StringConstants.tapToSelectFirmwareFile
-                                  : _selectedFile!.name,
-                              style: StyleConstants.primary18w700Style,
-                              textAlign: TextAlign.center,
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                SvgPicture.asset(
+                                  AssetConstants.binFolderIcon,
+                                  width: 48 * scale,
+                                  height: 48 * scale,
+                                ),
+                                SizedBox(height: 16 * scale),
+                                Text(
+                                  _selectedFile == null
+                                      ? StringConstants.tapToSelectFirmwareFile
+                                      : _selectedFile!.name,
+                                  style: StyleConstants.primary18w700Style,
+                                  textAlign: TextAlign.center,
+                                ),
+                                if (_selectedFile != null) ...[
+                                  SizedBox(height: 8 * scale),
+                                  Text(
+                                    '${(_selectedFile!.size / (1024 * 1024)).toStringAsFixed(2)} MB',
+                                    style: StyleConstants.primary14w500Style,
+                                  ),
+                                ],
+                              ],
                             ),
-                            if (_selectedFile != null) ...[
-                              SizedBox(height: 8),
-                              Text(
-                                '${(_selectedFile!.size / (1024 * 1024)).toStringAsFixed(2)} MB',
-                                style: StyleConstants.primary14w500Style,
-                              ),
-                            ],
-                          ],
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-              ),
-              SizedBox(height: 16),
-              LinearProgressIndicator(
-                backgroundColor:
-                    _isUploading
-                        ? ColorConstants.progressTrack
-                        : Colors.transparent,
-                valueColor: AlwaysStoppedAnimation<Color>(
-                  _isUploading ? ColorConstants.primary : Colors.transparent,
-                ),
-              ),
-            ],
-          ),
-        ),
-        SizedBox(height: 24),
-        Row(
-          children: [
-            Expanded(
-              child: CommonCtaButton(
-                onTap: () {
-                  setState(() {
-                    _currentStep = FirmwareUpgradeStep.essentialSteps;
-                  });
-                },
-                color: ColorConstants.buttonSecondaryBackground,
-                child: Text(
-                  StringConstants.back,
-                  style: StyleConstants.labelText16w600Style,
-                ),
+                  SizedBox(height: 16 * scale),
+                  LinearProgressIndicator(
+                    backgroundColor:
+                        _isUploading
+                            ? ColorConstants.progressTrack
+                            : Colors.transparent,
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      _isUploading
+                          ? ColorConstants.primary
+                          : Colors.transparent,
+                    ),
+                  ),
+                ],
               ),
             ),
-            SizedBox(width: 16),
-            Expanded(
-              child: CommonCtaButton(
-                onTap:
-                    _selectedFirmwareType == null ||
-                            _selectedFile == null ||
-                            _isUploading
-                        ? null
-                        : _goToFileDetails,
-                isDisabled:
-                    _selectedFirmwareType == null ||
-                    _selectedFile == null ||
-                    _isUploading,
-                child: Text(
-                  StringConstants.disabled,
-                  style: StyleConstants.white16w600Style,
+            SizedBox(height: 24 * scale),
+            Row(
+              children: [
+                Expanded(
+                  child: CommonCtaButton(
+                    onTap: () {
+                      setState(() {
+                        _currentStep = FirmwareUpgradeStep.essentialSteps;
+                      });
+                    },
+                    color: ColorConstants.buttonSecondaryBackground,
+                    child: Text(
+                      StringConstants.back,
+                      style: StyleConstants.labelText16w600Style,
+                    ),
+                  ),
                 ),
-              ),
+                SizedBox(width: 16),
+                Expanded(
+                  child: CommonCtaButton(
+                    onTap:
+                        _selectedFirmwareType == null ||
+                                _selectedFile == null ||
+                                _isUploading
+                            ? null
+                            : _goToFileDetails,
+                    isDisabled:
+                        _selectedFirmwareType == null ||
+                        _selectedFile == null ||
+                        _isUploading,
+                    child: Text(
+                      StringConstants.disabled,
+                      style: StyleConstants.white16w600Style,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
-        ),
-      ],
+        );
+      },
     );
   }
 
@@ -573,6 +581,7 @@ class _FirmwareUpgradeBottomSheetState
     required String iconAsset,
     required FirmwareType type,
     bool enabled = true,
+    double scale = 1,
   }) {
     final isSelected = _selectedFirmwareType == type;
     return GestureDetector(
@@ -585,7 +594,7 @@ class _FirmwareUpgradeBottomSheetState
               }
               : null,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 24 * scale),
         decoration: BoxDecoration(
           color: isSelected ? Color(0xFFFFE8E9) : Color(0xFFFFFFFF),
           borderRadius: BorderRadius.circular(8),
@@ -628,20 +637,20 @@ class _FirmwareUpgradeBottomSheetState
           children: [
             SvgPicture.asset(
               iconAsset,
-              width: 72,
-              height: 72,
+              width: 72 * scale,
+              height: 72 * scale,
               color:
                   enabled
                       ? ColorConstants.primary
                       : ColorConstants.textDisabled,
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16 * scale),
             Text(
               title,
               textAlign: TextAlign.center,
               style: StyleConstants.textDark16w700Style,
             ),
-            const SizedBox(height: 6),
+            SizedBox(height: 6 * scale),
             Text(
               description,
               textAlign: TextAlign.center,
@@ -661,186 +670,202 @@ class _FirmwareUpgradeBottomSheetState
     final result = _validationResult;
     final isCrcMatched = _controller.isFileCrcMatched.value;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Image.asset(
-          AssetConstants.firmwareDetailsIcon,
-          width: 140.w,
-          height: 140.h,
-        ),
-        Text(
-          StringConstants.firmwareDetails,
-          style: StyleConstants.primary18w700Style,
-        ),
-        SizedBox(height: 24),
-        _buildDetailRow(StringConstants.fileName, _selectedFile!.name),
-        // SizedBox(height: 12),
-        _buildDetailRow(
-          StringConstants.fileSize,
-          '${(_selectedFile!.size / (1024 * 1024)).toStringAsFixed(2)} MB',
-        ),
-        // SizedBox(height: 12),
-        _buildDetailRow(
-          StringConstants.firmwareTypeLabel,
-          _selectedFirmwareType == FirmwareType.mainPanel
-              ? StringConstants.mainPanelFirmware
-              : StringConstants.bleChipFirmware,
-        ),
-        if (result != null) ...[
-          // SizedBox(height: 12),
-          _buildDetailRow(
-            StringConstants.firmwareVersion2,
-            _emptyToDash(result.firmwareVersion),
-          ),
-          // SizedBox(height: 12),
-          _buildDetailRow(
-            StringConstants.hardwareVersion2,
-            _emptyToDash(result.hardwareVersion),
-          ),
-          // SizedBox(height: 12),
-          _buildDetailRow(StringConstants.buildDate, _emptyToDash(result.date)),
-          // SizedBox(height: 12),
-          _buildDetailRow(
-            StringConstants.productId,
-            _emptyToDash(result.productId),
-          ),
-        ],
-        _buildDetailRow(
-          StringConstants.statusLabel,
-          _isValidating
-              ? StringConstants.validating2
-              : isCrcMatched
-              ? StringConstants.validLabel
-              : StringConstants.invalidLabel,
-          valueColor:
-              _isValidating
-                  ? ColorConstants.textDisabled
-                  : isCrcMatched
-                  ? ColorConstants.success
-                  : ColorConstants.primary,
-          valueIconAsset:
-              _isValidating
-                  ? null
-                  : isCrcMatched
-                  ? AssetConstants.validBinFileIcon
-                  : AssetConstants.invalidBinFileIcon,
-        ),
-        if (_isValidating) ...[
-          SizedBox(height: 16),
-          Center(child: CircularProgressIndicator()),
-        ],
-        // if (!_isValidating && !isCrcMatched)
-        //   Container(
-        //     margin: EdgeInsets.only(top: 24),
-        //     padding: EdgeInsets.all(16),
-        //     decoration: BoxDecoration(
-        //       color: ColorConstants.primary.withOpacity(0.1),
-        //       borderRadius: BorderRadius.circular(8),
-        //     ),
-        //     child: Row(
-        //       children: [
-        //         Icon(Icons.warning, color: ColorConstants.primary),
-        //         SizedBox(width: 12),
-        //         Expanded(
-        //           child: Text(
-        //             _validationResult?.error ??
-        //                 StringConstants.fileCrcValidationFailedSelectValidFile,
-        //             style: StyleConstants.primary14w400Style,
-        //           ),
-        //         ),
-        //       ],
-        //     ),
-        //   ),
-        Spacer(),
-        Row(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final double scale = _firmwareHeightScale(constraints);
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Expanded(
-              child: CommonCtaButton(
-                color: ColorConstants.buttonSecondaryBackground,
-                onTap:
-                    _isValidating
-                        ? null
-                        : () {
-                          setState(() {
-                            _currentStep = FirmwareUpgradeStep.chooseType;
-                          });
-                        },
-                isDisabled: _isValidating,
-                child: Text(
-                  StringConstants.back,
-                  style: StyleConstants.labelText16w600Style,
+            Align(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: 140 * scale,
+                  maxHeight: 140 * scale,
+                ),
+                child: Image.asset(
+                  AssetConstants.firmwareDetailsIcon,
+                  fit: BoxFit.contain,
                 ),
               ),
             ),
-            // Expanded(
-            //   child: OutlinedButton(
-            //     onPressed:
-            //         _isValidating
-            //             ? null
-            //             : () {
-            //               setState(() {
-            //                 _currentStep = FirmwareUpgradeStep.chooseType;
-            //               });
-            //             },
-            //     style: OutlinedButton.styleFrom(
-            //       padding: EdgeInsets.symmetric(vertical: 16),
-            //       shape: RoundedRectangleBorder(
-            //         borderRadius: BorderRadius.circular(8),
-            //       ),
-            //       side: BorderSide(color: ColorConstants.primary),
-            //     ),
-            //     child: Text(
-            //       StringConstants.back,
-            //       style: StyleConstants.primary16w600Style,
-            //     ),
-            //   ),
-            // ),
-            SizedBox(width: 16),
-            Expanded(
-              child: CommonCtaButton(
-                onTap:
-                    (_isValidating || !isCrcMatched)
-                        ? null
-                        : () async {
-                          await _onValidationContinuePressed();
-                        },
-                isDisabled: _isValidating || !isCrcMatched,
-                child: Text(
-                  StringConstants.disabled,
-                  style: StyleConstants.white16w600Style,
-                ),
-              ),
+            Text(
+              StringConstants.firmwareDetails,
+              style: StyleConstants.primary18w700Style,
             ),
-            // Expanded(
-            //   flex: 2,
-            //   child: ElevatedButton(
-            //     onPressed:
-            //         (_isValidating || !isCrcMatched)
-            //             ? null
-            //             : () {
-            //               _startUpgrade(
-            //                 isChipInBootLoader:
-            //                     _selectedDevice?.manufacturerData.last == 1,
-            //               );
-            //             },
-            //     style: ElevatedButton.styleFrom(
-            //       backgroundColor: ColorConstants.primary,
-            //       padding: EdgeInsets.symmetric(vertical: 16),
-            //       shape: RoundedRectangleBorder(
-            //         borderRadius: BorderRadius.circular(8),
-            //       ),
-            //       disabledBackgroundColor: ColorConstants.progressTrack,
+            SizedBox(height: 24 * scale),
+            _buildDetailRow(StringConstants.fileName, _selectedFile!.name),
+            // SizedBox(height: 12),
+            _buildDetailRow(
+              StringConstants.fileSize,
+              '${(_selectedFile!.size / (1024 * 1024)).toStringAsFixed(2)} MB',
+            ),
+            // SizedBox(height: 12),
+            _buildDetailRow(
+              StringConstants.firmwareTypeLabel,
+              _selectedFirmwareType == FirmwareType.mainPanel
+                  ? StringConstants.mainPanelFirmware
+                  : StringConstants.bleChipFirmware,
+            ),
+            if (result != null) ...[
+              // SizedBox(height: 12),
+              _buildDetailRow(
+                StringConstants.firmwareVersion2,
+                _emptyToDash(result.firmwareVersion),
+              ),
+              // SizedBox(height: 12),
+              _buildDetailRow(
+                StringConstants.hardwareVersion2,
+                _emptyToDash(result.hardwareVersion),
+              ),
+              // SizedBox(height: 12),
+              _buildDetailRow(
+                StringConstants.buildDate,
+                _emptyToDash(result.date),
+              ),
+              // SizedBox(height: 12),
+              _buildDetailRow(
+                StringConstants.productId,
+                _emptyToDash(result.productId),
+              ),
+            ],
+            _buildDetailRow(
+              isLast: true,
+              StringConstants.statusLabel,
+              _isValidating
+                  ? StringConstants.validating2
+                  : isCrcMatched
+                  ? StringConstants.validLabel
+                  : StringConstants.invalidLabel,
+              valueColor:
+                  _isValidating
+                      ? ColorConstants.textDisabled
+                      : isCrcMatched
+                      ? ColorConstants.success
+                      : ColorConstants.primary,
+              valueIconAsset:
+                  _isValidating
+                      ? null
+                      : isCrcMatched
+                      ? AssetConstants.validBinFileIcon
+                      : AssetConstants.invalidBinFileIcon,
+            ),
+            if (_isValidating) ...[
+              SizedBox(height: 16),
+              Center(child: CircularProgressIndicator()),
+            ],
+            // if (!_isValidating && !isCrcMatched)
+            //   Container(
+            //     margin: EdgeInsets.only(top: 24),
+            //     padding: EdgeInsets.all(16),
+            //     decoration: BoxDecoration(
+            //       color: ColorConstants.primary.withOpacity(0.1),
+            //       borderRadius: BorderRadius.circular(8),
             //     ),
-            //     child: Text(
-            //       StringConstants.disabled,
-            //       style: StyleConstants.white16w600Style,
+            //     child: Row(
+            //       children: [
+            //         Icon(Icons.warning, color: ColorConstants.primary),
+            //         SizedBox(width: 12),
+            //         Expanded(
+            //           child: Text(
+            //             _validationResult?.error ??
+            //                 StringConstants.fileCrcValidationFailedSelectValidFile,
+            //             style: StyleConstants.primary14w400Style,
+            //           ),
+            //         ),
+            //       ],
             //     ),
             //   ),
-            // ),
+            Spacer(),
+            Row(
+              children: [
+                Expanded(
+                  child: CommonCtaButton(
+                    color: ColorConstants.buttonSecondaryBackground,
+                    onTap:
+                        _isValidating
+                            ? null
+                            : () {
+                              setState(() {
+                                _currentStep = FirmwareUpgradeStep.chooseType;
+                              });
+                            },
+                    isDisabled: _isValidating,
+                    child: Text(
+                      StringConstants.back,
+                      style: StyleConstants.labelText16w600Style,
+                    ),
+                  ),
+                ),
+                // Expanded(
+                //   child: OutlinedButton(
+                //     onPressed:
+                //         _isValidating
+                //             ? null
+                //             : () {
+                //               setState(() {
+                //                 _currentStep = FirmwareUpgradeStep.chooseType;
+                //               });
+                //             },
+                //     style: OutlinedButton.styleFrom(
+                //       padding: EdgeInsets.symmetric(vertical: 16),
+                //       shape: RoundedRectangleBorder(
+                //         borderRadius: BorderRadius.circular(8),
+                //       ),
+                //       side: BorderSide(color: ColorConstants.primary),
+                //     ),
+                //     child: Text(
+                //       StringConstants.back,
+                //       style: StyleConstants.primary16w600Style,
+                //     ),
+                //   ),
+                // ),
+                SizedBox(width: 16),
+                Expanded(
+                  child: CommonCtaButton(
+                    onTap:
+                        (_isValidating || !isCrcMatched)
+                            ? null
+                            : () async {
+                              await _onValidationContinuePressed();
+                            },
+                    isDisabled: _isValidating || !isCrcMatched,
+                    child: Text(
+                      StringConstants.disabled,
+                      style: StyleConstants.white16w600Style,
+                    ),
+                  ),
+                ),
+                // Expanded(
+                //   flex: 2,
+                //   child: ElevatedButton(
+                //     onPressed:
+                //         (_isValidating || !isCrcMatched)
+                //             ? null
+                //             : () {
+                //               _startUpgrade(
+                //                 isChipInBootLoader:
+                //                     _selectedDevice?.manufacturerData.last == 1,
+                //               );
+                //             },
+                //     style: ElevatedButton.styleFrom(
+                //       backgroundColor: ColorConstants.primary,
+                //       padding: EdgeInsets.symmetric(vertical: 16),
+                //       shape: RoundedRectangleBorder(
+                //         borderRadius: BorderRadius.circular(8),
+                //       ),
+                //       disabledBackgroundColor: ColorConstants.progressTrack,
+                //     ),
+                //     child: Text(
+                //       StringConstants.disabled,
+                //       style: StyleConstants.white16w600Style,
+                //     ),
+                //   ),
+                // ),
+              ],
+            ),
           ],
-        ),
-      ],
+        );
+      },
     );
   }
 
@@ -851,11 +876,12 @@ class _FirmwareUpgradeBottomSheetState
     String value, {
     Color? valueColor,
     String? valueIconAsset,
+    bool? isLast = false,
   }) {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4),
+          padding: const EdgeInsets.symmetric(vertical: 0),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -892,77 +918,72 @@ class _FirmwareUpgradeBottomSheetState
             ],
           ),
         ),
-        Divider(color: Color(0xFFBDBDBD)),
+        if (!isLast!) Divider(color: Color(0xFFBDBDBD)),
       ],
     );
   }
 
   Widget _buildProgress() {
-    return Obx(() {
-      final progress = _controller.progressbarCount.value;
-      final status = _controller.downloadingStatus.value;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final double scale = _firmwareHeightScale(constraints);
+        final double availableRadius = (constraints.maxHeight - 80) / 2;
+        final double radius =
+            availableRadius < 80
+                ? availableRadius.clamp(48, 80).toDouble()
+                : (200 * scale).clamp(80, availableRadius).toDouble();
+        return Obx(() {
+          final progress = _controller.progressbarCount.value;
+          final status = _controller.downloadingStatus.value;
 
-      // Always show the normal progress UI, even during reconnection phases
-      // This hides the reconnection/status fetching messages and shows only the upload progress
-      return Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Text(
-          //   'Firmware Upgrade in Progress',
-          //   style: StyleConstants.black18w700Style,
-          // ),
-          // SizedBox(height: 32),
-          Center(
-            child:
-                (progress * 100).toStringAsFixed(1) == '0.0'
-                    ? Lottie.asset(AssetConstants.bleConnectingJson)
-                    : CircularPercentIndicator(
-                      radius: 200,
-                      lineWidth: 8,
-                      percent: progress.clamp(0.0, 1.0),
-                      center: Lottie.asset(AssetConstants.firmwareUpgradeJson),
-                      progressColor: ColorConstants.primary,
-                      backgroundColor: ColorConstants.progressTrack,
-                      circularStrokeCap: CircularStrokeCap.round,
-                    ),
-          ),
-          SizedBox(height: 12),
-          Visibility(
-            visible: !((progress * 100).toStringAsFixed(1) == '0.0'),
-            child: Center(
-              child: Text(
-                '${(progress * 100).toStringAsFixed(1)}%',
-                style: StyleConstants.primary24w700Style,
+          return Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Center(
+                child:
+                    (progress * 100).toStringAsFixed(1) == '0.0'
+                        ? Lottie.asset(
+                          AssetConstants.bleConnectingJson,
+                          height: radius * 2,
+                          width: radius * 2,
+                        )
+                        : CircularPercentIndicator(
+                          radius: radius,
+                          lineWidth: 8,
+                          percent: progress.clamp(0.0, 1.0),
+                          center: Lottie.asset(
+                            AssetConstants.firmwareUpgradeJson,
+                          ),
+                          progressColor: ColorConstants.primary,
+                          backgroundColor: ColorConstants.progressTrack,
+                          circularStrokeCap: CircularStrokeCap.round,
+                        ),
               ),
-            ),
-          ),
-          // if (totalPackets > 0)
-          //   Text(
-          //     'Packet $currentIndex of $totalPackets',
-          //     style: StyleConstants.textDisabled14w400Style,
-          //     textAlign: TextAlign.center,
-          //   ),
-          // SizedBox(height: 8),
-          // LinearPercentIndicator(
-          //   lineHeight: 8,
-          //   percent: progress.clamp(0.0, 1.0),
-          //   backgroundColor: ColorConstants.progressTrack,
-          //   progressColor: ColorConstants.primary,
-          //   barRadius: Radius.circular(4),
-          // ),
-          SizedBox(height: 12),
-          Text(
-            _currentBleStateMessage ??
-                (status == fw.DownloadStatus.upgrading
-                    ? StringConstants.pleaseWaitWhileFirmwareUpgraded
-                    : StringConstants.processingLabel),
-            style: StyleConstants.textDisabled14w400Style,
-            textAlign: TextAlign.center,
-          ),
-        ],
-      );
-    });
+              SizedBox(height: 12 * scale),
+              Visibility(
+                visible: !((progress * 100).toStringAsFixed(1) == '0.0'),
+                child: Center(
+                  child: Text(
+                    '${(progress * 100).toStringAsFixed(1)}%',
+                    style: StyleConstants.primary24w700Style,
+                  ),
+                ),
+              ),
+              SizedBox(height: 12 * scale),
+              Text(
+                _currentBleStateMessage ??
+                    (status == fw.DownloadStatus.upgrading
+                        ? StringConstants.pleaseWaitWhileFirmwareUpgraded
+                        : StringConstants.processingLabel),
+                style: StyleConstants.textDisabled14w400Style,
+                textAlign: TextAlign.center,
+              ),
+            ],
+          );
+        });
+      },
+    );
   }
 
   Future<void> _onResultDone(bool isSuccess) async {
@@ -1022,13 +1043,57 @@ class _FirmwareUpgradeBottomSheetState
     final isSuccess =
         _controller.downloadingStatus.value == fw.DownloadStatus.completed;
 
-    return Stack(
-      children: [
-        Align(
-          alignment: Alignment.bottomCenter,
-          child: SizedBox(
-            height: 48.h,
-            child: CommonCtaButton(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final double scale = _firmwareHeightScale(constraints);
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Align(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxWidth: 200 * scale,
+                        maxHeight: 200 * scale,
+                      ),
+                      child: Lottie.asset(
+                        isSuccess
+                            ? AssetConstants.firmwareUpgradeSuccessJson
+                            : AssetConstants.firmwareUpgradeFailedJson,
+                        repeat: false,
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 24 * scale),
+                  Text(
+                    isSuccess
+                        ? StringConstants.strf910c9ffFailed
+                        : StringConstants.failedLabel,
+                    style: StyleConstants.primary24w700Style.copyWith(
+                      color:
+                          isSuccess
+                              ? ColorConstants.success
+                              : ColorConstants.primary,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 82),
+                    child: Text(
+                      "Your firmware has been successfully uploaded.\nPlease click Done for upgrade to initiate in panel.",
+                      style: StyleConstants.textDisabled14w400Style,
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: 12 * scale),
+            CommonCtaButton(
               onTap: _isConfirmingComplete ? null : _resetFirmwareFlow,
               isDisabled: _isConfirmingComplete,
               child: Text(
@@ -1036,83 +1101,9 @@ class _FirmwareUpgradeBottomSheetState
                 style: StyleConstants.white16w600Style,
               ),
             ),
-          ),
-        ),
-        Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Lottie.asset(
-              height: 200.h,
-              width: 200.w,
-              isSuccess
-                  ? AssetConstants.firmwareUpgradeSuccessJson
-                  : AssetConstants.firmwareUpgradeFailedJson,
-              repeat: false,
-            ),
-            SizedBox(height: 24),
-            Text(
-              isSuccess
-                  ? StringConstants.strf910c9ffFailed
-                  : StringConstants.failedLabel,
-              style: StyleConstants.primary24w700Style.copyWith(
-                color:
-                    isSuccess ? ColorConstants.success : ColorConstants.primary,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 82),
-              child: Text(
-                "Your firmware has been successfully uploaded.\nPlease click Done for upgrade to initiate in panel.",
-                style: StyleConstants.textDisabled14w400Style,
-                textAlign: TextAlign.center,
-              ),
-            ),
-            // Spacer(),
-            // CommonCtaButton(
-            //   onTap: () {
-            //     Navigator.of(context).pop(isSuccess);
-            //     // Reset state
-            //     _controller.downloadingStatus.value =
-            //         fw.DownloadStatus.downloading;
-            //     _controller.isFileCrcMatched.value = false;
-            //     _controller.selectedFirmwareFile = null;
-            //     _controller.progressbarIndex.value = 0;
-            //     _controller.progressbarCount.value = 0.0;
-            //     _controller.totalPacketLength.value = 0;
-            //   },
-            //   child: Text(
-            //     StringConstants.doneLabel,
-            //     style: StyleConstants.white16w600Style,
-            //   ),
-            // ),
-            // ElevatedButton(
-            //   onPressed: () {
-            //     Navigator.of(context).pop();
-            //     // Reset state
-            //     _controller.downloadingStatus.value = fw.DownloadStatus.downloading;
-            //     _controller.isFileCrcMatched.value = false;
-            //     _controller.selectedFirmwareFile = null;
-            //     _controller.progressbarIndex.value = 0;
-            //     _controller.progressbarCount.value = 0.0;
-            //     _controller.totalPacketLength.value = 0;
-            //   },
-            //   style: ElevatedButton.styleFrom(
-            //     backgroundColor: ColorConstants.primary,
-            //     padding: EdgeInsets.symmetric(vertical: 16),
-            //     shape: RoundedRectangleBorder(
-            //       borderRadius: BorderRadius.circular(8),
-            //     ),
-            //   ),
-            //   child: Text(
-            //     'Done',
-            //     style: StyleConstants.white16w600Style,
-            //   ),
-            // ),
           ],
-        ),
-      ],
+        );
+      },
     );
   }
 
