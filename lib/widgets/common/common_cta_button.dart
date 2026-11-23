@@ -18,26 +18,30 @@ class CommonCtaButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Opacity(
-        opacity: isDisabled ?? false ? 0.5 : 1,
-        child: Container(
-          width: width ?? double.infinity,
-          // height: 55,
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          decoration: BoxDecoration(
-            color: color ?? ColorConstants.primary,
-            borderRadius: BorderRadius.circular(8),
-            boxShadow: [
-              BoxShadow(
-                color: color ?? ColorConstants.primary.withOpacity(0.3),
-                blurRadius: 8,
-                offset: Offset(0, 4),
-              ),
-            ],
+    return MouseRegion(
+      cursor:
+          onTap == null ? SystemMouseCursors.basic : SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: onTap,
+        child: Opacity(
+          opacity: isDisabled ?? false ? 0.5 : 1,
+          child: Container(
+            width: width ?? double.infinity,
+            // height: 55,
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            decoration: BoxDecoration(
+              color: color ?? ColorConstants.primary,
+              borderRadius: BorderRadius.circular(8),
+              boxShadow: [
+                BoxShadow(
+                  color: color ?? ColorConstants.primary.withOpacity(0.3),
+                  blurRadius: 8,
+                  offset: Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Center(child: child),
           ),
-          child: Center(child: child),
         ),
       ),
     );

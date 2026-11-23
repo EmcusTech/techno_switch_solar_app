@@ -21,44 +21,53 @@ class ScanDeviceCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final label = device.name;
 
-    return GestureDetector(
-      onTap:
-          () =>
-              controller.onDeviceSelected(device, isScanningConnectFlow: true),
-      child: Container(
-        decoration: BoxDecoration(
-          color: ColorConstants.primary.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: ColorConstants.primary, width: 2),
-          boxShadow: [
-            BoxShadow(
-              color: ColorConstants.blackMaterial.withValues(alpha: 0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 2),
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap:
+            () => controller.onDeviceSelected(
+              device,
+              isScanningConnectFlow: true,
             ),
-          ],
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(10),
-          child: Column(
-            children: [
-              Text(
-                BleNameUtils.getDisplayPrefixFromBleName(label),
-                style: StyleConstants.textDark8boldStyle,
-              ),
-              const SizedBox(height: 6),
-              SvgPicture.asset(AssetConstants.panelIcon, width: 60, height: 60),
-              const SizedBox(height: 6),
-              Expanded(
-                child: Text(
-                  BleNameUtils.getDisplayIdFromBleName(label),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.center,
-                  style: StyleConstants.black12boldStyle,
-                ),
+        child: Container(
+          decoration: BoxDecoration(
+            color: ColorConstants.primary.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: ColorConstants.primary, width: 2),
+            boxShadow: [
+              BoxShadow(
+                color: ColorConstants.blackMaterial.withValues(alpha: 0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 2),
               ),
             ],
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(10),
+            child: Column(
+              children: [
+                Text(
+                  BleNameUtils.getDisplayPrefixFromBleName(label),
+                  style: StyleConstants.textDark8boldStyle,
+                ),
+                const SizedBox(height: 6),
+                SvgPicture.asset(
+                  AssetConstants.panelIcon,
+                  width: 60,
+                  height: 60,
+                ),
+                const SizedBox(height: 6),
+                Expanded(
+                  child: Text(
+                    BleNameUtils.getDisplayIdFromBleName(label),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: StyleConstants.black12boldStyle,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

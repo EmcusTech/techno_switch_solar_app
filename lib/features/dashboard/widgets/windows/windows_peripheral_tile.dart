@@ -46,64 +46,69 @@ class PeripheralTile extends StatelessWidget {
       ]),
       builder: (context, _) {
         final locked = !process.sessionAccessCodeReady.value;
-        final downloading =
-            process.newEventLogPhase != NewEventLogPhase.idle;
+        final downloading = process.newEventLogPhase != NewEventLogPhase.idle;
         final inactive =
             config.isDisabled ||
             locked ||
             (downloading && config.label != StringConstants.eventLog);
         final isSelected =
             controller.selectedWindowsTile.value == config.label && !locked;
-        return GestureDetector(
-          onTap: () async {
-            if (inactive) return;
-            controller.pendingWindowsTileLabel = config.label;
-            await controller.onPeripheralTileTap(config.onTap);
-          },
-          child: Column(
-            children: [
-              Expanded(
-                child: Container(
-                  decoration: BoxDecoration(
-                    color:
-                        isSelected
-                            ? ColorConstants.primary.withValues(alpha: 0.1)
-                            : ColorConstants.backgroundSubtle,
-                    border: Border.all(
+        return MouseRegion(
+          cursor:
+              inactive ? SystemMouseCursors.basic : SystemMouseCursors.click,
+          child: GestureDetector(
+            onTap: () async {
+              if (inactive) return;
+              controller.pendingWindowsTileLabel = config.label;
+              await controller.onPeripheralTileTap(config.onTap);
+            },
+            child: Column(
+              children: [
+                Expanded(
+                  child: Container(
+                    decoration: BoxDecoration(
                       color:
                           isSelected
-                              ? ColorConstants.primary
-                              : ColorConstants.borderMedium,
-                      width: isSelected ? 2 : 1,
-                    ),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Center(
-                    child: SvgPicture.asset(
-                      config.iconPath,
-                      colorFilter: ColorFilter.mode(
-                        inactive
-                            ? ColorConstants.textGray.withValues(alpha: 0.2)
-                            : ColorConstants.primary,
-                        BlendMode.srcIn,
+                              ? ColorConstants.primary.withValues(alpha: 0.1)
+                              : ColorConstants.backgroundSubtle,
+                      border: Border.all(
+                        color:
+                            isSelected
+                                ? ColorConstants.primary
+                                : ColorConstants.borderMedium,
+                        width: isSelected ? 2 : 1,
                       ),
-                      height: config.iconHeight,
-                      width: config.iconWidth,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Center(
+                      child: SvgPicture.asset(
+                        config.iconPath,
+                        colorFilter: ColorFilter.mode(
+                          inactive
+                              ? ColorConstants.textGray.withValues(alpha: 0.2)
+                              : ColorConstants.primary,
+                          BlendMode.srcIn,
+                        ),
+                        height: config.iconHeight,
+                        width: config.iconWidth,
+                      ),
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                config.label,
-                style:
-                    inactive
-                        ? StyleConstants.textSecondary10w500Style.copyWith(
-                          color: ColorConstants.textGray.withValues(alpha: 0.2),
-                        )
-                        : StyleConstants.textSecondary10w500Style,
-              ),
-            ],
+                const SizedBox(height: 8),
+                Text(
+                  config.label,
+                  style:
+                      inactive
+                          ? StyleConstants.textSecondary10w500Style.copyWith(
+                            color: ColorConstants.textGray.withValues(
+                              alpha: 0.2,
+                            ),
+                          )
+                          : StyleConstants.textSecondary10w500Style,
+                ),
+              ],
+            ),
           ),
         );
       },

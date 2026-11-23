@@ -130,6 +130,7 @@ class EventLogTexts {
     0x402A: 'GAS HOLD LOW RESIST',
     0x402B: 'GAS HOLD SHORT CKT',
     0x402C: 'BATTERY VOLT CRITICAL',
+    0x402D: 'AUX 24V FAULT',
 
     //Extout/Gas Events
     0x5000: 'ZONE IN EVACUATION',

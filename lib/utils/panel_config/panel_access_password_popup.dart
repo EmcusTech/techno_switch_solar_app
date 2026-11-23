@@ -825,56 +825,63 @@ Future<void> showPanelAccessPasswordPopup({
                                                                 .text
                                                                 .trim()
                                                                 .isNotEmpty;
-                                                        return ElevatedButton(
-                                                          style: ElevatedButton.styleFrom(
-                                                            backgroundColor:
-                                                                ColorConstants
-                                                                    .primary,
-                                                            shape: RoundedRectangleBorder(
-                                                              borderRadius:
-                                                                  BorderRadius.circular(
-                                                                    24,
-                                                                  ),
-                                                            ),
-                                                          ),
-                                                          onPressed:
+                                                        return MouseRegion(
+                                                          cursor:
                                                               canVerify
-                                                                  ? () async {
-                                                                    FocusScope.of(
-                                                                      dialogContext,
-                                                                    ).unfocus();
+                                                                  ? SystemMouseCursors
+                                                                      .click
+                                                                  : SystemMouseCursors
+                                                                      .basic,
+                                                          child: ElevatedButton(
+                                                            style: ElevatedButton.styleFrom(
+                                                              backgroundColor:
+                                                                  ColorConstants
+                                                                      .primary,
+                                                              shape: RoundedRectangleBorder(
+                                                                borderRadius:
+                                                                    BorderRadius.circular(
+                                                                      24,
+                                                                    ),
+                                                              ),
+                                                            ),
+                                                            onPressed:
+                                                                canVerify
+                                                                    ? () async {
+                                                                      FocusScope.of(
+                                                                        dialogContext,
+                                                                      ).unfocus();
 
-                                                                    bleProcess
-                                                                        .isAccessKeyValid
-                                                                        .value = null;
-                                                                    bleProcess
-                                                                            .processDesc
-                                                                            .value =
-                                                                        'Validating';
+                                                                      bleProcess
+                                                                          .isAccessKeyValid
+                                                                          .value = null;
+                                                                      bleProcess
+                                                                          .processDesc
+                                                                          .value = 'Validating';
 
-                                                                    accessKey
-                                                                            .value =
-                                                                        accessController
-                                                                            .text;
+                                                                      accessKey
+                                                                              .value =
+                                                                          accessController
+                                                                              .text;
 
-                                                                    if (isConfigLogBulkApply &&
-                                                                        mode ==
-                                                                            'bottomsheet_apply') {
-                                                                      await PeripheralCacheToBle.applyToBleManager(
-                                                                        bleManager,
-                                                                        selectedDevice
-                                                                            .id,
-                                                                      );
+                                                                      if (isConfigLogBulkApply &&
+                                                                          mode ==
+                                                                              'bottomsheet_apply') {
+                                                                        await PeripheralCacheToBle.applyToBleManager(
+                                                                          bleManager,
+                                                                          selectedDevice
+                                                                              .id,
+                                                                        );
+                                                                      }
+
+                                                                      onCall();
                                                                     }
-
-                                                                    onCall();
-                                                                  }
-                                                                  : null,
-                                                          child: Text(
-                                                            'Verify',
-                                                            style:
-                                                                StyleConstants
-                                                                    .white16w600Style,
+                                                                    : null,
+                                                            child: Text(
+                                                              'Verify',
+                                                              style:
+                                                                  StyleConstants
+                                                                      .white16w600Style,
+                                                            ),
                                                           ),
                                                         );
                                                       },

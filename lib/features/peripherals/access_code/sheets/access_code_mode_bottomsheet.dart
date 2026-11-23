@@ -314,9 +314,7 @@ class _AccessCodesBottomSheetState extends State<AccessCodesBottomSheet> {
         style: OutlinedButton.styleFrom(
           foregroundColor: ColorConstants.primary,
           side: const BorderSide(color: ColorConstants.primary),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
         onPressed: () {
           FocusManager.instance.primaryFocus?.unfocus();
@@ -336,9 +334,7 @@ class _AccessCodesBottomSheetState extends State<AccessCodesBottomSheet> {
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
           backgroundColor: ColorConstants.primary,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
         onPressed:
             controller.computeIsValid()
