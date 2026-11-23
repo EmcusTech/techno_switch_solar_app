@@ -158,7 +158,7 @@ class _ModuleInfoBottomSheetState extends State<ModuleInfoBottomSheet> {
                                     color: ColorConstants.primary,
                                   ),
                                   shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(24),
+                                    borderRadius: BorderRadius.circular(8),
                                   ),
                                 ),
                                 onPressed: widget.onDownload,

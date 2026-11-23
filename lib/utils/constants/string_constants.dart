@@ -714,7 +714,8 @@ abstract final class StringConstants {
   static const String power = "Power";
   static const String pragmaForeignKeysON = "PRAGMA foreign_keys = ON";
   static const String preparingDashboard = "Preparing dashboard...";
-  static const String preparingFirmwareUpgrade = "Preparing Firmware Upload...";
+  static const String preparingFirmwareUpgrade =
+      "Uploading Firmware bin files...";
   static const String preparingToNavigate = "Preparing to navigate...";
   static const String processing = "Fetching...";
   static const String product = "Product";
@@ -1049,7 +1050,7 @@ abstract final class StringConstants {
   static const String disable = "Disable";
   static const String disablement = "Disablement";
   static const String doYouWantToUpdateTheFirmware =
-      "Do you want to update the firmware?";
+      "Do you want panel to initiate firmware upgrade?";
   static const String encryptingAndAuthenticating =
       "Encrypting and authenticating...";
   static const String ext = "EXT";

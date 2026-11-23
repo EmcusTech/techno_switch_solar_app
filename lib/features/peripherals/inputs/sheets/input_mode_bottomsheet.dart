@@ -318,7 +318,7 @@ class InputModeBottomSheetState extends State<InputModeBottomSheet> {
           foregroundColor: ColorConstants.primary,
           side: const BorderSide(color: ColorConstants.primary),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(8),
           ),
         ),
         onPressed: () {
@@ -341,7 +341,7 @@ class InputModeBottomSheetState extends State<InputModeBottomSheet> {
           backgroundColor: ColorConstants.primary,
           disabledBackgroundColor: Colors.grey.shade400,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(8),
           ),
         ),
         onPressed:

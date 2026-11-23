@@ -843,7 +843,17 @@ class _LiveEventLogsDialogState extends State<LiveEventLogsDialog> {
 
   static const List<Set<int>> _componentEventIds = <Set<int>>[
     <int>{0x2010, 0x2011},
-    <int>{0x101D, 0x101E, 0x2003, 0x2004, 0x4003, 0x4024, 0x4025, 0x4026, 0x4027},
+    <int>{
+      0x101D,
+      0x101E,
+      0x2003,
+      0x2004,
+      0x4003,
+      0x4024,
+      0x4025,
+      0x4026,
+      0x4027,
+    },
     <int>{
       0x101B,
       0x101C,
@@ -1175,14 +1185,17 @@ class _LiveEventLogsDialogState extends State<LiveEventLogsDialog> {
     final ({String label, String icon}) item = _components[index];
     final Color foreground =
         selected ? ColorConstants.white : ColorConstants.primary;
-    return InkWell(
-      onTap:
-          () => setState(() {
-            if (!_componentFilters.add(index)) _componentFilters.remove(index);
-          }),
-      child: Column(
-        children: [
-          Expanded(
+    return Column(
+      children: [
+        Expanded(
+          child: InkWell(
+            onTap:
+                () => setState(() {
+                  if (!_componentFilters.add(index)) {
+                    _componentFilters.remove(index);
+                  }
+                }),
+            borderRadius: BorderRadius.circular(10),
             child: Container(
               decoration: BoxDecoration(
                 color:
@@ -1206,16 +1219,16 @@ class _LiveEventLogsDialogState extends State<LiveEventLogsDialog> {
               ),
             ),
           ),
-          const SizedBox(height: 8),
-          Text(
-            item.label,
-            textAlign: TextAlign.center,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: StyleConstants.textSecondary10w500Style,
-          ),
-        ],
-      ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          item.label,
+          textAlign: TextAlign.center,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: StyleConstants.textSecondary10w500Style,
+        ),
+      ],
     );
   }
 }

@@ -183,11 +183,12 @@ class _PanelDateTimeBottomSheetState extends State<PanelDateTimeBottomSheet> {
   Widget _applyButton(PanelDateTimeController c) {
     return SizedBox(
       height: 48,
+      width: double.infinity,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
           backgroundColor: ColorConstants.primary,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(8),
           ),
         ),
         onPressed:

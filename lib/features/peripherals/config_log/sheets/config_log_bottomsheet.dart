@@ -261,7 +261,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet> {
                             foregroundColor: _brandRed,
                             side: const BorderSide(color: _brandRed),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(24),
+                              borderRadius: BorderRadius.circular(8),
                             ),
                           ),
                           onPressed: () => Navigator.of(ctx).pop(false),
@@ -282,7 +282,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet> {
                             foregroundColor: ColorConstants.white,
                             elevation: 0,
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(24),
+                              borderRadius: BorderRadius.circular(8),
                             ),
                           ),
                           onPressed: () => Navigator.of(ctx).pop(true),
@@ -477,7 +477,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet> {
           foregroundColor: ColorConstants.white,
           disabledBackgroundColor: Colors.grey.shade400,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(8),
           ),
         ),
         onPressed: working ? null : widget.onDownloadAndCompare,

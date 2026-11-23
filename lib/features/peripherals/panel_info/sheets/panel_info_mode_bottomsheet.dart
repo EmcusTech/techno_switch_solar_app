@@ -555,7 +555,7 @@ class PanelInfoBottomSheetState extends State<PanelInfoBottomSheet>
           foregroundColor: ColorConstants.primary,
           side: const BorderSide(color: ColorConstants.primary),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(8),
           ),
         ),
         onPressed: () {
@@ -577,7 +577,7 @@ class PanelInfoBottomSheetState extends State<PanelInfoBottomSheet>
         style: ElevatedButton.styleFrom(
           backgroundColor: ColorConstants.primary,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(8),
           ),
         ),
         onPressed:

@@ -448,7 +448,7 @@ class ZoneBottomSheetState extends State<ZoneBottomSheet>
           foregroundColor: ColorConstants.primary,
           side: const BorderSide(color: ColorConstants.primary),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(8),
           ),
         ),
         onPressed: () {
@@ -471,7 +471,7 @@ class ZoneBottomSheetState extends State<ZoneBottomSheet>
           backgroundColor: ColorConstants.primary,
           disabledBackgroundColor: Colors.grey.shade400,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(8),
           ),
         ),
         onPressed:

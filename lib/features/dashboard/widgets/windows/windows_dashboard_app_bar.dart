@@ -161,16 +161,27 @@ class _WindowsDashboardAppBarState extends State<WindowsDashboardAppBar>
                 ),
               ),
               const SizedBox(width: 40),
-              InkWell(
-                onTap: _toggleFullScreen,
+              // InkWell(
+              //   onTap: _toggleFullScreen,
+              //   child: Row(
+              //     mainAxisSize: MainAxisSize.min,
+              //     children: [
+              //       Text(
+              //         _fullScreen
+              //             ? StringConstants.exitFullScreen
+              //             : StringConstants.fullScreen,
+              //       ),
+              //       const SizedBox(width: 12),
+              //       SvgPicture.asset(AssetConstants.winFullScreenIcon),
+              //     ],
+              //   ),
+              // ),
+              Opacity(
+                opacity: 0.4,
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
-                      _fullScreen
-                          ? StringConstants.exitFullScreen
-                          : StringConstants.fullScreen,
-                    ),
+                    Text(StringConstants.fullScreen),
                     const SizedBox(width: 12),
                     SvgPicture.asset(AssetConstants.winFullScreenIcon),
                   ],

@@ -33,7 +33,7 @@ abstract final class WindowsDashboardTileRegistry {
       WindowsDashboardTileConfig(
         label: StringConstants.radio,
         iconPath: AssetConstants.peripheralProgHoldIcon,
-        isDisabled: !DemoBle.enabled,
+        isDisabled: true,
         iconHeight: 24,
         iconWidth: 24,
         onTap: () => ProjectDashboardTileActions.openRadio(controller),

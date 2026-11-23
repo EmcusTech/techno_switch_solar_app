@@ -191,7 +191,7 @@ class _RadioModeBottomSheetState extends State<RadioModeBottomSheet> {
           backgroundColor: ColorConstants.primary,
           disabledBackgroundColor: Colors.grey.shade400,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(8),
           ),
         ),
         onPressed:
@@ -218,7 +218,7 @@ class _RadioModeBottomSheetState extends State<RadioModeBottomSheet> {
           foregroundColor: ColorConstants.primary,
           side: const BorderSide(color: ColorConstants.primary),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(8),
           ),
         ),
         child: Text(

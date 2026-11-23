@@ -380,7 +380,7 @@ class LBusBottomSheetState extends State<LBusBottomSheet> {
           foregroundColor: ColorConstants.primary,
           side: const BorderSide(color: ColorConstants.primary),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(8),
           ),
         ),
         onPressed: () {
@@ -402,7 +402,7 @@ class LBusBottomSheetState extends State<LBusBottomSheet> {
         style: ElevatedButton.styleFrom(
           backgroundColor: ColorConstants.primary,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(8),
           ),
         ),
         onPressed:
