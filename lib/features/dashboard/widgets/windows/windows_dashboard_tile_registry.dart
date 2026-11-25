@@ -109,14 +109,14 @@ abstract final class WindowsDashboardTileRegistry {
       WindowsDashboardTileConfig(
         label: StringConstants.liveDataIsBeingStreamedFromTheDeviceInRealTime,
         iconPath: AssetConstants.diagnosticIcon,
-        isDisabled: true,
+        // isDisabled: true,
         onTap:
             () => ProjectDashboardTileActions.openLiveDiagnostics(controller),
       ),
       WindowsDashboardTileConfig(
         label: StringConstants.walkTest,
         iconPath: AssetConstants.walkTestIcon,
-        isDisabled: true,
+        // isDisabled: true,
         iconHeight: 32,
         iconWidth: 32,
         onTap: () => ProjectDashboardTileActions.openWalkTest(controller),
@@ -130,7 +130,7 @@ abstract final class WindowsDashboardTileRegistry {
       WindowsDashboardTileConfig(
         label: StringConstants.testMode,
         iconPath: AssetConstants.peripheralProgHoldIcon,
-        isDisabled: true,
+        // isDisabled: true,
         iconHeight: 24,
         iconWidth: 24,
         onTap: () => ProjectDashboardTileActions.openTestMode(controller),
