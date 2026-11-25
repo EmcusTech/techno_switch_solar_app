@@ -38,8 +38,10 @@ abstract final class ExtOutConfigOptions {
     StringConstants.disabled,
   ];
 
+  static const String continuousAction = 'Continous';
+
   static const List<String> actionOptions = [
-    'Continous',
+    continuousAction,
     StringConstants.pulse100msOn,
     StringConstants.pulse300msOn,
     StringConstants.pulse600msOn,
@@ -92,4 +94,23 @@ abstract final class ExtOutConfigOptions {
   static String actionLabel(int value) => labelFor(actionOptions, value);
 
   static int actionIndex(String label) => indexFor(actionOptions, label);
+
+  /// Continous is a wire value only for Not Defined and Solenoid.
+  static bool actuatorAllowsContinuous(String actuatorType) {
+    return actuatorType == actuatorTypeOptions.first ||
+        actuatorType == StringConstants.solenoid;
+  }
+
+  static List<String> actionOptionsFor(String actuatorType) {
+    if (actuatorAllowsContinuous(actuatorType)) return actionOptions;
+    return actionOptions.skip(1).toList();
+  }
+
+  /// Keeps the full-list label so [actionIndex] still matches the wire value.
+  static String actionForActuator(String actuatorType, String action) {
+    if (actuatorAllowsContinuous(actuatorType) || action != continuousAction) {
+      return action;
+    }
+    return actionOptions[1];
+  }
 }

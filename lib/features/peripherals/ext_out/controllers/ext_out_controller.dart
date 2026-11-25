@@ -37,7 +37,8 @@ class ExtOutController extends PeripheralModeController {
 
   List<String> get holdCountOptions => ExtOutConfigOptions.holdCountOptions;
 
-  List<String> get actionOptions => ExtOutConfigOptions.actionOptions;
+  List<String> get actionOptions =>
+      ExtOutConfigOptions.actionOptionsFor(actuatorType);
 
   final String autoError = "Countdown Auto must be between 0 and 60";
   final String manError = StringConstants.countdownManMustBeBetween0And60;
@@ -145,7 +146,7 @@ class ExtOutController extends PeripheralModeController {
     function = ui.function;
     resetInCount = ui.resetInCount;
     holdCount = ui.holdCount;
-    action = ui.action;
+    action = ExtOutConfigOptions.actionForActuator(ui.actuatorType, ui.action);
     autoCtrl.text = ui.countdownAuto.toString();
     manCtrl.text = ui.countdownMan.toString();
     releaseCtrl.text = ui.releaseTime.toString();
@@ -209,6 +210,7 @@ class ExtOutController extends PeripheralModeController {
 
   void setActuatorType(String v) {
     actuatorType = v;
+    action = ExtOutConfigOptions.actionForActuator(v, action);
     refreshUi();
   }
 
