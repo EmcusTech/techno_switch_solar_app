@@ -9,7 +9,6 @@ import 'package:Technoswitch/features/peripherals/shared/controllers/peripheral_
 import 'package:Technoswitch/utils/panel_config/panel_config_cache_sync.dart';
 import 'package:Technoswitch/utils/peripherals/defaults/zone_defaults.dart';
 import 'package:Technoswitch/utils/storage/peripheral_setup_cache.dart';
-import 'package:Technoswitch/utils/zone_setup_manager_sync.dart';
 import 'package:Technoswitch/utils/constants/string_constants.dart';
 
 class ZoneConfig {
@@ -71,9 +70,6 @@ class ZoneModeController extends PeripheralModeController {
         zones[i],
         ZoneConfigUiBridge.fromCacheMap(z, zoneNumber: i + 1),
       );
-    }
-    if (manager != null) {
-      applyZoneTestFlagsFromCacheMap(manager!, data);
     }
     _normalizeVerificationTimes();
   }
@@ -142,13 +138,10 @@ class ZoneModeController extends PeripheralModeController {
     ];
 
     for (int i = 0; i < 3; i++) {
-      final ui = _currentUiState(i);
-      final effectiveTest =
-          ZoneConfigOptions.yesNoValue(ui.enabled) && snapshotTest[i];
       ZoneConfigUiBridge.applyToBleProcess(
-        ui,
+        _currentUiState(i),
         m.bleProcess,
-        test: effectiveTest,
+        test: snapshotTest[i],
       );
     }
 
@@ -217,9 +210,6 @@ class ZoneModeController extends PeripheralModeController {
 
   void setEnabled(int index, String v) {
     zones[index].enabled = v;
-    if (v == 'No' && manager != null) {
-      clearZoneTestOnManager(manager!, index);
-    }
     refreshUi();
   }
 
