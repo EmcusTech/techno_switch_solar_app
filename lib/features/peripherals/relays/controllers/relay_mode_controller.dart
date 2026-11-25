@@ -7,7 +7,6 @@ import 'package:Technoswitch/config/ui/relay_config_options.dart';
 import 'package:Technoswitch/config/ui/relay_config_ui_bridge.dart';
 import 'package:Technoswitch/features/peripherals/shared/controllers/peripheral_mode_controller.dart';
 import 'package:Technoswitch/utils/panel_config/panel_config_cache_sync.dart';
-import 'package:Technoswitch/utils/peripherals/peripheral_test_mode_sync.dart';
 import 'package:Technoswitch/utils/storage/peripheral_setup_cache.dart';
 import 'package:Technoswitch/utils/constants/string_constants.dart';
 
@@ -69,9 +68,6 @@ class RelayModeController extends PeripheralModeController {
         RelayConfigUiBridge.fromCacheMap(r, relayNumber: i + 1),
       );
     }
-    if (manager != null) {
-      applyRelayTestFlagsFromCacheMap(manager!, data);
-    }
     for (int i = 0; i < 3; i++) {
       if (relays[i].group == StringConstants.extOut) {
         relays[i].dynamicController.text = '1';
@@ -129,13 +125,10 @@ class RelayModeController extends PeripheralModeController {
     ];
 
     for (int i = 0; i < 3; i++) {
-      final ui = _currentUiState(i);
-      final effectiveTest =
-          RelayConfigOptions.yesNoValue(ui.enabled) && snapshotTest[i];
       RelayConfigUiBridge.applyToBleProcess(
-        ui,
+        _currentUiState(i),
         m.bleProcess,
-        test: effectiveTest,
+        test: snapshotTest[i],
       );
     }
 
@@ -198,9 +191,6 @@ class RelayModeController extends PeripheralModeController {
 
   void setEnabled(int index, String v) {
     relays[index].enabled = v;
-    if (v == StringConstants.no && manager != null) {
-      clearRelayTestOnManager(manager!, index);
-    }
     refreshUi();
   }
 
