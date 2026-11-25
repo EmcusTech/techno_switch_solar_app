@@ -373,6 +373,7 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
         label: StringConstants.enabled,
         value: controller.enabledLabelFor(index),
         items: controller.yesNoOptions,
+        enabled: sounder.group != StringConstants.extOut,
         onChanged: (v) => controller.setSounderEnabled(index, v),
       ),
       DropdownWidget(

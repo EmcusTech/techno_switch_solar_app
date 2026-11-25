@@ -171,6 +171,13 @@ class SounderModeController extends PeripheralModeController {
       (data[StringConstants.functionno] as num?)?.toInt() ??
           defaults['functionNo'] as int,
     );
+    _keepExtOutEnabled(sounder);
+  }
+
+  void _keepExtOutEnabled(SounderConfig sounder) {
+    if (sounder.group == StringConstants.extOut) {
+      sounder.enabled = StringConstants.yes;
+    }
   }
 
   /// Zone group uses this field as the zone number. A missing number is 1,
@@ -374,6 +381,9 @@ class SounderModeController extends PeripheralModeController {
     _setFunctionNo(sounderOne, manager!.sounderOneFunctionNo.value);
     _setFunctionNo(sounderTwo, manager!.sounderTwoFunctionNo.value);
     _setFunctionNo(sounderThree, manager!.sounderThreeFunctionNo.value);
+    _keepExtOutEnabled(sounderOne);
+    _keepExtOutEnabled(sounderTwo);
+    _keepExtOutEnabled(sounderThree);
 
     delayController.text = manager!.sounderGeneralDelay.value.toString();
     delayed =
@@ -453,6 +463,7 @@ class SounderModeController extends PeripheralModeController {
     final m = manager!;
     for (int i = 0; i < 3; i++) {
       final sounder = sounders[i];
+      _keepExtOutEnabled(sounder);
 
       final enabledLabel = sounder.enabled;
       bool isEnabled = enabledLabel == StringConstants.yes;
@@ -626,6 +637,7 @@ class SounderModeController extends PeripheralModeController {
     final sounder = sounders[index];
     sounder.group = v;
     sounder.function = functionOptionsMap[v]!.first;
+    _keepExtOutEnabled(sounder);
     _normalizeZoneNumber(sounder);
     refreshUi();
   }
@@ -636,7 +648,9 @@ class SounderModeController extends PeripheralModeController {
   }
 
   void setSounderEnabled(int index, String v) {
-    sounders[index].enabled = v;
+    final sounder = sounders[index];
+    if (sounder.group == StringConstants.extOut) return;
+    sounder.enabled = v;
     refreshUi();
   }
 
