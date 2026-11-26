@@ -34,6 +34,7 @@ import 'package:Technoswitch/features/peripherals/radio/sheets/radio_mode_bottom
 import 'package:Technoswitch/features/peripherals/relays/sheets/relay_mode_bottomsheet.dart';
 import 'package:Technoswitch/features/peripherals/service_due/sheets/service_due_mode_bottomsheet.dart';
 import 'package:Technoswitch/features/peripherals/shared/controllers/peripheral_mode_controller.dart';
+import 'package:Technoswitch/features/peripherals/sounders/sheets/sounder_advanced_bottomsheet.dart';
 import 'package:Technoswitch/features/peripherals/sounders/sheets/sounder_mode_bottomsheet.dart';
 import 'package:Technoswitch/features/peripherals/test_mode/sheets/test_mode_bottomsheet.dart';
 import 'package:Technoswitch/features/peripherals/walk_test/sheets/walk_test_zone_bottomsheet.dart';
@@ -1589,6 +1590,23 @@ mixin ProjectDashboardUiDelegateMixin<T extends StatefulWidget> on State<T>
     _presentPeripheralSheet(
       builder:
           (_) => SounderModeBottomSheet(
+            deviceId: dashboardController.selectedDevice.id,
+            onDownload: onDownload,
+            onApply: onApply,
+            refreshTrigger: refreshTrigger,
+          ),
+    );
+  }
+
+  @override
+  void showSounderAdvancedBottomSheet({
+    required VoidCallback onDownload,
+    required VoidCallback onApply,
+    required ValueNotifier<int> refreshTrigger,
+  }) {
+    _presentPeripheralSheet(
+      builder:
+          (_) => SounderAdvancedBottomSheet(
             deviceId: dashboardController.selectedDevice.id,
             onDownload: onDownload,
             onApply: onApply,

@@ -896,6 +896,7 @@ abstract final class StringConstants {
   static const String sounderfunction = "sounderFunction";
   static const String soundergroup = "sounderGroup";
   static const String sounders = "Sounders";
+  static const String sounderAdvanced = "Sounder Advanced";
   static const String sounderstate = "sounderState";
   static const String soundertest = "sounderTest";
   static const String soundertext = "sounderText";

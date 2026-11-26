@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 import 'package:get/get.dart';
 import 'package:Technoswitch/features/peripherals/sounders/controllers/sounder_mode_controller.dart';
-import 'package:Technoswitch/utils/peripherals/defaults/sounder_defaults.dart';
+import 'package:Technoswitch/features/peripherals/sounders/sheets/sounder_advanced_panel.dart';
+import 'package:Technoswitch/features/peripherals/sounders/sheets/sounder_tab_slot.dart';
 import 'package:Technoswitch/widgets/common/dropdown.dart';
 import 'package:Technoswitch/utils/constants/color_constants.dart';
 import 'package:Technoswitch/utils/constants/string_constants.dart';
@@ -44,6 +44,7 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
   final FocusNode delayFocusNode = FocusNode();
   bool _scrollAfterAdvancedTap = false;
   int _sounderTabIndex = 0;
+  int? _zoneSounderIndex;
 
   final String _delayError = StringConstants.delayMustBeBetween0And600Seconds;
 
@@ -108,7 +109,7 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
     final tabs = _sounderTabController;
     if (tabs == null) return;
     if (_sounderTabIndex != tabs.index) {
-      _sounderTabIndex = tabs.index;
+      setState(() => _sounderTabIndex = tabs.index);
       _focusAdvancedForGroup(controller.sounders[tabs.index].group);
     }
     if (tabs.indexIsChanging) return;
@@ -165,8 +166,7 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
               _title(StringConstants.sounderModeConfiguration),
             ...List.generate(3, (i) => _sounderTile(i)),
             const SizedBox(height: 24),
-            _advancedHeader(),
-            _advancedTabs(),
+            _advancedPanel(),
           ],
         ),
       ),
@@ -308,15 +308,14 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  _SounderTabSlot(
+                  SounderTabSlot(
                     controller: _sounderTabController!,
                     count: 3,
                     fitCurrentPage: true,
                     pageBuilder: (index, _) => _sounderFields(index),
                   ),
                   const SizedBox(height: 8),
-                  _advancedHeader(),
-                  _advancedTabs(),
+                  _advancedPanel(),
                 ],
               ),
             ),
@@ -340,6 +339,7 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
       items: controller.groupOptions,
       enabled: !sounder.groupLocked,
       onChanged: (v) {
+        if (v == StringConstants.zone) _zoneSounderIndex = index;
         _focusAdvancedForGroup(v);
         controller.setSounderGroup(index, v);
       },
@@ -363,6 +363,7 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
               value: sounder.dynamicController.text.trim(),
               items: const ['1', '2', '3'],
               onChanged: (v) {
+                _zoneSounderIndex = index;
                 _focusAdvancedTab(1);
                 sounder.dynamicController.text = v;
               },
@@ -431,243 +432,20 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
 
   // ───────────────── ADVANCED ─────────────────
 
-  Widget _advancedHeader() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Divider(thickness: 1.2),
-        Text(
-          StringConstants.advancedConfiguration,
-          style: StyleConstants.textDark14w700Style,
-        ),
-        const SizedBox(height: 12),
-      ],
+  /// View of the shared advanced values for the groups and functions picked
+  /// above. Editing happens on the Sounder Advanced tile. The create-project
+  /// step still edits here because that flow has no separate tile.
+  Widget _advancedPanel() {
+    return SounderAdvancedPanel(
+      controller: controller,
+      tabController: _tabController,
+      delayFocusNode: delayFocusNode,
+      delayError: _delayError,
+      readOnly: !widget.embedInCreateFlow,
+      zoneSounderIndex:
+          _sounderTabController != null ? _sounderTabIndex : _zoneSounderIndex,
+      onTabTapped: _onAdvancedTabTapped,
     );
-  }
-
-  Widget _advancedTabs() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Align(
-          alignment: Alignment.centerLeft,
-          child: Container(
-            width: 480,
-            height: 48,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              color: ColorConstants.surfaceLight,
-            ),
-            child: TabBar(
-              controller: _tabController,
-              onTap: _onAdvancedTabTapped,
-              indicatorSize: TabBarIndicatorSize.tab,
-              indicator: const UnderlineTabIndicator(
-                borderSide: BorderSide(
-                  width: 2.5,
-                  color: ColorConstants.primary,
-                ),
-              ),
-              labelColor: ColorConstants.primary,
-              unselectedLabelColor: ColorConstants.textSubtle,
-              labelStyle: StyleConstants.black13w600Style,
-              unselectedLabelStyle: StyleConstants.black13w500Style,
-              tabs: const [
-                Tab(text: 'General'),
-                Tab(text: StringConstants.zone),
-                Tab(text: StringConstants.extOut2),
-                Tab(text: 'Delay'),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(height: 20),
-        _advancedTabBody(),
-      ],
-    );
-  }
-
-  Widget _advancedTabBody() {
-    if (!PeripheralSheetChrome.flat) {
-      final pages = <Widget>[
-        _generalAdvancedFields(),
-        _zoneAdvancedFields(),
-        _extOutAdvancedFields(),
-        _delayFields(),
-      ];
-      return pages[_tabController.index];
-    }
-    return _SounderTabSlot(
-      controller: _tabController,
-      count: 4,
-      fitCurrentPage: true,
-      pageBuilder: (index, forMeasure) {
-        switch (index) {
-          case 1:
-            return _zoneAdvancedFields();
-          case 2:
-            return _extOutAdvancedFields();
-          case 3:
-            return _delayFields(attachFocus: !forMeasure);
-          default:
-            return _generalAdvancedFields();
-        }
-      },
-    );
-  }
-
-  Widget _generalAdvancedFields() {
-    final actionIndex =
-        controller.manager?.sounderGeneralAction.value ??
-        SounderDefaults.generalActionBle;
-    final safeIndex = actionIndex.clamp(0, controller.actionOptions.length - 1);
-    return peripheralSheetFieldGrid([
-      DropdownWidget(
-        label: StringConstants.action,
-        value: controller.actionOptions[safeIndex],
-        items: controller.actionOptions,
-        dropdownListHeight: 80.h,
-        onChanged: controller.setGeneralAction,
-      ),
-    ]);
-  }
-
-  Widget _zoneAdvancedFields() {
-    final numbers = <int>[];
-    var invalid = false;
-    for (final sounder in controller.sounders) {
-      if (sounder.group != StringConstants.zone) continue;
-      final number = controller.selectionNumber(sounder);
-      if (number == null) {
-        invalid = true;
-      } else if (!numbers.contains(number)) {
-        numbers.add(number);
-      }
-    }
-    if (numbers.isEmpty && !invalid) {
-      return Text(
-        StringConstants.noZoneSelected,
-        style: StyleConstants.textGray14w400Style,
-      );
-    }
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (invalid)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: Text(
-              StringConstants.enterZoneNumberFrom1To3,
-              style: StyleConstants.textGray14w400Style,
-            ),
-          ),
-        for (final number in numbers)
-          peripheralSheetFieldGrid([
-            DropdownWidget(
-              label: StringConstants.action,
-              value: controller.zones[number - 1].action,
-              items: controller.actionOptions,
-              dropdownListHeight: 80.h,
-              onChanged: (v) => controller.setZoneAction(number - 1, v),
-            ),
-          ]),
-      ],
-    );
-  }
-
-  Widget _extOutAdvancedFields() {
-    final indexes = <int>[];
-    for (final sounder in controller.sounders) {
-      if (sounder.group != StringConstants.extOut) continue;
-      final index = controller.functions.indexOf(sounder.function);
-      if (index < 0 || indexes.contains(index)) continue;
-      indexes.add(index);
-    }
-    if (indexes.isEmpty) {
-      return Text(
-        StringConstants.noExtOutSelected,
-        style: StyleConstants.textGray14w400Style,
-      );
-    }
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        for (var i = 0; i < indexes.length; i++) ...[
-          if (i > 0) const SizedBox(height: 16),
-          Text(
-            controller.functions[indexes[i]],
-            style: StyleConstants.textDark14w700Style,
-          ),
-          const SizedBox(height: 12),
-          _extOutFunctionFields(indexes[i]),
-        ],
-      ],
-    );
-  }
-
-  Widget _extOutFunctionFields(int index) {
-    final extOut = controller.extOuts[index];
-    return peripheralSheetFieldGrid([
-      DropdownWidget(
-        label: 'Countdown',
-        value: extOut.countdownAction,
-        items: controller.extOutActionOptions,
-        dropdownListHeight: 130.h,
-        onChanged: (v) => controller.setExtCountdown(index, v),
-      ),
-      DropdownWidget(
-        label: 'Hold',
-        value: extOut.holdAction,
-        items: controller.extOutActionOptions,
-        dropdownListHeight: 130.h,
-        onChanged: (v) => controller.setExtHold(index, v),
-      ),
-      DropdownWidget(
-        label: 'Release',
-        value: extOut.releaseAction,
-        items: controller.extOutActionOptions,
-        dropdownListHeight: 80.h,
-        onChanged: (v) => controller.setExtRelease(index, v),
-      ),
-    ]);
-  }
-
-  Widget _delayFields({bool attachFocus = true}) {
-    final delayedOn =
-        controller.manager?.isSounderGeneralDelay.value ??
-        controller.delayed == SounderDefaults.delayedLabel;
-    return peripheralSheetFieldGrid([
-      Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _textField(
-            label: StringConstants.delayS,
-            fieldController: controller.delayController,
-            keyboardType: TextInputType.number,
-            inputFormatters: [
-              FilteringTextInputFormatter.digitsOnly,
-              LengthLimitingTextInputFormatter(3),
-            ],
-            decoration: _inputDecoration(),
-            focusNode: attachFocus ? delayFocusNode : null,
-          ),
-          if (delayFocusNode.hasFocus)
-            Text(
-              _delayError,
-              style: StyleConstants.black12w400Style.copyWith(
-                color: Colors.orange,
-              ),
-            ),
-        ],
-      ),
-      DropdownWidget(
-        label: StringConstants.delayed,
-        value: controller.yesNoOptions[delayedOn ? 1 : 0],
-        items: controller.yesNoOptions,
-        dropdownListHeight: 80.h,
-        onChanged: (_) {},
-      ),
-    ]);
   }
 
   // ───────────────── UI HELPERS ─────────────────
@@ -794,9 +572,7 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
         style: OutlinedButton.styleFrom(
           foregroundColor: ColorConstants.primary,
           side: const BorderSide(color: ColorConstants.primary),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
         onPressed: () {
           FocusManager.instance.primaryFocus?.unfocus();
@@ -817,9 +593,7 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
           backgroundColor: ColorConstants.primary,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
         onPressed:
             controller.manager != null && isDelayValid
@@ -834,149 +608,6 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
           style: StyleConstants.white16w600Style,
         ),
       ),
-    );
-  }
-}
-
-/// Tab area for a [TabBarView]. By default the area is as tall as the
-/// tallest page. With [fitCurrentPage], it follows the open page so the
-/// next section starts on the line below.
-class _SounderTabSlot extends StatefulWidget {
-  const _SounderTabSlot({
-    required this.controller,
-    required this.count,
-    required this.pageBuilder,
-    this.fitCurrentPage = false,
-  });
-
-  final TabController controller;
-  final int count;
-  final Widget Function(int index, bool forMeasure) pageBuilder;
-  final bool fitCurrentPage;
-
-  @override
-  State<_SounderTabSlot> createState() => _SounderTabSlotState();
-}
-
-class _SounderTabSlotState extends State<_SounderTabSlot> {
-  late List<double> _heights;
-  int _index = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    _heights = List<double>.filled(widget.count, 0);
-    _index = widget.controller.index;
-    widget.controller.addListener(_onTab);
-  }
-
-  @override
-  void didUpdateWidget(covariant _SounderTabSlot oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.controller != widget.controller) {
-      oldWidget.controller.removeListener(_onTab);
-      widget.controller.addListener(_onTab);
-    }
-    if (oldWidget.count != widget.count) {
-      _heights = List<double>.filled(widget.count, 0);
-    }
-    _index = widget.controller.index;
-  }
-
-  @override
-  void dispose() {
-    widget.controller.removeListener(_onTab);
-    super.dispose();
-  }
-
-  void _onTab() {
-    if (!widget.fitCurrentPage) return;
-    final index = widget.controller.index;
-    if (index == _index) return;
-    setState(() => _index = index);
-  }
-
-  void _report(int index, Size size) {
-    if (index < 0 || index >= _heights.length) return;
-    if ((size.height - _heights[index]).abs() < 1) return;
-    setState(() => _heights[index] = size.height);
-  }
-
-  double get _slotHeight {
-    if (widget.fitCurrentPage) {
-      final index = _index.clamp(0, _heights.length - 1);
-      final height = _heights[index];
-      return height <= 0 ? 1 : height;
-    }
-    var maxHeight = 0.0;
-    for (final height in _heights) {
-      if (height > maxHeight) maxHeight = height;
-    }
-    return maxHeight <= 0 ? 1 : maxHeight;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      alignment: Alignment.topCenter,
-      children: [
-        for (var i = 0; i < widget.count; i++)
-          ExcludeFocus(
-            child: IgnorePointer(
-              child: Offstage(
-                child: _TabPageMeasure(
-                  onSize: (size) => _report(i, size),
-                  child: widget.pageBuilder(i, true),
-                ),
-              ),
-            ),
-          ),
-        SizedBox(
-          height: _slotHeight,
-          width: double.infinity,
-          child: TabBarView(
-            controller: widget.controller,
-            children: [
-              for (var i = 0; i < widget.count; i++)
-                widget.pageBuilder(i, false),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _TabPageMeasure extends StatefulWidget {
-  const _TabPageMeasure({required this.onSize, required this.child});
-
-  final ValueChanged<Size> onSize;
-  final Widget child;
-
-  @override
-  State<_TabPageMeasure> createState() => _TabPageMeasureState();
-}
-
-class _TabPageMeasureState extends State<_TabPageMeasure> {
-  final GlobalKey _key = GlobalKey();
-  Size? _last;
-
-  @override
-  Widget build(BuildContext context) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      final box = _key.currentContext?.findRenderObject() as RenderBox?;
-      if (box == null || !box.hasSize) return;
-      final size = box.size;
-      if (size == _last) return;
-      _last = size;
-      widget.onSize(size);
-    });
-    return OverflowBox(
-      alignment: Alignment.topCenter,
-      minHeight: 0,
-      maxHeight: double.infinity,
-      child: KeyedSubtree(key: _key, child: widget.child),
     );
   }
 }

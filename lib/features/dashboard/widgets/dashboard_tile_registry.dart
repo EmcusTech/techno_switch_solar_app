@@ -33,6 +33,13 @@ abstract final class DashboardTileRegistry {
         onTap: () => ProjectDashboardTileActions.openSounders(controller),
       ),
       DashboardTileConfig(
+        label: StringConstants.sounderAdvanced,
+        isDisabled: !DemoBle.enabled,
+        iconPath: AssetConstants.peripheralSounderIcon,
+        onTap:
+            () => ProjectDashboardTileActions.openSounderAdvanced(controller),
+      ),
+      DashboardTileConfig(
         label: StringConstants.radio,
         iconPath: AssetConstants.peripheralProgHoldIcon,
         isDisabled: !DemoBle.enabled,

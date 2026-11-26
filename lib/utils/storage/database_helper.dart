@@ -55,45 +55,114 @@ class DatabaseHelper {
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
-      await db.execute(DbSql.createPanelsTable);
-      await db.execute(DbSql.createIndexPanelsPanelId);
-      await db.execute(DbSql.createIndexPanelsSiteId);
+      await _createTableIfMissing(db, DbSql.createPanelsTable);
+      await _createIndexIfMissing(db, DbSql.createIndexPanelsPanelId);
+      await _createIndexIfMissing(db, DbSql.createIndexPanelsSiteId);
     }
 
     if (oldVersion < 3) {
-      await db.execute(DbSql.createLogRetrievalsTable);
-      await db.execute(DbSql.createIndexLogRetrievalsSiteId);
-      await db.execute(DbSql.createIndexLogRetrievalsRetrievalDate);
+      await _createTableIfMissing(db, DbSql.createLogRetrievalsTable);
+      await _createIndexIfMissing(db, DbSql.createIndexLogRetrievalsSiteId);
+      await _createIndexIfMissing(
+        db,
+        DbSql.createIndexLogRetrievalsRetrievalDate,
+      );
     }
 
     if (oldVersion < 4) {
-      await db.execute(StringConstants.alterTABLELogsADDCOLUMNIsValidINTEGER);
+      await _addColumnIfMissing(
+        db,
+        'logs',
+        'is_valid',
+        StringConstants.alterTABLELogsADDCOLUMNIsValidINTEGER,
+      );
     }
 
     if (oldVersion < 5) {
-      await db.execute(
+      await _addColumnIfMissing(
+        db,
+        'logs',
+        'retrieval_id',
         StringConstants.alterTABLELogsADDCOLUMNRetrievalIdINTEGER,
       );
-      await db.execute(DbSql.createIndexLogsRetrievalId);
+      await _createIndexIfMissing(db, DbSql.createIndexLogsRetrievalId);
     }
 
     if (oldVersion < 6) {
-      await db.execute(StringConstants.alterTABLELogsADDCOLUMNConfigTextTEXT);
-      await db.execute(StringConstants.alterTABLELogsADDCOLUMNPar0INTEGER);
-      await db.execute(StringConstants.alterTABLELogsADDCOLUMNPar1INTEGER);
-      await db.execute(StringConstants.alterTABLELogsADDCOLUMNPanelIdTEXT);
-      await db.execute(DbSql.createIndexLogsPanelId);
+      await _addColumnIfMissing(
+        db,
+        'logs',
+        'config_text',
+        StringConstants.alterTABLELogsADDCOLUMNConfigTextTEXT,
+      );
+      await _addColumnIfMissing(
+        db,
+        'logs',
+        'par0',
+        StringConstants.alterTABLELogsADDCOLUMNPar0INTEGER,
+      );
+      await _addColumnIfMissing(
+        db,
+        'logs',
+        'par1',
+        StringConstants.alterTABLELogsADDCOLUMNPar1INTEGER,
+      );
+      await _addColumnIfMissing(
+        db,
+        'logs',
+        'panel_id',
+        StringConstants.alterTABLELogsADDCOLUMNPanelIdTEXT,
+      );
+      await _createIndexIfMissing(db, DbSql.createIndexLogsPanelId);
     }
 
     if (oldVersion < 7) {
-      await db.execute(DbSql.createSavedEventLogSessionsTable);
-      await db.execute(DbSql.createIndexSavedEventLogSessionsPanelId);
-      await db.execute(
+      await _createTableIfMissing(db, DbSql.createSavedEventLogSessionsTable);
+      await _createIndexIfMissing(
+        db,
+        DbSql.createIndexSavedEventLogSessionsPanelId,
+      );
+      await _addColumnIfMissing(
+        db,
+        'logs',
+        'saved_session_id',
         StringConstants.alterTABLELogsADDCOLUMNSavedSessionIdINTEGER,
       );
-      await db.execute(DbSql.createIndexLogsSavedSessionId);
+      await _createIndexIfMissing(db, DbSql.createIndexLogsSavedSessionId);
       await _adoptExistingPanelLogs(db);
     }
+  }
+
+  Future<void> _addColumnIfMissing(
+    Database db,
+    String table,
+    String column,
+    String sql,
+  ) async {
+    final List<Map<String, Object?>> rows = await db.rawQuery(
+      'PRAGMA table_info($table)',
+    );
+    final bool exists = rows.any((row) => row['name'] == column);
+    if (exists) return;
+    await db.execute(sql);
+  }
+
+  Future<void> _createTableIfMissing(Database db, String sql) async {
+    await db.execute(
+      sql.replaceFirst(
+        RegExp('CREATE TABLE', caseSensitive: false),
+        'CREATE TABLE IF NOT EXISTS',
+      ),
+    );
+  }
+
+  Future<void> _createIndexIfMissing(Database db, String sql) async {
+    await db.execute(
+      sql.replaceFirst(
+        RegExp('CREATE INDEX', caseSensitive: false),
+        'CREATE INDEX IF NOT EXISTS',
+      ),
+    );
   }
 
   Future<void> _adoptExistingPanelLogs(Database db) async {
@@ -107,6 +176,20 @@ class DatabaseHelper {
       final String panelId = group['panel_id'] as String? ?? '';
       if (panelId.isEmpty) continue;
       final Object? retrievedAt = group['retrieved_at'];
+      final List<Map<String, Object?>> existing = await db.query(
+        'saved_event_log_sessions',
+        columns: <String>['id'],
+        where:
+            retrievedAt == null
+                ? 'panel_id = ? AND retrieved_at = 0'
+                : 'panel_id = ? AND retrieved_at = ?',
+        whereArgs:
+            retrievedAt == null
+                ? <Object>[panelId]
+                : <Object>[panelId, retrievedAt],
+        limit: 1,
+      );
+      if (existing.isNotEmpty) continue;
       final int sessionId = await db.insert('saved_event_log_sessions', {
         'panel_id': panelId,
         'site_id': group['site_id'],

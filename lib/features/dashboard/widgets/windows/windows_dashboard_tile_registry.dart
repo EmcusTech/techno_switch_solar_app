@@ -31,6 +31,12 @@ abstract final class WindowsDashboardTileRegistry {
         onTap: () => ProjectDashboardTileActions.openSounders(controller),
       ),
       WindowsDashboardTileConfig(
+        label: StringConstants.sounderAdvanced,
+        iconPath: AssetConstants.peripheralSounderIcon,
+        onTap:
+            () => ProjectDashboardTileActions.openSounderAdvanced(controller),
+      ),
+      WindowsDashboardTileConfig(
         label: StringConstants.radio,
         iconPath: AssetConstants.peripheralProgHoldIcon,
         isDisabled: true,

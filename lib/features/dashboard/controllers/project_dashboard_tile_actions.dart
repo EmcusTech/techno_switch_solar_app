@@ -74,6 +74,21 @@ abstract final class ProjectDashboardTileActions {
     });
   }
 
+  static void openSounderAdvanced(ProjectDashboardController c) {
+    c.guardBootloaderOr(() {
+      final ui = _ui(c);
+      if (ui == null) return;
+      ui.showSounderAdvancedBottomSheet(
+        onDownload:
+            () => ui.runSounderSetupDownload(
+              onDownloadComplete: c.saveSounderCacheAndNotifyRefresh,
+            ),
+        onApply: () => ui.runSounderSetupApply(),
+        refreshTrigger: c.sounderRefreshTrigger,
+      );
+    });
+  }
+
   static void openRadio(ProjectDashboardController c) {
     c.guardBootloaderOr(() {
       final ui = _ui(c);

@@ -213,6 +213,12 @@ abstract class ProjectDashboardUiDelegate {
     required ValueNotifier<int> refreshTrigger,
   });
 
+  void showSounderAdvancedBottomSheet({
+    required VoidCallback onDownload,
+    required VoidCallback onApply,
+    required ValueNotifier<int> refreshTrigger,
+  });
+
   void showServiceDueSetupBottomSheet({
     required VoidCallback onDownload,
     required VoidCallback onApply,
