@@ -339,10 +339,10 @@ class _AppStyledTextInputDialogState extends State<_AppStyledTextInputDialog> {
                     hintText: widget.hintText,
                     errorText: _errorText,
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(4),
                     ),
                     focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(4),
                       borderSide: const BorderSide(
                         color: ColorConstants.primary,
                         width: 1.5,

@@ -226,7 +226,7 @@ class InputModeBottomSheetState extends State<InputModeBottomSheet> {
             padding: const EdgeInsets.symmetric(horizontal: 14),
             decoration: BoxDecoration(
               color: ColorConstants.colorFff0F0F0,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(4),
               border: Border.all(color: ColorConstants.borderLight),
             ),
             child: Text(value, style: StyleConstants.textDark14w500Style),
@@ -296,15 +296,15 @@ class InputModeBottomSheetState extends State<InputModeBottomSheet> {
       fillColor: ColorConstants.surfaceLight,
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(4),
         borderSide: BorderSide(color: borderColor),
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(4),
         borderSide: BorderSide(color: borderColor),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(4),
         borderSide: const BorderSide(color: ColorConstants.primary, width: 2),
       ),
     );

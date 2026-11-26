@@ -369,27 +369,21 @@ class _CommonNumericKeypadWidgetState extends State<CommonNumericKeypadWidget> {
                                           fillColor:
                                               ColorConstants.surfaceLight,
                                           border: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              12,
-                                            ),
+                                            borderRadius: BorderRadius.circular(4),
                                             borderSide: BorderSide(
                                               color: borderColor,
                                               width: fieldBorderIsError ? 1 : 2,
                                             ),
                                           ),
                                           enabledBorder: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              12,
-                                            ),
+                                            borderRadius: BorderRadius.circular(4),
                                             borderSide: BorderSide(
                                               color: borderColor,
                                               width: 1,
                                             ),
                                           ),
                                           focusedBorder: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              12,
-                                            ),
+                                            borderRadius: BorderRadius.circular(4),
                                             borderSide: const BorderSide(
                                               color: ColorConstants.primary,
                                               width: 2,

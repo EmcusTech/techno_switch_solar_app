@@ -287,7 +287,7 @@ class _RadioModeBottomSheetState extends State<RadioModeBottomSheet> {
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 0),
             decoration: BoxDecoration(
               color: ColorConstants.surfaceLight,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(4),
               border: Border.all(color: ColorConstants.borderLight),
             ),
             alignment: Alignment.centerLeft,
@@ -312,15 +312,15 @@ class _RadioModeBottomSheetState extends State<RadioModeBottomSheet> {
       fillColor: ColorConstants.surfaceLight,
       contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(4),
         borderSide: BorderSide(color: borderColor),
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(4),
         borderSide: BorderSide(color: borderColor),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(4),
         borderSide: const BorderSide(color: ColorConstants.primary, width: 2),
       ),
     );

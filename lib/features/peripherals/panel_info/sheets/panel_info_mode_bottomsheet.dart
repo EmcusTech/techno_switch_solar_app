@@ -509,11 +509,11 @@ class PanelInfoBottomSheetState extends State<PanelInfoBottomSheet>
 
   InputDecoration _inputDecoration({String? errorText}) {
     const border = OutlineInputBorder(
-      borderRadius: BorderRadius.all(Radius.circular(12)),
+      borderRadius: BorderRadius.all(Radius.circular(4)),
       borderSide: BorderSide(color: ColorConstants.borderLight),
     );
     const focusedBorder = OutlineInputBorder(
-      borderRadius: BorderRadius.all(Radius.circular(12)),
+      borderRadius: BorderRadius.all(Radius.circular(4)),
       borderSide: BorderSide(color: ColorConstants.primary, width: 2),
     );
     return InputDecoration(

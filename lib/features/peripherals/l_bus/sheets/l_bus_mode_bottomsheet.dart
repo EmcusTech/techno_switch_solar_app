@@ -358,15 +358,15 @@ class LBusBottomSheetState extends State<LBusBottomSheet> {
       fillColor: ColorConstants.surfaceLight,
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(4),
         borderSide: const BorderSide(color: ColorConstants.borderLight),
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(4),
         borderSide: const BorderSide(color: ColorConstants.borderLight),
       ),
       focusedBorder: const OutlineInputBorder(
-        borderRadius: BorderRadius.all(Radius.circular(12)),
+        borderRadius: BorderRadius.all(Radius.circular(4)),
         borderSide: BorderSide(color: ColorConstants.primary, width: 2),
       ),
     );

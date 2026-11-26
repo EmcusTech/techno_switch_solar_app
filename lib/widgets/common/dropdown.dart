@@ -117,7 +117,7 @@ class _DropdownWidgetState extends State<DropdownWidget> {
                 padding: EdgeInsets.zero,
                 decoration: BoxDecoration(
                   color: ColorConstants.surfaceLight,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(4),
                 ),
               ),
 
@@ -129,7 +129,7 @@ class _DropdownWidgetState extends State<DropdownWidget> {
                     color:
                         locked
                             ? ColorConstants.textDisabled
-                            : ColorConstants.textDark,
+                            : ColorConstants.primary,
                   ),
                 ),
                 iconSize: 22,
@@ -139,7 +139,7 @@ class _DropdownWidgetState extends State<DropdownWidget> {
                 maxHeight: widget.dropdownListHeight ?? 135.h,
                 decoration: BoxDecoration(
                   color: ColorConstants.white,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(4),
                 ),
                 elevation: 4,
                 isOverButton: false,
@@ -174,18 +174,18 @@ class _DropdownWidgetState extends State<DropdownWidget> {
                               prefixIcon: const Icon(Icons.search, size: 20),
 
                               border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10),
+                                borderRadius: BorderRadius.circular(4),
                               ),
 
                               enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10),
+                                borderRadius: BorderRadius.circular(4),
                                 borderSide: const BorderSide(
                                   color: ColorConstants.borderLight,
                                 ),
                               ),
 
                               focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10),
+                                borderRadius: BorderRadius.circular(4),
                                 borderSide: const BorderSide(
                                   color: ColorConstants.primary,
                                   width: 2,
@@ -224,7 +224,7 @@ class _DropdownWidgetState extends State<DropdownWidget> {
                 ),
 
                 enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(4),
                   borderSide: const BorderSide(
                     color: ColorConstants.borderLight,
                     width: 1,
@@ -232,7 +232,7 @@ class _DropdownWidgetState extends State<DropdownWidget> {
                 ),
 
                 disabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(4),
                   borderSide: const BorderSide(
                     color: ColorConstants.borderLight,
                     width: 1,
@@ -240,7 +240,7 @@ class _DropdownWidgetState extends State<DropdownWidget> {
                 ),
 
                 focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(4),
                   borderSide: const BorderSide(
                     color: ColorConstants.primary,
                     width: 2,

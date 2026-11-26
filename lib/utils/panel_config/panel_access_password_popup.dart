@@ -586,7 +586,7 @@ Future<void> showPanelAccessPasswordPopup({
                                                     ColorConstants.surfaceLight,
                                                 border: OutlineInputBorder(
                                                   borderRadius:
-                                                      BorderRadius.circular(12),
+                                                      BorderRadius.circular(4),
                                                   borderSide: BorderSide(
                                                     color:
                                                         isAccessKeyValidValue ==
@@ -600,7 +600,7 @@ Future<void> showPanelAccessPasswordPopup({
                                                 ),
                                                 enabledBorder: OutlineInputBorder(
                                                   borderRadius:
-                                                      BorderRadius.circular(12),
+                                                      BorderRadius.circular(4),
                                                   borderSide: BorderSide(
                                                     color:
                                                         isAccessKeyValidValue ==
@@ -628,7 +628,7 @@ Future<void> showPanelAccessPasswordPopup({
                                                     ),
                                                 errorBorder: OutlineInputBorder(
                                                   borderRadius:
-                                                      BorderRadius.circular(12),
+                                                      BorderRadius.circular(4),
                                                   borderSide: const BorderSide(
                                                     color:
                                                         ColorConstants.primary,

@@ -199,7 +199,7 @@ class _ModuleInfoBottomSheetState extends State<ModuleInfoBottomSheet> {
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 0),
             decoration: BoxDecoration(
               color: ColorConstants.surfaceLight,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(4),
               border: Border.all(color: ColorConstants.borderLight),
             ),
             alignment: Alignment.centerLeft,
@@ -244,7 +244,7 @@ class _ModuleInfoBottomSheetState extends State<ModuleInfoBottomSheet> {
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             decoration: BoxDecoration(
               color: ColorConstants.surfaceLight,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(4),
               border: Border.all(color: ColorConstants.borderLight),
             ),
             child: Text(
