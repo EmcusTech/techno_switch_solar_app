@@ -477,22 +477,20 @@ abstract final class ProjectDashboardTileActions {
     c.guardBootloaderOr(() {
       final ui = _ui(c);
       if (ui == null) return;
-      ui.showTestModeChoiceBottomSheet(
-        onDownloadRelays:
-            () => ui.runRelaySetupDownload(
-              onDownloadComplete: c.saveRelayCacheAndNotifyRefresh,
+      ui.showTestModeBottomSheet(
+        onDownload:
+            () => ui.runTestModeDownload(
+              onSounderComplete: c.saveSounderCacheAndNotifyRefresh,
+              onRelayComplete: c.saveRelayCacheAndNotifyRefresh,
             ),
-        onDownloadSounders:
-            () => ui.runSounderSetupDownload(
-              onDownloadComplete: c.saveSounderCacheAndNotifyRefresh,
-            ),
-        onApplyRelays:
-            () => ui.runRelaySetupApply(
-              onAfterApplySuccess: ui.showRelayTestResultConfirmation,
-            ),
-        onApplySounders:
-            () => ui.runSounderSetupApply(
-              onAfterApplySuccess: ui.showSounderTestResultConfirmation,
+        onApply:
+            () => ui.runTestModeApply(
+              onSounderComplete: c.saveSounderCacheAndNotifyRefresh,
+              onRelayComplete: c.saveRelayCacheAndNotifyRefresh,
+              onAfterApplySuccess: () async {
+                await ui.showSounderTestResultConfirmation();
+                await ui.showRelayTestResultConfirmation();
+              },
             ),
         relayRefreshTrigger: c.relayRefreshTrigger,
         sounderRefreshTrigger: c.sounderRefreshTrigger,

@@ -35,9 +35,7 @@ import 'package:Technoswitch/features/peripherals/relays/sheets/relay_mode_botto
 import 'package:Technoswitch/features/peripherals/service_due/sheets/service_due_mode_bottomsheet.dart';
 import 'package:Technoswitch/features/peripherals/shared/controllers/peripheral_mode_controller.dart';
 import 'package:Technoswitch/features/peripherals/sounders/sheets/sounder_mode_bottomsheet.dart';
-import 'package:Technoswitch/features/peripherals/test_mode/sheets/test_mode_choice_bottomsheet.dart';
-import 'package:Technoswitch/features/peripherals/test_mode/sheets/test_mode_relay_bottomsheet.dart';
-import 'package:Technoswitch/features/peripherals/test_mode/sheets/test_mode_sounder_bottomsheet.dart';
+import 'package:Technoswitch/features/peripherals/test_mode/sheets/test_mode_bottomsheet.dart';
 import 'package:Technoswitch/features/peripherals/walk_test/sheets/walk_test_zone_bottomsheet.dart';
 import 'package:Technoswitch/features/peripherals/zones/sheets/zone_mode_bottomsheet.dart';
 import 'package:Technoswitch/features/scan/models/scan_type.dart';
@@ -49,6 +47,7 @@ import 'package:Technoswitch/utils/panel_config/zone_setup_ble_flow.dart';
 import 'package:Technoswitch/utils/panel_config/ext_out_setup_ble_flow.dart';
 import 'package:Technoswitch/utils/panel_config/relay_setup_ble_flow.dart';
 import 'package:Technoswitch/utils/panel_config/sounder_setup_ble_flow.dart';
+import 'package:Technoswitch/utils/panel_config/test_mode_ble_flow.dart';
 import 'package:Technoswitch/utils/panel_config/system_config_ble_flow.dart';
 import 'package:Technoswitch/utils/panel_config/panel_properties_setup_ble_flow.dart';
 import 'package:Technoswitch/utils/panel_config/access_code_setup_ble_flow.dart';
@@ -1145,6 +1144,51 @@ mixin ProjectDashboardUiDelegateMixin<T extends StatefulWidget> on State<T>
   }
 
   @override
+  Future<void> runTestModeDownload({
+    required Future<void> Function() onSounderComplete,
+    required Future<void> Function() onRelayComplete,
+  }) {
+    return runTestModeDownloadFlow(
+      context: uiContext,
+      isMounted: () => mounted,
+      bleProcess: dashboardController.bleManager.bleProcess,
+      bleController: dashboardController.bleController,
+      onSounderComplete: onSounderComplete,
+      onRelayComplete: onRelayComplete,
+      showDownloadSuccess: showDownloadSuccessDialog,
+    );
+  }
+
+  @override
+  Future<void> runTestModeApply({
+    required Future<void> Function() onSounderComplete,
+    required Future<void> Function() onRelayComplete,
+    Future<void> Function()? onAfterApplySuccess,
+  }) {
+    return runTestModeApplyFlow(
+      context: uiContext,
+      isMounted: () => mounted,
+      bleProcess: dashboardController.bleManager.bleProcess,
+      bleController: dashboardController.bleController,
+      onSounderComplete: onSounderComplete,
+      onRelayComplete: onRelayComplete,
+      showApplySuccess: (message) {
+        showPanelApplySuccessDialog(
+          uiContext,
+          dashboardController.bleManager.bleProcess,
+          message,
+          onDismissed:
+              onAfterApplySuccess == null
+                  ? null
+                  : () {
+                    if (mounted) onAfterApplySuccess();
+                  },
+        );
+      },
+    );
+  }
+
+  @override
   Future<void> runSystemConfigDownload({
     required Future<void> Function() onDownloadComplete,
   }) {
@@ -1753,69 +1797,21 @@ mixin ProjectDashboardUiDelegateMixin<T extends StatefulWidget> on State<T>
   }
 
   @override
-  void showTestModeSounderBottomSheet({
+  void showTestModeBottomSheet({
     required VoidCallback onDownload,
     required VoidCallback onApply,
-    required ValueNotifier<int> refreshTrigger,
-  }) {
-    _presentPeripheralSheet(
-      builder:
-          (_) => TestModeSounderBottomSheet(
-            deviceId: dashboardController.selectedDevice.id,
-            onDownload: onDownload,
-            onApply: onApply,
-            refreshTrigger: refreshTrigger,
-          ),
-    );
-  }
-
-  @override
-  void showTestModeRelayBottomSheet({
-    required VoidCallback onDownload,
-    required VoidCallback onApply,
-    required ValueNotifier<int> refreshTrigger,
-  }) {
-    _presentPeripheralSheet(
-      builder:
-          (_) => TestModeRelayBottomSheet(
-            deviceId: dashboardController.selectedDevice.id,
-            onDownload: onDownload,
-            onApply: onApply,
-            refreshTrigger: refreshTrigger,
-          ),
-    );
-  }
-
-  @override
-  void showTestModeChoiceBottomSheet({
-    required VoidCallback onDownloadRelays,
-    required VoidCallback onDownloadSounders,
-    required VoidCallback onApplyRelays,
-    required VoidCallback onApplySounders,
     required ValueNotifier<int> relayRefreshTrigger,
     required ValueNotifier<int> sounderRefreshTrigger,
   }) {
     _presentPeripheralSheet(
-      builder: (sheetContext) {
-        return TestModeChoiceBottomSheet(
-          onSounders: () {
-            Navigator.pop(sheetContext);
-            showTestModeSounderBottomSheet(
-              onDownload: onDownloadSounders,
-              onApply: onApplySounders,
-              refreshTrigger: sounderRefreshTrigger,
-            );
-          },
-          onRelays: () {
-            Navigator.pop(sheetContext);
-            showTestModeRelayBottomSheet(
-              onDownload: onDownloadRelays,
-              onApply: onApplyRelays,
-              refreshTrigger: relayRefreshTrigger,
-            );
-          },
-        );
-      },
+      builder:
+          (_) => TestModeBottomSheet(
+            deviceId: dashboardController.selectedDevice.id,
+            onDownload: onDownload,
+            onApply: onApply,
+            relayRefreshTrigger: relayRefreshTrigger,
+            sounderRefreshTrigger: sounderRefreshTrigger,
+          ),
     );
   }
 

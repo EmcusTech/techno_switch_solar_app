@@ -96,6 +96,17 @@ abstract class ProjectDashboardUiDelegate {
     Future<void> Function()? onAfterApplySuccess,
   });
 
+  Future<void> runTestModeDownload({
+    required Future<void> Function() onSounderComplete,
+    required Future<void> Function() onRelayComplete,
+  });
+
+  Future<void> runTestModeApply({
+    required Future<void> Function() onSounderComplete,
+    required Future<void> Function() onRelayComplete,
+    Future<void> Function()? onAfterApplySuccess,
+  });
+
   Future<void> runSystemConfigDownload({
     required Future<void> Function() onDownloadComplete,
   });
@@ -268,23 +279,9 @@ abstract class ProjectDashboardUiDelegate {
     required ValueNotifier<int> refreshTrigger,
   });
 
-  void showTestModeSounderBottomSheet({
+  void showTestModeBottomSheet({
     required VoidCallback onDownload,
     required VoidCallback onApply,
-    required ValueNotifier<int> refreshTrigger,
-  });
-
-  void showTestModeRelayBottomSheet({
-    required VoidCallback onDownload,
-    required VoidCallback onApply,
-    required ValueNotifier<int> refreshTrigger,
-  });
-
-  void showTestModeChoiceBottomSheet({
-    required VoidCallback onDownloadRelays,
-    required VoidCallback onDownloadSounders,
-    required VoidCallback onApplyRelays,
-    required VoidCallback onApplySounders,
     required ValueNotifier<int> relayRefreshTrigger,
     required ValueNotifier<int> sounderRefreshTrigger,
   });
