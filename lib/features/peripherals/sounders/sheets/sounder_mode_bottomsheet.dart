@@ -576,37 +576,58 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
   }
 
   Widget _extOutAdvancedFields() {
-    final selected = controller.sounders.any(
-      (sounder) => sounder.group == StringConstants.extOut,
-    );
-    if (!selected) {
+    final indexes = <int>[];
+    for (final sounder in controller.sounders) {
+      if (sounder.group != StringConstants.extOut) continue;
+      final index = controller.functions.indexOf(sounder.function);
+      if (index < 0 || indexes.contains(index)) continue;
+      indexes.add(index);
+    }
+    if (indexes.isEmpty) {
       return Text(
         StringConstants.noExtOutSelected,
         style: StyleConstants.textGray14w400Style,
       );
     }
-    final extOut = controller.extOuts[0];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (var i = 0; i < indexes.length; i++) ...[
+          if (i > 0) const SizedBox(height: 16),
+          Text(
+            controller.functions[indexes[i]],
+            style: StyleConstants.textDark14w700Style,
+          ),
+          const SizedBox(height: 12),
+          _extOutFunctionFields(indexes[i]),
+        ],
+      ],
+    );
+  }
+
+  Widget _extOutFunctionFields(int index) {
+    final extOut = controller.extOuts[index];
     return peripheralSheetFieldGrid([
       DropdownWidget(
         label: 'Countdown',
         value: extOut.countdownAction,
         items: controller.extOutActionOptions,
         dropdownListHeight: 130.h,
-        onChanged: (v) => controller.setExtCountdown(0, v),
+        onChanged: (v) => controller.setExtCountdown(index, v),
       ),
       DropdownWidget(
         label: 'Hold',
         value: extOut.holdAction,
         items: controller.extOutActionOptions,
         dropdownListHeight: 130.h,
-        onChanged: (v) => controller.setExtHold(0, v),
+        onChanged: (v) => controller.setExtHold(index, v),
       ),
       DropdownWidget(
         label: 'Release',
         value: extOut.releaseAction,
         items: controller.extOutActionOptions,
         dropdownListHeight: 80.h,
-        onChanged: (v) => controller.setExtRelease(0, v),
+        onChanged: (v) => controller.setExtRelease(index, v),
       ),
     ]);
   }

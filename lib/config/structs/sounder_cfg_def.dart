@@ -7,7 +7,8 @@ import 'package:Technoswitch/utils/peripherals/defaults/sounder_defaults.dart';
 /// Mirrors firmware `st_sounder_cfg_def` (34 bytes, packed).
 ///
 /// `st_adv` is always action, countdown, hold, release. The sounder's group
-/// decides which of those bytes are live. There is no ext-out number.
+/// decides which of those bytes are live. Ext Out copies the triple for
+/// `sounderFunc`: Ext. Snd 1, Ext. Snd 2, or Man. Release Snd.
 class SounderCfgDef {
   const SounderCfgDef({
     this.sounderNum = 1,

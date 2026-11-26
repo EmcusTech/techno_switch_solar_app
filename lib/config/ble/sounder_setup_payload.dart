@@ -79,9 +79,10 @@ abstract final class SounderSetupPayload {
       sounderZone = functionNo;
       advAction = _zoneAction(process, sounderZone);
     } else if (sounderGrp == SounderCfgDef.sounderGroupExtOut) {
-      advCountdown = process.extoutOneCountdownAction.value;
-      advHold = process.extoutOneHoldAction.value;
-      advRelease = process.extoutOneReleaseAction.value;
+      final actions = _extOutActions(process, sounderFunc);
+      advCountdown = actions.$1;
+      advHold = actions.$2;
+      advRelease = actions.$3;
     } else {
       advAction = process.sounderGeneralAction.value;
     }
@@ -152,12 +153,62 @@ abstract final class SounderSetupPayload {
       return;
     }
     if (config.sounderGrp == SounderCfgDef.sounderGroupExtOut) {
-      process.extoutOneCountdownAction.value = config.advCountdown;
-      process.extoutOneHoldAction.value = config.advHold;
-      process.extoutOneReleaseAction.value = config.advRelease;
+      _setExtOut(
+        process,
+        config.sounderFunc,
+        countdown: config.advCountdown,
+        hold: config.advHold,
+        release: config.advRelease,
+      );
       return;
     }
     process.sounderGeneralAction.value = config.advAction;
+  }
+
+  /// Ext. Snd 1, Ext. Snd 2, and Man. Release Snd each keep countdown, hold,
+  /// and release. [function] is that option's index.
+  static (int, int, int) _extOutActions(BleProcess process, int function) {
+    return switch (function) {
+      0 => (
+        process.extoutOneCountdownAction.value,
+        process.extoutOneHoldAction.value,
+        process.extoutOneReleaseAction.value,
+      ),
+      1 => (
+        process.extoutTwoCountdownAction.value,
+        process.extoutTwoHoldAction.value,
+        process.extoutTwoReleaseAction.value,
+      ),
+      2 => (
+        process.extoutThreeCountdownAction.value,
+        process.extoutThreeHoldAction.value,
+        process.extoutThreeReleaseAction.value,
+      ),
+      _ => (0, 0, 0),
+    };
+  }
+
+  static void _setExtOut(
+    BleProcess process,
+    int function, {
+    required int countdown,
+    required int hold,
+    required int release,
+  }) {
+    switch (function) {
+      case 0:
+        process.extoutOneCountdownAction.value = countdown;
+        process.extoutOneHoldAction.value = hold;
+        process.extoutOneReleaseAction.value = release;
+      case 1:
+        process.extoutTwoCountdownAction.value = countdown;
+        process.extoutTwoHoldAction.value = hold;
+        process.extoutTwoReleaseAction.value = release;
+      case 2:
+        process.extoutThreeCountdownAction.value = countdown;
+        process.extoutThreeHoldAction.value = hold;
+        process.extoutThreeReleaseAction.value = release;
+    }
   }
 
   static int _zoneAction(BleProcess process, int zone) {
