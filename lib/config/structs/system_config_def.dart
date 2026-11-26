@@ -43,6 +43,23 @@ class SystemConfigDef {
   static const int storedSizeLength = 2;
   static const int crcLength = 4;
 
+  static const int zonesOffset = storedSizeLength;
+  static const int inputsOffset =
+      zonesOffset + (ZoneCfgDef.byteLength * SystemConfigLimits.maxZoneSupport);
+  static const int relaysOffset =
+      inputsOffset +
+      (InputCfgDef.byteLength * SystemConfigLimits.maxInputSupport);
+  static const int extOutOffset =
+      relaysOffset +
+      (RelayCfgDef.byteLength * SystemConfigLimits.maxRelaySupport);
+  static const int soundersOffset = extOutOffset + ExtOutCfgDef.byteLength;
+  static const int bleOffset =
+      soundersOffset +
+      (SounderCfgDef.byteLength * SystemConfigLimits.maxSounderSupport);
+  static const int panelOffset = bleOffset + BleModuleCfgDef.byteLength;
+  static const int accessOffset =
+      panelOffset + PanelPropertiesCfgDef.byteLength;
+
   static const int byteLength =
       storedSizeLength +
       (ZoneCfgDef.byteLength * SystemConfigLimits.maxZoneSupport) +
@@ -202,6 +219,21 @@ class SystemConfigDef {
 
   static int readStoredCrc(Uint8List configBytes) {
     return _readUint32Le(configBytes, byteLength - crcLength);
+  }
+
+  /// Copies [image] and writes the CRC-16 of every preceding byte.
+  static Uint8List withStoredCrc(Uint8List image) {
+    if (image.length < byteLength) {
+      throw ArgumentError(
+        'SystemConfigDef image is ${image.length} bytes, expected $byteLength',
+      );
+    }
+    final bytes = Uint8List.fromList(image.sublist(0, byteLength));
+    final crc = crc16Ccitt(
+      Uint8List.sublistView(bytes, 0, byteLength - crcLength),
+    );
+    _writeUint32Le(bytes, byteLength - crcLength, crc);
+    return bytes;
   }
 
   static bool hasMatchingCrc(Uint8List configBytes) {

@@ -14,6 +14,17 @@ import 'package:Technoswitch/config/structs/struct_bytes.dart';
 import 'package:Technoswitch/config/structs/system_config_def.dart';
 import 'package:Technoswitch/config/system_config_limits.dart';
 
+/// Which block of the stored system-config image a partial transfer changed.
+enum SystemConfigImageSection {
+  zones,
+  input,
+  relays,
+  extOut,
+  sounders,
+  panel,
+  access,
+}
+
 /// Chunked `st_system_config_def` frames for command `0x1F`.
 ///
 /// Pull (panel → app): info request has marker 1 at [13]. Each chunk request
@@ -76,6 +87,90 @@ abstract final class SystemConfigPayload {
           PanelAccessLvlSetupPayload.fromBleManager(process.bleManager, i),
       ],
     );
+  }
+
+  /// Writes the live bytes for [section] into a copy of [image] and recomputes
+  /// the trailing CRC. Every other byte stays as it was stored.
+  static Uint8List spliceLiveSection(
+    Uint8List image,
+    BleProcess process,
+    SystemConfigImageSection section,
+  ) {
+    final bytes = Uint8List.fromList(
+      image.sublist(0, SystemConfigDef.byteLength),
+    );
+    switch (section) {
+      case SystemConfigImageSection.zones:
+        _writeEach(
+          bytes,
+          SystemConfigDef.zonesOffset,
+          SystemConfigLimits.maxZoneSupport,
+          (index) => ZoneSetupPayload.fromBleProcess(process, index).toBytes(),
+        );
+      case SystemConfigImageSection.input:
+        _writeBlock(
+          bytes,
+          SystemConfigDef.inputsOffset,
+          InputSetupPayload.fromBleProcess(process).toBytes(),
+        );
+      case SystemConfigImageSection.relays:
+        _writeEach(
+          bytes,
+          SystemConfigDef.relaysOffset,
+          SystemConfigLimits.maxRelaySupport,
+          (index) => RelaySetupPayload.fromBleProcess(process, index).toBytes(),
+        );
+      case SystemConfigImageSection.extOut:
+        _writeBlock(
+          bytes,
+          SystemConfigDef.extOutOffset,
+          ExtOutSetupPayload.fromBleProcess(process).toBytes(),
+        );
+      case SystemConfigImageSection.sounders:
+        _writeEach(
+          bytes,
+          SystemConfigDef.soundersOffset,
+          SystemConfigLimits.maxSounderSupport,
+          (index) =>
+              SounderSetupPayload.fromBleProcess(process, index).toBytes(),
+        );
+      case SystemConfigImageSection.panel:
+        _writeBlock(
+          bytes,
+          SystemConfigDef.panelOffset,
+          PanelPropertiesSetupPayload.fromBleProcess(process).toBytes(),
+        );
+      case SystemConfigImageSection.access:
+        _writeEach(
+          bytes,
+          SystemConfigDef.accessOffset,
+          SystemConfigLimits.maxPanelAccCodeNo,
+          (index) =>
+              PanelAccessLvlSetupPayload.fromBleManager(
+                process.bleManager,
+                index,
+              ).toBytes(),
+        );
+    }
+    return SystemConfigDef.withStoredCrc(bytes);
+  }
+
+  static void _writeEach(
+    Uint8List bytes,
+    int offset,
+    int count,
+    Uint8List Function(int index) blockAt,
+  ) {
+    var cursor = offset;
+    for (var index = 0; index < count; index++) {
+      final block = blockAt(index);
+      _writeBlock(bytes, cursor, block);
+      cursor += block.length;
+    }
+  }
+
+  static void _writeBlock(Uint8List bytes, int offset, Uint8List block) {
+    bytes.setRange(offset, offset + block.length, block);
   }
 
   static void applyToBleProcess(SystemConfigDef config, BleProcess process) {

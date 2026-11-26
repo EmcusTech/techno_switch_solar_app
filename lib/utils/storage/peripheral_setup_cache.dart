@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:shared_preferences/shared_preferences.dart';
 
 class PeripheralSetupCache {
@@ -29,6 +31,8 @@ class PeripheralSetupCache {
       '$_keyPrefix${deviceId}_panel_network';
   static String _systemConfigCrcKey(String deviceId) =>
       '$_keyPrefix${deviceId}_system_config_crc';
+  static String _systemConfigImageKey(String deviceId) =>
+      '$_keyPrefix${deviceId}_system_config_image';
 
   static Future<void> saveSounderSetup(
     String deviceId,
@@ -314,6 +318,7 @@ class PeripheralSetupCache {
     '_diagnostic',
     '_panel_network',
     '_system_config_crc',
+    '_system_config_image',
   ];
 
   static Future<void> saveSystemConfigCrc(String deviceId, int crc) async {
@@ -330,6 +335,29 @@ class PeripheralSetupCache {
     final raw = prefs.getString(_systemConfigCrcKey(id));
     if (raw == null) return null;
     return int.tryParse(raw);
+  }
+
+  static Future<void> saveSystemConfigImage(
+    String deviceId,
+    Uint8List bytes,
+  ) async {
+    final id = deviceId.trim();
+    if (id.isEmpty || bytes.isEmpty) return;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_systemConfigImageKey(id), base64Encode(bytes));
+  }
+
+  static Future<Uint8List?> loadSystemConfigImage(String deviceId) async {
+    final id = deviceId.trim();
+    if (id.isEmpty) return null;
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(_systemConfigImageKey(id));
+    if (raw == null || raw.isEmpty) return null;
+    try {
+      return Uint8List.fromList(base64Decode(raw));
+    } catch (_) {
+      return null;
+    }
   }
 
   /// Network / identity fields from the connect handshake (for offline PDF export).

@@ -106,6 +106,12 @@ class BleProcess {
   List<Uint8List> systemConfigPushChunks = <Uint8List>[];
   bool systemConfigApplyEndSent = false;
   SystemConfigDef? retainedSystemConfig;
+
+  /// Exact packed image last saved or downloaded. Partial transfers splice
+  /// one section into this and recompute the CRC.
+  Uint8List? retainedSystemConfigBytes;
+
+  Future<void> _systemConfigCrcTail = Future<void>.value();
   int sounderSetupFetchRelayCommandStep = 0;
   int sounderSetupFetchZoneCommandStep = 1;
   int sounderSetupFetchExtOutCommandStep = 1;
@@ -1669,6 +1675,7 @@ class BleProcess {
         isGeneralModuleSetupFetchCommandActive.value = false;
         isAccessKeyValid.value = true;
         processDesc.value = StringConstants.generalModuleSetupFetchCompleted;
+        _rememberLiveSystemConfigCrc(SystemConfigImageSection.panel);
       } else {
         startRxTimeout();
         await bleManager.sendPollPacket();
@@ -1716,6 +1723,7 @@ class BleProcess {
         isGeneralModuleSetupApplyDone.value = true;
         isAccessKeyValid.value = true;
         processDesc.value = StringConstants.generalModuleSetupApplyCompleted;
+        _rememberLiveSystemConfigCrc(SystemConfigImageSection.panel);
       } else {
         startRxTimeout();
         await bleManager.sendPollPacket();
@@ -1773,6 +1781,7 @@ class BleProcess {
         isPanelInfoSetupFetchCommandActive.value = false;
         isAccessKeyValid.value = true;
         processDesc.value = StringConstants.panelInfoSetupFetchCompleted;
+        _rememberLiveSystemConfigCrc(SystemConfigImageSection.panel);
       } else {
         startRxTimeout();
         await bleManager.sendPollPacket();
@@ -1802,6 +1811,7 @@ class BleProcess {
         isPanelInfoSetupApplyDone.value = true;
         isAccessKeyValid.value = true;
         processDesc.value = StringConstants.panelInfoSetupApplyCompleted;
+        _rememberLiveSystemConfigCrc(SystemConfigImageSection.panel);
       } else {
         startRxTimeout();
         await bleManager.sendPollPacket();
@@ -1843,6 +1853,7 @@ class BleProcess {
           isAccessCodeSetupFetchCommandActive.value = false;
           isAccessCodeSetupFetchDone.value = true;
           processDesc.value = StringConstants.accessCodeSetupFetchCompleted;
+          _rememberLiveSystemConfigCrc(SystemConfigImageSection.access);
         }
       }
     }
@@ -1870,6 +1881,7 @@ class BleProcess {
           isAccessCodeSetupApplyCommandActive.value = false;
           isAccessCodeSetupApplyDone.value = true;
           processDesc.value = StringConstants.accessCodeSetupApplyCompleted;
+          _rememberLiveSystemConfigCrc(SystemConfigImageSection.access);
         }
       }
     }
@@ -1896,6 +1908,7 @@ class BleProcess {
         isServiceDueFetchCommandActive.value = false;
         isAccessKeyValid.value = true;
         processDesc.value = StringConstants.serviceDueFetchCompleted;
+        _rememberLiveSystemConfigCrc(SystemConfigImageSection.panel);
       } else {
         startRxTimeout();
         await bleManager.sendPollPacket();
@@ -1911,6 +1924,7 @@ class BleProcess {
         isServiceDueApplyDone.value = true;
         isAccessKeyValid.value = true;
         processDesc.value = StringConstants.serviceDueApplyCompleted;
+        _rememberLiveSystemConfigCrc(SystemConfigImageSection.panel);
       } else {
         startRxTimeout();
         await bleManager.sendPollPacket();
@@ -1935,6 +1949,7 @@ class BleProcess {
         isSounderSetupFetchCommandActive.value = false;
         isSounderSetupFetchDone.value = true;
         processDesc.value = StringConstants.sounderSetupFetchCompleted;
+        _rememberLiveSystemConfigCrc(SystemConfigImageSection.sounders);
       }
     }
 
@@ -1949,6 +1964,7 @@ class BleProcess {
         checkForSounderSetupApplyRes = 0;
         isSounderSetupApplyCommandActive.value = false;
         isSounderSetupApplyDone.value = true;
+        _rememberLiveSystemConfigCrc(SystemConfigImageSection.sounders);
       }
     }
 
@@ -2189,6 +2205,7 @@ class BleProcess {
         checkForExtCmdApplyRes = 0;
         isExtOutCommandApplyActive.value = false;
         isExtOutApplyDone.value = true;
+        _rememberLiveSystemConfigCrc(SystemConfigImageSection.extOut);
       }
     }
 
@@ -2210,6 +2227,7 @@ class BleProcess {
           isInputSetupFetchDone.value = true;
           final config = InputSetupPayload.readFromPacket(rx.payload);
           InputSetupPayload.applyToBleProcess(config, this);
+          _rememberLiveSystemConfigCrc(SystemConfigImageSection.input);
         } else {
           print(
             'TX/RX: RECEIVE: input-setup-fetch-response rejected '
@@ -2236,6 +2254,7 @@ class BleProcess {
         checkForInputSetupApplyRes = 0;
         isInputSetupApplyActive.value = false;
         isInputSetupApplyDone.value = true;
+        _rememberLiveSystemConfigCrc(SystemConfigImageSection.input);
       }
     }
 
@@ -2261,6 +2280,7 @@ class BleProcess {
           checkForRelaySetupApplyRes = 0;
           isRelaySetupCommandApplyActive.value = false;
           isRelaySetupApplyDone.value = true;
+          _rememberLiveSystemConfigCrc(SystemConfigImageSection.relays);
         }
       }
     }
@@ -2275,6 +2295,7 @@ class BleProcess {
         isExtOutFetchDone.value = true;
         final config = ExtOutSetupPayload.readFromPacket(view);
         ExtOutSetupPayload.applyToBleProcess(config, this);
+        _rememberLiveSystemConfigCrc(SystemConfigImageSection.extOut);
       }
     }
 
@@ -2311,6 +2332,7 @@ class BleProcess {
           checkForRelaySetupFetchRes = 0;
           isRelaySetupFetchCommandActive.value = false;
           isRelaySetupFetchDone.value = true;
+          _rememberLiveSystemConfigCrc(SystemConfigImageSection.relays);
         }
       }
     }
@@ -2337,6 +2359,7 @@ class BleProcess {
           checkForZoneSetupApplyRes = 0;
           isZoneSetupCommandApplyActive.value = false;
           isZoneSetupApplyDone.value = true;
+          _rememberLiveSystemConfigCrc(SystemConfigImageSection.zones);
         }
       }
     }
@@ -2369,6 +2392,7 @@ class BleProcess {
           checkForZoneSetupFetchRes = 0;
           isZoneSetupFetchCommandActive.value = false;
           isZoneSetupFetchDone.value = true;
+          _rememberLiveSystemConfigCrc(SystemConfigImageSection.zones);
         }
       }
     }
@@ -2932,9 +2956,7 @@ class BleProcess {
     bleManager.otaProcessState = OtaProcessState.notInUse;
     processDesc.value = StringConstants.systemConfigFetchCompleted;
     isSystemConfigFetchDone.value = true;
-    _rememberSystemConfigCrc(
-      SystemConfigDef.readStoredCrc(systemConfigAssembly),
-    );
+    _rememberSystemConfigImage(systemConfigAssembly);
   }
 
   Future<void> _onSystemConfigApplyAck() async {
@@ -2964,11 +2986,11 @@ class BleProcess {
     bleManager.otaProcessState = OtaProcessState.notInUse;
     processDesc.value = StringConstants.systemConfigApplyCompleted;
     isSystemConfigApplyDone.value = true;
-    final sentCrc = _sentSystemConfigCrc();
-    if (sentCrc != null) _rememberSystemConfigCrc(sentCrc);
+    final sent = _sentSystemConfigBytes();
+    if (sent != null) _rememberSystemConfigImage(sent);
   }
 
-  int? _sentSystemConfigCrc() {
+  Uint8List? _sentSystemConfigBytes() {
     if (systemConfigPushChunks.isEmpty) return null;
     final total = systemConfigPushChunks.fold<int>(
       0,
@@ -2981,18 +3003,74 @@ class BleProcess {
       bytes.setRange(offset, offset + chunk.length, chunk);
       offset += chunk.length;
     }
-    return SystemConfigDef.readStoredCrc(bytes);
+    return bytes;
   }
 
-  void _rememberSystemConfigCrc(int crc) {
+  void _rememberSystemConfigImage(Uint8List image) {
+    final bytes = SystemConfigDef.withStoredCrc(image);
+    retainedSystemConfigBytes = bytes;
+    retainedSystemConfig = SystemConfigDef.fromBytes(bytes);
+    _systemConfigCrcTail = _systemConfigCrcTail.then((_) async {
+      try {
+        await _saveSystemConfigImage(bytes);
+      } catch (error) {
+        debugPrint('SYSTEM_CONFIG crc save skipped: $error');
+      }
+    });
+  }
+
+  /// Splices the live bytes for [section] into the stored image and saves the
+  /// new CRC. Loads the image from the last full transfer when this process
+  /// does not still have it.
+  void _rememberLiveSystemConfigCrc(SystemConfigImageSection section) {
+    _systemConfigCrcTail = _systemConfigCrcTail.then((_) async {
+      try {
+        await _refreshLiveSystemConfigCrc(section);
+      } catch (error) {
+        debugPrint('SYSTEM_CONFIG crc refresh skipped: $error');
+      }
+    });
+  }
+
+  Future<void> _refreshLiveSystemConfigCrc(
+    SystemConfigImageSection section,
+  ) async {
+    retainedSystemConfigBytes ??= await _loadSystemConfigImage();
+    final base = retainedSystemConfigBytes;
+    if (base == null) {
+      debugPrint('SYSTEM_CONFIG crc refresh skipped: no stored image');
+      return;
+    }
+    final bytes = SystemConfigPayload.spliceLiveSection(base, this, section);
+    retainedSystemConfigBytes = bytes;
+    retainedSystemConfig = SystemConfigDef.fromBytes(bytes);
+    await _saveSystemConfigImage(bytes);
+    debugPrint(
+      'SYSTEM_CONFIG crc refresh '
+      'section=${section.name} '
+      'stored=${SystemConfigDef.readStoredCrc(bytes).toRadixString(16)}',
+    );
+  }
+
+  Future<Uint8List?> _loadSystemConfigImage() async {
     final device = bleManager.selectedDevice;
-    if (device == null) return;
-    unawaited(
-      SystemConfigCrcStore.save(
-        crc: crc,
-        primaryDeviceId: device.id,
-        bleName: device.name,
-      ),
+    final deviceId = device?.id ?? bleManager.connectedDeviceId.value;
+    if (deviceId.trim().isEmpty) return null;
+    return SystemConfigCrcStore.loadImage(
+      primaryDeviceId: deviceId,
+      bleName: device?.name,
+    );
+  }
+
+  Future<void> _saveSystemConfigImage(Uint8List bytes) async {
+    final device = bleManager.selectedDevice;
+    final deviceId = device?.id ?? bleManager.connectedDeviceId.value;
+    if (deviceId.trim().isEmpty) return;
+    await SystemConfigCrcStore.save(
+      crc: SystemConfigDef.readStoredCrc(bytes),
+      primaryDeviceId: deviceId,
+      bleName: device?.name,
+      image: bytes,
     );
   }
 
@@ -4359,9 +4437,7 @@ class BleProcess {
         payload[TsFrame.commandOffset] == command) {
       return true;
     }
-    return payload.length > 12 &&
-        payload[10] == mode &&
-        payload[12] == command;
+    return payload.length > 12 && payload[10] == mode && payload[12] == command;
   }
 
   String? _firmwareCompleteStatusError(List<int> payload) {
@@ -4752,9 +4828,7 @@ class BleProcess {
     return true;
   }
 
-  void _armNewEventLogTimeout({
-    Duration timeout = const Duration(minutes: 2),
-  }) {
+  void _armNewEventLogTimeout({Duration timeout = const Duration(minutes: 2)}) {
     _newEventLogTimer?.cancel();
     _newEventLogTimer = Timer(timeout, () {
       if (_bulkTransferKind ==
@@ -5101,6 +5175,7 @@ class BleProcess {
     checkForPanelPropertiesFetchRes = 0;
     isPanelPropertiesFetchDone.value = true;
     isAccessKeyValid.value = true;
+    _rememberLiveSystemConfigCrc(SystemConfigImageSection.panel);
     isPanelInfoSetupFetchCommandActive.value = false;
     isGeneralModuleSetupFetchCommandActive.value = false;
     isServiceDueFetchCommandActive.value = false;
@@ -5112,6 +5187,7 @@ class BleProcess {
     checkForPanelPropertiesApplyRes = 0;
     isPanelPropertiesApplyDone.value = true;
     isAccessKeyValid.value = true;
+    _rememberLiveSystemConfigCrc(SystemConfigImageSection.panel);
     if (isPanelInfoSetupApplyCommandActive.value) {
       isPanelInfoSetupApplyCommandActive.value = false;
       isPanelInfoSetupApplyDone.value = true;

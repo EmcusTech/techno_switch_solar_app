@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:Technoswitch/config/structs/system_config_def.dart';
 import 'package:Technoswitch/utils/constants/ble/ble_msd_utils.dart';
 import 'package:Technoswitch/utils/peripherals/peripheral_setup_cache_resolver.dart';
 import 'package:Technoswitch/utils/storage/peripheral_setup_cache.dart';
@@ -23,6 +24,7 @@ abstract final class SystemConfigCrcStore {
     required String primaryDeviceId,
     String? bleName,
     String? panelVersionNo,
+    Uint8List? image,
   }) async {
     final value = crc & 0xFFFF;
     final ids = PeripheralSetupCacheResolver.cacheDeviceIdCandidates(
@@ -35,7 +37,29 @@ abstract final class SystemConfigCrcStore {
       final trimmed = id.trim();
       if (trimmed.isEmpty || !seen.add(trimmed)) continue;
       await PeripheralSetupCache.saveSystemConfigCrc(trimmed, value);
+      if (image != null) {
+        await PeripheralSetupCache.saveSystemConfigImage(trimmed, image);
+      }
     }
+  }
+
+  static Future<Uint8List?> loadImage({
+    required String primaryDeviceId,
+    String? bleName,
+    String? panelVersionNo,
+  }) async {
+    final ids = PeripheralSetupCacheResolver.cacheDeviceIdCandidates(
+      primaryDeviceId: primaryDeviceId,
+      bleName: bleName,
+      panelVersionNo: panelVersionNo,
+    );
+    for (final id in ids) {
+      final image = await PeripheralSetupCache.loadSystemConfigImage(id);
+      if (image != null && image.length >= SystemConfigDef.byteLength) {
+        return Uint8List.fromList(image.sublist(0, SystemConfigDef.byteLength));
+      }
+    }
+    return null;
   }
 
   static Future<int?> load({
