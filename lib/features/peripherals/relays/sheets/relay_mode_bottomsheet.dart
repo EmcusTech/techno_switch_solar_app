@@ -6,6 +6,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:Technoswitch/features/peripherals/relays/controllers/relay_mode_controller.dart';
+import 'package:Technoswitch/features/peripherals/relays/sheets/relay_pattern_fields.dart';
 import 'package:Technoswitch/widgets/common/dropdown.dart';
 import 'package:Technoswitch/widgets/common/peripheral_tab_bar.dart';
 import 'package:Technoswitch/utils/constants/color_constants.dart';
@@ -292,6 +293,21 @@ class RelayModeBottomSheetState extends State<RelayModeBottomSheet>
 
   Widget _relayFields(int index) {
     final relay = controller.relays[index];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _relayGrid(relay, index),
+        RelayPatternFields(
+          group: relay.group,
+          function: relay.function,
+          zoneText: relay.dynamicController.text,
+          manager: controller.manager,
+        ),
+      ],
+    );
+  }
+
+  Widget _relayGrid(RelayConfig relay, int index) {
     return peripheralSheetFieldGrid([
       _outputTextField(relay: relay, relayIndex: index),
       DropdownWidget(

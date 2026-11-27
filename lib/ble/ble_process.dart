@@ -2309,7 +2309,12 @@ class BleProcess {
           processDesc.value = "${StringConstants.downloadingRelay} 2/3";
 
           final config = RelaySetupPayload.readFromPacket(view);
-          RelaySetupPayload.applyToBleProcess(config, this, 0);
+          RelaySetupPayload.applyToBleProcess(
+            config,
+            this,
+            0,
+            applyPattern: true,
+          );
 
           relaySetupFetchCommandStep = 2;
           startRxTimeout();
@@ -2318,14 +2323,24 @@ class BleProcess {
           processDesc.value = "${StringConstants.downloadingRelay} 3/3";
 
           final config = RelaySetupPayload.readFromPacket(view);
-          RelaySetupPayload.applyToBleProcess(config, this, 1);
+          RelaySetupPayload.applyToBleProcess(
+            config,
+            this,
+            1,
+            applyPattern: true,
+          );
 
           relaySetupFetchCommandStep = 3;
           startRxTimeout();
           await bleManager.sendRelaySetupFetchThirdCmdPkt();
         } else if (relaySetupFetchCommandStep == 3) {
           final config = RelaySetupPayload.readFromPacket(view);
-          RelaySetupPayload.applyToBleProcess(config, this, 2);
+          RelaySetupPayload.applyToBleProcess(
+            config,
+            this,
+            2,
+            applyPattern: true,
+          );
 
           bleManager.otaProcessState = OtaProcessState.notInUse;
           cancelOperationDeadline();

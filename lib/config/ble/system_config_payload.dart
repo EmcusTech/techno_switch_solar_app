@@ -182,7 +182,12 @@ abstract final class SystemConfigPayload {
       InputSetupPayload.applyToBleProcess(config.inputs.first, process);
     }
     for (var i = 0; i < config.relays.length; i++) {
-      RelaySetupPayload.applyToBleProcess(config.relays[i], process, i);
+      RelaySetupPayload.applyToBleProcess(
+        config.relays[i],
+        process,
+        i,
+        applyPattern: true,
+      );
     }
     ExtOutSetupPayload.applyToBleProcess(config.extOut, process);
     for (var i = 0; i < config.sounders.length; i++) {

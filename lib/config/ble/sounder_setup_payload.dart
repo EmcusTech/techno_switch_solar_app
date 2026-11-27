@@ -2,7 +2,9 @@ import 'dart:typed_data';
 
 import 'package:Technoswitch/ble/ble_process.dart';
 import 'package:Technoswitch/config/ble/config_setup_payload.dart';
+import 'package:Technoswitch/config/ble/sndr_relay_pattern.dart';
 import 'package:Technoswitch/config/structs/sounder_cfg_def.dart';
+import 'package:Technoswitch/config/ui/sounder_config_options.dart';
 
 /// SETUP_SOUNDER data section inside the 216-byte BLE frame.
 ///
@@ -69,23 +71,19 @@ abstract final class SounderSetupPayload {
     required bool sounderTest,
     required bool sounderType,
   }) {
-    var sounderZone = 0;
-    var advAction = 0;
-    var advCountdown = 0;
-    var advHold = 0;
-    var advRelease = 0;
-
-    if (sounderGrp == SounderCfgDef.sounderGroupZone) {
-      sounderZone = functionNo;
-      advAction = _zoneAction(process, sounderZone);
-    } else if (sounderGrp == SounderCfgDef.sounderGroupExtOut) {
-      final actions = _extOutActions(process, sounderFunc);
-      advCountdown = actions.$1;
-      advHold = actions.$2;
-      advRelease = actions.$3;
-    } else {
-      advAction = process.sounderGeneralAction.value;
-    }
+    final sounderZone =
+        sounderGrp == SounderCfgDef.sounderGroupZone ? functionNo : 0;
+    final pattern = SndrRelayPattern.fromProcess(
+      process: process,
+      group: sounderGrp,
+      function: SndrRelayPattern.functionLabel(
+        group: sounderGrp,
+        function: sounderFunc,
+        groups: SounderConfigOptions.groupOptions,
+        functionsByGroup: SounderConfigOptions.functionOptionsMap,
+      ),
+      zone: sounderZone,
+    );
 
     return SounderCfgDef(
       sounderNum: sounderNum,
@@ -97,10 +95,10 @@ abstract final class SounderSetupPayload {
       sounderTest: sounderTest ? 1 : 0,
       sounderType: sounderType ? 0 : 1,
       delay: process.sounderGeneralDelay.value,
-      advAction: advAction,
-      advCountdown: advCountdown,
-      advHold: advHold,
-      advRelease: advRelease,
+      advAction: pattern.action,
+      advCountdown: pattern.countdown,
+      advHold: pattern.hold,
+      advRelease: pattern.release,
     );
   }
 
@@ -144,91 +142,21 @@ abstract final class SounderSetupPayload {
     }
 
     process.sounderGeneralDelay.value = config.delay;
-    _applyAdvanced(config, process);
-  }
-
-  static void _applyAdvanced(SounderCfgDef config, BleProcess process) {
-    if (config.sounderGrp == SounderCfgDef.sounderGroupZone) {
-      _setZone(process, config.sounderZone, action: config.advAction);
-      return;
-    }
-    if (config.sounderGrp == SounderCfgDef.sounderGroupExtOut) {
-      _setExtOut(
-        process,
-        config.sounderFunc,
-        countdown: config.advCountdown,
-        hold: config.advHold,
-        release: config.advRelease,
-      );
-      return;
-    }
-    process.sounderGeneralAction.value = config.advAction;
-  }
-
-  /// Ext. Snd 1, Ext. Snd 2, and Man. Release Snd each keep countdown, hold,
-  /// and release. [function] is that option's index.
-  static (int, int, int) _extOutActions(BleProcess process, int function) {
-    return switch (function) {
-      0 => (
-        process.extoutOneCountdownAction.value,
-        process.extoutOneHoldAction.value,
-        process.extoutOneReleaseAction.value,
+    SndrRelayPattern.applyToProcess(
+      process,
+      group: config.sounderGrp,
+      function: SndrRelayPattern.functionLabel(
+        group: config.sounderGrp,
+        function: config.sounderFunc,
+        groups: SounderConfigOptions.groupOptions,
+        functionsByGroup: SounderConfigOptions.functionOptionsMap,
       ),
-      1 => (
-        process.extoutTwoCountdownAction.value,
-        process.extoutTwoHoldAction.value,
-        process.extoutTwoReleaseAction.value,
-      ),
-      2 => (
-        process.extoutThreeCountdownAction.value,
-        process.extoutThreeHoldAction.value,
-        process.extoutThreeReleaseAction.value,
-      ),
-      _ => (0, 0, 0),
-    };
-  }
-
-  static void _setExtOut(
-    BleProcess process,
-    int function, {
-    required int countdown,
-    required int hold,
-    required int release,
-  }) {
-    switch (function) {
-      case 0:
-        process.extoutOneCountdownAction.value = countdown;
-        process.extoutOneHoldAction.value = hold;
-        process.extoutOneReleaseAction.value = release;
-      case 1:
-        process.extoutTwoCountdownAction.value = countdown;
-        process.extoutTwoHoldAction.value = hold;
-        process.extoutTwoReleaseAction.value = release;
-      case 2:
-        process.extoutThreeCountdownAction.value = countdown;
-        process.extoutThreeHoldAction.value = hold;
-        process.extoutThreeReleaseAction.value = release;
-    }
-  }
-
-  static int _zoneAction(BleProcess process, int zone) {
-    return switch (zone) {
-      1 => process.zoneOneAction.value,
-      2 => process.zoneTwoAction.value,
-      3 => process.zoneThreeAction.value,
-      _ => 0,
-    };
-  }
-
-  static void _setZone(BleProcess process, int zone, {required int action}) {
-    switch (zone) {
-      case 1:
-        process.zoneOneAction.value = action;
-      case 2:
-        process.zoneTwoAction.value = action;
-      case 3:
-        process.zoneThreeAction.value = action;
-    }
+      zone: config.sounderZone,
+      action: config.advAction,
+      countdown: config.advCountdown,
+      hold: config.advHold,
+      release: config.advRelease,
+    );
   }
 
   static int _functionNoFromStruct(SounderCfgDef config) {

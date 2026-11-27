@@ -5,7 +5,10 @@ import 'package:Technoswitch/config/structs/struct_bytes.dart';
 import 'package:Technoswitch/utils/constants/string_constants.dart';
 import 'package:Technoswitch/utils/peripherals/defaults/relay_defaults.dart';
 
-/// Mirrors firmware `st_relay_cfg_def` (28 bytes, packed).
+/// Mirrors firmware `st_relay_cfg_def` (32 bytes, packed).
+///
+/// `st_pattern` is the same action, countdown, hold, and release block a
+/// sounder carries. The relay's group and function decide which bytes are live.
 class RelayCfgDef {
   const RelayCfgDef({
     this.relayNum = 1,
@@ -16,9 +19,14 @@ class RelayCfgDef {
     this.relayExtOut = 0,
     this.relayEnable = RelayDefaults.enabledBle ? 1 : 0,
     this.relayTest = RelayDefaults.testBle ? 1 : 0,
+    this.patternAction = 0,
+    this.patternCountdown = 0,
+    this.patternHold = 0,
+    this.patternRelease = 0,
   });
 
-  static const int byteLength = 28;
+  static const int byteLength = 32;
+  static const int relayGroupGeneral = 1;
   static const int relayGroupZone = 2;
   static const int relayGroupExtOut = 3;
 
@@ -30,6 +38,10 @@ class RelayCfgDef {
   final int relayExtOut;
   final int relayEnable;
   final int relayTest;
+  final int patternAction;
+  final int patternCountdown;
+  final int patternHold;
+  final int patternRelease;
 
   factory RelayCfgDef.fromBytes(Uint8List bytes, {int offset = 0}) {
     if (offset < 0 || offset + byteLength > bytes.length) {
@@ -50,6 +62,10 @@ class RelayCfgDef {
       relayExtOut: bytes[offset + 25],
       relayEnable: bytes[offset + 26],
       relayTest: bytes[offset + 27],
+      patternAction: bytes[offset + 28],
+      patternCountdown: bytes[offset + 29],
+      patternHold: bytes[offset + 30],
+      patternRelease: bytes[offset + 31],
     );
   }
 
@@ -101,6 +117,10 @@ class RelayCfgDef {
     buf[25] = relayExtOut & 0xFF;
     buf[26] = relayEnable & 0xFF;
     buf[27] = relayTest & 0xFF;
+    buf[28] = patternAction & 0xFF;
+    buf[29] = patternCountdown & 0xFF;
+    buf[30] = patternHold & 0xFF;
+    buf[31] = patternRelease & 0xFF;
     return buf;
   }
 

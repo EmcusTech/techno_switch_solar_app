@@ -88,10 +88,10 @@ abstract final class SounderSetupPayloadDebug {
       '  test: ${config.sounderTest}',
       '  type: ${config.sounderType} $typeName',
       '  delay: ${config.delay}',
-      '  adv.action: ${config.advAction}',
-      '  adv.countdown: ${config.advCountdown}',
-      '  adv.hold: ${config.advHold}',
-      '  adv.release: ${config.advRelease}',
+      '  pattern.action: ${config.advAction}',
+      '  pattern.countdown: ${config.advCountdown}',
+      '  pattern.hold: ${config.advHold}',
+      '  pattern.release: ${config.advRelease}',
     ];
     return lines.join('\n');
   }

@@ -2,12 +2,14 @@ import 'dart:typed_data';
 
 import 'package:Technoswitch/ble/ble_process.dart';
 import 'package:Technoswitch/config/ble/config_setup_payload.dart';
+import 'package:Technoswitch/config/ble/sndr_relay_pattern.dart';
 import 'package:Technoswitch/config/structs/relay_cfg_def.dart';
+import 'package:Technoswitch/config/ui/relay_config_options.dart';
 import 'package:Technoswitch/config/ui/relay_config_ui_bridge.dart';
 
 /// SETUP_RELAY data section inside the 216-byte BLE frame.
 ///
-/// One command carries a single `st_relay_cfg_def` (28 bytes) at [13].
+/// One command carries a single `st_relay_cfg_def` (32 bytes) at [13].
 abstract final class RelaySetupPayload {
   static const int commandOffset = ConfigSetupPayload.commandOffset;
   static const int structOffset = ConfigSetupPayload.structOffset;
@@ -18,6 +20,7 @@ abstract final class RelaySetupPayload {
     switch (relayIndex) {
       case 0:
         return _fromRelayState(
+          process: process,
           relayNum: 1,
           relayText: process.relayOneSetupOutputText.value,
           relayGrp: process.relayOneSetupGroup.value,
@@ -28,6 +31,7 @@ abstract final class RelaySetupPayload {
         );
       case 1:
         return _fromRelayState(
+          process: process,
           relayNum: 2,
           relayText: process.relayTwoSetupOutputText.value,
           relayGrp: process.relayTwoSetupGroup.value,
@@ -38,6 +42,7 @@ abstract final class RelaySetupPayload {
         );
       case 2:
         return _fromRelayState(
+          process: process,
           relayNum: 3,
           relayText: process.relayThreeSetupOutputText.value,
           relayGrp: process.relayThreeSetupGroup.value,
@@ -52,6 +57,7 @@ abstract final class RelaySetupPayload {
   }
 
   static RelayCfgDef _fromRelayState({
+    required BleProcess process,
     required int relayNum,
     required String relayText,
     required int relayGrp,
@@ -73,6 +79,13 @@ abstract final class RelaySetupPayload {
       relayExtOut = dynamicValue;
     }
 
+    final pattern = SndrRelayPattern.fromProcess(
+      process: process,
+      group: relayGrp,
+      function: _functionLabel(relayGrp, relayFunc),
+      zone: relayZone,
+    );
+
     return RelayCfgDef(
       relayNum: relayNum,
       relayText: relayText,
@@ -82,14 +95,19 @@ abstract final class RelaySetupPayload {
       relayExtOut: relayExtOut,
       relayEnable: relayEnable ? 1 : 0,
       relayTest: relayTest ? 1 : 0,
+      patternAction: pattern.action,
+      patternCountdown: pattern.countdown,
+      patternHold: pattern.hold,
+      patternRelease: pattern.release,
     );
   }
 
   static void applyToBleProcess(
     RelayCfgDef config,
     BleProcess process,
-    int relayIndex,
-  ) {
+    int relayIndex, {
+    bool applyPattern = false,
+  }) {
     final dynamicText = RelayConfigUiBridge.dynamicValueFromStruct(config);
 
     switch (relayIndex) {
@@ -120,6 +138,27 @@ abstract final class RelaySetupPayload {
       default:
         throw RangeError('relayIndex must be 0..2, got $relayIndex');
     }
+
+    if (!applyPattern) return;
+    SndrRelayPattern.applyToProcess(
+      process,
+      group: config.relayGrp,
+      function: _functionLabel(config.relayGrp, config.relayFunc),
+      zone: config.relayZone,
+      action: config.patternAction,
+      countdown: config.patternCountdown,
+      hold: config.patternHold,
+      release: config.patternRelease,
+    );
+  }
+
+  static String _functionLabel(int group, int function) {
+    return SndrRelayPattern.functionLabel(
+      group: group,
+      function: function,
+      groups: RelayConfigOptions.groupOptions,
+      functionsByGroup: RelayConfigOptions.functionOptionsMap,
+    );
   }
 
   static void writeToPacket(Uint8List packet, RelayCfgDef config) {
