@@ -174,7 +174,7 @@ class _SounderAdvancedPanelState extends State<SounderAdvancedPanel>
         value: widget.controller.actionOptions[safeIndex],
         items: widget.controller.actionOptions,
         enabled: _enabled,
-        dropdownListHeight: 80.h,
+        // dropdownListHeight: 80.h,
         onChanged: widget.controller.setGeneralAction,
       ),
     ]);
@@ -187,7 +187,7 @@ class _SounderAdvancedPanelState extends State<SounderAdvancedPanel>
         value: widget.controller.zones.first.action,
         items: widget.controller.actionOptions,
         enabled: _enabled,
-        dropdownListHeight: 80.h,
+        // dropdownListHeight: 80.h,
         onChanged: widget.controller.setZoneAction,
       ),
     ]);
@@ -235,7 +235,7 @@ class _SounderAdvancedPanelState extends State<SounderAdvancedPanel>
         value: extOut.countdownAction,
         items: widget.controller.extOutActionOptions,
         enabled: _enabled,
-        dropdownListHeight: 130.h,
+        // dropdownListHeight: 130.h,
         onChanged: (v) => widget.controller.setExtCountdown(index, v),
       ),
       DropdownWidget(
@@ -243,7 +243,7 @@ class _SounderAdvancedPanelState extends State<SounderAdvancedPanel>
         value: extOut.holdAction,
         items: widget.controller.extOutActionOptions,
         enabled: _enabled,
-        dropdownListHeight: 130.h,
+        // dropdownListHeight: 130.h,
         onChanged: (v) => widget.controller.setExtHold(index, v),
       ),
       DropdownWidget(
@@ -251,7 +251,7 @@ class _SounderAdvancedPanelState extends State<SounderAdvancedPanel>
         value: extOut.releaseAction,
         items: widget.controller.extOutActionOptions,
         enabled: _enabled,
-        dropdownListHeight: 80.h,
+        // dropdownListHeight: 80.h,
         onChanged: (v) => widget.controller.setExtRelease(index, v),
       ),
     ]);
