@@ -309,6 +309,10 @@ class SounderModeController extends PeripheralModeController {
       final z = data[key] as Map<String, dynamic>?;
       if (z != null) _applyZoneFromMap(z, zone: zones[i]);
     }
+    final zoneAction = zones.first.action;
+    for (final zone in zones) {
+      zone.action = zoneAction;
+    }
     for (var i = 0; i < 3; i++) {
       final key =
           i == 0
@@ -398,16 +402,17 @@ class SounderModeController extends PeripheralModeController {
     zoneOne.enabled =
         manager!.isZoneOneEnabled.value ? StringConstants.yes : 'No';
     zoneOne.test = manager!.isZoneOneTest.value ? StringConstants.yes : 'No';
-    zoneOne.action = actionOptions[manager!.zoneOneAction.value];
+    final zoneAction = actionOptions[manager!.zoneOneAction.value];
+    zoneOne.action = zoneAction;
     zoneTwo.enabled =
         manager!.isZoneTwoEnabled.value ? StringConstants.yes : 'No';
     zoneTwo.test = manager!.isZoneTwoTest.value ? StringConstants.yes : 'No';
-    zoneTwo.action = actionOptions[manager!.zoneTwoAction.value];
+    zoneTwo.action = zoneAction;
     zoneThree.enabled =
         manager!.isZoneThreeEnabled.value ? StringConstants.yes : 'No';
     zoneThree.test =
         manager!.isZoneThreeTest.value ? StringConstants.yes : 'No';
-    zoneThree.action = actionOptions[manager!.zoneThreeAction.value];
+    zoneThree.action = zoneAction;
 
     final extOutOne = extOuts[0];
     final extOutTwo = extOuts[1];
@@ -667,8 +672,10 @@ class SounderModeController extends PeripheralModeController {
     refreshUi();
   }
 
-  void setZoneAction(int index, String v) {
-    zones[index].action = v;
+  void setZoneAction(String v) {
+    for (final zone in zones) {
+      zone.action = v;
+    }
     refreshUi();
   }
 

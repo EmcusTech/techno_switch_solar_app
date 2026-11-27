@@ -26,7 +26,6 @@ class SounderAdvancedPanel extends StatefulWidget {
     this.readOnly = false,
     this.extFunctionTabs = false,
     this.underlineTabs = false,
-    this.zoneSounderIndex,
     this.showHeader = true,
     this.onTabTapped,
   });
@@ -42,9 +41,6 @@ class SounderAdvancedPanel extends StatefulWidget {
   /// tabs stay on the card style.
   final bool underlineTabs;
 
-  /// Sounder whose zone number selects the single Zone action. When null, the
-  /// first sounder with group Zone is used.
-  final int? zoneSounderIndex;
   final bool showHeader;
   final ValueChanged<int>? onTabTapped;
 
@@ -179,48 +175,15 @@ class _SounderAdvancedPanelState extends State<SounderAdvancedPanel>
     ]);
   }
 
-  /// Zone number from the sounder pick. The Zone tab has one action; this
-  /// number decides which stored action that field shows.
-  int? _zoneNumberForAction() {
-    final preferred = widget.zoneSounderIndex;
-    final sounders = widget.controller.sounders;
-    if (preferred != null && preferred >= 0 && preferred < sounders.length) {
-      final sounder = sounders[preferred];
-      if (sounder.group == StringConstants.zone) {
-        return widget.controller.selectionNumber(sounder);
-      }
-    }
-    for (final sounder in sounders) {
-      if (sounder.group != StringConstants.zone) continue;
-      final number = widget.controller.selectionNumber(sounder);
-      if (number != null) return number;
-    }
-    return null;
-  }
-
   Widget _zoneFields() {
-    final number = _zoneNumberForAction();
-    if (number == null) {
-      final invalid = widget.controller.sounders.any(
-        (sounder) =>
-            sounder.group == StringConstants.zone &&
-            widget.controller.selectionNumber(sounder) == null,
-      );
-      return Text(
-        invalid
-            ? StringConstants.enterZoneNumberFrom1To3
-            : StringConstants.noZoneSelected,
-        style: StyleConstants.textGray14w400Style,
-      );
-    }
     return peripheralSheetFieldGrid([
       DropdownWidget(
         label: StringConstants.action,
-        value: widget.controller.zones[number - 1].action,
+        value: widget.controller.zones.first.action,
         items: widget.controller.actionOptions,
         enabled: _enabled,
         dropdownListHeight: 80.h,
-        onChanged: (v) => widget.controller.setZoneAction(number - 1, v),
+        onChanged: widget.controller.setZoneAction,
       ),
     ]);
   }

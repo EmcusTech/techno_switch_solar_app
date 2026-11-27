@@ -300,7 +300,6 @@ class RelayModeBottomSheetState extends State<RelayModeBottomSheet>
         RelayPatternFields(
           group: relay.group,
           function: relay.function,
-          zoneText: relay.dynamicController.text,
           manager: controller.manager,
         ),
       ],

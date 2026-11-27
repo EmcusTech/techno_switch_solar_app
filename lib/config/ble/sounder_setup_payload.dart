@@ -82,7 +82,6 @@ abstract final class SounderSetupPayload {
         groups: SounderConfigOptions.groupOptions,
         functionsByGroup: SounderConfigOptions.functionOptionsMap,
       ),
-      zone: sounderZone,
     );
 
     return SounderCfgDef(
@@ -151,7 +150,6 @@ abstract final class SounderSetupPayload {
         groups: SounderConfigOptions.groupOptions,
         functionsByGroup: SounderConfigOptions.functionOptionsMap,
       ),
-      zone: config.sounderZone,
       action: config.advAction,
       countdown: config.advCountdown,
       hold: config.advHold,

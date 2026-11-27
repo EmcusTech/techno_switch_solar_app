@@ -83,7 +83,6 @@ abstract final class RelaySetupPayload {
       process: process,
       group: relayGrp,
       function: _functionLabel(relayGrp, relayFunc),
-      zone: relayZone,
     );
 
     return RelayCfgDef(
@@ -144,7 +143,6 @@ abstract final class RelaySetupPayload {
       process,
       group: config.relayGrp,
       function: _functionLabel(config.relayGrp, config.relayFunc),
-      zone: config.relayZone,
       action: config.patternAction,
       countdown: config.patternCountdown,
       hold: config.patternHold,

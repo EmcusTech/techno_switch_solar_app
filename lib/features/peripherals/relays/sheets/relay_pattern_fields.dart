@@ -17,13 +17,11 @@ class RelayPatternFields extends StatelessWidget {
     super.key,
     required this.group,
     required this.function,
-    required this.zoneText,
     required this.manager,
   });
 
   final String group;
   final String function;
-  final String zoneText;
   final BleManager? manager;
 
   static const List<String> _actionOptions = [
@@ -77,18 +75,7 @@ class RelayPatternFields extends StatelessWidget {
     }
   }
 
-  Widget _zoneFields() {
-    final number = int.tryParse(zoneText.trim());
-    if (number == null || number < 1 || number > 3) {
-      return Text(
-        zoneText.trim().isEmpty
-            ? StringConstants.noZoneSelected
-            : StringConstants.enterZoneNumberFrom1To3,
-        style: StyleConstants.textGray14w400Style,
-      );
-    }
-    return _actionDropdown(_zoneAction(number));
-  }
+  Widget _zoneFields() => _actionDropdown(_zoneAction());
 
   Widget _extFields() {
     final index = SndrRelayPattern.extIndex(function) ?? 0;
@@ -141,15 +128,8 @@ class RelayPatternFields extends StatelessWidget {
         SounderDefaults.generalActionBle;
   }
 
-  int _zoneAction(int zone) {
-    final process = manager?.bleProcess;
-    if (process == null) return SounderDefaults.generalActionBle;
-    return switch (zone) {
-      1 => process.zoneOneAction.value,
-      2 => process.zoneTwoAction.value,
-      3 => process.zoneThreeAction.value,
-      _ => 0,
-    };
+  int _zoneAction() {
+    return manager?.zoneOneAction.value ?? SounderDefaults.generalActionBle;
   }
 
   (int, int, int) _extActions(int index) {

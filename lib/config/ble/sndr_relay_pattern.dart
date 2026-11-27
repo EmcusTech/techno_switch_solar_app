@@ -22,8 +22,8 @@ class SndrRelayPatternBytes {
 
 /// Shared pattern for sounders and relays.
 ///
-/// General + Fire Snd copies the action. Zone + Fire Snd copies the action
-/// for [zone]. Ext Out copies countdown, hold, and release for Ext. Snd 1,
+/// General + Fire Snd copies the general action. Zone + Fire Snd copies the
+/// one zone action. Ext Out copies countdown, hold, and release for Ext. Snd 1,
 /// Ext. Snd 2, or Man. Release Snd. Every other group and function is empty
 /// and does not change the stored pattern.
 abstract final class SndrRelayPattern {
@@ -61,13 +61,12 @@ abstract final class SndrRelayPattern {
     required BleProcess process,
     required int group,
     required String function,
-    required int zone,
   }) {
     if (_isGeneralFire(group, function)) {
       return SndrRelayPatternBytes(action: process.sounderGeneralAction.value);
     }
     if (_isZoneFire(group, function)) {
-      return SndrRelayPatternBytes(action: _zoneAction(process, zone));
+      return SndrRelayPatternBytes(action: _zoneAction(process));
     }
     final ext = _extIndex(function);
     if (group == groupExtOut && ext != null) {
@@ -87,7 +86,6 @@ abstract final class SndrRelayPattern {
     BleProcess process, {
     required int group,
     required String function,
-    required int zone,
     required int action,
     required int countdown,
     required int hold,
@@ -98,7 +96,7 @@ abstract final class SndrRelayPattern {
       return;
     }
     if (_isZoneFire(group, function)) {
-      _setZone(process, zone, action);
+      _setZone(process, action);
       return;
     }
     final ext = _extIndex(function);
@@ -166,23 +164,11 @@ abstract final class SndrRelayPattern {
     }
   }
 
-  static int _zoneAction(BleProcess process, int zone) {
-    return switch (zone) {
-      1 => process.zoneOneAction.value,
-      2 => process.zoneTwoAction.value,
-      3 => process.zoneThreeAction.value,
-      _ => 0,
-    };
-  }
+  static int _zoneAction(BleProcess process) => process.zoneOneAction.value;
 
-  static void _setZone(BleProcess process, int zone, int action) {
-    switch (zone) {
-      case 1:
-        process.zoneOneAction.value = action;
-      case 2:
-        process.zoneTwoAction.value = action;
-      case 3:
-        process.zoneThreeAction.value = action;
-    }
+  static void _setZone(BleProcess process, int action) {
+    process.zoneOneAction.value = action;
+    process.zoneTwoAction.value = action;
+    process.zoneThreeAction.value = action;
   }
 }

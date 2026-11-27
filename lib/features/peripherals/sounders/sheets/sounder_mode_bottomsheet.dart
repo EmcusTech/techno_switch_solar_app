@@ -45,7 +45,6 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
   final FocusNode delayFocusNode = FocusNode();
   bool _scrollAfterAdvancedTap = false;
   int _sounderTabIndex = 0;
-  int? _zoneSounderIndex;
 
   final String _delayError = StringConstants.delayMustBeBetween0And600Seconds;
 
@@ -318,7 +317,6 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
       items: controller.groupOptions,
       enabled: !sounder.groupLocked,
       onChanged: (v) {
-        if (v == StringConstants.zone) _zoneSounderIndex = index;
         _focusAdvancedForGroup(v);
         controller.setSounderGroup(index, v);
       },
@@ -342,7 +340,6 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
               value: sounder.dynamicController.text.trim(),
               items: const ['1', '2', '3'],
               onChanged: (v) {
-                _zoneSounderIndex = index;
                 _focusAdvancedTab(1);
                 sounder.dynamicController.text = v;
               },
@@ -422,8 +419,6 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
       delayError: _delayError,
       readOnly: !widget.embedInCreateFlow,
       underlineTabs: true,
-      zoneSounderIndex:
-          _sounderTabController != null ? _sounderTabIndex : _zoneSounderIndex,
       onTabTapped: _onAdvancedTabTapped,
     );
   }
