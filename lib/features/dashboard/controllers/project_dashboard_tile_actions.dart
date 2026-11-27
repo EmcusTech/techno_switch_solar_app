@@ -79,11 +79,6 @@ abstract final class ProjectDashboardTileActions {
       final ui = _ui(c);
       if (ui == null) return;
       ui.showSounderAdvancedBottomSheet(
-        onDownload:
-            () => ui.runSounderSetupDownload(
-              onDownloadComplete: c.saveSounderCacheAndNotifyRefresh,
-            ),
-        onApply: () => ui.runSounderSetupApply(),
         refreshTrigger: c.sounderRefreshTrigger,
       );
     });

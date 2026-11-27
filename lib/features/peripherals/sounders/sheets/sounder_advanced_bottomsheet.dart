@@ -8,24 +8,20 @@ import 'package:Technoswitch/utils/constants/string_constants.dart';
 import 'package:Technoswitch/utils/constants/style_constants.dart';
 import 'package:Technoswitch/widgets/common/peripheral_sheet_chrome.dart';
 
-/// Editor for the shared sounder advanced configuration.
+/// Editor for the shared sounder and relay pattern.
 ///
-/// Values are the same sounder setup the sounder sheet sends. Ext Out
-/// edits each function on its own tab.
+/// Save stores the pattern locally. Sounder and relay apply copy it.
+/// A sounder or relay download writes the matching fields back.
 class SounderAdvancedBottomSheet extends StatefulWidget {
   const SounderAdvancedBottomSheet({
     super.key,
     required this.deviceId,
-    required this.onDownload,
-    required this.onApply,
     required this.refreshTrigger,
   });
 
   static const controllerTag = 'sounder-advanced';
 
   final String deviceId;
-  final VoidCallback onDownload;
-  final VoidCallback onApply;
   final ValueNotifier<int> refreshTrigger;
 
   @override
@@ -143,13 +139,7 @@ class SounderAdvancedBottomSheetState extends State<SounderAdvancedBottomSheet>
                             ),
                             Expanded(child: scroll),
                             const SizedBox(height: 12),
-                            Row(
-                              children: [
-                                Expanded(child: _downloadButton()),
-                                const SizedBox(width: 12),
-                                Expanded(child: _applyButton()),
-                              ],
-                            ),
+                            _saveButton(),
                           ],
                         ),
                       ),
@@ -164,46 +154,19 @@ class SounderAdvancedBottomSheetState extends State<SounderAdvancedBottomSheet>
     );
   }
 
-  Widget _downloadButton() {
+  Widget _saveButton() {
+    final canSave = controller.manager != null && controller.computeIsValid();
     return SizedBox(
       height: 48,
-      child: OutlinedButton(
-        style: OutlinedButton.styleFrom(
-          foregroundColor: ColorConstants.primary,
-          side: const BorderSide(color: ColorConstants.primary),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        ),
-        onPressed: () {
-          FocusManager.instance.primaryFocus?.unfocus();
-          widget.onDownload();
-        },
-        child: Text(
-          StringConstants.download,
-          style: StyleConstants.primary16w600Style,
-        ),
-      ),
-    );
-  }
-
-  Widget _applyButton() {
-    final canApply = controller.manager != null && controller.computeIsValid();
-    return SizedBox(
-      height: 48,
+      width: double.infinity,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
           backgroundColor: ColorConstants.primary,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
-        onPressed:
-            canApply
-                ? () async {
-                  if (await controller.commitLocal()) {
-                    widget.onApply();
-                  }
-                }
-                : null,
+        onPressed: canSave ? controller.commitLocal : null,
         child: Text(
-          StringConstants.apply,
+          StringConstants.save,
           style: StyleConstants.white16w600Style,
         ),
       ),

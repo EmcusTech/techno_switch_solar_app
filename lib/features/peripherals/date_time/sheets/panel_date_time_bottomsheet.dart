@@ -128,7 +128,12 @@ class _PanelDateTimeBottomSheetState extends State<PanelDateTimeBottomSheet> {
                   style: StyleConstants.black16w600Style,
                 ),
               ),
-              Switch(value: c.useSystemTime, onChanged: c.toggleSystemTime),
+              Switch(
+                value: c.useSystemTime,
+                onChanged: c.toggleSystemTime,
+                activeThumbColor: ColorConstants.white,
+                activeTrackColor: ColorConstants.primary,
+              ),
             ],
           ),
         ),

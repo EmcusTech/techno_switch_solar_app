@@ -1600,16 +1600,12 @@ mixin ProjectDashboardUiDelegateMixin<T extends StatefulWidget> on State<T>
 
   @override
   void showSounderAdvancedBottomSheet({
-    required VoidCallback onDownload,
-    required VoidCallback onApply,
     required ValueNotifier<int> refreshTrigger,
   }) {
     _presentPeripheralSheet(
       builder:
           (_) => SounderAdvancedBottomSheet(
             deviceId: dashboardController.selectedDevice.id,
-            onDownload: onDownload,
-            onApply: onApply,
             refreshTrigger: refreshTrigger,
           ),
     );

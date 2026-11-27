@@ -122,17 +122,17 @@ class _DropdownWidgetState extends State<DropdownWidget> {
               ),
 
               iconStyleData: IconStyleData(
-                icon: Padding(
-                  padding: const EdgeInsets.only(right: 8.0),
-                  child: Icon(
-                    Icons.keyboard_arrow_down_rounded,
-                    color:
-                        locked
-                            ? ColorConstants.textDisabled
-                            : ColorConstants.primary,
-                  ),
-                ),
-                iconSize: 22,
+                icon:
+                    locked
+                        ? const SizedBox.shrink()
+                        : const Padding(
+                          padding: EdgeInsets.only(right: 8.0),
+                          child: Icon(
+                            Icons.keyboard_arrow_down_rounded,
+                            color: ColorConstants.primary,
+                          ),
+                        ),
+                iconSize: locked ? 0 : 22,
               ),
 
               dropdownStyleData: DropdownStyleData(

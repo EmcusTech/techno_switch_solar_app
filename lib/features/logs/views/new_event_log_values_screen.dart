@@ -478,6 +478,10 @@ class _EventLogGridState extends State<_EventLogGrid> {
                 ),
                 Material(
                   color: ColorConstants.primary,
+                  borderRadius: const BorderRadius.horizontal(
+                    right: Radius.circular(4),
+                  ),
+                  clipBehavior: Clip.antiAlias,
                   child: InkWell(
                     onTap: () => setState(() {}),
                     child: const SizedBox(

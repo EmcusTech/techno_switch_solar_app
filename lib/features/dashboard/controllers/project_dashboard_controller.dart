@@ -534,6 +534,9 @@ class ProjectDashboardController extends GetxController {
       PeripheralConfigSnapshot.relayMap(bleManager),
     );
     relayRefreshTrigger.value++;
+    // A relay download writes the shared pattern. Keep that in the sounder
+    // cache the pattern tile reads.
+    await saveSounderCacheAndNotifyRefresh();
   }
 
   Future<void> saveInputCacheAndNotifyRefresh() async {

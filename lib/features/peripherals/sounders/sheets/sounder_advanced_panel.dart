@@ -26,6 +26,7 @@ class SounderAdvancedPanel extends StatefulWidget {
     this.readOnly = false,
     this.extFunctionTabs = false,
     this.underlineTabs = false,
+    this.sounderIndex = 0,
     this.showHeader = true,
     this.onTabTapped,
   });
@@ -40,6 +41,10 @@ class SounderAdvancedPanel extends StatefulWidget {
   /// Underline bar for General / Zone / Ext Out / Delay. Ext Out function
   /// tabs stay on the card style.
   final bool underlineTabs;
+
+  /// Sounder whose group and function pick the Ext Out pattern in the view.
+  /// The editor ignores this and shows every function tab.
+  final int sounderIndex;
 
   final bool showHeader;
   final ValueChanged<int>? onTabTapped;
@@ -206,33 +211,20 @@ class _SounderAdvancedPanelState extends State<SounderAdvancedPanel>
       );
     }
 
-    final indexes = <int>[];
-    for (final sounder in widget.controller.sounders) {
-      if (sounder.group != StringConstants.extOut) continue;
-      final index = widget.controller.functions.indexOf(sounder.function);
-      if (index < 0 || indexes.contains(index)) continue;
-      indexes.add(index);
-    }
-    if (indexes.isEmpty) {
+    final sounders = widget.controller.sounders;
+    final sounderIndex = widget.sounderIndex.clamp(0, sounders.length - 1);
+    final sounder = sounders[sounderIndex];
+    final functionIndex =
+        sounder.group == StringConstants.extOut
+            ? widget.controller.functions.indexOf(sounder.function)
+            : -1;
+    if (functionIndex < 0) {
       return Text(
         StringConstants.noExtOutSelected,
         style: StyleConstants.textGray14w400Style,
       );
     }
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        for (var i = 0; i < indexes.length; i++) ...[
-          if (i > 0) const SizedBox(height: 16),
-          Text(
-            widget.controller.functions[indexes[i]],
-            style: StyleConstants.textDark14w700Style,
-          ),
-          const SizedBox(height: 12),
-          _extFunctionFields(indexes[i]),
-        ],
-      ],
-    );
+    return _extFunctionFields(functionIndex);
   }
 
   Widget _extFunctionFields(int index) {

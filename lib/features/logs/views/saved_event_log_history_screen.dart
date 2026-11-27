@@ -390,6 +390,10 @@ class _SavedEventLogHistoryScreenState
           ),
           Material(
             color: ColorConstants.primary,
+            borderRadius: const BorderRadius.horizontal(
+              right: Radius.circular(4),
+            ),
+            clipBehavior: Clip.antiAlias,
             child: InkWell(
               onTap: () => setState(() {}),
               child: const SizedBox(
@@ -560,21 +564,27 @@ class _SavedEventLogHistoryScreenState
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        GestureDetector(
-          onTap: () => _open(session),
-          child: SvgPicture.asset(
-            AssetConstants.viewLogIcon,
-            width: 30,
-            height: 30,
+        MouseRegion(
+          cursor: SystemMouseCursors.click,
+          child: GestureDetector(
+            onTap: () => _open(session),
+            child: SvgPicture.asset(
+              AssetConstants.viewLogIcon,
+              width: 30,
+              height: 30,
+            ),
           ),
         ),
         const SizedBox(width: 8),
-        GestureDetector(
-          onTap: () => _delete(session),
-          child: SvgPicture.asset(
-            AssetConstants.deleteLogIcon,
-            width: 30,
-            height: 30,
+        MouseRegion(
+          cursor: SystemMouseCursors.click,
+          child: GestureDetector(
+            onTap: () => _delete(session),
+            child: SvgPicture.asset(
+              AssetConstants.deleteLogIcon,
+              width: 30,
+              height: 30,
+            ),
           ),
         ),
       ],

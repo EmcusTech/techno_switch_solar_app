@@ -45,6 +45,7 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
   final FocusNode delayFocusNode = FocusNode();
   bool _scrollAfterAdvancedTap = false;
   int _sounderTabIndex = 0;
+  int _patternSounderIndex = 0;
 
   final String _delayError = StringConstants.delayMustBeBetween0And600Seconds;
 
@@ -66,7 +67,6 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
     _tabController.addListener(_onAdvancedTabChanged);
     if (PeripheralSheetChrome.flat && !widget.embedInCreateFlow) {
       _sounderTabController = TabController(length: 3, vsync: this);
-      _sounderTabController!.addListener(_onSounderTabChanged);
     }
 
     controller = Get.put(
@@ -75,6 +75,7 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
         refreshTrigger: widget.refreshTrigger,
       ),
     );
+    _sounderTabController?.addListener(_onSounderTabChanged);
   }
 
   void _onAdvancedTabChanged() {
@@ -110,6 +111,8 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
     if (tabs == null) return;
     if (_sounderTabIndex != tabs.index) {
       setState(() => _sounderTabIndex = tabs.index);
+      _patternSounderIndex = tabs.index;
+      controller.refreshUi();
       _focusAdvancedForGroup(controller.sounders[tabs.index].group);
     }
     if (tabs.indexIsChanging) return;
@@ -317,6 +320,7 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
       items: controller.groupOptions,
       enabled: !sounder.groupLocked,
       onChanged: (v) {
+        _patternSounderIndex = index;
         _focusAdvancedForGroup(v);
         controller.setSounderGroup(index, v);
       },
@@ -327,6 +331,7 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
       items: controller.functionOptionsMap[sounder.group]!,
       enabled: !sounder.functionLocked,
       onChanged: (v) {
+        _patternSounderIndex = index;
         if (sounder.group == StringConstants.extOut) {
           _focusAdvancedTab(2);
         }
@@ -379,6 +384,8 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
           child: ExpansionTile(
             onExpansionChanged: (expanded) async {
               if (expanded) {
+                _patternSounderIndex = index;
+                controller.refreshUi();
                 await Future.delayed(const Duration(milliseconds: 250));
 
                 final context = _tileKeys[index].currentContext;
@@ -419,6 +426,7 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
       delayError: _delayError,
       readOnly: !widget.embedInCreateFlow,
       underlineTabs: true,
+      sounderIndex: _patternSounderIndex,
       onTabTapped: _onAdvancedTabTapped,
     );
   }

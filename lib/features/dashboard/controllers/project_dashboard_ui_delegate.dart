@@ -214,8 +214,6 @@ abstract class ProjectDashboardUiDelegate {
   });
 
   void showSounderAdvancedBottomSheet({
-    required VoidCallback onDownload,
-    required VoidCallback onApply,
     required ValueNotifier<int> refreshTrigger,
   });
 
