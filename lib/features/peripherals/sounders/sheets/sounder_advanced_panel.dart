@@ -9,6 +9,7 @@ import 'package:Technoswitch/utils/constants/style_constants.dart';
 import 'package:Technoswitch/utils/peripherals/defaults/sounder_defaults.dart';
 import 'package:Technoswitch/widgets/common/dropdown.dart';
 import 'package:Technoswitch/widgets/common/peripheral_sheet_chrome.dart';
+import 'package:Technoswitch/widgets/common/peripheral_tab_bar.dart';
 
 /// Shared General / Zone / Ext Out / Delay fields.
 ///
@@ -24,6 +25,7 @@ class SounderAdvancedPanel extends StatefulWidget {
     required this.delayError,
     this.readOnly = false,
     this.extFunctionTabs = false,
+    this.underlineTabs = false,
     this.zoneSounderIndex,
     this.showHeader = true,
     this.onTabTapped,
@@ -35,6 +37,10 @@ class SounderAdvancedPanel extends StatefulWidget {
   final String delayError;
   final bool readOnly;
   final bool extFunctionTabs;
+
+  /// Underline bar for General / Zone / Ext Out / Delay. Ext Out function
+  /// tabs stay on the card style.
+  final bool underlineTabs;
 
   /// Sounder whose zone number selects the single Zone action. When null, the
   /// first sounder with group Zone is used.
@@ -110,37 +116,16 @@ class _SounderAdvancedPanelState extends State<SounderAdvancedPanel>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Align(
-          alignment: Alignment.centerLeft,
-          child: Container(
-            width: 480,
-            height: 48,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              color: ColorConstants.surfaceLight,
-            ),
-            child: TabBar(
-              controller: widget.tabController,
-              onTap: widget.onTabTapped,
-              indicatorSize: TabBarIndicatorSize.tab,
-              indicator: const UnderlineTabIndicator(
-                borderSide: BorderSide(
-                  width: 2.5,
-                  color: ColorConstants.primary,
-                ),
-              ),
-              labelColor: ColorConstants.primary,
-              unselectedLabelColor: ColorConstants.textSubtle,
-              labelStyle: StyleConstants.black13w600Style,
-              unselectedLabelStyle: StyleConstants.black13w500Style,
-              tabs: const [
-                Tab(text: 'General'),
-                Tab(text: StringConstants.zone),
-                Tab(text: StringConstants.extOut2),
-                Tab(text: 'Delay'),
-              ],
-            ),
-          ),
+        PeripheralTabBar(
+          controller: widget.tabController,
+          onTap: widget.onTabTapped,
+          underline: widget.underlineTabs,
+          tabs: const [
+            Tab(text: 'General'),
+            Tab(text: StringConstants.zone),
+            Tab(text: StringConstants.extOut2),
+            Tab(text: 'Delay'),
+          ],
         ),
         const SizedBox(height: 20),
         _tabBody(),
@@ -246,34 +231,11 @@ class _SounderAdvancedPanelState extends State<SounderAdvancedPanel>
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Container(
-              width: 480,
-              height: 48,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                color: ColorConstants.surfaceLight,
-              ),
-              child: TabBar(
-                controller: tabs,
-                indicatorSize: TabBarIndicatorSize.tab,
-                indicator: const UnderlineTabIndicator(
-                  borderSide: BorderSide(
-                    width: 2.5,
-                    color: ColorConstants.primary,
-                  ),
-                ),
-                labelColor: ColorConstants.primary,
-                unselectedLabelColor: ColorConstants.textSubtle,
-                labelStyle: StyleConstants.black13w600Style,
-                unselectedLabelStyle: StyleConstants.black13w500Style,
-                tabs: [
-                  for (final name in widget.controller.functions)
-                    Tab(text: name),
-                ],
-              ),
-            ),
+          PeripheralTabBar(
+            controller: tabs,
+            tabs: [
+              for (final name in widget.controller.functions) Tab(text: name),
+            ],
           ),
           const SizedBox(height: 16),
           _extFunctionFields(_extIndex),

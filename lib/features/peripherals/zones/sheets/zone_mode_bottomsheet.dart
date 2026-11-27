@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:Technoswitch/features/peripherals/zones/controllers/zone_mode_controller.dart';
 import 'package:Technoswitch/widgets/common/dropdown.dart';
+import 'package:Technoswitch/widgets/common/peripheral_tab_bar.dart';
 import 'package:Technoswitch/utils/constants/color_constants.dart';
 import 'package:Technoswitch/utils/constants/string_constants.dart';
 import 'package:Technoswitch/widgets/common/peripheral_sheet_chrome.dart';
@@ -266,34 +267,12 @@ class ZoneBottomSheetState extends State<ZoneBottomSheet>
   Widget _zoneTabs() {
     return Column(
       children: [
-        Align(
-          alignment: Alignment.centerLeft,
-          child: Container(
-            width: 320,
-            height: 48,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              color: ColorConstants.surfaceLight,
-            ),
-            child: TabBar(
-              controller: _tabController,
-              indicatorSize: TabBarIndicatorSize.tab,
-              indicator: const UnderlineTabIndicator(
-                borderSide: BorderSide(
-                  width: 2.5,
-                  color: ColorConstants.primary,
-                ),
-              ),
-              labelColor: ColorConstants.primary,
-              unselectedLabelColor: ColorConstants.textSubtle,
-              labelStyle: StyleConstants.black13w600Style,
-              unselectedLabelStyle: StyleConstants.black13w500Style,
-              tabs: [
-                for (var i = 0; i < 3; i++)
-                  Tab(text: 'Zone ${controller.zones[i].zoneNumber}'),
-              ],
-            ),
-          ),
+        PeripheralTabBar(
+          controller: _tabController!,
+          tabs: [
+            for (var i = 0; i < 3; i++)
+              Tab(text: 'Zone ${controller.zones[i].zoneNumber}'),
+          ],
         ),
         const SizedBox(height: 20),
         Expanded(
@@ -447,9 +426,7 @@ class ZoneBottomSheetState extends State<ZoneBottomSheet>
         style: OutlinedButton.styleFrom(
           foregroundColor: ColorConstants.primary,
           side: const BorderSide(color: ColorConstants.primary),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
         onPressed: () {
           FocusManager.instance.primaryFocus?.unfocus();
@@ -470,9 +447,7 @@ class ZoneBottomSheetState extends State<ZoneBottomSheet>
         style: ElevatedButton.styleFrom(
           backgroundColor: ColorConstants.primary,
           disabledBackgroundColor: Colors.grey.shade400,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
         onPressed:
             isValid && controller.manager != null

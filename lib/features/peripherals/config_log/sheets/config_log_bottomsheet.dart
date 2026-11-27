@@ -10,6 +10,7 @@ import 'package:Technoswitch/utils/constants/string_constants.dart';
 import 'package:Technoswitch/utils/peripherals/peripheral_config_snapshot.dart';
 import 'package:Technoswitch/utils/constants/color_constants.dart';
 import 'package:Technoswitch/widgets/common/dropdown.dart';
+import 'package:Technoswitch/widgets/common/peripheral_tab_bar.dart';
 
 import 'package:Technoswitch/utils/constants/style_constants.dart';
 
@@ -50,7 +51,6 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet> {
 
   static const Color _textPrimary = ColorConstants.textDark;
   static const Color _textMuted = ColorConstants.textMuted;
-  static const Color _textTabUnselected = ColorConstants.textSubtle;
   static const Color _brandRed = ColorConstants.primary;
   static const Color _border = ColorConstants.borderMuted;
   static const Color _surfaceMuted = ColorConstants.surfaceLight;
@@ -476,9 +476,7 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet> {
           backgroundColor: _brandRed,
           foregroundColor: ColorConstants.white,
           disabledBackgroundColor: Colors.grey.shade400,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
         onPressed: working ? null : widget.onDownloadAndCompare,
         child: Text(
@@ -645,42 +643,20 @@ class _ConfigLogBottomSheetState extends State<ConfigLogBottomSheet> {
           ),
         ),
         const SizedBox(height: 16),
-        Container(
-          height: 48,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            color: _surfaceMuted,
-          ),
-          child: TabBar(
-            controller: tabCtrl,
-            isScrollable: true,
-            tabAlignment: TabAlignment.start,
-            indicatorSize: TabBarIndicatorSize.tab,
-            indicator: const UnderlineTabIndicator(
-              borderSide: BorderSide(width: 2.5, color: _brandRed),
-            ),
-            labelColor: _brandRed,
-            unselectedLabelColor: _textTabUnselected,
-            labelStyle: StyleConstants.black13w600Style,
-            unselectedLabelStyle: StyleConstants.black13w500Style,
-            labelPadding: const EdgeInsets.symmetric(horizontal: 14),
-            tabs:
-                sections
-                    .map(
-                      (s) => Tab(
-                        height: 46,
-                        child: Align(
-                          alignment: Alignment.center,
-                          child: Text(
-                            s.displayLabel,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
+        PeripheralTabBar(
+          controller: tabCtrl,
+          tabs:
+              sections
+                  .map(
+                    (s) => Tab(
+                      child: Text(
+                        s.displayLabel,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                    )
-                    .toList(),
-          ),
+                    ),
+                  )
+                  .toList(),
         ),
         const SizedBox(height: 16),
         SizedBox(

@@ -8,6 +8,7 @@ import 'package:Technoswitch/utils/constants/color_constants.dart';
 import 'package:Technoswitch/utils/constants/string_constants.dart';
 import 'package:Technoswitch/utils/constants/style_constants.dart';
 import 'package:Technoswitch/widgets/common/dropdown.dart';
+import 'package:Technoswitch/widgets/common/peripheral_tab_bar.dart';
 import 'package:Technoswitch/widgets/common/peripheral_sheet_chrome.dart';
 
 /// Sounder and relay test values on two tabs, with one Download and one Apply.
@@ -71,8 +72,7 @@ class _TestModeBottomSheetState extends State<TestModeBottomSheet>
         return GetBuilder<TestModeRelayController>(
           init: relayController,
           builder: (relays) {
-            final canApply =
-                sounders.manager != null && relays.manager != null;
+            final canApply = sounders.manager != null && relays.manager != null;
             return SafeArea(
               child: ConstrainedBox(
                 constraints: BoxConstraints(
@@ -141,34 +141,12 @@ class _TestModeBottomSheetState extends State<TestModeBottomSheet>
   ) {
     return Column(
       children: [
-        Align(
-          alignment: Alignment.centerLeft,
-          child: Container(
-            height: 48,
-            width: 320,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              color: ColorConstants.surfaceLight,
-            ),
-            child: TabBar(
-              controller: _tabController,
-              indicatorSize: TabBarIndicatorSize.tab,
-              indicator: const UnderlineTabIndicator(
-                borderSide: BorderSide(
-                  width: 2.5,
-                  color: ColorConstants.primary,
-                ),
-              ),
-              labelColor: ColorConstants.primary,
-              unselectedLabelColor: ColorConstants.textSubtle,
-              labelStyle: StyleConstants.black13w600Style,
-              unselectedLabelStyle: StyleConstants.black13w500Style,
-              tabs: const [
-                Tab(text: StringConstants.sounders),
-                Tab(text: StringConstants.relays),
-              ],
-            ),
-          ),
+        PeripheralTabBar(
+          controller: _tabController,
+          tabs: const [
+            Tab(text: StringConstants.sounders),
+            Tab(text: StringConstants.relays),
+          ],
         ),
         const SizedBox(height: 20),
         Expanded(

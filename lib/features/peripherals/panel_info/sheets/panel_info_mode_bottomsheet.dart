@@ -6,6 +6,7 @@ import 'package:Technoswitch/features/peripherals/panel_info/controllers/panel_i
 import 'package:Technoswitch/utils/constants/color_constants.dart';
 import 'package:Technoswitch/utils/constants/string_constants.dart';
 import 'package:Technoswitch/widgets/common/peripheral_sheet_chrome.dart';
+import 'package:Technoswitch/widgets/common/peripheral_tab_bar.dart';
 
 import 'package:Technoswitch/utils/constants/style_constants.dart';
 
@@ -188,34 +189,12 @@ class PanelInfoBottomSheetState extends State<PanelInfoBottomSheet>
   Widget _panelInfoTabs() {
     return Column(
       children: [
-        Align(
-          alignment: Alignment.centerLeft,
-          child: Container(
-            height: 48,
-            width: 480,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              color: ColorConstants.surfaceLight,
-            ),
-            child: TabBar(
-              controller: _tabController,
-              indicatorSize: TabBarIndicatorSize.tab,
-              indicator: const UnderlineTabIndicator(
-                borderSide: BorderSide(
-                  width: 2.5,
-                  color: ColorConstants.primary,
-                ),
-              ),
-              labelColor: ColorConstants.primary,
-              unselectedLabelColor: ColorConstants.textSubtle,
-              labelStyle: StyleConstants.black13w600Style,
-              unselectedLabelStyle: StyleConstants.black13w500Style,
-              tabs: const [
-                Tab(text: StringConstants.panelInfo),
-                Tab(text: StringConstants.eventReminder),
-              ],
-            ),
-          ),
+        PeripheralTabBar(
+          controller: _tabController!,
+          tabs: const [
+            Tab(text: StringConstants.panelInfo),
+            Tab(text: StringConstants.eventReminder),
+          ],
         ),
         const SizedBox(height: 20),
         Expanded(
@@ -261,10 +240,7 @@ class PanelInfoBottomSheetState extends State<PanelInfoBottomSheet>
         controller.config.panelIdController,
         isNumeric: true,
         maxLength: 2,
-        errorText:
-            _panelNoOutOfRange
-                ? StringConstants.panelNoRequired
-                : null,
+        errorText: _panelNoOutOfRange ? StringConstants.panelNoRequired : null,
       ),
       _textField(
         StringConstants.panelName,
@@ -554,9 +530,7 @@ class PanelInfoBottomSheetState extends State<PanelInfoBottomSheet>
         style: OutlinedButton.styleFrom(
           foregroundColor: ColorConstants.primary,
           side: const BorderSide(color: ColorConstants.primary),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
         onPressed: () {
           FocusManager.instance.primaryFocus?.unfocus();
@@ -576,9 +550,7 @@ class PanelInfoBottomSheetState extends State<PanelInfoBottomSheet>
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
           backgroundColor: ColorConstants.primary,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
         onPressed:
             controller.computeIsValid()

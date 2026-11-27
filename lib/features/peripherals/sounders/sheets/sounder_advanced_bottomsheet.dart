@@ -95,6 +95,7 @@ class SounderAdvancedBottomSheetState extends State<SounderAdvancedBottomSheet>
               delayFocusNode: delayFocusNode,
               delayError: _delayError,
               extFunctionTabs: true,
+              underlineTabs: true,
               showHeader: false,
             ),
           ),

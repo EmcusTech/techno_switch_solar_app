@@ -6,6 +6,7 @@ import 'package:Technoswitch/features/peripherals/sounders/controllers/sounder_m
 import 'package:Technoswitch/features/peripherals/sounders/sheets/sounder_advanced_panel.dart';
 import 'package:Technoswitch/features/peripherals/sounders/sheets/sounder_tab_slot.dart';
 import 'package:Technoswitch/widgets/common/dropdown.dart';
+import 'package:Technoswitch/widgets/common/peripheral_tab_bar.dart';
 import 'package:Technoswitch/utils/constants/color_constants.dart';
 import 'package:Technoswitch/utils/constants/string_constants.dart';
 import 'package:Technoswitch/widgets/common/peripheral_sheet_chrome.dart';
@@ -262,35 +263,13 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Align(
-          alignment: Alignment.centerLeft,
-          child: Container(
-            width: 420,
-            height: 48,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              color: ColorConstants.surfaceLight,
-            ),
-            child: TabBar(
-              controller: _sounderTabController,
-              indicatorSize: TabBarIndicatorSize.tab,
-              indicator: const UnderlineTabIndicator(
-                borderSide: BorderSide(
-                  width: 2.5,
-                  color: ColorConstants.primary,
-                ),
-              ),
-              labelColor: ColorConstants.primary,
-              unselectedLabelColor: ColorConstants.textSubtle,
-              labelStyle: StyleConstants.black13w600Style,
-              unselectedLabelStyle: StyleConstants.black13w500Style,
-              tabs: const [
-                Tab(text: 'Sounder 1'),
-                Tab(text: 'Sounder 2'),
-                Tab(text: 'Sounder 3'),
-              ],
-            ),
-          ),
+        PeripheralTabBar(
+          controller: _sounderTabController!,
+          tabs: const [
+            Tab(text: 'Sounder 1'),
+            Tab(text: 'Sounder 2'),
+            Tab(text: 'Sounder 3'),
+          ],
         ),
         const SizedBox(height: 20),
         Expanded(
@@ -442,6 +421,7 @@ class SounderModeBottomSheetState extends State<SounderModeBottomSheet>
       delayFocusNode: delayFocusNode,
       delayError: _delayError,
       readOnly: !widget.embedInCreateFlow,
+      underlineTabs: true,
       zoneSounderIndex:
           _sounderTabController != null ? _sounderTabIndex : _zoneSounderIndex,
       onTabTapped: _onAdvancedTabTapped,

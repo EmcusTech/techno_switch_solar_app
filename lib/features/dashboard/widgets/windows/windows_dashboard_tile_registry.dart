@@ -11,6 +11,12 @@ abstract final class WindowsDashboardTileRegistry {
   ) {
     return [
       WindowsDashboardTileConfig(
+        label: StringConstants.sndRelayPattern,
+        iconPath: AssetConstants.sndRelayPatternIcon,
+        onTap:
+            () => ProjectDashboardTileActions.openSounderAdvanced(controller),
+      ),
+      WindowsDashboardTileConfig(
         label: StringConstants.relays,
         iconPath: AssetConstants.peripheralRelayIcon,
         onTap: () => ProjectDashboardTileActions.openRelays(controller),
@@ -30,12 +36,7 @@ abstract final class WindowsDashboardTileRegistry {
         iconPath: AssetConstants.peripheralSounderIcon,
         onTap: () => ProjectDashboardTileActions.openSounders(controller),
       ),
-      WindowsDashboardTileConfig(
-        label: StringConstants.sounderAdvanced,
-        iconPath: AssetConstants.peripheralSounderIcon,
-        onTap:
-            () => ProjectDashboardTileActions.openSounderAdvanced(controller),
-      ),
+
       WindowsDashboardTileConfig(
         label: StringConstants.radio,
         iconPath: AssetConstants.peripheralProgHoldIcon,
@@ -63,7 +64,7 @@ abstract final class WindowsDashboardTileRegistry {
       ),
       WindowsDashboardTileConfig(
         label: StringConstants.liveEvents,
-        iconPath: AssetConstants.panelActionEventLogIcon,
+        iconPath: AssetConstants.liveLogsIcon,
         onTap: () => ProjectDashboardTileActions.openLiveEvents(controller),
       ),
     ];
